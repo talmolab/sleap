@@ -34,11 +34,31 @@ class Skeleton:
         Args:
             name: The name of the node to add to the skeleton. This name must be unique within the skeleton.
 
+        Returns:
+            None
+
         """
         if self.graph.has_node(name):
             raise ValueError("Skeleton already has a node named ({})".format(name))
 
         self.graph.add_node(name)
+
+    def delete_node(self, name: str):
+        """Remove a node from the skeleton.
+
+        The method removes a node from the skeleton and any edge that is connected to it.
+
+        Args:
+            name: The name of the edge to remove
+
+        Returns:
+            None
+
+        """
+        try:
+            self.graph.remove_node(name)
+        except nx.NetworkXError:
+            raise ValueError("The node named ({}) does not exist, cannot remove it.".format(name))
 
     def add_edge(self, source: str, destination: str):
         """Add an edge between two
