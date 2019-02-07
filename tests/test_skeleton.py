@@ -43,6 +43,26 @@ def test_add_dupe_edge(skeleton):
     with pytest.raises(ValueError):
         skeleton.add_edge(source="head", destination="thorax")
 
+def test_remove_node(skeleton):
+    """
+    Test whether we can delete nodes successfully.
+    """
+    skeleton.add_node("test_node1")
+    skeleton.add_node("test_node2")
+    skeleton.add_edge("test_node1", "test_node2")
+    skeleton.delete_node("test_node1")
+
+    assert not skeleton.graph.has_node("test_node1")
+    assert not skeleton.graph.has_edge("test_node1", "test_node2")
+    assert skeleton.graph.has_node("test_node2")
+
+def test_remove_node_non_exist(skeleton):
+    """
+    Test whether deleting a non-existent node throws and exception.
+    """
+    with pytest.raises(ValueError):
+        skeleton.delete_node("non-existent-node")
+
 def test_no_node_edge(skeleton):
     """
     Test if adding an edge with a non-existent node to the skeleton throws an exception.
