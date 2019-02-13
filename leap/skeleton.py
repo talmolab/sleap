@@ -102,6 +102,25 @@ class Skeleton:
         # These edges will have a special attribute signifying they are not part of the skeleton it self
         self.graph.add_edge(node1, node2, symmetry=True)
 
+    def __getitem__(self, node_name:str):
+        if not self.graph.has_node(node_name):
+            raise ValueError("Skeleton does not have source node named ({})".format(node_name))
+
+        return self.graph.nodes.data()[node_name]
+
+    def relabel_nodes(self, mapping:dict):
+        """
+        Relabel the nodes of the skeleton.
+
+        Args:
+            mapping: A dictionary with the old labels as keys and new labels as values. A partial mapping is allowed.
+
+        Returns:
+            None
+
+        """
+        nx.relabel_nodes(G=self.graph, mapping=mapping, copy=False)
+
     def save_json(self, filename: str):
         """Save the skeleton as JSON file.
 

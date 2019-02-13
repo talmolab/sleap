@@ -72,6 +72,33 @@ def test_no_node_edge(skeleton):
     with pytest.raises(ValueError):
         skeleton.add_edge(source="head", destination="non-existent-node-name")
 
+def test_getitem_node(skeleton):
+    """
+    Test whether we can access nodes of the skeleton via subscript notation.
+    """
+
+    # Make sure attempting to get a non-existent node throws exception
+    with pytest.raises(ValueError):
+        skeleton["non_exist_node"]
+
+    # Now try to get the head node
+    assert(skeleton["head"] is not None)
+
+def test_node_rename(skeleton):
+    """
+    Test if we can rename a node in place.
+    """
+
+    skeleton.relabel_nodes({"head": "new_head_name"})
+
+    # Make sure the old "head" doesn't exist
+    with pytest.raises(ValueError):
+        skeleton["head"]
+
+    # Make sure new head as the correct name
+    assert(skeleton["new_head_name"] is not None)
+
+
 def test_json(skeleton):
     """
     Test saving and loading a Skeleton object in JSON.

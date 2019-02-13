@@ -1,0 +1,45 @@
+# Setup a list of packages that aren't conda installable
+{% set conda_package_nonexistent = (
+    "pymanopt",
+) %}
+
+{% set data = load_setup_py_data() %}
+
+package:
+  # Repeating name because of the following issue:
+  # https://github.com/conda/conda-build/issues/2475
+  name: leapy
+  version: {{ GIT_DESCRIBE_TAG[1:] }}
+
+about:
+  home: {{ data.get('url') }}
+  license: {{ data.get('license') }}
+  summary: {{ data.get('description') }}
+
+source:
+  path: ../
+
+requirements:
+  host:
+    - python
+    - setuptools
+    - pip
+    - openmp
+    {% for req in data.get('setup_requires', [])
+        if req not in conda_package_nonexistent -%}
+    - {{req}}
+    {% endfor %}
+    {% for req in data.get('install_requires', [])
+        if req not in conda_package_nonexistent -%}
+    - {{req}}
+    {% endfor %}
+    - conda-forge::opencv
+
+  run:
+    - python
+    - openmp
+    {% for req in data.get('install_requires', [])
+        if req not in conda_package_nonexistent -%}
+    - {{req}}
+    {% endfor %}
+    - conda-forge::opencv
