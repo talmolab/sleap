@@ -19,53 +19,13 @@ from abc import ABC, abstractmethod
 from leap.skeleton import Skeleton
 
 
-class Dataset:
+class Dataset(ABC):
     """
     The LEAP Dataset class represents an API for accessing labelled video
     frames and other associated metadata. This class is front-end for all
     interactions with loading, writing, and modifying a dataset. The actual
     storage backend for the data is mostly abstracted away from the main
     interface.
-    """
-
-    def __init__(self, path: str, format: str = 'auto'):
-        """
-        Construct the :class:`.Dataset` from the file path. This may be a
-        single file or directory depending on the storage backend.
-
-        Args:
-            path: The filasytem path to the file or folder that stores the dataset.
-            format: The format the dataset is stored in. LEAP supports the following
-            formats for its dataset files:
-
-            * HDF5
-
-            The default value of auto will attempt to detect the format automatically
-            based on filename and contents. If it fails it will throw and exception.
-
-        """
-        self.path = path
-        self.format = format
-        self.confmaps = None
-
-        # If format is auto, we need to try to detect the format automatically.
-        # For now, lets look at the file extension
-        path_ext = os.path.splitext(self.path)[-1].lower()
-
-        if path_ext == '.h5' or path_ext == '.hdf5':
-            self.format = 'HDF5'
-        else:
-            raise ValueError("Can't automatically find dataset file format. " +
-                             "Are you sure this is a LEAP dataset?")
-
-        if self.format == 'HDF5':
-            self.backend = DatasetHDF5(path=self.path)
-
-
-class DatasetBackend(ABC):
-    """
-    The :class:`.DatasetBackend` class is an abstract class that provides a common
-    lower level interface for different storage backends to implement.
     """
 
     def __init__(self, path: str):
@@ -116,8 +76,34 @@ class DatasetBackend(ABC):
     def _load_pafs(self):
         raise NotImplementedError()
 
+    @classmethod
+    def load(cls, path: str, format: str = 'auto'):
+        """
+        Construct the :class:`.Dataset` from the file path. This may be a
+        single file or directory depending on the storage backend.
 
-class DatasetHDF5(DatasetBackend):
+        Args:
+            path: The filasytem path to the file or folder that stores the dataset.
+            format: The format the dataset is stored in. LEAP supports the following
+            formats for its dataset files:
+
+            * HDF5
+
+            The default value of auto will attempt to detect the format automatically
+            based on filename and contents. If it fails it will throw and exception.
+        """
+
+        # If format is auto, we need to try to detect the format automatically.
+        # For now, lets look at the file extension
+        path_ext = os.path.splitext(path)[-1].lower()
+
+        if path_ext == '.h5' or path_ext == '.hdf5' or format.tolower() == 'hdf5':
+            return DatasetHDF5(path=path)
+        else:
+            raise ValueError("Can't automatically find dataset file format. " +
+                             "Are you sure this is a LEAP dataset?")
+
+class DatasetHDF5(Dataset):
     """
     The :class:`.DatasetHDF5` class provides for reading and writing of HDF5 backed
     LEAP datasets.
