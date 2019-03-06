@@ -16,7 +16,7 @@ import numpy as np
 from time import time
 from abc import ABC, abstractmethod
 
-from leap.skeleton import Skeleton
+from sleap.skeleton import Skeleton
 
 
 class Dataset(ABC):

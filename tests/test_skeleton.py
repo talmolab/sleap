@@ -3,7 +3,7 @@ import pytest
 
 import h5py as h5
 
-from leap.skeleton import Skeleton
+from sleap.skeleton import Skeleton
 
 TEST_H5_DATASET = 'tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5'
 JSON_TEST_FILENAME = 'tests/test_skeleton.json'

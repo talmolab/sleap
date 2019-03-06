@@ -4,7 +4,7 @@
 
 import numpy
 
-from leap.skeleton import Skeleton
+from sleap.skeleton import Skeleton
 
 class InstanceList:
     pass

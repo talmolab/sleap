@@ -32,7 +32,7 @@ setup(
     license='Apache 2',
     packages=find_packages(),
     entry_points = {
-        'console_scripts': ['leap-train=leap.training:main'],
+        'console_scripts': ['sleap-train=sleap.training:main'],
     }
 )
 
