@@ -17,16 +17,22 @@ def get_requirements(require_name=None):
     with open(path.join(here, prefix + 'requirements.txt'), encoding='utf-8') as f:
         return f.read().strip().split('\n')
 
-setup(name='leapy',
-      use_scm_version=True,
-      setup_requires=['setuptools_scm'],
-      install_requires=get_requirements(),
-      description='LEAP (LEAP Estimates Animal Pose) is a deep learning framework for estimating animal pose.',
-      long_description=long_description,
-      author='Talmo Pereira, David Turner',
-      author_email='talmo@princeton.edu',
-      url='https://github.com/talmo/leapy',
-      keywords='deep learning, pose estimation, tracking, neuroscience',
-      license='Apache 2',
-      packages=find_packages(),
-     )
+
+setup(
+    name='leapy',
+    use_scm_version=True,
+    setup_requires=['setuptools_scm'],
+    install_requires=get_requirements(),
+    description='LEAP (LEAP Estimates Animal Pose) is a deep learning framework for estimating animal pose.',
+    long_description=long_description,
+    author='Talmo Pereira, David Turner',
+    author_email='talmo@princeton.edu',
+    url='https://github.com/talmo/leapy',
+    keywords='deep learning, pose estimation, tracking, neuroscience',
+    license='Apache 2',
+    packages=find_packages(),
+    entry_points = {
+        'console_scripts': ['leap-train=leap.training:main'],
+    }
+)
+

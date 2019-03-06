@@ -1,2 +1,5 @@
 jsonpickle
 networkx
+tensorflow-gpu
+keras
+h5py

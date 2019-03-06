@@ -1,8 +1,11 @@
 import os
 import pytest
 
+import h5py as h5
+
 from leap.skeleton import Skeleton
 
+TEST_H5_DATASET = 'tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5'
 JSON_TEST_FILENAME = 'tests/test_skeleton.json'
 
 @pytest.fixture(autouse=True)
@@ -72,6 +75,33 @@ def test_no_node_edge(skeleton):
     with pytest.raises(ValueError):
         skeleton.add_edge(source="head", destination="non-existent-node-name")
 
+def test_getitem_node(skeleton):
+    """
+    Test whether we can access nodes of the skeleton via subscript notation.
+    """
+
+    # Make sure attempting to get a non-existent node throws exception
+    with pytest.raises(ValueError):
+        skeleton["non_exist_node"]
+
+    # Now try to get the head node
+    assert(skeleton["head"] is not None)
+
+def test_node_rename(skeleton):
+    """
+    Test if we can rename a node in place.
+    """
+
+    skeleton.relabel_nodes({"head": "new_head_name"})
+
+    # Make sure the old "head" doesn't exist
+    with pytest.raises(ValueError):
+        skeleton["head"]
+
+    # Make sure new head has the correct name
+    assert(skeleton["new_head_name"] is not None)
+
+
 def test_json(skeleton):
     """
     Test saving and loading a Skeleton object in JSON.
@@ -86,3 +116,23 @@ def test_json(skeleton):
     # Make sure we get back the same skeleton we saved.
     assert(skeleton == skeleton_copy)
 
+
+def test_load_hdf5():
+    """
+    Test loading of a skeleton from HDF5
+    """
+    gt_skeleton = Skeleton()
+    gt_skeleton.add_nodes(['head', 'neck', 'thorax', 'abdomen', 'wingL', 'wingR'])
+    gt_skeleton.add_edge('thorax', 'neck')
+    gt_skeleton.add_edge('neck', 'head')
+    gt_skeleton.add_edge('thorax', 'abdomen')
+    gt_skeleton.add_edge('thorax', 'wingL')
+    gt_skeleton.add_edge('thorax', 'wingR')
+
+    f = h5.File(TEST_H5_DATASET)
+    g = f['skeleton']
+    skeleton = Skeleton.load_hdf5(g)
+
+    assert(skeleton.graph.number_of_nodes() == 6)
+
+    assert(skeleton == gt_skeleton)
