@@ -1,0 +1,12 @@
+name: sleapy
+dependencies:
+- python=3.6
+- jsonpickle
+- networkx
+- tensorflow-gpu
+- keras
+- h5py
+- pip
+- pip:
+    - opencv-python
+    - PySide2==5.12.0
