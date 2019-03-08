@@ -1,4 +1,4 @@
-name: sleapy
+name: sleap
 dependencies:
 - python=3.6
 - jsonpickle

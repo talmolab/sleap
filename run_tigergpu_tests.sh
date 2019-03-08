@@ -1,3 +1,7 @@
 #!/bin/bash
 
-ls -l
+module load anaconda
+
+conda activate sleap
+
+python -m pytest tests/ 
