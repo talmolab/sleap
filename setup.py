@@ -23,6 +23,9 @@ setup(
     use_scm_version=True,
     setup_requires=['setuptools_scm'],
     install_requires=get_requirements(),
+    extras_require={
+        'dev': get_requirements('dev'),
+    },
     description='LEAP (LEAP Estimates Animal Pose) is a deep learning framework for estimating animal pose.',
     long_description=long_description,
     author='Talmo Pereira, David Turner',
@@ -33,6 +36,8 @@ setup(
     packages=find_packages(),
     entry_points = {
         'console_scripts': ['sleap-train=sleap.training:main'],
-    }
+    },
+    python_requires='>=3.6'
+
 )
 

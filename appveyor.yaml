@@ -1,0 +1,29 @@
+version: '{build}'
+
+clone_depth: 5
+
+build: false
+
+environment:
+  matrix:
+  - PYTHON_VERSION: 3.6
+    MINICONDA: C:\Miniconda3
+
+init:
+- cmd: ''
+
+install:
+- cmd: >-
+    - "set PATH=%MINICONDA%;%MINICONDA%\\Scripts;%PATH%"
+    - conda config --set always_yes yes --set changeps1 no
+    - conda update -q conda
+    - conda info -a
+    - conda env create -f environment.yml && exit 0
+    - activate sleapy
+    - pip install -r dev_requirements.txt
+
+cache:
+  - C:\Miniconda3 -> environment.yml
+
+test_script:
+- cmd: 'python.exe -m pytest tests/'
