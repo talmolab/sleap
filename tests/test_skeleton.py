@@ -55,9 +55,9 @@ def test_remove_node(skeleton):
     skeleton.add_edge("test_node1", "test_node2")
     skeleton.delete_node("test_node1")
 
-    assert not skeleton.graph.has_node("test_node1")
-    assert not skeleton.graph.has_edge("test_node1", "test_node2")
-    assert skeleton.graph.has_node("test_node2")
+    assert not skeleton.has_node("test_node1")
+    assert not skeleton.has_edge("test_node1", "test_node2")
+    assert skeleton.has_node("test_node2")
 
 def test_remove_node_non_exist(skeleton):
     """

@@ -191,7 +191,7 @@ class DatasetHDF5(Dataset):
 
 
     @staticmethod
-    def _preprocess(x: np.ndarray, permute : tuple = None) -> np.ndarray:
+    def _preprocess(x: np.ndarray, permute: tuple = None) -> np.ndarray:
         """
         Normalizes input data. Handles things like single images and unsigned integers.
 
