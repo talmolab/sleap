@@ -1,0 +1,47 @@
+version: '{build}'
+
+clone_depth: 5
+
+environment:
+  matrix:
+  - PYTHON_VERSION: 3.6
+    PYTHON_ARCH: "64"
+    MINICONDA: C:\Miniconda36-x64
+
+init:
+- cmd: ''
+
+install:
+  # Add Miniconda to the PATH
+  - "set PATH=%MINICONDA%;%MINICONDA%\\Scripts;%PATH%"
+
+  # Setup always yes
+  - conda config --set always_yes yes --set changeps1 no
+
+  # Quietly update if needed
+  #- conda update -q conda
+
+  # Display conda version
+  - conda info -a
+
+  # Create the environment if need be from our environment.yml
+  #- "conda env create -f environment.yml && exit 0"
+
+  # Update the sleap environment in case some dependencies changed.
+  - conda env update -f environment_appveyor.yml
+
+  # Activate things
+  - activate sleap_appveyor
+
+  # Install dev requirements too.
+  - pip install -r dev_requirements.txt
+
+cache:
+  - C:\Miniconda36-x64\envs\sleap_appveyor
+
+build: off
+test_script:
+  - cmd: activate sleap_appveyor
+  - cmd: where python
+  - cmd: python -m pytest tests/
+
