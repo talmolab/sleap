@@ -42,6 +42,7 @@ cache:
 build: off
 test_script:
 - cmd: >-
+
   activate sleap
-  
   python.exe -m pytest tests/
+
