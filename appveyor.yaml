@@ -23,5 +23,6 @@ install:
 cache:
   - C:\Miniconda3 -> environment.yml
 
+build: off
 test_script:
 - cmd: 'python.exe -m pytest tests/'
