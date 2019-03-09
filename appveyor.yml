@@ -5,6 +5,7 @@ clone_depth: 5
 environment:
   matrix:
   - PYTHON_VERSION: 3.6
+    PYTHON_ARCH: "64"
     MINICONDA: C:\Miniconda3
 
 init:
@@ -27,7 +28,7 @@ install:
   - "conda env create -f environment.yml && exit 0"
 
   # Activate things
-  - "conda activate sleapy"
+  - "conda activate sleap"
 
   # Install dev requirements too.
   - "pip install -r dev_requirements.txt"
