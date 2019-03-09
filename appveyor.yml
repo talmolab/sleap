@@ -41,8 +41,7 @@ cache:
 
 build: off
 test_script:
-- cmd: >-
-
-  activate sleap
-  python.exe -m pytest tests/
+  - cmd: activate sleap
+  - cmd: where python
+  - cmd: python -m pytest tests/
 
