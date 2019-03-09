@@ -14,25 +14,24 @@ init:
 install:
   # Add Miniconda to the PATH
   - "set PATH=%MINICONDA%;%MINICONDA%\\Scripts;%PATH%"
-  - cmd: >-
 
-      # Setup always yes
-      conda config --set always_yes yes --set changeps1 no
+  # Setup always yes
+  - conda config --set always_yes yes --set changeps1 no
 
-      # Quietly update if needed
-      conda update -q conda
+  # Quietly update if needed
+  - conda update -q conda
 
-      # Display conda version
-      conda info -a
+  # Display conda version
+  - conda info -a
 
-      # Create the environment if need be from our environment.yml
-      conda env create -f environment.yml
+  # Create the environment if need be from our environment.yml
+  - "conda env create -f environment.yml && exit 0"
 
-      # Activate things
-      conda activate sleap
+  # Activate things
+  - activate sleap
 
-      # Install dev requirements too.
-      pip install -r dev_requirements.txt
+  # Install dev requirements too.
+  - pip install -r dev_requirements.txt
 
 cache:
   - C:\Miniconda36-x64 -> environment.yml
