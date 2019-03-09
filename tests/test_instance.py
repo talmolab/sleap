@@ -41,7 +41,7 @@ def test_instance_node_get_set_item(fly_skeleton):
 
     thorax_point = instance["thorax"]
     assert math.isnan(thorax_point.x) and math.isnan(thorax_point.y)
-    
+
 
 def test_instance_node_multi_get_set_item(fly_skeleton):
     """

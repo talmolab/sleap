@@ -2,8 +2,6 @@ version: '{build}'
 
 clone_depth: 5
 
-build: false
-
 environment:
   matrix:
   - PYTHON_VERSION: 3.6
