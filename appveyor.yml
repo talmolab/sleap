@@ -13,9 +13,8 @@ init:
 
 install:
   # Add Miniconda to the PATH
+  - "set PATH=%MINICONDA%;%MINICONDA%\\Scripts;%PATH%"
   - cmd: >-
-
-      "set PATH=%MINICONDA%;%MINICONDA%\\Scripts;%PATH%"
 
       # Setup always yes
       conda config --set always_yes yes --set changeps1 no
