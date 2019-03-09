@@ -19,13 +19,16 @@ install:
   - conda config --set always_yes yes --set changeps1 no
 
   # Quietly update if needed
-  - conda update -q conda
+  #- conda update -q conda
 
   # Display conda version
   - conda info -a
 
   # Create the environment if need be from our environment.yml
-  - "conda env create -f environment.yml && exit 0"
+  #- "conda env create -f environment.yml && exit 0"
+
+  # Update the sleap environment in case some dependencies changed.
+  - conda env update -f environment.yml
 
   # Activate things
   - activate sleap
@@ -34,8 +37,11 @@ install:
   - pip install -r dev_requirements.txt
 
 cache:
-  - C:\Miniconda36-x64 -> environment.yml
+  - C:\Miniconda36-x64
 
 build: off
 test_script:
-- cmd: 'python.exe -m pytest tests/'
+- cmd: >-
+  activate sleap
+  
+  python.exe -m pytest tests/
