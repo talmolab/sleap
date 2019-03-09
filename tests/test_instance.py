@@ -73,3 +73,20 @@ def test_non_exist_node(fly_skeleton):
     with pytest.raises(KeyError):
         instance = Instance(skeleton=fly_skeleton, video=None, frame_idx=0, points = {"non-exist": Point()})
 
+def test_instance_point_iter(fly_skeleton):
+    """
+    Test iteration methods over instances.
+    """
+    node_names = ["left-wing", "head", "right-wing"]
+    points = {"head": Point(1, 4), "left-wing": Point(2, 5), "right-wing": Point(3, 6)}
+
+    instance = Instance(skeleton=fly_skeleton, video=None, frame_idx=0, points=points)
+
+    assert [node for node in instance.nodes()] == ['head', 'left-wing', 'right-wing']
+    assert np.allclose([p.x for p in instance.points()], [1, 2, 3])
+    assert np.allclose([p.y for p in instance.points()], [4, 5, 6])
+
+    # Make sure we can iterate over tuples
+    for (node, point) in instance.nodes_points():
+        assert points[node] == point
+
