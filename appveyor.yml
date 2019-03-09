@@ -28,20 +28,20 @@ install:
   #- "conda env create -f environment.yml && exit 0"
 
   # Update the sleap environment in case some dependencies changed.
-  - conda env update -f environment.yml
+  - conda env update -f environment_appveyor.yml
 
   # Activate things
-  - activate sleap
+  - activate sleap_appveyor
 
   # Install dev requirements too.
   - pip install -r dev_requirements.txt
 
 cache:
-  - C:\Miniconda36-x64
+  - C:\Miniconda36-x64\envs\sleap_appveyor
 
 build: off
 test_script:
-  - cmd: activate sleap
+  - cmd: activate sleap_appveyor
   - cmd: where python
   - cmd: python -m pytest tests/
 
