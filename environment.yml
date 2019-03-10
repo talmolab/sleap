@@ -6,6 +6,7 @@ dependencies:
 - tensorflow-gpu
 - keras
 - h5py
+- pandas
 - pip
 - pip:
     - opencv-python
