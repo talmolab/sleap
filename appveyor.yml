@@ -18,17 +18,16 @@ install:
   # Setup always yes
   - conda config --set always_yes yes --set changeps1 no
 
+  conda remove --all
+
   # Quietly update if needed
   #- conda update -q conda
 
   # Display conda version
   - conda info -a
 
-  # Create the environment if need be from our environment.yml
-  #- "conda env create -f environment.yml && exit 0"
-
-  # Update the sleap environment in case some dependencies changed.
-  - conda env update -f environment_appveyor.yml
+  # Create/update the sleap environment in case some dependencies changed.
+  - conda update -n sleap_appveyor --file win10_conda_spec_cpuonly.txt
 
   # Activate things
   - activate sleap_appveyor
@@ -37,7 +36,7 @@ install:
   - pip install -r dev_requirements.txt
 
 cache:
-  - C:\Miniconda36-x64\envs\sleap_appveyor
+  - C:\Miniconda36-x64\envs\sleap_appveyor -> win10_conda_spec_cpuonly.txt
 
 build: off
 test_script:
