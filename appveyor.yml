@@ -18,8 +18,6 @@ install:
   # Setup always yes
   - conda config --set always_yes yes --set changeps1 no
 
-  conda remove --all
-
   # Quietly update if needed
   #- conda update -q conda
 
