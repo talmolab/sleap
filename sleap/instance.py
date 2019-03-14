@@ -3,9 +3,12 @@
 """
 
 import math
+import shelve
 
-from typing import Dict
+import h5py as h5
+import pandas as pd
 
+from typing import Dict, List, Union
 
 from sleap.skeleton import Skeleton
 from sleap.io.video import Video
@@ -34,7 +37,7 @@ class Point:
 
 class Instance:
 
-    def __init__(self, skeleton:Skeleton, video:Video, frame_idx:int, points: Dict[str, Point] = {}):
+    def __init__(self, skeleton:Skeleton, video:Video, frame_idx:int, points: Dict[str, Point] = None):
         """
         The class :class:`Instance` represents a labelled instance of skeleton on
         a particular frame of a particular video.
@@ -51,7 +54,10 @@ class Instance:
 
         # Create a data structure to store a list of labelled _points for each node of this
         # skeleton.
-        self._points = points
+        if points is None:
+            self._points = {}
+        else:
+            self._points = points
 
         self._validate_all_points()
 
@@ -145,4 +151,85 @@ class Instance:
             The list of labelled points, in order they were labelled.
         """
         return self._points.values()
+
+    @classmethod
+    def to_pandas_df(cls, instances: Union['Instance', List['Instance']], skip_nan:bool = True) -> pd.DataFrame:
+        """
+        Given an instance or list of instances, generate a pandas DataFrame that contains
+        all of the data in normalized form.
+        Args:
+            instances: A single instance or list of instances.
+            skip_nan: Whether to drop points that have NaN values for x or y.
+
+        Returns:
+            A pandas DataFrame that contains all of the isntance's points level data
+            in and normalized form. The columns of the DataFrame are:
+
+            * id - A unique number for each row of the table.
+            * instanceId - a unique id for each unique instance.
+            * skeleton - the name of the skeleton that this point is a part of.
+            * node - A string specifying the name of the skeleton node that this point value corresponds.
+            * videoId - A string specifying the video that this instance is in.
+            * frameIdx - The frame number of the video that this instance occurs on.
+            * visible - Whether the point in this row for this instance is visible.
+            * x - The horizontal pixel position of this node for this instance.
+            * y - The vertical pixel position of this node for this instance.
+        """
+
+        # If this is a single instance, make it a list
+        if type(instances) is Instance:
+            instances = [instances]
+
+        instance_ids = []
+        nodes = []
+        frames = []
+        xs = []
+        ys = []
+        videos = []
+        skeletons = []
+        visibles = []
+
+        # Extract all the data from each instance and its points
+        for instance_id, instance in enumerate(instances):
+            for (node, point) in instance.nodes_points():
+
+                # Skip any NaN points if the user has asked for it.
+                if skip_nan and (math.isnan(point.x) or math.isnan(point.y)):
+                    continue
+
+                instance_ids.append(instance_id)
+                nodes.append(node)
+                frames.append(instance.frame_idx)
+                xs.append(point.x)
+                ys.append(point.y)
+                visibles.append(point.visible)
+                videos.append(instance.video)
+                skeletons.append(instance.skeleton)
+
+        # Construct a pandas data frame from this list of instances
+        df = pd.DataFrame.from_dict({
+            'id': [i for i in range(len(instance_ids))],
+            'instanceId': instance_ids,
+            'skeleton': [s.name for s in skeletons],
+            'node': nodes,
+            'videoId': [str(video) for video in videos ],
+            'frameIdx': frames,
+            'visible': visibles,
+            'x': xs,
+            'y': ys
+        })
+
+        return df
+
+    # @classmethod
+    # def load_instances_hdf5_group(cls, h5_group: h5.Group, skeleton: Skeleton) -> List['Instance']:
+    #
+    #     # Get the datasets
+    #     x = h5_group['x']
+    #     y = h5_group['y']
+    #     frames = h5_group['frameIdx']
+    #     visible = h5_group['visible']
+    #     video = h5_group['videoId']
+    #     node = h5_group['node']
+    #     instance_id = h5_group['instanceId']
 

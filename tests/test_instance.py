@@ -24,6 +24,29 @@ def fly_skeleton():
 
     return skeleton
 
+# Generate some instances
+NUM_INSTANCES = 500
+
+# How many columns are supposed to be in point DataFrame
+NUM_COLS = 9
+
+@pytest.fixture
+def instances(fly_skeleton):
+
+    instances = []
+    for i in range(NUM_INSTANCES):
+        instance = Instance(skeleton=fly_skeleton, video=None, frame_idx=i)
+        instance['head'] = Point(i*1, i*2)
+        instance['left-wing'] = Point(10 + i * 1, 10 + i * 2)
+        instance['right-wing'] = Point(20 + i * 1, 20 + i * 2)
+
+        # Lets make an NaN entry to test skip_nan as well
+        instance['thorax']
+
+        instances.append(instance)
+
+    return instances
+
 def test_instance_node_get_set_item(fly_skeleton):
     """
     Test basic get item and set item functionality of instances.
@@ -90,3 +113,20 @@ def test_instance_point_iter(fly_skeleton):
     for (node, point) in instance.nodes_points():
         assert points[node] == point
 
+
+def test_instance_to_pandas_df(fly_skeleton, instances):
+    """
+    Test generating pandas DataFrames from lists of instances.
+    """
+
+    df = Instance.to_pandas_df(instances)
+
+    # Check to make sure we got the expected shape
+    assert df.shape == (3*NUM_INSTANCES, NUM_COLS)
+
+    # Check skip_nan is working
+    assert Instance.to_pandas_df(instances, skip_nan=False).shape == (4*NUM_INSTANCES, NUM_COLS)
+
+def test_to_hdf5(instances, tmpdir):
+    df = Instance.to_pandas_df(instances)
+    #df.to_hdf('test.h5', key='points')

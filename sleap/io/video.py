@@ -7,8 +7,12 @@ import numpy as np
 
 class Video(ABC):
     """ Generic interface for video reading across formats. """
-    def __init__(*args, **kwargs):
-        pass
+    def __init__(self, *args, **kwargs):
+        self.width = None
+        self.height = None
+        self.channels = None
+        self.num_frames = None
+        self.dtype = None
 
     @property
     def frames(self):
@@ -25,6 +29,9 @@ class Video(ABC):
     def __str__(self):
         """ Informal string representation (for print or format) """
         return type(self).__name__ + "([%d x %d x %d x %d])" % self.shape
+
+    def __len__(self):
+        return self.frames
 
     @abstractmethod
     def get_frame(self, idx):
@@ -57,6 +64,7 @@ class HDF5Video(Video):
 
         test_frame = self.get_frame(0)
         self.height, self.width, self.channels = test_frame.shape
+        self.dtype = test_frame.dtype
 
         self.num_frames = len(self._dataset)
 
@@ -84,6 +92,7 @@ class MediaVideo(Video):
             self.grayscale = np.alltrue(test_frame[...,0] == test_frame[...,-1])
 
         self.height, self.width, self.channels = test_frame.shape
+        self.dtype = test_frame.dtype
         if self.grayscale:
             self.channels = 1
 
