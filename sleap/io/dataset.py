@@ -1,7 +1,7 @@
 """A LEAP Dataset represents annotated (labeled) video data.
 
 A LEAP Dataset stores almost all data required for training of a model.
-This includes, raw video frame data, labelled instances of skeleton points,
+This includes, raw video frame data, labelled instances of skeleton _points,
 confidence maps, part affinity fields, and skeleton data. A LEAP :class:`.Dataset`
 is a high level API to these data structures that abstracts away their underlying
 storage format.
@@ -52,7 +52,7 @@ class Dataset(ABC):
             logging.warning("Confidence maps not found in dataset. Need to compute them.")
 
         # Check if part affinity fields were found, if not we will need to compute
-        # them based on points and skeleton data.
+        # them based on _points and skeleton data.
         if not hasattr(self, 'pafs') or self.pafs is not None:
             logging.warning("Part affinity fields not found in dataset. Need to compute them.")
 
@@ -115,7 +115,7 @@ class DatasetHDF5(Dataset):
     _confmaps_dataset_name = "confmaps"  # HDF5 dataset name for confidence map data
     _pafs_dataset_name = "pafs"  # HDF5 dataset name for part affinity field data
     _skelton_dataset_name = "skeleton"  # HDF5 dataset name for skeleton data
-    _points_dataset_name = "points"  # HDF5 dataset name labeled points
+    _points_dataset_name = "_points"  # HDF5 dataset name labeled _points
 
     def __init__(self, path: str):
 
@@ -191,7 +191,7 @@ class DatasetHDF5(Dataset):
 
 
     @staticmethod
-    def _preprocess(x: np.ndarray, permute : tuple = None) -> np.ndarray:
+    def _preprocess(x: np.ndarray, permute: tuple = None) -> np.ndarray:
         """
         Normalizes input data. Handles things like single images and unsigned integers.
 

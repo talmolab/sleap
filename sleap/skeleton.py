@@ -11,6 +11,8 @@ import jsonpickle
 import networkx as nx
 import h5py as h5
 
+from typing import Iterable
+
 from networkx.readwrite import json_graph
 
 
@@ -21,7 +23,7 @@ class Skeleton:
     is being estimated.
 
     """
-    def __init__(self, name: str = None):
+    def __init__(self, name: str = ""):
         """Initialize an empty skeleton object.
 
         Skeleton objects, once they are created can be modified by adding nodes and edges.
@@ -30,6 +32,16 @@ class Skeleton:
             name: A name for this skeleton.
         """
         self.graph = nx.MultiDiGraph(name=name)
+
+    @property
+    def name(self):
+        """
+        Get the name of the skeleton.
+
+        Returns:
+            A string representing the name of the skeleton.
+        """
+        return self.graph.name
 
     def add_node(self, name: str):
         """Add a node representing an animal part to the skeleton.
@@ -145,6 +157,51 @@ class Skeleton:
 
         """
         nx.relabel_nodes(G=self.graph, mapping=mapping, copy=False)
+
+    def has_node(self, name: str) -> bool:
+        """
+        Check whether the skeleton has a node.
+
+        Args:
+            name: The name of the node to check for.
+
+        Returns:
+            True for yes, False for no.
+
+        """
+        return self.graph.has_node(name)
+
+    def has_nodes(self, names: Iterable[str]) -> bool:
+        """
+        Check whether the skeleton has a list of nodes.
+
+        Args:
+            name: The list names of the nodes to check for.
+
+        Returns:
+            True for yes, False for no.
+
+        """
+        for name in names:
+            if not self.graph.has_node(name):
+                return False
+
+        return True
+
+
+    def has_edge(self, source_name: str, dest_name: str) -> bool:
+        """
+        Check whether the skeleton has an edge.
+
+        Args:
+            source_name: The name of the source node for the edge.
+            dest_name: The name of the destination node for the edge.
+
+        Returns:
+            True is yes, False if no.
+
+        """
+        return self.graph.has_edge(source_name, dest_name)
 
     def save_json(self, filename: str):
         """Save the skeleton as JSON file.

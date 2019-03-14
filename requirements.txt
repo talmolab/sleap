@@ -3,3 +3,4 @@ networkx
 tensorflow-gpu
 keras
 h5py
+opencv-python
