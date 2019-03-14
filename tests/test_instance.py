@@ -129,4 +129,4 @@ def test_instance_to_pandas_df(fly_skeleton, instances):
 
 def test_to_hdf5(instances, tmpdir):
     df = Instance.to_pandas_df(instances)
-    df.to_hdf('test.h5', key='points')
+    #df.to_hdf('test.h5', key='points')
