@@ -162,14 +162,15 @@ class Instance:
             skip_nan: Whether to drop points that have NaN values for x or y.
 
         Returns:
-            A pandas DataFrame that contains all of the isntances points level data
+            A pandas DataFrame that contains all of the isntance's points level data
             in and normalized form. The columns of the DataFrame are:
 
-            * frameIdx - The frame number of the video that this instance occurs on.
             * id - A unique number for each row of the table.
             * instanceId - a unique id for each unique instance.
+            * skeleton - the name of the skeleton that this point is a part of.
             * node - A string specifying the name of the skeleton node that this point value corresponds.
             * videoId - A string specifying the video that this instance is in.
+            * frameIdx - The frame number of the video that this instance occurs on.
             * visible - Whether the point in this row for this instance is visible.
             * x - The horizontal pixel position of this node for this instance.
             * y - The vertical pixel position of this node for this instance.
@@ -207,11 +208,12 @@ class Instance:
 
         # Construct a pandas data frame from this list of instances
         df = pd.DataFrame.from_dict({
-            'frameIdx': frames,
             'id': [i for i in range(len(instance_ids))],
             'instanceId': instance_ids,
+            'skeleton': [s.name for s in skeletons],
             'node': nodes,
             'videoId': [str(video) for video in videos ],
+            'frameIdx': frames,
             'visible': visibles,
             'x': xs,
             'y': ys
