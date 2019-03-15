@@ -1,0 +1,19 @@
+name: sleap_appveyor
+
+dependencies:
+- python=3.6
+- jsonpickle
+- networkx
+- tensorflow
+- keras
+- h5py
+- pandas
+- qtpy
+- matplotlib
+- scikit-image
+- Shapely
+- pip
+- pip:
+    - opencv-python
+    - PySide2==5.12.0
+    - imgaug
