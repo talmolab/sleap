@@ -38,12 +38,6 @@ install:
 # Install dev requirements too.
   - pip install -r dev_requirements.txt
 
-cache:
-  - C:\Miniconda36-x64\pkgs\mkl-2019.1-144.tar.bz2 -> win10_conda_spec_cpuonly.txt
-  - C:\Miniconda36-x64\pkgs\tensorflow-base-1.13.1-mkl_py36hcaf7020_0.tar.bz2 -> win10_conda_spec_cpuonly.txt
-  - C:\Miniconda36-x64\pkgs\libmklml-2019.0.3-0.tar.bz2 -> win10_conda_spec_cpuonly.txt
-
-
 build: off
 test_script:
   - cmd: activate sleap_appveyor
