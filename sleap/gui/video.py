@@ -243,7 +243,7 @@ if __name__ == "__main__":
 
     from sleap.io.video import HDF5Video
 
-    vid = HDF5Video("C:/code/sleap/tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5", "/box", input_format="channels_first")
+    vid = HDF5Video("tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5", "/box", input_format="channels_first")
 
     app = QApplication([])
     # app.setApplicationName("sLEAP Label")
