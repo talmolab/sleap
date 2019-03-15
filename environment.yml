@@ -2,15 +2,14 @@ name: sleap
 
 dependencies:
 - python=3.6
+- attrs
 - jsonpickle
 - networkx
 - tensorflow-gpu
 - keras
 - h5py
 - pandas
-- qtpy
 - matplotlib
-- scikit-image
 - Shapely
 - pip
 - pip:

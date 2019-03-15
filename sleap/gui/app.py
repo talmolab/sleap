@@ -59,7 +59,7 @@ if __name__ == "__main__":
     window = MainWindow()
 
     from sleap.io.video import HDF5Video
-    window.video.video = HDF5Video("C:/code/sleap/tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5", "/box", input_format="channels_first")
+    window.video.video = HDF5Video("tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5", "/box", input_format="channels_first")
     window.video.plot()
 
     app.exec_()
