@@ -39,11 +39,12 @@ install:
   - pip install -r dev_requirements.txt
 
 cache:
-  - C:\Miniconda36-x64\envs\sleap_appveyor -> win10_conda_spec_cpuonly.txt
+  - C:\Miniconda36-x64 -> win10_conda_spec_cpuonly.txt
 
 build: off
 test_script:
   - cmd: activate sleap_appveyor
   - cmd: where python
+  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
   - cmd: python -m pytest tests/
 
