@@ -24,24 +24,24 @@ install:
   # Display conda version
   - conda info -a
 
-  # Create the environment if need be from our environment.yml
-  #- "conda env create -f environment.yml && exit 0"
-
-  # Update the sleap environment in case some dependencies changed.
-  - conda env update -f environment_appveyor.yml
+  # Create/update the sleap environment in case some dependencies changed.
+  - conda update -n sleap_appveyor --file win10_conda_spec_cpuonly.txt
 
   # Activate things
   - activate sleap_appveyor
 
-  # Install dev requirements too.
-  - pip install -r dev_requirements.txt
+  # Conda Explicit Spec files don't include pip installed stuff.
+  # See: https://github.com/conda/conda/issues/8372
+  # We need to install this separately, what a mess.
+  - pip install PySide2 opencv-python imgaug
 
-cache:
-  - C:\Miniconda36-x64\envs\sleap_appveyor
+# Install dev requirements too.
+  - pip install -r dev_requirements.txt
 
 build: off
 test_script:
   - cmd: activate sleap_appveyor
   - cmd: where python
+  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
   - cmd: python -m pytest tests/
 

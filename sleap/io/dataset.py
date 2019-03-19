@@ -48,13 +48,13 @@ class Dataset(ABC):
 
         # Check if confidence maps were found, if not we will need to compute them
         # based on the point data.
-        if not hasattr(self, 'confmaps') or self.confmaps is not None:
-            logging.warning("Confidence maps not found in dataset. Need to compute them.")
+        #if not hasattr(self, 'confmaps') or self.confmaps is not None:
+        #    logging.warning("Confidence maps not found in dataset. Need to compute them.")
 
         # Check if part affinity fields were found, if not we will need to compute
         # them based on _points and skeleton data.
-        if not hasattr(self, 'pafs') or self.pafs is not None:
-            logging.warning("Part affinity fields not found in dataset. Need to compute them.")
+        #if not hasattr(self, 'pafs') or self.pafs is not None:
+        #    logging.warning("Part affinity fields not found in dataset. Need to compute them.")
 
     @abstractmethod
     def _load_frames(self):
