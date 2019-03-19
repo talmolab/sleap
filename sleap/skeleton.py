@@ -11,7 +11,8 @@ import jsonpickle
 import networkx as nx
 import h5py as h5
 
-from typing import Iterable
+from itertools import count
+from typing import Iterable, Union, List, Dict
 
 from networkx.readwrite import json_graph
 
@@ -23,7 +24,14 @@ class Skeleton:
     is being estimated.
 
     """
-    def __init__(self, name: str = ""):
+
+    """
+    A index variable used to give skeletons a default name that attemtpts to be
+    unique across all skeletons. Will be non-
+    """
+    _skeleton_idx = count(0)
+
+    def __init__(self, name: str = None):
         """Initialize an empty skeleton object.
 
         Skeleton objects, once they are created can be modified by adding nodes and edges.
@@ -31,6 +39,11 @@ class Skeleton:
         Args:
             name: A name for this skeleton.
         """
+
+        # If no skeleton was create, try to create a unique name for this Skeleton.
+        if name is None or type(name) is not str or len(name) == 0:
+            name = "Skeleton-" + str(self._skeleton_idx)
+
         self.graph = nx.MultiDiGraph(name=name)
 
     @property
@@ -42,6 +55,21 @@ class Skeleton:
             A string representing the name of the skeleton.
         """
         return self.graph.name
+
+    @name.setter
+    def name(self, name: str):
+        """
+        Set the name of the skeleton. Must be a valid string with length greater than 0.
+
+        Args:
+            name: The name of the Skeleton.
+
+        Returns:
+            None
+        """
+        if name is None or type(name) is not str or len(name) == 0:
+            raise ValueError("A skeleton must have a valid string name.")
+        self.graph.name = name
 
     def add_node(self, name: str):
         """Add a node representing an animal part to the skeleton.
@@ -89,7 +117,7 @@ class Skeleton:
             raise ValueError("The node named ({}) does not exist, cannot remove it.".format(name))
 
     def add_edge(self, source: str, destination: str):
-        """Add an edge between two
+        """Add an edge between two nodes.
 
         Args:
             source: The name of the source node.
@@ -110,6 +138,27 @@ class Skeleton:
             raise ValueError("Skeleton already has an edge between ({}) and ({}).".format(source, destination))
 
         self.graph.add_edge(source, destination)
+
+    def delete_edge(self, source: str, destination: str):
+        """Delete an edge between two nodes.
+
+        Args:
+            source: The name of the source node.
+            destination: The name of the destination node.
+
+        Returns:
+            None
+        """
+        if not self.graph.has_node(source):
+            raise ValueError("Skeleton does not have source node named ({})".format(source))
+
+        if not self.graph.has_node(destination):
+            raise ValueError("Skeleton does not have destination node named ({})".format(destination))
+
+        if not self.graph.has_edge(source, destination):
+            raise ValueError("Skeleton has no edge between ({}) and ({}).".format(source, destination))
+
+        self.graph.remove_edge(source, destination)
 
     def add_symmetry(self, node1:str, node2:str):
         """Specify that two parts (nodes) in the skeleton are symmetrical.
@@ -203,6 +252,20 @@ class Skeleton:
         """
         return self.graph.has_edge(source_name, dest_name)
 
+    def to_json(self) -> str:
+        """
+        Convert the skeleton to a JSON representation.
+
+        Returns:
+            A string containing the JSON representation of the Skeleton.
+        """
+        jsonpickle.set_encoder_options('simplejson', sort_keys=True, indent=4)
+
+        # Encode to JSON
+        json_str = jsonpickle.encode(json_graph.node_link_data(self.graph))
+
+        return json_str
+
     def save_json(self, filename: str):
         """Save the skeleton as JSON file.
 
@@ -216,13 +279,28 @@ class Skeleton:
 
            """
 
-        jsonpickle.set_encoder_options('simplejson', sort_keys=True, indent=4)
-
-        # Encode to JSON
-        json_str = jsonpickle.encode(json_graph.node_link_data(self.graph))
+        json_str = self.to_json()
 
         with open(filename, 'w') as file:
             file.write(json_str)
+
+
+    @classmethod
+    def from_json(cls, json_str: str):
+        """
+        Parse a JSON string containing the Skeleton object and create an instance from it.
+
+        Args:
+            json_str: The JSON encoded Skeleton.
+
+        Returns:
+            An instance of the Skeleton object decoded from the JSON.
+        """
+        graph = json_graph.node_link_graph(jsonpickle.decode(json_str))
+        skeleton = Skeleton()
+        skeleton.graph = graph
+
+        return skeleton
 
     @classmethod
     def load_json(cls, filename: str):
@@ -239,60 +317,121 @@ class Skeleton:
         """
 
         with open(filename, 'r') as file:
-            json_str = file.read()
-            graph = json_graph.node_link_graph(jsonpickle.decode(json_str))
-            skeleton = Skeleton()
-            skeleton.graph = graph
+            skeleton = Skeleton.from_json(file.read())
 
         return skeleton
 
     @classmethod
-    def load_hdf5(cls, h5_group: h5.Group):
+    def load_hdf5(cls, file: Union[str, h5.File], name: str):
+        """
+        Load a specific skeleton (by name) from the HDF5 file.
 
-        # Check to make sure the datasets exist in group
-        if not 'nodes' in h5_group:
-            raise ValueError("Could not find nodes dataset in skeleton group.")
+        Args:
+            file: The file name or open h5.File
+            name: The name of the skeleton.
 
-        if not 'edges' in h5_group:
-            raise ValueError("Could not find edges dataset in skeleton group.")
+        Returns:
+            The skeleton intance stored in the HDF5 file.
+        """
+        if type(file) is str:
+            with h5.File(file) as _file:
+                skeletons = Skeleton._load_hdf5(_file) # Load all skeletons
+        else:
+            skeletons = Skeleton._load_hdf5(file)
 
-        # Lets first grab the attributes of the group, these should contain
-        # the names of the nodes.
-        node_names = h5_group.attrs.get("nodeNames", default=None)
-        if node_names is None:
-            raise ValueError("Couldn't not find nodeNames attribute in skeleton HDF5 group.")
+        return skeletons[name]
 
-        # Decode the byte string and split it by end lines, this is how the nodes names are stored
-        node_names = node_names.decode('utf-8').split('\n')
+    @classmethod
+    def load_all_hdf5(cls, file: Union[str, h5.File],
+                      return_dict: bool = False) -> Union[List['Skeleton'], Dict[str, 'Skeleton']]:
+        """
+        Load all skeletons found in the HDF5 file.
 
-        # Get the number of nodes
-        num_nodes = np.asscalar(h5_group["nodes"][:])
+        Args:
+            file: The file name or open h5.File
+            return_dict: True if the the return value should be a dict where the
+            keys are skeleton names and values the corresponding skeleton. False
+            if the return should just be a list of the skeletons.
 
-        # Get the edges
-        edges = h5_group["edges"][:].astype('int32')
+        Returns:
+            The skeleton intances stored in the HDF5 file. Either in List or Dict form.
+        """
+        if type(file) is str:
+            with h5.File(file) as _file:
+                skeletons = Skeleton._load_hdf5(_file) # Load all skeletons
+        else:
+            skeletons = Skeleton._load_hdf5(file)
 
-        # Make sure number nodes is equal to the length of node_names
-        if len(node_names) != num_nodes:
-            raise ValueError("Length of skeleton nodeNames attribute does not equal number of nodes in nodes dataset.")
+        if return_dict:
+            return skeletons
+        else:
+            return list(skeletons.values())
 
-        # Perform some checks on the edge list
+    @classmethod
+    def _load_hdf5(cls, file: h5.File):
 
+        skeletons = {}
+        for name, json_str in file['skeleton'].attrs.items():
+            skeletons[name] = Skeleton.from_json(json_str)
 
-        # Lets make the skeleton object now
-        skeleton = Skeleton()
+        return skeletons
 
-        # Add the nodes
-        for node in node_names:
-            skeleton.add_node(name=node)
+    def save_hdf5(self, file: Union[str, h5.File]):
+        if type(file) is str:
+            with h5.File(file) as _file:
+                self._save_hdf5(_file)
+        else:
+            self._save_hdf5(file)
 
-        # Add the edges
-        for i in range(edges.shape[1]):
-            skeleton.add_edge(source=node_names[edges[0,i]-1], destination=node_names[edges[1,i]-1])
+    @classmethod
+    def save_all_hdf5(self, file: Union[str, h5.File], skeletons: List['Skeleton']):
+        """
+        Convenience method to save a list of skeletons to HDF5 file. Skeletons are saved
+        as attributes of a /skeleton group in the file.
 
-        return skeleton
+        Args:
+            file: The file name or the open h5.File object.
+            skeletons: The list of skeletons to save.
 
+        Returns:
+            None
+        """
 
-    def __eq__(self, other):
+        # Make sure no skeleton has the same name
+        unique_names = {s.name for s in skeletons}
+
+        if len(unique_names) != len(skeletons):
+            raise ValueError("Cannot save multiple Skeleton's with the same name.")
+
+        for skeleton in skeletons:
+            skeleton.save_hdf5(file)
+
+    def _save_hdf5(self, file: h5.File):
+        """
+        Actual implemetation of HDF5 saving.
+
+        Args:
+            file: The open h5.File to write the skeleton data too.
+
+        Returns:
+            None
+        """
+
+        # All skeleton will be put as sub-groups in the skeleton group
+        if 'skeleton' not in file:
+            all_sk_group = file.create_group('skeleton', track_order=True)
+        else:
+            all_sk_group = file.require_group('skeleton')
+
+        # Write the dataset to JSON string, then store it in a string
+        # attribute
+        all_sk_group.attrs[self.name] = np.string_(self.to_json())
+
+    def __eq__(self, other: 'Skeleton'):
+
+        # First check names, duh!
+        if other.name != self.name:
+            return False
 
         def dict_match(dict1, dict2):
             return dict1 == dict2
@@ -315,4 +454,7 @@ class Skeleton:
 
     def __str__(self):
         return "%s(name=%r)" % (self.__class__.__name__, self.name)
+
+    def __hash__(self):
+        return hash(self.graph)
 

@@ -1,36 +1,10 @@
 import os
-import pytest
+import copy
 
-import h5py as h5
+import pytest
 
 from sleap.skeleton import Skeleton
 
-TEST_H5_DATASET = 'tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5'
-JSON_TEST_FILENAME = 'tests/test_skeleton.json'
-
-@pytest.fixture(autouse=True)
-def cleanup_file():
-    yield
-    if os.path.isfile(JSON_TEST_FILENAME):
-        os.remove(JSON_TEST_FILENAME)
-
-@pytest.fixture
-def skeleton():
-
-    # Create a simple skeleton object
-    skeleton = Skeleton("Bug")
-    skeleton.add_node(name="head")
-    skeleton.add_node(name="thorax")
-    skeleton.add_node(name="abdomen")
-    skeleton.add_node(name="left-wing")
-    skeleton.add_node(name="right-wing")
-    skeleton.add_edge(source="head", destination="thorax")
-    skeleton.add_edge(source="thorax", destination="abdomen")
-    skeleton.add_edge(source="thorax", destination="left-wing")
-    skeleton.add_edge(source="thorax", destination="right-wing")
-    skeleton.add_symmetry(node1="left-wing", node2="right-wing")
-
-    return skeleton
 
 def test_add_dupe_node(skeleton):
     """
@@ -39,12 +13,14 @@ def test_add_dupe_node(skeleton):
     with pytest.raises(ValueError):
         skeleton.add_node(name="head")
 
+
 def test_add_dupe_edge(skeleton):
     """
     Test if adding a duplicate edge to skeleton throws an exception.
     """
     with pytest.raises(ValueError):
         skeleton.add_edge(source="head", destination="thorax")
+
 
 def test_remove_node(skeleton):
     """
@@ -59,12 +35,14 @@ def test_remove_node(skeleton):
     assert not skeleton.has_edge("test_node1", "test_node2")
     assert skeleton.has_node("test_node2")
 
+
 def test_remove_node_non_exist(skeleton):
     """
     Test whether deleting a non-existent node throws and exception.
     """
     with pytest.raises(ValueError):
         skeleton.delete_node("non-existent-node")
+
 
 def test_no_node_edge(skeleton):
     """
@@ -74,6 +52,7 @@ def test_no_node_edge(skeleton):
         skeleton.add_edge(source="non-existent-node-name", destination="thorax")
     with pytest.raises(ValueError):
         skeleton.add_edge(source="head", destination="non-existent-node-name")
+
 
 def test_getitem_node(skeleton):
     """
@@ -86,6 +65,7 @@ def test_getitem_node(skeleton):
 
     # Now try to get the head node
     assert(skeleton["head"] is not None)
+
 
 def test_node_rename(skeleton):
     """
@@ -102,10 +82,53 @@ def test_node_rename(skeleton):
     assert(skeleton["new_head_name"] is not None)
 
 
-def test_json(skeleton):
+def test_eq():
+    s1 = Skeleton("s1")
+    s1.add_nodes(['1','2','3','4','5','6'])
+    s1.add_edge('1', '2')
+    s1.add_edge('3', '4')
+    s1.add_edge('5', '6')
+    s1.add_symmetry('3', '6')
+    s1.add_symmetry('1', '6')
+
+    # Make a copy check that they are equal
+    s2 = copy.deepcopy(s1)
+    assert s1 == s2
+
+    # Add an edge, check that they are not equal
+    s2 = copy.deepcopy(s1)
+    s2.add_edge('5', '1')
+    assert s1 != s2
+
+    # Add a symmetry edge, not equal
+    s2 = copy.deepcopy(s1)
+    s2.add_symmetry('5', '1')
+    assert s1 != s2
+
+    # Delete a node
+    s2 = copy.deepcopy(s1)
+    s2.delete_node('5')
+    assert s1 != s2
+
+    # Delete and edge, not equal
+    s2 = copy.deepcopy(s1)
+    s2.delete_edge('1', '2')
+    assert s1 != s2
+
+    # FIXME: Probably shouldn't test it this way.
+    # Add a value to a nodes dict, make sure they are not equal. This is touching the
+    # internal graph storage of the skeleton which probably should be avoided. But, I
+    # wanted to test this just in case we add attributes to the nodes in the future.
+    s2 = copy.deepcopy(s1)
+    s2.graph.nodes['1']['test'] = 5
+    assert s1 != s2
+
+
+def test_json(skeleton, tmpdir):
     """
     Test saving and loading a Skeleton object in JSON.
     """
+    JSON_TEST_FILENAME = os.path.join(tmpdir, 'skeleton.json')
 
     # Save it to a JSON file
     skeleton.save_json(JSON_TEST_FILENAME)
@@ -117,22 +140,42 @@ def test_json(skeleton):
     assert(skeleton == skeleton_copy)
 
 
-def test_load_hdf5():
-    """
-    Test loading of a skeleton from HDF5
-    """
-    gt_skeleton = Skeleton()
-    gt_skeleton.add_nodes(['head', 'neck', 'thorax', 'abdomen', 'wingL', 'wingR'])
-    gt_skeleton.add_edge('thorax', 'neck')
-    gt_skeleton.add_edge('neck', 'head')
-    gt_skeleton.add_edge('thorax', 'abdomen')
-    gt_skeleton.add_edge('thorax', 'wingL')
-    gt_skeleton.add_edge('thorax', 'wingR')
+def test_hdf5(skeleton, stickman, tmpdir):
+    filename = os.path.join(tmpdir, 'skeleton.h5')
 
-    f = h5.File(TEST_H5_DATASET)
-    g = f['skeleton']
-    skeleton = Skeleton.load_hdf5(g)
+    if os.path.isfile(filename):
+        os.remove(filename)
 
-    assert(skeleton.graph.number_of_nodes() == 6)
+    # Save both skeletons to the HDF5 file
+    skeleton.save_hdf5(filename)
+    stickman.save_hdf5(filename)
 
-    assert(skeleton == gt_skeleton)
+    # Load the all the skeletons as a list
+    sk_list = Skeleton.load_all_hdf5(filename)
+
+    # Lets check that they are equal to what we saved, this checks the order too.
+    assert skeleton == sk_list[0]
+    assert stickman == sk_list[1]
+
+    # Check load to dict as well
+    sk_dict = Skeleton.load_all_hdf5(filename, return_dict=True)
+    assert skeleton == sk_dict[skeleton.name]
+    assert stickman == sk_dict[stickman.name]
+
+    # Check individual load
+    assert Skeleton.load_hdf5(filename, skeleton.name) == skeleton
+    assert Skeleton.load_hdf5(filename, stickman.name) == stickman
+
+    # Check overwrite save and save list
+    Skeleton.save_all_hdf5(filename, [skeleton, stickman])
+    assert Skeleton.load_hdf5(filename, skeleton.name) == skeleton
+    assert Skeleton.load_hdf5(filename, stickman.name) == stickman
+
+    # Make sure we can't load a non-existent skeleton
+    with pytest.raises(KeyError):
+        Skeleton.load_hdf5(filename, 'BadName')
+
+    # Make sure we can't save skeletons with the same name
+    with pytest.raises(ValueError):
+        Skeleton.save_all_hdf5(filename, [skeleton, Skeleton(name=skeleton.name)])
+

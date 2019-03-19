@@ -17,6 +17,7 @@ from time import time
 from abc import ABC, abstractmethod
 
 from sleap.skeleton import Skeleton
+from sleap.instance import Instance
 
 
 class Dataset(ABC):
@@ -40,28 +41,14 @@ class Dataset(ABC):
         self.path = path
 
         # Load all the components of the dataset.
-        self._load_frames()
+        #self._load_frames()
         self._load_instance_data()
-        self._load_confidence_maps()
+        #self._load_confidence_maps()
         self._load_skeleton()
-        self._load_pafs()
-
-        # Check if confidence maps were found, if not we will need to compute them
-        # based on the point data.
-        #if not hasattr(self, 'confmaps') or self.confmaps is not None:
-        #    logging.warning("Confidence maps not found in dataset. Need to compute them.")
-
-        # Check if part affinity fields were found, if not we will need to compute
-        # them based on _points and skeleton data.
-        #if not hasattr(self, 'pafs') or self.pafs is not None:
-        #    logging.warning("Part affinity fields not found in dataset. Need to compute them.")
+        #self._load_pafs()
 
     @abstractmethod
     def _load_frames(self):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def _load_confidence_maps(self):
         raise NotImplementedError()
 
     @abstractmethod
@@ -72,12 +59,8 @@ class Dataset(ABC):
     def _load_instance_data(self):
         raise NotImplementedError()
 
-    @abstractmethod
-    def _load_pafs(self):
-        raise NotImplementedError()
-
     @classmethod
-    def load(cls, path: str, format: str = 'auto'):
+    def load(cls, path: str, format: str = 'auto', create:bool = True):
         """
         Construct the :class:`.Dataset` from the file path. This may be a
         single file or directory depending on the storage backend.
@@ -86,12 +69,18 @@ class Dataset(ABC):
             path: The filasytem path to the file or folder that stores the dataset.
             format: The format the dataset is stored in. LEAP supports the following
             formats for its dataset files:
+            create: Should the dataset be created if it does not exist?
 
             * HDF5
 
             The default value of auto will attempt to detect the format automatically
             based on filename and contents. If it fails it will throw and exception.
         """
+
+        # First things first, check if the dataset exists, if not, throw exception if
+        # create is False
+        if not create and os.path.isfile(path):
+            raise FileNotFoundError(f"Could not load dataset {path}!")
 
         # If format is auto, we need to try to detect the format automatically.
         # For now, lets look at the file extension
@@ -102,6 +91,17 @@ class Dataset(ABC):
         else:
             raise ValueError("Can't automatically find dataset file format. " +
                              "Are you sure this is a LEAP dataset?")
+
+    @abstractmethod
+    def save(self):
+        """
+        Save the dataset to HDF5 file specified in self.path.
+
+        Returns:
+            None
+        """
+        raise NotImplementedError()
+
 
 class DatasetHDF5(Dataset):
     """
@@ -121,7 +121,7 @@ class DatasetHDF5(Dataset):
 
         # Open the HDF5 file for reading and call the base constructor to load all the
         # parts of the dataset.
-        with h5py.File(path, "r") as self._h5_file:
+        with h5py.File(path) as self._h5_file:
             super(DatasetHDF5, self).__init__(path)
 
     def _load_frames(self):
@@ -144,50 +144,6 @@ class DatasetHDF5(Dataset):
             logging.info("Permuted and normalized video frame data. [%.1fs]" % (time() - t0))
         except Exception as e:
             raise ValueError("HDF5 format data did not have valid video frames data!") from e
-
-    def _load_confidence_maps(self):
-        """
-        Loads and normalizes the confidence map data from the HDF5 dataset.
-
-        Returns:
-            None
-        """
-        try:
-            # Load
-            t0 = time()
-            self.confmaps = self._h5_file[DatasetHDF5._confmaps_dataset_name][:]
-            logging.info("Loaded %d frames of confidence map data [%.1fs]" % (len(self.frames), time() - t0))
-
-            # Adjust dimensions
-            t0 = time()
-            self.confmaps = self._preprocess(self.confmaps, permute = (0, 3, 2, 1))
-            logging.info("Permuted and normalized the confidence map data. [%.1fs]" % (time() - t0))
-
-        except:
-            # Part affinity field data might not be pre-computed, ignore exceptions.
-            pass
-
-    def _load_pafs(self):
-        """
-        Loads and the part affinity fields from the HDF5 dataset.
-
-        Returns:
-            None
-        """
-        try:
-            # Load
-            t0 = time()
-            self.pafs = self._h5_file[DatasetHDF5._pafs_dataset_name][:]
-            logging.info("Loaded %d frames of part affinity field (PAF) data [%.1fs]" % (len(self.frames), time() - t0))
-
-            # Adjust dimensions
-            t0 = time()
-            self.pafs = self._preprocess(self.pafs, permute = (0, 3, 2, 1))
-            logging.info("Permuted and normalized the part affinity field (PAF) map data. [%.1fs]" % (time() - t0))
-
-        except:
-            # Part affinity field data might not be pre-computed, ignore exceptions.
-            pass
 
 
     @staticmethod
@@ -224,7 +180,30 @@ class DatasetHDF5(Dataset):
         Returns:
             None
         """
-        self.skeleton = Skeleton.load_hdf5(self._h5_file[self. _skelton_dataset_name])
+        try:
+            self.skeletons = Skeleton.load_all_hdf5(self._h5_file, return_dict=True)
+        except KeyError:
+            self.skeletons = {}
 
     def _load_instance_data(self):
-        pass
+        """
+        Load the instance data.
+        """
+        try:
+            self.instances = Instance.load_hdf5(file=self._h5_file)
+        except KeyError:
+            self.instances = []
+
+    def save(self):
+        """
+        Save the dataset to HDF5 file specified in self.path.
+
+        Returns:
+            None
+        """
+        if hasattr(self, 'instances') and self.instances:
+            Instance.save_hdf5(file=self.path, instances=self.instances)
+
+        if hasattr(self, 'skeletons') and self.skeletons:
+            Skeleton.save_all_hdf5(file=self._h5_file, skeletons=self.skeletons)
+
