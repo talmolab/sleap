@@ -9,15 +9,17 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 import numpy as np
 
-from sleap.gui.video import VideoPlayer, QtVideoPlayer
+from sleap.gui.video import QtVideoPlayer, QtInstance, QtEdge, QtNode
+
 
 class MainWindow(QMainWindow):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, video=None, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
 
         # self.video = VideoPlayer()
-        self.video = QtVideoPlayer()
-        self.setCentralWidget(self.video)
+        self.videoPlayer = QtVideoPlayer(video=video)
+        self.setCentralWidget(self.videoPlayer)
+
 
         self.menuBar().addMenu("File")
         viewMenu = self.menuBar().addMenu("View")
@@ -47,20 +49,21 @@ class MainWindow(QMainWindow):
         viewMenu.addAction(skeleton_dock.toggleViewAction())
 
 
-        self.show()
+        # self.show()
 
 
 
 
 if __name__ == "__main__":
 
+    from sleap.io.video import HDF5Video
+    vid = HDF5Video("D:/sleap/tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5", "/box", input_format="channels_first")
+
     app = QApplication([])
     app.setApplicationName("sLEAP Label")
-    window = MainWindow()
+    window = MainWindow(video=vid)
+    window.videoPlayer.plot()
 
-    from sleap.io.video import HDF5Video
-    window.video.video = HDF5Video("C:/code/sleap/tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5", "/box", input_format="channels_first")
-    window.video.plot()
-
+    window.show()
     app.exec_()
 

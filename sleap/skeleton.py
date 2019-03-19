@@ -35,13 +35,22 @@ class Skeleton:
 
     @property
     def name(self):
-        """
-        Get the name of the skeleton.
+        """Get the name of the skeleton.
 
         Returns:
             A string representing the name of the skeleton.
         """
         return self.graph.name
+
+    @property
+    def node_names(self):
+        """Get a list of node names.
+
+        Returns:
+            A list of strings with the node names.
+        """
+        return list(self.graph.nodes)
+    
 
     def add_node(self, name: str):
         """Add a node representing an animal part to the skeleton.
