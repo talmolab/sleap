@@ -37,7 +37,7 @@ class Point:
 
 class Instance:
 
-    def __init__(self, skeleton:Skeleton, video:Video, frame_idx:int, points: Dict[str, Point] = {}):
+    def __init__(self, skeleton:Skeleton, video:Video = None, instance_id:int = None, frame_idx:int = None, points: Dict[str, Point] = {}):
         """
         The class :class:`Instance` represents a labelled instance of skeleton on
         a particular frame of a particular video.

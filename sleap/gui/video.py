@@ -76,6 +76,8 @@ class GraphicsView(QGraphicsView):
         QGraphicsView.__init__(self)
         self.scene = QGraphicsScene()
         self.setScene(self.scene)
+        # brush = QBrush(QColor.black())
+        self.scene.setBackgroundBrush(QBrush(QColor(Qt.black)))
 
         self._pixmapHandle = None
 

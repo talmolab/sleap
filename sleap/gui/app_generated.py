@@ -109,20 +109,20 @@ class MainWindow(QMainWindow):
         self.video = self.labels.video
 
         # Populate skeleton
-        self.skeletonNodesTable.setRowCount(len(labels.skeleton.node_names))
-        for i, node in enumerate(labels.skeleton.node_names):
+        self.skeletonNodesTable.setRowCount(len(self.labels.skeleton.node_names))
+        for i, node in enumerate(self.labels.skeleton.node_names):
             self.skeletonNodesTable.setVerticalHeaderItem(i, QTableWidgetItem(f"{i}"))
             self.skeletonNodesTable.setItem(i, 0, QTableWidgetItem(f"{node}"))
             self.skeletonNodesTable.setItem(i, 1, QTableWidgetItem(""))
 
-        self.skeletonEdgesTable.setRowCount(len(labels.skeleton.graph.edges()))
-        for i, (src, dst) in enumerate(labels.skeleton.graph.edges()):
+        self.skeletonEdgesTable.setRowCount(len(self.labels.skeleton.graph.edges()))
+        for i, (src, dst) in enumerate(self.labels.skeleton.graph.edges()):
             self.skeletonEdgesTable.setVerticalHeaderItem(i, QTableWidgetItem(f"{i}"))
             self.skeletonEdgesTable.setItem(i, 0, QTableWidgetItem(f"{src}"))
             self.skeletonEdgesTable.setItem(i, 1, QTableWidgetItem(f"{dst}"))
 
         # Populate points
-        self.pointsTable.setRowCount(len(labels.points))
+        self.pointsTable.setRowCount(len(self.labels.points))
         for i, row in self.labels.points.iterrows():
             self.pointsTable.setVerticalHeaderItem(i, QTableWidgetItem(f"{int(row['id'])}"))
             for j, k in enumerate(["frameIdx", "instanceId", "x", "y", "node", "visible"]):
