@@ -269,9 +269,11 @@ class MainWindow(QMainWindow):
 
     def importData(self, filename=None):
         show_msg = False
-        if filename is None:
+        # if filename is None:
+        if not isinstance(filename, str):
             filters = ["JSON labels (*.json)", "HDF5 dataset (*.h5 *.hdf5)"]
-            filename, selected_filter = QFileDialog.getOpenFileName(self, dir="C:/Users/tdp/OneDrive/code/sandbox/leap_wt_gold_pilot", caption="Import labeled data...", filter=";;".join(filters))
+            # filename, selected_filter = QFileDialog.getOpenFileName(self, dir="C:/Users/tdp/OneDrive/code/sandbox/leap_wt_gold_pilot", caption="Import labeled data...", filter=";;".join(filters))
+            filename, selected_filter = QFileDialog.getOpenFileName(self, dir=None, caption="Import labeled data...", filter=";;".join(filters))
             show_msg = True
         
         if len(filename) == 0: return
@@ -327,7 +329,7 @@ class MainWindow(QMainWindow):
         imgs, keys = generate_images(self.labels)
         confmaps, _keys, points = generate_confidence_maps(self.labels)
 
-        self.confmapModel = train(imgs, confmaps, test_size=0.1, batch_norm=False, num_filters=64, batch_size=4, num_epochs=100, steps_per_epoch=200)
+        self.confmapModel = train(imgs, confmaps, test_size=0.1, batch_norm=False, num_filters=64, batch_size=4, num_epochs=100, steps_per_epoch=100)
 
 
     def newFrame(self, player, frame_idx):
@@ -356,7 +358,8 @@ if __name__ == "__main__":
     app.setApplicationName("sLEAP Label")
     # window = MainWindow()
     # window = MainWindow(video=vid)
-    window = MainWindow(data_path=data_path)
+    # window = MainWindow(data_path=data_path)
+    window = MainWindow()
     window.showMaximized()
     app.exec_()
 

@@ -158,4 +158,4 @@ if __name__ == "__main__":
     imgs, keys = generate_images(labels)
     confmaps, _keys, points = generate_confidence_maps(labels, sigma=5)
 
-    train(imgs, confmaps, test_size=0.1, batch_norm=False, num_filters=64, batch_size=4, num_epochs=100, steps_per_epoch=200)
+    train(imgs, confmaps, test_size=0.1, batch_norm=False, num_filters=64, batch_size=4, num_epochs=100, steps_per_epoch=100)
