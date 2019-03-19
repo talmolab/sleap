@@ -14,4 +14,6 @@ pip install PySide2==5.12.0
 pip install --no-deps -e .
 pip install opencv-python==3.4.5.20
 conda install ipython
+pip install imgaug
+pip install sklearn
 ```

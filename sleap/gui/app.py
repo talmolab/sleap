@@ -321,7 +321,13 @@ class MainWindow(QMainWindow):
 
 
     def trainConfmaps(self):
-        pass
+        from sleap.nn.datagen import generate_images, generate_confidence_maps
+        from sleap.nn.training import train
+
+        imgs, keys = generate_images(self.labels)
+        confmaps, _keys, points = generate_confidence_maps(self.labels)
+
+        self.confmapModel = train(imgs, confmaps, test_size=0.1, batch_norm=False, num_filters=32, batch_size=16, num_epochs=250, steps_per_epoch=None)
 
 
     def newFrame(self, player, frame_idx):
