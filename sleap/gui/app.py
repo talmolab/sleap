@@ -76,10 +76,13 @@ class MainWindow(QMainWindow):
         self.labels = Labels()
         self.initialize_gui()
 
-        # if video is not None:
-        #     self.loadVideo(video)
         if data_path is not None:
             self.importData(data_path)
+
+        # TODO: auto-add video to clean project if no data provided
+        # TODO: auto-select video if data provided, or add it to project
+        # if video is not None:
+        #     self.loadVideo(video)
 
     def initialize_gui(self):
 
@@ -337,7 +340,11 @@ if __name__ == "__main__":
 
     # from sleap.io.video import HDF5Video
     # vid = HDF5Video("../../tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5", "/box", input_format="channels_first")
+    
+    # TODO: unfuck this
     data_path = "C:/Users/tdp/OneDrive/code/sandbox/leap_wt_gold_pilot/centered_pair.json"
+    if not os.path.exists(data_path):
+        data_path = "D:/OneDrive/code/sandbox/leap_wt_gold_pilot/centered_pair.json"
 
     app = QApplication([])
     app.setApplicationName("sLEAP Label")
