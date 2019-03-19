@@ -2,7 +2,7 @@ import numpy as np
 import collections
 import tensorflow as tf
 import keras
-from keras.layers import Conv2D, BatchNormalization, Add, MaxPool2D, UpSampling2D
+from keras.layers import Conv2D, BatchNormalization, Add, MaxPool2D, UpSampling2D, Concatenate
 
 def conv(num_filters, kernel_size=(3, 3), activation="relu", **kwargs):
     """Convenience presets for Conv2D.
@@ -199,7 +199,7 @@ def expand_to_n(x, n):
         
     return x
 
-def stacked_hourglass(x_in, num_output_channels, num_hourglass_blocks=3, num_filters=32, depth=3, batch_norm=True, interp="bilinear"):
+def stacked_hourglass(x_in, num_output_channels, num_hourglass_blocks=3, num_filters=32, depth=3, batch_norm=True, intermediate_inputs=True, interp="bilinear"):
     """Stacked hourglass block.
 
     This function builds and connects multiple hourglass blocks. See `hourglass` for
@@ -223,6 +223,8 @@ def stacked_hourglass(x_in, num_output_channels, num_hourglass_blocks=3, num_fil
             be a tensor with `2^depth` height and width to allow for symmetric
             pooling and upsampling with skip connections.
         batch_norm: Apply batch normalization after each convolution
+        intermediate_inputs: Re-introduce the input tensor `x_in` after each hourglass
+            by concatenating with intermediate outputs
         interp: Method to use for interpolation when upsampling smaller features.
 
     Returns:
@@ -244,6 +246,10 @@ def stacked_hourglass(x_in, num_output_channels, num_hourglass_blocks=3, num_fil
     # Create individual hourglasses and collect intermediate outputs
     x_outs = []
     for i in range(num_hourglass_blocks):
+        if i > 0 and intermediate_inputs:
+            x = Concatenate()([x, x_in])
+            x = residual_block(x, num_filters[i], batch_norm[i])
+
         x, x_out = hourglass_block(x, num_output_channels, num_filters[i], depth=depth[i], batch_norm=batch_norm[i], interp=interp[i])
         x_outs.append(x_out)
         
