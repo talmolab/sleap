@@ -29,7 +29,7 @@ class Labels():
         self.predicted_instances = pd.DataFrame(columns=['id','videoId','frameIdx','trackId','matching_score','tracking_score'])
         self.predicted_points = pd.DataFrame(columns=['id','videoId','frameIdx','instanceId','x','y','node','visible','confidence'])
         
-    def load_json(self, data_path, adjust_matlab_indexing=True):
+    def load_json(self, data_path, adjust_matlab_indexing=True, fix_rel_paths=True):
         data = json.loads(open(data_path).read())
 
         self.videos = pd.DataFrame(data["videos"])
@@ -60,6 +60,14 @@ class Labels():
             edges = np.array(edges) - 1
         for (src, dst) in edges:
                 self.skeleton.add_edge(self.skeleton.node_names[src], self.skeleton.node_names[dst])
+
+        if fix_rel_paths:
+            for i, row in self.videos.iterrows():
+                p = row.filepath
+                if not os.path.exists(p):
+                    p = os.path.join(os.path.dirname(data_path), p)
+                    if os.path.exists(p):
+                        self.videos.at[i, "filepath"] = p
 
 
     def __len__(self):
@@ -92,3 +100,5 @@ if __name__ == "__main__":
     
     labels = Labels(data_path)
     print(len(labels))
+    print(labels.videos.filepath)
+    print(labels.videos.filepath.apply(os.path.exists))

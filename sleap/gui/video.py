@@ -393,15 +393,16 @@ class QtInstance(QGraphicsObject):
         col_fill = QColor(*self.color, a=128)
         brush = QBrush(col_fill)
 
-        col_fill_missing = QColor(*self.color, a=25)
+        col_fill_missing = QColor(*self.color, a=0)
         brush_missing = QBrush(col_fill_missing)
 
         for (node, point) in self.instance.nodes_points():
-            node_item = QtNode(parent=self, point=point, radius=self.markerRadius)
             if point.visible:
+                node_item = QtNode(parent=self, point=point, radius=self.markerRadius)
                 node_item.setPen(pen)
                 node_item.setBrush(brush)
             else:
+                node_item = QtNode(parent=self, point=point, radius=self.markerRadius * 0.5)
                 node_item.setPen(pen_missing)
                 node_item.setBrush(brush_missing)
             node_item.setFlag(QGraphicsItem.ItemIsMovable)

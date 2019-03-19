@@ -96,7 +96,7 @@ class MediaVideo(Video):
         if self.grayscale:
             self.channels = 1
 
-        self.num_frames = self._reader.get(cv2.CAP_PROP_FRAME_COUNT)
+        self.num_frames = int(self._reader.get(cv2.CAP_PROP_FRAME_COUNT))
 
     def get_frame(self, idx, grayscale=None):
         if grayscale is None:

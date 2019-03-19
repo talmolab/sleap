@@ -1,25 +1,65 @@
 from PySide2.QtCore import Qt
+from PySide2 import QtCore
 
 from PySide2.QtGui import QKeyEvent
 
 from PySide2.QtWidgets import QApplication, QMainWindow, QWidget, QDockWidget
 from PySide2.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QFormLayout
 from PySide2.QtWidgets import QLabel, QPushButton, QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox, QCheckBox
-from PySide2.QtWidgets import QTableWidget, QTableWidgetItem
+from PySide2.QtWidgets import QTableWidget, QTableView, QTableWidgetItem
 from PySide2.QtWidgets import QMenu, QAction
 from PySide2.QtWidgets import QFileDialog, QMessageBox
 
 import os
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 from sleap.gui.video import QtVideoPlayer, QtInstance, QtEdge, QtNode
 from sleap.io.video import Video, HDF5Video, MediaVideo
 from sleap.io.labels import Labels
 
+class PandasModel(QtCore.QAbstractTableModel):
+    """
+    Class to populate a table view with a pandas dataframe
+    https://stackoverflow.com/a/45262758/1939934
+    """
+
+    def __init__(self, data, parent=None):
+        QtCore.QAbstractTableModel.__init__(self, parent)
+        self._data = data
+
+    def rowCount(self, parent=None):
+        return len(self._data.values)
+
+    def columnCount(self, parent=None):
+        return self._data.columns.size
+
+    def data(self, index, role=QtCore.Qt.DisplayRole):
+        if index.isValid():
+            if role == QtCore.Qt.DisplayRole:
+                # if(index.column() != 0):
+                #     return str('%.2f'%self._data.values[index.row()][index.column()])
+                # else:
+                return str(self._data.values[index.row()][index.column()])
+        return None
+
+    def headerData(self, section, orientation, role):
+        if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
+            return self._data.columns[section]
+        elif orientation == QtCore.Qt.Vertical and role == QtCore.Qt.DisplayRole:
+            return str(self._data.index[section])
+        return None
+
+    def flags(self, index):
+        flags = super(self.__class__,self).flags(index)
+        flags |= QtCore.Qt.ItemIsSelectable
+        flags |= QtCore.Qt.ItemIsEnabled
+        return flags
+
 
 class MainWindow(QMainWindow):
-    def __init__(self, video=None, *args, **kwargs):
+    def __init__(self, data_path=None, video=None, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
 
         # lines(7)*255
@@ -33,13 +73,13 @@ class MainWindow(QMainWindow):
         [162,  20,    47],
         ])
 
+        self.labels = Labels()
         self.initialize_gui()
 
-        self.labels = Labels()
-
-        if video is not None:
-            self.loadVideo(video)
-
+        # if video is not None:
+        #     self.loadVideo(video)
+        if data_path is not None:
+            self.importData(data_path)
 
     def initialize_gui(self):
 
@@ -104,9 +144,14 @@ class MainWindow(QMainWindow):
             table.verticalHeader().hide()
             return table
 
+        def _make_table_df(df):
+            table = QTableView()
+            table.setModel(PandasModel(df))
+            return table
+
         ####### Videos #######
         videos_layout = _make_dock("Videos")
-        self.videosTable = _make_table(["id", "filepath", "format", "dataset", "width", "height", "channels", "frames", "dtype"])
+        self.videosTable = _make_table_df(self.labels.videos)
         videos_layout.addWidget(self.videosTable)
 
         ####### Skeleton #######
@@ -142,7 +187,8 @@ class MainWindow(QMainWindow):
 
         ####### Instances #######
         instances_layout = _make_dock("Instances")
-        self.instancesTable = _make_table(["id", "videoId", "frameIdx", "complete", "trackId"])
+        # self.instancesTable = _make_table(["id", "videoId", "frameIdx", "complete", "trackId"])
+        self.instancesTable = _make_table_df(self.labels.instances)
         instances_layout.addWidget(self.instancesTable)
         hb = QHBoxLayout()
         btn = QPushButton("New instance")
@@ -154,7 +200,8 @@ class MainWindow(QMainWindow):
 
         ####### Points #######
         points_layout = _make_dock("Points", tab_with=instances_layout.parent().parent())
-        self.pointsTable = _make_table(["id", "frameIdx", "instanceId", "x", "y", "node", "visible"])
+        # self.pointsTable = _make_table(["id", "frameIdx", "instanceId", "x", "y", "node", "visible"])
+        self.pointsTable = _make_table_df(self.labels.points)
         points_layout.addWidget(self.pointsTable)
 
         ####### Training #######
@@ -218,22 +265,29 @@ class MainWindow(QMainWindow):
             event.ignore() # Kicks the event up to parent
 
     def importData(self, filename=None):
+        show_msg = False
         if filename is None:
             filters = ["JSON labels (*.json)", "HDF5 dataset (*.h5 *.hdf5)"]
-            filename, selected_filter = QFileDialog.getOpenFileName(self, caption="Import labeled data...", filter=";;".join(filters))
+            filename, selected_filter = QFileDialog.getOpenFileName(self, dir="C:/Users/tdp/OneDrive/code/sandbox/leap_wt_gold_pilot", caption="Import labeled data...", filter=";;".join(filters))
+            show_msg = True
         
         if len(filename) == 0: return
 
         if filename.endswith(".json"):
             self.labels = Labels(filename)
+            if show_msg:
+                msgBox = QMessageBox(text=f"Imported {len(self.labels)} labeled frames.")
+                msgBox.exec_()
 
-            msgBox = QMessageBox(text=f"Imported {len(self.labels)} labeled frames.")
-            msgBox.exec_()
+            # Update UI tables
+            self.videosTable.setModel(PandasModel(self.labels.videos))
+            self.instancesTable.setModel(PandasModel(self.labels.instances))
+            self.pointsTable.setModel(PandasModel(self.labels.points))
 
-            # TODO: update UI tables
-            # TODO: load first video
-            # TODO: 
-
+            # Load first video
+            vid = self.labels.videos.iloc[0]
+            if vid.format == "media":
+                self.loadVideo(MediaVideo(vid.filepath, grayscale=vid.channels == 1))
 
 
     def addVideo(self):
@@ -242,6 +296,7 @@ class MainWindow(QMainWindow):
         pass
 
     def loadVideo(self, video:Video):
+        # TODO: use video id
         self.video = video
         self.player.load_video(self.video)
 
@@ -266,26 +321,29 @@ class MainWindow(QMainWindow):
         pass
 
 
-    def newFrame(self, player, idx):
-        # frame_instances = self.labels.get_frame_instances(idx)
+    def newFrame(self, player, frame_idx):
+        # TODO: use video id
+        frame_instances = self.labels.get_frame_instances(self.labels.videos.id.loc[0], frame_idx)
 
-        # for i, instance in enumerate(frame_instances):
-        #     qt_instance = QtInstance(instance=instance, color=self.cmap[i])
-        #     player.view.scene.addItem(qt_instance)
+        for i, instance in enumerate(frame_instances):
+            qt_instance = QtInstance(instance=instance, color=self.cmap[i])
+            player.view.scene.addItem(qt_instance)
 
-        # self.statusBar().showMessage(f"Frame: {self.player.frame_idx+1}/{len(self.labels.video)} | Instances (current/total): {len(frame_instances)}/{self.labels.points.instanceId.nunique()}")
-        self.statusBar().showMessage(f"Frame: {self.player.frame_idx+1}/{len(self.video)}")
+        self.statusBar().showMessage(f"Frame: {self.player.frame_idx+1}/{len(self.video)}  |  Labeled frames (video/total): {self.labels.instances[self.labels.instances.videoId == 1].frameIdx.nunique()}/{len(self.labels)}  |  Instances (frame/total): {len(frame_instances)}/{self.labels.points.instanceId.nunique()}")
+        # self.statusBar().showMessage(f"Frame: {self.player.frame_idx+1}/{len(self.video)}")
 
 
 if __name__ == "__main__":
 
     # from sleap.io.video import HDF5Video
-    vid = HDF5Video("../../tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5", "/box", input_format="channels_first")
+    # vid = HDF5Video("../../tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5", "/box", input_format="channels_first")
+    data_path = "C:/Users/tdp/OneDrive/code/sandbox/leap_wt_gold_pilot/centered_pair.json"
 
     app = QApplication([])
     app.setApplicationName("sLEAP Label")
-    window = MainWindow(video=vid)
     # window = MainWindow()
+    # window = MainWindow(video=vid)
+    window = MainWindow(data_path=data_path)
     window.showMaximized()
     app.exec_()
 
