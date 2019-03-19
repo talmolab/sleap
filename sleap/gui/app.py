@@ -327,7 +327,7 @@ class MainWindow(QMainWindow):
         imgs, keys = generate_images(self.labels)
         confmaps, _keys, points = generate_confidence_maps(self.labels)
 
-        self.confmapModel = train(imgs, confmaps, test_size=0.1, batch_norm=False, num_filters=32, batch_size=16, num_epochs=250, steps_per_epoch=None)
+        self.confmapModel = train(imgs, confmaps, test_size=0.1, batch_norm=False, num_filters=64, batch_size=4, num_epochs=100, steps_per_epoch=200)
 
 
     def newFrame(self, player, frame_idx):

@@ -16,7 +16,7 @@ from sleap.nn.augmentation import Augmenter
 
 
 
-def train(imgs, confmaps, test_size=0.1, arch="unet", batch_norm=True, num_filters=64, batch_size=16, num_epochs=250, steps_per_epoch=200):
+def train(imgs, confmaps, test_size=0.1, arch="unet", batch_norm=True, num_filters=64, batch_size=4, num_epochs=100, steps_per_epoch=200):
 
     imgs_train, imgs_val, confmaps_train, confmaps_val = train_test_split(imgs, confmaps, test_size=test_size)
 
@@ -115,24 +115,24 @@ def train(imgs, confmaps, test_size=0.1, arch="unet", batch_norm=True, num_filte
         # plt.show()
     plot_preds(-1, None)
 
+    if steps_per_epoch is None:
+        steps_per_epoch = len(imgs_train) // batch_size
+    train_datagen = Augmenter(imgs_train, confmaps_train, output_names=model.output_names, batch_size=batch_size)
 
     monitor_loss = "val_loss"
     # monitor_loss = "val_tf_nn_class_acc"
     callbacks = [
         LambdaCallback(on_epoch_end=plot_preds),
-    #     LambdaCallback(on_epoch_end=lambda epoch, logs: train_datagen.shuffle()),
+        LambdaCallback(on_epoch_end=lambda epoch, logs: train_datagen.shuffle()),
         # LambdaCallback(on_epoch_end=lambda epoch, logs: check_test_acc()),
-        ReduceLROnPlateau(monitor=monitor_loss, min_delta=1e-4, patience=10, verbose=1, factor=0.1, mode="auto", cooldown=3, min_lr=1e-10),
-        EarlyStopping(monitor=monitor_loss, min_delta=1e-6, patience=30, verbose=1),
+        ReduceLROnPlateau(monitor=monitor_loss, min_delta=1e-6, patience=5, verbose=1, factor=0.5, mode="auto", cooldown=3, min_lr=1e-10),
+        EarlyStopping(monitor=monitor_loss, min_delta=1e-8, patience=30, verbose=1),
         # TensorBoard(log_dir="D:/tmp/logs/{}".format(time()), update_freq=250, histogram_freq=0, batch_size=32, write_graph=False, write_grads=False, write_images=False, embeddings_freq=0, embeddings_layer_names=None, embeddings_metadata=None, embeddings_data=None),
     #     ModelCheckpoint(filepath="models/best_model.h5", monitor="val_loss", save_best_only=True, verbose=1, period=50),
     ]
 
     # Train!
     
-    if steps_per_epoch is None:
-        steps_per_epoch = len(imgs_train) // batch_size
-    train_datagen = Augmenter(imgs_train, confmaps_train, output_names=model.output_names, batch_size=batch_size)
     training = model.fit_generator(
         train_datagen,
         steps_per_epoch=steps_per_epoch,
@@ -156,6 +156,6 @@ if __name__ == "__main__":
     
     labels = Labels(data_path)
     imgs, keys = generate_images(labels)
-    confmaps, _keys, points = generate_confidence_maps(labels)
+    confmaps, _keys, points = generate_confidence_maps(labels, sigma=5)
 
-    train(imgs, confmaps, test_size=0.1, batch_norm=False, num_filters=32, batch_size=16, num_epochs=250, steps_per_epoch=None)
+    train(imgs, confmaps, test_size=0.1, batch_norm=False, num_filters=64, batch_size=4, num_epochs=100, steps_per_epoch=200)
