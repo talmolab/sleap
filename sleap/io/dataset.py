@@ -43,9 +43,7 @@ class Dataset(ABC):
         # Load all the components of the dataset.
         #self._load_frames()
         self._load_instance_data()
-        #self._load_confidence_maps()
         self._load_skeleton()
-        #self._load_pafs()
 
     @abstractmethod
     def _load_frames(self):
@@ -112,7 +110,8 @@ class DatasetHDF5(Dataset):
     # Class level constants that define the dataset paths within
     # the HDF5 data.
     skeleton_group_name = "skeleton"  # HDF5 dataset name for skeleton data
-    points_group_name = "points"  # HDF5 dataset name labeled _points
+    points_group_name = "points"      # HDF5 dataset name labeled _points
+    frames_group_name = "frames"      # HDF5 dataset name video frames
 
     def __init__(self, path: str):
 

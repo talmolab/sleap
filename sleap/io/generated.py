@@ -8,25 +8,7 @@ import h5py
 from sleap.skeleton import Skeleton
 from sleap.io.video import HDF5Video
 from sleap.instance import Point, Instance
-
-
-def SimpleFly():
-    skeleton = Skeleton("Fly")
-    skeleton.add_node(name="head")
-    skeleton.add_node(name="neck")
-    skeleton.add_node(name="thorax")
-    skeleton.add_node(name="abdomen")
-    skeleton.add_node(name="left-wing")
-    skeleton.add_node(name="right-wing")
-    skeleton.add_edge(source="head", destination="neck")
-    skeleton.add_edge(source="neck", destination="thorax")
-    skeleton.add_edge(source="thorax", destination="abdomen")
-    skeleton.add_edge(source="thorax", destination="left-wing")
-    skeleton.add_edge(source="thorax", destination="right-wing")
-    # skeleton.add_symmetry(node1="left-wing", node2="right-wing")
-
-    return skeleton
-
+from sleap.io.dataset import Dataset
 
 class GeneratedLabels():
     def __init__(self, file_path, imgs_dset="/box", matlab_indexing=True):
@@ -99,17 +81,6 @@ class GeneratedLabels():
 
         return instances
 
-    # def get_instances(self, idx=None, vid_id=None, frame_idx=None, instance_id=None):
-    #     pass
-
-    # def __getitem__(self, idxs):
-    #     if isinstance(idxs, slice):
-    #         start, stop, step = idxs.indices(self.num_frames)
-    #         idxs = range(start, stop, step)
-    #     return self.get_frames(idxs)
-
-
-
 if __name__ == "__main__":
-    data_path = "../../tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"
-    labels = GeneratedLabels(data_path)
+    data_path = "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"
+    labels = Dataset(data_path)
