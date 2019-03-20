@@ -48,8 +48,7 @@ class Skeleton:
 
     @property
     def name(self):
-        """
-        Get the name of the skeleton.
+        """Get the name of the skeleton.
 
         Returns:
             A string representing the name of the skeleton.
@@ -70,6 +69,15 @@ class Skeleton:
         if name is None or type(name) is not str or len(name) == 0:
             raise ValueError("A skeleton must have a valid string name.")
         self.graph.name = name
+
+    @property
+    def node_names(self):
+        """Get a list of node names.
+
+        Returns:
+            A list of strings with the node names.
+        """
+        return list(self.graph.nodes)
 
     def add_node(self, name: str):
         """Add a node representing an animal part to the skeleton.
@@ -236,7 +244,6 @@ class Skeleton:
                 return False
 
         return True
-
 
     def has_edge(self, source_name: str, dest_name: str) -> bool:
         """

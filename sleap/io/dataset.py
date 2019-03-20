@@ -111,11 +111,8 @@ class DatasetHDF5(Dataset):
 
     # Class level constants that define the dataset paths within
     # the HDF5 data.
-    _frames_dataset_name = "box"  # HDF5 dataset name for video frame data
-    _confmaps_dataset_name = "confmaps"  # HDF5 dataset name for confidence map data
-    _pafs_dataset_name = "pafs"  # HDF5 dataset name for part affinity field data
-    _skelton_dataset_name = "skeleton"  # HDF5 dataset name for skeleton data
-    _points_dataset_name = "_points"  # HDF5 dataset name labeled _points
+    skeleton_group_name = "skeleton"  # HDF5 dataset name for skeleton data
+    points_group_name = "points"  # HDF5 dataset name labeled _points
 
     def __init__(self, path: str):
 
