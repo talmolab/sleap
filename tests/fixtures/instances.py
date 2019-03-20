@@ -11,7 +11,7 @@ def instances(skeleton):
 
     instances = []
     for i in range(NUM_INSTANCES):
-        instance = Instance(skeleton=skeleton, video=None, frame_idx=i)
+        instance = Instance(skeleton=skeleton)
         instance['head'] = Point(i*1, i*2)
         instance['left-wing'] = Point(10 + i * 1, 10 + i * 2)
         instance['right-wing'] = Point(20 + i * 1, 20 + i * 2)

@@ -6,14 +6,14 @@ import h5py as h5
 import cv2
 import numpy as np
 import attr
-
+import cattr
 
 from typing import Iterable, Union
 
 from sleap.util import try_open_file
 
 
-@attr.s(auto_attribs=True)
+@attr.s(auto_attribs=True, cmp=False)
 class Video:
     """
     The top-level interface to any Video data used by sLEAP is represented by
@@ -164,8 +164,18 @@ class Video:
         backend = MediaVideo(filename=file, *args, **kwargs)
         return cls(backend=backend)
 
+    @staticmethod
+    def make_cattr():
+        _cattr = cattr.Converter()
+        _cattr.register_unstructure_hook(h5.File, lambda x: None)
+        _cattr.register_unstructure_hook(h5.Dataset, lambda x: None)
+        _cattr.register_unstructure_hook(h5.Group, lambda x: None)
+        _cattr.register_unstructure_hook(cv2.VideoCapture, lambda x: None)
+        _cattr.register_unstructure_hook(np.bool_, bool)
 
-@attr.s(auto_attribs=True)
+        return _cattr
+
+@attr.s(auto_attribs=True, cmp=False)
 class HDF5Video:
     """
     Video data stored as 4D datasets in HDF5 files can be imported into
@@ -286,7 +296,7 @@ class HDF5Video:
         return cls(file_h5=dataset.file, dataset_h5=dataset)
 
 
-@attr.s(auto_attribs=True)
+@attr.s(auto_attribs=True, cmp=False)
 class MediaVideo:
     """
     Video data stored in traditional media formats readable by FFMPEG can be loaded

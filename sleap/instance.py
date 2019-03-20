@@ -54,20 +54,14 @@ class Point:
 @attr.s(auto_attribs=True, slots=True)
 class Instance:
     """
-    The class :class:`Instance` represents a labelled instance of skeleton on
-    a particular frame of a particular video.
+    The class :class:`Instance` represents a labelled instance of skeleton
 
     Args:
         skeleton: The skeleton that this instance is associated with.
-        video: The videos that the instance appears.
-        frame_idx: The frame number of the video.
         points: A dictionary where keys are skeleton node names and values are _points.
     """
 
     skeleton: Skeleton
-    video: Video
-    frame_idx: int
-
     _points: Dict[str, Point] = attr.ib(default=attr.Factory(dict))
 
     @_points.validator
@@ -360,16 +354,9 @@ class Instance:
 
         instance_records = df[[*instance_cols]].to_dict('records')
 
-        # Convert skeletons to skeleton objects
+        # Convert skeletons references to skeleton objects
         for r in instance_records:
             r['skeleton'] = skeletons[r['skeleton']]
-
-        # Convert videos to video objects
-        for r in instance_records:
-            if r['video'] == "":
-                r['video'] = None
-            else:
-                r['video'] = skeletons[r['skeleton']]
 
         instances: List[Instance] = []
         curr_id = -1 # Start with an invalid instance id so condition is tripped

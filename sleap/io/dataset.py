@@ -9,197 +9,105 @@ storage format.
 """
 
 import logging
-import h5py
+import h5py as h5
 import os
 import numpy as np
+import attr
+import cattr
+import json
 
-from time import time
-from abc import ABC, abstractmethod
+from typing import List, Dict, Union
 
 from sleap.skeleton import Skeleton
 from sleap.instance import Instance
+from sleap.io.video import Video
 
 
-class Dataset(ABC):
-    """
-    The LEAP Dataset class represents an API for accessing labelled video
-    frames and other associated metadata. This class is front-end for all
-    interactions with loading, writing, and modifying a dataset. The actual
-    storage backend for the data is mostly abstracted away from the main
-    interface.
-    """
-
-    def __init__(self, path: str):
-        """
-        The constructor for any subclass of :class:`.DatasetBackend` should call
-        this constructor to initiate loading of each component of a dataset.
-
-        Args:
-            path: The path to the file or folder containing the dataset.
-        """
-
-        self.path = path
-
-        # Load all the components of the dataset.
-        #self._load_frames()
-        self._load_instance_data()
-        self._load_skeleton()
-
-    @abstractmethod
-    def _load_frames(self):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def _load_skeleton(self):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def _load_instance_data(self):
-        raise NotImplementedError()
-
-    @classmethod
-    def load(cls, path: str, format: str = 'auto', create:bool = True):
-        """
-        Construct the :class:`.Dataset` from the file path. This may be a
-        single file or directory depending on the storage backend.
-
-        Args:
-            path: The filasytem path to the file or folder that stores the dataset.
-            format: The format the dataset is stored in. LEAP supports the following
-            formats for its dataset files:
-            create: Should the dataset be created if it does not exist?
-
-            * HDF5
-
-            The default value of auto will attempt to detect the format automatically
-            based on filename and contents. If it fails it will throw and exception.
-        """
-
-        # First things first, check if the dataset exists, if not, throw exception if
-        # create is False
-        if not create and os.path.isfile(path):
-            raise FileNotFoundError(f"Could not load dataset {path}!")
-
-        # If format is auto, we need to try to detect the format automatically.
-        # For now, lets look at the file extension
-        path_ext = os.path.splitext(path)[-1].lower()
-
-        if path_ext == '.h5' or path_ext == '.hdf5' or format.tolower() == 'hdf5':
-            return DatasetHDF5(path=path)
-        else:
-            raise ValueError("Can't automatically find dataset file format. " +
-                             "Are you sure this is a LEAP dataset?")
-
-    @abstractmethod
-    def save(self):
-        """
-        Save the dataset to HDF5 file specified in self.path.
-
-        Returns:
-            None
-        """
-        raise NotImplementedError()
-
-
-class DatasetHDF5(Dataset):
-    """
-    The :class:`.DatasetHDF5` class provides for reading and writing of HDF5 backed
-    LEAP datasets.
-    """
-
-    # Class level constants that define the dataset paths within
-    # the HDF5 data.
-    skeleton_group_name = "skeleton"  # HDF5 dataset name for skeleton data
-    points_group_name = "points"      # HDF5 dataset name labeled _points
-    frames_group_name = "frames"      # HDF5 dataset name video frames
-
-    def __init__(self, path: str):
-
-        # Open the HDF5 file for reading and call the base constructor to load all the
-        # parts of the dataset.
-        with h5py.File(path) as self._h5_file:
-            super(DatasetHDF5, self).__init__(path)
-
-    def _load_frames(self):
-        """
-        Loads and normalizes the video frame data from the HDF5 dataset.
-
-        Returns:
-            None
-        """
-
-        try:
-            # Load
-            t0 = time()
-            self.frames = self._h5_file[DatasetHDF5._frames_dataset_name][:]
-            logging.info("Loaded %d video frames [%.1fs]" % (len(self.frames), time() - t0))
-
-            # Adjust dimensions
-            t0 = time()
-            self.frames = self._preprocess(self.frames, permute = (0, 3, 2, 1))
-            logging.info("Permuted and normalized video frame data. [%.1fs]" % (time() - t0))
-        except Exception as e:
-            raise ValueError("HDF5 format data did not have valid video frames data!") from e
-
+@attr.s(auto_attribs=True)
+class LabeledFrame:
+    video: Video = attr.ib()
+    frame_idx: int = attr.ib(converter=int)
+    instances: List[Instance] = attr.ib(default=attr.Factory(list))
 
     @staticmethod
-    def _preprocess(x: np.ndarray, permute: tuple = None) -> np.ndarray:
-        """
-        Normalizes input data. Handles things like single images and unsigned integers.
+    def make_cattr():
 
-        Args:
-            x: A 4-D numpy array
-            permute: A tuple specifying how to shift the dimensions of the array. None means leave be.
+        # We will need to serialize video references, so do the default.
+        _cattr: cattr.Converter = Video.make_cattr()
+
+        return _cattr
+
+
+@attr.s(auto_attribs=True)
+class Labels:
+    """
+    The LEAP :class:`.Labels` class represents an API for accessing labeled video
+    frames and other associated metadata. This class is front-end for all
+    interactions with loading, writing, and modifying these labels. The actual
+    storage backend for the data is mostly abstracted away from the main
+    interface.
+
+    Args:
+        instances: A list of instances
+    """
+
+    labels: List[LabeledFrame] = attr.ib(default=attr.Factory(list))
+
+    def to_json(self):
+        """
+        Serialize all labels in the underling list of LabeledFrame(s) to a
+        JSON structured string.
 
         Returns:
-            The resulting data.
+            The JSON representaiton of the string.
         """
 
-        # Add singleton dim for single images
-        if x.ndim == 3:
-            x = x[None, ...]
+        # Get the unique skeletons. Convert it to a list
+        skeletons = set()
+        for label in self.labels:
+            for instance in label.instances:
+                skeletons.add(instance.skeleton)
+        skeletons = list(skeletons)
 
-        # Adjust dimensions
-        if permute is not None:
-            x = np.transpose(x, permute)
+        # Get the unique videos. Convert it to a list
+        videos = list({label.video for label in self.labels})
 
-        # Normalize
-        if x.dtype == "uint8":
-            x = x.astype("float32") / 255
+        # Register some unstructure hooks, start with video default cattr
+        # since videos objects ar
+        label_cattr = LabeledFrame.make_cattr()
 
-        return x
+        # By default label's cattr will serialize the skeleton and videos, override.
+        # Don't serialize skeletons and videos within each video, store a
+        # reference with a simple index to the two lists create above.
+        label_cattr.register_unstructure_hook(Skeleton, lambda x: skeletons.index(x))
+        label_cattr.register_unstructure_hook(Video, lambda x: videos.index(x))
 
-    def _load_skeleton(self):
-        """
-        Load the skeleton data into a skeleton object models.
+        v = Video.make_cattr().unstructure(videos)
 
-        Returns:
-            None
-        """
-        try:
-            self.skeletons = Skeleton.load_all_hdf5(self._h5_file, return_dict=True)
-        except KeyError:
-            self.skeletons = {}
+        # Serialize the skeletons, videos, and labels
+        dicts = {
+            'skeletons': Skeleton.make_cattr().unstructure(skeletons),
+            'videos': Video.make_cattr().unstructure(videos),
+            'labels': label_cattr.unstructure(self.labels)
+         }
 
-    def _load_instance_data(self):
-        """
-        Load the instance data.
-        """
-        try:
-            self.instances = Instance.load_hdf5(file=self._h5_file)
-        except KeyError:
-            self.instances = []
+        return json.dumps(dicts)
 
-    def save(self):
-        """
-        Save the dataset to HDF5 file specified in self.path.
+    @staticmethod
+    def save_json(labels: 'Labels', filename: str):
+        json_str = labels.to_json()
 
-        Returns:
-            None
-        """
-        if hasattr(self, 'instances') and self.instances:
-            Instance.save_hdf5(file=self.path, instances=self.instances)
+        with open(filename, 'w') as file:
+            file.write(json_str)
 
-        if hasattr(self, 'skeletons') and self.skeletons:
-            Skeleton.save_all_hdf5(file=self._h5_file, skeletons=self.skeletons)
+    @classmethod
+    def from_json(cls, json_str: str):
+        return cls()
+
+    @classmethod
+    def load_json(cls, filename: str):
+        with open(filename, 'r') as file:
+            return Labels.from_json(file.read())
+
+
 

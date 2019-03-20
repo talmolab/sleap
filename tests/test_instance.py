@@ -11,7 +11,7 @@ def test_instance_node_get_set_item(skeleton):
     """
     Test basic get item and set item functionality of instances.
     """
-    instance = Instance(skeleton=skeleton, video=None, frame_idx=0)
+    instance = Instance(skeleton=skeleton)
     instance["head"].x = 20
     instance["head"].y = 50
 
@@ -33,8 +33,7 @@ def test_instance_node_multi_get_set_item(skeleton):
     node_names = ["left-wing", "head", "right-wing"]
     points = {"head": Point(1, 4), "left-wing": Point(2, 5), "right-wing": Point(3,6)}
 
-    instance1 = Instance(skeleton=skeleton, video=None, frame_idx=0, points=points)
-    instance2 = Instance(skeleton=skeleton, video=None, frame_idx=0)
+    instance1 = Instance(skeleton=skeleton, points=points)
 
     instance1[node_names] = list(points.values())
 
@@ -49,13 +48,13 @@ def test_non_exist_node(skeleton):
     """
     Test is instances throw key errors for nodes that don't exist in the skeleton.
     """
-    instance = Instance(skeleton=skeleton, video=None, frame_idx=0)
+    instance = Instance(skeleton=skeleton)
 
     with pytest.raises(KeyError):
         instance["non-existent-node"].x = 1
 
     with pytest.raises(KeyError):
-        instance = Instance(skeleton=skeleton, video=None, frame_idx=0, points = {"non-exist": Point()})
+        instance = Instance(skeleton=skeleton, points = {"non-exist": Point()})
 
 
 def test_instance_point_iter(skeleton):
@@ -65,7 +64,7 @@ def test_instance_point_iter(skeleton):
     node_names = ["left-wing", "head", "right-wing"]
     points = {"head": Point(1, 4), "left-wing": Point(2, 5), "right-wing": Point(3, 6)}
 
-    instance = Instance(skeleton=skeleton, video=None, frame_idx=0, points=points)
+    instance = Instance(skeleton=skeleton, points=points)
 
     assert [node for node in instance.nodes()] == ['head', 'left-wing', 'right-wing']
     assert np.allclose([p.x for p in instance.points()], [1, 2, 3])
@@ -82,7 +81,7 @@ def test_instance_to_pandas_df(skeleton, instances):
     """
 
     # How many columns are supposed to be in point DataFrame
-    NUM_COLS = 9
+    NUM_COLS = 7
 
     NUM_INSTANCES = len(instances)
 
@@ -96,7 +95,7 @@ def test_instance_to_pandas_df(skeleton, instances):
 
 
 def test_hdf5(instances, tmpdir):
-    out_dir = tmpdir
+    out_dir = '.'
     path = os.path.join(out_dir, 'dataset.h5')
 
     if os.path.isfile(path):

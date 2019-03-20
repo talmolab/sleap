@@ -6,8 +6,10 @@ connection to each other, and needed meta-data.
 
 """
 
+import cattr
 import numpy as np
 import jsonpickle
+import json
 import networkx as nx
 import h5py as h5
 
@@ -45,6 +47,12 @@ class Skeleton:
             name = "Skeleton-" + str(self._skeleton_idx)
 
         self.graph = nx.MultiDiGraph(name=name)
+
+    @staticmethod
+    def make_cattr():
+        _cattr = cattr.Converter()
+        _cattr.register_unstructure_hook(Skeleton, Skeleton.to_dict)
+        return _cattr
 
     @property
     def name(self):
@@ -259,6 +267,13 @@ class Skeleton:
         """
         return self.graph.has_edge(source_name, dest_name)
 
+    @staticmethod
+    def to_dict(obj):
+
+        # This is a weird hack to serialize the whole graph into a dict.
+        # I use the underlying to_json and parse it.
+        return json.loads(obj.to_json())
+
     def to_json(self) -> str:
         """
         Convert the skeleton to a JSON representation.
@@ -290,7 +305,6 @@ class Skeleton:
 
         with open(filename, 'w') as file:
             file.write(json_str)
-
 
     @classmethod
     def from_json(cls, json_str: str):
