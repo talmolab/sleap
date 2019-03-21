@@ -8,5 +8,4 @@ rem # all get installed twice if we do this. pip doesn't see the
 rem # conda install of the packages.
 
 set PIP_NO_INDEX=False
-python -m pip install opencv-python
-python -m pip install PySide2==5.12.0
+python -m pip install opencv-python PySide2==5.12.0 imgaug cattrs

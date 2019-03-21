@@ -1,7 +1,9 @@
 attrs
+cattrs
 jsonpickle
 networkx
 tensorflow-gpu
 keras
 h5py
 opencv-python
+PySide2

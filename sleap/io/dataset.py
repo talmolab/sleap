@@ -102,7 +102,20 @@ class Labels:
         skeletons = Skeleton.make_cattr().structure(dicts['skeletons'], List[Skeleton])
         videos = Skeleton.make_cattr().structure(dicts['videos'], List[Video])
 
-        return cls()
+        @attr.s(auto_attribs=True)
+        class SkeletonRef:
+            idx: int = attr.ib()
+
+        @attr.s(auto_attribs=True)
+        class VideoRef:
+            idx: int = attr.ib()
+
+        label_cattr = cattr.Converter()
+        label_cattr.register_structure_hook(Skeleton, lambda x,type: skeletons[x])
+        label_cattr.register_structure_hook(Video, lambda x,type: videos[x])
+        labels = label_cattr.structure(dicts['labels'], List[LabeledFrame])
+
+        return cls(labels=labels)
 
     @classmethod
     def load_json(cls, filename: str):

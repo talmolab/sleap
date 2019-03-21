@@ -12,134 +12,6 @@ from typing import Iterable, Union
 
 from sleap.util import try_open_file
 
-
-@attr.s(auto_attribs=True, cmp=False)
-class Video:
-    """
-    The top-level interface to any Video data used by sLEAP is represented by
-    the :class:`.Video` class. This class provides a common interface for
-    various supported video data backends. It provides the bare minimum of
-    properties and methods that any video data needs to support in order to
-    function with other sLEAP components. This interface currently only supports
-    reading of video data, there is no write support. Unless one is creating a new video
-    backend, this class should be instantiated from its various class methods
-    for different formats. For example:
-
-    >>> video = Video.from_hdf5(file='test.h5', dataset='box')
-    >>> video = Video.from_media(file='test.mp4')
-
-    Args:
-        backend: A backend is and object that implements the following basic
-        required methods and properties
-
-        * Properties
-
-            * :code:`frames`: The number of frames in the video
-            * :code:`channels`: The number of channels in the video (e.g. 1 for grayscale, 3 for RGB)
-            * :code:`width`: The width of each frame in pixels
-            * :code:`height`: The height of each frame in pixels
-
-        * Methods
-
-            * :code:`get_frame(frame_index: int) -> np.ndarray(shape=(width, height, channels)`:
-            Get a single frame from the underlying video data
-
-    """
-
-    _backend: object = attr.ib()
-
-    # Delegate to the backend
-    def __getattr__(self, item):
-        return getattr(self._backend, item)
-
-    @property
-    def num_frames(self) -> int:
-        """The number of frames in the video. Just an alias for frames property."""
-        return self.frames
-
-    @property
-    def shape(self):
-        return (self.frames, self.width, self.height, self.channels)
-
-    def __str__(self):
-        """ Informal string representation (for print or format) """
-        return type(self).__name__ + "([%d x %d x %d x %d])" % self.shape
-
-    def __len__(self):
-        """
-        The length of the video should be the number of frames.
-
-        Returns:
-            The number of frames in the video.
-        """
-        return self.frames
-
-    def get_frame(self, idx: int) -> np.ndarray:
-        """
-        Return a single frame of video from the underlying video data.
-
-        Args:
-            idx: The index of the video frame
-
-        Returns:
-            The video frame with shape (width, height, channels)
-        """
-        return self._backend.get_frame(idx)
-
-    def get_frames(self, idxs: Union[int, Iterable[int]]) -> np.ndarray:
-        """
-        Return a collection of video frames from the underlying video data.
-
-        Args:
-            idxs: An iterable object that contains the indices of frames.
-
-        Returns:
-            The requested video frames with shape (len(idxs), width, height, channels)
-        """
-        if np.isscalar(idxs):
-            idxs = [idxs,]
-        return np.stack([self.get_frame(idx) for idx in idxs], axis=0)
-
-    def __getitem__(self, idxs):
-        if isinstance(idxs, slice):
-            start, stop, step = idxs.indices(self.num_frames)
-            idxs = range(start, stop, step)
-        return self.get_frames(idxs)
-
-    @classmethod
-    def from_hdf5(cls, dataset: Union[str, h5.Dataset],
-                  file: Union[str, h5.File] = None,
-                  input_format: str = "channels_last"):
-        """
-        Create an instance of a video object from an HDF5 file and dataset. This
-        is a helper method that invokes the HDF5Video backend.
-
-        Args:
-            dataset: The name of the dataset or and h5.Dataset object. If file is
-            h5.File, dataset must be a str of the dataset name.
-            file: The name of the HDF5 file or and open h5.File object.
-            input_format: Whether the data is oriented with "channels_first" or "channels_last"
-
-        Returns:
-            A Video object with HDF5Video backend.
-        """
-        backend = HDF5Video(file=file, dataset=dataset, input_format=input_format)
-        return cls(backend=backend)
-
-    @classmethod
-    def from_media(cls, file: str, *args, **kwargs):
-        """
-        Create an instance of a video object from a typical media file (e.g. .mp4, .avi).
-
-        Args:
-            file: The name of the file
-
-        Returns:
-            A Video object with and MediaVideo backend
-        """
-        backend = MediaVideo(filename=file, *args, **kwargs)
-        return cls(backend=backend)
-
 @attr.s(auto_attribs=True, cmp=False)
 class HDF5Video:
     """
@@ -241,33 +113,6 @@ class HDF5Video:
 
         return frame
 
-    @classmethod
-    def from_file(cls, filename: str, dataset_name: str, *args, **kwargs):
-        """
-        Create and HDF5Video object from a dataset name and HDF5 file name.
-
-        Args:
-            filename: The name of the HDF5 file
-            dataset_name:  The name of the dataset.
-
-        Returns:
-            The instantiated HDF5Video object.
-        """
-        return cls(file=filename, dataset=dataset_name, *args, **kwargs)
-
-    @classmethod
-    def from_dataset(cls, dataset: h5.Dataset) -> 'HDF5Video':
-        """
-        Create an HDF5Video from an HDF5 dataset object
-
-        Args:
-            dataset: The dataset that contains the underlying video data.
-
-        Returns:
-
-        """
-        return cls(file_h5=dataset.file, dataset_h5=dataset)
-
 
 @attr.s(auto_attribs=True, cmp=False)
 class MediaVideo:
@@ -277,7 +122,9 @@ class MediaVideo:
     OpenCV's VideoCapture class.
 
     Args:
-        filename: The name of the fiel
+        filename: The name of the file (.mp4, .avi, etc)
+        grayscale: Whether the video is grayscale or not. "auto" means detect
+        based on first frame.
     """
     filename: str = attr.ib()
     grayscale: bool = attr.ib(default=None, converter=bool)
@@ -341,4 +188,133 @@ class MediaVideo:
             frame = frame[...,0][...,None]
 
         return frame
+
+
+
+@attr.s(auto_attribs=True, cmp=False)
+class Video:
+    """
+    The top-level interface to any Video data used by sLEAP is represented by
+    the :class:`.Video` class. This class provides a common interface for
+    various supported video data backends. It provides the bare minimum of
+    properties and methods that any video data needs to support in order to
+    function with other sLEAP components. This interface currently only supports
+    reading of video data, there is no write support. Unless one is creating a new video
+    backend, this class should be instantiated from its various class methods
+    for different formats. For example:
+
+    >>> video = Video.from_hdf5(file='test.h5', dataset='box')
+    >>> video = Video.from_media(file='test.mp4')
+
+    Args:
+        backend: A backend is and object that implements the following basic
+        required methods and properties
+
+        * Properties
+
+            * :code:`frames`: The number of frames in the video
+            * :code:`channels`: The number of channels in the video (e.g. 1 for grayscale, 3 for RGB)
+            * :code:`width`: The width of each frame in pixels
+            * :code:`height`: The height of each frame in pixels
+
+        * Methods
+
+            * :code:`get_frame(frame_index: int) -> np.ndarray(shape=(width, height, channels)`:
+            Get a single frame from the underlying video data
+
+    """
+
+    backend: Union[HDF5Video, MediaVideo] = attr.ib()
+
+    # Delegate to the backend
+    def __getattr__(self, item):
+        return getattr(self.backend, item)
+
+    @property
+    def num_frames(self) -> int:
+        """The number of frames in the video. Just an alias for frames property."""
+        return self.frames
+
+    @property
+    def shape(self):
+        return (self.frames, self.width, self.height, self.channels)
+
+    def __str__(self):
+        """ Informal string representation (for print or format) """
+        return type(self).__name__ + "([%d x %d x %d x %d])" % self.shape
+
+    def __len__(self):
+        """
+        The length of the video should be the number of frames.
+
+        Returns:
+            The number of frames in the video.
+        """
+        return self.frames
+
+    def get_frame(self, idx: int) -> np.ndarray:
+        """
+        Return a single frame of video from the underlying video data.
+
+        Args:
+            idx: The index of the video frame
+
+        Returns:
+            The video frame with shape (width, height, channels)
+        """
+        return self.backend.get_frame(idx)
+
+    def get_frames(self, idxs: Union[int, Iterable[int]]) -> np.ndarray:
+        """
+        Return a collection of video frames from the underlying video data.
+
+        Args:
+            idxs: An iterable object that contains the indices of frames.
+
+        Returns:
+            The requested video frames with shape (len(idxs), width, height, channels)
+        """
+        if np.isscalar(idxs):
+            idxs = [idxs,]
+        return np.stack([self.get_frame(idx) for idx in idxs], axis=0)
+
+    def __getitem__(self, idxs):
+        if isinstance(idxs, slice):
+            start, stop, step = idxs.indices(self.num_frames)
+            idxs = range(start, stop, step)
+        return self.get_frames(idxs)
+
+    @classmethod
+    def from_hdf5(cls, dataset: Union[str, h5.Dataset],
+                  file: Union[str, h5.File] = None,
+                  input_format: str = "channels_last"):
+        """
+        Create an instance of a video object from an HDF5 file and dataset. This
+        is a helper method that invokes the HDF5Video backend.
+
+        Args:
+            dataset: The name of the dataset or and h5.Dataset object. If file is
+            h5.File, dataset must be a str of the dataset name.
+            file: The name of the HDF5 file or and open h5.File object.
+            input_format: Whether the data is oriented with "channels_first" or "channels_last"
+
+        Returns:
+            A Video object with HDF5Video backend.
+        """
+        backend = HDF5Video(file=file, dataset=dataset, input_format=input_format)
+        return cls(backend=backend)
+
+    @classmethod
+    def from_media(cls, file: str, *args, **kwargs):
+        """
+        Create an instance of a video object from a typical media file (e.g. .mp4, .avi).
+
+        Args:
+            file: The name of the file
+
+        Returns:
+            A Video object with and MediaVideo backend
+        """
+        backend = MediaVideo(filename=file, *args, **kwargs)
+        return cls(backend=backend)
 

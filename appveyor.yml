@@ -25,7 +25,7 @@ install:
   - conda info -a
 
   # Create/update the sleap environment in case some dependencies changed.
-  - conda update -n sleap_appveyor --file win10_conda_spec_cpuonly.txt
+  - conda env create -n sleap_appveyor -f environment_appveyor.yml
 
   # Activate things
   - activate sleap_appveyor
@@ -33,7 +33,7 @@ install:
   # Conda Explicit Spec files don't include pip installed stuff.
   # See: https://github.com/conda/conda/issues/8372
   # We need to install this separately, what a mess.
-  - pip install PySide2 opencv-python imgaug cattrs
+  # - pip install PySide2 opencv-python imgaug cattrs
 
 # Install dev requirements too.
   - pip install -r dev_requirements.txt
