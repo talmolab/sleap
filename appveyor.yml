@@ -33,7 +33,7 @@ install:
   # Conda Explicit Spec files don't include pip installed stuff.
   # See: https://github.com/conda/conda/issues/8372
   # We need to install this separately, what a mess.
-  - pip install PySide2 opencv-python imgaug
+  - pip install PySide2 opencv-python imgaug cattrs
 
 # Install dev requirements too.
   - pip install -r dev_requirements.txt
