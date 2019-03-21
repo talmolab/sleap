@@ -16,4 +16,4 @@ dependencies:
     - opencv-python
     - PySide2==5.12.0
     - imgaug
-    - cattrs
+    - cattrs==1.0.0rc0
