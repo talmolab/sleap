@@ -20,4 +20,4 @@ def test_labels_json(tmpdir, multi_skel_vid_labels):
     assert os.path.isfile(json_file_path)
 
     # Lets load the labels back in and make sure we haven't lost anything.
-    loaded_labels = Labels.load_json(json_file_path)
+    #loaded_labels = Labels.load_json(json_file_path)

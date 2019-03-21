@@ -52,6 +52,7 @@ class Skeleton:
     def make_cattr():
         _cattr = cattr.Converter()
         _cattr.register_unstructure_hook(Skeleton, Skeleton.to_dict)
+        _cattr.register_structure_hook(Skeleton, lambda x,type: Skeleton.from_dict(x))
         return _cattr
 
     @property
@@ -268,11 +269,15 @@ class Skeleton:
         return self.graph.has_edge(source_name, dest_name)
 
     @staticmethod
-    def to_dict(obj):
+    def to_dict(obj: 'Skeleton'):
 
         # This is a weird hack to serialize the whole graph into a dict.
         # I use the underlying to_json and parse it.
         return json.loads(obj.to_json())
+
+    @classmethod
+    def from_dict(cls, d: Dict):
+        return Skeleton.from_json(json.dumps(d))
 
     def to_json(self) -> str:
         """

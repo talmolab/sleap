@@ -29,14 +29,6 @@ class LabeledFrame:
     frame_idx: int = attr.ib(converter=int)
     instances: List[Instance] = attr.ib(default=attr.Factory(list))
 
-    @staticmethod
-    def make_cattr():
-
-        # We will need to serialize video references, so do the default.
-        _cattr: cattr.Converter = Video.make_cattr()
-
-        return _cattr
-
 
 @attr.s(auto_attribs=True)
 class Labels:
@@ -72,9 +64,11 @@ class Labels:
         # Get the unique videos. Convert it to a list
         videos = list({label.video for label in self.labels})
 
-        # Register some unstructure hooks, start with video default cattr
-        # since videos objects ar
-        label_cattr = LabeledFrame.make_cattr()
+        # Register some unstructure hooks since we don't want complete deserialization
+        # of video and skeleton objects present in the labels. We will serialize these
+        # as references to the above constructed lists to limit redundant data in the
+        # json
+        label_cattr = cattr.Converter()
 
         # By default label's cattr will serialize the skeleton and videos, override.
         # Don't serialize skeletons and videos within each video, store a
@@ -82,12 +76,10 @@ class Labels:
         label_cattr.register_unstructure_hook(Skeleton, lambda x: skeletons.index(x))
         label_cattr.register_unstructure_hook(Video, lambda x: videos.index(x))
 
-        v = Video.make_cattr().unstructure(videos)
-
         # Serialize the skeletons, videos, and labels
         dicts = {
             'skeletons': Skeleton.make_cattr().unstructure(skeletons),
-            'videos': Video.make_cattr().unstructure(videos),
+            'videos': cattr.unstructure(videos),
             'labels': label_cattr.unstructure(self.labels)
          }
 
@@ -102,6 +94,14 @@ class Labels:
 
     @classmethod
     def from_json(cls, json_str: str):
+
+        dicts = json.loads(json_str)
+
+        # First, deserialize the skeleton and videos lists, the labels reference these
+        # so we will need them while deserializing.
+        skeletons = Skeleton.make_cattr().structure(dicts['skeletons'], List[Skeleton])
+        videos = Skeleton.make_cattr().structure(dicts['videos'], List[Video])
+
         return cls()
 
     @classmethod

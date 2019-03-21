@@ -48,10 +48,9 @@ class Video:
 
     _backend: object = attr.ib()
 
-    @property
-    def frames(self) -> int:
-        """The number of frames in the video"""
-        return self._backend.frames
+    # Delegate to the backend
+    def __getattr__(self, item):
+        return getattr(self._backend, item)
 
     @property
     def num_frames(self) -> int:
@@ -59,29 +58,8 @@ class Video:
         return self.frames
 
     @property
-    def width(self) -> int:
-        """The width of the video in pixels"""
-        return self._backend.width
-
-    @property
-    def height(self) -> int:
-        """The height of the video in pixels"""
-        return self._backend.height
-
-    @property
-    def channels(self) -> int:
-        """The number of channels in the video (e.g. 1 for grayscale, 3 for RGB)"""
-        return self._backend.channels
-
-    @property
-    def dtype(self) -> np.dtype:
-        """The numpy datatype of each frame ndarray"""
-        return self._backend.dtype
-
-    @property
     def shape(self):
-        """Utitlity property for :code:`(frames, height, width, channels)`"""
-        return (self.frames, self.height, self.width, self.channels)
+        return (self.frames, self.width, self.height, self.channels)
 
     def __str__(self):
         """ Informal string representation (for print or format) """
@@ -129,24 +107,23 @@ class Video:
         return self.get_frames(idxs)
 
     @classmethod
-    def from_hdf5(cls, file: str, dataset: Union[str, h5.Dataset], input_format: str = "channels_last"):
+    def from_hdf5(cls, dataset: Union[str, h5.Dataset],
+                  file: Union[str, h5.File] = None,
+                  input_format: str = "channels_last"):
         """
         Create an instance of a video object from an HDF5 file and dataset. This
         is a helper method that invokes the HDF5Video backend.
 
         Args:
-            file:
-            dataset:
-            input_format:
+            dataset: The name of the dataset or and h5.Dataset object. If file is
+            h5.File, dataset must be a str of the dataset name.
+            file: The name of the HDF5 file or and open h5.File object.
+            input_format: Whether the data is oriented with "channels_first" or "channels_last"
 
         Returns:
-
+            A Video object with HDF5Video backend.
         """
-        if type(file) is str:
-            backend = HDF5Video.from_file(filename=file, dataset_name=dataset, input_format=input_format)
-        else:
-            backend = HDF5Video.from_dataset(dataset=dataset, input_format=input_format)
-
+        backend = HDF5Video(file=file, dataset=dataset, input_format=input_format)
         return cls(backend=backend)
 
     @classmethod
@@ -157,23 +134,11 @@ class Video:
         Args:
             file: The name of the file
 
-
         Returns:
-
+            A Video object with and MediaVideo backend
         """
         backend = MediaVideo(filename=file, *args, **kwargs)
         return cls(backend=backend)
-
-    @staticmethod
-    def make_cattr():
-        _cattr = cattr.Converter()
-        _cattr.register_unstructure_hook(h5.File, lambda x: None)
-        _cattr.register_unstructure_hook(h5.Dataset, lambda x: None)
-        _cattr.register_unstructure_hook(h5.Group, lambda x: None)
-        _cattr.register_unstructure_hook(cv2.VideoCapture, lambda x: None)
-        _cattr.register_unstructure_hook(np.bool_, bool)
-
-        return _cattr
 
 @attr.s(auto_attribs=True, cmp=False)
 class HDF5Video:
@@ -195,23 +160,31 @@ class HDF5Video:
 
     file: str = attr.ib(default=None)
     dataset: str = attr.ib(default=None)
-    _file_h5: h5.File = attr.ib(default=None)
-    _dataset_h5: h5.Dataset = attr.ib(default=None)
     input_format: str = attr.ib(default="channels_last")
 
     def __attrs_post_init__(self):
-        if isinstance(self._file_h5, h5.File):
-            self.file = self._file_h5.filename
-        elif self._file_h5 is None:
+
+        # Handle cases where the user feeds in h5.File objects instead of filename
+        if isinstance(self.file, h5.File):
+            self.__file_h5 = self.file
+            self.file = self.__file_h5.filename
+        elif type(self.file) is str:
             try:
-                self._file_h5 = h5.File(self.file, 'r')
+                self.__file_h5 = h5.File(self.file, 'r')
             except OSError as ex:
                 raise FileNotFoundError(f"Could not find HDF5 file {self.file}") from ex
+        else:
+            self.__file_h5 = None
 
-        if isinstance(self._dataset_h5, h5.Dataset):
-            self.dataset = self._dataset_h5.name
-        elif self._dataset_h5 is None:
-            self._dataset_h5 = self._file_h5[self.dataset]
+        # Handle the case when h5.Dataset is passed in
+        if isinstance(self.dataset, h5.Dataset):
+            self.__dataset_h5 = self.dataset
+            self.__file_h5 = self.__dataset_h5.file
+            self.dataset = self.__dataset_h5.name
+        elif self.dataset is not None and type(self.dataset) is str:
+            self.__dataset_h5 = self.__file_h5[self.dataset]
+        else:
+            self.__dataset_h5 = None
 
 
     @input_format.validator
@@ -221,35 +194,35 @@ class HDF5Video:
 
         if value == "channels_first":
             self.__channel_idx = 1
-            self.__width_idx = 2
-            self.__height_idx = 3
+            self.__width_idx = 3
+            self.__height_idx = 2
         else:
             self.__channel_idx = 3
-            self.__width_idx = 1
-            self.__height_idx = 2
+            self.__width_idx = 2
+            self.__height_idx = 1
 
     # The properties and methods below complete our contract with the
     # higher level Video interface.
 
     @property
     def frames(self):
-        return self._dataset_h5.shape[0]
+        return self.__dataset_h5.shape[0]
 
     @property
     def channels(self):
-        return self._dataset_h5.shape[self.__channel_idx]
+        return self.__dataset_h5.shape[self.__channel_idx]
 
     @property
     def width(self):
-        return self._dataset_h5.shape[self.__width_idx]
+        return self.__dataset_h5.shape[self.__width_idx]
 
     @property
     def height(self):
-        return self._dataset_h5.shape[self.__height_idx]
+        return self.__dataset_h5.shape[self.__height_idx]
 
     @property
     def dtype(self):
-        return self._dataset_h5.dtype
+        return self.__dataset_h5.dtype
 
     def get_frame(self, idx) -> np.ndarray:
         """
@@ -261,7 +234,7 @@ class HDF5Video:
         Returns:
             The numpy.ndarray representing the video frame data.
         """
-        frame = self._dataset_h5[idx]
+        frame = self.__dataset_h5[idx]
 
         if self.input_format == "channels_first":
             frame = np.transpose(frame, (2, 1, 0))
@@ -307,8 +280,7 @@ class MediaVideo:
         filename: The name of the fiel
     """
     filename: str = attr.ib()
-    _reader: cv2.VideoCapture = attr.ib(default=None)
-    grayscale: bool = attr.ib(default=None)
+    grayscale: bool = attr.ib(default=None, converter=bool)
 
     def __attrs_post_init__(self):
 
@@ -316,7 +288,7 @@ class MediaVideo:
             raise FileNotFoundError(f"Could not file video file named {self.filename}")
 
         # Try and open the file either locally in current directory or with full path
-        self._reader = cv2.VideoCapture(self.filename)
+        self.__reader = cv2.VideoCapture(self.filename)
 
         # Lets grab a test frame to help us figure things out about the video
         self.__test_frame = self.get_frame(0, grayscale=False)
@@ -324,18 +296,18 @@ class MediaVideo:
         # If the user specified None for grayscale bool, figure it out based on the
         # the first frame of data.
         if self.grayscale is None:
-            self.grayscale = np.alltrue(self.__test_frame[..., 0] == self.__test_frame[..., -1])
+            self.grayscale = bool(np.alltrue(self.__test_frame[..., 0] == self.__test_frame[..., -1]))
 
     # The properties and methods below complete our contract with the
     # higher level Video interface.
 
     @property
     def frames(self):
-        return int(self._reader.get(cv2.CAP_PROP_FRAME_COUNT))
+        return int(self.__reader.get(cv2.CAP_PROP_FRAME_COUNT))
 
     @property
     def frames_float(self):
-        return self._reader.get(cv2.CAP_PROP_FRAME_COUNT)
+        return self.__reader.get(cv2.CAP_PROP_FRAME_COUNT)
 
     @property
     def channels(self):
@@ -346,11 +318,11 @@ class MediaVideo:
 
     @property
     def width(self):
-        return self.__test_frame.shape[1]
+        return self.__test_frame.shape[2]
 
     @property
     def height(self):
-        return self.__test_frame.shape[2]
+        return self.__test_frame.shape[1]
 
     @property
     def dtype(self):
@@ -360,10 +332,10 @@ class MediaVideo:
         if grayscale is None:
             grayscale = self.grayscale
 
-        if self._reader.get(cv2.CAP_PROP_POS_FRAMES) != idx:
-            self._reader.set(cv2.CAP_PROP_POS_FRAMES, idx)
+        if self.__reader.get(cv2.CAP_PROP_POS_FRAMES) != idx:
+            self.__reader.set(cv2.CAP_PROP_POS_FRAMES, idx)
 
-        ret, frame = self._reader.read()
+        ret, frame = self.__reader.read()
 
         if grayscale:
             frame = frame[...,0][...,None]
