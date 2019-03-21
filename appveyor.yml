@@ -19,7 +19,7 @@ install:
   - conda config --set always_yes yes --set changeps1 no
 
   # Quietly update if needed
-  - conda update -q conda
+  # - conda update -q conda
 
   # Display conda version
   - conda info -a
