@@ -9,7 +9,7 @@ from sleap.io.dataset import LabeledFrame, Labels
 TEST_H5_DATASET = 'tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5'
 
 def test_labels_json(tmpdir, multi_skel_vid_labels):
-    json_file_path = os.path.join('.', 'dataset.json')
+    json_file_path = os.path.join(tmpdir, 'dataset.json')
 
     if os.path.isfile(json_file_path):
         os.remove(json_file_path)
