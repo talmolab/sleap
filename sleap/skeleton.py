@@ -12,11 +12,26 @@ import jsonpickle
 import json
 import networkx as nx
 import h5py as h5
+import copy
 
+
+from enum import Enum
 from itertools import count
 from typing import Iterable, Union, List, Dict
 
 from networkx.readwrite import json_graph
+
+class EdgeType(Enum):
+    """
+    The skeleton graph can store different types of edges to represent
+    different things. All edges must specify one or more of the following types.
+
+        * BODY - these edges represent connections between parts or landmarks.
+        * SYMMETRY - these edges represent symmetrical relationships between
+        parts (e.g. left and right arms)
+    """
+    BODY = 1
+    SYMMETRY = 2
 
 
 class Skeleton:
@@ -46,7 +61,17 @@ class Skeleton:
         if name is None or type(name) is not str or len(name) == 0:
             name = "Skeleton-" + str(self._skeleton_idx)
 
-        self.graph = nx.MultiDiGraph(name=name)
+        self._graph: nx.MultiDiGraph = nx.MultiDiGraph(name=name)
+
+    @property
+    def graph(self):
+        edges = ((u, v) for u, v, d in self._graph.edges(data=True) if d['type'] == EdgeType.BODY)
+        return self._graph.edge_subgraph(edges)
+
+    @property
+    def graph_symmetry(self):
+        edges = ((u, v) for u, v, d in self._graph.edges(data=True) if d['type'] == EdgeType.SYMMETRY)
+        return self._graph.edge_subgraph(edges)
 
     @staticmethod
     def make_cattr():
@@ -62,22 +87,47 @@ class Skeleton:
         Returns:
             A string representing the name of the skeleton.
         """
-        return self.graph.name
+        return self._graph.name
 
     @name.setter
     def name(self, name: str):
         """
-        Set the name of the skeleton. Must be a valid string with length greater than 0.
+        A skeleton object cannot change its name. This property is immutable because it is
+        used to hash skeletons. If you want to rename a Skeleton you must use the class
+        method :code:`rename_skeleton`:
+
+        >>> new_skeleton = Skeleton.rename_skeleton(skeleton=old_skeleton, name="New Name")
 
         Args:
             name: The name of the Skeleton.
 
-        Returns:
-            None
+        Raises:
+            NotImplementedError
         """
-        if name is None or type(name) is not str or len(name) == 0:
-            raise ValueError("A skeleton must have a valid string name.")
-        self.graph.name = name
+        raise NotImplementedError("Cannot change Skeleton name, it is immutable since " +
+                                  "it is used for hashing. Create a copy of the skeleton " +
+                                  "with new name using " +
+                                  f"new_skeleton = Skeleton.rename(skeleton, '{name}'))")
+
+    @classmethod
+    def rename_skeleton(cls, skeleton: 'Skeleton', name: str) -> 'Skeleton':
+        """
+        A skeleton object cannot change its name. This property is immutable because it is
+        used to hash skeletons. If you want to rename a Skeleton you must use this classmethod.
+
+        >>> new_skeleton = Skeleton.rename_skeleton(skeleton=old_skeleton, name="New Name")
+
+        Args:
+            skeleton: The skeleton to copy.
+            name: The name of the new skeleton.
+
+        Returns:
+            A new deep copied skeleton with the changed name.
+        """
+        new_skeleton = cls(name)
+        new_skeleton._graph = copy.deepcopy(skeleton._graph)
+        new_skeleton._graph.name = name
+        return new_skeleton
 
     @property
     def node_names(self):
@@ -86,7 +136,7 @@ class Skeleton:
         Returns:
             A list of strings with the node names.
         """
-        return list(self.graph.nodes)
+        return list(self._graph.nodes)
 
     def add_node(self, name: str):
         """Add a node representing an animal part to the skeleton.
@@ -98,10 +148,10 @@ class Skeleton:
             None
 
         """
-        if self.graph.has_node(name):
+        if self._graph.has_node(name):
             raise ValueError("Skeleton already has a node named ({})".format(name))
 
-        self.graph.add_node(name)
+        self._graph.add_node(name)
 
     def add_nodes(self, name_list: list):
         """
@@ -129,7 +179,7 @@ class Skeleton:
 
         """
         try:
-            self.graph.remove_node(name)
+            self._graph.remove_node(name)
         except nx.NetworkXError:
             raise ValueError("The node named ({}) does not exist, cannot remove it.".format(name))
 
@@ -145,16 +195,16 @@ class Skeleton:
 
         """
 
-        if not self.graph.has_node(source):
+        if not self._graph.has_node(source):
             raise ValueError("Skeleton does not have source node named ({})".format(source))
 
-        if not self.graph.has_node(destination):
+        if not self._graph.has_node(destination):
             raise ValueError("Skeleton does not have destination node named ({})".format(destination))
 
-        if self.graph.has_edge(source, destination):
+        if self._graph.has_edge(source, destination):
             raise ValueError("Skeleton already has an edge between ({}) and ({}).".format(source, destination))
 
-        self.graph.add_edge(source, destination)
+        self._graph.add_edge(source, destination, type = EdgeType.BODY)
 
     def delete_edge(self, source: str, destination: str):
         """Delete an edge between two nodes.
@@ -166,16 +216,16 @@ class Skeleton:
         Returns:
             None
         """
-        if not self.graph.has_node(source):
+        if not self._graph.has_node(source):
             raise ValueError("Skeleton does not have source node named ({})".format(source))
 
-        if not self.graph.has_node(destination):
+        if not self._graph.has_node(destination):
             raise ValueError("Skeleton does not have destination node named ({})".format(destination))
 
-        if not self.graph.has_edge(source, destination):
+        if not self._graph.has_edge(source, destination):
             raise ValueError("Skeleton has no edge between ({}) and ({}).".format(source, destination))
 
-        self.graph.remove_edge(source, destination)
+        self._graph.remove_edge(source, destination)
 
     def add_symmetry(self, node1:str, node2:str):
         """Specify that two parts (nodes) in the skeleton are symmetrical.
@@ -192,9 +242,9 @@ class Skeleton:
 
         """
 
-        # We will represent symmetric pairs in the skeleton via additional edges in the graph
+        # We will represent symmetric pairs in the skeleton via additional edges in the _graph
         # These edges will have a special attribute signifying they are not part of the skeleton it self
-        self.graph.add_edge(node1, node2, symmetry=True)
+        self._graph.add_edge(node1, node2, type = EdgeType.SYMMETRY)
 
     def __getitem__(self, node_name:str) -> dict:
         """
@@ -206,10 +256,10 @@ class Skeleton:
             A dictionary of data associated with this node.
 
         """
-        if not self.graph.has_node(node_name):
+        if not self._graph.has_node(node_name):
             raise ValueError("Skeleton does not have source node named ({})".format(node_name))
 
-        return self.graph.nodes.data()[node_name]
+        return self._graph.nodes.data()[node_name]
 
     def relabel_nodes(self, mapping:dict):
         """
@@ -222,7 +272,7 @@ class Skeleton:
             None
 
         """
-        nx.relabel_nodes(G=self.graph, mapping=mapping, copy=False)
+        nx.relabel_nodes(G=self._graph, mapping=mapping, copy=False)
 
     def has_node(self, name: str) -> bool:
         """
@@ -235,7 +285,7 @@ class Skeleton:
             True for yes, False for no.
 
         """
-        return self.graph.has_node(name)
+        return self._graph.has_node(name)
 
     def has_nodes(self, names: Iterable[str]) -> bool:
         """
@@ -249,7 +299,7 @@ class Skeleton:
 
         """
         for name in names:
-            if not self.graph.has_node(name):
+            if not self._graph.has_node(name):
                 return False
 
         return True
@@ -266,12 +316,12 @@ class Skeleton:
             True is yes, False if no.
 
         """
-        return self.graph.has_edge(source_name, dest_name)
+        return self._graph.has_edge(source_name, dest_name)
 
     @staticmethod
     def to_dict(obj: 'Skeleton'):
 
-        # This is a weird hack to serialize the whole graph into a dict.
+        # This is a weird hack to serialize the whole _graph into a dict.
         # I use the underlying to_json and parse it.
         return json.loads(obj.to_json())
 
@@ -289,7 +339,7 @@ class Skeleton:
         jsonpickle.set_encoder_options('simplejson', sort_keys=True, indent=4)
 
         # Encode to JSON
-        json_str = jsonpickle.encode(json_graph.node_link_data(self.graph))
+        json_str = jsonpickle.encode(json_graph.node_link_data(self._graph))
 
         return json_str
 
@@ -324,7 +374,7 @@ class Skeleton:
         """
         graph = json_graph.node_link_graph(jsonpickle.decode(json_str))
         skeleton = Skeleton()
-        skeleton.graph = graph
+        skeleton._graph = graph
 
         return skeleton
 
@@ -434,7 +484,7 @@ class Skeleton:
 
     def _save_hdf5(self, file: h5.File):
         """
-        Actual implemetation of HDF5 saving.
+        Actual implementation of HDF5 saving.
 
         Args:
             file: The open h5.File to write the skeleton data too.
@@ -453,6 +503,9 @@ class Skeleton:
         # attribute
         all_sk_group.attrs[self.name] = np.string_(self.to_json())
 
+    def __str__(self):
+        return "%s(name=%r)" % (self.__class__.__name__, self.name)
+
     def __eq__(self, other: 'Skeleton'):
 
         # First check names, duh!
@@ -463,14 +516,14 @@ class Skeleton:
             return dict1 == dict2
 
         # Check if the graphs are iso-morphic
-        is_isomorphic = nx.is_isomorphic(self.graph, other.graph, node_match=dict_match)
+        is_isomorphic = nx.is_isomorphic(self._graph, other._graph, node_match=dict_match)
 
         if not is_isomorphic:
             return False
 
         # Now check that the nodes have the same labels
-        for node in self.graph.nodes:
-            if node not in other.graph:
+        for node in self._graph.nodes:
+            if node not in other._graph:
                 return False
 
         # FIXME: Skeletons still might not be exactly equal, isomorph with labels swapped.
@@ -478,9 +531,10 @@ class Skeleton:
         # Check if the two graphs are equal
         return True
 
-    def __str__(self):
-        return "%s(name=%r)" % (self.__class__.__name__, self.name)
-
     def __hash__(self):
-        return hash(self.graph)
+        """
+        Construct a hash from skeleton name, which we force to be immutable so hashes
+        will not change.
+        """
+        return hash(self.name)
 

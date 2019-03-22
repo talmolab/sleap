@@ -10,7 +10,6 @@ import cattr
 
 from typing import Iterable, Union
 
-from sleap.util import try_open_file
 
 @attr.s(auto_attribs=True, cmp=False)
 class HDF5Video:

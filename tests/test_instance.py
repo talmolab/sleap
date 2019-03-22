@@ -95,7 +95,7 @@ def test_instance_to_pandas_df(skeleton, instances):
 
 
 def test_hdf5(instances, tmpdir):
-    out_dir = '.'
+    out_dir = tmpdir
     path = os.path.join(out_dir, 'dataset.h5')
 
     if os.path.isfile(path):
