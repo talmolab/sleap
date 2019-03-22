@@ -81,8 +81,8 @@ class MainWindow(QMainWindow):
 
         # TODO: auto-add video to clean project if no data provided
         # TODO: auto-select video if data provided, or add it to project
-        # if video is not None:
-        #     self.loadVideo(video)
+        if video is not None:
+            self.addVideo(video)
 
     def initialize_gui(self):
 
@@ -295,8 +295,14 @@ class MainWindow(QMainWindow):
                 self.loadVideo(MediaVideo(vid.filepath, grayscale=vid.channels == 1))
 
 
-    def addVideo(self):
-        pass
+    def addVideo(self, filename=None):
+        if not isinstance(filename, str):
+            filters = ["Media (*.mp4 *.avi)", "HDF5 dataset (*.h5 *.hdf5)"]
+            filename, selected_filter = QFileDialog.getOpenFileName(self, dir=None, caption="Add video...", filter=";;".join(filters))
+            if len(filename) == 0: return
+
+        self.loadVideo(Video.from_media(filename))
+
     def removeVideo(self):
         pass
 
@@ -333,14 +339,15 @@ class MainWindow(QMainWindow):
 
 
     def newFrame(self, player, frame_idx):
+        pass
         # TODO: use video id
-        frame_instances = self.labels.get_frame_instances(self.labels.videos.id.loc[0], frame_idx)
+        # frame_instances = self.labels.get_frame_instances(self.labels.videos.id.loc[0], frame_idx)
 
-        for i, instance in enumerate(frame_instances):
-            qt_instance = QtInstance(instance=instance, color=self.cmap[i])
-            player.view.scene.addItem(qt_instance)
+        # for i, instance in enumerate(frame_instances):
+        #     qt_instance = QtInstance(instance=instance, color=self.cmap[i])
+        #     player.view.scene.addItem(qt_instance)
 
-        self.statusBar().showMessage(f"Frame: {self.player.frame_idx+1}/{len(self.video)}  |  Labeled frames (video/total): {self.labels.instances[self.labels.instances.videoId == 1].frameIdx.nunique()}/{len(self.labels)}  |  Instances (frame/total): {len(frame_instances)}/{self.labels.points.instanceId.nunique()}")
+        # self.statusBar().showMessage(f"Frame: {self.player.frame_idx+1}/{len(self.video)}  |  Labeled frames (video/total): {self.labels.instances[self.labels.instances.videoId == 1].frameIdx.nunique()}/{len(self.labels)}  |  Instances (frame/total): {len(frame_instances)}/{self.labels.points.instanceId.nunique()}")
         # self.statusBar().showMessage(f"Frame: {self.player.frame_idx+1}/{len(self.video)}")
 
 
@@ -354,12 +361,15 @@ if __name__ == "__main__":
     if not os.path.exists(data_path):
         data_path = "D:/OneDrive/code/sandbox/leap_wt_gold_pilot/centered_pair.json"
 
+    vid_path = "C:/Users/tdp/OneDrive/code/sandbox/leap_wt_gold_pilot/centered_pair.mp4"
     app = QApplication([])
     app.setApplicationName("sLEAP Label")
     # window = MainWindow()
     # window = MainWindow(video=vid)
     # window = MainWindow(data_path=data_path)
-    window = MainWindow()
+    window = MainWindow(video=vid_path)
     window.showMaximized()
     app.exec_()
+
+    # window.loadVideo(Video.from_media(vid_path))
 

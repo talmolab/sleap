@@ -127,7 +127,8 @@ class MediaVideo:
         based on first frame.
     """
     filename: str = attr.ib()
-    grayscale: bool = attr.ib(default=None, converter=bool)
+    # grayscale: bool = attr.ib(default=None, converter=bool)
+    grayscale: bool = attr.ib(default=None)
 
     def __attrs_post_init__(self):
 

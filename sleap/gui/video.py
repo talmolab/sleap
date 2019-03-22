@@ -24,6 +24,8 @@ from sleap.instance import Instance, Point
 from sleap.io.video import Video, HDF5Video
 
 
+import qimage2ndarray
+
 class VideoPlayer(QWidget):
     def __init__(self, video: Video = None, *args, **kwargs):
         super(VideoPlayer, self).__init__(*args, **kwargs)
@@ -82,6 +84,7 @@ class GraphicsView(QGraphicsView):
         self._pixmapHandle = None
 
         self.setRenderHint(QPainter.Antialiasing)
+        # self.setCacheMode(QGraphicsView.CacheNone)
 
         self.aspectRatioMode = Qt.KeepAspectRatio
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -95,6 +98,8 @@ class GraphicsView(QGraphicsView):
         anchor_mode = QGraphicsView.AnchorUnderMouse
         # anchor_mode = QGraphicsView.AnchorViewCenter
         self.setTransformationAnchor(anchor_mode)
+
+        # self.scene.render()
 
     def hasImage(self):
         """ Returns whether or not the scene contains an image pixmap.
@@ -113,7 +118,8 @@ class GraphicsView(QGraphicsView):
         if type(image) is QPixmap:
             pixmap = image
         elif type(image) is QImage:
-            pixmap = QPixmap.fromImage(image)
+            # pixmap = QPixmap.fromImage(image)
+            pixmap = QPixmap(image)
         else:
             raise RuntimeError("ImageViewer.setImage: Argument must be a QImage or QPixmap.")
         if self.hasImage():
@@ -286,11 +292,17 @@ class QtVideoPlayer(QWidget):
         # Clear existing objects
         self.view.clear()
 
-        # Display image
+        # Convert ndarray to QImage
+        # TODO: handle RGB and other formats
         # https://stackoverflow.com/questions/34232632/convert-python-opencv-image-numpy-array-to-pyqt-qpixmap-image
         # https://stackoverflow.com/questions/55063499/pyqt5-convert-cv2-image-to-qimage
-        image = QImage(frame.copy().data, frame.shape[1], frame.shape[0], frame.shape[1], QImage.Format_Grayscale8)
-        # TODO: handle RGB and other formats
+        # image = QImage(frame.copy().data, frame.shape[1], frame.shape[0], frame.shape[1], QImage.Format_Grayscale8)
+        # image = QImage(frame.copy().data, frame.shape[1], frame.shape[0], QImage.Format_Grayscale8)
+
+        # Magic bullet:
+        image = qimage2ndarray.array2qimage(frame)
+
+        # Display image
         self.view.setImage(image)
 
         # Handle callbacks
