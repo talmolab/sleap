@@ -1,10 +1,13 @@
-from PySide2.QtWidgets import QApplication, QWidget
-from PySide2.QtWidgets import QVBoxLayout, QLabel, QPushButton
+from PySide2.QtWidgets import QApplication, QVBoxLayout, QWidget
+from PySide2.QtWidgets import QLabel, QPushButton, QSlider
 from PySide2.QtWidgets import QAction
 
-from PySide2.QtWidgets import QGraphicsView, QGraphicsScene, QGraphicsItem
-from PySide2.QtGui import QImage, QPixmap, QPainterPath, QPen
-from PySide2.QtCore import Qt, QRectF, Signal
+from PySide2.QtWidgets import QGraphicsView, QGraphicsScene
+from PySide2.QtGui import QImage, QPixmap, QPainter, QPainterPath
+from PySide2.QtGui import QPen, QBrush, QColor
+from PySide2.QtGui import QKeyEvent
+from PySide2.QtCore import Qt, Signal, Slot
+from PySide2.QtCore import QRectF, QLineF, QPointF
 # from PySide2.QtCore import pyqtSignal
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -12,9 +15,17 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 
+from PySide2.QtWidgets import QGraphicsItem, QGraphicsObject
+# The PySide2.QtWidgets.QGraphicsObject class provides a base class for all graphics items that require signals, slots and properties.
+from PySide2.QtWidgets import QGraphicsEllipseItem, QGraphicsLineItem
+
+from sleap.skeleton import Skeleton
+from sleap.instance import Instance, Point
+from sleap.io.video import Video, HDF5Video
+
 
 class VideoPlayer(QWidget):
-    def __init__(self, video=None, *args, **kwargs):
+    def __init__(self, video: Video = None, *args, **kwargs):
         super(VideoPlayer, self).__init__(*args, **kwargs)
 
         self.video = video
@@ -65,8 +76,12 @@ class GraphicsView(QGraphicsView):
         QGraphicsView.__init__(self)
         self.scene = QGraphicsScene()
         self.setScene(self.scene)
+        # brush = QBrush(QColor.black())
+        self.scene.setBackgroundBrush(QBrush(QColor(Qt.black)))
 
         self._pixmapHandle = None
+
+        self.setRenderHint(QPainter.Antialiasing)
 
         self.aspectRatioMode = Qt.KeepAspectRatio
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -85,6 +100,10 @@ class GraphicsView(QGraphicsView):
         """ Returns whether or not the scene contains an image pixmap.
         """
         return self._pixmapHandle is not None
+
+    def clear(self):
+        self._pixmapHandle = None
+        self.scene.clear()
 
     def setImage(self, image):
         """ Set the scene's current image pixmap to the input QImage or QPixmap.
@@ -113,7 +132,12 @@ class GraphicsView(QGraphicsView):
             self.fitInView(self.zoomStack[-1], Qt.IgnoreAspectRatio)  # Show zoomed rect (ignore aspect ratio).
         else:
             self.zoomStack = []  # Clear the zoom stack (in case we got here because of an invalid zoom).
-            self.fitInView(self.sceneRect(), self.aspectRatioMode)  # Show entire image (use current aspect ratio mode).
+
+            rect = self.sceneRect()
+            # print(self.transform())
+            # print(rect)
+            # print(self.rect())
+            self.fitInView(rect, self.aspectRatioMode)  # Show entire image (use current aspect ratio mode).
             self.scale(self.zoomFactor, self.zoomFactor)
             # TODO: fix this so that it's a single operation
             #   Maybe adjust the self.sceneRect() to account for zooming?
@@ -190,65 +214,291 @@ class GraphicsView(QGraphicsView):
 
         # self.scale(factor, factor)
 
-        # print()
+        # https://stackoverflow.com/questions/19113532/qgraphicsview-zooming-in-and-out-under-mouse-position-using-mouse-wheel
+        # 
+
+    def keyPressEvent(self, event):
+        event.ignore() # Kicks the event up to parent
+
+    def keyReleaseEvent(self, event):
+        event.ignore() # Kicks the event up to parent
 
 
 class QtVideoPlayer(QWidget):
-    def __init__(self, video=None, *args, **kwargs):
+    def __init__(self, video: Video = None, callbacks=[], *args, **kwargs):
         super(QtVideoPlayer, self).__init__(*args, **kwargs)
 
-        self.video = video
-
-        # self.scene = QGraphicsScene()
-        # self.view = QGraphicsView(self.scene)
+        self.frame_idx = -1
+        self.callbacks = callbacks
         self.view = GraphicsView()
 
-        btn = QPushButton("Plot")
-        btn.clicked.connect(self.plot)
+        # btn = QPushButton("Plot")
+        # btn.clicked.connect(lambda x: self.plot(np.random.randint(0,len(self.video))))
+        
+        self.seekbar = QSlider(Qt.Horizontal)
+        self.seekbar.valueChanged.connect(lambda evt: self.plot(self.seekbar.value()))
+        self.seekbar.setEnabled(False)
 
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.view)
-        self.layout.addWidget(btn)
+        self.layout.addWidget(self.seekbar)
+        # self.layout.addWidget(btn)
         self.setLayout(self.layout)
         self.view.show()
-        self.plot()
 
-        # https://stackoverflow.com/questions/19113532/qgraphicsview-zooming-in-and-out-under-mouse-position-using-mouse-wheel
+        if video is not None:
+            self.load_video(video)
+        
+    def load_video(self, video: Video, initial_frame=0, plot=True):
 
-    def plot(self):
+        self.video = video
+        self.frame_idx = initial_frame
 
-        if self.video is not None:
-            frame = self.video.get_frame(np.random.randint(0,len(self.video)))
-        else:
-            frame = np.zeros((2,2), dtype="uint8")
+        # Is this necessary?
+        self.view.scene.setSceneRect(0, 0, video.width, video.height)
 
+        # self.seekbar.setTickInterval(1)
+        self.seekbar.setValue(self.frame_idx)
+        self.seekbar.setMinimum(0)
+        self.seekbar.setMaximum(video.frames - 1)
+        self.seekbar.setEnabled(True)
+
+        if plot:
+            self.plot()
+
+
+    def plot(self, idx=None):
+
+        if self.video is None:
+            return
+
+        # Refresh by default
+        if idx is None:
+            idx = self.frame_idx
+
+        # Get image data
+        frame = self.video.get_frame(idx)
+
+        # Update index
+        self.frame_idx = idx
+        self.seekbar.setValue(self.frame_idx)
+
+        # Clear existing objects
+        self.view.clear()
+
+        # Display image
         # https://stackoverflow.com/questions/34232632/convert-python-opencv-image-numpy-array-to-pyqt-qpixmap-image
         # https://stackoverflow.com/questions/55063499/pyqt5-convert-cv2-image-to-qimage
         image = QImage(frame.copy().data, frame.shape[1], frame.shape[0], frame.shape[1], QImage.Format_Grayscale8)
         # TODO: handle RGB and other formats
         self.view.setImage(image)
 
-        pen = QPen(Qt.red, 3)
-        lineItem = self.view.scene.addLine(100, 100, 250, 250, pen)
-        lineItem.setFlag(QGraphicsItem.ItemIsMovable)
-        # https://stackoverflow.com/questions/36689957/movable-qgraphicslineitem-bounding-box
-        # https://doc.qt.io/qtforpython/PySide2/QtWidgets/QGraphicsItem.html#PySide2.QtWidgets.QGraphicsItem
-        # https://doc.qt.io/qtforpython/overviews/qtwidgets-graphicsview-dragdroprobot-example.html#drag-and-drop-robot-example
+        # Handle callbacks
+        for callback in self.callbacks:
+            callback(self, idx)
+
+    def nextFrame(self, dt=1):
+        self.plot((self.frame_idx + abs(dt)) % len(self.video))
+
+    def prevFrame(self, dt=1):
+        self.plot((self.frame_idx - abs(dt)) % len(self.video))
+
+    def keyPressEvent(self, event: QKeyEvent):
+        if event.key() == Qt.Key.Key_Left:
+            self.prevFrame()
+        elif event.key() == Qt.Key.Key_Right:
+            self.nextFrame()
+        elif event.key() == Qt.Key.Key_Home:
+            self.plot(0)
+        elif event.key() == Qt.Key.Key_End:
+            self.plot(len(self.video) - 1)
+        else:
+            event.ignore() # Kicks the event up to parent
+            # print(event.key())
+
+class QtNode(QGraphicsEllipseItem):
+    # pointUpdated = Signal(Point)
+
+    def __init__(self, parent, point:Point, radius=1.5, *args, **kwargs):
+        self.point = point
+        self.radius = radius
+        self.edges = []
+
+        super(QtNode, self).__init__(-self.radius, -self.radius, self.radius*2, self.radius*2, parent=parent, *args, **kwargs)
+        self.setPos(self.point.x, self.point.y)
+
+    def updatePoint(self):
+        self.point.x = self.scenePos().x()
+        self.point.y = self.scenePos().y()
+
+        for edge in self.edges:
+            edge.updateEdge(self)
+
+    def mousePressEvent(self, event):
+        # print(event)
+        super(QtNode, self).mousePressEvent(event)
+        self.updatePoint()
+
+    def mouseMoveEvent(self, event):
+        # print(event)
+        super(QtNode, self).mouseMoveEvent(event)
+        self.updatePoint()
+
+    def mouseReleaseEvent(self, event):
+        # print(event)
+        super(QtNode, self).mouseReleaseEvent(event)
+        self.updatePoint()
+        # print(self.point)
+        # print(self.scenePos())
+        # print(self.pos())
 
 
 
+class QtEdge(QGraphicsLineItem):
+    def __init__(self, parent, src:QtNode, dst:QtNode, *args, **kwargs):
+        self.src = src
+        self.dst = dst
+
+        super(QtEdge, self).__init__(self.src.point.x, self.src.point.y, self.dst.point.x, self.dst.point.y, parent=parent, *args, **kwargs)
+        
+    def updateEdge(self, node):
+        if node == self.src:
+            line = self.line()
+            line.setP1(node.scenePos())
+            self.setLine(line)
+
+        elif node == self.dst: 
+            line = self.line()
+            line.setP2(node.scenePos())
+            self.setLine(line)
+
+
+class QtInstance(QGraphicsObject):
+    def __init__(self, skeleton:Skeleton = None, instance: Instance = None, color=(0, 114, 189), markerRadius=1.5, *args, **kwargs):
+        super(QtInstance, self).__init__(*args, **kwargs)
+        self.skeleton = skeleton if instance is None else instance.skeleton
+        self.instance = instance
+        self.nodes = {}
+        self.edges = []
+        self.color = color
+        self.markerRadius = markerRadius
+        
+        col_line = QColor(*self.color)
+        pen = QPen(col_line, 2)
+        pen.setCosmetic(True) # https://stackoverflow.com/questions/13120486/adjusting-qpen-thickness-when-scaling-qgraphicsview
+
+        pen_missing = QPen(col_line, 1)
+        pen_missing.setCosmetic(True)
+
+        col_fill = QColor(*self.color, a=128)
+        brush = QBrush(col_fill)
+
+        col_fill_missing = QColor(*self.color, a=0)
+        brush_missing = QBrush(col_fill_missing)
+
+        for (node, point) in self.instance.nodes_points():
+            if point.visible:
+                node_item = QtNode(parent=self, point=point, radius=self.markerRadius)
+                node_item.setPen(pen)
+                node_item.setBrush(brush)
+            else:
+                node_item = QtNode(parent=self, point=point, radius=self.markerRadius * 0.5)
+                node_item.setPen(pen_missing)
+                node_item.setBrush(brush_missing)
+            node_item.setFlag(QGraphicsItem.ItemIsMovable)
+
+            self.nodes[node] = node_item
+
+        for (src, dst) in self.skeleton.graph.edges():
+            edge_item = QtEdge(parent=self, src=self.nodes[src], dst=self.nodes[dst])
+            edge_item.setPen(pen)
+            self.nodes[src].edges.append(edge_item)
+            self.nodes[dst].edges.append(edge_item)
+            self.edges.append(edge_item)
+
+
+    def boundingRect(self):
+        return QRectF()
+
+    def paint(self, painter, option, widget=None):
+        pass
 
 if __name__ == "__main__":
 
+    import h5py
 
-    from sleap.io.video import HDF5Video
-
-    vid = HDF5Video("tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5", "/box", input_format="channels_first")
+    data_path = "D:/sleap/tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"
+    vid = HDF5Video(data_path, "/box", input_format="channels_first")
 
     app = QApplication([])
     # app.setApplicationName("sLEAP Label")
     # window = VideoPlayer(video=vid)
     window = QtVideoPlayer(video=vid)
+
+    # lines(7)*255
+    cmap = np.array([
+        [0,   114,   189],
+        [217,  83,    25],
+        [237, 177,    32],
+        [126,  47,   142],
+        [119, 172,    48],
+        [77,  190,   238],
+        [162,  20,    47],
+        ])
+
+    skeleton = Skeleton("Fly")
+    skeleton.add_node(name="head")
+    skeleton.add_node(name="neck")
+    skeleton.add_node(name="thorax")
+    skeleton.add_node(name="abdomen")
+    skeleton.add_node(name="left-wing")
+    skeleton.add_node(name="right-wing")
+    skeleton.add_edge(source="head", destination="neck")
+    skeleton.add_edge(source="neck", destination="thorax")
+    skeleton.add_edge(source="thorax", destination="abdomen")
+    skeleton.add_edge(source="thorax", destination="left-wing")
+    skeleton.add_edge(source="thorax", destination="right-wing")
+    # skeleton.add_symmetry(node1="left-wing", node2="right-wing")
+    node_names = list(skeleton.graph.nodes)
+
+    scale = 0.5
+    with h5py.File(data_path, "r") as f:
+        # skeleton = Skeleton.load_hdf5(f["skeleton"])
+        frames = {k: f["frames"][k][:].flatten() for k in ["videoId", "frameIdx"]}
+        points = {k: f["points"][k][:].flatten() for k in ["id", "frameIdx", "instanceId", "x", "y", "node", "visible"]}
+
+    # points["frameIdx"] -= 1
+    points["x"] *= scale
+    points["y"] *= scale
+    points["node"] = points["node"].astype("uint8") - 1
+    points["visible"] = points["visible"].astype("bool")
+
+
+
+    def plot_instances(vp, idx):
+
+        # Find instances in frame idx
+        is_in_frame = points["frameIdx"] == frames["frameIdx"][idx]
+        if not is_in_frame.any():
+            return
+
+        frame_instance_ids = np.unique(points["instanceId"][is_in_frame])
+        for i, instance_id in enumerate(frame_instance_ids):
+            is_instance = is_in_frame & (points["instanceId"] == instance_id)
+            instance_points = {node_names[n]: Point(x, y, visible=v) for x, y, n, v in
+                                            zip(*[points[k][is_instance] for k in ["x", "y", "node", "visible"]])}
+
+
+            # Plot instance
+            instance = Instance(skeleton=skeleton, video=vp.video, frame_idx=idx, points=instance_points)
+            qt_instance = QtInstance(instance=instance, color=cmap[i])
+            vp.view.scene.addItem(qt_instance)
+
+    window.callbacks.append(plot_instances)
+
+
     window.show()
+    window.plot()
+    
     app.exec_()
 

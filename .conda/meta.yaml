@@ -1,8 +1,9 @@
 # Setup a list of packages that aren't conda installable
-# OpenCV is available but we want to install from conda-forge in post build
-{% set conda_package_nonexistent = (
+{% set conda_skip = (
+    "cattrs",
     "opencv-python",
-    "PySide2"
+    "PySide2",
+    "imgaug"
 ) %}
 
 {% set data = load_setup_py_data() %}
@@ -21,6 +22,10 @@ about:
   license: {{ data.get('license') }}
   summary: {{ data.get('description') }}
 
+build:
+  number: 0
+  noarch: python
+
 source:
   path: ../
 
@@ -29,18 +34,19 @@ requirements:
     - python
     - setuptools
     - pip
-    {% for req in data.get('setup_requires', [])
-        if req not in conda_package_nonexistent -%}
-    - {{req}}
-    {% endfor %}
-    {% for req in data.get('install_requires', [])
-        if req not in conda_package_nonexistent -%}
-    - {{req}}
-    {% endfor %}
+    - attrs
+    - jsonpickle
+    - networkx
+    - tensorflow-gpu
+    - keras
+    - h5py
 
   run:
     - python
-    {% for req in data.get('install_requires', [])
-        if req not in conda_package_nonexistent -%}
-    - {{req}}
-    {% endfor %}
+    - attrs
+    - jsonpickle
+    - networkx
+    - tensorflow-gpu
+    - keras
+    - h5py
+
