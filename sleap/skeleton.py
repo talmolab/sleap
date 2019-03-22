@@ -65,12 +65,15 @@ class Skeleton:
 
     @property
     def graph(self):
-        edges = [(u, v, *list(d.values())) for u, v, d in self._graph.edges(data=True) if d['type'] == EdgeType.BODY]
+        edges = [(u, v, key) for src, dst, key, edge_type in self._graph.edges(keys=True, data="type") if edge_type == EdgeType.BODY]
+        # TODO: properly induce subgraph for MultiDiGraph
+        #   Currently, NetworkX will just return the nodes in the subgraph. 
+        #   See: https://stackoverflow.com/questions/16150557/networkxcreating-a-subgraph-induced-from-edges
         return self._graph.edge_subgraph(edges)
 
     @property
     def graph_symmetry(self):
-        edges = [(u, v, *list(d.values())) for u, v, d in self._graph.edges(data=True) if d['type'] == EdgeType.SYMMETRY]
+        edges = [(u, v, key) for src, dst, key, edge_type in self._graph.edges(keys=True, data="type") if edge_type == EdgeType.SYMMETRY]
         return self._graph.edge_subgraph(edges)
 
     @staticmethod
@@ -130,13 +133,58 @@ class Skeleton:
         return new_skeleton
 
     @property
-    def node_names(self):
+    def nodes(self):
         """Get a list of node names.
 
         Returns:
             A list of strings with the node names.
         """
         return list(self._graph.nodes)
+
+    @property
+    def edges(self):
+        """Get a list of edge tuples.
+
+        Returns:
+            list of (src_node, dst_node)
+        """
+        return [(src, dst) for src, dst, key, edge_type in self._graph.edges(keys=True, data="type") if edge_type == EdgeType.BODY]
+    
+    @property
+    def edges_full(self):
+        """Get a list of edge tuples with keys and attributes.
+
+        Returns:
+            list of (src_node, dst_node, key, attributes)
+        """
+        return [(src, dst, key, attr) for src, dst, key, attr in self._graph.edges(keys=True, data=True) if attr["type"] == EdgeType.BODY]
+
+    @property
+    def symmetries(self):
+        """Get a list of all symmetries without duplicates.
+
+        Returns:
+            list of (node1, node2)
+        """
+        # Find all symmetric edges
+        symmetries = [(src, dst) for src, dst, key, edge_type in self._graph.edges(keys=True, data="type") if edge_type == EdgeType.SYMMETRY]
+
+        # Get rid of duplicates
+        symmetries = list(set([tuple(set(e)) for e in symmetries]))
+        return symmetries
+
+    @property
+    def symmetries_full(self):
+        """Get a list of all symmetries with keys and attributes.
+
+        Note: The returned list will contain duplicates (node1, node2) and (node2, node1).
+
+        Returns:
+            list of (node1, node2, key, attr)
+        """
+
+        # Find all symmetric edges
+        return [(src, dst, key, attr) for src, dst, key, attr in self._graph.edges(keys=True, data=True) if attr["type"] == EdgeType.SYMMETRY]
 
     def node_to_index(self, node_name: str):
         """
@@ -246,8 +294,8 @@ class Skeleton:
         the left and right hands of a person.
 
         Args:
-            node1: The name of the one part in the symmetric pair
-            node2:  The name of the secondd part in the symmetric pair
+            node1: The name of the first part in the symmetric pair
+            node2: The name of the second part in the symmetric pair
 
         Returns:
             None
@@ -255,12 +303,59 @@ class Skeleton:
         """
 
         # We will represent symmetric pairs in the skeleton via additional edges in the _graph
-        # These edges will have a special attribute signifying they are not part of the skeleton it self
-        self._graph.add_edge(node1, node2, type = EdgeType.SYMMETRY)
+        # These edges will have a special attribute signifying they are not part of the skeleton itself
+
+        if node1 == node2:
+            raise ValueError("Cannot add symmetry to the same node.")
+
+        if self.get_symmetry(node1) is not None:
+            raise ValueError(f"{node1} is already symmetric with {self.get_symmetry(node1)}.")
+
+        if self.get_symmetry(node2) is not None:
+            raise ValueError(f"{node2} is already symmetric with {self.get_symmetry(node2)}.")
+
+        self._graph.add_edge(node1, node2, type=EdgeType.SYMMETRY)
+        self._graph.add_edge(node2, node1, type=EdgeType.SYMMETRY)
+
+    def delete_symmetry(self, node1:str, node2: str):
+        """Deletes a previously established symmetry relationship between two nodes.
+
+        Args:
+            node1: The name of the first part in the symmetric pair
+            node2: The name of the second part in the symmetric pair
+
+        Returns:
+            None
+        """
+        if self.get_symmetry(node1) != node2 or self.get_symmetry(node2) != node1:
+            raise ValueError(f"Nodes {node1}, {node2} are not symmetric.")
+
+        edges = [(src, dst, key) for src, dst, key, edge_type in self._graph.edges([node1, node2], keys=True, data="type") if edge_type == EdgeType.SYMMETRY]
+        self._graph.remove_edges_from(edges)
+
+    def get_symmetry(self, node:str):
+        """ Returns the node symmetric with the specified node.
+
+        Args:
+            node: The name of the node to query.
+
+        Returns:
+            name of symmetric node, None if no symmetry
+        """
+        symmetry = [dst for src, dst, edge_type in self._graph.edges(node, data="type") if edge_type == EdgeType.SYMMETRY]
+
+        if len(symmetry) == 0:
+            return None
+        elif len(symmetry) == 1:
+            return symmetry[0]
+        else:
+            raise ValueError(f"{node} has more than one symmetry.")
+
 
     def __getitem__(self, node_name:str) -> dict:
         """
         Retrieves a the node data associated with Skeleton node.
+
         Args:
             node_name: The name from which to retrieve data.
 
@@ -296,6 +391,11 @@ class Skeleton:
         Returns:
             None
         """
+        existing_nodes = self.nodes
+        for k, v in mapping.items():
+            if self._graph.has_node(v):
+                raise ValueError("Cannot relabel a node to an existing name.")
+
         self._graph = nx.relabel_nodes(G=self._graph, mapping=mapping)
 
     def has_node(self, name: str) -> bool:
