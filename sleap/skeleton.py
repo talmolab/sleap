@@ -65,12 +65,12 @@ class Skeleton:
 
     @property
     def graph(self):
-        edges = ((u, v) for u, v, d in self._graph.edges(data=True) if d['type'] == EdgeType.BODY)
+        edges = [(u, v, *list(d.values())) for u, v, d in self._graph.edges(data=True) if d['type'] == EdgeType.BODY]
         return self._graph.edge_subgraph(edges)
 
     @property
     def graph_symmetry(self):
-        edges = ((u, v) for u, v, d in self._graph.edges(data=True) if d['type'] == EdgeType.SYMMETRY)
+        edges = [(u, v, *list(d.values())) for u, v, d in self._graph.edges(data=True) if d['type'] == EdgeType.SYMMETRY]
         return self._graph.edge_subgraph(edges)
 
     @staticmethod
@@ -137,6 +137,18 @@ class Skeleton:
             A list of strings with the node names.
         """
         return list(self._graph.nodes)
+
+    def node_to_index(self, node_name: str):
+        """
+        Return the index of the node with name node_name.
+
+        Args:
+            node_name: The name of the node.
+
+        Returns:
+            The index of the node in the graph.
+        """
+        return list(self._graph.nodes()).index(node_name)
 
     def add_node(self, name: str):
         """Add a node representing an animal part to the skeleton.
@@ -261,6 +273,19 @@ class Skeleton:
 
         return self._graph.nodes.data()[node_name]
 
+    def relabel_node(self, old_name: str, new_name: str):
+        """
+        Relable a single node to a new name.
+
+        Args:
+            old_name: The old name of the node.
+            new_name: The new name of the node.
+
+        Returns:
+            None
+        """
+        self.relabel_nodes({old_name: new_name})
+
     def relabel_nodes(self, mapping:dict):
         """
         Relabel the nodes of the skeleton.
@@ -270,9 +295,8 @@ class Skeleton:
 
         Returns:
             None
-
         """
-        nx.relabel_nodes(G=self._graph, mapping=mapping, copy=False)
+        self._graph = nx.relabel_nodes(G=self._graph, mapping=mapping)
 
     def has_node(self, name: str) -> bool:
         """

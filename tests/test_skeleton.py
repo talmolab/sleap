@@ -204,3 +204,5 @@ def test_name_change(skeleton):
     with pytest.raises(NotImplementedError):
         skeleton.name = "Test"
 
+def test_graph_property(skeleton):
+    assert [node for node in skeleton.graph.nodes()] == skeleton.node_names
