@@ -51,6 +51,7 @@ class Point:
     def isnan(self):
         return math.isnan(self.x) or math.isnan(self.y)
 
+
 @attr.s(auto_attribs=True, slots=True)
 class Instance:
     """
@@ -62,7 +63,7 @@ class Instance:
     """
 
     skeleton: Skeleton
-    _points: Dict[str, Point] = attr.ib(default=attr.Factory(dict))
+    _points: Dict[int, Point] = attr.ib(default=attr.Factory(dict))
 
     @_points.validator
     def _validate_all_points(self, attribute, points):
@@ -75,9 +76,43 @@ class Instance:
         Raises:
             ValueError: If a point is associated with a skeleton node name that doesn't exist.
         """
-        for node_name in points.keys():
-            if not self.skeleton.has_node(node_name):
-                raise KeyError(f"There is no skeleton node named {node_name} in {self.skeleton}")
+        is_string_dict = set(map(type, self._points)) == {str}
+        if is_string_dict:
+            for node_name in points.keys():
+                if not self.skeleton.has_node(node_name):
+                    raise KeyError(f"There is no node named {node_name} in {self.skeleton}")
+
+    def __attrs_post_init__(self):
+
+        # If the points dict is non-empty, validate it.
+        if self._points:
+            # Check if the dict contains all strings
+            is_string_dict = set(map(type, self._points)) == {str}
+
+            # Check if the dict contains all strings
+            is_int_dict = set(map(type, self._points)) == {int}
+
+            # If the user fed in a dict whose keys are strings, these are node names,
+            # convert to node indices so we don't break references to skeleton nodes
+            # if the node name is relabeled.
+            if self._points and is_string_dict:
+                self._points = {self._node_to_index(name): point for name,point in self._points.items()}
+
+            if not is_string_dict and not is_int_dict:
+                raise ValueError("points dictionary must be keyed by either strings " +
+                                 "(node names) or integers (node indices).")
+
+    def _node_to_index(self, node_name):
+        """
+        Helper method to get the index of a node from its name.
+
+        Args:
+            node_name: The name of the node.
+
+        Returns:
+            The index of the node on skeleton graph.
+        """
+        return self.skeleton.node_to_index(node_name)
 
     def __getitem__(self, node):
         """
@@ -100,10 +135,11 @@ class Instance:
             return ret_list
 
         if self.skeleton.has_node(node):
-            if not node in self._points:
-                self._points[node] = Point()
+            node_index = self._node_to_index(node)
+            if not self._node_to_index(node) in self._points:
+                self._points[node_index] = Point()
 
-            return self._points[node]
+            return self._points[node_index]
         else:
             raise KeyError(f"The underlying skeleton ({self.skeleton}) has no node named '{node}'")
 
@@ -123,7 +159,7 @@ class Instance:
                 self.__setitem__(n, v)
         else:
             if self.skeleton.has_node(node):
-                self._points[node] = value
+                self._points[self._node_to_index(node)] = value
             else:
                 raise KeyError(f"The underlying skeleton ({self.skeleton}) has no node named '{node}'")
 
@@ -135,7 +171,7 @@ class Instance:
             A list of nodes that have been labelled for this instance.
 
         """
-        return self._points.keys()
+        return [self.skeleton.node_names[i] for i in self._points.keys()]
 
     def nodes_points(self):
         """
@@ -145,7 +181,8 @@ class Instance:
         Returns:
             The instance's (node, point) tuple pairs for all labelled point.
         """
-        return self._points.items()
+        names_to_points = {self.skeleton.node_names[i]: point for i, point in self._points.items()}
+        return names_to_points.items()
 
     def points(self):
         """

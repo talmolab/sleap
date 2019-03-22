@@ -27,8 +27,9 @@ def test_labels_json(tmpdir, multi_skel_vid_labels):
     for expected_label, label in zip(multi_skel_vid_labels.labels, loaded_labels.labels):
         assert expected_label.frame_idx == label.frame_idx
 
-        # Compare the first frames of the videos
-        np.allclose(expected_label.video.get_frame(0), label.video.get_frame(0))
+        # Compare the first frames of the videos, do it on a small sub-region to
+        # make the test reasonable in time.
+        np.allclose(expected_label.video.get_frame(0)[0:15,0:15,:], label.video.get_frame(0)[0:15,0:15,:])
 
         # Compare the instances
         assert expected_label.instances == label.instances

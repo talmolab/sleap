@@ -117,10 +117,10 @@ def test_eq():
 
     # FIXME: Probably shouldn't test it this way.
     # Add a value to a nodes dict, make sure they are not equal. This is touching the
-    # internal graph storage of the skeleton which probably should be avoided. But, I
+    # internal _graph storage of the skeleton which probably should be avoided. But, I
     # wanted to test this just in case we add attributes to the nodes in the future.
     s2 = copy.deepcopy(s1)
-    s2.graph.nodes['1']['test'] = 5
+    s2._graph.nodes['1']['test'] = 5
     assert s1 != s2
 
 
@@ -179,3 +179,30 @@ def test_hdf5(skeleton, stickman, tmpdir):
     with pytest.raises(ValueError):
         Skeleton.save_all_hdf5(filename, [skeleton, Skeleton(name=skeleton.name)])
 
+
+def test_name_change(skeleton):
+    new_skeleton = Skeleton.rename_skeleton(skeleton, "New Fly")
+
+    import networkx as nx
+
+    def dict_match(dict1, dict2):
+        return dict1 == dict2
+
+    # Make sure the graphs are the same, not exact but clo
+    assert nx.is_isomorphic(new_skeleton._graph, skeleton._graph, node_match=dict_match)
+
+    # Make sure the skeletons are different (because of name)
+    assert new_skeleton != skeleton
+
+    # Make sure they hash different
+    assert hash(new_skeleton) != hash(skeleton)
+
+    # Make sure sets work
+    assert len({new_skeleton, skeleton}) == 2
+
+    # Make sure changing the name causues problems
+    with pytest.raises(NotImplementedError):
+        skeleton.name = "Test"
+
+def test_graph_property(skeleton):
+    assert [node for node in skeleton.graph.nodes()] == skeleton.node_names

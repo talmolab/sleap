@@ -5,6 +5,7 @@ import copy
 import pytest
 import numpy as np
 
+from sleap.skeleton import Skeleton
 from sleap.instance import Instance, Point
 
 def test_instance_node_get_set_item(skeleton):
@@ -95,7 +96,7 @@ def test_instance_to_pandas_df(skeleton, instances):
 
 
 def test_hdf5(instances, tmpdir):
-    out_dir = '.'
+    out_dir = tmpdir
     path = os.path.join(out_dir, 'dataset.h5')
 
     if os.path.isfile(path):
@@ -121,4 +122,30 @@ def test_hdf5(instances, tmpdir):
     # Check that we get back the same instances
     for i in range(len(instances2)):
         assert instances_copy[i] == instances2[i]
+
+
+def test_skeleton_node_name_change():
+    """
+    Test that and instance is not broken after a node on the
+    skeleton has its name changed.
+    """
+
+    s = Skeleton("Test")
+    s.add_nodes(['a', 'b', 'c', 'd', 'e'])
+    s.add_edge('a', 'b')
+
+    instance = Instance(s)
+    instance['a'] = Point(1,2)
+    instance['b'] = Point(3,4)
+
+    # Rename the node
+    s.relabel_nodes({'a': 'A'})
+
+    # Reference to the old node name should raise a KeyError
+    with pytest.raises(KeyError):
+        instance['a'].x = 2
+
+    # Make sure the A now references the same point on the instance
+    assert instance['A'] == Point(1, 2)
+    assert instance['b'] == Point(3, 4)
 
