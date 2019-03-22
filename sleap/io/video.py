@@ -131,7 +131,7 @@ class MediaVideo:
     def __attrs_post_init__(self):
 
         if not os.path.isfile(self.filename):
-            raise FileNotFoundError(f"Could not file video file named {self.filename}")
+            raise FileNotFoundError(f"Could not find file video file named {self.filename}")
 
         # Try and open the file either locally in current directory or with full path
         self.__reader = cv2.VideoCapture(self.filename)
@@ -187,7 +187,6 @@ class MediaVideo:
             frame = frame[...,0][...,None]
 
         return frame
-
 
 
 @attr.s(auto_attribs=True, cmp=False)
