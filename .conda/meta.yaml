@@ -1,9 +1,9 @@
 # Setup a list of packages that aren't conda installable
 {% set conda_skip = (
-    "cattrs"         # No conda package
-    "opencv-python", # We will pip install it because we want ffmpeg
-    "PySide2"        # Doesn't exist in conda defaults
-    "imgaug"         # Brings in matplotlib, which needs pyqt, which we don't want
+    "cattrs",
+    "opencv-python",
+    "PySide2",
+    "imgaug"
 ) %}
 
 {% set data = load_setup_py_data() %}
@@ -22,6 +22,10 @@ about:
   license: {{ data.get('license') }}
   summary: {{ data.get('description') }}
 
+build:
+  number: 0
+  noarch: python
+
 source:
   path: ../
 
@@ -30,18 +34,19 @@ requirements:
     - python
     - setuptools
     - pip
-    {% for req in data.get('setup_requires', [])
-        if req not in conda_skip -%}
-    - {{req}}
-    {% endfor %}
-    {% for req in data.get('install_requires', [])
-        if req not in conda_skip -%}
-    - {{req}}
-    {% endfor %}
+    - attrs
+    - jsonpickle
+    - networkx
+    - tensorflow-gpu
+    - keras
+    - h5py
 
   run:
     - python
-    {% for req in data.get('install_requires', [])
-        if req not in conda_skip -%}
-    - {{req}}
-    {% endfor %}
+    - attrs
+    - jsonpickle
+    - networkx
+    - tensorflow-gpu
+    - keras
+    - h5py
+
