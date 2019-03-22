@@ -1,8 +1,5 @@
-import numpy as np
-import collections
-import tensorflow as tf
 import keras
-from keras.layers import Conv2D, BatchNormalization, Concatenate, MaxPool2D, UpSampling2D
+from keras.layers import Conv2D, Conv2DTranspose, Concatenate, MaxPool2D, UpSampling2D
 
 def conv(num_filters, kernel_size=(5, 5), activation="relu", initializer="glorot_normal", **kwargs):
     """Convenience presets for Conv2D.
@@ -19,7 +16,7 @@ def conv(num_filters, kernel_size=(5, 5), activation="relu", initializer="glorot
     return Conv2D(num_filters, kernel_size=kernel_size, activation=activation, padding="same", **kwargs)
 
 
-def unet(x_in, num_output_channels, depth=3, convs_per_depth=2, num_filters=16, interp="bilinear"):
+def unet(x_in, num_output_channels, depth=3, convs_per_depth=2, num_filters=16, upsampling_layers=True, interp="bilinear"):
     """U-net block.
 
     Implementation based off of `CARE
@@ -38,6 +35,7 @@ def unet(x_in, num_output_channels, depth=3, convs_per_depth=2, num_filters=16, 
             after upsampling.
         num_filters: The base number feature channels of the block. The number of
             filters is doubled at each pooling step.
+        upsampling_layers: Use upsampling instead of transposed convolutions.
         interp: Method to use for interpolation when upsampling smaller features.
 
     Returns:
@@ -67,7 +65,13 @@ def unet(x_in, num_output_channels, depth=3, convs_per_depth=2, num_filters=16, 
 
     # Upsampling (with skips)
     for n in reversed(range(depth)):
-        x = Concatenate(axis=-1)([UpSampling2D(size=(2,2), interpolation=interp)(x), skip_layers[n]])
+        if upsampling_layers:
+            x = UpSampling2D(size=(2,2), interpolation=interp)(x)
+        else:
+            x = Conv2DTranspose(num_filters * 2 ** n, kernel_size=3, strides=2, padding="same", activation="relu", kernel_initializer="glorot_normal")(x)
+
+        x = Concatenate(axis=-1)([x, skip_layers[n]])
+        
         for i in range(convs_per_depth - 1):
             x = conv(num_filters * 2 ** n)(x)
 
