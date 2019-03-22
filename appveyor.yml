@@ -24,6 +24,11 @@ install:
   # Display conda version
   - conda info -a
 
+  # Take the enviroment.yml but replace tensorflow-gpu with tensorflow,
+  # we don't have GPUs on appveyor nodes and this will make
+  # building the enviroment faster.
+  - ps: (Get-Content -path .\environment.yml -Raw) -replace 'tensorflow-gpu','tensorflow' | Set-Content -Path environment_appveyor.yml
+
   # Create/update the sleap environment in case some dependencies changed.
   - conda env create -n sleap_appveyor -f environment_appveyor.yml
 
@@ -42,6 +47,6 @@ build: off
 test_script:
   - cmd: activate sleap_appveyor
   - cmd: where python
-  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+#  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
   - cmd: python -m pytest tests/
 
