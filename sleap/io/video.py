@@ -65,8 +65,8 @@ class HDF5Video:
 
         if value == "channels_first":
             self.__channel_idx = 1
-            self.__width_idx = 3
-            self.__height_idx = 2
+            self.__width_idx = 2
+            self.__height_idx = 3
         else:
             self.__channel_idx = 3
             self.__width_idx = 2
@@ -161,15 +161,15 @@ class MediaVideo:
         if self.grayscale:
             return 1
         else:
-            return self.__test_frame.shape[0]
+            return self.__test_frame.shape[2]
 
     @property
     def width(self):
-        return self.__test_frame.shape[2]
+        return self.__test_frame.shape[1]
 
     @property
     def height(self):
-        return self.__test_frame.shape[1]
+        return self.__test_frame.shape[0]
 
     @property
     def dtype(self):
@@ -312,8 +312,25 @@ class Video:
             file: The name of the file
 
         Returns:
-            A Video object with and MediaVideo backend
+            A Video object with a MediaVideo backend
         """
         backend = MediaVideo(filename=file, *args, **kwargs)
         return cls(backend=backend)
 
+    @classmethod
+    def from_filename(cls, file: str, *args, **kwargs):
+        """
+        Create an instance of a video object from a filename, auto-detecting the backend.
+
+        Args:
+            file: The path to the video file
+
+        Returns:
+            A Video object with the detected backend
+        """
+        if file.endswith(("h5", "hdf5")):
+            return cls(backend=HDF5Video(file=file, *args, **kwargs))
+        elif file.endswith(("mp4", "avi")):
+            return cls(backend=MediaVideo(file=file, *args, **kwargs))
+        else:
+            raise ValueError("Could not detect backend for specified filename.")
