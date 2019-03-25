@@ -15,51 +15,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from sleap.gui.video import QtVideoPlayer, QtInstance, QtEdge, QtNode
+from sleap.skeleton import Skeleton
+from sleap.instance import Instance, Point
 from sleap.io.video import Video, HDF5Video, MediaVideo
-from sleap.io.labels import Labels
-
-class PandasModel(QtCore.QAbstractTableModel):
-    """
-    Class to populate a table view with a pandas dataframe
-    https://stackoverflow.com/a/45262758/1939934
-    """
-
-    def __init__(self, data, parent=None):
-        QtCore.QAbstractTableModel.__init__(self, parent)
-        self._data = data
-
-    def rowCount(self, parent=None):
-        return len(self._data.values)
-
-    def columnCount(self, parent=None):
-        return self._data.columns.size
-
-    def data(self, index, role=QtCore.Qt.DisplayRole):
-        if index.isValid():
-            if role == QtCore.Qt.DisplayRole:
-                # if(index.column() != 0):
-                #     return str('%.2f'%self._data.values[index.row()][index.column()])
-                # else:
-                return str(self._data.values[index.row()][index.column()])
-        return None
-
-    def headerData(self, section, orientation, role):
-        if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
-            return self._data.columns[section]
-        elif orientation == QtCore.Qt.Vertical and role == QtCore.Qt.DisplayRole:
-            return str(self._data.index[section])
-        return None
-
-    def flags(self, index):
-        flags = super(self.__class__,self).flags(index)
-        flags |= QtCore.Qt.ItemIsSelectable
-        flags |= QtCore.Qt.ItemIsEnabled
-        return flags
+from sleap.io.dataset import Labels, LabeledFrame, load_labels_json_old
+from sleap.gui.video import QtVideoPlayer, QtInstance, QtEdge, QtNode
+from sleap.gui.dataviews import VideosTable, SkeletonNodesTable, SkeletonEdgesTable, LabeledFrameTable
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, data_path=None, video=None, *args, **kwargs):
+    def __init__(self, data_path=None, video=None, import_data=None, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
 
         # lines(7)*255
@@ -74,10 +39,17 @@ class MainWindow(QMainWindow):
         ])
 
         self.labels = Labels()
+        self.skeleton = Skeleton()
+        self.labeled_frame = None
+        self.video = None
+
         self.initialize_gui()
 
         if data_path is not None:
-            self.importData(data_path)
+            pass
+
+        if import_data is not None:
+            self.importData(import_data)
 
         # TODO: auto-add video to clean project if no data provided
         # TODO: auto-select video if data provided, or add it to project
@@ -140,21 +112,9 @@ class MainWindow(QMainWindow):
                 self.tabifyDockWidget(tab_with, dock)
             return layout
 
-        def _make_table(cols):
-            table = QTableWidget()
-            table.setColumnCount(len(cols))
-            table.setHorizontalHeaderLabels(cols)
-            table.verticalHeader().hide()
-            return table
-
-        def _make_table_df(df):
-            table = QTableView()
-            table.setModel(PandasModel(df))
-            return table
-
         ####### Videos #######
         videos_layout = _make_dock("Videos")
-        self.videosTable = _make_table_df(self.labels.videos)
+        self.videosTable = VideosTable()
         videos_layout.addWidget(self.videosTable)
 
         ####### Skeleton #######
@@ -162,7 +122,7 @@ class MainWindow(QMainWindow):
 
         gb = QGroupBox("Nodes")
         vb = QVBoxLayout()
-        self.skeletonNodesTable = _make_table(["id", "name", "symmetry"])
+        self.skeletonNodesTable = SkeletonNodesTable(self.skeleton)
         vb.addWidget(self.skeletonNodesTable)
         hb = QHBoxLayout()
         btn = QPushButton("New node")
@@ -176,7 +136,7 @@ class MainWindow(QMainWindow):
 
         gb = QGroupBox("Edges")
         vb = QVBoxLayout()
-        self.skeletonEdgesTable = _make_table(["source", "destination"])
+        self.skeletonEdgesTable = SkeletonEdgesTable(self.skeleton)
         vb.addWidget(self.skeletonEdgesTable)
         hb = QHBoxLayout()
         btn = QPushButton("New edge")
@@ -190,8 +150,7 @@ class MainWindow(QMainWindow):
 
         ####### Instances #######
         instances_layout = _make_dock("Instances")
-        # self.instancesTable = _make_table(["id", "videoId", "frameIdx", "complete", "trackId"])
-        self.instancesTable = _make_table_df(self.labels.instances)
+        self.instancesTable = LabeledFrameTable()
         instances_layout.addWidget(self.instancesTable)
         hb = QHBoxLayout()
         btn = QPushButton("New instance")
@@ -202,10 +161,10 @@ class MainWindow(QMainWindow):
         instances_layout.addWidget(hbw)
 
         ####### Points #######
-        points_layout = _make_dock("Points", tab_with=instances_layout.parent().parent())
+        # points_layout = _make_dock("Points", tab_with=instances_layout.parent().parent())
         # self.pointsTable = _make_table(["id", "frameIdx", "instanceId", "x", "y", "node", "visible"])
-        self.pointsTable = _make_table_df(self.labels.points)
-        points_layout.addWidget(self.pointsTable)
+        # # self.pointsTable = _make_table_df(self.labels.points)
+        # points_layout.addWidget(self.pointsTable)
 
         ####### Training #######
         training_layout = _make_dock("Training")
@@ -279,29 +238,31 @@ class MainWindow(QMainWindow):
         if len(filename) == 0: return
 
         if filename.endswith(".json"):
-            self.labels = Labels(filename)
+            self.labels = load_labels_json_old(filename)
             if show_msg:
                 msgBox = QMessageBox(text=f"Imported {len(self.labels)} labeled frames.")
                 msgBox.exec_()
 
             # Update UI tables
-            self.videosTable.setModel(PandasModel(self.labels.videos))
-            self.instancesTable.setModel(PandasModel(self.labels.instances))
-            self.pointsTable.setModel(PandasModel(self.labels.points))
-
+            self.videosTable.model().videos = self.labels.videos
+            if len(self.labels.labels) > 0:
+                if len(self.labels.labels[0].instances) > 0:
+                    self.skeleton = self.labels.labels[0].instances[0].skeleton
+                    self.skeletonNodesTable.model().skeleton = self.skeleton
+                    self.skeletonEdgesTable.model().skeleton = self.skeleton
+                    
             # Load first video
-            vid = self.labels.videos.iloc[0]
-            if vid.format == "media":
-                self.loadVideo(MediaVideo(vid.filepath, grayscale=vid.channels == 1))
+            self.loadVideo(self.labels.videos[0])
+            
 
 
     def addVideo(self, filename=None):
         if not isinstance(filename, str):
             filters = ["Media (*.mp4 *.avi)", "HDF5 dataset (*.h5 *.hdf5)"]
-            filename, selected_filter = QFileDialog.getOpenFileName(self, dir=None, caption="Add video...", filter=";;".join(filters))
+            filename, selected_filter = QFileDialog.getOpenFileName(self, caption="Add video...", filter=";;".join(filters))
             if len(filename) == 0: return
 
-        self.loadVideo(Video.from_media(filename))
+        self.loadVideo(Video.from_filename(filename))
 
     def removeVideo(self):
         pass
@@ -310,6 +271,10 @@ class MainWindow(QMainWindow):
         # TODO: use video id
         self.video = video
         self.player.load_video(self.video)
+
+        video_labels = [label for label in self.labels.labels if label.video == self.video]
+        if len(video_labels) > 0:
+            self.player.plot(video_labels[-1].frame_idx)
 
 
     def newNode(self):
@@ -323,7 +288,19 @@ class MainWindow(QMainWindow):
         pass
 
     def newInstance(self):
-        pass
+        if self.labeled_frame is None:
+            return
+
+        new_instance = Instance(skeleton=self.skeleton)
+        for node in self.skeleton.nodes:
+            new_instance[node] = Point(x=np.random.rand() * self.video.width * 0.5, y=np.random.rand() * self.video.height * 0.5, visible=True)
+        self.labeled_frame.instances.append(new_instance)
+
+        if self.labeled_frame not in self.labels.labels:
+            self.labels.append(self.labeled_frame)
+
+        self.player.plot()
+
     def deleteInstance(self):
         pass
 
@@ -339,37 +316,24 @@ class MainWindow(QMainWindow):
 
 
     def newFrame(self, player, frame_idx):
-        pass
-        # TODO: use video id
-        # frame_instances = self.labels.get_frame_instances(self.labels.videos.id.loc[0], frame_idx)
 
-        # for i, instance in enumerate(frame_instances):
-        #     qt_instance = QtInstance(instance=instance, color=self.cmap[i])
-        #     player.view.scene.addItem(qt_instance)
+        labeled_frame = [label for label in self.labels.labels if label.video == self.video and label.frame_idx == frame_idx]
+        self.labeled_frame = labeled_frame[0] if len(labeled_frame) > 0 else LabeledFrame(video=self.video, frame_idx=frame_idx)
+        self.instancesTable.model().labeled_frame = self.labeled_frame
+
+        for i, instance in enumerate(self.labeled_frame.instances):
+            qt_instance = QtInstance(instance=instance, color=self.cmap[i])
+            player.view.scene.addItem(qt_instance)
 
         # self.statusBar().showMessage(f"Frame: {self.player.frame_idx+1}/{len(self.video)}  |  Labeled frames (video/total): {self.labels.instances[self.labels.instances.videoId == 1].frameIdx.nunique()}/{len(self.labels)}  |  Instances (frame/total): {len(frame_instances)}/{self.labels.points.instanceId.nunique()}")
-        # self.statusBar().showMessage(f"Frame: {self.player.frame_idx+1}/{len(self.video)}")
+        self.statusBar().showMessage(f"Frame: {self.player.frame_idx+1}/{len(self.video)}")
 
 
 if __name__ == "__main__":
 
-    # from sleap.io.video import HDF5Video
-    # vid = HDF5Video("../../tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5", "/box", input_format="channels_first")
-    
-    # TODO: unfuck this
-    data_path = "C:/Users/tdp/OneDrive/code/sandbox/leap_wt_gold_pilot/centered_pair.json"
-    if not os.path.exists(data_path):
-        data_path = "D:/OneDrive/code/sandbox/leap_wt_gold_pilot/centered_pair.json"
-
-    vid_path = "C:/Users/tdp/OneDrive/code/sandbox/leap_wt_gold_pilot/centered_pair.mp4"
     app = QApplication([])
     app.setApplicationName("sLEAP Label")
     # window = MainWindow()
-    # window = MainWindow(video=vid)
-    # window = MainWindow(data_path=data_path)
-    window = MainWindow(video=vid_path)
+    window = MainWindow(import_data="tests/data/json_format_v1/centered_pair.json")
     window.showMaximized()
     app.exec_()
-
-    # window.loadVideo(Video.from_media(vid_path))
-
