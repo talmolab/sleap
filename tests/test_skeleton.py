@@ -89,7 +89,7 @@ def test_eq():
     s1.add_edge('3', '4')
     s1.add_edge('5', '6')
     s1.add_symmetry('3', '6')
-    s1.add_symmetry('1', '6')
+
 
     # Make a copy check that they are equal
     s2 = copy.deepcopy(s1)
@@ -123,6 +123,25 @@ def test_eq():
     s2._graph.nodes['1']['test'] = 5
     assert s1 != s2
 
+def test_symmetry():
+    s1 = Skeleton("s1")
+    s1.add_nodes(['1','2','3','4','5','6'])
+    s1.add_edge('1', '2')
+    s1.add_edge('3', '4')
+    s1.add_edge('5', '6')
+    s1.add_symmetry('1', '5')
+    s1.add_symmetry('3', '6')
+
+    assert s1.get_symmetry("1") == "5"
+    assert s1.get_symmetry("5") == "1"
+
+    assert s1.get_symmetry("3") == "6"
+
+    # Cannot add more than one symmetry to a node
+    with pytest.raises(ValueError):
+        s1.add_symmetry('1', '6')
+    with pytest.raises(ValueError):
+        s1.add_symmetry('6', '1')
 
 def test_json(skeleton, tmpdir):
     """
@@ -205,4 +224,4 @@ def test_name_change(skeleton):
         skeleton.name = "Test"
 
 def test_graph_property(skeleton):
-    assert [node for node in skeleton.graph.nodes()] == skeleton.node_names
+    assert [node for node in skeleton.graph.nodes()] == skeleton.nodes
