@@ -3,13 +3,14 @@
 import os
 import numpy as np
 
-from sleap.io.labels import Labels
-from sleap.io.video import HDF5Video, MediaVideo
+from sleap.io.dataset import Labels, load_labels_json_old
+from sleap.io.video import Video
 # from sleap.instance import Instance, Point
 # from sleap.skeleton import Skeleton
 
 def generate_images(labels:Labels, scale=1.0, output_size=None):
-    vid = labels.videos.iloc[0]
+
+    vid = labels.videos[0]
     full_size = (vid.height, vid.width)
     if output_size is None:
         output_size = (vid.height // (1/scale), vid.width // (1/scale))
@@ -18,23 +19,23 @@ def generate_images(labels:Labels, scale=1.0, output_size=None):
     full_size = tuple(map(int, full_size))
     output_size = tuple(map(int, output_size))
 
-    keys = list(labels.instances.groupby(["videoId","frameIdx"]).groups.keys())
     imgs = []
-    for i, (videoId, frameIdx) in enumerate(keys):
-        vid = labels.videos[labels.videos.id == videoId].iloc[0]
+    for labeled_frame in labels.labels:
+        img = labeled_frame.video[labeled_frame.frame_idx]
+        imgs.append(img)
 
-        if vid.format == "media":
-            video = MediaVideo(vid.filepath, grayscale=vid.channels == 1)
+    imgs = np.concatenate(imgs, axis=0)
 
-        imgs.append(video[frameIdx])
+    if imgs.dtype == "uint8":
+        imgs = imgs.astype("float32") / 255
 
-    imgs = np.concatenate(imgs, axis=0).astype("float32") / 255
-
-    return imgs, keys
+    return imgs
 
 
 def generate_confidence_maps(labels:Labels, sigma=5.0, scale=1.0, output_size=None):
-    vid = labels.videos.iloc[0]
+    vid = labels.videos[0]
+    skeleton = labels.labels[0].instances[0].skeleton
+
     full_size = (vid.height, vid.width)
     if output_size is None:
         output_size = (vid.height // (1/scale), vid.width // (1/scale))
@@ -47,20 +48,19 @@ def generate_confidence_maps(labels:Labels, sigma=5.0, scale=1.0, output_size=No
     yv = np.linspace(0, full_size[1] - 1, output_size[1], dtype="float32")
     XX, YY = np.meshgrid(xv, yv)
 
-    num_channels = len(labels.skeleton.node_names)
-    keys = list(labels.instances.groupby(["videoId","frameIdx"]).groups.keys())
-    points = []
-    confmaps = np.zeros((len(keys), XX.shape[0], XX.shape[1], num_channels), dtype="float32")
-    for i, (videoId, frameIdx) in enumerate(keys):
+    num_channels = len(skeleton.nodes)
+    confmaps = np.zeros((len(labels.labels), XX.shape[0], XX.shape[1], num_channels), dtype="float32")
+    for i, labeled_frame in enumerate(labels.labels):
+        for instance in labeled_frame.instances:
+            for node in skeleton.nodes:
+                if instance[node].visible:
+                    j = skeleton.node_to_index(node)
+                    confmaps[i, :, :, j] = np.maximum(
+                        confmaps[i, :, :, j],
+                        np.exp(-((YY - instance[node].y) ** 2 + (XX - instance[node].x) ** 2) / (2 * sigma ** 2))
+                        )
 
-        valid_points = labels.points[(labels.points.videoId == videoId) & (labels.points.frameIdx == frameIdx) & labels.points.visible]
-        points.append(valid_points)
-
-        for point in valid_points.itertuples():
-            confmap = np.exp(-((YY - point.y) ** 2 + (XX - point.x) ** 2) / (2 * sigma ** 2))
-            confmaps[i, :, :, point.node] = np.maximum(confmaps[i, :, :, point.node], confmap)
-
-    return confmaps, keys, points
+    return confmaps
 
 
 if __name__ == "__main__":
@@ -68,9 +68,17 @@ if __name__ == "__main__":
     if not os.path.exists(data_path):
         data_path = "D:/OneDrive/code/sandbox/leap_wt_gold_pilot/centered_pair.json"
     
-    labels = Labels(data_path)
-    imgs, keys = generate_images(labels)
-    confmaps, _keys, points = generate_confidence_maps(labels)
+    labels = load_labels_json_old(data_path)
+
+    imgs = generate_images(labels)
+    print(imgs.shape)
+    print(imgs.dtype)
+    print(np.ptp(imgs))
+
+    confmaps = generate_confidence_maps(labels)
+    print(confmaps.shape)
+    print(confmaps.dtype)
+    print(np.ptp(confmaps))
 
     import matplotlib.pyplot as plt
 
