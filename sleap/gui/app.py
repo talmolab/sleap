@@ -60,33 +60,33 @@ class MainWindow(QMainWindow):
 
         ####### Menus #######
         fileMenu = self.menuBar().addMenu("File")
-        fileMenu.addAction("New project")
-        fileMenu.addAction("Open project")
-        fileMenu.addAction("Save")
-        fileMenu.addAction("Save as...")
+        fileMenu.addAction("New project").triggered.connect(self.newProject)
+        fileMenu.addAction("Open project").triggered.connect(self.openProject)
+        fileMenu.addAction("Save").triggered.connect(self.saveProject)
+        fileMenu.addAction("Save as...").triggered.connect(self.saveProjectAs)
         fileMenu.addSeparator()
         fileMenu.addAction("Import...").triggered.connect(self.importData)
-        fileMenu.addAction("Export...")
+        fileMenu.addAction("Export...").triggered.connect(self.exportData)
         fileMenu.addSeparator()
         fileMenu.addAction("&Quit").triggered.connect(self.close)
 
         videoMenu = self.menuBar().addMenu("Video")
-        videoMenu.addAction("Check video encoding")
-        videoMenu.addAction("Reencode for seeking")
-        videoMenu.addSeparator()
+        # videoMenu.addAction("Check video encoding").triggered.connect(self.checkVideoEncoding)
+        # videoMenu.addAction("Reencode for seeking").triggered.connect(self.reencodeForSeeking)
+        # videoMenu.addSeparator()
         videoMenu.addAction("Add video").triggered.connect(self.addVideo)
-        videoMenu.addAction("Add folder")
-        videoMenu.addAction("Next video")
-        videoMenu.addAction("Previous video")
+        videoMenu.addAction("Add folder").triggered.connect(self.addVideoFolder)
+        videoMenu.addAction("Next video").triggered.connect(self.nextVideo)
+        videoMenu.addAction("Previous video").triggered.connect(self.previousVideo)
         videoMenu.addSeparator()
-        videoMenu.addAction("Extract clip")
+        videoMenu.addAction("Extract clip...").triggered.connect(self.extractClip)
 
         viewMenu = self.menuBar().addMenu("View")
 
         helpMenu = self.menuBar().addMenu("Help")
-        helpMenu.addAction("Documentation")
-        helpMenu.addAction("Keyboard reference")
-        helpMenu.addAction("About")
+        helpMenu.addAction("Documentation").triggered.connect(self.openDocumentation)
+        helpMenu.addAction("Keyboard reference").triggered.connect(self.openKeyRef)
+        helpMenu.addAction("About").triggered.connect(self.openAbout)
 
         ####### Video player #######
         self.player = QtVideoPlayer()
@@ -216,6 +216,8 @@ class MainWindow(QMainWindow):
         fl.addRow("Depth:", self.pafsDepth)
         self.pafsSigma = QDoubleSpinBox(); self.pafsSigma.setMinimum(0.1); self.pafsSigma.setValue(5.0)
         fl.addRow("Sigma:", self.pafsSigma)
+        btn = QPushButton("Train"); btn.clicked.connect(self.trainPAFs)
+        fl.addRow(btn)
         gb.setLayout(fl)
         training_layout.addWidget(gb)
 
@@ -304,6 +306,37 @@ class MainWindow(QMainWindow):
     def deleteInstance(self):
         pass
 
+    def newProject(self):
+        pass
+    def openProject(self):
+        pass
+    def saveProject(self):
+        pass
+    def saveProjectAs(self):
+        pass
+    def exportData(self):
+        pass
+    def close(self):
+        pass
+    def checkVideoEncoding(self):
+        pass
+    def reencodeForSeeking(self):
+        pass
+    def addVideoFolder(self):
+        pass
+    def nextVideo(self):
+        pass
+    def previousVideo(self):
+        pass
+    def extractClip(self):
+        pass
+    def openDocumentation(self):
+        pass
+    def openKeyRef(self):
+        pass
+    def openAbout(self):
+        pass
+
 
     def trainConfmaps(self):
         from sleap.nn.datagen import generate_images, generate_confidence_maps
@@ -313,6 +346,9 @@ class MainWindow(QMainWindow):
         confmaps, _keys, points = generate_confidence_maps(self.labels)
 
         self.confmapModel = train(imgs, confmaps, test_size=0.1, batch_norm=False, num_filters=64, batch_size=4, num_epochs=100, steps_per_epoch=100)
+
+    def trainPAFs(self):
+        pass
 
 
     def newFrame(self, player, frame_idx):
