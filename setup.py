@@ -19,7 +19,7 @@ def get_requirements(require_name=None):
 
 
 setup(
-    name='leapy',
+    name='sleap',
     use_scm_version=True,
     setup_requires=['setuptools_scm'],
     install_requires=get_requirements(),
@@ -30,7 +30,7 @@ setup(
     long_description=long_description,
     author='Talmo Pereira, David Turner',
     author_email='talmo@princeton.edu',
-    url='https://github.com/talmo/leapy',
+    url='https://github.com/murthylab/sleap',
     keywords='deep learning, pose estimation, tracking, neuroscience',
     license='Apache 2',
     packages=find_packages(),
