@@ -127,7 +127,13 @@ class MediaVideo:
     """
     filename: str = attr.ib()
     # grayscale: bool = attr.ib(default=None, converter=bool)
-    grayscale: bool = attr.ib(default=None)
+    grayscale: bool = attr.ib()
+    _detect_grayscale = False
+
+    @grayscale.default
+    def __grayscale_default__(self):
+        self._detect_grayscale = True
+        return False
 
     def __attrs_post_init__(self):
 
@@ -142,7 +148,7 @@ class MediaVideo:
 
         # If the user specified None for grayscale bool, figure it out based on the
         # the first frame of data.
-        if self.grayscale is None:
+        if self._detect_grayscale is True:
             self.grayscale = bool(np.alltrue(self.__test_frame[..., 0] == self.__test_frame[..., -1]))
 
     # The properties and methods below complete our contract with the
@@ -236,11 +242,11 @@ class Video:
 
     @property
     def shape(self):
-        return (self.frames, self.width, self.height, self.channels)
+        return (self.frames, self.height, self.width, self.channels)
 
     def __str__(self):
         """ Informal string representation (for print or format) """
-        return type(self).__name__ + "([%d x %d x %d x %d])" % self.shape
+        return type(self).__name__ + " ([%d x %d x %d x %d])" % self.shape
 
     def __len__(self):
         """

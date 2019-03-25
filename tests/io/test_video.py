@@ -39,7 +39,7 @@ def test_hd5f_file_not_found():
         Video.from_hdf5("non-existent-file.h5", 'dataset_name')
 
 def test_mp4_get_shape(small_robot_mp4_vid):
-    assert(small_robot_mp4_vid.shape == (166, 3, 560, 320))
+    assert(small_robot_mp4_vid.shape == (166, 320, 560, 3))
 
 
 def test_mp4_len(small_robot_mp4_vid):

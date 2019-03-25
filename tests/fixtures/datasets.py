@@ -26,13 +26,13 @@ def multi_skel_vid_labels(hdf5_vid, small_robot_mp4_vid, skeleton, stickman):
         fly_instances = []
         for i in range(6):
             fly_instances.append(Instance(skeleton=skeleton))
-            for node in skeleton.node_names:
+            for node in skeleton.nodes:
                 fly_instances[i][node] = Point(x=i % vid.width, y=i % vid.height)
 
         stickman_instances = []
         for i in range(6):
             stickman_instances.append(Instance(skeleton=stickman))
-            for node in stickman.node_names:
+            for node in stickman.nodes:
                 stickman_instances[i][node] = Point(x=i % vid.width, y=i % vid.height)
 
         label.instances = stickman_instances + fly_instances

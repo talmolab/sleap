@@ -52,14 +52,14 @@ def test_load_labels_json_old(tmpdir):
 
         # Make sure we only create one video object and it works
         assert len({label.video for label in labels}) == 1
-        assert labels[0].video.get_frame(0).shape == (384, 384, 3)
+        assert labels[0].video.get_frame(0).shape == (384, 384, 1)
 
         # Check some frame objects.
         assert labels[0].frame_idx == 118
         assert labels[40].frame_idx == 494
 
         # Check the skeleton
-        assert labels[0].instances[0].skeleton.node_names == skel_node_names
+        assert labels[0].instances[0].skeleton.nodes == skel_node_names
 
     labels = Labels.load_json("tests/data/json_format_v1/centered_pair.json")
     check_labels(labels)
