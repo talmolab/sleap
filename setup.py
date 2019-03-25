@@ -26,16 +26,19 @@ setup(
     extras_require={
         'dev': get_requirements('dev'),
     },
-    description='LEAP (LEAP Estimates Animal Pose) is a deep learning framework for estimating animal pose.',
+    description='SLEAP (Social LEAP Estimates Animal Pose) is a deep learning framework for estimating animal pose.',
     long_description=long_description,
     author='Talmo Pereira, David Turner',
     author_email='talmo@princeton.edu',
     url='https://github.com/murthylab/sleap',
     keywords='deep learning, pose estimation, tracking, neuroscience',
     license='Apache 2',
-    packages=find_packages(),
+    packages=find_packages(exclude=['tensorflow']),
     entry_points = {
-        'console_scripts': ['sleap-train=sleap.training:main'],
+        'console_scripts': [
+            'sleap-label=sleap.gui.app:main',
+            'sleap-train=sleap.training:main'
+        ],
     },
     python_requires='>=3.6'
 

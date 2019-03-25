@@ -316,8 +316,8 @@ class MainWindow(QMainWindow):
         pass
     def exportData(self):
         pass
-    def close(self):
-        pass
+    # def close(self):
+        # pass
     def checkVideoEncoding(self):
         pass
     def reencodeForSeeking(self):
@@ -365,11 +365,13 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage(f"Frame: {self.player.frame_idx+1}/{len(self.video)}")
 
 
-if __name__ == "__main__":
-
+def main(*args, **kwargs):
     app = QApplication([])
     app.setApplicationName("sLEAP Label")
-    # window = MainWindow()
-    window = MainWindow(import_data="tests/data/json_format_v1/centered_pair.json")
+    window = MainWindow(*args, **kwargs)
     window.showMaximized()
     app.exec_()
+
+if __name__ == "__main__":
+
+    main(import_data="tests/data/json_format_v1/centered_pair.json")
