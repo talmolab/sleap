@@ -396,7 +396,7 @@ class QtInstance(QGraphicsObject):
         self.markerRadius = markerRadius
         
         col_line = QColor(*self.color)
-        pen = QPen(col_line, 2)
+        pen = QPen(col_line, 1)
         pen.setCosmetic(True) # https://stackoverflow.com/questions/13120486/adjusting-qpen-thickness-when-scaling-qgraphicsview
 
         pen_missing = QPen(col_line, 1)
@@ -421,7 +421,7 @@ class QtInstance(QGraphicsObject):
 
             self.nodes[node] = node_item
 
-        for (src, dst) in self.skeleton.graph.edges():
+        for (src, dst) in self.skeleton.edges:
             edge_item = QtEdge(parent=self, src=self.nodes[src], dst=self.nodes[dst])
             edge_item.setPen(pen)
             self.nodes[src].edges.append(edge_item)

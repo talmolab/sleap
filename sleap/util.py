@@ -7,7 +7,9 @@ import h5py as h5
 import numpy as np
 import attr
 
+
 from typing import Callable
+
 
 def attr_to_dtype(cls):
     dtype_list = []
@@ -48,3 +50,4 @@ def try_open_file(open: Callable, *args, **kwargs) -> object:
             return open(*args, **kwargs)
         except FileNotFoundError:
             return None
+

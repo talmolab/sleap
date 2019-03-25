@@ -224,4 +224,4 @@ def test_name_change(skeleton):
         skeleton.name = "Test"
 
 def test_graph_property(skeleton):
-    assert [node for node in skeleton.graph.nodes()] == skeleton.node_names
+    assert [node for node in skeleton.graph.nodes()] == skeleton.nodes

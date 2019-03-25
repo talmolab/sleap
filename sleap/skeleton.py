@@ -65,7 +65,7 @@ class Skeleton:
 
     @property
     def graph(self):
-        edges = [(u, v, key) for src, dst, key, edge_type in self._graph.edges(keys=True, data="type") if edge_type == EdgeType.BODY]
+        edges = [(src, dst, key) for src, dst, key, edge_type in self._graph.edges(keys=True, data="type") if edge_type == EdgeType.BODY]
         # TODO: properly induce subgraph for MultiDiGraph
         #   Currently, NetworkX will just return the nodes in the subgraph. 
         #   See: https://stackoverflow.com/questions/16150557/networkxcreating-a-subgraph-induced-from-edges
@@ -73,7 +73,7 @@ class Skeleton:
 
     @property
     def graph_symmetry(self):
-        edges = [(u, v, key) for src, dst, key, edge_type in self._graph.edges(keys=True, data="type") if edge_type == EdgeType.SYMMETRY]
+        edges = [(src, dst, key) for src, dst, key, edge_type in self._graph.edges(keys=True, data="type") if edge_type == EdgeType.SYMMETRY]
         return self._graph.edge_subgraph(edges)
 
     @staticmethod
