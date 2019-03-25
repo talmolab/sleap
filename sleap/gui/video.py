@@ -421,7 +421,7 @@ class QtInstance(QGraphicsObject):
 
             self.nodes[node] = node_item
 
-        for (src, dst) in self.skeleton.graph.edges():
+        for (src, dst) in self.skeleton.edges:
             edge_item = QtEdge(parent=self, src=self.nodes[src], dst=self.nodes[dst])
             edge_item.setPen(pen)
             self.nodes[src].edges.append(edge_item)

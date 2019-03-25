@@ -171,7 +171,7 @@ class Instance:
             A list of nodes that have been labelled for this instance.
 
         """
-        return [self.skeleton.node_names[i] for i in self._points.keys()]
+        return [self.skeleton.nodes[i] for i in self._points.keys()]
 
     def nodes_points(self):
         """
@@ -181,7 +181,7 @@ class Instance:
         Returns:
             The instance's (node, point) tuple pairs for all labelled point.
         """
-        names_to_points = {self.skeleton.node_names[i]: point for i, point in self._points.items()}
+        names_to_points = {self.skeleton.nodes[i]: point for i, point in self._points.items()}
         return names_to_points.items()
 
     def points(self):

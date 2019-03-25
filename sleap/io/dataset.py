@@ -241,7 +241,7 @@ def load_labels_json_old(data_path: str, parsed_json: dict = None,
     if adjust_matlab_indexing:
         edges = np.array(edges) - 1
     for (src, dst) in edges:
-        skeleton.add_edge(skeleton.node_names[src], skeleton.node_names[dst])
+        skeleton.add_edge(skeleton.nodes[src], skeleton.nodes[dst])
 
     if fix_rel_paths:
         for i, row in videos.iterrows():
@@ -271,7 +271,7 @@ def load_labels_json_old(data_path: str, parsed_json: dict = None,
         frame_instance_ids = np.unique(points["instanceId"][is_in_frame])
         for i, instance_id in enumerate(frame_instance_ids):
             is_instance = is_in_frame & (points["instanceId"] == instance_id)
-            instance_points = {skeleton.node_names[n]: Point(x, y, visible=v) for x, y, n, v in
+            instance_points = {skeleton.nodes[n]: Point(x, y, visible=v) for x, y, n, v in
                                zip(*[points[k][is_instance] for k in ["x", "y", "node", "visible"]])}
 
             instance = Instance(skeleton=skeleton, points=instance_points)
