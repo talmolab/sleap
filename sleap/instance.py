@@ -143,6 +143,19 @@ class Instance:
         else:
             raise KeyError(f"The underlying skeleton ({self.skeleton}) has no node named '{node}'")
 
+    def __contains__(self, node):
+        """
+        Returns True if this instance has a point with the specified node.
+
+        Args:
+            node: node name
+
+        Returns:
+            bool: True if the point with the node name specified has a point in this instance.
+        """
+        return self._node_to_index(node) in self._points
+
+
     def __setitem__(self, node, value):
 
         # Make sure node and value, if either are lists, are of compatible size
@@ -162,6 +175,11 @@ class Instance:
                 self._points[self._node_to_index(node)] = value
             else:
                 raise KeyError(f"The underlying skeleton ({self.skeleton}) has no node named '{node}'")
+
+    def __delitem__(self, node):
+        """ Delete node key and points associated with that node. """
+        # TODO: handle this case somehow?
+        pass
 
     def nodes(self):
         """

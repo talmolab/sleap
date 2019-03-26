@@ -172,17 +172,37 @@ class Labels(MutableSequence):
         """ Find the last occurrence of a labeled frame for the given video and/or frame index.
         
         Args:
-            video: a `Video` instance that is associated with the labeled frames
-            frame_idx: an integer specifying the frame index within the video
+            video: A `Video` instance that is associated with the labeled frames
+            frame_idx: An integer specifying the frame index within the video
 
         Returns:
-            Last `LabeledFrame` that match the criteria or None if none were found.
+            LabeledFrame: Last label that matches the criteria or None if no results.
         """
 
         if video in self.videos:
             for label in reversed(self.labels):
                 if label.video == video and (frame_idx is None or (label.frame_idx == frame_idx)):
                     return label
+
+    @property
+    def all_instances(self):
+        return list(self.instances())
+    
+    def instances(self, video: Video = None, skeleton: Skeleton = None):
+        """ Iterate through all instances in the labels, optionally with filters.
+
+        Args:
+            video: Only iterate through instances in this video
+            skeleton: Only iterate through instances with this skeleton
+
+        Yields:
+            Instance: The next labeled instance
+        """
+        for label in self.labels:
+            if video is None or label.video == video:
+                for instance in label.instances:
+                    if skeleton is None or instance.skeleton == skeleton:
+                        yield instance
 
     def _update_containers(self, new_label: LabeledFrame):
         """ Ensure that top-level containers are kept updated with new 

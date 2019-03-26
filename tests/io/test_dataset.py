@@ -163,3 +163,20 @@ def test_label_mutability():
     assert len(labels.find(dummy_video2)) == 0
     assert all([label not in labels for label in dummy_frames2])
 
+
+def test_instance_access():
+    labels = Labels()
+
+    dummy_skeleton = Skeleton()
+    dummy_video = Video(backend=MediaVideo)
+    dummy_video2 = Video(backend=MediaVideo)
+
+    for i in range(10):
+        labels.append(LabeledFrame(dummy_video, frame_idx=i, instances=[Instance(dummy_skeleton), Instance(dummy_skeleton)]))
+    for i in range(10):
+        labels.append(LabeledFrame(dummy_video2, frame_idx=i, instances=[Instance(dummy_skeleton), Instance(dummy_skeleton), Instance(dummy_skeleton)]))
+
+    assert len(labels.all_instances) == 50
+    assert len(list(labels.instances(video=dummy_video))) == 20
+    assert len(list(labels.instances(video=dummy_video2))) == 30
+    
