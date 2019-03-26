@@ -352,7 +352,7 @@ class Skeleton:
             raise ValueError(f"{node} has more than one symmetry.")
 
 
-    def __getitem__(self, node_name:str) -> dict:
+    def __getitem__(self, node_name: str) -> dict:
         """
         Retrieves a the node data associated with Skeleton node.
 
@@ -364,13 +364,25 @@ class Skeleton:
 
         """
         if not self._graph.has_node(node_name):
-            raise ValueError("Skeleton does not have source node named ({})".format(node_name))
+            raise ValueError(f"Skeleton does not have node named '{node_name}'.")
 
         return self._graph.nodes.data()[node_name]
 
+    def __contains__(self, node_name: str) -> bool:
+        """
+        Checks if specified node exists in skeleton.
+
+        Args:
+            node_name: the node name to query
+
+        Returns:
+            True if node is in the skeleton.
+        """
+        return self._graph.has_node(node_name)
+
     def relabel_node(self, old_name: str, new_name: str):
         """
-        Relable a single node to a new name.
+        Relabel a single node to a new name.
 
         Args:
             old_name: The old name of the node.

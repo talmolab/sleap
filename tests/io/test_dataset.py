@@ -97,12 +97,12 @@ def test_label_accessors(centered_pair_labels):
 
     assert len(labels.find(video, 101)) == 0
     assert labels.find_first(video, 101) is None
-    with pytest.raises(IndexError):
+    with pytest.raises(KeyError):
         labels[video, 101]
 
     dummy_video = Video(backend=MediaVideo)
     assert len(labels.find(dummy_video)) == 0
-    with pytest.raises(IndexError):
+    with pytest.raises(KeyError):
         labels[dummy_video]
 
 
@@ -126,5 +126,40 @@ def test_label_mutability():
 
     dummy_video2 = Video(backend=MediaVideo)
     dummy_skeleton2 = Skeleton(name="dummy2")
+    dummy_instance2 = Instance(dummy_skeleton2)
+    dummy_frame2 = LabeledFrame(dummy_video2, frame_idx=0, instances=[dummy_instance2,])
     assert dummy_video2 not in labels
     assert dummy_skeleton2 not in labels
+    assert dummy_frame2 not in labels
+
+    labels.append(dummy_frame2)
+    assert dummy_video2 in labels
+    assert dummy_frame2 in labels
+
+    labels.remove_video(dummy_video2)
+    assert dummy_video2 not in labels
+    assert dummy_frame2 not in labels
+    assert len(labels.find(dummy_video2)) == 0
+
+    assert len(labels) == 1
+    labels.append(LabeledFrame(dummy_video, frame_idx=0))
+    assert len(labels) == 1
+
+    dummy_frames = [LabeledFrame(dummy_video, frame_idx=i) for i in range(10)]
+    dummy_frames2 = [LabeledFrame(dummy_video2, frame_idx=i) for i in range(10)]
+
+    for f in dummy_frames + dummy_frames2:
+        labels.append(f)
+
+    assert(len(labels) == 20)
+    labels.remove_video(dummy_video2)
+    assert(len(labels) == 10)
+
+    assert len(labels.find(dummy_video)) == 10
+    assert dummy_frame in labels
+    assert all([label in labels for label in dummy_frames[1:]])
+
+    assert dummy_video2 not in labels
+    assert len(labels.find(dummy_video2)) == 0
+    assert all([label not in labels for label in dummy_frames2])
+
