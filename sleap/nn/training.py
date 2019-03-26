@@ -1,22 +1,24 @@
 import numpy as np
 import matplotlib.pyplot as plt
-# plt.switch_backend('agg')
+from time import time
 
 import tensorflow as tf
 import keras
 
-from keras.layers import Input, Conv2D, BatchNormalization, Add, MaxPool2D, UpSampling2D
-from keras.layers import GlobalAveragePooling2D, GlobalMaxPooling2D, Flatten, Dense, Lambda
-from keras.callbacks import ReduceLROnPlateau, EarlyStopping, TensorBoard, LambdaCallback
-from sleap.nn.hourglass import conv, stacked_hourglass
-from sleap.nn.unet import unet
-
 from sklearn.model_selection import train_test_split
 from sleap.nn.augmentation import Augmenter
 
+from keras.layers import Input, Conv2D, BatchNormalization, Add, MaxPool2D, UpSampling2D, Concatenate
+from keras.callbacks import ReduceLROnPlateau, EarlyStopping, TensorBoard, LambdaCallback
+
+from sleap.nn.architectures.common import conv
+from sleap.nn.architectures.hourglass import hourglass, stacked_hourglass
+from sleap.nn.architectures.unet import unet
+from sleap.nn.architectures.leap import leap_cnn
 
 
-def train(imgs, confmaps, test_size=0.1, arch="unet", batch_norm=True, num_filters=64, batch_size=4, num_epochs=100, steps_per_epoch=200):
+
+def train(imgs, confmaps, test_size=0.1, arch="unet", batch_norm=True, num_stacks=1, num_filters=64, batch_size=4, num_epochs=100, steps_per_epoch=200):
 
     imgs_train, imgs_val, confmaps_train, confmaps_val = train_test_split(imgs, confmaps, test_size=test_size)
 
@@ -30,6 +32,14 @@ def train(imgs, confmaps, test_size=0.1, arch="unet", batch_norm=True, num_filte
 
     if arch == "unet":
         x_outs = unet(img_input, confmaps_channels, depth=3, convs_per_depth=2, num_filters=num_filters, interp="bilinear")
+    elif arch == "stacked_unet":
+        x = img_input
+        x_outs = []
+        for i in range(num_stacks):
+            if i > 0:
+                x = Concatenate()([img_input, x])
+            x = unet(x, confmaps_channels, depth=3, convs_per_depth=2, num_filters=num_filters, interp="bilinear")
+            x_outs.append(x)
 
     else:
         # Initial downsampling
@@ -41,7 +51,7 @@ def train(imgs, confmaps, test_size=0.1, arch="unet", batch_norm=True, num_filte
         # x = residual_block(x, num_filters, batch_norm)
 
         # Stacked hourglass modules
-        x_outs = stacked_hourglass(x, confmaps_channels, num_hourglass_blocks=1, num_filters=num_filters, depth=3, batch_norm=batch_norm, interp="bilinear")
+        x_outs = stacked_hourglass(x, confmaps_channels, num_hourglass_blocks=num_stacks, num_filters=num_filters, depth=3, batch_norm=batch_norm, interp="bilinear")
 
     # Create training model
     model = keras.Model(inputs=img_input, outputs=x_outs)
@@ -102,7 +112,7 @@ def train(imgs, confmaps, test_size=0.1, arch="unet", batch_norm=True, num_filte
 
         # plt.tight_layout()
 
-        print(logs)
+        # print(logs)
 
         plt.draw()
         if epoch == -1:
@@ -127,7 +137,7 @@ def train(imgs, confmaps, test_size=0.1, arch="unet", batch_norm=True, num_filte
         # LambdaCallback(on_epoch_end=lambda epoch, logs: check_test_acc()),
         ReduceLROnPlateau(monitor=monitor_loss, min_delta=1e-6, patience=5, verbose=1, factor=0.5, mode="auto", cooldown=3, min_lr=1e-10),
         EarlyStopping(monitor=monitor_loss, min_delta=1e-8, patience=30, verbose=1),
-        # TensorBoard(log_dir="D:/tmp/logs/{}".format(time()), update_freq=250, histogram_freq=0, batch_size=32, write_graph=False, write_grads=False, write_images=False, embeddings_freq=0, embeddings_layer_names=None, embeddings_metadata=None, embeddings_data=None),
+        TensorBoard(log_dir=f"D:/tmp/logs/{arch}{time()}", update_freq=150, histogram_freq=0, batch_size=32, write_graph=False, write_grads=False, write_images=False, embeddings_freq=0, embeddings_layer_names=None, embeddings_metadata=None, embeddings_data=None),
     #     ModelCheckpoint(filepath="models/best_model.h5", monitor="val_loss", save_best_only=True, verbose=1, period=50),
     ]
 
@@ -147,15 +157,16 @@ def train(imgs, confmaps, test_size=0.1, arch="unet", batch_norm=True, num_filte
 
 if __name__ == "__main__":
     import os
-    from sleap.io.labels import Labels
+    from sleap.io.dataset import Labels, load_labels_json_old
     from sleap.nn.datagen import generate_images, generate_confidence_maps
 
     data_path = "C:/Users/tdp/OneDrive/code/sandbox/leap_wt_gold_pilot/centered_pair.json"
     if not os.path.exists(data_path):
         data_path = "D:/OneDrive/code/sandbox/leap_wt_gold_pilot/centered_pair.json"
     
-    labels = Labels(data_path)
-    imgs, keys = generate_images(labels)
-    confmaps, _keys, points = generate_confidence_maps(labels, sigma=5)
+    labels = load_labels_json_old(data_path)
+    imgs = generate_images(labels)
+    confmaps = generate_confidence_maps(labels, sigma=5)
 
-    train(imgs, confmaps, test_size=0.1, batch_norm=False, num_filters=64, batch_size=4, num_epochs=100, steps_per_epoch=100)
+    # train(imgs, confmaps, test_size=0.1, batch_norm=False, num_filters=64, batch_size=4, num_epochs=100, steps_per_epoch=100)
+    train(imgs, confmaps, test_size=0.1, batch_norm=False, num_filters=32, batch_size=4, num_epochs=100, steps_per_epoch=100, arch="stacked_unet", num_stacks=3)

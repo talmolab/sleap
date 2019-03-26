@@ -4,7 +4,7 @@ import keras
 import imgaug
 
 class Augmenter(keras.utils.Sequence):
-    def __init__(self, X, Y, output_names=None, batch_size=32, shuffle=True):
+    def __init__(self, X, Y, output_names=None, batch_size=32, shuffle=True, rotation=(-180, 180)):
         self.X = X
         self.Y = Y
         self.output_names = output_names
@@ -20,7 +20,7 @@ class Augmenter(keras.utils.Sequence):
         
         self.aug = imgaug.augmenters.Sequential([
             # imgaug.augmenters.Affine(rotate=(-15, 15), scale=(0.9, 1.1)),
-            imgaug.augmenters.Affine(rotate=(-180, 180)),
+            imgaug.augmenters.Affine(rotate=rotation),
             # imgaug.augmenters.Fliplr(0.5),
         ])
         
