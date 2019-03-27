@@ -18,12 +18,16 @@ import pandas as pd
 from sleap.skeleton import Skeleton
 from sleap.instance import Instance, Point
 from sleap.io.video import Video, HDF5Video, MediaVideo
-from sleap.io.dataset import Labels, LabeledFrame, load_labels_json_old
+from sleap.io.dataset import Labels, LabeledFrame
 from sleap.gui.video import QtVideoPlayer, QtInstance, QtEdge, QtNode
 from sleap.gui.dataviews import VideosTable, SkeletonNodesTable, SkeletonEdgesTable, LabeledFrameTable
 
 
 class MainWindow(QMainWindow):
+    labels: Labels
+    skeleton: Skeleton
+    video: Video
+
     def __init__(self, data_path=None, video=None, import_data=None, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
 
@@ -116,6 +120,13 @@ class MainWindow(QMainWindow):
         videos_layout = _make_dock("Videos")
         self.videosTable = VideosTable()
         videos_layout.addWidget(self.videosTable)
+        hb = QHBoxLayout()
+        btn = QPushButton("Add video")
+        btn.clicked.connect(self.addVideo); hb.addWidget(btn)
+        btn = QPushButton("Remove video")
+        btn.clicked.connect(self.removeVideo); hb.addWidget(btn)
+        hbw = QWidget(); hbw.setLayout(hb)
+        videos_layout.addWidget(hbw)
 
         ####### Skeleton #######
         skeleton_layout = _make_dock("Skeleton", tab_with=videos_layout.parent().parent())
@@ -139,7 +150,11 @@ class MainWindow(QMainWindow):
         self.skeletonEdgesTable = SkeletonEdgesTable(self.skeleton)
         vb.addWidget(self.skeletonEdgesTable)
         hb = QHBoxLayout()
-        btn = QPushButton("New edge")
+        self.skeletonEdgesSrc = QComboBox(); self.skeletonEdgesSrc.setEditable(False); self.skeletonEdgesSrc.currentIndexChanged.connect(self.selectSkeletonEdgeSrc)
+        hb.addWidget(self.skeletonEdgesSrc)
+        self.skeletonEdgesDst = QComboBox(); self.skeletonEdgesDst.setEditable(False)
+        hb.addWidget(self.skeletonEdgesDst)
+        btn = QPushButton("Add edge")
         btn.clicked.connect(self.newEdge); hb.addWidget(btn)
         btn = QPushButton("Delete edge")
         btn.clicked.connect(self.deleteEdge); hb.addWidget(btn)
@@ -240,7 +255,7 @@ class MainWindow(QMainWindow):
         if len(filename) == 0: return
 
         if filename.endswith(".json"):
-            self.labels = load_labels_json_old(filename)
+            self.labels = Labels.load_json(filename)
             if show_msg:
                 msgBox = QMessageBox(text=f"Imported {len(self.labels)} labeled frames.")
                 msgBox.exec_()
@@ -252,6 +267,9 @@ class MainWindow(QMainWindow):
                     self.skeleton = self.labels.labels[0].instances[0].skeleton
                     self.skeletonNodesTable.model().skeleton = self.skeleton
                     self.skeletonEdgesTable.model().skeleton = self.skeleton
+                    self.skeletonEdgesSrc.clear()
+                    self.skeletonEdgesDst.clear()
+                    self.skeletonEdgesSrc.addItems(self.skeleton.nodes)
                     
             # Load first video
             self.loadVideo(self.labels.videos[0])
@@ -259,35 +277,165 @@ class MainWindow(QMainWindow):
 
 
     def addVideo(self, filename=None):
+        # Browse for file
         if not isinstance(filename, str):
             filters = ["Media (*.mp4 *.avi)", "HDF5 dataset (*.h5 *.hdf5)"]
             filename, selected_filter = QFileDialog.getOpenFileName(self, caption="Add video...", filter=";;".join(filters))
             if len(filename) == 0: return
 
-        self.loadVideo(Video.from_filename(filename))
+            # TODO: auto-detect HDF5 datasets and/or ask user
+
+        # TODO: check for duplicate videos by filename? class methods for __eq__?
+
+        # Instantiate video object
+        video = Video.from_filename(filename)
+
+        # Add to labels
+        self.labels.add_video(video)
+
+        # Load if no video currently loaded
+        if self.video is None:
+            self.loadVideo(video)
+
+        # TODO: Update data model/view!
 
     def removeVideo(self):
-        pass
+        # Get selected video
+        idx = self.videosTable.currentIndex()
+        if not idx.isValid(): return
+        video = self.labels.videos[idx.row()]
+
+        # Count labeled frames for this video
+        n = len(self.labels.find(video))
+
+        # Warn if there are labels that will be deleted
+        if n > 0:
+            response = QMessageBox.critical(self, "Removing video with labels", f"{n} labeled frames in this video will be deleted, are you sure you want to remove this video?", QMessageBox.Yes, QMessageBox.No)
+            if response == QMessageBox.No:
+                return
+
+        # Remove video
+        self.labels.remove_video(video)
+
+        # TODO: Update data model?
+
+        # Update view if this was the current video
+        if self.video == video:
+            if len(self.labels.videos) == 0:
+                self.player.reset()
+                # TODO: update statusbar
+            else:
+                new_idx = min(idx.row(), len(self.labels.videos) - 1)
+                self.loadVideo(self.labels.videos[new_idx])
 
     def loadVideo(self, video:Video):
-        # TODO: use video id
+        # Update current video instance
         self.video = video
+
+        # Load video in player widget
         self.player.load_video(self.video)
 
-        video_labels = [label for label in self.labels.labels if label.video == self.video]
-        if len(video_labels) > 0:
-            self.player.plot(video_labels[-1].frame_idx)
+        # Jump to last labeled frame
+        last_label = self.labels.find_last(self.video)
+        if last_label is not None:
+            self.player.plot(last_label.frame_idx)
 
 
     def newNode(self):
-        pass
+        # Find new part name
+        part_name = "new_part"
+        i = 1
+        while part_name in self.skeleton:
+            part_name = f"new_part_{i}"
+            i += 1
+
+        # Add the node to the skeleton
+        self.skeleton.add_node(part_name)
+
+        # TODO: Update data model(s)?
+
+        # TODO: Move this to unified data model
+        # Update source edges dropdown
+        self.skeletonEdgesSrc.clear()
+        self.skeletonEdgesSrc.addItems(self.skeleton.nodes)
+        self.skeletonEdgesDst.clear()
+        
+
     def deleteNode(self):
-        pass
+        # Get selected node
+        idx = self.skeletonNodesTable.currentIndex()
+        if not idx.isValid(): return
+        node = self.skeleton.nodes[idx.row()]
+
+        # Check if there are instances with the skeleton that owns the node to be deleted
+        affected_instances = list(self.labels.instances(skeleton=self.skeleton))
+
+        # TODO: update instances correctly
+        if len(affected_instances) > 0:
+            return
+
+        # Remove
+        self.skeleton.delete_node(node)
+
+        # TODO: Update data model(s)?
+
+        # TODO: Move this to unified data model
+        # Update source edges dropdown
+        self.skeletonEdgesSrc.clear()
+        self.skeletonEdgesSrc.addItems(self.skeleton.nodes)
+        self.skeletonEdgesDst.clear()
+
+        # TODO: Replot instances?
+
+    def selectSkeletonEdgeSrc(self):
+        # TODO: Move this to unified data model
+        # TODO: Hook to signal emitted for updates to the node names
+
+        # Get selected source node
+        # src_node = self.skeletonEdgesSrc.currentText()
+        src_node = self.skeleton.nodes[self.skeletonEdgesSrc.currentIndex()]
+
+        # Find destination nodes
+        dst_nodes = set(self.skeleton.nodes) - {src_node}
+
+        # Find valid edges
+        valid_edges = {(src_node, dst_node) for dst_node in dst_nodes} - set(self.skeleton.edges)
+
+        # Filter down to valid destination nodes
+        valid_dst_nodes = [dst_node for src_node, dst_node in valid_edges]
+
+        # Update destination edges dropdown
+        self.skeletonEdgesDst.clear()
+        self.skeletonEdgesDst.addItems(valid_dst_nodes)
 
     def newEdge(self):
-        pass
+        # TODO: Move this to unified data model
+
+        # Get selected nodes
+        src_node = self.skeletonEdgesDst.currentText()
+        dst_node = self.skeletonEdgesSrc.currentText()
+
+        # Check if they're in the graph
+        if src_node not in self.skeleton or dst_node not in self.skeleton:
+            return
+
+        # Add edge
+        self.skeleton.add_edge(source=src_node, destination=dst_node)
+
+
     def deleteEdge(self):
-        pass
+        # TODO: Move this to unified data model
+
+        # Get selected edge
+        idx = self.skeletonEdgesTable.currentIndex()
+        if not idx.isValid(): return
+        edge = self.skeleton.edges[idx.row()]
+
+        # Delete edge
+        self.skeleton.delete_edge(source=edge[0], destination=edge[1])
+
+        # TODO: Update things
+
 
     def newInstance(self):
         if self.labeled_frame is None:

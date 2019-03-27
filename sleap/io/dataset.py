@@ -30,6 +30,25 @@ class LabeledFrame:
     frame_idx: int = attr.ib(converter=int)
     instances: List[Instance] = attr.ib(default=attr.Factory(list))
 
+    def __len__(self):
+        return len(self.instances)
+
+    def __getitem__(self, index):
+        return self.instances.__getitem__(index)
+
+    def index(self, value: Instance):
+        return self.instances.index(value)
+
+    def __delitem__(self, index):
+        self.instances.__delitem__(index)
+
+    def insert(self, index, value: Instance):
+        self.instances.insert(index, value)
+
+    def __setitem__(self, index, value: Instance):
+        self.instances.__setitem__(index, value)
+
+
 """
 The version number to put in the Labels JSON format.
 """
@@ -46,20 +65,25 @@ class Labels(MutableSequence):
     interface.
 
     Args:
-        instances: A list of instances
+        labeled_frames: A list of `LabeledFrame`s
         videos: A list of videos that these labels may or may not reference.
         That is, every LabeledFrame's video will be in videos but a Video
         object from videos might not have any LabeledFrame.
+        skeletons: A list of skeletons that these labels may or may not reference.
     """
 
-    labels: List[LabeledFrame] = attr.ib(default=attr.Factory(list))
+    labeled_frames: List[LabeledFrame] = attr.ib(default=attr.Factory(list))
     videos: List[Video] = attr.ib(default=attr.Factory(list))
+    skeletons: List[Skeleton] = attr.ib(default=attr.Factory(list))
 
     def __attrs_post_init__(self):
 
         # Add any videos that are present in the labels but
         # missing from the video list
-        self.videos = self.videos + list({l.video for l in self.labels})
+        self.videos = self.videos + list({label.video for label in self.labels})
+
+        # Ditto for skeletons
+        self.skeletons = self.skeletons + list({instance.skeleton for label in self.labels for instance in label.instances})
 
     # Below are convenience methods for working with Labels as list.
     # Maybe we should just inherit from list? Maybe this class shouldn't
@@ -67,23 +91,182 @@ class Labels(MutableSequence):
     # think more stuff might appear in this class later down the line
     # though.
 
+    @property
+    def labels(self):
+        """ Alias for labeled_frames """
+        return self.labeled_frames
+
     def __len__(self):
-        return len(self.labels)
+        return len(self.labeled_frames)
 
-    def __delitem__(self, index):
-        self.labels.__delitem__(index)
+    def index(self, value):
+        return self.labeled_frames.index(value)
 
-    def insert(self, index, value):
-        self.labels.insert(index, value)
+    def __contains__(self, item):
+        if isinstance(item, LabeledFrame):
+            return item in self.labeled_frames
+        elif isinstance(item, Video):
+            return item in self.videos
+        elif isinstance(item, Skeleton):
+            return item in self.skeletons
+        elif isinstance(item, tuple) and len(item) == 2 and isinstance(item[0], Video) and isinstance(item[1], int):
+            return self.find_first(*item) is not None
 
-    def __setitem__(self, index, value):
-        self.labels.__setitem__(index, value)
+    def __getitem__(self, key):
+        if isinstance(key, int):
+            return self.labels.__getitem__(key)
 
-    def __getitem__(self, index):
-        return self.labels.__getitem__(index)
+        elif isinstance(key, Video):
+            if key not in self.videos:
+                raise KeyError("Video not found in labels.")
+            return self.find(video=key)
 
-    def append(self, value):
+        elif isinstance(key, tuple) and len(key) == 2 and isinstance(key[0], Video) and isinstance(key[1], int):
+            if key[0] not in self.videos:
+                raise KeyError("Video not found in labels.")
+
+            _hit = self.find_first(video=key[0], frame_idx=key[1])
+
+            if _hit is None:
+                raise KeyError(f"No label found for specified video at frame {key[1]}.")
+
+            return _hit
+
+        else:
+            raise KeyError("Invalid label indexing arguments.")
+
+    def find(self, video: Video, frame_idx: int = None) -> List[LabeledFrame]:
+        """ Search for labeled frames given video and/or frame index. 
+        
+        Args:
+            video: a `Video` instance that is associated with the labeled frames
+            frame_idx: an integer specifying the frame index within the video
+
+        Returns:
+            List of `LabeledFrame`s that match the criteria. Empty if no matches found.
+
+        """
+
+        if frame_idx:
+            return [label for label in self.labels if label.video == video and label.frame_idx == frame_idx]
+        else:
+            return [label for label in self.labels if label.video == video]
+
+    def find_first(self, video: Video, frame_idx: int = None) -> LabeledFrame:
+        """ Find the first occurrence of a labeled frame for the given video and/or frame index.
+        
+        Args:
+            video: a `Video` instance that is associated with the labeled frames
+            frame_idx: an integer specifying the frame index within the video
+
+        Returns:
+            First `LabeledFrame` that match the criteria or None if none were found.
+        """
+
+        if video in self.videos:
+            for label in self.labels:
+                if label.video == video and (frame_idx is None or (label.frame_idx == frame_idx)):
+                    return label
+
+    def find_last(self, video: Video, frame_idx: int = None) -> LabeledFrame:
+        """ Find the last occurrence of a labeled frame for the given video and/or frame index.
+        
+        Args:
+            video: A `Video` instance that is associated with the labeled frames
+            frame_idx: An integer specifying the frame index within the video
+
+        Returns:
+            LabeledFrame: Last label that matches the criteria or None if no results.
+        """
+
+        if video in self.videos:
+            for label in reversed(self.labels):
+                if label.video == video and (frame_idx is None or (label.frame_idx == frame_idx)):
+                    return label
+
+    @property
+    def all_instances(self):
+        return list(self.instances())
+    
+    def instances(self, video: Video = None, skeleton: Skeleton = None):
+        """ Iterate through all instances in the labels, optionally with filters.
+
+        Args:
+            video: Only iterate through instances in this video
+            skeleton: Only iterate through instances with this skeleton
+
+        Yields:
+            Instance: The next labeled instance
+        """
+        for label in self.labels:
+            if video is None or label.video == video:
+                for instance in label.instances:
+                    if skeleton is None or instance.skeleton == skeleton:
+                        yield instance
+
+    def _update_containers(self, new_label: LabeledFrame):
+        """ Ensure that top-level containers are kept updated with new 
+        instances of objects that come along with new labels. """
+
+        if new_label.video not in self.videos:
+            self.videos.append(new_label.video)
+
+        for skeleton in {instance.skeleton for instance in new_label}:
+            if skeleton not in self.skeletons:
+                self.skeletons.append(skeleton)
+
+    def __setitem__(self, index, value: LabeledFrame):
+        # TODO: Maybe we should remove this method altogether?
+        self.labeled_frames.__setitem__(index, value)
+        self._update_containers(value)
+
+    def insert(self, index, value: LabeledFrame):
+        if value in self or (value.video, value.frame_idx) in self:
+            return
+
+        self.labeled_frames.insert(index, value)
+        self._update_containers(value)
+
+    def append(self, value: LabeledFrame):
         self.insert(len(self) + 1, value)
+
+    def __delitem__(self, key):
+        self.labeled_frames.__delitem__(key)
+
+    def remove(self, value: LabeledFrame):
+        self.labeled_frames.remove(value)
+
+    def add_video(self, video: Video):
+        """ Add a video to the labels if it is not already in it.
+
+        Video instances are added automatically when adding labeled frames,
+        but this function allows for adding videos to the labels before any
+        labeled frames are added.
+
+        Args:
+            video: `Video` instance
+
+        """
+        if video not in self.videos:
+            self.videos.append(video)
+
+    def remove_video(self, video: Video):
+        """ Removes a video from the labels and ALL associated labeled frames.
+
+        Args:
+            video: `Video` instance to be removed
+        """
+        if video not in self.videos:
+            raise KeyError("Video is not in labels.")
+
+        # Delete all associated labeled frames
+        for label in reversed(self.labeled_frames):
+            if label.video == video:
+                self.labeled_frames.remove(label)
+
+        # Delete video
+        self.videos.remove(video)
+
 
     def to_json(self):
         """
@@ -94,27 +277,21 @@ class Labels(MutableSequence):
             The JSON representaiton of the string.
         """
 
-        # Get the unique skeletons. Convert it to a list
-        skeletons = set()
-        for label in self.labels:
-            for instance in label.instances:
-                skeletons.add(instance.skeleton)
-        skeletons = list(skeletons)
-
         # Register some unstructure hooks since we don't want complete deserialization
         # of video and skeleton objects present in the labels. We will serialize these
         # as references to the above constructed lists to limit redundant data in the
         # json
         label_cattr = cattr.Converter()
-        label_cattr.register_unstructure_hook(Skeleton, lambda x: skeletons.index(x))
+        # label_cattr.register_unstructure_hook(Skeleton, lambda x: skeletons.index(x))
+        label_cattr.register_unstructure_hook(Skeleton, lambda x: self.skeletons.index(x))
         label_cattr.register_unstructure_hook(Video, lambda x: self.videos.index(x))
 
         # Serialize the skeletons, videos, and labels
         dicts = {
             'version': LABELS_JSON_FILE_VERSION,
-            'skeletons': Skeleton.make_cattr().unstructure(skeletons),
+            'skeletons': Skeleton.make_cattr().unstructure(self.skeletons),
             'videos': cattr.unstructure(self.videos),
-            'labels': label_cattr.unstructure(self.labels)
+            'labels': label_cattr.unstructure(self.labeled_frames)
          }
 
         return json.dumps(dicts)
@@ -146,7 +323,7 @@ class Labels(MutableSequence):
         label_cattr.register_structure_hook(Video, lambda x,type: videos[x])
         labels = label_cattr.structure(dicts['labels'], List[LabeledFrame])
 
-        return cls(labels=labels, videos=videos)
+        return cls(labeled_frames=labels, videos=videos, skeletons=skeletons)
 
     @classmethod
     def load_json(cls, filename: str):

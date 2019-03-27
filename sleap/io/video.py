@@ -337,6 +337,6 @@ class Video:
         if file.endswith(("h5", "hdf5")):
             return cls(backend=HDF5Video(file=file, *args, **kwargs))
         elif file.endswith(("mp4", "avi")):
-            return cls(backend=MediaVideo(file=file, *args, **kwargs))
+            return cls(backend=MediaVideo(filename=file, *args, **kwargs))
         else:
             raise ValueError("Could not detect backend for specified filename.")
