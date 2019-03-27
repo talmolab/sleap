@@ -266,12 +266,19 @@ class QtVideoPlayer(QWidget):
         # self.seekbar.setTickInterval(1)
         self.seekbar.setValue(self.frame_idx)
         self.seekbar.setMinimum(0)
-        self.seekbar.setMaximum(video.frames - 1)
+        self.seekbar.setMaximum(self.video.frames - 1)
         self.seekbar.setEnabled(True)
 
         if plot:
-            self.plot()
+            self.plot(initial_frame)
 
+    def reset(self):
+        self.video = None
+        self.frame_idx = None
+        self.view.clear()
+        self.seekbar.setMaximum(0)
+        self.seekbar.setEnabled(False)
+        
 
     def plot(self, idx=None):
 

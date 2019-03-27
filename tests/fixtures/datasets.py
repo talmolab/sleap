@@ -4,6 +4,13 @@ import pytest
 from sleap.instance import Instance, Point
 from sleap.io.dataset import LabeledFrame, Labels
 
+
+TEST_JSON_LABELS = "tests/data/json_format_v1/centered_pair.json"
+
+@pytest.fixture
+def centered_pair_labels():
+    return Labels.load_json(TEST_JSON_LABELS)
+
 @pytest.fixture
 def multi_skel_vid_labels(hdf5_vid, small_robot_mp4_vid, skeleton, stickman):
     """
@@ -41,3 +48,4 @@ def multi_skel_vid_labels(hdf5_vid, small_robot_mp4_vid, skeleton, stickman):
     labels = Labels(labels)
 
     return labels
+

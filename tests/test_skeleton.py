@@ -66,6 +66,13 @@ def test_getitem_node(skeleton):
     # Now try to get the head node
     assert(skeleton["head"] is not None)
 
+def test_contains_node(skeleton):
+    """
+    Test whether __contains__ overload returns presence of nodes by name.
+    """
+    assert "head" in skeleton
+    assert "not head" not in skeleton
+
 
 def test_node_rename(skeleton):
     """

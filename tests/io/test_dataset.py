@@ -2,8 +2,9 @@ import os
 import pytest
 import numpy as np
 
+from sleap.skeleton import Skeleton
 from sleap.instance import Instance, Point
-from sleap.io.video import Video
+from sleap.io.video import Video, MediaVideo
 from sleap.io.dataset import LabeledFrame, Labels, load_labels_json_old
 
 TEST_H5_DATASET = 'tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5'
@@ -71,3 +72,111 @@ def test_load_labels_json_old(tmpdir):
     new_labels = Labels.load_json(new_file_path)
     check_labels(new_labels)
 
+
+def test_label_accessors(centered_pair_labels):
+    labels = centered_pair_labels
+
+    video = labels.videos[0]
+    assert len(labels.find(video)) == 70
+    assert labels[video] == labels.find(video)
+
+    assert labels[0].video == video
+    assert labels[0].frame_idx == 118
+
+    assert labels[61].video == video
+    assert labels[61].frame_idx == 100
+
+    assert len(labels.find(video, frame_idx=100)) == 1
+    assert len(labels.find(video, 100)) == 1
+    assert labels.find(video, 100)[0] == labels[61]
+    assert labels.find_first(video) == labels[0]
+    assert labels.find_first(video, 100) == labels[61]
+    assert labels[video, 100] == labels[61]
+    assert labels[video, 118] == labels[0]
+    assert labels[video] == labels.labels
+
+    assert len(labels.find(video, 101)) == 0
+    assert labels.find_first(video, 101) is None
+    with pytest.raises(KeyError):
+        labels[video, 101]
+
+    dummy_video = Video(backend=MediaVideo)
+    assert len(labels.find(dummy_video)) == 0
+    with pytest.raises(KeyError):
+        labels[dummy_video]
+
+
+def test_label_mutability():
+    dummy_video = Video(backend=MediaVideo)
+    dummy_skeleton = Skeleton()
+    dummy_instance = Instance(dummy_skeleton)
+    dummy_frame = LabeledFrame(dummy_video, frame_idx=0, instances=[dummy_instance,])
+
+    labels = Labels()
+    labels.append(dummy_frame)
+
+    assert dummy_video in labels.videos
+    assert dummy_video in labels
+    assert dummy_skeleton in labels.skeletons
+    assert dummy_skeleton in labels
+    assert dummy_frame in labels.labeled_frames
+    assert dummy_frame in labels
+    assert (dummy_video, 0) in labels
+    assert (dummy_video, 1) not in labels
+
+    dummy_video2 = Video(backend=MediaVideo)
+    dummy_skeleton2 = Skeleton(name="dummy2")
+    dummy_instance2 = Instance(dummy_skeleton2)
+    dummy_frame2 = LabeledFrame(dummy_video2, frame_idx=0, instances=[dummy_instance2,])
+    assert dummy_video2 not in labels
+    assert dummy_skeleton2 not in labels
+    assert dummy_frame2 not in labels
+
+    labels.append(dummy_frame2)
+    assert dummy_video2 in labels
+    assert dummy_frame2 in labels
+
+    labels.remove_video(dummy_video2)
+    assert dummy_video2 not in labels
+    assert dummy_frame2 not in labels
+    assert len(labels.find(dummy_video2)) == 0
+
+    assert len(labels) == 1
+    labels.append(LabeledFrame(dummy_video, frame_idx=0))
+    assert len(labels) == 1
+
+    dummy_frames = [LabeledFrame(dummy_video, frame_idx=i) for i in range(10)]
+    dummy_frames2 = [LabeledFrame(dummy_video2, frame_idx=i) for i in range(10)]
+
+    for f in dummy_frames + dummy_frames2:
+        labels.append(f)
+
+    assert(len(labels) == 20)
+    labels.remove_video(dummy_video2)
+    assert(len(labels) == 10)
+
+    assert len(labels.find(dummy_video)) == 10
+    assert dummy_frame in labels
+    assert all([label in labels for label in dummy_frames[1:]])
+
+    assert dummy_video2 not in labels
+    assert len(labels.find(dummy_video2)) == 0
+    assert all([label not in labels for label in dummy_frames2])
+
+
+def test_instance_access():
+    labels = Labels()
+
+    dummy_skeleton = Skeleton()
+    dummy_video = Video(backend=MediaVideo)
+    dummy_video2 = Video(backend=MediaVideo)
+
+    for i in range(10):
+        labels.append(LabeledFrame(dummy_video, frame_idx=i, instances=[Instance(dummy_skeleton), Instance(dummy_skeleton)]))
+    for i in range(10):
+        labels.append(LabeledFrame(dummy_video2, frame_idx=i, instances=[Instance(dummy_skeleton), Instance(dummy_skeleton), Instance(dummy_skeleton)]))
+
+    assert len(labels.all_instances) == 50
+    assert len(list(labels.instances(video=dummy_video))) == 20
+    assert len(list(labels.instances(video=dummy_video2))) == 30
+    
