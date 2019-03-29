@@ -10,8 +10,21 @@ import numpy as np
 from sleap.io.video import Video, HDF5Video
 
 class QtConfMaps(QGraphicsObject):
+    """Type of QGraphicsObject to display confidence maps in a QGraphicsView.
+    
+    Initialize with an array of the confidence map data for one frame:
+        QGraphicsObject(frame)
+    """
     
     def __init__(self, frame: np.array = None, *args, **kwargs):
+    """Initializes the QGraphics Object with a confidence map frame.
+    
+    This creates a child QtConfMap item for each channel, so that these will
+    all be added to the view along with the parent QtConfMaps.
+    
+    Args:
+        frame (numpy.array): The format of the frame is (channels, height, width).
+    """
         super(QtConfMaps, self).__init__(*args, **kwargs)
         self.frame = frame
         self.conf_maps = []
@@ -80,7 +93,7 @@ class QtConfMaps(QGraphicsObject):
             conf_map_item = QtConfMap(confmap=self.frame[:,:,channel], color=color_map, parent=self)
             self.conf_maps.append(conf_map_item)
         
-    def boundingRect(self):
+    def boundingRect(self) -> QRectF:
         return QRectF()
 
     def paint(self, painter, option, widget=None):
@@ -88,6 +101,16 @@ class QtConfMaps(QGraphicsObject):
 
 
 class QtConfMap(QGraphicsPixmapItem):
+    """Type of QGraphicsPixmapItem for drawing single channel of confidence map.
+    
+    Usage:
+        Call QtConfMap(parent=self, confmap, [color]) from an object
+        which can contain child pixmaps items (i.e., a QGraphicsObject).
+        
+    Args:
+        confmap (numpy.array): (h,w) array of one confidence map channel.
+        color (list): optional (r,g,b) array for channel color.
+    """
 
     def __init__(self, confmap: np.array = None, color = [255, 255, 255], *args, **kwargs):
         super(QtConfMap, self).__init__(*args, **kwargs)
@@ -99,7 +122,7 @@ class QtConfMap(QGraphicsPixmapItem):
             image = self.get_conf_image()
             self.setPixmap(QPixmap(image))
             
-    def get_conf_image(self):
+    def get_conf_image(self) -> QImage:
     
         if self.confmap is None:
             return
