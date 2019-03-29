@@ -19,13 +19,18 @@ install:
   - conda config --set always_yes yes --set changeps1 no
 
   # Quietly update if needed
-  #- conda update -q conda
+  # - conda update -q conda
 
   # Display conda version
   - conda info -a
 
+  # Take the enviroment.yml but replace tensorflow-gpu with tensorflow,
+  # we don't have GPUs on appveyor nodes and this will make
+  # building the enviroment faster.
+  - ps: (Get-Content -path .\environment.yml -Raw) -replace 'tensorflow-gpu','tensorflow' | Set-Content -Path environment_appveyor.yml
+
   # Create/update the sleap environment in case some dependencies changed.
-  - conda update -n sleap_appveyor --file win10_conda_spec_cpuonly.txt
+  - conda env create -n sleap_appveyor -f environment_appveyor.yml
 
   # Activate things
   - activate sleap_appveyor
@@ -33,7 +38,7 @@ install:
   # Conda Explicit Spec files don't include pip installed stuff.
   # See: https://github.com/conda/conda/issues/8372
   # We need to install this separately, what a mess.
-  - pip install PySide2 opencv-python imgaug
+  # - pip install PySide2 opencv-python imgaug cattrs
 
 # Install dev requirements too.
   - pip install -r dev_requirements.txt
@@ -42,6 +47,6 @@ build: off
 test_script:
   - cmd: activate sleap_appveyor
   - cmd: where python
-  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+#  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
   - cmd: python -m pytest tests/
 

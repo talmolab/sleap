@@ -8,223 +8,461 @@ storage format.
 
 """
 
-import logging
-import h5py
 import os
+import attr
+import cattr
+import json
 import numpy as np
 
-from time import time
-from abc import ABC, abstractmethod
+from collections import MutableSequence
+from typing import List, Dict, Union
+
+import pandas as pd
 
 from sleap.skeleton import Skeleton
+from sleap.instance import Instance, Point
+from sleap.io.video import Video
 
 
-class Dataset(ABC):
+@attr.s(auto_attribs=True)
+class LabeledFrame:
+    video: Video = attr.ib()
+    frame_idx: int = attr.ib(converter=int)
+    instances: List[Instance] = attr.ib(default=attr.Factory(list))
+
+    def __len__(self):
+        return len(self.instances)
+
+    def __getitem__(self, index):
+        return self.instances.__getitem__(index)
+
+    def index(self, value: Instance):
+        return self.instances.index(value)
+
+    def __delitem__(self, index):
+        self.instances.__delitem__(index)
+
+    def insert(self, index, value: Instance):
+        self.instances.insert(index, value)
+
+    def __setitem__(self, index, value: Instance):
+        self.instances.__setitem__(index, value)
+
+
+"""
+The version number to put in the Labels JSON format.
+"""
+LABELS_JSON_FILE_VERSION = "2.0.0"
+
+
+@attr.s(auto_attribs=True)
+class Labels(MutableSequence):
     """
-    The LEAP Dataset class represents an API for accessing labelled video
+    The LEAP :class:`.Labels` class represents an API for accessing labeled video
     frames and other associated metadata. This class is front-end for all
-    interactions with loading, writing, and modifying a dataset. The actual
+    interactions with loading, writing, and modifying these labels. The actual
     storage backend for the data is mostly abstracted away from the main
     interface.
+
+    Args:
+        labeled_frames: A list of `LabeledFrame`s
+        videos: A list of videos that these labels may or may not reference.
+        That is, every LabeledFrame's video will be in videos but a Video
+        object from videos might not have any LabeledFrame.
+        skeletons: A list of skeletons that these labels may or may not reference.
     """
 
-    def __init__(self, path: str):
-        """
-        The constructor for any subclass of :class:`.DatasetBackend` should call
-        this constructor to initiate loading of each component of a dataset.
+    labeled_frames: List[LabeledFrame] = attr.ib(default=attr.Factory(list))
+    videos: List[Video] = attr.ib(default=attr.Factory(list))
+    skeletons: List[Skeleton] = attr.ib(default=attr.Factory(list))
 
-        Args:
-            path: The path to the file or folder containing the dataset.
-        """
+    def __attrs_post_init__(self):
 
-        self.path = path
+        # Add any videos that are present in the labels but
+        # missing from the video list
+        self.videos = self.videos + list({label.video for label in self.labels})
 
-        # Load all the components of the dataset.
-        self._load_frames()
-        self._load_instance_data()
-        self._load_confidence_maps()
-        self._load_skeleton()
-        self._load_pafs()
+        # Ditto for skeletons
+        self.skeletons = self.skeletons + list({instance.skeleton for label in self.labels for instance in label.instances})
 
-        # Check if confidence maps were found, if not we will need to compute them
-        # based on the point data.
-        #if not hasattr(self, 'confmaps') or self.confmaps is not None:
-        #    logging.warning("Confidence maps not found in dataset. Need to compute them.")
+    # Below are convenience methods for working with Labels as list.
+    # Maybe we should just inherit from list? Maybe this class shouldn't
+    # exists since it is just a list really with some class methods. I
+    # think more stuff might appear in this class later down the line
+    # though.
 
-        # Check if part affinity fields were found, if not we will need to compute
-        # them based on _points and skeleton data.
-        #if not hasattr(self, 'pafs') or self.pafs is not None:
-        #    logging.warning("Part affinity fields not found in dataset. Need to compute them.")
+    @property
+    def labels(self):
+        """ Alias for labeled_frames """
+        return self.labeled_frames
 
-    @abstractmethod
-    def _load_frames(self):
-        raise NotImplementedError()
+    def __len__(self):
+        return len(self.labeled_frames)
 
-    @abstractmethod
-    def _load_confidence_maps(self):
-        raise NotImplementedError()
+    def index(self, value):
+        return self.labeled_frames.index(value)
 
-    @abstractmethod
-    def _load_skeleton(self):
-        raise NotImplementedError()
+    def __contains__(self, item):
+        if isinstance(item, LabeledFrame):
+            return item in self.labeled_frames
+        elif isinstance(item, Video):
+            return item in self.videos
+        elif isinstance(item, Skeleton):
+            return item in self.skeletons
+        elif isinstance(item, tuple) and len(item) == 2 and isinstance(item[0], Video) and isinstance(item[1], int):
+            return self.find_first(*item) is not None
 
-    @abstractmethod
-    def _load_instance_data(self):
-        raise NotImplementedError()
+    def __getitem__(self, key):
+        if isinstance(key, int):
+            return self.labels.__getitem__(key)
 
-    @abstractmethod
-    def _load_pafs(self):
-        raise NotImplementedError()
+        elif isinstance(key, Video):
+            if key not in self.videos:
+                raise KeyError("Video not found in labels.")
+            return self.find(video=key)
 
-    @classmethod
-    def load(cls, path: str, format: str = 'auto'):
-        """
-        Construct the :class:`.Dataset` from the file path. This may be a
-        single file or directory depending on the storage backend.
+        elif isinstance(key, tuple) and len(key) == 2 and isinstance(key[0], Video) and isinstance(key[1], int):
+            if key[0] not in self.videos:
+                raise KeyError("Video not found in labels.")
 
-        Args:
-            path: The filasytem path to the file or folder that stores the dataset.
-            format: The format the dataset is stored in. LEAP supports the following
-            formats for its dataset files:
+            _hit = self.find_first(video=key[0], frame_idx=key[1])
 
-            * HDF5
+            if _hit is None:
+                raise KeyError(f"No label found for specified video at frame {key[1]}.")
 
-            The default value of auto will attempt to detect the format automatically
-            based on filename and contents. If it fails it will throw and exception.
-        """
+            return _hit
 
-        # If format is auto, we need to try to detect the format automatically.
-        # For now, lets look at the file extension
-        path_ext = os.path.splitext(path)[-1].lower()
-
-        if path_ext == '.h5' or path_ext == '.hdf5' or format.tolower() == 'hdf5':
-            return DatasetHDF5(path=path)
         else:
-            raise ValueError("Can't automatically find dataset file format. " +
-                             "Are you sure this is a LEAP dataset?")
+            raise KeyError("Invalid label indexing arguments.")
 
-class DatasetHDF5(Dataset):
-    """
-    The :class:`.DatasetHDF5` class provides for reading and writing of HDF5 backed
-    LEAP datasets.
-    """
-
-    # Class level constants that define the dataset paths within
-    # the HDF5 data.
-    _frames_dataset_name = "box"  # HDF5 dataset name for video frame data
-    _confmaps_dataset_name = "confmaps"  # HDF5 dataset name for confidence map data
-    _pafs_dataset_name = "pafs"  # HDF5 dataset name for part affinity field data
-    _skelton_dataset_name = "skeleton"  # HDF5 dataset name for skeleton data
-    _points_dataset_name = "_points"  # HDF5 dataset name labeled _points
-
-    def __init__(self, path: str):
-
-        # Open the HDF5 file for reading and call the base constructor to load all the
-        # parts of the dataset.
-        with h5py.File(path, "r") as self._h5_file:
-            super(DatasetHDF5, self).__init__(path)
-
-    def _load_frames(self):
-        """
-        Loads and normalizes the video frame data from the HDF5 dataset.
+    def find(self, video: Video, frame_idx: int = None) -> List[LabeledFrame]:
+        """ Search for labeled frames given video and/or frame index. 
+        
+        Args:
+            video: a `Video` instance that is associated with the labeled frames
+            frame_idx: an integer specifying the frame index within the video
 
         Returns:
-            None
+            List of `LabeledFrame`s that match the criteria. Empty if no matches found.
+
         """
 
-        try:
-            # Load
-            t0 = time()
-            self.frames = self._h5_file[DatasetHDF5._frames_dataset_name][:]
-            logging.info("Loaded %d video frames [%.1fs]" % (len(self.frames), time() - t0))
+        if frame_idx:
+            return [label for label in self.labels if label.video == video and label.frame_idx == frame_idx]
+        else:
+            return [label for label in self.labels if label.video == video]
 
-            # Adjust dimensions
-            t0 = time()
-            self.frames = self._preprocess(self.frames, permute = (0, 3, 2, 1))
-            logging.info("Permuted and normalized video frame data. [%.1fs]" % (time() - t0))
-        except Exception as e:
-            raise ValueError("HDF5 format data did not have valid video frames data!") from e
-
-    def _load_confidence_maps(self):
-        """
-        Loads and normalizes the confidence map data from the HDF5 dataset.
+    def find_first(self, video: Video, frame_idx: int = None) -> LabeledFrame:
+        """ Find the first occurrence of a labeled frame for the given video and/or frame index.
+        
+        Args:
+            video: a `Video` instance that is associated with the labeled frames
+            frame_idx: an integer specifying the frame index within the video
 
         Returns:
-            None
+            First `LabeledFrame` that match the criteria or None if none were found.
         """
-        try:
-            # Load
-            t0 = time()
-            self.confmaps = self._h5_file[DatasetHDF5._confmaps_dataset_name][:]
-            logging.info("Loaded %d frames of confidence map data [%.1fs]" % (len(self.frames), time() - t0))
 
-            # Adjust dimensions
-            t0 = time()
-            self.confmaps = self._preprocess(self.confmaps, permute = (0, 3, 2, 1))
-            logging.info("Permuted and normalized the confidence map data. [%.1fs]" % (time() - t0))
+        if video in self.videos:
+            for label in self.labels:
+                if label.video == video and (frame_idx is None or (label.frame_idx == frame_idx)):
+                    return label
 
-        except:
-            # Part affinity field data might not be pre-computed, ignore exceptions.
-            pass
-
-    def _load_pafs(self):
-        """
-        Loads and the part affinity fields from the HDF5 dataset.
+    def find_last(self, video: Video, frame_idx: int = None) -> LabeledFrame:
+        """ Find the last occurrence of a labeled frame for the given video and/or frame index.
+        
+        Args:
+            video: A `Video` instance that is associated with the labeled frames
+            frame_idx: An integer specifying the frame index within the video
 
         Returns:
-            None
+            LabeledFrame: Last label that matches the criteria or None if no results.
         """
-        try:
-            # Load
-            t0 = time()
-            self.pafs = self._h5_file[DatasetHDF5._pafs_dataset_name][:]
-            logging.info("Loaded %d frames of part affinity field (PAF) data [%.1fs]" % (len(self.frames), time() - t0))
 
-            # Adjust dimensions
-            t0 = time()
-            self.pafs = self._preprocess(self.pafs, permute = (0, 3, 2, 1))
-            logging.info("Permuted and normalized the part affinity field (PAF) map data. [%.1fs]" % (time() - t0))
+        if video in self.videos:
+            for label in reversed(self.labels):
+                if label.video == video and (frame_idx is None or (label.frame_idx == frame_idx)):
+                    return label
 
-        except:
-            # Part affinity field data might not be pre-computed, ignore exceptions.
-            pass
+    @property
+    def all_instances(self):
+        return list(self.instances())
+    
+    def instances(self, video: Video = None, skeleton: Skeleton = None):
+        """ Iterate through all instances in the labels, optionally with filters.
 
+        Args:
+            video: Only iterate through instances in this video
+            skeleton: Only iterate through instances with this skeleton
+
+        Yields:
+            Instance: The next labeled instance
+        """
+        for label in self.labels:
+            if video is None or label.video == video:
+                for instance in label.instances:
+                    if skeleton is None or instance.skeleton == skeleton:
+                        yield instance
+
+    def _update_containers(self, new_label: LabeledFrame):
+        """ Ensure that top-level containers are kept updated with new 
+        instances of objects that come along with new labels. """
+
+        if new_label.video not in self.videos:
+            self.videos.append(new_label.video)
+
+        for skeleton in {instance.skeleton for instance in new_label}:
+            if skeleton not in self.skeletons:
+                self.skeletons.append(skeleton)
+
+    def __setitem__(self, index, value: LabeledFrame):
+        # TODO: Maybe we should remove this method altogether?
+        self.labeled_frames.__setitem__(index, value)
+        self._update_containers(value)
+
+    def insert(self, index, value: LabeledFrame):
+        if value in self or (value.video, value.frame_idx) in self:
+            return
+
+        self.labeled_frames.insert(index, value)
+        self._update_containers(value)
+
+    def append(self, value: LabeledFrame):
+        self.insert(len(self) + 1, value)
+
+    def __delitem__(self, key):
+        self.labeled_frames.__delitem__(key)
+
+    def remove(self, value: LabeledFrame):
+        self.labeled_frames.remove(value)
+
+    def add_video(self, video: Video):
+        """ Add a video to the labels if it is not already in it.
+
+        Video instances are added automatically when adding labeled frames,
+        but this function allows for adding videos to the labels before any
+        labeled frames are added.
+
+        Args:
+            video: `Video` instance
+
+        """
+        if video not in self.videos:
+            self.videos.append(video)
+
+    def remove_video(self, video: Video):
+        """ Removes a video from the labels and ALL associated labeled frames.
+
+        Args:
+            video: `Video` instance to be removed
+        """
+        if video not in self.videos:
+            raise KeyError("Video is not in labels.")
+
+        # Delete all associated labeled frames
+        for label in reversed(self.labeled_frames):
+            if label.video == video:
+                self.labeled_frames.remove(label)
+
+        # Delete video
+        self.videos.remove(video)
+
+
+    def to_json(self):
+        """
+        Serialize all labels in the underling list of LabeledFrame(s) to a
+        JSON structured string.
+
+        Returns:
+            The JSON representaiton of the string.
+        """
+
+        # Register some unstructure hooks since we don't want complete deserialization
+        # of video and skeleton objects present in the labels. We will serialize these
+        # as references to the above constructed lists to limit redundant data in the
+        # json
+        label_cattr = cattr.Converter()
+        # label_cattr.register_unstructure_hook(Skeleton, lambda x: skeletons.index(x))
+        label_cattr.register_unstructure_hook(Skeleton, lambda x: self.skeletons.index(x))
+        label_cattr.register_unstructure_hook(Video, lambda x: self.videos.index(x))
+
+        # Serialize the skeletons, videos, and labels
+        dicts = {
+            'version': LABELS_JSON_FILE_VERSION,
+            'skeletons': Skeleton.make_cattr().unstructure(self.skeletons),
+            'videos': cattr.unstructure(self.videos),
+            'labels': label_cattr.unstructure(self.labeled_frames)
+         }
+
+        return json.dumps(dicts)
 
     @staticmethod
-    def _preprocess(x: np.ndarray, permute: tuple = None) -> np.ndarray:
-        """
-        Normalizes input data. Handles things like single images and unsigned integers.
+    def save_json(labels: 'Labels', filename: str):
+        json_str = labels.to_json()
 
-        Args:
-            x: A 4-D numpy array
-            permute: A tuple specifying how to shift the dimensions of the array. None means leave be.
+        with open(filename, 'w') as file:
+            file.write(json_str)
 
-        Returns:
-            The resulting data.
-        """
+    @classmethod
+    def from_json(cls, data: Union[str, dict]):
 
-        # Add singleton dim for single images
-        if x.ndim == 3:
-            x = x[None, ...]
+        # Parse the json string if needed.
+        if data is str:
+            dicts = json.loads(data)
+        else:
+            dicts = data
 
-        # Adjust dimensions
-        if permute is not None:
-            x = np.transpose(x, permute)
+        # First, deserialize the skeleton and videos lists, the labels reference these
+        # so we will need them while deserializing.
+        skeletons = Skeleton.make_cattr().structure(dicts['skeletons'], List[Skeleton])
 
-        # Normalize
-        if x.dtype == "uint8":
-            x = x.astype("float32") / 255
+        videos = Skeleton.make_cattr().structure(dicts['videos'], List[Video])
 
-        return x
+        label_cattr = cattr.Converter()
+        label_cattr.register_structure_hook(Skeleton, lambda x,type: skeletons[x])
+        label_cattr.register_structure_hook(Video, lambda x,type: videos[x])
+        labels = label_cattr.structure(dicts['labels'], List[LabeledFrame])
 
-    def _load_skeleton(self):
-        """
-        Load the skeleton data into a skeleton object models.
+        return cls(labeled_frames=labels, videos=videos, skeletons=skeletons)
 
-        Returns:
-            None
-        """
-        self.skeleton = Skeleton.load_hdf5(self._h5_file[self. _skelton_dataset_name])
+    @classmethod
+    def load_json(cls, filename: str):
+        with open(filename, 'r') as file:
 
-    def _load_instance_data(self):
-        pass
+            # FIXME: Peek into the json to see if there is version string.
+            # I do this to tell apart old JSON data from leap_dev vs the
+            # newer format for sLEAP.
+            json_str = file.read()
+            dicts = json.loads(json_str)
+
+            # If we have a version number, then it is new sLEAP format
+            if "version" in dicts:
+
+                # Cache the working directory.
+                cwd = os.getcwd()
+
+                # Try to load the labels file.
+                try:
+                    labels = Labels.from_json(dicts)
+                except FileNotFoundError:
+
+                    # FIXME: We are going to the labels JSON that has references to
+                    # video files. Lets change directory to the dirname of the json file
+                    # so that relative paths will be from this director. Maybe
+                    # it is better to feed the dataset dirname all the way down to
+                    # the Video object. This seems like less coupling between classes
+                    # though.
+                    if os.path.dirname(filename) != "":
+                        os.chdir(os.path.dirname(filename))
+
+                    # Try again
+                    labels = Labels.from_json(dicts)
+
+                except Exception as ex:
+                    # Ok, we give up, where the hell are these videos!
+                    raise ex # Re-raise.
+                finally:
+                    os.chdir(cwd)  # Make sure to change back if we have problems.
+
+                return labels
+
+            else:
+                return load_labels_json_old(data_path=filename, parsed_json=dicts)
+
+
+def load_labels_json_old(data_path: str, parsed_json: dict = None,
+                         adjust_matlab_indexing: bool = True,
+                         fix_rel_paths: bool = True) -> Labels:
+    """
+    Simple utitlity code to load data from Talmo's old JSON format into newer
+    Labels object.
+
+    Args:
+        data_path: The path to the JSON file.
+        parsed_json: The parsed json if already loaded. Save some time if already parsed.
+        adjust_matlab_indexing: Do we need to adjust indexing from MATLAB.
+        fix_rel_paths: Fix paths to videos to absolute paths.
+
+    Returns:
+        A newly constructed Labels object.
+    """
+    if parsed_json is None:
+        data = json.loads(open(data_path).read())
+    else:
+        data = parsed_json
+
+    videos = pd.DataFrame(data["videos"])
+    instances = pd.DataFrame(data["instances"])
+    points = pd.DataFrame(data["points"])
+    predicted_instances = pd.DataFrame(data["predicted_instances"])
+    predicted_points = pd.DataFrame(data["predicted_points"])
+
+    if adjust_matlab_indexing:
+        instances.frameIdx -= 1
+        points.frameIdx -= 1
+        predicted_instances.frameIdx -= 1
+        predicted_points.frameIdx -= 1
+
+        points.node -= 1
+        predicted_points.node -= 1
+
+        points.x -= 1
+        predicted_points.x -= 1
+
+        points.y -= 1
+        predicted_points.y -= 1
+
+    skeleton = Skeleton()
+    skeleton.add_nodes(data["skeleton"]["nodeNames"])
+    edges = data["skeleton"]["edges"]
+    if adjust_matlab_indexing:
+        edges = np.array(edges) - 1
+    for (src, dst) in edges:
+        skeleton.add_edge(skeleton.nodes[src], skeleton.nodes[dst])
+
+    if fix_rel_paths:
+        for i, row in videos.iterrows():
+            p = row.filepath
+            if not os.path.exists(p):
+                p = os.path.join(os.path.dirname(data_path), p)
+                if os.path.exists(p):
+                    videos.at[i, "filepath"] = p
+
+    # Make the video objects
+    video_objects = {}
+    for i, row in videos.iterrows():
+        if videos.at[i, "format"] == "media":
+            vid = Video.from_media(videos.at[i, "filepath"])
+        else:
+            vid = Video.from_hdf5(file=videos.at[i, "filepath"], dataset=videos.at[i, "dataset"])
+
+        video_objects[videos.at[i, "id"]] = vid
+
+    # A function to get all the instances for a particular video frame
+    def get_frame_instances(video_id, frame_idx):
+        is_in_frame = (points["videoId"] == video_id) & (points["frameIdx"] == frame_idx)
+        if not is_in_frame.any():
+            return []
+
+        instances = []
+        frame_instance_ids = np.unique(points["instanceId"][is_in_frame])
+        for i, instance_id in enumerate(frame_instance_ids):
+            is_instance = is_in_frame & (points["instanceId"] == instance_id)
+            instance_points = {skeleton.nodes[n]: Point(x, y, visible=v) for x, y, n, v in
+                               zip(*[points[k][is_instance] for k in ["x", "y", "node", "visible"]])}
+
+            instance = Instance(skeleton=skeleton, points=instance_points)
+            instances.append(instance)
+
+        return instances
+
+    # Get the unique labeled frames and construct a list of LabeledFrame objects for them.
+    frame_keys = {(videoId, frameIdx) for videoId, frameIdx in zip(points["videoId"], points["frameIdx"])}
+    labels = []
+    for videoId, frameIdx in frame_keys:
+        label = LabeledFrame(video=video_objects[videoId], frame_idx=frameIdx,
+                             instances = get_frame_instances(videoId, frameIdx))
+        labels.append(label)
+
+    return Labels(labels)
+
