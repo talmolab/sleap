@@ -6,6 +6,7 @@ from PySide2.QtGui import QImage, QPixmap
 from PySide2.QtCore import QRectF
 
 import numpy as np
+import qimage2ndarray
 
 from sleap.io.video import Video, HDF5Video
 
@@ -17,14 +18,14 @@ class QtConfMaps(QGraphicsObject):
     """
     
     def __init__(self, frame: np.array = None, *args, **kwargs):
-    """Initializes the QGraphics Object with a confidence map frame.
+        """ Initializes the QGraphics Object with a confidence map frame.
     
-    This creates a child QtConfMap item for each channel, so that these will
-    all be added to the view along with the parent QtConfMaps.
+        This creates a child QtConfMap item for each channel, so that these will
+        all be added to the view along with the parent QtConfMaps.
     
-    Args:
-        frame (numpy.array): The format of the frame is (channels, height, width).
-    """
+        Args:
+            frame (numpy.array): The format of the frame is (channels, height, width).
+        """
         super(QtConfMaps, self).__init__(*args, **kwargs)
         self.frame = frame
         self.conf_maps = []
@@ -101,7 +102,7 @@ class QtConfMaps(QGraphicsObject):
 
 
 class QtConfMap(QGraphicsPixmapItem):
-    """Type of QGraphicsPixmapItem for drawing single channel of confidence map.
+    """ Type of QGraphicsPixmapItem for drawing single channel of confidence map.
     
     Usage:
         Call QtConfMap(parent=self, confmap, [color]) from an object
