@@ -18,7 +18,7 @@ class QtAffinityFields(QGraphicsObject):
         QGraphicsObject(frame)
     """
     
-    def __init__(self, frame: np.array = None, show_fields = None, *args, **kwargs):
+    def __init__(self, frame: np.array = None, show_fields: list = None, blur: int = 9, *args, **kwargs):
         """ Initializes the QGraphics Object with a affinity field frame.
     
         This creates a child QtAffinityField item for each channel, so that these will
@@ -26,7 +26,8 @@ class QtAffinityFields(QGraphicsObject):
     
         Args:
             frame (numpy.array): Formats is (channels * 2, height, width).
-            show_fields (array): Array of field channels to show. If None, show all.
+            show_fields (list): List of field channels to show. If None, show all.
+            blur (int): Only show one vector for each blur * blur box. If 1, show vector at each point.
 
         Note:
             Each channel corresponds to two (h,w) arrays: x and y for the vector.
@@ -86,7 +87,7 @@ class QtAffinityFields(QGraphicsObject):
             [81,181,204],
             [51,113,127]
             ]
-
+        self.blur = blur
         if show_fields is None:
             self.show_fields = range(self.frame.shape[2]//2)
         else:
@@ -98,6 +99,7 @@ class QtAffinityFields(QGraphicsObject):
                                     field_x=self.frame[...,channel*2], 
                                     field_y=self.frame[...,channel*2+1], 
                                     color=color_map, 
+                                    blur=self.blur,
                                     parent=self
                                     )
                 self.affinity_field.append(aff_field_item)
@@ -122,11 +124,12 @@ class QtAffinityField(QGraphicsObject):
         color (list): optional (r,g,b) array for channel color.
     """
 
-    def __init__(self, field_x: np.array = None, field_y: np.array = None, color = [255, 255, 255], *args, **kwargs):
+    def __init__(self, field_x: np.array = None, field_y: np.array = None, color = [255, 255, 255], blur = 1, *args, **kwargs):
         super(QtAffinityField, self).__init__(*args, **kwargs)
         
         self.field_x, self.field_y = None, None
         self.color = color
+        self.blur = blur
         self.pen = QPen(QColor(*self.color), 1)
         
         if field_x is not None and field_y is not None:
@@ -135,18 +138,17 @@ class QtAffinityField(QGraphicsObject):
             self.add_affinity_arrows()
 
     def add_affinity_arrows(self):
-        box = 15
         if self.field_x is not None and self.field_y is not None:
             for y,x in itertools.product(range(self.field_x.shape[0]),range(self.field_y.shape[1])):
-                # we'll only draw one arrow per box
-                if x%box == 0 and y%box == 0:
+                # we'll only draw one arrow per blur box
+                if x%self.blur == 0 and y%self.blur == 0:
                     # sum all deltas for the vectors in box
-                    x_delta = self.field_x[y:y+box][:,x:x+box].sum() / box**2 * box
-                    y_delta = self.field_y[y:y+box][:,x:x+box].sum() / box**2 * box
+                    x_delta = self.field_x[y:y+self.blur][:,x:x+self.blur].sum() / self.blur**2 * self.blur
+                    y_delta = self.field_y[y:y+self.blur][:,x:x+self.blur].sum() / self.blur**2 * self.blur
                     #x_delta = self.field_x[y,x] * 10
                     #y_delta = self.field_y[y,x] * 10
                     if x_delta != 0 or y_delta != 0:
-                        line = QAffinityArrow(x+box//2, y+box//2, x+x_delta, y+y_delta, self.pen, parent=self)
+                        line = QAffinityArrow(x+self.blur//2, y+self.blur//2, x+x_delta, y+y_delta, self.pen, parent=self)
 
     def boundingRect(self) -> QRectF:
         return QRectF()
@@ -209,9 +211,11 @@ if __name__ == "__main__":
     field_count = overlay_data.get_frame(1).shape[-1]//2 - 1
     # show the first, middle, and last fields
     show_fields = [0, field_count//2, field_count]
+    # show one arrow for each 15*15 box
+    blur = 15
     
     def plot_fields(parent,item_idx):
-        aff_fields_item = QtAffinityFields(overlay_data.get_frame(parent.frame_idx), show_fields)
+        aff_fields_item = QtAffinityFields(overlay_data.get_frame(parent.frame_idx), show_fields, blur)
         window.view.scene.addItem(aff_fields_item)
         
     window.callbacks.append(plot_fields)
