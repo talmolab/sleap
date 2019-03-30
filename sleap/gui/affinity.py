@@ -26,6 +26,7 @@ class QtAffinityFields(QGraphicsObject):
     
         Args:
             frame (numpy.array): Formats is (channels * 2, height, width).
+            show_fields (array): Array of field channels to show. If None, show all.
 
         Note:
             Each channel corresponds to two (h,w) arrays: x and y for the vector.
