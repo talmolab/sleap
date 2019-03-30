@@ -6,8 +6,11 @@ from PySide2.QtGui import QImage, QPixmap
 from PySide2.QtGui import QPen, QBrush, QColor
 from PySide2.QtCore import QRectF
 
+from PySide2.QtWidgets import QGridLayout, QGroupBox, QButtonGroup, QCheckBox
+
 import numpy as np
 import itertools
+import math
 
 from sleap.io.video import Video, HDF5Video
 
@@ -130,7 +133,7 @@ class QtAffinityField(QGraphicsObject):
         self.field_x, self.field_y = None, None
         self.color = color
         self.blur = blur
-        self.pen = QPen(QColor(*self.color), 1)
+        self.pen = QPen(QColor(*self.color), min(4,max(.5,math.log(blur,10))))
         
         if field_x is not None and field_y is not None:
             self.field_x, self.field_y = field_x, field_y
@@ -211,10 +214,49 @@ if __name__ == "__main__":
     field_count = overlay_data.get_frame(1).shape[-1]//2 - 1
     # show the first, middle, and last fields
     show_fields = [0, field_count//2, field_count]
-    # show one arrow for each 15*15 box
-    blur = 15
+    
+    field_checkboxes = [None]*field_count
+    # ButtonGroup allows us to get list of checked boxes more easily
+    field_check_group = QButtonGroup()
+    field_check_group.setExclusive(False) # so you can check multiple checkboxes
+    # GroupBox is for visual layout
+    field_check_groupbox = QGroupBox()
+    field_check_groupbox.setFlat(True) # don't draw box around checkbox group
+    check_layout = QGridLayout()
+    field_check_groupbox.setLayout(check_layout)
+    for i in range(field_count+1):
+        check = QCheckBox("%d"%(i))
+        check.stateChanged.connect(lambda evt: window.plot())
+        if i in show_fields:
+            check.setChecked(True)
+        field_check_group.addButton(check, i)
+        check_layout.addWidget(check, i//8, i%8)
+    
+    
+    window.layout.addWidget(field_check_groupbox)
+    
+    # show one arrow for each blur*blur box
+    default_blur = 9
+    
+    blur_size_bar = QSlider(Qt.Horizontal)
+    blur_size_bar.valueChanged.connect(lambda evt: window.plot())
+    blur_size_bar.setValue(default_blur)
+    blur_size_bar.setMinimum(1)
+    blur_size_bar.setMaximum(21)
+    blur_size_bar.setEnabled(True)
+    window.layout.addWidget(blur_size_bar)
+    
+    
     
     def plot_fields(parent,item_idx):
+        # build list of checked boxes to determine which affinity fields to show
+        show_fields = []
+        for check_button in field_check_group.buttons():
+            if check_button.isChecked():
+                show_fields.append(field_check_group.id(check_button))
+        # get blur size from slider
+        blur = blur_size_bar.value()
+        # show affinity fields
         aff_fields_item = QtAffinityFields(overlay_data.get_frame(parent.frame_idx), show_fields, blur)
         window.view.scene.addItem(aff_fields_item)
         
