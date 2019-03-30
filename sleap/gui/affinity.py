@@ -18,7 +18,7 @@ class QtAffinityFields(QGraphicsObject):
         QGraphicsObject(frame)
     """
     
-    def __init__(self, frame: np.array = None, *args, **kwargs):
+    def __init__(self, frame: np.array = None, show_fields = None, *args, **kwargs):
         """ Initializes the QGraphics Object with a affinity field frame.
     
         This creates a child QtAffinityField item for each channel, so that these will
@@ -86,15 +86,20 @@ class QtAffinityFields(QGraphicsObject):
             [51,113,127]
             ]
 
-        for channel in range(self.frame.shape[2]//2):
-            color_map = self.color_maps[channel % len(self.color_maps)]
-            aff_field_item = QtAffinityField(
-                                field_x=self.frame[...,channel], 
-                                field_y=self.frame[...,channel+1], 
-                                color=color_map, 
-                                parent=self
-                                )
-            self.affinity_field.append(aff_field_item)
+        if show_fields is None:
+            self.show_fields = range(self.frame.shape[2]//2)
+        else:
+            self.show_fields = show_fields
+        for channel in self.show_fields:
+            if channel < self.frame.shape[-1]//2:
+                color_map = self.color_maps[channel % len(self.color_maps)]
+                aff_field_item = QtAffinityField(
+                                    field_x=self.frame[...,channel*2], 
+                                    field_y=self.frame[...,channel*2+1], 
+                                    color=color_map, 
+                                    parent=self
+                                    )
+                self.affinity_field.append(aff_field_item)
         
     def boundingRect(self) -> QRectF:
         return QRectF()
@@ -119,19 +124,29 @@ class QtAffinityField(QGraphicsObject):
     def __init__(self, field_x: np.array = None, field_y: np.array = None, color = [255, 255, 255], *args, **kwargs):
         super(QtAffinityField, self).__init__(*args, **kwargs)
         
+        self.field_x, self.field_y = None, None
         self.color = color
         self.pen = QPen(QColor(*self.color), 1)
         
         if field_x is not None and field_y is not None:
             self.field_x, self.field_y = field_x, field_y
             
+            self.add_affinity_arrows()
+
+    def add_affinity_arrows(self):
+        box = 15
+        if self.field_x is not None and self.field_y is not None:
             for y,x in itertools.product(range(self.field_x.shape[0]),range(self.field_y.shape[1])):
-                if x%9 == 0 and y%9 == 0:
-                    x_delta = self.field_x[y,x] * 10 # TO DO: decide how to scale
-                    y_delta = self.field_y[y,x] * 10
+                # we'll only draw one arrow per box
+                if x%box == 0 and y%box == 0:
+                    # sum all deltas for the vectors in box
+                    x_delta = self.field_x[y:y+box][:,x:x+box].sum() / box**2 * box
+                    y_delta = self.field_y[y:y+box][:,x:x+box].sum() / box**2 * box
+                    #x_delta = self.field_x[y,x] * 10
+                    #y_delta = self.field_y[y,x] * 10
                     if x_delta != 0 or y_delta != 0:
-                        line = QAffinityArrow(x, y, x+x_delta, y+y_delta, self.pen, *args, **kwargs)
-            
+                        line = QAffinityArrow(x+box//2, y+box//2, x+x_delta, y+y_delta, self.pen, parent=self)
+
     def boundingRect(self) -> QRectF:
         return QRectF()
 
@@ -190,8 +205,12 @@ if __name__ == "__main__":
     app = QApplication([])
     window = QtVideoPlayer(video=vid)
     
+    field_count = overlay_data.get_frame(1).shape[-1]//2 - 1
+    # show the first, middle, and last fields
+    show_fields = [0, field_count//2, field_count]
+    
     def plot_fields(parent,item_idx):
-        aff_fields_item = QtAffinityFields(overlay_data.get_frame(parent.frame_idx))
+        aff_fields_item = QtAffinityFields(overlay_data.get_frame(parent.frame_idx), show_fields)
         window.view.scene.addItem(aff_fields_item)
         
     window.callbacks.append(plot_fields)
