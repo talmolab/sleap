@@ -13,6 +13,7 @@ import itertools
 import math
 
 from sleap.io.video import Video, HDF5Video
+from sleap.gui.multicheck import MultiCheckWidget
 
 class QtAffinityFields(QGraphicsObject):
     """ Type of QGraphicsObject to display affinity fields in a QGraphicsView.
@@ -133,7 +134,7 @@ class QtAffinityField(QGraphicsObject):
         self.field_x, self.field_y = None, None
         self.color = color
         self.blur = blur
-        self.pen = QPen(QColor(*self.color), min(4,max(.5,math.log(blur,10))))
+        self.pen = QPen(QColor(*self.color), min(4,max(.1,math.log(blur,20))))
         
         if field_x is not None and field_y is not None:
             self.field_x, self.field_y = field_x, field_y
@@ -146,8 +147,8 @@ class QtAffinityField(QGraphicsObject):
                 # we'll only draw one arrow per blur box
                 if x%self.blur == 0 and y%self.blur == 0:
                     # sum all deltas for the vectors in box
-                    x_delta = self.field_x[y:y+self.blur][:,x:x+self.blur].sum() / self.blur**2 * self.blur
-                    y_delta = self.field_y[y:y+self.blur][:,x:x+self.blur].sum() / self.blur**2 * self.blur
+                    x_delta = self.field_x[y:y+self.blur][:,x:x+self.blur].sum() / self.blur**2 * self.blur * .9
+                    y_delta = self.field_y[y:y+self.blur][:,x:x+self.blur].sum() / self.blur**2 * self.blur * .9
                     #x_delta = self.field_x[y,x] * 10
                     #y_delta = self.field_y[y,x] * 10
                     if x_delta != 0 or y_delta != 0:
@@ -178,12 +179,12 @@ class QAffinityArrow(QGraphicsItem):
             head_line_2.setPen(self.pen)
     
     def get_arrow_head_points(self, from_point, to_point):
-        arrow_head_size = 3 # TO DO: how should we determine this?
         x1, y1 = from_point
         x2, y2 = to_point
 
         dx, dy = x2-x1, y2-y1
-        line_length = (dx**2 + dy**2)**.5
+        line_length = (dx**2 + dy**2)**.4
+        arrow_head_size = line_length / 4
         u_dx, u_dy = dx/line_length, dy/line_length
 
         p1_x = x2 - u_dx*arrow_head_size - u_dy*arrow_head_size
@@ -215,24 +216,12 @@ if __name__ == "__main__":
     # show the first, middle, and last fields
     show_fields = [0, field_count//2, field_count]
     
-    field_checkboxes = [None]*field_count
-    # ButtonGroup allows us to get list of checked boxes more easily
-    field_check_group = QButtonGroup()
-    field_check_group.setExclusive(False) # so you can check multiple checkboxes
-    # GroupBox is for visual layout
-    field_check_groupbox = QGroupBox()
-    field_check_groupbox.setFlat(True) # don't draw box around checkbox group
-    check_layout = QGridLayout()
-    field_check_groupbox.setLayout(check_layout)
-    for i in range(field_count+1):
-        check = QCheckBox("%d"%(i))
-        check.stateChanged.connect(lambda evt: window.plot())
-        if i in show_fields:
-            check.setChecked(True)
-        field_check_group.addButton(check, i)
-        check_layout.addWidget(check, i//8, i%8)
-    
-    
+    field_check_groupbox = MultiCheckWidget(
+                                count=field_count,
+                                selected=show_fields,
+                                title="Affinity Field Channel"
+                            )
+    field_check_groupbox.selectionChanged.connect(window.plot)
     window.layout.addWidget(field_check_groupbox)
     
     # show one arrow for each blur*blur box
@@ -250,10 +239,7 @@ if __name__ == "__main__":
     
     def plot_fields(parent,item_idx):
         # build list of checked boxes to determine which affinity fields to show
-        show_fields = []
-        for check_button in field_check_group.buttons():
-            if check_button.isChecked():
-                show_fields.append(field_check_group.id(check_button))
+        show_fields = field_check_groupbox.getSelected()
         # get blur size from slider
         blur = blur_size_bar.value()
         # show affinity fields
