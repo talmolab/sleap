@@ -1,5 +1,5 @@
 from sleap.gui.video import VideoPlayer, QtVideoPlayer
-from sleap.gui.confmaps import QtConfMaps
+from sleap.gui.confmapsplot import ConfMapsPlot
 
 from sleap.io.video import Video
 
@@ -12,15 +12,14 @@ TEST_H5_INPUT_FORMAT = "channels_first"
 
 import PySide2.QtCore as QtCore
 
-def test_gui_video(qtbot):
+def test_gui_conf_maps(qtbot):
     
     hdf5_conf = Video.from_hdf5(file=TEST_H5_FILE, dataset=TEST_H5_DSET, input_format=TEST_H5_INPUT_FORMAT)
     
     vp = QtVideoPlayer()
     vp.show()
-    conf_maps = QtConfMaps(hdf5_conf.get_frame(1))
+    conf_maps = ConfMapsPlot(hdf5_conf.get_frame(1))
     vp.view.scene.addItem(conf_maps)
-
-    # Click the button 20 times
-    # for i in range(20):
-    #     qtbot.mouseClick(vp.btn, QtCore.Qt.LeftButton)
+    
+    # make sure we're showing all the channels
+    assert len(conf_maps.childItems()) == 6
