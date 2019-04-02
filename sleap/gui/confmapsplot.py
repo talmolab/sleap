@@ -9,24 +9,24 @@ import numpy as np
 import qimage2ndarray
 
 from sleap.io.video import Video, HDF5Video
+from sleap.gui.multicheck import MultiCheckWidget
 
-class QtConfMaps(QGraphicsObject):
-    """Type of QGraphicsObject to display confidence maps in a QGraphicsView.
+class ConfMapsPlot(QGraphicsObject):
+    """
+    QGraphicsObject to display multiple confidence maps in a QGraphicsView.
     
-    Initialize with an array of the confidence map data for one frame:
-        QGraphicsObject(frame)
+    Args:
+        frame (numpy.array): Data for one frame of confidence map data. Shape is (channels, height, width).
+        show (list, optional): List of channels to show. If None, show all channels.
+    
+    Returns:
+        None.
+    
+    When initialized, creates one child ConfMapPlot item for each channel.
     """
     
-    def __init__(self, frame: np.array = None, *args, **kwargs):
-        """ Initializes the QGraphics Object with a confidence map frame.
-    
-        This creates a child QtConfMap item for each channel, so that these will
-        all be added to the view along with the parent QtConfMaps.
-    
-        Args:
-            frame (numpy.array): The format of the frame is (channels, height, width).
-        """
-        super(QtConfMaps, self).__init__(*args, **kwargs)
+    def __init__(self, frame: np.array = None, show = None, *args, **kwargs):
+        super(ConfMapsPlot, self).__init__(*args, **kwargs)
         self.frame = frame
         self.conf_maps = []
         self.color_maps = [
@@ -81,18 +81,11 @@ class QtConfMaps(QGraphicsObject):
             [81,181,204],
             [51,113,127]
             ]
-#         self.color_maps = [
-#             [248, 240, 124],
-#             [248,  48,  60],
-#             [168,  56,  44],
-#             [242,  50, 138],
-#             [30,   82, 182],
-#             [4,   150, 100]
-#             ]
         for channel in range(self.frame.shape[2]):
-            color_map = self.color_maps[channel % len(self.color_maps)]
-            conf_map_item = QtConfMap(confmap=self.frame[:,:,channel], color=color_map, parent=self)
-            self.conf_maps.append(conf_map_item)
+            if show is None or channel in show:
+                color_map = self.color_maps[channel % len(self.color_maps)]
+                conf_map_item = ConfMapPlot(confmap=self.frame[:,:,channel], color=color_map, parent=self)
+                self.conf_maps.append(conf_map_item)
         
     def boundingRect(self) -> QRectF:
         return QRectF()
@@ -101,20 +94,23 @@ class QtConfMaps(QGraphicsObject):
         pass
 
 
-class QtConfMap(QGraphicsPixmapItem):
-    """ Type of QGraphicsPixmapItem for drawing single channel of confidence map.
-    
-    Usage:
-        Call QtConfMap(parent=self, confmap, [color]) from an object
-        which can contain child pixmaps items (i.e., a QGraphicsObject).
+class ConfMapPlot(QGraphicsPixmapItem):
+    """
+    QGraphicsPixmapItem object for drawing single channel of confidence map.
         
     Args:
         confmap (numpy.array): (h,w) array of one confidence map channel.
         color (list): optional (r,g,b) array for channel color.
+    
+    Returns:
+        None.
+        
+    Note:
+        In most cases this should only be called by ConfMapsPlot.
     """
 
     def __init__(self, confmap: np.array = None, color = [255, 255, 255], *args, **kwargs):
-        super(QtConfMap, self).__init__(*args, **kwargs)
+        super(ConfMapPlot, self).__init__(*args, **kwargs)
         
         self.color_map = color
         
@@ -124,7 +120,12 @@ class QtConfMap(QGraphicsPixmapItem):
             self.setPixmap(QPixmap(image))
             
     def get_conf_image(self) -> QImage:
+        """
+        Converts array data stored in object to QImage.
     
+        Returns:
+            QImage.
+        """
         if self.confmap is None:
             return
         
@@ -148,15 +149,25 @@ if __name__ == "__main__":
 
     from video import *
 
-    data_path = "/Users/nat/tech/sleap/training.scale=1.00,sigma=5.h5"
+    #data_path = "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"
+    data_path = "training.scale=1.00,sigma=5.h5"
     vid = HDF5Video(data_path, "/box", input_format="channels_first")
     conf_data = HDF5Video(data_path, "/confmaps", input_format="channels_first")
     
     app = QApplication([])
     window = QtVideoPlayer(video=vid)
     
+    channel_box = MultiCheckWidget(
+                    count=conf_data.get_frame(0).shape[-1],
+                    title="Confidence Map Channel",
+                    default=True
+                    )
+    channel_box.selectionChanged.connect(window.plot)
+    window.layout.addWidget(channel_box)
+    
     def plot_confmaps(parent,item_idx):
-        conf_maps = QtConfMaps(conf_data.get_frame(parent.frame_idx))
+        selected = channel_box.getSelected()
+        conf_maps = ConfMapsPlot(conf_data.get_frame(parent.frame_idx),selected)
         window.view.scene.addItem(conf_maps)
         
     window.callbacks.append(plot_confmaps)
