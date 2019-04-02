@@ -1,7 +1,7 @@
 from PySide2.QtWidgets import QApplication, QVBoxLayout, QWidget
 from PySide2.QtWidgets import QGraphicsView, QGraphicsScene
 from PySide2.QtWidgets import QGraphicsItem, QGraphicsObject
-from PySide2.QtWidgets import QGraphicsPixmapItem
+from PySide2.QtWidgets import QGraphicsPixmapItem, QGraphicsLineItem
 from PySide2.QtGui import QImage, QPixmap
 from PySide2.QtGui import QPen, QBrush, QColor
 from PySide2.QtCore import QRectF
@@ -15,28 +15,26 @@ import math
 from sleap.io.video import Video, HDF5Video
 from sleap.gui.multicheck import MultiCheckWidget
 
-class QtAffinityFields(QGraphicsObject):
-    """ Type of QGraphicsObject to display affinity fields in a QGraphicsView.
+class MultiQuiverPlot(QGraphicsObject):
+    """
+    QGraphicsObject to display multiple quiver plots in a QGraphicsView.
     
-    Initialize with an array of the affinity field data for one frame:
-        QGraphicsObject(frame)
+    Args:
+        frame (numpy.array): Data for one frame of quiver plot data. Shape is (channels, height, width).
+        show (list, optional): List of channels to show. If None, show all channels.
+        decimation (int, optional): Decimation factor. If 1, show every arrow.
+    
+    Returns:
+        None.
+    
+    Note:
+        Each channel corresponds to two (h,w) arrays: x and y for the vector.
+    
+    When initialized, creates one child QuiverPlot item for each channel.
     """
     
-    def __init__(self, frame: np.array = None, show_fields: list = None, blur: int = 9, *args, **kwargs):
-        """ Initializes the QGraphics Object with a affinity field frame.
-    
-        This creates a child QtAffinityField item for each channel, so that these will
-        all be added to the view along with the parent QtAffinityFields.
-    
-        Args:
-            frame (numpy.array): Formats is (channels * 2, height, width).
-            show_fields (list): List of field channels to show. If None, show all.
-            blur (int): Only show one vector for each blur * blur box. If 1, show vector at each point.
-
-        Note:
-            Each channel corresponds to two (h,w) arrays: x and y for the vector.
-        """
-        super(QtAffinityFields, self).__init__(*args, **kwargs)
+    def __init__(self, frame: np.array = None, show: list = None, decimation: int = 9, *args, **kwargs):
+        super(MultiQuiverPlot, self).__init__(*args, **kwargs)
         self.frame = frame
         self.affinity_field = []
         self.color_maps = [
@@ -91,19 +89,19 @@ class QtAffinityFields(QGraphicsObject):
             [81,181,204],
             [51,113,127]
             ]
-        self.blur = blur
-        if show_fields is None:
-            self.show_fields = range(self.frame.shape[2]//2)
+        self.decimation = decimation
+        if show is None:
+            self.show_list = range(self.frame.shape[2]//2)
         else:
-            self.show_fields = show_fields
-        for channel in self.show_fields:
+            self.show_list = show
+        for channel in self.show_list:
             if channel < self.frame.shape[-1]//2:
                 color_map = self.color_maps[channel % len(self.color_maps)]
-                aff_field_item = QtAffinityField(
+                aff_field_item = QuiverPlot(
                                     field_x=self.frame[...,channel*2], 
                                     field_y=self.frame[...,channel*2+1], 
                                     color=color_map, 
-                                    blur=self.blur,
+                                    decimation=self.decimation,
                                     parent=self
                                     )
                 self.affinity_field.append(aff_field_item)
@@ -115,44 +113,45 @@ class QtAffinityFields(QGraphicsObject):
         pass
 
 
-class QtAffinityField(QGraphicsObject):
-    """ Type of QGraphicsPixmapItem for drawing single field of an affinity field.
-    
-    Usage:
-        Call QtAffinityField(parent=self, field_x, field_y, [color]) from an object
-        which can contain child pixmaps items (i.e., a QGraphicsObject).
+class QuiverPlot(QGraphicsObject):
+    """
+    QGraphicsPixmapItem for drawing single quiver plot.
         
     Args:
-        field_x (numpy.array): (h,w) array of x component of field vectors.
-        field_y (numpy.array): (h,w) array of y component of field vectors.
-        color (list): optional (r,g,b) array for channel color.
+        field_x (numpy.array): (h,w) array of x component of vectors.
+        field_y (numpy.array): (h,w) array of y component of vectors.
+        color (list, optional): Arrow color. Format as (r,g,b) array.
+        decimation (int, optional): Decimation factor. If 1, show every arrow.
+        
+    Returns:
+        None.
     """
 
-    def __init__(self, field_x: np.array = None, field_y: np.array = None, color = [255, 255, 255], blur = 1, *args, **kwargs):
-        super(QtAffinityField, self).__init__(*args, **kwargs)
+    def __init__(self, field_x: np.array = None, field_y: np.array = None, color = [255, 255, 255], decimation = 1, *args, **kwargs):
+        super(QuiverPlot, self).__init__(*args, **kwargs)
         
         self.field_x, self.field_y = None, None
         self.color = color
-        self.blur = blur
-        self.pen = QPen(QColor(*self.color), min(4,max(.1,math.log(blur,20))))
+        self.decimation = decimation
+        self.pen = QPen(QColor(*self.color), min(4,max(.1,math.log(decimation,20))))
         
         if field_x is not None and field_y is not None:
             self.field_x, self.field_y = field_x, field_y
             
-            self.add_affinity_arrows()
+            self._add_arrows()
 
-    def add_affinity_arrows(self):
+    def _add_arrows(self):
         if self.field_x is not None and self.field_y is not None:
             for y,x in itertools.product(range(self.field_x.shape[0]),range(self.field_y.shape[1])):
-                # we'll only draw one arrow per blur box
-                if x%self.blur == 0 and y%self.blur == 0:
+                # we'll only draw one arrow per decimation box
+                if x%self.decimation == 0 and y%self.decimation == 0:
                     # sum all deltas for the vectors in box
-                    x_delta = self.field_x[y:y+self.blur][:,x:x+self.blur].sum() / self.blur**2 * self.blur * .9
-                    y_delta = self.field_y[y:y+self.blur][:,x:x+self.blur].sum() / self.blur**2 * self.blur * .9
+                    x_delta = self.field_x[y:y+self.decimation][:,x:x+self.decimation].sum() / self.decimation**2 * self.decimation * .9
+                    y_delta = self.field_y[y:y+self.decimation][:,x:x+self.decimation].sum() / self.decimation**2 * self.decimation * .9
                     #x_delta = self.field_x[y,x] * 10
                     #y_delta = self.field_y[y,x] * 10
                     if x_delta != 0 or y_delta != 0:
-                        line = QAffinityArrow(x+self.blur//2, y+self.blur//2, x+x_delta, y+y_delta, self.pen, parent=self)
+                        line = QuiverArrow(x+self.decimation//2, y+self.decimation//2, x+x_delta, y+y_delta, self.pen, parent=self)
 
     def boundingRect(self) -> QRectF:
         return QRectF()
@@ -161,14 +160,14 @@ class QtAffinityField(QGraphicsObject):
         pass
         
 
-class QAffinityArrow(QGraphicsItem):
+class QuiverArrow(QGraphicsItem):
 
     def __init__(self, x, y, x2, y2, pen = None, *args, **kwargs):
-        super(QAffinityArrow, self).__init__(*args, **kwargs)
+        super(QuiverArrow, self).__init__(*args, **kwargs)
         
         self.line = QGraphicsLineItem(x, y, x2, y2, *args, **kwargs)
         
-        arrow_points = self.get_arrow_head_points((x,y), (x2,y2))
+        arrow_points = self._get_arrow_head_points((x,y), (x2,y2))
         head_line_1 = QGraphicsLineItem(x2, y2, *arrow_points[0], *args, **kwargs)
         head_line_2 = QGraphicsLineItem(x2, y2, *arrow_points[1], *args, **kwargs)
         
@@ -178,7 +177,7 @@ class QAffinityArrow(QGraphicsItem):
             head_line_1.setPen(self.pen)
             head_line_2.setPen(self.pen)
     
-    def get_arrow_head_points(self, from_point, to_point):
+    def _get_arrow_head_points(self, from_point, to_point):
         x1, y1 = from_point
         x2, y2 = to_point
 
@@ -205,7 +204,8 @@ if __name__ == "__main__":
 
     from video import *
 
-    data_path = "/Users/nat/tech/sleap/training.scale=1.00,sigma=5.h5"
+    data_path = "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"
+    #data_path = "training.scale=1.00,sigma=5.h5"
     vid = HDF5Video(data_path, "/box", input_format="channels_first")
     overlay_data = HDF5Video(data_path, "/pafs", input_format="channels_first")
     
@@ -224,26 +224,25 @@ if __name__ == "__main__":
     field_check_groupbox.selectionChanged.connect(window.plot)
     window.layout.addWidget(field_check_groupbox)
     
-    # show one arrow for each blur*blur box
-    default_blur = 9
+    # show one arrow for each decimation*decimation box
+    default_decimation = 9
     
-    blur_size_bar = QSlider(Qt.Horizontal)
-    blur_size_bar.valueChanged.connect(lambda evt: window.plot())
-    blur_size_bar.setValue(default_blur)
-    blur_size_bar.setMinimum(1)
-    blur_size_bar.setMaximum(21)
-    blur_size_bar.setEnabled(True)
-    window.layout.addWidget(blur_size_bar)
-    
-    
+    decimation_size_bar = QSlider(Qt.Horizontal)
+    decimation_size_bar.valueChanged.connect(lambda evt: window.plot())
+    decimation_size_bar.setValue(default_decimation)
+    decimation_size_bar.setMinimum(1)
+    decimation_size_bar.setMaximum(21)
+    decimation_size_bar.setEnabled(True)
+    window.layout.addWidget(decimation_size_bar)
     
     def plot_fields(parent,item_idx):
         # build list of checked boxes to determine which affinity fields to show
         show_fields = field_check_groupbox.getSelected()
-        # get blur size from slider
-        blur = blur_size_bar.value()
+        # get decimation size from slider
+        decimation = decimation_size_bar.value()
         # show affinity fields
-        aff_fields_item = QtAffinityFields(overlay_data.get_frame(parent.frame_idx), show_fields, blur)
+        aff_fields_item = MultiQuiverPlot(overlay_data.get_frame(parent.frame_idx), show_fields, decimation)
+        
         window.view.scene.addItem(aff_fields_item)
         
     window.callbacks.append(plot_fields)
@@ -252,4 +251,3 @@ if __name__ == "__main__":
     window.plot()
 
     app.exec_()
-
