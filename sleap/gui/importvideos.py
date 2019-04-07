@@ -328,5 +328,8 @@ if __name__ == "__main__":
 
     app = QApplication([])
     
-    print(ImportVideos().go())
+    import_list = ImportVideos().go()
     
+    for import_item in import_list:
+        vid = import_item["video_class"](**import_item["params"])
+        print("Imported video data: (%d, %d), %d f, %d c" % (vid.width, vid.height, vid.frames, vid.channels))
