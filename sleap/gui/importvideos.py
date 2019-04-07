@@ -21,7 +21,7 @@ class ImportVideos:
             {
                 "video_type": "hdf5",
                 "match": "h5,hdf5",
-                "video_class": HDF5Video,
+                "video_class": Video.from_hdf5,
                 "params": [
                     {
                         "name": "dataset",
@@ -38,7 +38,7 @@ class ImportVideos:
             {
                 "video_type": "mp4",
                 "match": "mp4,avi",
-                "video_class": MediaVideo,
+                "video_class": Video.from_media,
                 "params": [
                     {
                         "name": "grayscale",
@@ -135,10 +135,12 @@ class ImportParamDialog(QDialog):
     def get_data(self) -> dict:
         """Get all data (fixed and user-selected) for imported video."""
         
-        video_params = self.options_widget.get_values()
-        video_params["video_type"] = self.import_type["video_type"]
-        video_params["file_path"] = self.file_path
-        return video_params
+        video_data = {
+                        "params": self.options_widget.get_values(),
+                        "video_type": self.import_type["video_type"],
+                        "video_class": self.import_type["video_class"],
+                     }
+        return video_data
 
     def update_video(self):
         """Update preview video using current param values."""
@@ -146,7 +148,7 @@ class ImportParamDialog(QDialog):
         video_params = self.options_widget.get_values()
         try:
             if self.import_type["video_class"] is not None:
-                self.video = self.import_type["video_class"](self.file_path, **video_params)
+                self.video = self.import_type["video_class"](**video_params)
             else:
                 self.video = None
             
@@ -227,6 +229,7 @@ class ImportParamWidget(QWidget):
         """Returns current user-selected values for import parameters."""
         param_list = self.import_type["params"]
         param_values = {}
+        param_values["file"] = self.file_path
         for param_item in param_list:
             name = param_item["name"]
             type = param_item["type"]
