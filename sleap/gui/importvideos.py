@@ -130,8 +130,11 @@ class ImportParamDialog(QDialog):
         import_button.clicked.connect(self.accept)
         cancel_button.clicked.connect(self.reject)
 
-    def get_data(self, import_result = []):
+    def get_data(self, import_result = None):
         """Return list with import data for all enabled import items."""
+        # we don't want to set default to [] because that persists
+        if import_result is None:
+            import_result = []
         for import_item in self.import_widgets:
             if import_item.is_enabled():
                 import_result.append(import_item.get_data())
