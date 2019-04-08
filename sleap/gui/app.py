@@ -11,7 +11,7 @@ from PySide2.QtWidgets import QMenu, QAction
 from PySide2.QtWidgets import QFileDialog, QMessageBox
 
 import os
-import matplotlib.pyplot as plt
+
 import numpy as np
 import pandas as pd
 
