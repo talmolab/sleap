@@ -1,6 +1,24 @@
 """
-Interface for importing video.
+Interface to handle the UI for importing videos.
+
+Usage:
+
+>>> import_list = ImportVideos().go()
+
+This will show the user a file-selection dialog, and then a second dialog
+to select the import parameters for each file.
+
+It returns a list with data about each file selected by the user.
+In particular, we'll have the name of the file and all of the parameters
+relevant for that specific type of file. It also includes a reference
+to the relevant method of :class:`Video`.
+
+For each `item` in `import_list`, we can load the video by calling this
+method while passing the user-selected params as the named parameters:
+
+>>> vid = item["video_class"](**item["params"])
 """
+
 from PySide2.QtCore import Qt, QRectF, Signal
 from PySide2.QtWidgets import QApplication, QLayout, QVBoxLayout, QHBoxLayout, QFrame
 from PySide2.QtWidgets import QFileDialog, QDialog, QWidget, QLabel, QScrollArea
@@ -131,7 +149,14 @@ class ImportParamDialog(QDialog):
         cancel_button.clicked.connect(self.reject)
 
     def get_data(self, import_result = None):
-        """Return list with import data for all enabled import items."""
+        """Method to get results from import.
+
+        Args:
+            import_result (optional): If specified, we'll insert data into this.
+
+        Returns:
+            List of dicts with data for each (enabled) imported file.
+        """
         # we don't want to set default to [] because that persists
         if import_result is None:
             import_result = []
@@ -150,7 +175,7 @@ class ImportParamDialog(QDialog):
 
 class ImportItemWidget(QFrame):
     """Widget for selecting parameters with preview when importing video.
-    
+
     Args:
         file_path (str): Full path to selected video file.
         import_type (dict): Data about user-selectable import parameters.
@@ -191,10 +216,10 @@ class ImportItemWidget(QFrame):
 
     def is_enabled(self):
         """Am I enabled?
-        
+
         Our UI provides a way to enable/disable this item (file).
         We only want to import enabled items.
-        
+
         Returns:
             Boolean: Am I enabled?
         """
@@ -244,11 +269,19 @@ class ImportItemWidget(QFrame):
         pass
 
 class ImportParamWidget(QWidget):
-    """Widget for allowing user to select video type and relevant parameters."""
+    """Widget for allowing user to select video parameters.
+
+    Args:
+        file_path: file path/name
+        import_type: data about the parameters for this type of video
+
+    Note:
+        Object is a widget with the UI for params specific to this video type.
+    """
 
     changed = Signal()
 
-    def __init__(self, file_path, import_type, *args, **kwargs):
+    def __init__(self, file_path:str, import_type:dict, *args, **kwargs):
         super(ImportParamWidget, self).__init__(*args, **kwargs)
         
         self.file_path = file_path
@@ -262,7 +295,7 @@ class ImportParamWidget(QWidget):
         self.setLayout(option_layout)
     
     def make_layout(self) -> QLayout:
-        """Returns Qt layout of widgets for user-selected import parameters."""
+        """Builds the layout of widgets for user-selected import parameters."""
         
         param_list = self.import_type["params"]
         widget_layout = QVBoxLayout()
@@ -301,7 +334,19 @@ class ImportParamWidget(QWidget):
         return widget_layout
     
     def get_values(self):
-        """Returns current user-selected values for import parameters."""
+        """Method to get current user-selected values for import parameters.
+
+        Args:
+            None.
+
+        Returns:
+            Dict of param keys/values.
+
+        Note:
+            It's easiest if the return dict matches the arguments we need
+            for the Video object, so we'll add the file name to the dict
+            even though it's not a user-selectable param.
+        """
         param_list = self.import_type["params"]
         param_values = {}
         param_values["file"] = self.file_path
@@ -319,7 +364,17 @@ class ImportParamWidget(QWidget):
         return param_values
     
     def _get_h5_dataset_options(self) -> list:
-        """Returns a list of all datasets in hdf5 file."""
+        """Method to get a list of all datasets in hdf5 file.
+
+        Args:
+            None.
+
+        Returns:
+            List of datasets in the hdf5 file for our import item.
+
+        Note:
+            This is used to populate the "function_menu"-type param.
+        """
         try:
             with h5py.File(self.file_path,"r") as f:
                 options = self._find_h5_datasets("",f)
@@ -338,7 +393,6 @@ class ImportParamWidget(QWidget):
                 options.extend(self._find_h5_datasets(data_path + "/" + key, data_object[key]))
         return options
 
-    
     def boundingRect(self) -> QRectF:
         """Method required by Qt."""
         return QRectF()
@@ -349,7 +403,17 @@ class ImportParamWidget(QWidget):
 
 
 class VideoPreviewWidget(QWidget):
-    """Widget to show video preview. Based on :class:`Video` class."""
+    """Widget to show video preview. Based on :class:`Video` class.
+
+    Args:
+        video: the video to show
+
+    Returns:
+        None.
+
+    Note:
+        This widget is used by ImportItemWidget.
+    """
 
     def __init__(self, video: Video = None, *args, **kwargs):
         super(VideoPreviewWidget, self).__init__(*args, **kwargs)
@@ -362,14 +426,16 @@ class VideoPreviewWidget(QWidget):
         self.layout.addWidget(self.video_label)
         self.setLayout(self.layout)
         self.view.show()
-
+        
         if video is not None:
             self.load_video(video)
     
     def clear_video(self):
+        """Clear the video preview."""
         self.view.clear()
     
     def load_video(self, video: Video, initial_frame=0, plot=True):
+        """Load the video preview and display label text."""
         self.video = video
         self.frame_idx = initial_frame
         label = "(%d, %d), %d f, %d c" % (self.video.width, self.video.height, self.video.frames, self.video.channels)
@@ -378,9 +444,10 @@ class VideoPreviewWidget(QWidget):
             self.plot(initial_frame)
     
     def plot(self, idx=0):
+        """Show the video preview."""
         if self.video is None:
             return
-
+        
         # Get image data
         frame = self.video.get_frame(idx)
         # Clear existing objects
