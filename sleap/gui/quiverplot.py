@@ -158,7 +158,10 @@ class QuiverPlot(QGraphicsObject):
                     #x_delta = self.field_x[y, x] * 10
                     #y_delta = self.field_y[y, x] * 10
                     if x_delta != 0 or y_delta != 0:
-                        line = QuiverArrow(x+self.decimation//2, y+self.decimation//2, x+x_delta, y+y_delta, self.pen, parent=self)
+                        line = QuiverArrow(
+                                x+self.decimation//2, y+self.decimation//2,
+                                x+self.decimation//2+x_delta, y+self.decimation//2+y_delta,
+                                self.pen, parent=self)
 
     def boundingRect(self) -> QRectF:
         return QRectF()
@@ -171,15 +174,14 @@ class QuiverArrow(QGraphicsItem):
     def __init__(self, x, y, x2, y2, pen=None, *args, **kwargs):
         super(QuiverArrow, self).__init__(*args, **kwargs)
 
-        self.line = QGraphicsLineItem(x, y, x2, y2, *args, **kwargs)
-
         arrow_points = self._get_arrow_head_points((x, y), (x2, y2))
+        shaft_line = QGraphicsLineItem(x, y, x2, y2, *args, **kwargs)
         head_line_1 = QGraphicsLineItem(x2, y2, *arrow_points[0], *args, **kwargs)
         head_line_2 = QGraphicsLineItem(x2, y2, *arrow_points[1], *args, **kwargs)
 
         if pen is not None:
             self.pen = pen
-            self.line.setPen(self.pen)
+            shaft_line.setPen(self.pen)
             head_line_1.setPen(self.pen)
             head_line_2.setPen(self.pen)
 
