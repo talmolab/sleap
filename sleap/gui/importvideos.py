@@ -56,9 +56,10 @@ class ImportVideos:
                                 "Any Video (*.h5 *.hd5v *.mp4 *.avi);;HDF5 (*.h5 *.hd5v);;Media Video (*.mp4 *.avi);;Any File (*.*)", # filters
                                 #options=QFileDialog.DontUseNativeDialog
                                 )
-        importer = ImportParamDialog(file_names)
-        importer.accepted.connect(lambda:importer.get_data(self.result))
-        importer.exec_()
+        if len(file_names) > 0:
+            importer = ImportParamDialog(file_names)
+            importer.accepted.connect(lambda:importer.get_data(self.result))
+            importer.exec_()
         return self.result
 
 class ImportParamDialog(QDialog):
