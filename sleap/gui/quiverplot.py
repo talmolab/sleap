@@ -4,7 +4,7 @@ from PySide2.QtWidgets import QGraphicsItem, QGraphicsObject
 from PySide2.QtWidgets import QGraphicsPixmapItem, QGraphicsLineItem
 from PySide2.QtGui import QImage, QPixmap
 from PySide2.QtGui import QPen, QBrush, QColor, QPaintDevice
-from PySide2.QtCore import QRectF, QPoint
+from PySide2.QtCore import QRectF, QPointF
 
 from PySide2.QtWidgets import QGridLayout, QGroupBox, QButtonGroup, QCheckBox
 
@@ -190,11 +190,8 @@ class QuiverArrow(QGraphicsObject):
         points.append((x2,y2))
         points.append(arrow_points[1])
         points.append((x2,y2))
-#         points.extend([(x, y), (x2, y2)])
-#         points.extend([(x2, y2), arrow_points[0]])
-#         points.extend([(x2, y2), arrow_points[1]])
 
-        self.points = list(itertools.starmap(QPoint,points))
+        self.points = list(itertools.starmap(QPointF,points))
 
         self.pen = pen
 
