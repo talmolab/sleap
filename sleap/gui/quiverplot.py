@@ -134,92 +134,81 @@ class QuiverPlot(QGraphicsObject):
 
         self.field_x, self.field_y = None, None
         self.color = color
+        decimation = 1 # FIX: decimation no longer works, so ignore decimation value
         self.decimation = decimation
         pen_width = min(4, max(.1, math.log(self.decimation, 20)))
         self.pen = QPen(QColor(*self.color), pen_width)
+        self.points = []
+        self.rect = QRectF()
 
         if field_x is not None and field_y is not None:
             self.field_x, self.field_y = field_x, field_y
+            self.rect = QRectF(0,0,*self.field_x.shape)
 
             self._add_arrows()
 
     def _add_arrows(self):
+        points = []
         if self.field_x is not None and self.field_y is not None:
+            loc_yx = np.moveaxis(np.indices(self.field_x.shape),0,-1)
+            delta_yx = np.stack((self.field_y,self.field_x),axis=-1)
+
+            loc_y, loc_x = loc_yx[...,0], loc_yx[...,1]
+            delta_y, delta_x = delta_yx[...,0], delta_yx[...,1]
+            x2 = delta_x + loc_x
+            y2 = delta_y + loc_y
+            line_length = (delta_x**2 + delta_y**2)**.5
+            arrow_head_size = line_length / 4
+
+            u_dx, u_dy = delta_x/line_length, delta_y/line_length
+            p1_x = x2 - u_dx*arrow_head_size - u_dy*arrow_head_size
+            p1_y = y2 - u_dy*arrow_head_size + u_dx*arrow_head_size
+
+            p2_x = x2 - u_dx*arrow_head_size + u_dy*arrow_head_size
+            p2_y = y2 - u_dy*arrow_head_size - u_dx*arrow_head_size
+
             y_x_pairs = itertools.product(
-                range(self.field_x.shape[0]),
-                range(self.field_y.shape[1])
+                range(loc_yx.shape[0]),
+                range(loc_yx.shape[1])
                 )
             for y, x in y_x_pairs:
-                # we'll only draw one arrow per decimation box
-                if x%self.decimation == 0 and y%self.decimation == 0:
-                    # sum all deltas for the vectors in box
-                    x_delta = self.field_x[y:y+self.decimation][:, x:x+self.decimation].sum() / self.decimation**2 * self.decimation * .9
-                    y_delta = self.field_y[y:y+self.decimation][:, x:x+self.decimation].sum() / self.decimation**2 * self.decimation * .9
-                    #x_delta = self.field_x[y, x] * 10
-                    #y_delta = self.field_y[y, x] * 10
-                    if x_delta != 0 or y_delta != 0:
-                        line = QuiverArrow(
-                                x+self.decimation//2, y+self.decimation//2,
-                                x+self.decimation//2+x_delta, y+self.decimation//2+y_delta,
-                                self.pen, parent=self)
+                x1, y1 = loc_x[y,x], loc_y[y,x]
+                x_delta = self.field_x[y, x]
+                y_delta = self.field_y[y, x]
+                if x_delta != 0 or y_delta != 0:
+                    points.append((x1, y1))
+                    points.append((x2[y,x],y2[y,x]))
+                    points.append((p1_x[y,x],p1_y[y,x]))
+                    points.append((x2[y,x],y2[y,x]))
+                    points.append((p2_x[y,x],p2_y[y,x]))
+                    points.append((x2[y,x],y2[y,x]))
+            self.points = list(itertools.starmap(QPointF,points))
+
+    def _decimate(self, image:np.array, box:int):
+        height = width = box
+        # Source: https://stackoverflow.com/questions/48482317/slice-an-image-into-tiles-using-numpy
+        _nrows, _ncols, depth = image.shape
+        _size = image.size
+        _strides = image.strides
+
+        nrows, _m = divmod(_nrows, height)
+        ncols, _n = divmod(_ncols, width)
+        if _m != 0 or _n != 0:
+            # if we can't tile whole image, forget about bottom/right edges
+            image = image[:nrows*box,:ncols*box]
+
+        tiles =  np.lib.stride_tricks.as_strided(
+            np.ravel(image),
+            shape=(nrows, ncols, height, width, depth),
+            strides=(height * _strides[0], width * _strides[1], *_strides),
+            writeable=False
+        )
+        return np.mean(tiles, axis=(2,3))
 
     def boundingRect(self) -> QRectF:
-        return QRectF()
+        return QRectF(self.rect)
 
     def paint(self, painter, option, widget=None):
-        pass
-
-class QuiverArrow(QGraphicsObject):
-
-    def __init__(self, x, y, x2, y2, pen=None, *args, **kwargs):
-        super(QuiverArrow, self).__init__(*args, **kwargs)
-
-        arrow_points = self._get_arrow_head_points((x, y), (x2, y2))
-        
-        min_x = min(x, x2, arrow_points[0][0], arrow_points[1][0])
-        max_x = max(x, x2, arrow_points[0][0], arrow_points[1][0])
-        min_y = min(y, y2, arrow_points[0][1], arrow_points[1][1])
-        max_y = max(y, y2, arrow_points[0][1], arrow_points[1][1])
-        
-        self.rect = QRectF(min_x,min_y,max_x,max_y)
-        
-        points = []
-        points.append((x,y))
-        points.append((x2,y2))
-        points.append(arrow_points[0])
-        points.append((x2,y2))
-        points.append(arrow_points[1])
-        points.append((x2,y2))
-
-        self.points = list(itertools.starmap(QPointF,points))
-
-        self.pen = pen
-
-    def _get_arrow_head_points(self, from_point, to_point):
-        x1, y1 = from_point
-        x2, y2 = to_point
-
-        dx, dy = x2-x1, y2-y1
-        line_length = (dx**2 + dy**2)**.4
-        arrow_head_size = line_length / 4
-        u_dx, u_dy = dx/line_length, dy/line_length
-
-        p1_x = x2 - u_dx*arrow_head_size - u_dy*arrow_head_size
-        p1_y = y2 - u_dy*arrow_head_size + u_dx*arrow_head_size
-
-        p2_x = x2 - u_dx*arrow_head_size + u_dy*arrow_head_size
-        p2_y = y2 - u_dy*arrow_head_size - u_dx*arrow_head_size
-
-        return (p1_x, p1_y), (p2_x, p2_y)
-
-    def boundingRect(self) -> QRectF:
-        """Method required by Qt.
-        """
-        return self.rect
-
-    def paint(self, painter, option, widget=None):
-        """Method required by Qt.
-        """
         if self.pen is not None:
             painter.setPen(self.pen)
         painter.drawLines(self.points)
