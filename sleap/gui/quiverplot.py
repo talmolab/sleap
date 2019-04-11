@@ -3,8 +3,8 @@ from PySide2.QtWidgets import QGraphicsView, QGraphicsScene
 from PySide2.QtWidgets import QGraphicsItem, QGraphicsObject
 from PySide2.QtWidgets import QGraphicsPixmapItem, QGraphicsLineItem
 from PySide2.QtGui import QImage, QPixmap
-from PySide2.QtGui import QPen, QBrush, QColor
-from PySide2.QtCore import QRectF
+from PySide2.QtGui import QPen, QBrush, QColor, QPaintDevice
+from PySide2.QtCore import QRectF, QPoint
 
 from PySide2.QtWidgets import QGridLayout, QGroupBox, QButtonGroup, QCheckBox
 
@@ -169,21 +169,34 @@ class QuiverPlot(QGraphicsObject):
     def paint(self, painter, option, widget=None):
         pass
 
-class QuiverArrow(QGraphicsItem):
+class QuiverArrow(QGraphicsObject):
 
     def __init__(self, x, y, x2, y2, pen=None, *args, **kwargs):
         super(QuiverArrow, self).__init__(*args, **kwargs)
 
         arrow_points = self._get_arrow_head_points((x, y), (x2, y2))
-        shaft_line = QGraphicsLineItem(x, y, x2, y2, *args, **kwargs)
-        head_line_1 = QGraphicsLineItem(x2, y2, *arrow_points[0], *args, **kwargs)
-        head_line_2 = QGraphicsLineItem(x2, y2, *arrow_points[1], *args, **kwargs)
+        
+        min_x = min(x, x2, arrow_points[0][0], arrow_points[1][0])
+        max_x = max(x, x2, arrow_points[0][0], arrow_points[1][0])
+        min_y = min(y, y2, arrow_points[0][1], arrow_points[1][1])
+        max_y = max(y, y2, arrow_points[0][1], arrow_points[1][1])
+        
+        self.rect = QRectF(min_x,min_y,max_x,max_y)
+        
+        points = []
+        points.append((x,y))
+        points.append((x2,y2))
+        points.append(arrow_points[0])
+        points.append((x2,y2))
+        points.append(arrow_points[1])
+        points.append((x2,y2))
+#         points.extend([(x, y), (x2, y2)])
+#         points.extend([(x2, y2), arrow_points[0]])
+#         points.extend([(x2, y2), arrow_points[1]])
 
-        if pen is not None:
-            self.pen = pen
-            shaft_line.setPen(self.pen)
-            head_line_1.setPen(self.pen)
-            head_line_2.setPen(self.pen)
+        self.points = list(itertools.starmap(QPoint,points))
+
+        self.pen = pen
 
     def _get_arrow_head_points(self, from_point, to_point):
         x1, y1 = from_point
@@ -205,11 +218,14 @@ class QuiverArrow(QGraphicsItem):
     def boundingRect(self) -> QRectF:
         """Method required by Qt.
         """
-        return QRectF()
+        return self.rect
 
     def paint(self, painter, option, widget=None):
         """Method required by Qt.
         """
+        if self.pen is not None:
+            painter.setPen(self.pen)
+        painter.drawLines(self.points)
         pass
 
 
