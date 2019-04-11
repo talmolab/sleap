@@ -19,4 +19,4 @@ def test_gui_quiver(qtbot, hdf5_affinity):
     # make sure we're showing all the channels we selected
     assert len(affinity_fields.childItems()) == 2
     # make sure we're showing all arrows in first channel
-    assert len(affinity_fields.childItems()[0].childItems()) == 320
+    assert len(affinity_fields.childItems()[0].points) == 480
