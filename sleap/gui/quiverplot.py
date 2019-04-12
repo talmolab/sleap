@@ -117,7 +117,7 @@ class MultiQuiverPlot(QGraphicsObject):
         pass
 
 class QuiverPlot(QGraphicsObject):
-    """QGraphicsPixmapItem for drawing single quiver plot.
+    """QGraphicsObject for drawing single quiver plot.
 
     Args:
         field_x (numpy.array): (h, w) array of x component of vectors.
@@ -134,7 +134,6 @@ class QuiverPlot(QGraphicsObject):
 
         self.field_x, self.field_y = None, None
         self.color = color
-        decimation = 1 # FIX: decimation no longer works, so ignore decimation value
         self.decimation = decimation
         pen_width = min(4, max(.1, math.log(self.decimation, 20)))
         self.pen = QPen(QColor(*self.color), pen_width)
@@ -150,13 +149,21 @@ class QuiverPlot(QGraphicsObject):
     def _add_arrows(self):
         points = []
         if self.field_x is not None and self.field_y is not None:
-            loc_yx = np.moveaxis(np.indices(self.field_x.shape),0,-1)
-            delta_yx = np.stack((self.field_y,self.field_x),axis=-1)
-
+            
+            dim_0 = self.field_x.shape[0]//self.decimation*self.decimation
+            dim_1 = self.field_x.shape[1]//self.decimation*self.decimation
+            raw_delta_yx = np.stack((self.field_y,self.field_x),axis=-1)
+            grid = np.mgrid[0:dim_0:self.decimation, 0:dim_1:self.decimation]
+            loc_yx = np.moveaxis(grid,0,-1)
+            if self.decimation > 1:
+                delta_yx = self._decimate(raw_delta_yx, self.decimation)
+                loc_yx += self.decimation//2
+            else:
+                delta_yx = raw_delta_yx
             loc_y, loc_x = loc_yx[...,0], loc_yx[...,1]
             delta_y, delta_x = delta_yx[...,0], delta_yx[...,1]
-            x2 = delta_x + loc_x
-            y2 = delta_y + loc_y
+            x2 = delta_x*self.decimation + loc_x
+            y2 = delta_y*self.decimation + loc_y
             line_length = (delta_x**2 + delta_y**2)**.5
             arrow_head_size = line_length / 4
 
@@ -168,14 +175,13 @@ class QuiverPlot(QGraphicsObject):
             p2_y = y2 - u_dy*arrow_head_size - u_dx*arrow_head_size
 
             y_x_pairs = itertools.product(
-                range(loc_yx.shape[0]),
-                range(loc_yx.shape[1])
+                range(delta_yx.shape[0]),
+                range(delta_yx.shape[1])
                 )
             for y, x in y_x_pairs:
                 x1, y1 = loc_x[y,x], loc_y[y,x]
-                x_delta = self.field_x[y, x]
-                y_delta = self.field_y[y, x]
-                if x_delta != 0 or y_delta != 0:
+
+                if line_length[y,x] > 0:
                     points.append((x1, y1))
                     points.append((x2[y,x],y2[y,x]))
                     points.append((p1_x[y,x],p1_y[y,x]))
@@ -195,7 +201,7 @@ class QuiverPlot(QGraphicsObject):
         ncols, _n = divmod(_ncols, width)
         if _m != 0 or _n != 0:
             # if we can't tile whole image, forget about bottom/right edges
-            image = image[:nrows*box,:ncols*box]
+            image = image[:(nrows+1)*box,:(ncols+1)*box]
 
         tiles =  np.lib.stride_tricks.as_strided(
             np.ravel(image),
@@ -203,12 +209,14 @@ class QuiverPlot(QGraphicsObject):
             strides=(height * _strides[0], width * _strides[1], *_strides),
             writeable=False
         )
-        return np.mean(tiles, axis=(2,3))
+        return np.mean(np.swapaxes(tiles,0,1), axis=(2,3))
 
     def boundingRect(self) -> QRectF:
+        """Method called by Qt in order to determine whether object is in visible frame."""
         return QRectF(self.rect)
 
     def paint(self, painter, option, widget=None):
+        """Method called by Qt to draw object."""
         if self.pen is not None:
             painter.setPen(self.pen)
         painter.drawLines(self.points)
