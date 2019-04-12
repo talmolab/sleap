@@ -167,7 +167,8 @@ class QuiverPlot(QGraphicsObject):
             line_length = (delta_x**2 + delta_y**2)**.5
             arrow_head_size = line_length / 4
 
-            u_dx, u_dy = delta_x/line_length, delta_y/line_length
+            u_dx = np.divide(delta_x, line_length, out=np.zeros_like(delta_x), where=line_length!=0)
+            u_dy = np.divide(delta_y, line_length, out=np.zeros_like(delta_y), where=line_length!=0)
             p1_x = x2 - u_dx*arrow_head_size - u_dy*arrow_head_size
             p1_y = y2 - u_dy*arrow_head_size + u_dx*arrow_head_size
 
