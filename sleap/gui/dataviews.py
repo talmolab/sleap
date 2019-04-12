@@ -57,7 +57,7 @@ class VideosTableModel(QtCore.QAbstractTableModel):
                 video = self.videos[idx]
 
                 if prop == "filename":
-                    return video.filename
+                    return os.path.basename(video.filename) # just show the name, not full path
                 elif prop == "frames":
                     return video.frames
                 elif prop == "height":
