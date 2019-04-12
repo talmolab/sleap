@@ -21,7 +21,7 @@ from sleap.io.video import Video, HDF5Video, MediaVideo
 from sleap.io.dataset import Labels, LabeledFrame
 from sleap.gui.video import QtVideoPlayer, QtInstance, QtEdge, QtNode
 from sleap.gui.dataviews import VideosTable, SkeletonNodesTable, SkeletonEdgesTable, LabeledFrameTable
-
+from sleap.gui.importvideos import ImportVideos
 
 class MainWindow(QMainWindow):
     labels: Labels
@@ -278,26 +278,25 @@ class MainWindow(QMainWindow):
 
     def addVideo(self, filename=None):
         # Browse for file
-        if not isinstance(filename, str):
-            filters = ["Media (*.mp4 *.avi)", "HDF5 dataset (*.h5 *.hdf5)"]
-            filename, selected_filter = QFileDialog.getOpenFileName(self, caption="Add video...", filter=";;".join(filters))
-            if len(filename) == 0: return
-
-            # TODO: auto-detect HDF5 datasets and/or ask user
-
-        # TODO: check for duplicate videos by filename? class methods for __eq__?
-
-        # Instantiate video object
-        video = Video.from_filename(filename)
-
-        # Add to labels
-        self.labels.add_video(video)
+        video = None
+        if isinstance(filename, str):
+            video = Video.from_filename(filename)
+            # Add to labels
+            self.labels.add_video(video)
+        else:
+            import_list = ImportVideos().go()
+            for import_item in import_list:
+                # Create Video object
+                video = Video.from_filename(**import_item["params"])
+                # Add to labels
+                self.labels.add_video(video)
 
         # Load if no video currently loaded
         if self.video is None:
             self.loadVideo(video)
 
-        # TODO: Update data model/view!
+        # Update data model/view
+        self.videosTable.model().videos = self.labels.videos
 
     def removeVideo(self):
         # Get selected video
@@ -318,6 +317,7 @@ class MainWindow(QMainWindow):
         self.labels.remove_video(video)
 
         # TODO: Update data model?
+        self.videosTable.model().videos = self.labels.videos
 
         # Update view if this was the current video
         if self.video == video:
@@ -360,6 +360,7 @@ class MainWindow(QMainWindow):
         self.skeletonEdgesSrc.addItems(self.skeleton.nodes)
         self.skeletonEdgesDst.clear()
         
+        self.player.plot()
 
     def deleteNode(self):
         # Get selected node
@@ -386,6 +387,7 @@ class MainWindow(QMainWindow):
         self.skeletonEdgesDst.clear()
 
         # TODO: Replot instances?
+        self.player.plot()
 
     def selectSkeletonEdgeSrc(self):
         # TODO: Move this to unified data model
@@ -421,6 +423,7 @@ class MainWindow(QMainWindow):
 
         # Add edge
         self.skeleton.add_edge(source=src_node, destination=dst_node)
+        self.player.plot()
 
 
     def deleteEdge(self):
@@ -435,6 +438,7 @@ class MainWindow(QMainWindow):
         self.skeleton.delete_edge(source=edge[0], destination=edge[1])
 
         # TODO: Update things
+        self.player.plot()
 
 
     def newInstance(self):
