@@ -95,6 +95,10 @@ class HDF5Video:
     def dtype(self):
         return self.__dataset_h5.dtype
 
+    @property
+    def filename(self):
+        return self.file
+
     def get_frame(self, idx) -> np.ndarray:
         """
         Get a frame from the underlying HDF5 video data.
