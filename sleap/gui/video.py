@@ -10,8 +10,8 @@ from PySide2.QtCore import Qt, Signal, Slot
 from PySide2.QtCore import QRectF, QLineF, QPointF
 # from PySide2.QtCore import pyqtSignal
 
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-import matplotlib.pyplot as plt
+# from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+# import matplotlib.pyplot as plt
 
 import numpy as np
 
@@ -317,10 +317,10 @@ class QtVideoPlayer(QWidget):
             callback(self, idx)
 
     def nextFrame(self, dt=1):
-        self.plot((self.frame_idx + abs(dt)) % len(self.video))
+        self.plot((self.frame_idx + abs(dt)) % self.video.frames)
 
     def prevFrame(self, dt=1):
-        self.plot((self.frame_idx - abs(dt)) % len(self.video))
+        self.plot((self.frame_idx - abs(dt)) % self.video.frames)
 
     def keyPressEvent(self, event: QKeyEvent):
         if event.key() == Qt.Key.Key_Left:
@@ -330,7 +330,7 @@ class QtVideoPlayer(QWidget):
         elif event.key() == Qt.Key.Key_Home:
             self.plot(0)
         elif event.key() == Qt.Key.Key_End:
-            self.plot(len(self.video) - 1)
+            self.plot(self.video.frames - 1)
         else:
             event.ignore() # Kicks the event up to parent
             # print(event.key())
@@ -446,7 +446,7 @@ if __name__ == "__main__":
 
     import h5py
 
-    data_path = "D:/sleap/tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"
+    data_path = "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"
     vid = HDF5Video(data_path, "/box", input_format="channels_first")
 
     app = QApplication([])
@@ -492,8 +492,6 @@ if __name__ == "__main__":
     points["node"] = points["node"].astype("uint8") - 1
     points["visible"] = points["visible"].astype("bool")
 
-
-
     def plot_instances(vp, idx):
 
         # Find instances in frame idx
@@ -505,12 +503,12 @@ if __name__ == "__main__":
         for i, instance_id in enumerate(frame_instance_ids):
             is_instance = is_in_frame & (points["instanceId"] == instance_id)
             instance_points = {node_names[n]: Point(x, y, visible=v) for x, y, n, v in
-                                            zip(*[points[k][is_instance] for k in ["x", "y", "node", "visible"]])}
-
+                                            zip(*[points[k][is_instance] for k in ["x", "y", "node", "visible"]])
+                                            if n < len(node_names)}
 
             # Plot instance
-            instance = Instance(skeleton=skeleton, video=vp.video, frame_idx=idx, points=instance_points)
-            qt_instance = QtInstance(instance=instance, color=cmap[i])
+            instance = Instance(skeleton=skeleton, points=instance_points)
+            qt_instance = QtInstance(instance=instance, color=cmap[i%len(cmap)])
             vp.view.scene.addItem(qt_instance)
 
     window.callbacks.append(plot_instances)
