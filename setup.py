@@ -37,7 +37,8 @@ setup(
     entry_points = {
         'console_scripts': [
             'sleap-label=sleap.gui.app:main',
-            'sleap-train=sleap.training:main'
+            'sleap-train=sleap.nn.training:main',
+            'sleap-predict=sleap.nn.tracking:main'
         ],
     },
     python_requires='>=3.6'
