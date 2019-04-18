@@ -2,11 +2,12 @@
 A miscellaneous set of utility functions. Try not to put things in here
 unless they really have no other place.
 """
+import os
 
 import h5py as h5
 import numpy as np
 import attr
-
+import psutil
 
 from typing import Callable
 
@@ -50,4 +51,23 @@ def try_open_file(open: Callable, *args, **kwargs) -> object:
             return open(*args, **kwargs)
         except FileNotFoundError:
             return None
+
+def usable_cpu_count() -> int:
+    """Get number of CPUs usable by the current process.
+
+    Takes into consideration cpusets restrictions.
+
+    Returns
+    -------
+        The number of usable cpus
+    """
+    try:
+        result = len(os.sched_getaffinity(0))
+    except AttributeError:
+        try:
+            result = len(psutil.Process().cpu_affinity())
+        except AttributeError:
+            result = os.cpu_count()
+    return result
+
 

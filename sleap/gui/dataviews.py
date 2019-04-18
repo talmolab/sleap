@@ -12,7 +12,7 @@ from PySide2.QtWidgets import QMenu, QAction
 from PySide2.QtWidgets import QFileDialog, QMessageBox
 
 import os
-import matplotlib.pyplot as plt
+
 import numpy as np
 import pandas as pd
 
@@ -28,6 +28,7 @@ class VideosTable(QTableView):
     def __init__(self, videos: list = []):
         super(VideosTable, self).__init__()
         self.setModel(VideosTableModel(videos))
+        self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setSelectionMode(QAbstractItemView.SingleSelection)
 
 class VideosTableModel(QtCore.QAbstractTableModel):
@@ -56,7 +57,7 @@ class VideosTableModel(QtCore.QAbstractTableModel):
                 video = self.videos[idx]
 
                 if prop == "filename":
-                    return video.filename
+                    return os.path.basename(video.filename) # just show the name, not full path
                 elif prop == "frames":
                     return video.frames
                 elif prop == "height":
@@ -93,6 +94,7 @@ class SkeletonNodesTable(QTableView):
     def __init__(self, skeleton: Skeleton):
         super(SkeletonNodesTable, self).__init__()
         self.setModel(SkeletonNodesTableModel(skeleton))
+        self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setSelectionMode(QAbstractItemView.SingleSelection)
 
 class SkeletonNodesTableModel(QtCore.QAbstractTableModel):
@@ -175,6 +177,7 @@ class SkeletonEdgesTable(QTableView):
     def __init__(self, skeleton: Skeleton):
         super(SkeletonEdgesTable, self).__init__()
         self.setModel(SkeletonEdgesTableModel(skeleton))
+        self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setSelectionMode(QAbstractItemView.SingleSelection)
 
 class SkeletonEdgesTableModel(QtCore.QAbstractTableModel):
@@ -234,6 +237,7 @@ class LabeledFrameTable(QTableView):
     def __init__(self, labeled_frame: LabeledFrame = None):
         super(LabeledFrameTable, self).__init__()
         self.setModel(LabeledFrameTableModel(labeled_frame))
+        self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setSelectionMode(QAbstractItemView.SingleSelection)
 
 class LabeledFrameTableModel(QtCore.QAbstractTableModel):
