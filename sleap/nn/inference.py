@@ -14,7 +14,7 @@ from scipy.io import savemat, loadmat
 from keras.utils import multi_gpu_model
 
 
-def get_inference_model(confmap_model_path, paf_model_path):
+def get_inference_model(confmap_model_path: str, paf_model_path: str) -> keras.Model:
     """ Loads and merges confmap and PAF models into one. """
 
     # Load
@@ -39,9 +39,12 @@ def get_inference_model(confmap_model_path, paf_model_path):
     # Combine models with tuple output
     model = keras.Model(new_input, [confmap_model(new_input), paf_model(new_input)])
 
-    parallel_model = multi_gpu_model(model, gpus=4)
+    try:
+        model = multi_gpu_model(model, gpus=4)
+    except:
+        pass
 
-    return parallel_model
+    return model
 
 def impeaksnms(I, min_thresh=0.3, sigma=3, return_val=True):
     """ Find peaks via non-maximum suppresion. """
