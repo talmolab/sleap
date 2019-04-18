@@ -2,6 +2,7 @@ import sys
 import argparse
 import multiprocessing
 import logging
+logger = logging.getLogger(__name__)
 
 import numpy as np
 import cv2
@@ -47,7 +48,7 @@ class Predictor:
     model: keras.Model = attr.ib()
     skeleton: str = attr.ib()
     inference_batch_size: int = 4
-    read_chunk_size = 20
+    read_chunk_size = 512
     nms_min_thresh = 0.3
     nms_sigma = 3
     min_score_to_node_ratio: float = 0.2
@@ -72,14 +73,14 @@ class Predictor:
         skeleton = loadmat(self.skeleton)
         skeleton["nodes"] = skeleton["nodes"][0][0]  # convert to scalar
         skeleton["edges"] = skeleton["edges"] - 1  # convert to 0-based indexing
-        logging.info("Skeleton (%d nodes):" % skeleton["nodes"])
-        logging.info("  %s" % str(skeleton["edges"]))
+        logger.info("Skeleton (%d nodes):" % skeleton["nodes"])
+        logger.info("  %s" % str(skeleton["edges"]))
 
         # Load model
         _, h, w, c = self.model.input_shape
         model_channels = c
-        logging.info("Loaded models:")
-        logging.info("  Input shape: %d x %d x %d" % (h, w, c))
+        logger.info("Loaded models:")
+        logger.info("  Input shape: %d x %d x %d" % (h, w, c))
 
         # Open the video if we need it.
         try:
@@ -92,11 +93,11 @@ class Predictor:
         vid_h = vid.shape[1]
         vid_w = vid.shape[2]
         scale = h / vid_h
-        logging.info("Opened video:")
-        logging.info("  Source:", vid.backend)
-        logging.info("  Frames: %d" % num_frames)
-        logging.info("  Frame shape: %d x %d" % (vid_h, vid_w))
-        logging.info("  Scale: %f" % scale)
+        logger.info("Opened video:")
+        logger.info("  Source: " + str(vid.backend))
+        logger.info("  Frames: %d" % num_frames)
+        logger.info("  Frame shape: %d x %d" % (vid_h, vid_w))
+        logger.info("  Scale: %f" % scale)
 
         # Initialize tracking
         tracker = FlowShiftTracker(window=self.flow_window)
@@ -115,46 +116,48 @@ class Predictor:
         match_scores = []
         matched_peak_vals = []
         num_chunks = int(np.ceil(num_frames / self.read_chunk_size))
+        frame_num = 0
         for chunk in range(num_chunks):
-            logging.info("Processing chunk %d/%d:" % (chunk + 1, num_chunks))
+            logger.info("Processing chunk %d/%d:" % (chunk + 1, num_chunks))
             t0_chunk = time()
             # Calculate how many frames to read
             # num_chunk_frames = min(read_chunk_size, num_frames - int(vid.get(cv2.CAP_PROP_POS_FRAMES)))
 
             # Read the next batch of images
             t0 = time()
-            mov = []
-            frame_num = 0
-            while frame_num < vid.num_frames:
-                I = vid.get_frame(frame_num)
 
-                # Preprocess frame
-                if model_channels == 1:
-                    I = I[:, :, 0]
-                I = cv2.resize(I, (w, h))
-                mov.append(I)
+            # Read the next chunk of frames
+            frame_end = frame_num + self.read_chunk_size
+            if frame_end > vid.num_frames:
+                frame_end = vid.num_frames
 
-                if len(mov) >= self.read_chunk_size:
-                    break
+            mov = vid[frame_num:frame_end]
 
-            # Merge and add singleton dimension
-            mov = np.stack(mov, axis=0)
+            # Preprocess the frames
+            if model_channels == 1:
+                mov = mov[:, :, :, 0]
+
+            # Resize the frames to the model input size
+            for i in range(mov.shape[0]):
+                mov[i, :, :] = cv2.resize(mov[i, :, :], (w, h))
+
+            # Add back singleton dimension
             if model_channels == 1:
                 mov = mov[..., None]
             else:
                 mov = mov[..., ::-1]
 
-            logging.info("  Read %d frames [%.1fs]" % (len(mov), time() - t0))
+            logger.info("  Read %d frames [%.1fs]" % (len(mov), time() - t0))
 
             # Run inference
             t0 = time()
             confmaps, pafs = self.model.predict(mov.astype("float32") / 255, batch_size=self.inference_batch_size)
-            logging.info("  Inferred confmaps and PAFs [%.1fs]" % (time() - t0))
+            logger.info("  Inferred confmaps and PAFs [%.1fs]" % (time() - t0))
 
             # Find peaks
             t0 = time()
             peaks, peak_vals = find_all_peaks(confmaps, min_thresh=self.nms_min_thresh, sigma=self.nms_sigma)
-            logging.info("  Found peaks [%.1fs]" % (time() - t0))
+            logger.info("  Found peaks [%.1fs]" % (time() - t0))
 
             # Match peaks via PAFs
             t0 = time()
@@ -164,7 +167,7 @@ class Predictor:
                                                                min_score_midpts=self.min_score_midpts,
                                                                min_score_integral=self.min_score_integral,
                                                                add_last_edge=self.add_last_edge, pool=pool)
-            logging.info("  Matched peaks via PAFs [%.1fs]" % (time() - t0))
+            logger.info("  Matched peaks via PAFs [%.1fs]" % (time() - t0))
 
             # # Adjust for input scale
             # for i in range(len(instances)):
@@ -174,7 +177,7 @@ class Predictor:
             # Track
             t0 = time()
             tracker.track(mov, instances)
-            logging.info("  Tracked IDs via flow shift [%.1fs]" % (time() - t0))
+            logger.info("  Tracked IDs via flow shift [%.1fs]" % (time() - t0))
 
             # Save
             matched_instances.extend(instances)
@@ -184,7 +187,7 @@ class Predictor:
             save_every = 3
 
             # Get the parameters used for this inference.
-            params = attr.asdict(self)
+            params = attr.asdict(self, filter=lambda attr, value: attr.name != "model")
 
             if chunk % save_every == 0 or chunk == (num_chunks - 1):
                 t0 = time()
@@ -195,17 +198,17 @@ class Predictor:
                                         uids=tracker.uids, tracked_instances=tracker.generate_tracks(matched_instances),
                                         flow_assignment_costs=tracker.flow_assignment_costs,
                                         ), do_compression=True)
-                logging.info("  Saved to: %s [%.1fs]" % (output_path, time() - t0))
+                logger.info("  Saved to: %s [%.1fs]" % (output_path, time() - t0))
 
             elapsed = time() - t0_chunk
             total_elapsed = time() - t0_start
             fps = len(matched_instances) / total_elapsed
             frames_left = num_frames - len(matched_instances)
-            logging.info("  Finished chunk [%.1fs / %.1f FPS / ETA: %.1f min]" % (elapsed, fps, (frames_left / fps) / 60))
+            logger.info("  Finished chunk [%.1fs / %.1f FPS / ETA: %.1f min]" % (elapsed, fps, (frames_left / fps) / 60))
 
             sys.stdout.flush()
 
-        logging.info("Total: %.1f min" % (total_elapsed / 60))
+        logger.info("Total: %.1f min" % (total_elapsed / 60))
 
 
 def main():
