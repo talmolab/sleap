@@ -268,6 +268,8 @@ class MainWindow(QMainWindow):
         if len(filename) == 0: return
 
         self.filename = filename
+        self.setWindowTitle(self.filename)
+
         if filename.endswith(".json"):
             self.labels = Labels.load_json(filename)
             if show_msg:
