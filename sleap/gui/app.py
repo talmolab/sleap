@@ -1,7 +1,7 @@
 from PySide2 import QtCore
 from PySide2.QtCore import Qt
 
-from PySide2.QtGui import QKeyEvent
+from PySide2.QtGui import QKeyEvent, QKeySequence
 
 from PySide2.QtWidgets import QApplication, QMainWindow, QWidget, QDockWidget
 from PySide2.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QFormLayout
@@ -70,33 +70,33 @@ class MainWindow(QMainWindow):
 
         ####### Menus #######
         fileMenu = self.menuBar().addMenu("File")
-        fileMenu.addAction("&New project").triggered.connect(self.newProject)
-        fileMenu.addAction("&Open project...").triggered.connect(self.openProject)
-        fileMenu.addAction("&Save").triggered.connect(self.saveProject)
-        fileMenu.addAction("Save as...").triggered.connect(self.saveProjectAs)
+        fileMenu.addAction("&New Project", self.newProject, QKeySequence.New)
+        fileMenu.addAction("&Open project...", self.openProject, QKeySequence.Open)
+        fileMenu.addAction("&Save", self.saveProject, QKeySequence.Save)
+        fileMenu.addAction("Save as...", self.saveProjectAs, QKeySequence.SaveAs)
         fileMenu.addSeparator()
 #         fileMenu.addAction("Import...").triggered.connect(self.importData)
 #         fileMenu.addAction("Export...").triggered.connect(self.exportData)
 #         fileMenu.addSeparator()
-        fileMenu.addAction("&Quit").triggered.connect(self.close)
+        fileMenu.addAction("&Quit", self.close)
 
         videoMenu = self.menuBar().addMenu("Video")
         # videoMenu.addAction("Check video encoding").triggered.connect(self.checkVideoEncoding)
         # videoMenu.addAction("Reencode for seeking").triggered.connect(self.reencodeForSeeking)
         # videoMenu.addSeparator()
-        videoMenu.addAction("Add videos...").triggered.connect(self.addVideo)
+        videoMenu.addAction("Add videos...", self.addVideo, Qt.CTRL + Qt.Key_A)
         # videoMenu.addAction("Add folder").triggered.connect(self.addVideoFolder)
-        videoMenu.addAction("Next video").triggered.connect(self.nextVideo)
-        videoMenu.addAction("Previous video").triggered.connect(self.previousVideo)
+        videoMenu.addAction("Next video", self.nextVideo, QKeySequence.Forward)
+        videoMenu.addAction("Previous video", self.previousVideo, QKeySequence.Back)
         videoMenu.addSeparator()
-        videoMenu.addAction("Extract clip...").triggered.connect(self.extractClip)
+        videoMenu.addAction("Extract clip...", self.extractClip)
 
         viewMenu = self.menuBar().addMenu("View")
 
         helpMenu = self.menuBar().addMenu("Help")
-        helpMenu.addAction("Documentation").triggered.connect(self.openDocumentation)
-        helpMenu.addAction("Keyboard reference").triggered.connect(self.openKeyRef)
-        helpMenu.addAction("About").triggered.connect(self.openAbout)
+        helpMenu.addAction("Documentation", self.openDocumentation)
+        helpMenu.addAction("Keyboard reference", self.openKeyRef)
+        helpMenu.addAction("About", self.openAbout)
 
         ####### Video player #######
         self.player = QtVideoPlayer()
