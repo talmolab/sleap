@@ -208,6 +208,8 @@ class GraphicsView(QGraphicsView):
 
         self.zoomFactor = max(factor * self.zoomFactor, 1)
         self.updateViewer()
+        
+        QGraphicsView.wheelEvent(self, event)
 
         # transform = self.transform()
 
@@ -359,6 +361,7 @@ class QtNode(QGraphicsEllipseItem):
     def mousePressEvent(self, event):
         if event.modifiers() == Qt.MetaModifier:
             self.dragParent = True
+            self.parentObject().setTransformOriginPoint(self.scenePos())
             self.parentObject().mousePressEvent(event)
         else:
             self.dragParent = False
@@ -382,6 +385,11 @@ class QtNode(QGraphicsEllipseItem):
         else:
             super(QtNode, self).mouseReleaseEvent(event)
             self.updatePoint()
+
+    def wheelEvent(self, event):
+        if self.dragParent:
+            angle = event.delta() * 3 + self.parentObject().rotation()
+            self.parentObject().setRotation(angle)
 
 
 class QtEdge(QGraphicsLineItem):
@@ -456,8 +464,9 @@ class QtInstance(QGraphicsObject):
             node_item.point.x = node_item.scenePos().x()
             node_item.point.y = node_item.scenePos().y()
             node_item.setPos(node_item.point.x, node_item.point.y)
-        # Reset the scene position (changes when we drag entire skeleton)
+        # Reset the scene position and rotation (changes when we drag entire skeleton)
         self.setPos(0, 0)
+        self.setRotation(0)
         # Update the position for each edge
         for edge_item in self.edges:
             edge_item.updateEdge(edge_item.src)
