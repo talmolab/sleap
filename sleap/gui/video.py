@@ -202,28 +202,29 @@ class GraphicsView(QGraphicsView):
         QGraphicsView.mouseDoubleClickEvent(self, event)
 
     def wheelEvent(self, event):
+        # zoom on wheel when no mouse buttons are pressed
+        if event.buttons() == Qt.NoButton:
+            angle = event.angleDelta().y()
+            factor = 1.1 if angle > 0 else 0.9
 
-        angle = event.angleDelta().y()
-        factor = 1.1 if angle > 0 else 0.9
-
-        self.zoomFactor = max(factor * self.zoomFactor, 1)
-        self.updateViewer()
+            self.zoomFactor = max(factor * self.zoomFactor, 1)
+            self.updateViewer()
         
         QGraphicsView.wheelEvent(self, event)
 
-        # transform = self.transform()
+            # transform = self.transform()
 
-        # print(self.sceneRect())
-        # print(self.transform())
+            # print(self.sceneRect())
+            # print(self.transform())
 
-        # scale = max(transform.m11(), transform.m22())
-        # if scale * factor < 1.0:
-        #     factor = 1.0
+            # scale = max(transform.m11(), transform.m22())
+            # if scale * factor < 1.0:
+            #     factor = 1.0
 
-        # self.scale(factor, factor)
+            # self.scale(factor, factor)
 
-        # https://stackoverflow.com/questions/19113532/qgraphicsview-zooming-in-and-out-under-mouse-position-using-mouse-wheel
-        # 
+            # https://stackoverflow.com/questions/19113532/qgraphicsview-zooming-in-and-out-under-mouse-position-using-mouse-wheel
+            # 
 
     def keyPressEvent(self, event):
         event.ignore() # Kicks the event up to parent
@@ -375,6 +376,7 @@ class QtNode(QGraphicsEllipseItem):
                 super(QtNode, self).mousePressEvent(event)
                 self.updatePoint()
         elif event.button() == Qt.MidButton:
+            print("node middle")
             pass
 
     def mouseMoveEvent(self, event):
@@ -396,8 +398,9 @@ class QtNode(QGraphicsEllipseItem):
             self.updatePoint()
 
     def wheelEvent(self, event):
-        angle = event.delta() / 10 + self.parentObject().rotation()
-        self.parentObject().setRotation(angle)
+        if self.dragParent:
+            angle = event.delta() / 10 + self.parentObject().rotation()
+            self.parentObject().setRotation(angle)
 
 
 class QtEdge(QGraphicsLineItem):
