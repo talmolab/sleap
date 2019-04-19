@@ -100,10 +100,14 @@ class MainWindow(QMainWindow):
         videoMenu.addAction("Previous Video", self.previousVideo, QKeySequence.Back)
         videoMenu.addSeparator()
         videoMenu.addAction("Mark Frame", self.markFrame, Qt.CTRL + Qt.Key_M)
+        videoMenu.addAction("Go to Marked Frame", self.goMarkedFrame, Qt.CTRL + Qt.SHIFT + Qt.Key_M)
         videoMenu.addAction("Extract Clip...", self.extractClip, Qt.CTRL + Qt.Key_E)
 
         labelMenu = self.menuBar().addMenu("Labels")
         labelMenu.addAction("Add Instance", self.newInstance, Qt.CTRL + Qt.Key_I)
+        labelMenu.addSeparator()
+        labelMenu.addAction("Next Labeled Frame", self.nextLabeledFrame, QKeySequence.FindNext)
+        labelMenu.addAction("Previous Labeled Frame", self.previousLabeledFrame, QKeySequence.FindPrevious)
 
         viewMenu = self.menuBar().addMenu("View")
 
@@ -536,14 +540,31 @@ class MainWindow(QMainWindow):
 
     def markFrame(self):
         self.mark_idx = self.player.frame_idx
+        
+    def goMarkedFrame(self):
+        self.player.plot(self.mark_idx)
 
     def extractClip(self):
         if self.mark_idx is None:
-            QMessageBox(text=f"You must set a mark first.").exec_()
+            QMessageBox(text=f"You must first mark a frame to determine the range for extraction.").exec_()
         else:
             start = min(self.mark_idx, self.player.frame_idx)
             end = max(self.mark_idx, self.player.frame_idx)
-            QMessageBox(text=f"Extract video frames: {start+1} to {end+1})").exec_()
+            QMessageBox(text=f"Extract video frames: {start+1} to {end+1}. Not yet implemented.").exec_()
+
+    def previousLabeledFrame(self):
+        cur_idx = self.player.frame_idx
+        frame_indexes = [frame.frame_idx for frame in self.labels.find(self.video)]
+        if len(frame_indexes):
+            prev_idx = max(filter(lambda idx: idx < cur_idx, frame_indexes), default=frame_indexes[-1])
+            self.player.plot(prev_idx)
+
+    def nextLabeledFrame(self):
+        cur_idx = self.player.frame_idx
+        frame_indexes = [frame.frame_idx for frame in self.labels.find(self.video)]
+        if len(frame_indexes):
+            next_idx = min(filter(lambda idx: idx > cur_idx, frame_indexes), default=frame_indexes[0])
+            self.player.plot(next_idx)
 
     def openDocumentation(self):
         pass
