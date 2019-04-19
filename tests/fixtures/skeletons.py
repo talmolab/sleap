@@ -24,11 +24,11 @@ def skeleton():
 
     # Create a simple skeleton object
     skeleton = Skeleton("Fly")
-    skeleton.add_node(name="head")
-    skeleton.add_node(name="thorax")
-    skeleton.add_node(name="abdomen")
-    skeleton.add_node(name="left-wing")
-    skeleton.add_node(name="right-wing")
+    skeleton.add_node("head")
+    skeleton.add_node("thorax")
+    skeleton.add_node("abdomen")
+    skeleton.add_node("left-wing")
+    skeleton.add_node("right-wing")
     skeleton.add_edge(source="head", destination="thorax")
     skeleton.add_edge(source="thorax", destination="abdomen")
     skeleton.add_edge(source="thorax", destination="left-wing")
