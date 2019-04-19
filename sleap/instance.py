@@ -11,7 +11,7 @@ import pandas as pd
 
 from typing import Dict, List, Union
 
-from sleap.skeleton import Skeleton
+from sleap.skeleton import Skeleton, Node
 from sleap.io.video import Video
 from sleap.util import attr_to_dtype
 
@@ -63,7 +63,7 @@ class Instance:
     """
 
     skeleton: Skeleton
-    _points: Dict[int, Point] = attr.ib(default=attr.Factory(dict))
+    _points: Dict[Node, Point] = attr.ib(default=attr.Factory(dict))
 
     @_points.validator
     def _validate_all_points(self, attribute, points):
@@ -89,8 +89,8 @@ class Instance:
             # Check if the dict contains all strings
             is_string_dict = set(map(type, self._points)) == {str}
 
-            # Check if the dict contains all strings
-            is_int_dict = set(map(type, self._points)) == {int}
+            # Check if the dict contains all Node objects
+            is_node_dict = set(map(type, self._points)) == {Node}
 
             # If the user fed in a dict whose keys are strings, these are node names,
             # convert to node indices so we don't break references to skeleton nodes
@@ -98,9 +98,9 @@ class Instance:
             if self._points and is_string_dict:
                 self._points = {self._node_to_index(name): point for name,point in self._points.items()}
 
-            if not is_string_dict and not is_int_dict:
+            if not is_string_dict and not is_node_dict:
                 raise ValueError("points dictionary must be keyed by either strings " +
-                                 "(node names) or integers (node indices).")
+                                 "(node names) or Nodes.")
 
     def _node_to_index(self, node_name):
         """
@@ -134,14 +134,15 @@ class Instance:
 
             return ret_list
 
-        if self.skeleton.has_node(node):
-            node_index = self._node_to_index(node)
-            if not self._node_to_index(node) in self._points:
-                self._points[node_index] = Point()
+        if isinstance(node, str):
+            node = self.skeleton.find_node(node)
+        if node in self.skeleton.nodes:
+            if not node in self._points:
+                self._points[node] = Point()
 
-            return self._points[node_index]
+            return self._points[node]
         else:
-            raise KeyError(f"The underlying skeleton ({self.skeleton}) has no node named '{node}'")
+            raise KeyError(f"The underlying skeleton ({self.skeleton}) has no node '{node}'")
 
     def __contains__(self, node):
         """
@@ -171,15 +172,36 @@ class Instance:
             for n, v in zip(node, value):
                 self.__setitem__(n, v)
         else:
-            if self.skeleton.has_node(node):
-                self._points[self._node_to_index(node)] = value
+            if isinstance(node,str):
+                node = self.skeleton.find_node(node)
+
+            if node in self.skeleton.nodes:
+                self._points[node] = value
             else:
-                raise KeyError(f"The underlying skeleton ({self.skeleton}) has no node named '{node}'")
+                raise KeyError(f"The underlying skeleton ({self.skeleton}) has no node '{node}'")
 
     def __delitem__(self, node):
         """ Delete node key and points associated with that node. """
         # TODO: handle this case somehow?
         pass
+
+    def matches(self, other):
+        """
+        Compare this `Instance` to another, modulo the particular `Node` objects.
+
+        Args:
+            other: The other instance.
+
+        Returns:
+            True if match, False otherwise.
+        """
+        if list(self.points()) != list(other.points()):
+            return False
+
+        if not self.skeleton.matches(other.skeleton):
+            return False
+
+        return True
 
     def nodes(self):
         """
@@ -189,7 +211,7 @@ class Instance:
             A list of nodes that have been labelled for this instance.
 
         """
-        return [self.skeleton.nodes[i] for i in self._points.keys()]
+        return self._points.keys()
 
     def nodes_points(self):
         """
@@ -199,7 +221,7 @@ class Instance:
         Returns:
             The instance's (node, point) tuple pairs for all labelled point.
         """
-        names_to_points = {self.skeleton.nodes[i]: point for i, point in self._points.items()}
+        names_to_points = {node: point for node, point in self._points.items()}
         return names_to_points.items()
 
     def points(self):
@@ -261,7 +283,7 @@ class Instance:
                 if skip_nan and (math.isnan(point.x) or math.isnan(point.y)):
                     continue
 
-                precord = {'node': node, **attr.asdict(point)}
+                precord = {'node': node.name, **attr.asdict(point)} # FIXME: save other node attributes?
 
                 records.append({**irecord, **precord})
 

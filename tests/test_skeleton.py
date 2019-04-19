@@ -10,8 +10,9 @@ def test_add_dupe_node(skeleton):
     """
     Test if adding a node with the same name to skeleton throws an exception.
     """
+    print(skeleton.nodes)
     with pytest.raises(ValueError):
-        skeleton.add_node(name="head")
+        skeleton.add_node("head")
 
 
 def test_add_dupe_edge(skeleton):
@@ -100,35 +101,38 @@ def test_eq():
 
     # Make a copy check that they are equal
     s2 = copy.deepcopy(s1)
-    assert s1 == s2
+    assert s1.matches(s2)
 
     # Add an edge, check that they are not equal
     s2 = copy.deepcopy(s1)
     s2.add_edge('5', '1')
-    assert s1 != s2
+    assert not s1.matches(s2)
 
     # Add a symmetry edge, not equal
     s2 = copy.deepcopy(s1)
     s2.add_symmetry('5', '1')
-    assert s1 != s2
+    assert not s1.matches(s2)
 
     # Delete a node
     s2 = copy.deepcopy(s1)
     s2.delete_node('5')
-    assert s1 != s2
+    assert not s1.matches(s2)
 
     # Delete and edge, not equal
     s2 = copy.deepcopy(s1)
     s2.delete_edge('1', '2')
-    assert s1 != s2
+    assert not s1.matches(s2)
 
     # FIXME: Probably shouldn't test it this way.
     # Add a value to a nodes dict, make sure they are not equal. This is touching the
     # internal _graph storage of the skeleton which probably should be avoided. But, I
     # wanted to test this just in case we add attributes to the nodes in the future.
-    s2 = copy.deepcopy(s1)
-    s2._graph.nodes['1']['test'] = 5
-    assert s1 != s2
+    # UPDATE: Test is currently disabled.
+    # Now that nodes are keyed to `Node`, we can't access by name.
+    # Also, we can't directly check graph identity, since we want identity modulo `Node` identity.
+    # s2 = copy.deepcopy(s1)
+    # s2._graph.nodes['1']['test'] = 5
+    # assert s1 != s2
 
 def test_symmetry():
     s1 = Skeleton("s1")
@@ -139,10 +143,10 @@ def test_symmetry():
     s1.add_symmetry('1', '5')
     s1.add_symmetry('3', '6')
 
-    assert s1.get_symmetry("1") == "5"
-    assert s1.get_symmetry("5") == "1"
+    assert s1.get_symmetry("1").name == "5"
+    assert s1.get_symmetry("5").name == "1"
 
-    assert s1.get_symmetry("3") == "6"
+    assert s1.get_symmetry("3").name == "6"
 
     # Cannot add more than one symmetry to a node
     with pytest.raises(ValueError):
@@ -163,7 +167,7 @@ def test_json(skeleton, tmpdir):
     skeleton_copy = Skeleton.load_json(JSON_TEST_FILENAME)
 
     # Make sure we get back the same skeleton we saved.
-    assert(skeleton == skeleton_copy)
+    assert(skeleton.matches(skeleton_copy))
 
 
 def test_hdf5(skeleton, stickman, tmpdir):
@@ -180,22 +184,22 @@ def test_hdf5(skeleton, stickman, tmpdir):
     sk_list = Skeleton.load_all_hdf5(filename)
 
     # Lets check that they are equal to what we saved, this checks the order too.
-    assert skeleton == sk_list[0]
-    assert stickman == sk_list[1]
+    assert skeleton.matches(sk_list[0])
+    assert stickman.matches(sk_list[1])
 
     # Check load to dict as well
     sk_dict = Skeleton.load_all_hdf5(filename, return_dict=True)
-    assert skeleton == sk_dict[skeleton.name]
-    assert stickman == sk_dict[stickman.name]
+    assert skeleton.matches(sk_dict[skeleton.name])
+    assert stickman.matches(sk_dict[stickman.name])
 
     # Check individual load
-    assert Skeleton.load_hdf5(filename, skeleton.name) == skeleton
-    assert Skeleton.load_hdf5(filename, stickman.name) == stickman
+    assert Skeleton.load_hdf5(filename, skeleton.name).matches(skeleton)
+    assert Skeleton.load_hdf5(filename, stickman.name).matches(stickman)
 
     # Check overwrite save and save list
     Skeleton.save_all_hdf5(filename, [skeleton, stickman])
-    assert Skeleton.load_hdf5(filename, skeleton.name) == skeleton
-    assert Skeleton.load_hdf5(filename, stickman.name) == stickman
+    assert Skeleton.load_hdf5(filename, skeleton.name).matches(skeleton)
+    assert Skeleton.load_hdf5(filename, stickman.name).matches(stickman)
 
     # Make sure we can't load a non-existent skeleton
     with pytest.raises(KeyError):

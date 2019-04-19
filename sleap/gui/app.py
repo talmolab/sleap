@@ -1,7 +1,7 @@
 from PySide2 import QtCore
 from PySide2.QtCore import Qt
 
-from PySide2.QtGui import QKeyEvent
+from PySide2.QtGui import QKeyEvent, QKeySequence
 
 from PySide2.QtWidgets import QApplication, QMainWindow, QWidget, QDockWidget
 from PySide2.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QFormLayout
@@ -12,16 +12,20 @@ from PySide2.QtWidgets import QFileDialog, QMessageBox
 
 import os
 
+from pathlib import PurePath
+
 import numpy as np
 import pandas as pd
 
-from sleap.skeleton import Skeleton
+from sleap.skeleton import Skeleton, Node
 from sleap.instance import Instance, Point
 from sleap.io.video import Video, HDF5Video, MediaVideo
 from sleap.io.dataset import Labels, LabeledFrame
 from sleap.gui.video import QtVideoPlayer, QtInstance, QtEdge, QtNode
-from sleap.gui.dataviews import VideosTable, SkeletonNodesTable, SkeletonEdgesTable, LabeledFrameTable
+from sleap.gui.dataviews import VideosTable, SkeletonNodesTable, SkeletonEdgesTable, LabeledFrameTable, SkeletonNodeModel
 from sleap.gui.importvideos import ImportVideos
+
+OPEN_IN_NEW = True
 
 class MainWindow(QMainWindow):
     labels: Labels
@@ -46,6 +50,8 @@ class MainWindow(QMainWindow):
         self.skeleton = Skeleton()
         self.labeled_frame = None
         self.video = None
+        self.video_idx = None
+        self.filename = None
 
         self.initialize_gui()
 
@@ -64,37 +70,37 @@ class MainWindow(QMainWindow):
 
         ####### Menus #######
         fileMenu = self.menuBar().addMenu("File")
-        fileMenu.addAction("New project").triggered.connect(self.newProject)
-        fileMenu.addAction("Open project").triggered.connect(self.openProject)
-        fileMenu.addAction("Save").triggered.connect(self.saveProject)
-        fileMenu.addAction("Save as...").triggered.connect(self.saveProjectAs)
+        fileMenu.addAction("&New Project", self.newProject, QKeySequence.New)
+        fileMenu.addAction("&Open project...", self.openProject, QKeySequence.Open)
+        fileMenu.addAction("&Save", self.saveProject, QKeySequence.Save)
+        fileMenu.addAction("Save as...", self.saveProjectAs, QKeySequence.SaveAs)
         fileMenu.addSeparator()
-        fileMenu.addAction("Import...").triggered.connect(self.importData)
-        fileMenu.addAction("Export...").triggered.connect(self.exportData)
-        fileMenu.addSeparator()
-        fileMenu.addAction("&Quit").triggered.connect(self.close)
+#         fileMenu.addAction("Import...").triggered.connect(self.importData)
+#         fileMenu.addAction("Export...").triggered.connect(self.exportData)
+#         fileMenu.addSeparator()
+        fileMenu.addAction("&Quit", self.close)
 
         videoMenu = self.menuBar().addMenu("Video")
         # videoMenu.addAction("Check video encoding").triggered.connect(self.checkVideoEncoding)
         # videoMenu.addAction("Reencode for seeking").triggered.connect(self.reencodeForSeeking)
         # videoMenu.addSeparator()
-        videoMenu.addAction("Add video").triggered.connect(self.addVideo)
-        videoMenu.addAction("Add folder").triggered.connect(self.addVideoFolder)
-        videoMenu.addAction("Next video").triggered.connect(self.nextVideo)
-        videoMenu.addAction("Previous video").triggered.connect(self.previousVideo)
+        videoMenu.addAction("Add videos...", self.addVideo, Qt.CTRL + Qt.Key_A)
+        # videoMenu.addAction("Add folder").triggered.connect(self.addVideoFolder)
+        videoMenu.addAction("Next video", self.nextVideo, QKeySequence.Forward)
+        videoMenu.addAction("Previous video", self.previousVideo, QKeySequence.Back)
         videoMenu.addSeparator()
-        videoMenu.addAction("Extract clip...").triggered.connect(self.extractClip)
+        videoMenu.addAction("Extract clip...", self.extractClip)
 
         viewMenu = self.menuBar().addMenu("View")
 
         helpMenu = self.menuBar().addMenu("Help")
-        helpMenu.addAction("Documentation").triggered.connect(self.openDocumentation)
-        helpMenu.addAction("Keyboard reference").triggered.connect(self.openKeyRef)
-        helpMenu.addAction("About").triggered.connect(self.openAbout)
+        helpMenu.addAction("Documentation", self.openDocumentation)
+        helpMenu.addAction("Keyboard reference", self.openKeyRef)
+        helpMenu.addAction("About", self.openAbout)
 
         ####### Video player #######
         self.player = QtVideoPlayer()
-        self.player.callbacks.append(self.newFrame)
+        self.player.changedPlot.connect(self.newFrame)
         self.setCentralWidget(self.player)
 
         ####### Status bar #######
@@ -121,12 +127,14 @@ class MainWindow(QMainWindow):
         self.videosTable = VideosTable()
         videos_layout.addWidget(self.videosTable)
         hb = QHBoxLayout()
-        btn = QPushButton("Add video")
+        btn = QPushButton("Add videos")
         btn.clicked.connect(self.addVideo); hb.addWidget(btn)
         btn = QPushButton("Remove video")
         btn.clicked.connect(self.removeVideo); hb.addWidget(btn)
         hbw = QWidget(); hbw.setLayout(hb)
         videos_layout.addWidget(hbw)
+
+        self.videosTable.doubleClicked.connect(lambda x: self.loadVideo(self.labels.videos[x.row()], x.row()))
 
         ####### Skeleton #######
         skeleton_layout = _make_dock("Skeleton", tab_with=videos_layout.parent().parent())
@@ -151,9 +159,11 @@ class MainWindow(QMainWindow):
         vb.addWidget(self.skeletonEdgesTable)
         hb = QHBoxLayout()
         self.skeletonEdgesSrc = QComboBox(); self.skeletonEdgesSrc.setEditable(False); self.skeletonEdgesSrc.currentIndexChanged.connect(self.selectSkeletonEdgeSrc)
+        self.skeletonEdgesSrc.setModel(SkeletonNodeModel(self.skeleton))
         hb.addWidget(self.skeletonEdgesSrc)
         self.skeletonEdgesDst = QComboBox(); self.skeletonEdgesDst.setEditable(False)
         hb.addWidget(self.skeletonEdgesDst)
+        self.skeletonEdgesDst.setModel(SkeletonNodeModel(self.skeleton, lambda: self.skeletonEdgesSrc.currentText()))
         btn = QPushButton("Add edge")
         btn.clicked.connect(self.newEdge); hb.addWidget(btn)
         btn = QPushButton("Delete edge")
@@ -162,6 +172,9 @@ class MainWindow(QMainWindow):
         vb.addWidget(hbw)
         gb.setLayout(vb)
         skeleton_layout.addWidget(gb)
+
+        # update edge UI when change to nodes
+        self.skeletonNodesTable.model().dataChanged.connect(self.updateEdges)
 
         ####### Instances #######
         instances_layout = _make_dock("Instances")
@@ -246,13 +259,16 @@ class MainWindow(QMainWindow):
     def importData(self, filename=None):
         show_msg = False
         # if filename is None:
-        if not isinstance(filename, str):
-            filters = ["JSON labels (*.json)", "HDF5 dataset (*.h5 *.hdf5)"]
-            # filename, selected_filter = QFileDialog.getOpenFileName(self, dir="C:/Users/tdp/OneDrive/code/sandbox/leap_wt_gold_pilot", caption="Import labeled data...", filter=";;".join(filters))
-            filename, selected_filter = QFileDialog.getOpenFileName(self, dir=None, caption="Import labeled data...", filter=";;".join(filters))
-            show_msg = True
+#         if not isinstance(filename, str):
+#             filters = ["JSON labels (*.json)", "HDF5 dataset (*.h5 *.hdf5)"]
+#             # filename, selected_filter = QFileDialog.getOpenFileName(self, dir="C:/Users/tdp/OneDrive/code/sandbox/leap_wt_gold_pilot", caption="Import labeled data...", filter=";;".join(filters))
+#             filename, selected_filter = QFileDialog.getOpenFileName(self, dir=None, caption="Import labeled data...", filter=";;".join(filters))
+#             show_msg = True
         
         if len(filename) == 0: return
+
+        self.filename = filename
+        self.setWindowTitle(self.filename)
 
         if filename.endswith(".json"):
             self.labels = Labels.load_json(filename)
@@ -267,14 +283,11 @@ class MainWindow(QMainWindow):
                     self.skeleton = self.labels.labels[0].instances[0].skeleton
                     self.skeletonNodesTable.model().skeleton = self.skeleton
                     self.skeletonEdgesTable.model().skeleton = self.skeleton
-                    self.skeletonEdgesSrc.clear()
-                    self.skeletonEdgesDst.clear()
-                    self.skeletonEdgesSrc.addItems(self.skeleton.nodes)
-                    
-            # Load first video
-            self.loadVideo(self.labels.videos[0])
-            
+                    self.skeletonEdgesSrc.model().skeleton = self.skeleton
+                    self.skeletonEdgesDst.model().skeleton = self.skeleton
 
+            # Load first video
+            self.loadVideo(self.labels.videos[0], 0)
 
     def addVideo(self, filename=None):
         # Browse for file
@@ -293,7 +306,7 @@ class MainWindow(QMainWindow):
 
         # Load if no video currently loaded
         if self.video is None:
-            self.loadVideo(video)
+            self.loadVideo(video, len(self.labels.videos)-1)
 
         # Update data model/view
         self.videosTable.model().videos = self.labels.videos
@@ -326,11 +339,12 @@ class MainWindow(QMainWindow):
                 # TODO: update statusbar
             else:
                 new_idx = min(idx.row(), len(self.labels.videos) - 1)
-                self.loadVideo(self.labels.videos[new_idx])
+                self.loadVideo(self.labels.videos[new_idx], new_idx)
 
-    def loadVideo(self, video:Video):
+    def loadVideo(self, video:Video, video_idx: int = None):
         # Update current video instance
         self.video = video
+        self.video_idx = video_idx if video_idx is not None else self.video_idx
 
         # Load video in player widget
         self.player.load_video(self.video)
@@ -352,13 +366,11 @@ class MainWindow(QMainWindow):
         # Add the node to the skeleton
         self.skeleton.add_node(part_name)
 
-        # TODO: Update data model(s)?
+        # Update data model
+        self.skeletonNodesTable.model().skeleton = self.skeleton
 
-        # TODO: Move this to unified data model
         # Update source edges dropdown
-        self.skeletonEdgesSrc.clear()
-        self.skeletonEdgesSrc.addItems(self.skeleton.nodes)
-        self.skeletonEdgesDst.clear()
+        self.skeletonEdgesSrc.model().skeleton = self.skeleton
         
         self.player.plot()
 
@@ -368,54 +380,32 @@ class MainWindow(QMainWindow):
         if not idx.isValid(): return
         node = self.skeleton.nodes[idx.row()]
 
-        # Check if there are instances with the skeleton that owns the node to be deleted
-        affected_instances = list(self.labels.instances(skeleton=self.skeleton))
-
-        # TODO: update instances correctly
-        if len(affected_instances) > 0:
-            return
-
         # Remove
         self.skeleton.delete_node(node)
 
-        # TODO: Update data model(s)?
+        # Update data model
+        self.skeletonNodesTable.model().skeleton = self.skeleton
 
-        # TODO: Move this to unified data model
-        # Update source edges dropdown
-        self.skeletonEdgesSrc.clear()
-        self.skeletonEdgesSrc.addItems(self.skeleton.nodes)
-        self.skeletonEdgesDst.clear()
+        # Update edges dropdown
+        self.skeletonEdgesSrc.model().skeleton = self.skeleton
 
         # TODO: Replot instances?
         self.player.plot()
 
     def selectSkeletonEdgeSrc(self):
-        # TODO: Move this to unified data model
-        # TODO: Hook to signal emitted for updates to the node names
+        self.skeletonEdgesDst.model().skeleton = self.skeleton
 
-        # Get selected source node
-        # src_node = self.skeletonEdgesSrc.currentText()
-        src_node = self.skeleton.nodes[self.skeletonEdgesSrc.currentIndex()]
-
-        # Find destination nodes
-        dst_nodes = set(self.skeleton.nodes) - {src_node}
-
-        # Find valid edges
-        valid_edges = {(src_node, dst_node) for dst_node in dst_nodes} - set(self.skeleton.edges)
-
-        # Filter down to valid destination nodes
-        valid_dst_nodes = [dst_node for src_node, dst_node in valid_edges]
-
-        # Update destination edges dropdown
-        self.skeletonEdgesDst.clear()
-        self.skeletonEdgesDst.addItems(valid_dst_nodes)
+    def updateEdges(self):
+        self.skeletonEdgesTable.model().skeleton = self.skeleton
+        self.skeletonEdgesSrc.model().skeleton = self.skeleton
+        self.skeletonEdgesDst.model().skeleton = self.skeleton
 
     def newEdge(self):
         # TODO: Move this to unified data model
 
         # Get selected nodes
-        src_node = self.skeletonEdgesDst.currentText()
-        dst_node = self.skeletonEdgesSrc.currentText()
+        src_node = self.skeletonEdgesSrc.currentText()
+        dst_node = self.skeletonEdgesDst.currentText()
 
         # Check if they're in the graph
         if src_node not in self.skeleton or dst_node not in self.skeleton:
@@ -423,6 +413,10 @@ class MainWindow(QMainWindow):
 
         # Add edge
         self.skeleton.add_edge(source=src_node, destination=dst_node)
+
+        # Update data model
+        self.skeletonEdgesTable.model().skeleton = self.skeleton
+
         self.player.plot()
 
 
@@ -437,7 +431,9 @@ class MainWindow(QMainWindow):
         # Delete edge
         self.skeleton.delete_edge(source=edge[0], destination=edge[1])
 
-        # TODO: Update things
+        # Update data model
+        self.skeletonEdgesTable.model().skeleton = self.skeleton
+
         self.player.plot()
 
 
@@ -456,16 +452,48 @@ class MainWindow(QMainWindow):
         self.player.plot()
 
     def deleteInstance(self):
-        pass
+        idx = self.instancesTable.currentIndex()
+        if not idx.isValid(): return
+        del self.labeled_frame.instances[idx.row()]
+
+        self.player.plot()
 
     def newProject(self):
-        pass
+        window = MainWindow()
+        window.showMaximized()
+
     def openProject(self):
-        pass
+        filters = ["JSON labels (*.json)", "HDF5 dataset (*.h5 *.hdf5)"]
+        filename, selected_filter = QFileDialog.getOpenFileName(self, dir=None, caption="Import labeled data...", filter=";;".join(filters))
+
+        if len(filename) == 0: return
+
+        if OPEN_IN_NEW:
+            new_window = MainWindow()
+            new_window.showMaximized()
+            new_window.importData(filename)
+        else:
+            self.importData(filename)
+
     def saveProject(self):
-        pass
+        if self.filename is not None:
+            filename = self.filename
+            if filename.endswith(".json"):
+                Labels.save_json(labels = self.labels, filename = filename)
+
     def saveProjectAs(self):
-        pass
+        default_name = self.filename if self.filename is not None else "untitled.json"
+        p = PurePath(default_name)
+        default_name = str(p.with_name(f"{p.stem} copy{p.suffix}"))
+
+        filters = ["JSON labels (*.json)", "HDF5 dataset (*.h5 *.hdf5)"]
+        filename, selected_filter = QFileDialog.getSaveFileName(self, caption="Save As...", dir=default_name, filter=";;".join(filters))
+
+        if len(filename) == 0: return
+
+        if filename.endswith(".json"):
+            Labels.save_json(labels = self.labels, filename = filename)
+
     def exportData(self):
         pass
     # def close(self):
@@ -477,9 +505,15 @@ class MainWindow(QMainWindow):
     def addVideoFolder(self):
         pass
     def nextVideo(self):
-        pass
+        new_idx = self.video_idx+1
+        new_idx = 0 if new_idx >= len(self.labels.videos) else new_idx
+        self.loadVideo(self.labels.videos[new_idx], new_idx)
+        
     def previousVideo(self):
-        pass
+        new_idx = self.video_idx-1
+        new_idx = len(self.labels.videos)-1 if new_idx < 0 else new_idx
+        self.loadVideo(self.labels.videos[new_idx], new_idx)
+        
     def extractClip(self):
         pass
     def openDocumentation(self):
@@ -526,4 +560,5 @@ def main(*args, **kwargs):
 
 if __name__ == "__main__":
 
-    main(import_data="tests/data/json_format_v1/centered_pair.json")
+    # main(import_data="tests/data/json_format_v1/centered_pair.json")
+    main()

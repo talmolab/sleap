@@ -202,26 +202,29 @@ class GraphicsView(QGraphicsView):
         QGraphicsView.mouseDoubleClickEvent(self, event)
 
     def wheelEvent(self, event):
+        # zoom on wheel when no mouse buttons are pressed
+        if event.buttons() == Qt.NoButton:
+            angle = event.angleDelta().y()
+            factor = 1.1 if angle > 0 else 0.9
 
-        angle = event.angleDelta().y()
-        factor = 1.1 if angle > 0 else 0.9
+            self.zoomFactor = max(factor * self.zoomFactor, 1)
+            self.updateViewer()
+        
+        QGraphicsView.wheelEvent(self, event)
 
-        self.zoomFactor = max(factor * self.zoomFactor, 1)
-        self.updateViewer()
+            # transform = self.transform()
 
-        # transform = self.transform()
+            # print(self.sceneRect())
+            # print(self.transform())
 
-        # print(self.sceneRect())
-        # print(self.transform())
+            # scale = max(transform.m11(), transform.m22())
+            # if scale * factor < 1.0:
+            #     factor = 1.0
 
-        # scale = max(transform.m11(), transform.m22())
-        # if scale * factor < 1.0:
-        #     factor = 1.0
+            # self.scale(factor, factor)
 
-        # self.scale(factor, factor)
-
-        # https://stackoverflow.com/questions/19113532/qgraphicsview-zooming-in-and-out-under-mouse-position-using-mouse-wheel
-        # 
+            # https://stackoverflow.com/questions/19113532/qgraphicsview-zooming-in-and-out-under-mouse-position-using-mouse-wheel
+            # 
 
     def keyPressEvent(self, event):
         event.ignore() # Kicks the event up to parent
@@ -231,6 +234,9 @@ class GraphicsView(QGraphicsView):
 
 
 class QtVideoPlayer(QWidget):
+
+    changedPlot = Signal(QWidget, int)
+
     def __init__(self, video: Video = None, callbacks=[], *args, **kwargs):
         super(QtVideoPlayer, self).__init__(*args, **kwargs)
 
@@ -312,6 +318,9 @@ class QtVideoPlayer(QWidget):
         # Display image
         self.view.setImage(image)
 
+        # Emit signal (it's better to use the signal than a callback)
+        self.changedPlot.emit(self, idx)
+
         # Handle callbacks
         for callback in self.callbacks:
             callback(self, idx)
@@ -338,13 +347,16 @@ class QtVideoPlayer(QWidget):
 class QtNode(QGraphicsEllipseItem):
     # pointUpdated = Signal(Point)
 
-    def __init__(self, parent, point:Point, radius=1.5, *args, **kwargs):
+    def __init__(self, parent, point:Point, radius=1.5, node_name:str = None, *args, **kwargs):
         self.point = point
         self.radius = radius
         self.edges = []
+        self.dragParent = False
 
         super(QtNode, self).__init__(-self.radius, -self.radius, self.radius*2, self.radius*2, parent=parent, *args, **kwargs)
         self.setPos(self.point.x, self.point.y)
+        if node_name is not None:
+            self.setToolTip(node_name)
 
     def updatePoint(self):
         self.point.x = self.scenePos().x()
@@ -354,23 +366,41 @@ class QtNode(QGraphicsEllipseItem):
             edge.updateEdge(self)
 
     def mousePressEvent(self, event):
-        # print(event)
-        super(QtNode, self).mousePressEvent(event)
-        self.updatePoint()
+        if event.button() == Qt.LeftButton:
+            if event.modifiers() == Qt.AltModifier:
+                self.dragParent = True
+                self.parentObject().setTransformOriginPoint(self.scenePos())
+                self.parentObject().mousePressEvent(event)
+            else:
+                self.dragParent = False
+                super(QtNode, self).mousePressEvent(event)
+                self.updatePoint()
+        elif event.button() == Qt.MidButton:
+            print("node middle")
+            pass
 
     def mouseMoveEvent(self, event):
-        # print(event)
-        super(QtNode, self).mouseMoveEvent(event)
-        self.updatePoint()
+        #print(event)
+        if self.dragParent:
+            self.parentObject().mouseMoveEvent(event)
+        else:
+            super(QtNode, self).mouseMoveEvent(event)
+            self.updatePoint()
 
     def mouseReleaseEvent(self, event):
-        # print(event)
-        super(QtNode, self).mouseReleaseEvent(event)
-        self.updatePoint()
-        # print(self.point)
-        # print(self.scenePos())
-        # print(self.pos())
+        #print(event)
+        if self.dragParent:
+            self.parentObject().mouseReleaseEvent(event)
+            self.parentObject().setSelected(False)
+            self.parentObject().updatePoints()
+        else:
+            super(QtNode, self).mouseReleaseEvent(event)
+            self.updatePoint()
 
+    def wheelEvent(self, event):
+        if self.dragParent:
+            angle = event.delta() / 10 + self.parentObject().rotation()
+            self.parentObject().setRotation(angle)
 
 
 class QtEdge(QGraphicsLineItem):
@@ -401,6 +431,8 @@ class QtInstance(QGraphicsObject):
         self.edges = []
         self.color = color
         self.markerRadius = markerRadius
+        self.setFlag(QGraphicsItem.ItemIsMovable)
+        self.setFlag(QGraphicsItem.ItemIsSelectable)
         
         col_line = QColor(*self.color)
         pen = QPen(col_line, 1)
@@ -417,30 +449,46 @@ class QtInstance(QGraphicsObject):
 
         for (node, point) in self.instance.nodes_points():
             if point.visible:
-                node_item = QtNode(parent=self, point=point, radius=self.markerRadius)
+                node_item = QtNode(parent=self, point=point, radius=self.markerRadius, node_name = node.name)
                 node_item.setPen(pen)
                 node_item.setBrush(brush)
             else:
-                node_item = QtNode(parent=self, point=point, radius=self.markerRadius * 0.5)
+                node_item = QtNode(parent=self, point=point, radius=self.markerRadius * 0.5, node_name = node.name)
                 node_item.setPen(pen_missing)
                 node_item.setBrush(brush_missing)
             node_item.setFlag(QGraphicsItem.ItemIsMovable)
 
-            self.nodes[node] = node_item
+            self.nodes[node.name] = node_item
 
-        for (src, dst) in self.skeleton.edges:
-            edge_item = QtEdge(parent=self, src=self.nodes[src], dst=self.nodes[dst])
-            edge_item.setPen(pen)
-            self.nodes[src].edges.append(edge_item)
-            self.nodes[dst].edges.append(edge_item)
-            self.edges.append(edge_item)
+        for (src, dst) in self.skeleton.edge_names:
+            # Make sure that both nodes are present in this instance before drawing edge
+            if src in self.nodes and dst in self.nodes:
+                edge_item = QtEdge(parent=self, src=self.nodes[src], dst=self.nodes[dst])
+                edge_item.setPen(pen)
+                self.nodes[src].edges.append(edge_item)
+                self.nodes[dst].edges.append(edge_item)
+                self.edges.append(edge_item)
 
+    def updatePoints(self):
+        # Update the position for each node
+        for node_item in self.nodes.values():
+            node_item.point.x = node_item.scenePos().x()
+            node_item.point.y = node_item.scenePos().y()
+            node_item.setPos(node_item.point.x, node_item.point.y)
+        # Reset the scene position and rotation (changes when we drag entire skeleton)
+        self.setPos(0, 0)
+        self.setRotation(0)
+        # Update the position for each edge
+        for edge_item in self.edges:
+            edge_item.updateEdge(edge_item.src)
+            edge_item.updateEdge(edge_item.dst)
 
     def boundingRect(self):
         return QRectF()
 
     def paint(self, painter, option, widget=None):
         pass
+
 
 if __name__ == "__main__":
 
