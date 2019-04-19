@@ -233,6 +233,9 @@ class GraphicsView(QGraphicsView):
 
 
 class QtVideoPlayer(QWidget):
+
+    changedPlot = Signal(QWidget, int)
+
     def __init__(self, video: Video = None, callbacks=[], *args, **kwargs):
         super(QtVideoPlayer, self).__init__(*args, **kwargs)
 
@@ -313,6 +316,9 @@ class QtVideoPlayer(QWidget):
 
         # Display image
         self.view.setImage(image)
+
+        # Emit signal (it's better to use the signal than a callback)
+        self.changedPlot.emit(self, idx)
 
         # Handle callbacks
         for callback in self.callbacks:
