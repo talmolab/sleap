@@ -16,6 +16,7 @@ from sleap.io.video import Video
 from sleap.util import attr_to_dtype
 
 import attr
+import functools
 
 # This can probably be a namedtuple but has been made a full class just in case
 # we need more complicated functionality later.
@@ -52,6 +53,18 @@ class Point:
         return math.isnan(self.x) or math.isnan(self.y)
 
 
+@attr.s(slots=True, cmp=False)
+class Track:
+    spawned_on: int = attr.ib()
+    name: str = attr.ib(default="")
+
+@attr.s(slots=True, cmp=False)
+class InstanceArray:
+    # TODO: integrate this with the full instance class below or rename as PredictedInstance?
+    track: Track = attr.ib()
+    frame_idx: int = attr.ib()
+    points: np.ndarray = attr.ib()
+
 @attr.s(auto_attribs=True, slots=True)
 class Instance:
     """
@@ -64,6 +77,8 @@ class Instance:
 
     skeleton: Skeleton
     _points: Dict[int, Point] = attr.ib(default=attr.Factory(dict))
+    # track: attr.ib(validator=attr.validators.optional(attr.validators.instance_of(Track)))
+    # frame_idx: attr.ib(validator=attr.validators.optional(attr.validators.instance_of(int)))
 
     @_points.validator
     def _validate_all_points(self, attribute, points):
@@ -455,3 +470,50 @@ class Instance:
         """
         for i in instances:
             i.drop_nan_points()
+
+
+
+@attr.s(slots=True, cmp=False)
+class ShiftedInstance:
+    frame_idx: int = attr.ib()
+    parent = attr.ib()
+    points: np.ndarray = attr.ib()
+        
+    @property
+    @functools.lru_cache()
+    def source(self):
+        if isinstance(self.parent, InstanceArray):
+            return self.parent
+        else:
+            return self.parent.source
+    
+    @property
+    def track(self):
+        return self.source.track
+
+
+@attr.s(slots=True)
+class Tracks:
+    instances: Dict[int, list] = attr.ib(default=attr.Factory(dict))
+    tracks: List[Track] = attr.ib(factory=list)
+        
+    def get_frame_instances(self, frame_idx: int, max_shift = None):
+        
+        instances = self.instances.get(frame_idx, [])
+        
+        # Filter
+        if max_shift is not None:
+            instances = [instance for instance in instances if isinstance(instance, InstanceArray) or (isinstance(instance, ShiftedInstance) and ((frame_idx - instance.source.frame_idx) <= max_shift))]
+            
+        return instances
+    
+    def add_instance(self, instance: Union[InstanceArray, ShiftedInstance]):
+        frame_instances = self.instances.get(instance.frame_idx, [])
+        frame_instances.append(instance)
+        self.instances[instance.frame_idx] = frame_instances
+        if instance.track not in self.tracks:
+            self.tracks.append(instance.track)
+            
+    def add_instances(self, instances: list):
+        for instance in instances:
+            self.add_instance(instance)
