@@ -365,14 +365,17 @@ class QtNode(QGraphicsEllipseItem):
             edge.updateEdge(self)
 
     def mousePressEvent(self, event):
-        if event.modifiers() == Qt.MetaModifier:
-            self.dragParent = True
-            self.parentObject().setTransformOriginPoint(self.scenePos())
-            self.parentObject().mousePressEvent(event)
-        else:
-            self.dragParent = False
-            super(QtNode, self).mousePressEvent(event)
-            self.updatePoint()
+        if event.button() == Qt.LeftButton:
+            if event.modifiers() == Qt.AltModifier:
+                self.dragParent = True
+                self.parentObject().setTransformOriginPoint(self.scenePos())
+                self.parentObject().mousePressEvent(event)
+            else:
+                self.dragParent = False
+                super(QtNode, self).mousePressEvent(event)
+                self.updatePoint()
+        elif event.button() == Qt.MidButton:
+            pass
 
     def mouseMoveEvent(self, event):
         #print(event)
@@ -393,9 +396,8 @@ class QtNode(QGraphicsEllipseItem):
             self.updatePoint()
 
     def wheelEvent(self, event):
-        if self.dragParent:
-            angle = event.delta() * 3 + self.parentObject().rotation()
-            self.parentObject().setRotation(angle)
+        angle = event.delta() / 10 + self.parentObject().rotation()
+        self.parentObject().setRotation(angle)
 
 
 class QtEdge(QGraphicsLineItem):
