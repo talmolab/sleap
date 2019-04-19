@@ -81,10 +81,10 @@ class Labels(MutableSequence):
 
         # Add any videos that are present in the labels but
         # missing from the video list
-        self.videos = self.videos + list({label.video for label in self.labels})
+        self.videos = list(set(self.videos).union({label.video for label in self.labels}))
 
         # Ditto for skeletons
-        self.skeletons = self.skeletons + list({instance.skeleton for label in self.labels for instance in label.instances})
+        self.skeletons = list(set(self.skeletons).union({instance.skeleton for label in self.labels for instance in label.instances}))
 
         # Ditto for nodes
         self.nodes = list(set(self.nodes).union({node for skeleton in self.skeletons for node in skeleton.nodes}))
@@ -350,7 +350,6 @@ class Labels(MutableSequence):
         labels = label_cattr.structure(dicts['labels'], List[LabeledFrame])
 
 #         print("LABELS"); print(labels)
-
         return cls(labeled_frames=labels, videos=videos, skeletons=skeletons, nodes=nodes)
 
     @classmethod
@@ -372,6 +371,7 @@ class Labels(MutableSequence):
                 # Try to load the labels file.
                 try:
                     labels = Labels.from_json(dicts)
+
                 except FileNotFoundError:
 
                     # FIXME: We are going to the labels JSON that has references to
