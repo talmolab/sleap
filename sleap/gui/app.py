@@ -110,7 +110,8 @@ class MainWindow(QMainWindow):
         labelMenu.addAction("Next Labeled Frame", self.nextLabeledFrame, QKeySequence.FindNext)
         labelMenu.addAction("Previous Labeled Frame", self.previousLabeledFrame, QKeySequence.FindPrevious)
         labelMenu.addSeparator()
-        labelMenu.addAction("Toggle Label Overlay", self.toggleLabels, Qt.ALT + Qt.Key_Tab)
+        labelMenu.addAction("Toggle Node Name View", self.toggleLabels, Qt.ALT + Qt.Key_Tab)
+        labelMenu.addAction("Toggle Edge View", self.toggleEdges, Qt.ALT + Qt.SHIFT + Qt.Key_Tab)
 
         viewMenu = self.menuBar().addMenu("View")
 
@@ -582,6 +583,9 @@ class MainWindow(QMainWindow):
 
     def toggleLabels(self):
         self.player.toggleLabels()
+
+    def toggleEdges(self):
+        self.player.toggleEdges()
 
     def openDocumentation(self):
         pass

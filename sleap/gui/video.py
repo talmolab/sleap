@@ -339,6 +339,10 @@ class QtVideoPlayer(QWidget):
         for inst in self.instances():
             inst.toggleLabels()
 
+    def toggleEdges(self):
+        for inst in self.instances():
+            inst.toggleEdges()
+
     def keyPressEvent(self, event: QKeyEvent):
         if event.key() == Qt.Key.Key_Left:
             self.prevFrame()
@@ -528,6 +532,7 @@ class QtInstance(QGraphicsObject):
         self.instance = instance
         self.nodes = {}
         self.edges = []
+        self.edges_shown = True
         self.labels = {}
         self.labels_shown = True
         self.color = color
@@ -598,20 +603,22 @@ class QtInstance(QGraphicsObject):
             edge_item.updateEdge(edge_item.dst)
 
     def toggleLabels(self):
-        if self.labels_shown:
-            self.hideLabels()
-        else:
-            self.showLabels()
+        self.showLabels(not self.labels_shown)
 
-    def showLabels(self):
+    def showLabels(self, show):
+        op = 1 if show else 0
         for label in self.labels.values():
-            label.setOpacity(1)
-        self.labels_shown = True
+            label.setOpacity(op)
+        self.labels_shown = show
 
-    def hideLabels(self):
-        for label in self.labels.values():
-            label.setOpacity(0)
-        self.labels_shown = False
+    def toggleEdges(self):
+        self.showEdges(not self.edges_shown)
+
+    def showEdges(self, show = True):
+        op = 1 if show else 0
+        for edge in self.edges:
+            edge.setOpacity(op)
+        self.edges_shown = show
 
     def boundingRect(self):
         return QRectF()
