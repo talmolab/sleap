@@ -105,6 +105,7 @@ class MainWindow(QMainWindow):
 
         labelMenu = self.menuBar().addMenu("Labels")
         labelMenu.addAction("Add Instance", self.newInstance, Qt.CTRL + Qt.Key_I)
+        labelMenu.addAction("Transpose Instances", self.transposeInstance, Qt.CTRL + Qt.Key_T)
         labelMenu.addSeparator()
         labelMenu.addAction("Next Labeled Frame", self.nextLabeledFrame, QKeySequence.FindNext)
         labelMenu.addAction("Previous Labeled Frame", self.previousLabeledFrame, QKeySequence.FindPrevious)
@@ -420,6 +421,7 @@ class MainWindow(QMainWindow):
         self.skeletonEdgesTable.model().skeleton = self.skeleton
         self.skeletonEdgesSrc.model().skeleton = self.skeleton
         self.skeletonEdgesDst.model().skeleton = self.skeleton
+        self.player.plot()
 
     def newEdge(self):
         # TODO: Move this to unified data model
@@ -478,6 +480,12 @@ class MainWindow(QMainWindow):
         del self.labeled_frame.instances[idx.row()]
 
         self.player.plot()
+        
+    def transposeInstance(self):
+        # FIXME: transpose based on selection rather than swapping first pair
+        self.labeled_frame.instances[0], self.labeled_frame.instances[1] = (
+            self.labeled_frame.instances[1], self.labeled_frame.instances[0])
+        self.player.plot()
 
     def newProject(self):
         window = MainWindow()
@@ -501,6 +509,8 @@ class MainWindow(QMainWindow):
             filename = self.filename
             if filename.endswith(".json"):
                 Labels.save_json(labels = self.labels, filename = filename)
+            # Redraw. Not sure why, but sometimes we need to do this.
+            self.player.plot()
 
     def saveProjectAs(self):
         default_name = self.filename if self.filename is not None else "untitled.json"
@@ -515,6 +525,8 @@ class MainWindow(QMainWindow):
         if filename.endswith(".json"):
             Labels.save_json(labels = self.labels, filename = filename)
             self.filename = filename
+            # Redraw. Not sure why, but sometimes we need to do this.
+            self.player.plot()
         else:
             QMessageBox(text=f"File not saved. Only .json currently implemented.")
 
