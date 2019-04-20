@@ -109,6 +109,8 @@ class MainWindow(QMainWindow):
         labelMenu.addSeparator()
         labelMenu.addAction("Next Labeled Frame", self.nextLabeledFrame, QKeySequence.FindNext)
         labelMenu.addAction("Previous Labeled Frame", self.previousLabeledFrame, QKeySequence.FindPrevious)
+        labelMenu.addSeparator()
+        labelMenu.addAction("Toggle Label Overlay", self.toggleLabels, Qt.ALT + Qt.Key_Tab)
 
         viewMenu = self.menuBar().addMenu("View")
 
@@ -578,6 +580,9 @@ class MainWindow(QMainWindow):
             next_idx = min(filter(lambda idx: idx > cur_idx, frame_indexes), default=frame_indexes[0])
             self.player.plot(next_idx)
 
+    def toggleLabels(self):
+        self.player.toggleLabels()
+
     def openDocumentation(self):
         pass
     def openKeyRef(self):
@@ -608,6 +613,11 @@ class MainWindow(QMainWindow):
         for i, instance in enumerate(self.labeled_frame.instances):
             qt_instance = QtInstance(instance=instance, color=self.cmap[i%len(self.cmap)])
             player.view.scene.addItem(qt_instance)
+
+            # connect signal so we can adjust QtNodeLabel positions after zoom
+            player.view.updatedViewer.connect(qt_instance.updatePoints)
+
+        player.view.updatedViewer.emit()
 
         # self.statusBar().showMessage(f"Frame: {self.player.frame_idx+1}/{len(self.video)}  |  Labeled frames (video/total): {self.labels.instances[self.labels.instances.videoId == 1].frameIdx.nunique()}/{len(self.labels)}  |  Instances (frame/total): {len(frame_instances)}/{self.labels.points.instanceId.nunique()}")
         self.statusBar().showMessage(f"Frame: {self.player.frame_idx+1}/{len(self.video)}")

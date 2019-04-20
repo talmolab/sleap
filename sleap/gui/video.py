@@ -4,7 +4,7 @@ from PySide2.QtWidgets import QAction
 
 from PySide2.QtWidgets import QGraphicsView, QGraphicsScene
 from PySide2.QtGui import QImage, QPixmap, QPainter, QPainterPath
-from PySide2.QtGui import QPen, QBrush, QColor
+from PySide2.QtGui import QPen, QBrush, QColor, QFont
 from PySide2.QtGui import QKeyEvent
 from PySide2.QtCore import Qt, Signal, Slot
 from PySide2.QtCore import QRectF, QLineF, QPointF
@@ -17,7 +17,7 @@ import numpy as np
 
 from PySide2.QtWidgets import QGraphicsItem, QGraphicsObject
 # The PySide2.QtWidgets.QGraphicsObject class provides a base class for all graphics items that require signals, slots and properties.
-from PySide2.QtWidgets import QGraphicsEllipseItem, QGraphicsLineItem
+from PySide2.QtWidgets import QGraphicsEllipseItem, QGraphicsLineItem, QGraphicsTextItem
 
 from sleap.skeleton import Skeleton
 from sleap.instance import Instance, Point
@@ -72,6 +72,7 @@ class GraphicsView(QGraphicsView):
     rightMouseButtonReleased = Signal(float, float)
     leftMouseButtonDoubleClicked = Signal(float, float)
     rightMouseButtonDoubleClicked = Signal(float, float)
+    updatedViewer = Signal()
 
     def __init__(self, *args, **kwargs):
         """ https://github.com/marcel-goldschen-ohm/PyQtImageViewer/blob/master/QtImageViewer.py """
@@ -148,6 +149,7 @@ class GraphicsView(QGraphicsView):
             # TODO: fix this so that it's a single operation
             #   Maybe adjust the self.sceneRect() to account for zooming?
             # print(self.mapFromScene(self.sceneRect()))
+        self.updatedViewer.emit()
 
     def resizeEvent(self, event):
         """ Maintain current zoom on resize.
@@ -209,7 +211,7 @@ class GraphicsView(QGraphicsView):
 
             self.zoomFactor = max(factor * self.zoomFactor, 1)
             self.updateViewer()
-        
+
         QGraphicsView.wheelEvent(self, event)
 
             # transform = self.transform()
@@ -237,16 +239,16 @@ class QtVideoPlayer(QWidget):
 
     changedPlot = Signal(QWidget, int)
 
-    def __init__(self, video: Video = None, callbacks=[], *args, **kwargs):
+    def __init__(self, video: Video = None, callbacks=None, *args, **kwargs):
         super(QtVideoPlayer, self).__init__(*args, **kwargs)
 
         self.frame_idx = -1
-        self.callbacks = callbacks
+        self.callbacks = [] if callbacks is None else callbacks
         self.view = GraphicsView()
 
         # btn = QPushButton("Plot")
         # btn.clicked.connect(lambda x: self.plot(np.random.randint(0,len(self.video))))
-        
+
         self.seekbar = QSlider(Qt.Horizontal)
         self.seekbar.valueChanged.connect(lambda evt: self.plot(self.seekbar.value()))
         self.seekbar.setEnabled(False)
@@ -260,7 +262,7 @@ class QtVideoPlayer(QWidget):
 
         if video is not None:
             self.load_video(video)
-        
+
     def load_video(self, video: Video, initial_frame=0, plot=True):
 
         self.video = video
@@ -284,7 +286,9 @@ class QtVideoPlayer(QWidget):
         self.view.clear()
         self.seekbar.setMaximum(0)
         self.seekbar.setEnabled(False)
-        
+
+    def instances(self):
+        return [item for item in self.view.scene.items() if type(item) == QtInstance]
 
     def plot(self, idx=None):
 
@@ -331,6 +335,10 @@ class QtVideoPlayer(QWidget):
     def prevFrame(self, dt=1):
         self.plot((self.frame_idx - abs(dt)) % self.video.frames)
 
+    def toggleLabels(self):
+        for inst in self.instances():
+            inst.toggleLabels()
+
     def keyPressEvent(self, event: QKeyEvent):
         if event.key() == Qt.Key.Key_Left:
             self.prevFrame()
@@ -344,19 +352,81 @@ class QtVideoPlayer(QWidget):
             event.ignore() # Kicks the event up to parent
             # print(event.key())
 
-class QtNode(QGraphicsEllipseItem):
-    # pointUpdated = Signal(Point)
+class QtNodeLabel(QGraphicsTextItem):
 
-    def __init__(self, parent, point:Point, radius=1.5, node_name:str = None, *args, **kwargs):
+    def __init__(self, text, parent, *args, **kwargs):
+        self.text = text
+        self._parent = parent
+        super(QtNodeLabel, self).__init__(self.text, parent=parent, *args, **kwargs)
+
+        self._anchor_x = self.pos().x()
+        self._anchor_x = self.pos().y()
+
+        self.setFlag(QGraphicsItem.ItemIgnoresTransformations)
+
+    def adjustPos(self, node):
+        self._anchor_x = node.point.x
+        self._anchor_y = node.point.y
+
+        # average the unit vectors pointing to other nodes
+        sum_x = 0
+        sum_y = 0
+        for edge in node.edges:
+            vector_x, vector_y = edge.unit_vector_from(node)
+            sum_x += vector_x
+            sum_y += vector_y
+        sum_x, sum_y = sum_x/len(node.edges), sum_y/len(node.edges)
+
+        # Use the _shift_factor to control how the label is positioned
+        # relative to the node.
+        # Shift factor of -1 means we shift label up/left by it's height/width.
+        # Right now, we try to position on the opposite side from the edges.
+        # This could use some tweaking.
+        self._shift_factor_x = (-sum_x/2) -.5
+        self._shift_factor_y = (-sum_y/2) -.5
+
+        # Since item doesn't scale when view is transformed (i.e., zoom)
+        # we need to calculate bounding size in view manually.
+        height = self.boundingRect().height()
+        width = self.boundingRect().width()
+
+        scene = self.scene()
+        if scene is not None:
+            view = scene.views()[0]
+            height = height / view.viewportTransform().m11()
+            width = width / view.viewportTransform().m22()
+
+        self.setPos(self._anchor_x + width*self._shift_factor_x,
+                    self._anchor_y + height*self._shift_factor_y)
+
+    def boundingRect(self):
+        return super(QtNodeLabel, self).boundingRect()
+
+    def paint(self, *args, **kwargs):
+        super(QtNodeLabel, self).paint(*args, **kwargs)
+
+
+class QtNode(QGraphicsEllipseItem):
+
+    def __init__(self, parent, point:Point, radius=1.5, node_name:str = None, callbacks = None, *args, **kwargs):
         self.point = point
         self.radius = radius
         self.edges = []
+        self.name = node_name
+        self.callbacks = [] if callbacks is None else callbacks
         self.dragParent = False
 
         super(QtNode, self).__init__(-self.radius, -self.radius, self.radius*2, self.radius*2, parent=parent, *args, **kwargs)
-        self.setPos(self.point.x, self.point.y)
+
         if node_name is not None:
             self.setToolTip(node_name)
+
+        self.setPos(self.point.x, self.point.y)
+
+    def calls(self):
+        for callback in self.callbacks:
+            if callable(callback):
+                callback(self)
 
     def updatePoint(self):
         self.point.x = self.scenePos().x()
@@ -364,11 +434,17 @@ class QtNode(QGraphicsEllipseItem):
 
         for edge in self.edges:
             edge.updateEdge(self)
+            # trigger callbacks for other connected nodes
+            edge.connected_to(self).calls()
+
+        # trigger callbacks for this node
+        self.calls()
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
             if event.modifiers() == Qt.AltModifier:
                 self.dragParent = True
+                # set origin to point clicked so that we can rotate around this point
                 self.parentObject().setTransformOriginPoint(self.scenePos())
                 self.parentObject().mousePressEvent(event)
             else:
@@ -376,7 +452,6 @@ class QtNode(QGraphicsEllipseItem):
                 super(QtNode, self).mousePressEvent(event)
                 self.updatePoint()
         elif event.button() == Qt.MidButton:
-            print("node middle")
             pass
 
     def mouseMoveEvent(self, event):
@@ -409,7 +484,31 @@ class QtEdge(QGraphicsLineItem):
         self.dst = dst
 
         super(QtEdge, self).__init__(self.src.point.x, self.src.point.y, self.dst.point.x, self.dst.point.y, parent=parent, *args, **kwargs)
-        
+
+    def connected_to(self, node):
+        """Return the other node along the edge.
+
+        Args:
+            node: One of the edge's nodes.
+        Returns:
+            The other node (or None if edge doesn't have node).
+        """
+        if node == self.src:
+            return self.dst
+        elif node == self.dst:
+            return self.src
+
+        return None
+
+    def unit_vector_from(self, node):
+        to = self.connected_to(node)
+        if to is not None:
+            x = to.point.x - node.point.x
+            y = to.point.y - node.point.y
+            d = (x**2 + y**2)**.5
+
+            return (x/d, y/d)
+
     def updateEdge(self, node):
         if node == self.src:
             line = self.line()
@@ -429,11 +528,13 @@ class QtInstance(QGraphicsObject):
         self.instance = instance
         self.nodes = {}
         self.edges = []
+        self.labels = {}
+        self.labels_shown = True
         self.color = color
         self.markerRadius = markerRadius
         self.setFlag(QGraphicsItem.ItemIsMovable)
         self.setFlag(QGraphicsItem.ItemIsSelectable)
-        
+
         col_line = QColor(*self.color)
         pen = QPen(col_line, 1)
         pen.setCosmetic(True) # https://stackoverflow.com/questions/13120486/adjusting-qpen-thickness-when-scaling-qgraphicsview
@@ -469,12 +570,25 @@ class QtInstance(QGraphicsObject):
                 self.nodes[dst].edges.append(edge_item)
                 self.edges.append(edge_item)
 
+        # Add labels to nodes
+        # We do this after adding edges so that we can position labels to avoid overlap
+        for node in self.nodes.values():
+            node_label = QtNodeLabel(f"{node.name}", parent=self)
+            node_label.setDefaultTextColor(col_line)
+            node_label.setFont(QFont().setPixelSize(10))
+            node_label.adjustPos(node)
+
+            self.labels[node.name] = node_label
+            # add callback to adjust position of label after node has moved
+            node.callbacks.append(node_label.adjustPos)
+
     def updatePoints(self):
         # Update the position for each node
         for node_item in self.nodes.values():
             node_item.point.x = node_item.scenePos().x()
             node_item.point.y = node_item.scenePos().y()
             node_item.setPos(node_item.point.x, node_item.point.y)
+            node_item.calls()
         # Reset the scene position and rotation (changes when we drag entire skeleton)
         self.setPos(0, 0)
         self.setRotation(0)
@@ -482,6 +596,22 @@ class QtInstance(QGraphicsObject):
         for edge_item in self.edges:
             edge_item.updateEdge(edge_item.src)
             edge_item.updateEdge(edge_item.dst)
+
+    def toggleLabels(self):
+        if self.labels_shown:
+            self.hideLabels()
+        else:
+            self.showLabels()
+
+    def showLabels(self):
+        for label in self.labels.values():
+            label.setOpacity(1)
+        self.labels_shown = True
+
+    def hideLabels(self):
+        for label in self.labels.values():
+            label.setOpacity(0)
+        self.labels_shown = False
 
     def boundingRect(self):
         return QRectF()
@@ -559,11 +689,14 @@ if __name__ == "__main__":
             qt_instance = QtInstance(instance=instance, color=cmap[i%len(cmap)])
             vp.view.scene.addItem(qt_instance)
 
+            # connect signal so we can adjust QtNodeLabel positions after zoom
+            vp.view.updatedViewer.connect(qt_instance.updatePoints)
+
     window.callbacks.append(plot_instances)
 
 
     window.show()
     window.plot()
-    
+
     app.exec_()
 
