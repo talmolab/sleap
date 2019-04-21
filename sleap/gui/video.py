@@ -358,17 +358,22 @@ class QtVideoPlayer(QWidget):
 
 class QtNodeLabel(QGraphicsTextItem):
 
-    def __init__(self, text, parent, *args, **kwargs):
-        self.text = text
+    def __init__(self, node, parent, *args, **kwargs):
+        self.node = node
+        self.text = node.name
         self._parent = parent
         super(QtNodeLabel, self).__init__(self.text, parent=parent, *args, **kwargs)
 
         self._anchor_x = self.pos().x()
         self._anchor_x = self.pos().y()
 
+        self.setFont(QFont().setPixelSize(10))
         self.setFlag(QGraphicsItem.ItemIgnoresTransformations)
 
-    def adjustPos(self, node):
+        self.adjustColor()
+
+    def adjustPos(self, *args, **kwargs):
+        node = self.node
         self._anchor_x = node.point.x
         self._anchor_y = node.point.y
 
@@ -402,6 +407,14 @@ class QtNodeLabel(QGraphicsTextItem):
 
         self.setPos(self._anchor_x + width*self._shift_factor_x,
                     self._anchor_y + height*self._shift_factor_y)
+
+        self.adjustColor()
+
+    def adjustColor(self):
+        if self.node.point.complete:
+            self.setDefaultTextColor(QColor(Qt.green))
+        else:
+            self.setDefaultTextColor(QColor(Qt.blue))
 
     def boundingRect(self):
         return super(QtNodeLabel, self).boundingRect()
@@ -455,6 +468,7 @@ class QtNode(QGraphicsEllipseItem):
                 self.dragParent = False
                 super(QtNode, self).mousePressEvent(event)
                 self.updatePoint()
+            self.point.complete = True
         elif event.button() == Qt.MidButton:
             pass
 
@@ -471,7 +485,7 @@ class QtNode(QGraphicsEllipseItem):
         if self.dragParent:
             self.parentObject().mouseReleaseEvent(event)
             self.parentObject().setSelected(False)
-            self.parentObject().updatePoints()
+            self.parentObject().updatePoints(complete=True)
         else:
             super(QtNode, self).mouseReleaseEvent(event)
             self.updatePoint()
@@ -578,21 +592,20 @@ class QtInstance(QGraphicsObject):
         # Add labels to nodes
         # We do this after adding edges so that we can position labels to avoid overlap
         for node in self.nodes.values():
-            node_label = QtNodeLabel(f"{node.name}", parent=self)
-            node_label.setDefaultTextColor(col_line)
-            node_label.setFont(QFont().setPixelSize(10))
-            node_label.adjustPos(node)
+            node_label = QtNodeLabel(node, parent=self)
+            node_label.adjustPos()
 
             self.labels[node.name] = node_label
             # add callback to adjust position of label after node has moved
             node.callbacks.append(node_label.adjustPos)
 
-    def updatePoints(self):
+    def updatePoints(self, complete:bool = False):
         # Update the position for each node
         for node_item in self.nodes.values():
             node_item.point.x = node_item.scenePos().x()
             node_item.point.y = node_item.scenePos().y()
             node_item.setPos(node_item.point.x, node_item.point.y)
+            if complete: node_item.point.complete = True
             node_item.calls()
         # Reset the scene position and rotation (changes when we drag entire skeleton)
         self.setPos(0, 0)
