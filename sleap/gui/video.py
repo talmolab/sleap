@@ -13,6 +13,7 @@ from PySide2.QtCore import QRectF, QLineF, QPointF
 # from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 # import matplotlib.pyplot as plt
 
+import math
 import numpy as np
 
 from PySide2.QtWidgets import QGraphicsItem, QGraphicsObject
@@ -367,32 +368,38 @@ class QtNodeLabel(QGraphicsTextItem):
         self._anchor_x = self.pos().x()
         self._anchor_x = self.pos().y()
 
-        self.setFont(QFont().setPixelSize(10))
+        self._base_font = QFont()
+        self._base_font.setPixelSize(12)
+        self.setFont(self._base_font)
+
+        # set color to match node color
+        self.setDefaultTextColor(self.node.pen().color())
+        # don't rescale when view is scaled (i.e., zoom)
         self.setFlag(QGraphicsItem.ItemIgnoresTransformations)
 
-        self.adjustColor()
+        self.adjustStyle()
 
     def adjustPos(self, *args, **kwargs):
         node = self.node
         self._anchor_x = node.point.x
         self._anchor_y = node.point.y
 
-        # average the unit vectors pointing to other nodes
-        sum_x = 0
-        sum_y = 0
-        for edge in node.edges:
-            vector_x, vector_y = edge.unit_vector_from(node)
-            sum_x += vector_x
-            sum_y += vector_y
-        sum_x, sum_y = sum_x/len(node.edges), sum_y/len(node.edges)
+        # Calculate position for label within the largest arc made by edges.
+        shift_angle = 0
+        if len(node.edges):
+            edge_angles = sorted([edge.unit_vector_from(node) for edge in node.edges])
+
+            edge_angles.append(edge_angles[0] + math.pi*2)
+            edge_arcs = [(edge_angles[i+1]-edge_angles[i],edge_angles[i+1]/2+edge_angles[i]/2) for i in range(len(edge_angles)-1)]
+            max_arc = sorted(edge_arcs)[-1]
+            shift_angle = max_arc[1]
+            shift_angle %= 2*math.pi
 
         # Use the _shift_factor to control how the label is positioned
         # relative to the node.
-        # Shift factor of -1 means we shift label up/left by it's height/width.
-        # Right now, we try to position on the opposite side from the edges.
-        # This could use some tweaking.
-        self._shift_factor_x = (-sum_x/2) -.5
-        self._shift_factor_y = (-sum_y/2) -.5
+        # Shift factor of -1 means we shift label up/left by its height/width.
+        self._shift_factor_x = (math.cos(shift_angle)*.6) -.5
+        self._shift_factor_y = (math.sin(shift_angle)*.6) -.5
 
         # Since item doesn't scale when view is transformed (i.e., zoom)
         # we need to calculate bounding size in view manually.
@@ -408,13 +415,17 @@ class QtNodeLabel(QGraphicsTextItem):
         self.setPos(self._anchor_x + width*self._shift_factor_x,
                     self._anchor_y + height*self._shift_factor_y)
 
-        self.adjustColor()
+        self.adjustStyle()
 
-    def adjustColor(self):
+    def adjustStyle(self):
         if self.node.point.complete:
-            self.setDefaultTextColor(QColor(Qt.green))
+            self._base_font.setBold(True)
+            self.setFont(self._base_font)
+            self.setDefaultTextColor(QColor(80, 194, 159)) # greenish
         else:
-            self.setDefaultTextColor(QColor(Qt.blue))
+            self._base_font.setBold(False)
+            self.setFont(self._base_font)
+            self.setDefaultTextColor(QColor(232, 45, 32)) # redish
 
     def boundingRect(self):
         return super(QtNodeLabel, self).boundingRect()
@@ -523,9 +534,7 @@ class QtEdge(QGraphicsLineItem):
         if to is not None:
             x = to.point.x - node.point.x
             y = to.point.y - node.point.y
-            d = (x**2 + y**2)**.5
-
-            return (x/d, y/d)
+            return math.atan2(y, x)
 
     def updateEdge(self, node):
         if node == self.src:
