@@ -630,11 +630,15 @@ class MainWindow(QMainWindow):
 def main(*args, **kwargs):
     app = QApplication([])
     app.setApplicationName("sLEAP Label")
+
+    filters = ["JSON labels (*.json)", "HDF5 dataset (*.h5 *.hdf5)"]
+    filename, selected_filter = QFileDialog.getOpenFileName(None, dir=None, caption="Open Project", filter=";;".join(filters))
+
+    if len(filename): kwargs["import_data"] = filename
+
     window = MainWindow(*args, **kwargs)
     window.showMaximized()
     app.exec_()
 
 if __name__ == "__main__":
-
-    # main(import_data="tests/data/json_format_v1/centered_pair.json")
     main()
