@@ -161,12 +161,15 @@ class GraphicsView(QGraphicsView):
 
     def nextSelection(self):
         instances = self.instances()
+        if len(instances) == 0: return
+        select_inst = instances[0] # default to selecting first instance
         for idx, instance in enumerate(instances):
             if instance.selected:
                 instance.setUserSelection(False)
-                next_inst = instances[(idx+1)%len(instances)]
-                next_inst.setUserSelection(True)
+                select_inst = instances[(idx+1)%len(instances)]
                 break
+        select_inst.setUserSelection(True)
+
     def selectInstance(self, select_idx):
         instances = self.instances()
         if select_idx <= len(instances):
