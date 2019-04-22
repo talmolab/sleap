@@ -54,6 +54,9 @@ class MainWindow(QMainWindow):
         self.mark_idx = None
         self.filename = None
 
+        self._show_labels = True
+        self._show_edges = True
+
         self.initialize_gui()
 
         if data_path is not None:
@@ -70,7 +73,7 @@ class MainWindow(QMainWindow):
     @property
     def filename(self):
         return self._filename
-        
+
     @filename.setter
     def filename(self, x):
         self._filename = x
@@ -226,7 +229,7 @@ class MainWindow(QMainWindow):
         # TODO: normalization (z-score, CLAHE)
         self.dataScale = QDoubleSpinBox(); self.dataScale.setMinimum(0.25); self.dataScale.setValue(1.0)
         fl.addRow("Scale:", self.dataScale)
-        
+
         gb.setLayout(fl)
         training_layout.addWidget(gb)
 
@@ -278,6 +281,12 @@ class MainWindow(QMainWindow):
         else:
             event.ignore() # Kicks the event up to parent
 
+    def plotFrame(self, *args, **kwargs):
+        """Wrap call to player.plot so we can redraw/update things."""
+        self.player.plot(*args, **kwargs)
+        self.player.showLabels(self._show_labels)
+        self.player.showEdges(self._show_edges)
+
     def importData(self, filename=None):
         show_msg = False
         # if filename is None:
@@ -286,7 +295,7 @@ class MainWindow(QMainWindow):
 #             # filename, selected_filter = QFileDialog.getOpenFileName(self, dir="C:/Users/tdp/OneDrive/code/sandbox/leap_wt_gold_pilot", caption="Import labeled data...", filter=";;".join(filters))
 #             filename, selected_filter = QFileDialog.getOpenFileName(self, dir=None, caption="Import labeled data...", filter=";;".join(filters))
 #             show_msg = True
-        
+
         if len(filename) == 0: return
 
         self.filename = filename
@@ -366,7 +375,7 @@ class MainWindow(QMainWindow):
     def loadVideo(self, video:Video, video_idx: int = None):
         # Clear video frame mark
         self.mark_idx = None
-    
+
         # Update current video instance
         self.video = video
         self.video_idx = video_idx if video_idx is not None else self.video_idx
@@ -377,7 +386,7 @@ class MainWindow(QMainWindow):
         # Jump to last labeled frame
         last_label = self.labels.find_last(self.video)
         if last_label is not None:
-            self.player.plot(last_label.frame_idx)
+            self.plotFrame(last_label.frame_idx)
 
 
     def newNode(self):
@@ -396,8 +405,8 @@ class MainWindow(QMainWindow):
 
         # Update source edges dropdown
         self.skeletonEdgesSrc.model().skeleton = self.skeleton
-        
-        self.player.plot()
+
+        self.plotFrame()
 
     def deleteNode(self):
         # Get selected node
@@ -415,7 +424,7 @@ class MainWindow(QMainWindow):
         self.skeletonEdgesSrc.model().skeleton = self.skeleton
 
         # TODO: Replot instances?
-        self.player.plot()
+        self.plotFrame()
 
     def selectSkeletonEdgeSrc(self):
         self.skeletonEdgesDst.model().skeleton = self.skeleton
@@ -424,7 +433,7 @@ class MainWindow(QMainWindow):
         self.skeletonEdgesTable.model().skeleton = self.skeleton
         self.skeletonEdgesSrc.model().skeleton = self.skeleton
         self.skeletonEdgesDst.model().skeleton = self.skeleton
-        self.player.plot()
+        self.plotFrame()
 
     def newEdge(self):
         # TODO: Move this to unified data model
@@ -443,7 +452,7 @@ class MainWindow(QMainWindow):
         # Update data model
         self.skeletonEdgesTable.model().skeleton = self.skeleton
 
-        self.player.plot()
+        self.plotFrame()
 
 
     def deleteEdge(self):
@@ -460,7 +469,7 @@ class MainWindow(QMainWindow):
         # Update data model
         self.skeletonEdgesTable.model().skeleton = self.skeleton
 
-        self.player.plot()
+        self.plotFrame()
 
 
     def newInstance(self):
@@ -475,20 +484,20 @@ class MainWindow(QMainWindow):
         if self.labeled_frame not in self.labels.labels:
             self.labels.append(self.labeled_frame)
 
-        self.player.plot()
+        self.plotFrame()
 
     def deleteInstance(self):
         idx = self.instancesTable.currentIndex()
         if not idx.isValid(): return
         del self.labeled_frame.instances[idx.row()]
 
-        self.player.plot()
-        
+        self.plotFrame()
+
     def transposeInstance(self):
         # FIXME: transpose based on selection rather than swapping first pair
         self.labeled_frame.instances[0], self.labeled_frame.instances[1] = (
             self.labeled_frame.instances[1], self.labeled_frame.instances[0])
-        self.player.plot()
+        self.plotFrame()
 
     def newProject(self):
         window = MainWindow()
@@ -513,7 +522,7 @@ class MainWindow(QMainWindow):
             if filename.endswith(".json"):
                 Labels.save_json(labels = self.labels, filename = filename)
             # Redraw. Not sure why, but sometimes we need to do this.
-            self.player.plot()
+            self.plotFrame()
 
     def saveProjectAs(self):
         default_name = self.filename if self.filename is not None else "untitled.json"
@@ -529,7 +538,7 @@ class MainWindow(QMainWindow):
             Labels.save_json(labels = self.labels, filename = filename)
             self.filename = filename
             # Redraw. Not sure why, but sometimes we need to do this.
-            self.player.plot()
+            self.plotFrame()
         else:
             QMessageBox(text=f"File not saved. Only .json currently implemented.")
 
@@ -547,7 +556,7 @@ class MainWindow(QMainWindow):
         new_idx = self.video_idx+1
         new_idx = 0 if new_idx >= len(self.labels.videos) else new_idx
         self.loadVideo(self.labels.videos[new_idx], new_idx)
-        
+
     def previousVideo(self):
         new_idx = self.video_idx-1
         new_idx = len(self.labels.videos)-1 if new_idx < 0 else new_idx
@@ -555,9 +564,9 @@ class MainWindow(QMainWindow):
 
     def markFrame(self):
         self.mark_idx = self.player.frame_idx
-        
+
     def goMarkedFrame(self):
-        self.player.plot(self.mark_idx)
+        self.plotFrame(self.mark_idx)
 
     def extractClip(self):
         if self.mark_idx is None:
@@ -572,20 +581,22 @@ class MainWindow(QMainWindow):
         frame_indexes = [frame.frame_idx for frame in self.labels.find(self.video)]
         if len(frame_indexes):
             prev_idx = max(filter(lambda idx: idx < cur_idx, frame_indexes), default=frame_indexes[-1])
-            self.player.plot(prev_idx)
+            self.plotFrame(prev_idx)
 
     def nextLabeledFrame(self):
         cur_idx = self.player.frame_idx
         frame_indexes = [frame.frame_idx for frame in self.labels.find(self.video)]
         if len(frame_indexes):
             next_idx = min(filter(lambda idx: idx > cur_idx, frame_indexes), default=frame_indexes[0])
-            self.player.plot(next_idx)
+            self.plotFrame(next_idx)
 
     def toggleLabels(self):
-        self.player.toggleLabels()
+        self._show_labels = not self._show_labels
+        self.player.showLabels(self._show_labels)
 
     def toggleEdges(self):
-        self.player.toggleEdges()
+        self._show_edges = not self._show_edges
+        self.player.showEdges(self._show_edges)
 
     def openDocumentation(self):
         pass

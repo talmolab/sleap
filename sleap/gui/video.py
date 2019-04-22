@@ -375,6 +375,14 @@ class QtVideoPlayer(QWidget):
     def prevFrame(self, dt=1):
         self.plot((self.frame_idx - abs(dt)) % self.video.frames)
 
+    def showLabels(self, show):
+        for inst in self.instances():
+            inst.showLabels(show)
+
+    def showEdges(self, show):
+        for inst in self.instances():
+            inst.showEdges(show)
+
     def toggleLabels(self):
         for inst in self.instances():
             inst.toggleLabels()
