@@ -74,6 +74,7 @@ class GraphicsView(QGraphicsView):
     leftMouseButtonDoubleClicked = Signal(float, float)
     rightMouseButtonDoubleClicked = Signal(float, float)
     updatedViewer = Signal()
+    updatedSelection = Signal()
 
     def __init__(self, *args, **kwargs):
         """ https://github.com/marcel-goldschen-ohm/PyQtImageViewer/blob/master/QtImageViewer.py """
@@ -153,28 +154,43 @@ class GraphicsView(QGraphicsView):
         self.updatedViewer.emit()
 
     def instances(self):
-        return [item for item in self.scene.items() if type(item) == QtInstance]
+        # order should match the order in which instances were added to scene
+        return [item for item in self.scene.items(Qt.SortOrder.AscendingOrder) if type(item) == QtInstance]
 
     def clearSelection(self):
         for instance in self.instances():
             instance.setUserSelection(False)
+        self.updatedSelection.emit()
 
     def nextSelection(self):
         instances = self.instances()
         if len(instances) == 0: return
         select_inst = instances[0] # default to selecting first instance
+        select_idx = 0
         for idx, instance in enumerate(instances):
             if instance.selected:
                 instance.setUserSelection(False)
-                select_inst = instances[(idx+1)%len(instances)]
+                select_idx = (idx+1)%len(instances)
+                select_inst = instances[select_idx]
                 break
         select_inst.setUserSelection(True)
+        self.updatedSelection.emit()
 
     def selectInstance(self, select_idx):
         instances = self.instances()
-        if select_idx <= len(instances):
+        if select_idx < len(instances):
             for idx, instance in enumerate(instances):
-                instance.setUserSelection(select_idx == (idx+1))
+                instance.setUserSelection(select_idx == (idx))
+        self.updatedSelection.emit()
+
+    def getSelection(self):
+        instances = self.instances()
+        if len(instances) == 0: return
+        select_inst = instances[0] # default to selecting first instance
+        select_idx = 0
+        for idx, instance in enumerate(instances):
+            if instance.selected:
+                return idx
 
     def resizeEvent(self, event):
         """ Maintain current zoom on resize.
@@ -213,8 +229,9 @@ class GraphicsView(QGraphicsView):
 #                 instances = [item for item
 #                              in self.scene.items(scenePos, Qt.IntersectsItemBoundingRect)
 #                              if type(item) == QtInstance]
-                for instance in self.instances():
+                for idx, instance in enumerate(self.instances()):
                     instance.setUserSelection(instance in clicked)
+                self.updatedSelection.emit()
             # finish drag
             self.setDragMode(QGraphicsView.NoDrag)
             # pass along event
@@ -405,7 +422,8 @@ class QtVideoPlayer(QWidget):
         elif event.key() == Qt.Key.Key_QuoteLeft:
             self.view.nextSelection()
         elif event.key() < 128 and chr(event.key()).isnumeric():
-            self.view.selectInstance(int(chr(event.key())))
+            # decrement by 1 since instances are 0-indexed
+            self.view.selectInstance(int(chr(event.key()))-1)
         else:
             event.ignore() # Kicks the event up to parent
             # print(event.key())

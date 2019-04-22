@@ -81,6 +81,14 @@ class MainWindow(QMainWindow):
 
     def initialize_gui(self):
 
+        ####### Video player #######
+        self.player = QtVideoPlayer()
+        self.player.changedPlot.connect(self.newFrame)
+        self.setCentralWidget(self.player)
+
+        ####### Status bar #######
+        self.statusBar() # Initialize status bar
+
         ####### Menus #######
         fileMenu = self.menuBar().addMenu("File")
         fileMenu.addAction("&New Project", self.newProject, QKeySequence.New)
@@ -109,6 +117,8 @@ class MainWindow(QMainWindow):
         labelMenu = self.menuBar().addMenu("Labels")
         labelMenu.addAction("Add Instance", self.newInstance, Qt.CTRL + Qt.Key_I)
         labelMenu.addAction("Transpose Instances", self.transposeInstance, Qt.CTRL + Qt.Key_T)
+        labelMenu.addAction("Select Next Instance", self.player.view.nextSelection, QKeySequence(Qt.Key.Key_QuoteLeft))
+        labelMenu.addAction("Clear Selection", self.player.view.clearSelection, QKeySequence(Qt.Key.Key_Escape))
         labelMenu.addSeparator()
         labelMenu.addAction("Next Labeled Frame", self.nextLabeledFrame, QKeySequence.FindNext)
         labelMenu.addAction("Previous Labeled Frame", self.previousLabeledFrame, QKeySequence.FindPrevious)
@@ -122,14 +132,6 @@ class MainWindow(QMainWindow):
         helpMenu.addAction("Documentation", self.openDocumentation)
         helpMenu.addAction("Keyboard Reference", self.openKeyRef)
         helpMenu.addAction("About", self.openAbout)
-
-        ####### Video player #######
-        self.player = QtVideoPlayer()
-        self.player.changedPlot.connect(self.newFrame)
-        self.setCentralWidget(self.player)
-
-        ####### Status bar #######
-        self.statusBar() # Initialize status bar
 
         ####### Helpers #######
         def _make_dock(name, widgets=[], tab_with=None):
@@ -494,9 +496,35 @@ class MainWindow(QMainWindow):
         self.plotFrame()
 
     def transposeInstance(self):
-        # FIXME: transpose based on selection rather than swapping first pair
-        self.labeled_frame.instances[0], self.labeled_frame.instances[1] = (
-            self.labeled_frame.instances[1], self.labeled_frame.instances[0])
+        # We're currently identifying instances by numeric index, so it's
+        # impossible to (e.g.) have a single instance which we identify
+        # as the second instance in some other frame.
+        # For the present, we can only "transpose" if there are multiple instances.
+        if len(self.labeled_frame.instances) < 2: return
+        # If there are just two instances, transpose them.
+        if len(self.labeled_frame.instances) == 2:
+            self.labeled_frame.instances[0], self.labeled_frame.instances[1] = (
+                self.labeled_frame.instances[1], self.labeled_frame.instances[0])
+
+        # If there are more than two, then we need the user to select the instances.
+        else:
+            # Define function that will be called when user selects another instance
+            # idx_0 arg is set to the current selection (i.e., when function defined)
+            def swap(idx_0 = self.player.view.getSelection()):
+                idx_1 = self.player.view.getSelection()
+                if idx_1 is not None:
+                    # Transpose
+                    self.labeled_frame.instances[idx_0], self.labeled_frame.instances[idx_1] = (
+                         self.labeled_frame.instances[idx_1], self.labeled_frame.instances[idx_0])
+                    # Update view
+                    self.plotFrame()
+
+                # Disconnect self since we only want to get signal once
+                self.player.view.updatedSelection.disconnect(swap)
+
+            # Connect swap function so it gets called for next user selection
+            self.player.view.updatedSelection.connect(swap)
+
         self.plotFrame()
 
     def newProject(self):
