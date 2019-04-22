@@ -687,6 +687,10 @@ class QtInstance(QGraphicsObject):
             node_item.point.y = node_item.scenePos().y()
             node_item.setPos(node_item.point.x, node_item.point.y)
             if complete: node_item.point.complete = True
+        # Wait to run callbacks until all noces are updated
+        # Otherwise the label positions aren't correct since
+        # they depend on the edge vectors to old node positions.
+        for node_item in self.nodes.values():
             node_item.calls()
         # Reset the scene position and rotation (changes when we drag entire skeleton)
         self.setPos(0, 0)
@@ -695,6 +699,8 @@ class QtInstance(QGraphicsObject):
         for edge_item in self.edges:
             edge_item.updateEdge(edge_item.src)
             edge_item.updateEdge(edge_item.dst)
+        # Update box for instance selection
+        self.updateBox()
 
     def getPointsBoundingRect(self):
         rect = None
