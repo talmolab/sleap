@@ -53,9 +53,11 @@ class MainWindow(QMainWindow):
         self.video_idx = None
         self.mark_idx = None
         self.filename = None
+        self.menuAction = dict()
 
         self._show_labels = True
         self._show_edges = True
+        self._auto_zoom = False
 
         self.initialize_gui()
 
@@ -123,8 +125,14 @@ class MainWindow(QMainWindow):
         labelMenu.addAction("Next Labeled Frame", self.nextLabeledFrame, QKeySequence.FindNext)
         labelMenu.addAction("Previous Labeled Frame", self.previousLabeledFrame, QKeySequence.FindPrevious)
         labelMenu.addSeparator()
-        labelMenu.addAction("Toggle Node Name View", self.toggleLabels, Qt.ALT + Qt.Key_Tab)
-        labelMenu.addAction("Toggle Edge View", self.toggleEdges, Qt.ALT + Qt.SHIFT + Qt.Key_Tab)
+        self.menuAction["show labels"] = labelMenu.addAction("Show Node Names", self.toggleLabels, Qt.ALT + Qt.Key_Tab)
+        self.menuAction["show edges"] = labelMenu.addAction("Show Edges", self.toggleEdges, Qt.ALT + Qt.SHIFT + Qt.Key_Tab)
+        labelMenu.addSeparator()
+        self.menuAction["fit"] = labelMenu.addAction("Fit Instances to View", self.toggleAutoZoom, Qt.CTRL + Qt.Key_Equal)
+
+        self.menuAction["show labels"].setCheckable(True); self.menuAction["show labels"].setChecked(self._show_labels)
+        self.menuAction["show edges"].setCheckable(True); self.menuAction["show edges"].setChecked(self._show_edges)
+        self.menuAction["fit"].setCheckable(True)
 
         viewMenu = self.menuBar().addMenu("View")
 
@@ -288,6 +296,10 @@ class MainWindow(QMainWindow):
         self.player.plot(*args, **kwargs)
         self.player.showLabels(self._show_labels)
         self.player.showEdges(self._show_edges)
+        if self._auto_zoom:
+            zoom_rect = self.player.view.instancesBoundingRect(margin=30, keepAspectRatio=True)
+            if not zoom_rect.size().isEmpty():
+                self.player.view.zoomToRect(zoom_rect, relative = False)
 
     def importData(self, filename=None):
         show_msg = False
@@ -620,11 +632,20 @@ class MainWindow(QMainWindow):
 
     def toggleLabels(self):
         self._show_labels = not self._show_labels
+        self.menuAction["show labels"].setChecked(self._show_labels)
         self.player.showLabels(self._show_labels)
 
     def toggleEdges(self):
         self._show_edges = not self._show_edges
+        self.menuAction["show edges"].setChecked(self._show_edges)
         self.player.showEdges(self._show_edges)
+
+    def toggleAutoZoom(self):
+        self._auto_zoom = not self._auto_zoom
+        self.menuAction["fit"].setChecked(self._auto_zoom)
+        if not self._auto_zoom:
+            self.player.view.clearZoom()
+        self.plotFrame()
 
     def openDocumentation(self):
         pass

@@ -7,7 +7,7 @@ from PySide2.QtGui import QImage, QPixmap, QPainter, QPainterPath
 from PySide2.QtGui import QPen, QBrush, QColor, QFont
 from PySide2.QtGui import QKeyEvent
 from PySide2.QtCore import Qt, Signal, Slot
-from PySide2.QtCore import QRectF, QLineF, QPointF, QMarginsF
+from PySide2.QtCore import QRectF, QLineF, QPointF, QMarginsF, QSizeF
 # from PySide2.QtCore import pyqtSignal
 
 # from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -238,14 +238,36 @@ class GraphicsView(QGraphicsView):
             self.leftMouseButtonReleased.emit(scenePos.x(), scenePos.y())
         elif event.button() == Qt.RightButton:
             if self.canZoom:
-                viewBBox = self.zoomStack[-1] if len(self.zoomStack) else self.sceneRect()
-                selectionBBox = self.scene.selectionArea().boundingRect().intersected(viewBBox)
-                self.scene.setSelectionArea(QPainterPath())  # Clear current selection area.
-                if selectionBBox.isValid() and (selectionBBox != viewBBox):
-                    self.zoomStack.append(selectionBBox)
-                    self.updateViewer()
+                zoom_rect = self.scene.selectionArea().boundingRect()
+                self.zoomToRect(zoom_rect, relative = True)
             self.setDragMode(QGraphicsView.NoDrag)
             self.rightMouseButtonReleased.emit(scenePos.x(), scenePos.y())
+
+    def zoomToRect(self, zoom_rect: QRectF, relative: bool = False):
+        if not relative: self.zoomStack = [] # If rect is not relative to current zoom, clear zoomStack
+        viewBBox = self.zoomStack[-1] if len(self.zoomStack) else self.sceneRect()
+        selectionBBox = zoom_rect.intersected(viewBBox)
+        self.scene.setSelectionArea(QPainterPath())  # Clear current selection area.
+        if selectionBBox.isValid() and (selectionBBox != viewBBox):
+            self.zoomStack.append(selectionBBox)
+            self.updateViewer()
+
+    def clearZoom(self):
+        self.zoomStack = []
+
+    def instancesBoundingRect(self, margin=0, keepAspectRatio=True):
+        rect = QRectF()
+        for item in self.instances():
+            rect = rect.united(item.boundingRect())
+        if margin > 0:
+            rect = rect.marginsAdded(QMarginsF(margin, margin, margin, margin))
+        if keepAspectRatio:
+            size = QSizeF(self.sceneRect().width(), self.sceneRect().height())
+            size.scale(rect.width(), rect.height(), Qt.AspectRatioMode.KeepAspectRatioByExpanding)
+            extra_width = size.width() - rect.width()
+            extra_height = size.height() - rect.height()
+            rect = rect.marginsAdded(QMarginsF(extra_width/2, extra_height/2, extra_width/2, extra_height/2))
+        return rect
 
     def mouseDoubleClickEvent(self, event):
         """ Show entire image.
@@ -492,7 +514,10 @@ class QtNodeLabel(QGraphicsTextItem):
         if self.node.point.complete:
             self._base_font.setBold(True)
             self.setFont(self._base_font)
-            self.setDefaultTextColor(QColor(80, 194, 159)) # greenish
+            complete_color = QColor(80, 194, 159) # greenish
+            self.setDefaultTextColor(complete_color)
+            # FIXME: Adjust style of node here as well?
+            # self.node.setBrush(complete_color)
         else:
             self._base_font.setBold(False)
             self.setFont(self._base_font)
@@ -617,7 +642,7 @@ class QtEdge(QGraphicsLineItem):
             line.setP1(node.scenePos())
             self.setLine(line)
 
-        elif node == self.dst: 
+        elif node == self.dst:
             line = self.line()
             line.setP2(node.scenePos())
             self.setLine(line)
