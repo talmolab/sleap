@@ -529,6 +529,8 @@ class QtNode(QGraphicsEllipseItem):
                 # set origin to point clicked so that we can rotate around this point
                 self.parentObject().setTransformOriginPoint(self.scenePos())
                 self.parentObject().mousePressEvent(event)
+            elif event.modifiers() == Qt.ShiftModifier:
+                self.parentObject().updatePoints(complete=True)
             else:
                 self.dragParent = False
                 super(QtNode, self).mousePressEvent(event)
@@ -551,7 +553,7 @@ class QtNode(QGraphicsEllipseItem):
             self.parentObject().mouseReleaseEvent(event)
             self.parentObject().setSelected(False)
             self.parentObject().setFlag(QGraphicsItem.ItemIsMovable, False)
-            self.parentObject().updatePoints(complete=True)
+            self.parentObject().updatePoints()
         else:
             super(QtNode, self).mouseReleaseEvent(event)
             self.updatePoint()
