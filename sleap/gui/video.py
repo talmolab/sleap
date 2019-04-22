@@ -7,7 +7,7 @@ from PySide2.QtGui import QImage, QPixmap, QPainter, QPainterPath
 from PySide2.QtGui import QPen, QBrush, QColor, QFont
 from PySide2.QtGui import QKeyEvent
 from PySide2.QtCore import Qt, Signal, Slot
-from PySide2.QtCore import QRectF, QLineF, QPointF
+from PySide2.QtCore import QRectF, QLineF, QPointF, QMarginsF
 # from PySide2.QtCore import pyqtSignal
 
 # from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -18,7 +18,7 @@ import numpy as np
 
 from PySide2.QtWidgets import QGraphicsItem, QGraphicsObject
 # The PySide2.QtWidgets.QGraphicsObject class provides a base class for all graphics items that require signals, slots and properties.
-from PySide2.QtWidgets import QGraphicsEllipseItem, QGraphicsLineItem, QGraphicsTextItem
+from PySide2.QtWidgets import QGraphicsEllipseItem, QGraphicsLineItem, QGraphicsTextItem, QGraphicsRectItem
 
 from sleap.skeleton import Skeleton
 from sleap.instance import Instance, Point
@@ -152,6 +152,27 @@ class GraphicsView(QGraphicsView):
             # print(self.mapFromScene(self.sceneRect()))
         self.updatedViewer.emit()
 
+    def instances(self):
+        return [item for item in self.scene.items() if type(item) == QtInstance]
+
+    def clearSelection(self):
+        for instance in self.instances():
+            instance.setUserSelection(False)
+
+    def nextSelection(self):
+        instances = self.instances()
+        for idx, instance in enumerate(instances):
+            if instance.selected:
+                instance.setUserSelection(False)
+                next_inst = instances[(idx+1)%len(instances)]
+                next_inst.setUserSelection(True)
+                break
+    def selectInstance(self, select_idx):
+        instances = self.instances()
+        if select_idx <= len(instances):
+            for idx, instance in enumerate(instances):
+                instance.setUserSelection(select_idx == (idx+1))
+
     def resizeEvent(self, event):
         """ Maintain current zoom on resize.
         """
@@ -162,6 +183,9 @@ class GraphicsView(QGraphicsView):
         """ Start mouse pan or zoom mode.
         """
         scenePos = self.mapToScene(event.pos())
+        # keep track of click location
+        self._down_pos = event.pos()
+        # behavior depends on which button is pressed
         if event.button() == Qt.LeftButton:
             if self.canPan:
                 self.setDragMode(QGraphicsView.ScrollHandDrag)
@@ -177,8 +201,20 @@ class GraphicsView(QGraphicsView):
         """
         QGraphicsView.mouseReleaseEvent(self, event)
         scenePos = self.mapToScene(event.pos())
+        # check if mouse moved during click
+        has_moved = (event.pos() != self._down_pos)
         if event.button() == Qt.LeftButton:
+            # if this was just a tap (not drag), see if there's an item underneath to select
+            if not has_moved:
+                clicked = self.scene.items(scenePos, Qt.IntersectsItemBoundingRect)
+#                 instances = [item for item
+#                              in self.scene.items(scenePos, Qt.IntersectsItemBoundingRect)
+#                              if type(item) == QtInstance]
+                for instance in self.instances():
+                    instance.setUserSelection(instance in clicked)
+            # finish drag
             self.setDragMode(QGraphicsView.NoDrag)
+            # pass along event
             self.leftMouseButtonReleased.emit(scenePos.x(), scenePos.y())
         elif event.button() == Qt.RightButton:
             if self.canZoom:
@@ -289,7 +325,7 @@ class QtVideoPlayer(QWidget):
         self.seekbar.setEnabled(False)
 
     def instances(self):
-        return [item for item in self.view.scene.items() if type(item) == QtInstance]
+        return self.view.instances()
 
     def plot(self, idx=None):
 
@@ -353,6 +389,12 @@ class QtVideoPlayer(QWidget):
             self.plot(0)
         elif event.key() == Qt.Key.Key_End:
             self.plot(self.video.frames - 1)
+        elif event.key() == Qt.Key.Key_Escape:
+            self.view.clearSelection()
+        elif event.key() == Qt.Key.Key_QuoteLeft:
+            self.view.nextSelection()
+        elif event.key() < 128 and chr(event.key()).isnumeric():
+            self.view.selectInstance(int(chr(event.key())))
         else:
             event.ignore() # Kicks the event up to parent
             # print(event.key())
@@ -472,6 +514,7 @@ class QtNode(QGraphicsEllipseItem):
         if event.button() == Qt.LeftButton:
             if event.modifiers() == Qt.AltModifier:
                 self.dragParent = True
+                self.parentObject().setFlag(QGraphicsItem.ItemIsMovable)
                 # set origin to point clicked so that we can rotate around this point
                 self.parentObject().setTransformOriginPoint(self.scenePos())
                 self.parentObject().mousePressEvent(event)
@@ -496,6 +539,7 @@ class QtNode(QGraphicsEllipseItem):
         if self.dragParent:
             self.parentObject().mouseReleaseEvent(event)
             self.parentObject().setSelected(False)
+            self.parentObject().setFlag(QGraphicsItem.ItemIsMovable, False)
             self.parentObject().updatePoints(complete=True)
         else:
             super(QtNode, self).mouseReleaseEvent(event)
@@ -560,8 +604,10 @@ class QtInstance(QGraphicsObject):
         self.labels_shown = True
         self.color = color
         self.markerRadius = markerRadius
-        self.setFlag(QGraphicsItem.ItemIsMovable)
-        self.setFlag(QGraphicsItem.ItemIsSelectable)
+        self._selected = False
+        self._bounding_rect = QRectF()
+        #self.setFlag(QGraphicsItem.ItemIsMovable)
+        #self.setFlag(QGraphicsItem.ItemIsSelectable)
 
         col_line = QColor(*self.color)
         pen = QPen(col_line, 1)
@@ -576,6 +622,14 @@ class QtInstance(QGraphicsObject):
         col_fill_missing = QColor(*self.color, a=0)
         brush_missing = QBrush(col_fill_missing)
 
+        # Add box to go around instance
+        self.box = QGraphicsRectItem(parent=self)
+        box_pen = QPen(col_line, 1)
+        box_pen.setStyle(Qt.DashLine)
+        box_pen.setCosmetic(True)
+        self.box.setPen(box_pen)
+
+        # Add nodes
         for (node, point) in self.instance.nodes_points():
             if point.visible:
                 node_item = QtNode(parent=self, point=point, radius=self.markerRadius, node_name = node.name)
@@ -589,6 +643,7 @@ class QtInstance(QGraphicsObject):
 
             self.nodes[node.name] = node_item
 
+        # Add edges
         for (src, dst) in self.skeleton.edge_names:
             # Make sure that both nodes are present in this instance before drawing edge
             if src in self.nodes and dst in self.nodes:
@@ -607,6 +662,10 @@ class QtInstance(QGraphicsObject):
             self.labels[node.name] = node_label
             # add callback to adjust position of label after node has moved
             node.callbacks.append(node_label.adjustPos)
+            node.callbacks.append(self.updateBox)
+
+        # Update size of box so it includes all the nodes/edges
+        self.updateBox()
 
     def updatePoints(self, complete:bool = False):
         # Update the position for each node
@@ -623,6 +682,30 @@ class QtInstance(QGraphicsObject):
         for edge_item in self.edges:
             edge_item.updateEdge(edge_item.src)
             edge_item.updateEdge(edge_item.dst)
+
+    def getPointsBoundingRect(self):
+        rect = None
+        for item in self.edges:
+            rect = item.boundingRect() if rect is None else rect.united(item.boundingRect())
+        return rect
+
+    def updateBox(self, *args, **kwargs):
+        # Only show box if instance is selected
+        op = .7 if self._selected else 0
+        self.box.setOpacity(op)
+        # Update the position for the box
+        rect = self.getPointsBoundingRect()
+        self._bounding_rect = rect
+        rect = rect.marginsAdded(QMarginsF(10, 10, 10, 10))
+        self.box.setRect(rect)
+
+    @property
+    def selected(self):
+        return self._selected
+
+    def setUserSelection(self, selected:bool):
+        self._selected = selected
+        self.updateBox()
 
     def toggleLabels(self):
         self.showLabels(not self.labels_shown)
@@ -643,7 +726,7 @@ class QtInstance(QGraphicsObject):
         self.edges_shown = show
 
     def boundingRect(self):
-        return QRectF()
+        return self._bounding_rect
 
     def paint(self, painter, option, widget=None):
         pass
