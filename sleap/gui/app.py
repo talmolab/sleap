@@ -21,7 +21,7 @@ from sleap.skeleton import Skeleton, Node
 from sleap.instance import Instance, Point
 from sleap.io.video import Video, HDF5Video, MediaVideo
 from sleap.io.dataset import Labels, LabeledFrame
-from sleap.gui.video import QtVideoPlayer, QtInstance, QtEdge, QtNode
+from sleap.gui.video import QtVideoPlayer
 from sleap.gui.dataviews import VideosTable, SkeletonNodesTable, SkeletonEdgesTable, LabeledFrameTable, SkeletonNodeModel
 from sleap.gui.importvideos import ImportVideos
 
@@ -51,7 +51,13 @@ class MainWindow(QMainWindow):
         self.labeled_frame = None
         self.video = None
         self.video_idx = None
+        self.mark_idx = None
         self.filename = None
+        self.menuAction = dict()
+
+        self._show_labels = True
+        self._show_edges = True
+        self._auto_zoom = False
 
         self.initialize_gui()
 
@@ -66,14 +72,31 @@ class MainWindow(QMainWindow):
         if video is not None:
             self.addVideo(video)
 
+    @property
+    def filename(self):
+        return self._filename
+
+    @filename.setter
+    def filename(self, x):
+        self._filename = x
+        self.setWindowTitle(x)
+
     def initialize_gui(self):
+
+        ####### Video player #######
+        self.player = QtVideoPlayer()
+        self.player.changedPlot.connect(self.newFrame)
+        self.setCentralWidget(self.player)
+
+        ####### Status bar #######
+        self.statusBar() # Initialize status bar
 
         ####### Menus #######
         fileMenu = self.menuBar().addMenu("File")
         fileMenu.addAction("&New Project", self.newProject, QKeySequence.New)
-        fileMenu.addAction("&Open project...", self.openProject, QKeySequence.Open)
+        fileMenu.addAction("&Open Project...", self.openProject, QKeySequence.Open)
         fileMenu.addAction("&Save", self.saveProject, QKeySequence.Save)
-        fileMenu.addAction("Save as...", self.saveProjectAs, QKeySequence.SaveAs)
+        fileMenu.addAction("Save As...", self.saveProjectAs, QKeySequence.SaveAs)
         fileMenu.addSeparator()
 #         fileMenu.addAction("Import...").triggered.connect(self.importData)
 #         fileMenu.addAction("Export...").triggered.connect(self.exportData)
@@ -84,27 +107,39 @@ class MainWindow(QMainWindow):
         # videoMenu.addAction("Check video encoding").triggered.connect(self.checkVideoEncoding)
         # videoMenu.addAction("Reencode for seeking").triggered.connect(self.reencodeForSeeking)
         # videoMenu.addSeparator()
-        videoMenu.addAction("Add videos...", self.addVideo, Qt.CTRL + Qt.Key_A)
+        videoMenu.addAction("Add Videos...", self.addVideo, Qt.CTRL + Qt.Key_A)
         # videoMenu.addAction("Add folder").triggered.connect(self.addVideoFolder)
-        videoMenu.addAction("Next video", self.nextVideo, QKeySequence.Forward)
-        videoMenu.addAction("Previous video", self.previousVideo, QKeySequence.Back)
+        videoMenu.addAction("Next Video", self.nextVideo, QKeySequence.Forward)
+        videoMenu.addAction("Previous Video", self.previousVideo, QKeySequence.Back)
         videoMenu.addSeparator()
-        videoMenu.addAction("Extract clip...", self.extractClip)
+        videoMenu.addAction("Mark Frame", self.markFrame, Qt.CTRL + Qt.Key_M)
+        videoMenu.addAction("Go to Marked Frame", self.goMarkedFrame, Qt.CTRL + Qt.SHIFT + Qt.Key_M)
+        videoMenu.addAction("Extract Clip...", self.extractClip, Qt.CTRL + Qt.Key_E)
+
+        labelMenu = self.menuBar().addMenu("Labels")
+        labelMenu.addAction("Add Instance", self.newInstance, Qt.CTRL + Qt.Key_I)
+        labelMenu.addAction("Transpose Instances", self.transposeInstance, Qt.CTRL + Qt.Key_T)
+        labelMenu.addAction("Select Next Instance", self.player.view.nextSelection, QKeySequence(Qt.Key.Key_QuoteLeft))
+        labelMenu.addAction("Clear Selection", self.player.view.clearSelection, QKeySequence(Qt.Key.Key_Escape))
+        labelMenu.addSeparator()
+        labelMenu.addAction("Next Labeled Frame", self.nextLabeledFrame, QKeySequence.FindNext)
+        labelMenu.addAction("Previous Labeled Frame", self.previousLabeledFrame, QKeySequence.FindPrevious)
+        labelMenu.addSeparator()
+        self.menuAction["show labels"] = labelMenu.addAction("Show Node Names", self.toggleLabels, Qt.ALT + Qt.Key_Tab)
+        self.menuAction["show edges"] = labelMenu.addAction("Show Edges", self.toggleEdges, Qt.ALT + Qt.SHIFT + Qt.Key_Tab)
+        labelMenu.addSeparator()
+        self.menuAction["fit"] = labelMenu.addAction("Fit Instances to View", self.toggleAutoZoom, Qt.CTRL + Qt.Key_Equal)
+
+        self.menuAction["show labels"].setCheckable(True); self.menuAction["show labels"].setChecked(self._show_labels)
+        self.menuAction["show edges"].setCheckable(True); self.menuAction["show edges"].setChecked(self._show_edges)
+        self.menuAction["fit"].setCheckable(True)
 
         viewMenu = self.menuBar().addMenu("View")
 
         helpMenu = self.menuBar().addMenu("Help")
         helpMenu.addAction("Documentation", self.openDocumentation)
-        helpMenu.addAction("Keyboard reference", self.openKeyRef)
+        helpMenu.addAction("Keyboard Reference", self.openKeyRef)
         helpMenu.addAction("About", self.openAbout)
-
-        ####### Video player #######
-        self.player = QtVideoPlayer()
-        self.player.changedPlot.connect(self.newFrame)
-        self.setCentralWidget(self.player)
-
-        ####### Status bar #######
-        self.statusBar() # Initialize status bar
 
         ####### Helpers #######
         def _make_dock(name, widgets=[], tab_with=None):
@@ -204,7 +239,7 @@ class MainWindow(QMainWindow):
         # TODO: normalization (z-score, CLAHE)
         self.dataScale = QDoubleSpinBox(); self.dataScale.setMinimum(0.25); self.dataScale.setValue(1.0)
         fl.addRow("Scale:", self.dataScale)
-        
+
         gb.setLayout(fl)
         training_layout.addWidget(gb)
 
@@ -256,6 +291,14 @@ class MainWindow(QMainWindow):
         else:
             event.ignore() # Kicks the event up to parent
 
+    def plotFrame(self, *args, **kwargs):
+        """Wrap call to player.plot so we can redraw/update things."""
+        self.player.plot(*args, **kwargs)
+        self.player.showLabels(self._show_labels)
+        self.player.showEdges(self._show_edges)
+        if self._auto_zoom:
+            self.player.zoomToFit()
+
     def importData(self, filename=None):
         show_msg = False
         # if filename is None:
@@ -264,14 +307,14 @@ class MainWindow(QMainWindow):
 #             # filename, selected_filter = QFileDialog.getOpenFileName(self, dir="C:/Users/tdp/OneDrive/code/sandbox/leap_wt_gold_pilot", caption="Import labeled data...", filter=";;".join(filters))
 #             filename, selected_filter = QFileDialog.getOpenFileName(self, dir=None, caption="Import labeled data...", filter=";;".join(filters))
 #             show_msg = True
-        
+
         if len(filename) == 0: return
 
         self.filename = filename
-        self.setWindowTitle(self.filename)
 
         if filename.endswith(".json"):
             self.labels = Labels.load_json(filename)
+
             if show_msg:
                 msgBox = QMessageBox(text=f"Imported {len(self.labels)} labeled frames.")
                 msgBox.exec_()
@@ -342,6 +385,9 @@ class MainWindow(QMainWindow):
                 self.loadVideo(self.labels.videos[new_idx], new_idx)
 
     def loadVideo(self, video:Video, video_idx: int = None):
+        # Clear video frame mark
+        self.mark_idx = None
+
         # Update current video instance
         self.video = video
         self.video_idx = video_idx if video_idx is not None else self.video_idx
@@ -352,7 +398,7 @@ class MainWindow(QMainWindow):
         # Jump to last labeled frame
         last_label = self.labels.find_last(self.video)
         if last_label is not None:
-            self.player.plot(last_label.frame_idx)
+            self.plotFrame(last_label.frame_idx)
 
 
     def newNode(self):
@@ -371,8 +417,8 @@ class MainWindow(QMainWindow):
 
         # Update source edges dropdown
         self.skeletonEdgesSrc.model().skeleton = self.skeleton
-        
-        self.player.plot()
+
+        self.plotFrame()
 
     def deleteNode(self):
         # Get selected node
@@ -390,7 +436,7 @@ class MainWindow(QMainWindow):
         self.skeletonEdgesSrc.model().skeleton = self.skeleton
 
         # TODO: Replot instances?
-        self.player.plot()
+        self.plotFrame()
 
     def selectSkeletonEdgeSrc(self):
         self.skeletonEdgesDst.model().skeleton = self.skeleton
@@ -399,6 +445,7 @@ class MainWindow(QMainWindow):
         self.skeletonEdgesTable.model().skeleton = self.skeleton
         self.skeletonEdgesSrc.model().skeleton = self.skeleton
         self.skeletonEdgesDst.model().skeleton = self.skeleton
+        self.plotFrame()
 
     def newEdge(self):
         # TODO: Move this to unified data model
@@ -417,7 +464,7 @@ class MainWindow(QMainWindow):
         # Update data model
         self.skeletonEdgesTable.model().skeleton = self.skeleton
 
-        self.player.plot()
+        self.plotFrame()
 
 
     def deleteEdge(self):
@@ -434,7 +481,7 @@ class MainWindow(QMainWindow):
         # Update data model
         self.skeletonEdgesTable.model().skeleton = self.skeleton
 
-        self.player.plot()
+        self.plotFrame()
 
 
     def newInstance(self):
@@ -449,14 +496,38 @@ class MainWindow(QMainWindow):
         if self.labeled_frame not in self.labels.labels:
             self.labels.append(self.labeled_frame)
 
-        self.player.plot()
+        self.plotFrame()
 
     def deleteInstance(self):
         idx = self.instancesTable.currentIndex()
         if not idx.isValid(): return
         del self.labeled_frame.instances[idx.row()]
 
-        self.player.plot()
+        self.plotFrame()
+
+    def transposeInstance(self):
+        # We're currently identifying instances by numeric index, so it's
+        # impossible to (e.g.) have a single instance which we identify
+        # as the second instance in some other frame.
+        
+        # For the present, we can only "transpose" if there are multiple instances.
+        if len(self.labeled_frame.instances) < 2: return
+        # If there are just two instances, transpose them.
+        if len(self.labeled_frame.instances) == 2:
+            self._transpose_instances((0,1))
+        # If there are more than two, then we need the user to select the instances.
+        else:
+            self.player.onSequenceSelect(seq_len = 2, on_success = self._transpose_instances)
+
+    def _transpose_instances(self, instance_ids:list):
+        if len(instance_ids) != 2: return
+        
+        idx_0 = instance_ids[0]
+        idx_1 = instance_ids[1]
+        self.labeled_frame.instances[idx_0], self.labeled_frame.instances[idx_1] = (
+            self.labeled_frame.instances[idx_1], self.labeled_frame.instances[idx_0])
+            
+        self.plotFrame()
 
     def newProject(self):
         window = MainWindow()
@@ -480,6 +551,8 @@ class MainWindow(QMainWindow):
             filename = self.filename
             if filename.endswith(".json"):
                 Labels.save_json(labels = self.labels, filename = filename)
+            # Redraw. Not sure why, but sometimes we need to do this.
+            self.plotFrame()
 
     def saveProjectAs(self):
         default_name = self.filename if self.filename is not None else "untitled.json"
@@ -493,6 +566,11 @@ class MainWindow(QMainWindow):
 
         if filename.endswith(".json"):
             Labels.save_json(labels = self.labels, filename = filename)
+            self.filename = filename
+            # Redraw. Not sure why, but sometimes we need to do this.
+            self.plotFrame()
+        else:
+            QMessageBox(text=f"File not saved. Only .json currently implemented.")
 
     def exportData(self):
         pass
@@ -508,14 +586,57 @@ class MainWindow(QMainWindow):
         new_idx = self.video_idx+1
         new_idx = 0 if new_idx >= len(self.labels.videos) else new_idx
         self.loadVideo(self.labels.videos[new_idx], new_idx)
-        
+
     def previousVideo(self):
         new_idx = self.video_idx-1
         new_idx = len(self.labels.videos)-1 if new_idx < 0 else new_idx
         self.loadVideo(self.labels.videos[new_idx], new_idx)
-        
+
+    def markFrame(self):
+        self.mark_idx = self.player.frame_idx
+
+    def goMarkedFrame(self):
+        self.plotFrame(self.mark_idx)
+
     def extractClip(self):
-        pass
+        if self.mark_idx is None:
+            QMessageBox(text=f"You must first mark a frame to determine the range for extraction.").exec_()
+        else:
+            start = min(self.mark_idx, self.player.frame_idx)
+            end = max(self.mark_idx, self.player.frame_idx)
+            QMessageBox(text=f"Extract video frames: {start+1} to {end+1}. Not yet implemented.").exec_()
+
+    def previousLabeledFrame(self):
+        cur_idx = self.player.frame_idx
+        frame_indexes = [frame.frame_idx for frame in self.labels.find(self.video)]
+        if len(frame_indexes):
+            prev_idx = max(filter(lambda idx: idx < cur_idx, frame_indexes), default=frame_indexes[-1])
+            self.plotFrame(prev_idx)
+
+    def nextLabeledFrame(self):
+        cur_idx = self.player.frame_idx
+        frame_indexes = [frame.frame_idx for frame in self.labels.find(self.video)]
+        if len(frame_indexes):
+            next_idx = min(filter(lambda idx: idx > cur_idx, frame_indexes), default=frame_indexes[0])
+            self.plotFrame(next_idx)
+
+    def toggleLabels(self):
+        self._show_labels = not self._show_labels
+        self.menuAction["show labels"].setChecked(self._show_labels)
+        self.player.showLabels(self._show_labels)
+
+    def toggleEdges(self):
+        self._show_edges = not self._show_edges
+        self.menuAction["show edges"].setChecked(self._show_edges)
+        self.player.showEdges(self._show_edges)
+
+    def toggleAutoZoom(self):
+        self._auto_zoom = not self._auto_zoom
+        self.menuAction["fit"].setChecked(self._auto_zoom)
+        if not self._auto_zoom:
+            self.player.view.clearZoom()
+        self.plotFrame()
+
     def openDocumentation(self):
         pass
     def openKeyRef(self):
@@ -544,8 +665,9 @@ class MainWindow(QMainWindow):
         self.instancesTable.model().labeled_frame = self.labeled_frame
 
         for i, instance in enumerate(self.labeled_frame.instances):
-            qt_instance = QtInstance(instance=instance, color=self.cmap[i])
-            player.view.scene.addItem(qt_instance)
+            player.addInstance(instance=instance, color=self.cmap[i%len(self.cmap)])
+
+        player.view.updatedViewer.emit()
 
         # self.statusBar().showMessage(f"Frame: {self.player.frame_idx+1}/{len(self.video)}  |  Labeled frames (video/total): {self.labels.instances[self.labels.instances.videoId == 1].frameIdx.nunique()}/{len(self.labels)}  |  Instances (frame/total): {len(frame_instances)}/{self.labels.points.instanceId.nunique()}")
         self.statusBar().showMessage(f"Frame: {self.player.frame_idx+1}/{len(self.video)}")
@@ -554,11 +676,15 @@ class MainWindow(QMainWindow):
 def main(*args, **kwargs):
     app = QApplication([])
     app.setApplicationName("sLEAP Label")
+
+    filters = ["JSON labels (*.json)", "HDF5 dataset (*.h5 *.hdf5)"]
+    filename, selected_filter = QFileDialog.getOpenFileName(None, dir=None, caption="Open Project", filter=";;".join(filters))
+
+    if len(filename): kwargs["import_data"] = filename
+
     window = MainWindow(*args, **kwargs)
     window.showMaximized()
     app.exec_()
 
 if __name__ == "__main__":
-
-    # main(import_data="tests/data/json_format_v1/centered_pair.json")
     main()

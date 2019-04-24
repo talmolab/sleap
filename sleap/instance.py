@@ -33,6 +33,7 @@ class Point:
     x: float = attr.ib(default=math.nan, converter=float)
     y: float = attr.ib(default=math.nan, converter=float)
     visible: bool = True
+    complete: bool = False
 
     def __str__(self):
         return f"({self.x}, {self.y})"
