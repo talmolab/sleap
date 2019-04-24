@@ -21,7 +21,7 @@ from sleap.skeleton import Skeleton, Node
 from sleap.instance import Instance, Point
 from sleap.io.video import Video, HDF5Video, MediaVideo
 from sleap.io.dataset import Labels, LabeledFrame
-from sleap.gui.video import QtVideoPlayer, QtInstance, QtEdge, QtNode
+from sleap.gui.video import QtVideoPlayer
 from sleap.gui.dataviews import VideosTable, SkeletonNodesTable, SkeletonEdgesTable, LabeledFrameTable, SkeletonNodeModel
 from sleap.gui.importvideos import ImportVideos
 
@@ -297,9 +297,7 @@ class MainWindow(QMainWindow):
         self.player.showLabels(self._show_labels)
         self.player.showEdges(self._show_edges)
         if self._auto_zoom:
-            zoom_rect = self.player.view.instancesBoundingRect(margin=30, keepAspectRatio=True)
-            if not zoom_rect.size().isEmpty():
-                self.player.view.zoomToRect(zoom_rect, relative = False)
+            self.player.zoomToFit()
 
     def importData(self, filename=None):
         show_msg = False
@@ -511,32 +509,24 @@ class MainWindow(QMainWindow):
         # We're currently identifying instances by numeric index, so it's
         # impossible to (e.g.) have a single instance which we identify
         # as the second instance in some other frame.
+        
         # For the present, we can only "transpose" if there are multiple instances.
         if len(self.labeled_frame.instances) < 2: return
         # If there are just two instances, transpose them.
         if len(self.labeled_frame.instances) == 2:
-            self.labeled_frame.instances[0], self.labeled_frame.instances[1] = (
-                self.labeled_frame.instances[1], self.labeled_frame.instances[0])
-
+            self._transpose_instances((0,1))
         # If there are more than two, then we need the user to select the instances.
         else:
-            # Define function that will be called when user selects another instance
-            # idx_0 arg is set to the current selection (i.e., when function defined)
-            def swap(idx_0 = self.player.view.getSelection()):
-                idx_1 = self.player.view.getSelection()
-                if idx_1 is not None:
-                    # Transpose
-                    self.labeled_frame.instances[idx_0], self.labeled_frame.instances[idx_1] = (
-                         self.labeled_frame.instances[idx_1], self.labeled_frame.instances[idx_0])
-                    # Update view
-                    self.plotFrame()
+            self.player.onSequenceSelect(seq_len = 2, on_success = self._transpose_instances)
 
-                # Disconnect self since we only want to get signal once
-                self.player.view.updatedSelection.disconnect(swap)
-
-            # Connect swap function so it gets called for next user selection
-            self.player.view.updatedSelection.connect(swap)
-
+    def _transpose_instances(self, instance_ids:list):
+        if len(instance_ids) != 2: return
+        
+        idx_0 = instance_ids[0]
+        idx_1 = instance_ids[1]
+        self.labeled_frame.instances[idx_0], self.labeled_frame.instances[idx_1] = (
+            self.labeled_frame.instances[idx_1], self.labeled_frame.instances[idx_0])
+            
         self.plotFrame()
 
     def newProject(self):
@@ -675,11 +665,7 @@ class MainWindow(QMainWindow):
         self.instancesTable.model().labeled_frame = self.labeled_frame
 
         for i, instance in enumerate(self.labeled_frame.instances):
-            qt_instance = QtInstance(instance=instance, color=self.cmap[i%len(self.cmap)])
-            player.view.scene.addItem(qt_instance)
-
-            # connect signal so we can adjust QtNodeLabel positions after zoom
-            player.view.updatedViewer.connect(qt_instance.updatePoints)
+            player.addInstance(instance=instance, color=self.cmap[i%len(self.cmap)])
 
         player.view.updatedViewer.emit()
 
