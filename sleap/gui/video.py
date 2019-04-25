@@ -251,6 +251,7 @@ class QtVideoPlayer(QWidget):
                 self.view.updatedSelection.disconnect(handle_selection)
                 if callable(on_failure):
                     on_failure(indexes)
+                return
             
             # If we have all the instances we want in our sequence, we're done
             if len(indexes) >= seq_len:
