@@ -7,6 +7,8 @@ def test_gui_video(qtbot):
     vp.show()
     qtbot.addWidget(vp)
 
+    assert vp.close()
+
     # Click the button 20 times
     # for i in range(20):
     #     qtbot.mouseClick(vp.btn, QtCore.Qt.LeftButton)
@@ -41,3 +43,5 @@ def test_gui_video_instances(qtbot, small_robot_mp4_vid, centered_pair_labels):
     
     # Check that node is marked as complete
     assert vp.instances[0].childItems()[1].point.complete
+
+    assert vp.close()
