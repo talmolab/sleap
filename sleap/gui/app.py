@@ -519,11 +519,13 @@ class MainWindow(QMainWindow):
         else:
             self.player.onSequenceSelect(seq_len = 2,
                                          on_success = self._transpose_instances,
-                                         on_each = self._transpose_message)
+                                         on_each = self._transpose_message,
+                                         on_failure = lambda x:self.updateStatusMessage()
+                                         )
 
     def _transpose_message(self, instance_ids:list):
         word = "next" if len(instance_ids) else "first"
-        self.statusBar().showMessage(f"Please select the {word} instance to transpose...")
+        self.updateStatusMessage(f"Please select the {word} instance to transpose...")
 
     def _transpose_instances(self, instance_ids:list):
         if len(instance_ids) != 2: return
@@ -675,9 +677,14 @@ class MainWindow(QMainWindow):
 
         player.view.updatedViewer.emit()
 
-        # self.statusBar().showMessage(f"Frame: {self.player.frame_idx+1}/{len(self.video)}  |  Labeled frames (video/total): {self.labels.instances[self.labels.instances.videoId == 1].frameIdx.nunique()}/{len(self.labels)}  |  Instances (frame/total): {len(frame_instances)}/{self.labels.points.instanceId.nunique()}")
-        self.statusBar().showMessage(f"Frame: {self.player.frame_idx+1}/{len(self.video)}")
+        self.updateStatusMessage()
 
+    def updateStatusMessage(self, message = None):
+        if message is None:
+            message = f"Frame: {self.player.frame_idx+1}/{len(self.video)}"
+
+        self.statusBar().showMessage(message)
+        # self.statusBar().showMessage(f"Frame: {self.player.frame_idx+1}/{len(self.video)}  |  Labeled frames (video/total): {self.labels.instances[self.labels.instances.videoId == 1].frameIdx.nunique()}/{len(self.labels)}  |  Instances (frame/total): {len(frame_instances)}/{self.labels.points.instanceId.nunique()}")
 
 def main(*args, **kwargs):
     app = QApplication([])
