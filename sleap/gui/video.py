@@ -215,7 +215,8 @@ class QtVideoPlayer(QWidget):
         if not zoom_rect.size().isEmpty():
             self.view.zoomToRect(zoom_rect, relative = False)
 
-    def onSequenceSelect(self, seq_len: int, on_success: Callable, on_failure = None):
+    def onSequenceSelect(self, seq_len: int, on_success: Callable,
+                         on_each = None, on_failure = None):
         """
         Collect a sequence of instances (through user selection) and call `on_success`.
         If the user cancels (by unselecting without new selection), call `on_failure`.
@@ -238,6 +239,7 @@ class QtVideoPlayer(QWidget):
         def handle_selection(seq_len=seq_len,
                              indexes=indexes,
                              on_success=on_success,
+                             on_each=on_each,
                              on_failure=on_failure):
             # Get the index of the currently selected instance
             new_idx = self.view.getSelection()
@@ -256,8 +258,15 @@ class QtVideoPlayer(QWidget):
                 self.view.updatedSelection.disconnect(handle_selection)
                 # trigger success, passing the list of selected indexes
                 on_success(indexes)
+            # If we're still in progress...
+            else:
+                if callable(on_each):
+                    on_each(indexes)
 
         self.view.updatedSelection.connect(handle_selection)
+
+        if callable(on_each):
+            on_each(indexes)
 
     def keyPressEvent(self, event: QKeyEvent):
         """ Custom event handler.

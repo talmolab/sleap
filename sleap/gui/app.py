@@ -517,7 +517,13 @@ class MainWindow(QMainWindow):
             self._transpose_instances((0,1))
         # If there are more than two, then we need the user to select the instances.
         else:
-            self.player.onSequenceSelect(seq_len = 2, on_success = self._transpose_instances)
+            self.player.onSequenceSelect(seq_len = 2,
+                                         on_success = self._transpose_instances,
+                                         on_each = self._transpose_message)
+
+    def _transpose_message(self, instance_ids:list):
+        word = "next" if len(instance_ids) else "first"
+        self.statusBar().showMessage(f"Please select the {word} instance to transpose...")
 
     def _transpose_instances(self, instance_ids:list):
         if len(instance_ids) != 2: return
