@@ -121,7 +121,7 @@ class ImportParamDialog(QDialog):
                 this_type = None
                 for import_type in self.import_types:
                     if import_type.get("match",None) is not None:
-                        if file_name.endswith(tuple(import_type["match"].split(","))):
+                        if file_name.lower().endswith(tuple(import_type["match"].split(","))):
                             this_type = import_type
                             break
                 if this_type is not None:
