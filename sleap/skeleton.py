@@ -15,12 +15,13 @@ import networkx as nx
 import h5py as h5
 import copy
 
-
 from enum import Enum
 from itertools import count
 from typing import Iterable, Union, List, Dict
 
 from networkx.readwrite import json_graph
+from scipy.io import loadmat, savemat
+
 
 class EdgeType(Enum):
     """
@@ -774,6 +775,35 @@ class Skeleton:
         # Write the dataset to JSON string, then store it in a string
         # attribute
         all_sk_group.attrs[self.name] = np.string_(self.to_json())
+
+    @classmethod
+    def load_mat(cls, filename: str):
+        """
+        Load the skeleton from a Matlab MAT file. This is to support backwards
+        compatibility with old LEAP MATLAB code and datasets.
+
+        Args:
+            filename: The file name of the skeleton
+
+        Returns:
+            An instance of the skeleton.
+        """
+
+        # Lets create a skeleton object, use the filename for the name since old LEAP
+        # skeletons did not have names.
+        skeleton = cls(name=filename)
+
+        skel_mat = loadmat(filename)
+        skel_mat["nodes"] = skel_mat["nodes"][0][0]  # convert to scalar
+        skel_mat["edges"] = skel_mat["edges"] - 1    # convert to 0-based indexing
+
+        node_names = skel_mat['nodeNames']
+        skeleton.add_nodes(node_names)
+        for k in range(len(skel_mat["edges"])):
+            edge = skel_mat["edges"][k]
+            skeleton.add_edge(source=node_names[edge[0]], destination=node_names[edge[1]])
+
+        return skeleton
 
     def __str__(self):
         return "%s(name=%r)" % (self.__class__.__name__, self.name)

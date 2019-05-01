@@ -236,3 +236,45 @@ def test_name_change(skeleton):
 
 def test_graph_property(skeleton):
     assert [node for node in skeleton.graph.nodes()] == skeleton.nodes
+
+def test_load_mat_format():
+    skeleton = Skeleton.load_mat('tests/data/skeleton/leap_mat_format/skeleton_legs.mat')
+
+    # Check some stuff about the skeleton we loaded
+    assert(len(skeleton.nodes) == 24)
+    assert(len(skeleton.edges) == 23)
+
+    node_names = ['head',
+    'neck',
+    'thorax',
+    'abdomen',
+    'wingL',
+    'wingR',
+    'forelegL1',
+    'forelegL2',
+    'forelegL3',
+    'forelegR1',
+    'forelegR2',
+    'forelegR3',
+    'midlegL1' ,
+    'midlegL2' ,
+    'midlegL3' ,
+    'midlegR1' ,
+    'midlegR2' ,
+    'midlegR3' ,
+    'hindlegL1',
+    'hindlegL2',
+    'hindlegL3',
+    'hindlegR1',
+    'hindlegR2',
+    'hindlegR3']
+
+    assert [n.name for n in skeleton.nodes] == node_names
+
+    # Check some edges
+    assert skeleton.has_edge('thorax', 'neck')
+    assert skeleton.has_edge('thorax', 'wingL')
+    assert skeleton.has_edge('thorax', 'wingR')
+    assert skeleton.has_edge('thorax', 'abdomen')
+    
+
