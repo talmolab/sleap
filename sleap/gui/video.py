@@ -590,8 +590,6 @@ class GraphicsView(QGraphicsView):
             self.zoomFactor = max(factor * self.zoomFactor, 1)
             self.updateViewer()
 
-        QGraphicsView.wheelEvent(self, event)
-
             # transform = self.transform()
 
             # print(self.sceneRect())
