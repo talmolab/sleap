@@ -741,11 +741,13 @@ class QtNode(QGraphicsEllipseItem):
             Note that this is a mutable object so we're able to directly access
             the very same `Point` object that's defined outside our class.
         radius: Radius of the visual node item.
+        color: Color of the visual node item.
         callbacks: List of functions to call after we update to the `Point`.
     """
-    def __init__(self, parent, point:Point, radius=3, node_name:str = None, callbacks = None, *args, **kwargs):
+    def __init__(self, parent, point:Point, radius:float, color:list, node_name:str = None, callbacks = None, *args, **kwargs):
         self.point = point
         self.radius = radius
+        self.color = color
         self.edges = []
         self.name = node_name
         self.callbacks = [] if callbacks is None else callbacks
@@ -756,8 +758,20 @@ class QtNode(QGraphicsEllipseItem):
         if node_name is not None:
             self.setToolTip(node_name)
 
-        self.setPos(self.point.x, self.point.y)
         self.setFlag(QGraphicsItem.ItemIgnoresTransformations)
+        self.setFlag(QGraphicsItem.ItemIsMovable)
+
+        col_line = QColor(*self.color)
+        
+        self.pen_default = QPen(col_line, 1)
+        self.pen_default.setCosmetic(True) # https://stackoverflow.com/questions/13120486/adjusting-qpen-thickness-when-scaling-qgraphicsview
+        self.pen_missing = QPen(col_line, 1)
+        self.pen_missing.setCosmetic(True)
+        self.brush = QBrush(QColor(*self.color, a=128))
+        self.brush_missing = QBrush(QColor(*self.color, a=0))
+
+        self.setPos(self.point.x, self.point.y)
+        self.updatePoint()
 
     def calls(self):
         """ Method to call all callbacks.
@@ -771,6 +785,16 @@ class QtNode(QGraphicsEllipseItem):
         """
         self.point.x = self.scenePos().x()
         self.point.y = self.scenePos().y()
+
+        if self.point.visible:
+            radius = self.radius
+            self.setPen(self.pen_default)
+            self.setBrush(self.brush)
+        else:
+            radius = self.radius / 2.
+            self.setPen(self.pen_missing)
+            self.setBrush(self.brush_missing)
+        self.setRect(-radius, -radius, radius*2, radius*2)
 
         for edge in self.edges:
             edge.updateEdge(self)
@@ -798,7 +822,11 @@ class QtNode(QGraphicsEllipseItem):
                 self.dragParent = False
                 super(QtNode, self).mousePressEvent(event)
                 self.updatePoint()
+            
             self.point.complete = True
+        elif event.button() == Qt.RightButton:
+            # Right-click to mark node missing from this instance
+            self.point.visible = False
         elif event.button() == Qt.MidButton:
             pass
 
@@ -840,11 +868,15 @@ class QtEdge(QGraphicsLineItem):
         src: The `QtNode` source node for the edge.
         dst: The `QtNode` destination node for the edge.
     """
-    def __init__(self, parent, src:QtNode, dst:QtNode, *args, **kwargs):
+    def __init__(self, parent, src:QtNode, dst:QtNode, color, *args, **kwargs):
         self.src = src
         self.dst = dst
 
         super(QtEdge, self).__init__(self.src.point.x, self.src.point.y, self.dst.point.x, self.dst.point.y, parent=parent, *args, **kwargs)
+
+        pen = QPen(QColor(*color), 1)
+        pen.setCosmetic(True)
+        self.setPen(pen)
 
     def connected_to(self, node):
         """
@@ -909,7 +941,7 @@ class QtInstance(QGraphicsObject):
     When instantiated, it creates `QtNode`, `QtEdge`, and
     `QtNodeLabel` items as children of itself.
     """
-    def __init__(self, skeleton:Skeleton = None, instance: Instance = None, color=(0, 114, 189), markerRadius=3, *args, **kwargs):
+    def __init__(self, skeleton:Skeleton = None, instance: Instance = None, color=(0, 114, 189), markerRadius=4, *args, **kwargs):
         super(QtInstance, self).__init__(*args, **kwargs)
         self.skeleton = skeleton if instance is None else instance.skeleton
         self.instance = instance
@@ -925,46 +957,25 @@ class QtInstance(QGraphicsObject):
         #self.setFlag(QGraphicsItem.ItemIsMovable)
         #self.setFlag(QGraphicsItem.ItemIsSelectable)
 
-        col_line = QColor(*self.color)
-        pen = QPen(col_line, 1)
-        pen.setCosmetic(True) # https://stackoverflow.com/questions/13120486/adjusting-qpen-thickness-when-scaling-qgraphicsview
-
-        pen_missing = QPen(col_line, 1)
-        pen_missing.setCosmetic(True)
-
-        col_fill = QColor(*self.color, a=128)
-        brush = QBrush(col_fill)
-
-        col_fill_missing = QColor(*self.color, a=0)
-        brush_missing = QBrush(col_fill_missing)
-
         # Add box to go around instance
         self.box = QGraphicsRectItem(parent=self)
-        box_pen = QPen(col_line, 1)
+        box_pen = QPen(QColor(*self.color), 1)
         box_pen.setStyle(Qt.DashLine)
         box_pen.setCosmetic(True)
         self.box.setPen(box_pen)
 
         # Add nodes
         for (node, point) in self.instance.nodes_points():
-            if point.visible:
-                node_item = QtNode(parent=self, point=point, radius=self.markerRadius, node_name = node.name)
-                node_item.setPen(pen)
-                node_item.setBrush(brush)
-            else:
-                node_item = QtNode(parent=self, point=point, radius=self.markerRadius * 0.5, node_name = node.name)
-                node_item.setPen(pen_missing)
-                node_item.setBrush(brush_missing)
-            node_item.setFlag(QGraphicsItem.ItemIsMovable)
-
+            node_item = QtNode(parent=self, point=point, node_name=node.name,
+                               color=self.color, radius=self.markerRadius)
             self.nodes[node.name] = node_item
 
         # Add edges
         for (src, dst) in self.skeleton.edge_names:
             # Make sure that both nodes are present in this instance before drawing edge
             if src in self.nodes and dst in self.nodes:
-                edge_item = QtEdge(parent=self, src=self.nodes[src], dst=self.nodes[dst])
-                edge_item.setPen(pen)
+                edge_item = QtEdge(parent=self, src=self.nodes[src], dst=self.nodes[dst],
+                                   color=self.color)
                 self.nodes[src].edges.append(edge_item)
                 self.nodes[dst].edges.append(edge_item)
                 self.edges.append(edge_item)
