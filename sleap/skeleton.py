@@ -68,7 +68,7 @@ class Skeleton:
 
     """
     A index variable used to give skeletons a default name that attemtpts to be
-    unique across all skeletons. Will be non-
+    unique across all skeletons. 
     """
     _skeleton_idx = count(0)
 
@@ -256,7 +256,7 @@ class Skeleton:
         Returns:
             The index of the node in the graph.
         """
-        return self.find_node(node_name)
+        return list(self.graph.nodes).index(self.find_node(node_name))
 
     def add_node(self, name: str):
         """Add a node representing an animal part to the skeleton.

@@ -67,12 +67,12 @@ def test_instance_point_iter(skeleton):
 
     instance = Instance(skeleton=skeleton, points=points)
 
-    assert [node.name for node in instance.nodes()] == ['head', 'left-wing', 'right-wing']
+    assert [node.name for node in instance.nodes] == ['head', 'left-wing', 'right-wing']
     assert np.allclose([p.x for p in instance.points()], [1, 2, 3])
     assert np.allclose([p.y for p in instance.points()], [4, 5, 6])
 
     # Make sure we can iterate over tuples
-    for (node, point) in instance.nodes_points():
+    for (node, point) in instance.nodes_points:
         assert points[node.name] == point
 
 

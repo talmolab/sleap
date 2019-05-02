@@ -97,7 +97,7 @@ class Instance:
             # convert to node indices so we don't break references to skeleton nodes
             # if the node name is relabeled.
             if self._points and is_string_dict:
-                self._points = {self._node_to_index(name): point for name,point in self._points.items()}
+                self._points = {self.skeleton.find_node(name): point for name,point in self._points.items()}
 
             if not is_string_dict and not is_node_dict:
                 raise ValueError("points dictionary must be keyed by either strings " +
@@ -204,6 +204,7 @@ class Instance:
 
         return True
 
+    @property
     def nodes(self):
         """
         Get the list of nodes that have been labelled for this instance.
@@ -212,8 +213,9 @@ class Instance:
             A list of nodes that have been labelled for this instance.
 
         """
-        return self._points.keys()
+        return tuple(self._points.keys())
 
+    @property
     def nodes_points(self):
         """
         Return view object that displays a list of the instance's (node, point) tuple pairs
@@ -232,7 +234,7 @@ class Instance:
         Returns:
             The list of labelled points, in order they were labelled.
         """
-        return self._points.values()
+        return tuple(self._points.values())
 
     @classmethod
     def to_pandas_df(cls, instances: Union['Instance', List['Instance']], skip_nan:bool = True) -> pd.DataFrame:
@@ -278,7 +280,7 @@ class Instance:
 
             # FIXME: Do the same for the video
 
-            for (node, point) in instance.nodes_points():
+            for (node, point) in instance.nodes_points:
 
                 # Skip any NaN points if the user has asked for it.
                 if skip_nan and (math.isnan(point.x) or math.isnan(point.y)):

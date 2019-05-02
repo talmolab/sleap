@@ -918,7 +918,7 @@ class QtInstance(QGraphicsObject):
         self.box.setPen(box_pen)
 
         # Add nodes
-        for (node, point) in self.instance.nodes_points():
+        for (node, point) in self.instance.nodes_points:
             if point.visible:
                 node_item = QtNode(parent=self, point=point, radius=self.markerRadius, node_name = node.name)
                 node_item.setPen(pen)
