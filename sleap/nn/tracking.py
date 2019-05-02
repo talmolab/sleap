@@ -8,6 +8,7 @@ import numpy as np
 import cv2
 import attr
 import keras
+import h5py as h5
 
 from typing import Union
 from time import time
@@ -18,7 +19,7 @@ from sleap.io.video import Video
 from sleap.skeleton import Skeleton
 from sleap.nn.inference import find_all_peaks, FlowShiftTracker, get_inference_model
 from sleap.nn.paf_inference import match_peaks_paf_par
-from sleap.util import usable_cpu_count
+from sleap.util import usable_cpu_count, save_dict_to_hdf5
 
 
 @attr.s(auto_attribs=True)
@@ -184,13 +185,18 @@ class Predictor:
 
             if chunk % save_every == 0 or chunk == (num_chunks - 1):
                 t0 = time()
-                # FIXME: Saving as MAT file should be replaced with HDF5
-                savemat(output_path, dict(params=params, skeleton=self.skeleton,
-                                        matched_instances=matched_instances, match_scores=match_scores,
-                                        matched_peak_vals=matched_peak_vals, scale=scale,
-                                        uids=tracker.uids, tracked_instances=tracker.generate_tracks(matched_instances),
-                                        flow_assignment_costs=tracker.flow_assignment_costs,
-                                        ), do_compression=True)
+                with h5.File(output_path) as f:
+                    save_dict_to_hdf5(f, '/',
+                                      dict(params=params,
+                                           matched_instances=matched_instances, match_scores=match_scores,
+                                           matched_peak_vals=matched_peak_vals, scale=scale,
+                                           uids=tracker.uids, tracked_instances=tracker.generate_tracks(matched_instances),
+                                           flow_assignment_costs=tracker.flow_assignment_costs,
+                                        ))
+
+                    # Save the skeleton as well, in JSON to the HDF5
+                    self.skeleton.save_hdf5(f)
+
                 logger.info("  Saved to: %s [%.1fs]" % (output_path, time() - t0))
 
             elapsed = time() - t0_chunk
