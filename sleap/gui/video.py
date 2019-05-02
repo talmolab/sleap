@@ -743,7 +743,7 @@ class QtNode(QGraphicsEllipseItem):
         radius: Radius of the visual node item.
         callbacks: List of functions to call after we update to the `Point`.
     """
-    def __init__(self, parent, point:Point, radius=1.5, node_name:str = None, callbacks = None, *args, **kwargs):
+    def __init__(self, parent, point:Point, radius=3, node_name:str = None, callbacks = None, *args, **kwargs):
         self.point = point
         self.radius = radius
         self.edges = []
@@ -757,6 +757,7 @@ class QtNode(QGraphicsEllipseItem):
             self.setToolTip(node_name)
 
         self.setPos(self.point.x, self.point.y)
+        self.setFlag(QGraphicsItem.ItemIgnoresTransformations)
 
     def calls(self):
         """ Method to call all callbacks.
@@ -908,7 +909,7 @@ class QtInstance(QGraphicsObject):
     When instantiated, it creates `QtNode`, `QtEdge`, and
     `QtNodeLabel` items as children of itself.
     """
-    def __init__(self, skeleton:Skeleton = None, instance: Instance = None, color=(0, 114, 189), markerRadius=1.5, *args, **kwargs):
+    def __init__(self, skeleton:Skeleton = None, instance: Instance = None, color=(0, 114, 189), markerRadius=3, *args, **kwargs):
         super(QtInstance, self).__init__(*args, **kwargs)
         self.skeleton = skeleton if instance is None else instance.skeleton
         self.instance = instance
