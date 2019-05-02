@@ -715,6 +715,21 @@ class QtNodeLabel(QGraphicsTextItem):
         """
         super(QtNodeLabel, self).paint(*args, **kwargs)
 
+    def mousePressEvent(self, event):
+        """ Pass events along so that clicking label is like clicking node.
+        """
+        self.node.mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        """ Pass events along so that clicking label is like clicking node.
+        """
+        self.node.mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        """ Pass events along so that clicking label is like clicking node.
+        """
+        self.node.mouseReleaseEvent(event)
+
 
 class QtNode(QGraphicsEllipseItem):
     """
@@ -768,12 +783,14 @@ class QtNode(QGraphicsEllipseItem):
         """ Custom event handler for mouse press.
         """
         if event.button() == Qt.LeftButton:
+            # Alt-click to drag instance
             if event.modifiers() == Qt.AltModifier:
                 self.dragParent = True
                 self.parentObject().setFlag(QGraphicsItem.ItemIsMovable)
                 # set origin to point clicked so that we can rotate around this point
                 self.parentObject().setTransformOriginPoint(self.scenePos())
                 self.parentObject().mousePressEvent(event)
+            # Shift-click to mark all points as complete
             elif event.modifiers() == Qt.ShiftModifier:
                 self.parentObject().updatePoints(complete=True)
             else:
