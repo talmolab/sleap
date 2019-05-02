@@ -49,7 +49,7 @@ class Predictor:
     model: keras.Model = attr.ib()
     skeleton: Skeleton = attr.ib()
     inference_batch_size: int = 4
-    read_chunk_size = 512
+    read_chunk_size = 10
     nms_min_thresh = 0.3
     nms_sigma = 3
     min_score_to_node_ratio: float = 0.2
@@ -181,11 +181,12 @@ class Predictor:
             save_every = 3
 
             # Get the parameters used for this inference.
-            params = attr.asdict(self, filter=lambda attr, value: attr.name in ["model", "skeleton"])
+            params = attr.asdict(self, filter=lambda attr, value: attr.name not in ["model", "skeleton"])
+            print(params)
 
             if chunk % save_every == 0 or chunk == (num_chunks - 1):
                 t0 = time()
-                with h5.File(output_path) as f:
+                with h5.File(output_path, 'w') as f:
                     save_dict_to_hdf5(f, '/',
                                       dict(params=params,
                                            matched_instances=matched_instances, match_scores=match_scores,
@@ -221,7 +222,7 @@ def main():
     data_path = args.data_path
     confmap_model_path = args.confmap_model_path
     paf_model_path = args.paf_model_path
-    save_path = data_path + ".paf_tracking.mat"
+    save_path = data_path + ".paf_tracking.h5"
     skeleton_path = args.skeleton_path
 
     # Load the model

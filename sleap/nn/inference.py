@@ -39,10 +39,7 @@ def get_inference_model(confmap_model_path: str, paf_model_path: str) -> keras.M
     # Combine models with tuple output
     model = keras.Model(new_input, [confmap_model(new_input), paf_model(new_input)])
 
-    try:
-        model = multi_gpu_model(model, gpus=4)
-    except:
-        pass
+    model = multi_gpu_model(model, gpus=4)
 
     return model
 

@@ -85,6 +85,7 @@ def save_dict_to_hdf5(h5file: h5.File, path: str, dic: dict):
         None
     """
     for key, item in list(dic.items()):
+        print(f"Saving {key}:")
         if item is None:
             h5file[path + key] = ""
         elif isinstance(item, bool):
@@ -104,5 +105,7 @@ def save_dict_to_hdf5(h5file: h5.File, path: str, dic: dict):
             h5file[path + key] = item
         elif isinstance(item, dict):
             save_dict_to_hdf5(h5file, path + key + '/', item)
+        elif isinstance(item, int):
+            h5file[path + key] = item
         else:
             raise ValueError('Cannot save %s type'%type(item))
