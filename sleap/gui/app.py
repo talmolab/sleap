@@ -11,6 +11,7 @@ from PySide2.QtWidgets import QMenu, QAction
 from PySide2.QtWidgets import QFileDialog, QMessageBox
 
 import os
+import sys
 
 from pathlib import PurePath
 
@@ -690,14 +691,20 @@ def main(*args, **kwargs):
     app = QApplication([])
     app.setApplicationName("sLEAP Label")
 
-    filters = ["JSON labels (*.json)", "HDF5 dataset (*.h5 *.hdf5)"]
-    filename, selected_filter = QFileDialog.getOpenFileName(None, dir=None, caption="Open Project", filter=";;".join(filters))
+    if "import_data" not in kwargs:
+        filters = ["JSON labels (*.json)", "HDF5 dataset (*.h5 *.hdf5)"]
+        filename, selected_filter = QFileDialog.getOpenFileName(None, dir=None, caption="Open Project", filter=";;".join(filters))
 
-    if len(filename): kwargs["import_data"] = filename
+        if len(filename): kwargs["import_data"] = filename
 
     window = MainWindow(*args, **kwargs)
     window.showMaximized()
     app.exec_()
 
 if __name__ == "__main__":
-    main()
+
+    kwargs = dict()
+    if len(sys.argv) > 1:
+        kwargs["import_data"] = sys.argv[1]
+
+    main(**kwargs)
