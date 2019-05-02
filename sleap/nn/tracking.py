@@ -29,8 +29,8 @@ class Predictor:
     inference, non-maximum suppression peak finding, paf part matching, to tracking.
 
     Args:
-        model: A trained keras model used for confidence map and paf inference. FIXME: Should this be a keral model or a sLEAP model class
-        skeleton: The skeleton to use for prediction. FIXME. This should be stored with the model I think
+        model: A trained keras model used for confidence map and paf inference. FIXME: Should this be a keras model or a sLEAP model class
+        skeleton: The skeleton(s) to use for prediction. FIXME. This should be stored with the model I think
         inference_batch_size: Frames per inference batch (GPU memory limited)
         read_chunk_size: How many frames to read into CPU memory at a time (CPU memory limited)
         nms_min_thresh: A threshold of non-max suppression peak finding in confidence maps. All
@@ -46,7 +46,7 @@ class Predictor:
     """
 
     model: keras.Model = attr.ib()
-    skeleton: str = attr.ib()
+    skeleton: Skeleton = attr.ib()
     inference_batch_size: int = 4
     read_chunk_size = 512
     nms_min_thresh = 0.3
@@ -68,13 +68,6 @@ class Predictor:
         Returns:
             None
         """
-
-        # Load skeleton: FIXME: this is using mat files, need to fix.
-        skeleton = loadmat(self.skeleton)
-        skeleton["nodes"] = skeleton["nodes"][0][0]  # convert to scalar
-        skeleton["edges"] = skeleton["edges"] - 1  # convert to 0-based indexing
-        logger.info("Skeleton (%d nodes):" % skeleton["nodes"])
-        logger.info("  %s" % str(skeleton["edges"]))
 
         # Load model
         _, h, w, c = self.model.input_shape
@@ -162,7 +155,7 @@ class Predictor:
             # Match peaks via PAFs
             t0 = time()
             # instances, scores = match_peaks_paf(peaks, peak_vals, pafs, skeleton)
-            instances, scores, peak_vals = match_peaks_paf_par(peaks, peak_vals, pafs, skeleton,
+            instances, scores, peak_vals = match_peaks_paf_par(peaks, peak_vals, pafs, self.skeleton,
                                                                min_score_to_node_ratio=self.min_score_to_node_ratio,
                                                                min_score_midpts=self.min_score_midpts,
                                                                min_score_integral=self.min_score_integral,
@@ -187,12 +180,12 @@ class Predictor:
             save_every = 3
 
             # Get the parameters used for this inference.
-            params = attr.asdict(self, filter=lambda attr, value: attr.name != "model")
+            params = attr.asdict(self, filter=lambda attr, value: attr.name in ["model", "skeleton"])
 
             if chunk % save_every == 0 or chunk == (num_chunks - 1):
                 t0 = time()
                 # FIXME: Saving as MAT file should be replaced with HDF5
-                savemat(output_path, dict(params=params, skeleton=skeleton,
+                savemat(output_path, dict(params=params, skeleton=self.skeleton,
                                         matched_instances=matched_instances, match_scores=match_scores,
                                         matched_peak_vals=matched_peak_vals, scale=scale,
                                         uids=tracker.uids, tracked_instances=tracker.generate_tracks(matched_instances),
@@ -228,8 +221,12 @@ def main():
     # Load the model
     model = get_inference_model(confmap_model_path, paf_model_path)
 
+    # Load the skeleton(s)
+    skeleton = Skeleton.load_json(skeleton_path)
+    logger.info(f"Skeleton (name={skeleton.name}, {len(skeleton.nodes)} nodes):")
+
     # Create a predictor to do the work.
-    predictor = Predictor(model=model, skeleton=skeleton_path)
+    predictor = Predictor(model=model, skeleton=skeleton)
 
     # Run the inference pipeline
     predictor.run(input_video=data_path, output_path=save_path)

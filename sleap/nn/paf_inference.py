@@ -57,14 +57,15 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton,
     # Score each edge
     special_k = []
     connection_all = []
-    for k in range(len(skeleton["edges"])):
-        edge = skeleton["edges"][k]
+    for k, edge in enumerate(skeleton.edge_names):
+        src_node_idx = skeleton.node_to_index(edge[0])
+        dst_node_idx = skeleton.node_to_index(edge[1])
         paf_x = pafs_t[...,2*k]
         paf_y = pafs_t[...,2*k+1]
-        peaks_src = peaks_t[edge[0]]
-        peaks_dst = peaks_t[edge[1]]
-        peak_vals_src = peak_vals_t[edge[0]]
-        peak_vals_dst = peak_vals_t[edge[1]]
+        peaks_src = peaks_t[src_node_idx]
+        peaks_dst = peaks_t[dst_node_idx]
+        peak_vals_src = peak_vals_t[src_node_idx]
+        peak_vals_dst = peak_vals_t[dst_node_idx]
 
         if len(peaks_src) == 0 or len(peaks_dst) == 0:
             special_k.append(k)
@@ -106,8 +107,8 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton,
                 i, j, score = candidate
                 # Add to connections if node is not already included
                 if (i not in connection[:, 3]) and (j not in connection[:, 4]):
-                    id_i = peak_ids[skeleton["edges"][k][0]][i]
-                    id_j = peak_ids[skeleton["edges"][k][1]][j]
+                    id_i = peak_ids[src_node_idx][i]
+                    id_j = peak_ids[dst_node_idx][j]
                     connection = np.vstack([connection, [id_i, id_j, score, i, j]])
 
                     # Stop when reached the max number of matches possible
@@ -116,10 +117,10 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton,
             connection_all.append(connection)
 
     # Greedy matching of each edge candidate set
-    subset = -1 * np.ones((0, skeleton["nodes"]+2)) # ids, overall score, number of parts
+    subset = -1 * np.ones((0, len(skeleton.nodes)+2)) # ids, overall score, number of parts
     candidate = np.array([y for x in peaks_t for y in x]) # flattened set of all points
     candidate_scores = np.array([y for x in peak_vals_t for y in x]) # flattened set of all peak scores
-    for k in range(len(skeleton["edges"])):
+    for k, edge in enumerate(skeleton.edge_names):
         # No matches for this edge
         if k in special_k:
             continue
@@ -129,7 +130,7 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton,
         partBs = connection_all[k][:,1]
 
         # Get edge
-        indexA, indexB = skeleton["edges"][k]
+        indexA, indexB = (skeleton.node_to_index(edge[0]), skeleton.node_to_index(edge[1]))
 
         # Loop through all candidates for current edge
         for i in range(len(connection_all[k])):
@@ -168,8 +169,8 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton,
                     subset[j1][-2] += candidate_scores[partBs[i].astype(int)] + connection_all[k][i][2]
 
             # Neither point found, create a new subset (if not the last edge)
-            elif found == 0 and (add_last_edge or (k < (len(skeleton["edges"])-1))):
-                row = -1 * np.ones(skeleton["nodes"]+2)
+            elif found == 0 and (add_last_edge or (k < (len(skeleton.edges)-1))):
+                row = -1 * np.ones(len(skeleton.nodes)+2)
                 row[indexA] = partAs[i] # ID
                 row[indexB] = partBs[i] # ID
                 row[-1] = 2 # initial count
@@ -185,8 +186,8 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton,
     match_scores_t = []
     matched_peak_vals_t = []
     for match in subset:
-        pts = np.full((skeleton["nodes"], 2), np.nan)
-        peak_vals = np.full((skeleton["nodes"],), np.nan)
+        pts = np.full((len(skeleton.nodes), 2), np.nan)
+        peak_vals = np.full((len(skeleton.nodes),), np.nan)
         for i in range(len(pts)):
             if match[i] >= 0:
                 pts[i,:] = candidate[int(match[i]),:2]
