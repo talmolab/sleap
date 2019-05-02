@@ -856,7 +856,7 @@ class QtNode(QGraphicsEllipseItem):
     def wheelEvent(self, event):
         """Custom event handler for mouse scroll wheel."""
         if self.dragParent:
-            angle = event.delta() / 10 + self.parentObject().rotation()
+            angle = event.delta() / 20 + self.parentObject().rotation()
             self.parentObject().setRotation(angle)
 
 
