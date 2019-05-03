@@ -17,7 +17,7 @@ from PySide2.QtWidgets import QLabel, QPushButton, QSlider
 from PySide2.QtWidgets import QAction
 
 from PySide2.QtWidgets import QGraphicsView, QGraphicsScene
-from PySide2.QtGui import QImage, QPixmap, QPainter, QPainterPath
+from PySide2.QtGui import QImage, QPixmap, QPainter, QPainterPath, QTransform
 from PySide2.QtGui import QPen, QBrush, QColor, QFont
 from PySide2.QtGui import QKeyEvent
 from PySide2.QtCore import Qt, Signal, Slot
@@ -211,9 +211,9 @@ class QtVideoPlayer(QWidget):
     def zoomToFit(self):
         """ Zoom view to fit all instances
         """
-        zoom_rect = self.view.instancesBoundingRect(margin=30, keepAspectRatio=True)
+        zoom_rect = self.view.instancesBoundingRect(margin=20)
         if not zoom_rect.size().isEmpty():
-            self.view.zoomToRect(zoom_rect, relative = False)
+            self.view.zoomToRect(zoom_rect)
 
     def onSequenceSelect(self, seq_len: int, on_success: Callable,
                          on_each = None, on_failure = None):
@@ -338,7 +338,6 @@ class GraphicsView(QGraphicsView):
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
-        self.zoomStack = []
         self.canZoom = True
         self.canPan = True
 
@@ -381,23 +380,17 @@ class GraphicsView(QGraphicsView):
 
     def updateViewer(self):
         """ Show current zoom (if showing entire image, apply current aspect ratio mode).
-        """
+        """        
         if not self.hasImage():
             return
-        if len(self.zoomStack) and self.sceneRect().contains(self.zoomStack[-1]):
-            self.fitInView(self.zoomStack[-1], Qt.IgnoreAspectRatio)  # Show zoomed rect (ignore aspect ratio).
-        else:
-            self.zoomStack = []  # Clear the zoom stack (in case we got here because of an invalid zoom).
 
-            rect = self.sceneRect()
-            # print(self.transform())
-            # print(rect)
-            # print(self.rect())
-            self.fitInView(rect, self.aspectRatioMode)  # Show entire image (use current aspect ratio mode).
-            self.scale(self.zoomFactor, self.zoomFactor)
-            # TODO: fix this so that it's a single operation
-            #   Maybe adjust the self.sceneRect() to account for zooming?
-            # print(self.mapFromScene(self.sceneRect()))
+        base_w_scale = self.width() / self.sceneRect().width()
+        base_h_scale = self.height() / self.sceneRect().height()
+        base_scale = min(base_w_scale, base_h_scale)
+
+        transform = QTransform()
+        transform.scale(base_scale * self.zoomFactor, base_scale * self.zoomFactor)
+        self.setTransform(transform)
         self.updatedViewer.emit()
 
     @property
@@ -511,11 +504,11 @@ class GraphicsView(QGraphicsView):
         elif event.button() == Qt.RightButton:
             if self.canZoom:
                 zoom_rect = self.scene.selectionArea().boundingRect()
-                self.zoomToRect(zoom_rect, relative = True)
+                self.zoomToRect(zoom_rect)
             self.setDragMode(QGraphicsView.NoDrag)
             self.rightMouseButtonReleased.emit(scenePos.x(), scenePos.y())
 
-    def zoomToRect(self, zoom_rect: QRectF, relative: bool = False):
+    def zoomToRect(self, zoom_rect: QRectF):
         """
         Method to zoom scene to a given rectangle.
 
@@ -527,29 +520,25 @@ class GraphicsView(QGraphicsView):
             zoom_rect: The `QRectF` to which we want to zoom.
             relative: Controls whether rect is relative to current zoom.
         """
-        # If rect is not relative to current zoom, clear zoomStack
-        if not relative: self.zoomStack = []
-
-        viewBBox = self.zoomStack[-1] if len(self.zoomStack) else self.sceneRect()
-        selectionBBox = zoom_rect.intersected(viewBBox)
-        self.scene.setSelectionArea(QPainterPath())  # Clear current selection area.
-        if selectionBBox.isValid() and (selectionBBox != viewBBox):
-            self.zoomStack.append(selectionBBox)
-            self.updateViewer()
+        scale_h = self.scene.height()/zoom_rect.height()
+        scale_w = self.scene.width()/zoom_rect.width()
+        scale = min(scale_h, scale_w)
+        
+        self.zoomFactor = scale
+        self.updateViewer()    
+        self.centerOn(zoom_rect.center())
 
     def clearZoom(self):
         """ Clear zoom stack. Doesn't update display.
         """
-        self.zoomStack = []
+        self.zoomFactor = 1
 
-    def instancesBoundingRect(self, margin=0, keepAspectRatio=True):
+    def instancesBoundingRect(self, margin=0):
         """
         Returns a rect which contains all displayed skeleton instances.
 
         Args:
             margin: Margin for padding the rect.
-            keepAspectRatio: If True, grows rect so that it maintains aspect
-                ratio for the video.
         Returns:
             The `QRectF` which contains the skeleton instances.
         """
@@ -558,12 +547,6 @@ class GraphicsView(QGraphicsView):
             rect = rect.united(item.boundingRect())
         if margin > 0:
             rect = rect.marginsAdded(QMarginsF(margin, margin, margin, margin))
-        if keepAspectRatio:
-            size = QSizeF(self.sceneRect().width(), self.sceneRect().height())
-            size.scale(rect.width(), rect.height(), Qt.AspectRatioMode.KeepAspectRatioByExpanding)
-            extra_width = size.width() - rect.width()
-            extra_height = size.height() - rect.height()
-            rect = rect.marginsAdded(QMarginsF(extra_width/2, extra_height/2, extra_width/2, extra_height/2))
         return rect
 
     def mouseDoubleClickEvent(self, event):
@@ -574,7 +557,7 @@ class GraphicsView(QGraphicsView):
             self.leftMouseButtonDoubleClicked.emit(scenePos.x(), scenePos.y())
         elif event.button() == Qt.RightButton:
             if self.canZoom:
-                self.zoomStack = []  # Clear zoom stack.
+                self.clearZoom()
                 self.updateViewer()
             self.rightMouseButtonDoubleClicked.emit(scenePos.x(), scenePos.y())
         QGraphicsView.mouseDoubleClickEvent(self, event)
