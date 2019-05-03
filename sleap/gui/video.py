@@ -504,6 +504,7 @@ class GraphicsView(QGraphicsView):
         elif event.button() == Qt.RightButton:
             if self.canZoom:
                 zoom_rect = self.scene.selectionArea().boundingRect()
+                self.scene.setSelectionArea(QPainterPath()) # clear selection
                 self.zoomToRect(zoom_rect)
             self.setDragMode(QGraphicsView.NoDrag)
             self.rightMouseButtonReleased.emit(scenePos.x(), scenePos.y())
@@ -520,6 +521,9 @@ class GraphicsView(QGraphicsView):
             zoom_rect: The `QRectF` to which we want to zoom.
             relative: Controls whether rect is relative to current zoom.
         """
+
+        if zoom_rect.isNull(): return
+
         scale_h = self.scene.height()/zoom_rect.height()
         scale_w = self.scene.width()/zoom_rect.width()
         scale = min(scale_h, scale_w)

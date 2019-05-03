@@ -35,9 +35,7 @@ def test_gui_video_instances(qtbot, small_robot_mp4_vid, centered_pair_labels):
     vp.zoomToFit()
 
     # Check that we zoomed correctly
-    assert len(vp.view.zoomStack) == 1
-    assert int(vp.view.zoomStack[0].height()) == 171
-    assert int(vp.view.zoomStack[0].width()) == 300
+    assert(vp.view.zoomFactor > 2)
     
     vp.instances[0].updatePoints(complete=True)
     
