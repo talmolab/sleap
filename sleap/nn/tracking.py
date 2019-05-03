@@ -14,12 +14,145 @@ from typing import Union
 from time import time
 
 from scipy.io import loadmat, savemat
+from scipy.optimize import linear_sum_assignment
 
 from sleap.io.video import Video
 from sleap.skeleton import Skeleton
-from sleap.nn.inference import find_all_peaks, FlowShiftTracker, get_inference_model
-from sleap.nn.paf_inference import match_peaks_paf_par
+from sleap.nn.inference import find_all_peaks, get_inference_model, match_peaks_paf_par
 from sleap.util import usable_cpu_count, save_dict_to_hdf5
+
+# from sleap.instance import Track, Instance, ShiftedInstance, Tracks
+from sleap.instance import Track, ShiftedInstance, Tracks
+from sleap.instance import InstanceArray as Instance
+
+
+
+class FlowShiftTracker():
+    def __init__(self, window=10, of_win_size=(21,21), of_max_level=3, of_max_count=30, of_epsilon=0.01, img_scale=1.0, verbosity=0):
+        self.window = window
+        self.of_params = dict(
+            winSize=of_win_size,
+            maxLevel=of_max_level,
+            criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, of_max_count, of_epsilon)
+        )
+        self.img_scale = np.array(img_scale).astype("float32")
+        self.verbosity = verbosity
+
+        self.last_img = None
+        self.tracks = Tracks()
+
+    def process(self, imgs, frame_idxs, matched_instances, skeleton):
+        """ Flow shift track a batch of frames with matched instances """
+
+        for img_idx, t in enumerate(frame_idxs):
+            if len(self.tracks.tracks) == 0:
+                for i, pts in enumerate(matched_instances[img_idx]):
+                    self.tracks.add_instance(Instance(points=pts / self.img_scale, frame_idx=t, track=Track(spawned_on=t, name=f"{i}")))
+                if self.verbosity > 0: print(f"[t = {t}] Created {len(self.tracks.tracks)} initial tracks")
+                self.last_img = imgs[img_idx].copy()
+                continue
+                
+            # Get all points in reference frame
+            instances_ref = self.tracks.get_frame_instances(t - 1, max_shift=self.window - 1)
+            pts_ref = [instance.points for instance in instances_ref]
+            if self.verbosity > 0: print(f"[t = {t}] Using {len(instances_ref)} refs back to t = {min([instance.frame_idx for instance in instances_ref] + [instance.source.frame_idx for instance in instances_ref if isinstance(instance, ShiftedInstance)])} ")
+
+            # Flow shift
+            pts_fs, status, err = cv2.calcOpticalFlowPyrLK(self.last_img, imgs[img_idx], (np.concatenate(pts_ref, axis=0)).astype("float32") * self.img_scale, None, **self.of_params)
+            self.last_img = imgs[img_idx].copy()
+
+            # Split by instance
+            sections = np.cumsum([len(x) for x in pts_ref])[:-1]
+            pts_fs = np.split(pts_fs / self.img_scale, sections, axis=0)
+            status = np.split(status, sections, axis=0)
+            err = np.split(err, sections, axis=0)
+
+            # Store shifted instances with metadata
+            shifted_instances = [ShiftedInstance(parent=ref, points=pts, frame_idx=t) for ref, pts, found in zip(instances_ref, pts_fs, status) if np.sum(found) > 0]
+            self.tracks.add_instances(shifted_instances)
+
+            if len(matched_instances[img_idx]) == 0:
+                if self.verbosity > 0: print(f"[t = {t}] No matched instances to assign to tracks")
+                continue
+
+            # Reduce distances by track
+            unassigned_pts = np.stack(matched_instances[img_idx], axis=0) / self.img_scale # instances x nodes x 2
+            shifted_tracks = list({instance.track for instance in shifted_instances})
+            if self.verbosity > 0: print(f"[t = {t}] Flow shift matching {len(unassigned_pts)} instances to {len(shifted_tracks)} ref tracks")
+            cost_matrix = np.full((len(unassigned_pts), len(shifted_tracks)), np.nan)
+            for i, track in enumerate(shifted_tracks):
+                # Get shifted points for current track
+                track_pts = np.stack([instance.points for instance in shifted_instances if instance.track == track], axis=0) # track_instances x nodes x 2
+
+                # Compute pairwise distances between points
+                distances = np.sqrt(np.sum((np.expand_dims(unassigned_pts, axis=1) - np.expand_dims(track_pts, axis=0)) ** 2, axis=-1)) # unassigned_instances x track_instances x nodes
+
+                # Reduce over nodes and instances
+                distances = -np.nansum(np.exp(-distances), axis=(1, 2))
+
+                # Save
+                cost_matrix[:, i] = distances
+
+            # Hungarian matching
+            assigned_ind, track_ind = linear_sum_assignment(cost_matrix)
+
+            # Save assigned instances
+            for i, j in zip(assigned_ind, track_ind):
+                self.tracks.add_instance(
+                    Instance(points=unassigned_pts[i], track=shifted_tracks[j], frame_idx=t)
+                )
+                if self.verbosity > 0: print(f"[t = {t}] Assigned instance {i} to existing track {shifted_tracks[j].name} (cost = {cost_matrix[i,j]})")
+
+            # Spawn new tracks for unassigned instances
+            for i, pts in enumerate(unassigned_pts):
+                if i in assigned_ind: continue
+                instance = Instance(points=pts, track=Track(spawned_on=t, name=f"{len(self.tracks.tracks)}"), frame_idx=t)
+                self.tracks.add_instance(instance)
+                if self.verbosity > 0: print(f"[t = {t}] Assigned remaining instance {i} to newly spawned track {instance.track.name} (best cost = {cost_matrix[i,:].min()})")
+
+                
+    def occupancy(self):
+        """ Compute occupancy matrix """
+        num_frames = max(self.tracks.instances.keys()) + 1
+        occ = np.zeros((len(self.tracks.tracks), int(num_frames)), dtype="bool")
+        for t in range(int(num_frames)):
+            instances = self.tracks.get_frame_instances(t)
+            instances = [instance for instance in instances if isinstance(instance, Instance)]
+            for instance in instances:
+                occ[self.tracks.tracks.index(instance.track),t] = True
+
+        return occ
+
+    def generate_tracks(self):
+        """ Serializes tracking data into a dict """
+        # return attr.asdict(self.tracks) # grr, doesn't work with savemat
+
+        num_tracks = len(self.tracks.tracks)
+        num_frames = int(max(self.tracks.instances.keys()) + 1)
+        num_nodes = len(self.tracks.instances[0][0].points)
+
+        instance_tracks = np.full((num_frames, num_nodes, 2, num_tracks), np.nan)
+        for t in range(num_frames):
+            instances = self.tracks.get_frame_instances(t)
+            instances = [instance for instance in instances if isinstance(instance, Instance)]
+
+            for instance in instances:
+                instance_tracks[t, :, :, self.tracks.tracks.index(instance.track)] = instance.points
+
+        return instance_tracks
+
+    def generate_shifted_data(self):
+        """ Generate arrays with all shifted instance data """
+
+        shifted_instances = [y for x in self.tracks.instances.values() for y in x if isinstance(y, ShiftedInstance)]
+
+        track_id = np.array([self.tracks.tracks.index(instance.track) for instance in shifted_instances])
+        frame_idx = np.array([instance.frame_idx for instance in shifted_instances])
+        frame_idx_source = np.array([instance.source.frame_idx for instance in shifted_instances])
+        points = np.stack([instance.points for instance in shifted_instances], axis=0)
+
+        return track_id, frame_idx, frame_idx_source, points
+
 
 
 @attr.s(auto_attribs=True)
@@ -49,7 +182,8 @@ class Predictor:
     model: keras.Model = attr.ib()
     skeleton: Skeleton = attr.ib()
     inference_batch_size: int = 4
-    read_chunk_size = 10
+    read_chunk_size: int = 512
+    save_frequency: int = 30 # chunks
     nms_min_thresh = 0.3
     nms_sigma = 3
     min_score_to_node_ratio: float = 0.2
@@ -57,6 +191,7 @@ class Predictor:
     min_score_integral: float = 0.6
     add_last_edge: bool = True
     flow_window: int = 15
+    save_shifted_instances: bool = True
 
     def run(self, input_video: Union[str, Video], output_path: str):
         """
@@ -110,7 +245,7 @@ class Predictor:
         match_scores = []
         matched_peak_vals = []
         num_chunks = int(np.ceil(num_frames / self.read_chunk_size))
-        frame_num = 0
+        frame_idx = 0
         for chunk in range(num_chunks):
             logger.info("Processing chunk %d/%d:" % (chunk + 1, num_chunks))
             t0_chunk = time()
@@ -121,11 +256,14 @@ class Predictor:
             t0 = time()
 
             # Read the next chunk of frames
-            frame_end = frame_num + self.read_chunk_size
+            frame_end = frame_idx + self.read_chunk_size
             if frame_end > vid.num_frames:
                 frame_end = vid.num_frames
 
-            mov = vid[frame_num:frame_end]
+            mov = vid[frame_idx:frame_end]
+
+            frames_idx = np.arange(frame_idx, frame_idx + len(mov))
+            frame_idx += len(mov)
 
             # Preprocess the frames
             if model_channels == 1:
@@ -139,6 +277,7 @@ class Predictor:
             if model_channels == 1:
                 mov = mov[..., None]
             else:
+                # TODO: figure out when/if this is necessary for RGB videos
                 mov = mov[..., ::-1]
 
             logger.info("  Read %d frames [%.1fs]" % (len(mov), time() - t0))
@@ -163,14 +302,9 @@ class Predictor:
                                                                add_last_edge=self.add_last_edge, pool=pool)
             logger.info("  Matched peaks via PAFs [%.1fs]" % (time() - t0))
 
-            # # Adjust for input scale
-            # for i in range(len(instances)):
-            #     for j in range(len(instances[i])):
-            #         instances[i][j] = instances[i][j] / scale
-
             # Track
             t0 = time()
-            tracker.track(mov, instances)
+            tracker.process(mov, frames_idx, instances, self.skeleton)
             logger.info("  Tracked IDs via flow shift [%.1fs]" % (time() - t0))
 
             # Save
@@ -178,22 +312,29 @@ class Predictor:
             match_scores.extend(scores)
             matched_peak_vals.extend(peak_vals)
 
-            save_every = 3
-
             # Get the parameters used for this inference.
             params = attr.asdict(self, filter=lambda attr, value: attr.name not in ["model", "skeleton"])
             print(params)
 
-            if chunk % save_every == 0 or chunk == (num_chunks - 1):
+            if chunk % self.save_frequency == 0 or chunk == (num_chunks - 1):
                 t0 = time()
+
+                save_dict = dict(params=params,
+                     matched_instances=matched_instances, match_scores=match_scores,
+                     matched_peak_vals=matched_peak_vals, scale=scale,
+                     uids=tracker.uids, tracked_instances=tracker.generate_tracks(matched_instances),
+                    flow_assignment_costs=tracker.flow_assignment_costs)
+
+                if self.save_shifted_instances:
+                    shifted_track_id, shifted_frame_idx, shifted_frame_idx_source, shifted_points = tracker.generate_shifted_data()
+                    save_dict.update(dict(
+                        shifted_track_id=shifted_track_id,
+                        shifted_frame_idx=shifted_frame_idx,
+                        shifted_frame_idx_source=shifted_frame_idx_source,
+                        shifted_points=shifted_points, ))
+
                 with h5.File(output_path, 'w') as f:
-                    save_dict_to_hdf5(f, '/',
-                                      dict(params=params,
-                                           matched_instances=matched_instances, match_scores=match_scores,
-                                           matched_peak_vals=matched_peak_vals, scale=scale,
-                                           uids=tracker.uids, tracked_instances=tracker.generate_tracks(matched_instances),
-                                           flow_assignment_costs=tracker.flow_assignment_costs,
-                                        ))
+                    save_dict_to_hdf5(f, '/', save_dict)
 
                     # Save the skeleton as well, in JSON to the HDF5
                     self.skeleton.save_hdf5(f)
