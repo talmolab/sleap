@@ -7,4 +7,5 @@ keras
 h5py
 opencv-python
 pandas
+psutil
 PySide2

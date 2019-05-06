@@ -132,6 +132,7 @@ class MediaVideo:
     filename: str = attr.ib()
     # grayscale: bool = attr.ib(default=None, converter=bool)
     grayscale: bool = attr.ib()
+    bgr: bool = attr.ib(default=True)
     _detect_grayscale = False
 
     @grayscale.default
@@ -196,6 +197,9 @@ class MediaVideo:
 
         if grayscale:
             frame = frame[...,0][...,None]
+
+        if self.bgr:
+            frame = frame[...,::-1]
 
         return frame
 
@@ -414,11 +418,11 @@ class Video:
         Returns:
             A Video object with the detected backend
         """
-        if file.endswith(("h5", "hdf5")):
+        if file.lower().endswith(("h5", "hdf5")):
             return cls(backend=HDF5Video(file=file, *args, **kwargs))
         elif file.endswith(("npy")):
             return cls(backend=NumpyVideo(file=file, *args, **kwargs))
-        elif file.endswith(("mp4", "avi")):
+        elif file.lower().endswith(("mp4", "avi")):
             return cls(backend=MediaVideo(filename=file, *args, **kwargs))
         else:
             raise ValueError("Could not detect backend for specified filename.")
