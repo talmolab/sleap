@@ -119,6 +119,7 @@ class MainWindow(QMainWindow):
 
         labelMenu = self.menuBar().addMenu("Labels")
         labelMenu.addAction("Add Instance", self.newInstance, Qt.CTRL + Qt.Key_I)
+        labelMenu.addAction("Delete Instance", self.deleteSelectedInstance, Qt.CTRL + Qt.Key_Backspace)
         labelMenu.addAction("Transpose Instances", self.transposeInstance, Qt.CTRL + Qt.Key_T)
         labelMenu.addAction("Select Next Instance", self.player.view.nextSelection, QKeySequence(Qt.Key.Key_QuoteLeft))
         labelMenu.addAction("Clear Selection", self.player.view.clearSelection, QKeySequence(Qt.Key.Key_Escape))
@@ -509,6 +510,14 @@ class MainWindow(QMainWindow):
 
         if self.labeled_frame not in self.labels.labels:
             self.labels.append(self.labeled_frame)
+
+        self.plotFrame()
+        self.updateSeekbarLabels()
+
+    def deleteSelectedInstance(self):
+        idx = self.player.view.getSelection()
+        if idx is None: return
+        del self.labeled_frame.instances[idx]
 
         self.plotFrame()
         self.updateSeekbarLabels()
