@@ -12,6 +12,7 @@ from PySide2.QtWidgets import QFileDialog, QMessageBox
 
 import os
 import sys
+import copy
 
 from pathlib import PurePath
 
@@ -503,9 +504,21 @@ class MainWindow(QMainWindow):
         if self.labeled_frame is None:
             return
 
+        copy_instance = None
+        if len(self.labeled_frame.instances):
+            # FIXME: filter by skeleton type
+            copy_instance = self.labeled_frame.instances[-1]
+
+        # TODO
+        # Look for instances in prior frames and copy if there are more instances
+        # than in the current frame.
+
         new_instance = Instance(skeleton=self.skeleton)
         for node in self.skeleton.nodes:
-            new_instance[node] = Point(x=np.random.rand() * self.video.width * 0.5, y=np.random.rand() * self.video.height * 0.5, visible=True)
+            if copy_instance is not None and node in copy_instance:
+                new_instance[node] = copy.copy(copy_instance[node])
+            else:
+                new_instance[node] = Point(x=np.random.rand() * self.video.width * 0.5, y=np.random.rand() * self.video.height * 0.5, visible=True)
         self.labeled_frame.instances.append(new_instance)
 
         if self.labeled_frame not in self.labels.labels:
