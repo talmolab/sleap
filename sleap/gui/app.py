@@ -396,7 +396,8 @@ class MainWindow(QMainWindow):
         # Load video in player widget
         self.player.load_video(self.video)
 
-        self.player.seekbar.setLabels([frame.frame_idx for frame in self.labels.find(self.video)])
+        # Annotate labelled frames on seekbar
+        self.updateSeekbarLabels()
 
         # Jump to last labeled frame
         last_label = self.labels.find_last(self.video)
@@ -486,6 +487,8 @@ class MainWindow(QMainWindow):
 
         self.plotFrame()
 
+    def updateSeekbarLabels(self):
+        self.player.seekbar.setLabels([frame.frame_idx for frame in self.labels.find(self.video)])
 
     def newInstance(self):
         if self.labeled_frame is None:
@@ -500,6 +503,7 @@ class MainWindow(QMainWindow):
             self.labels.append(self.labeled_frame)
 
         self.plotFrame()
+        self.updateSeekbarLabels()
 
     def deleteInstance(self):
         idx = self.instancesTable.currentIndex()
@@ -507,6 +511,7 @@ class MainWindow(QMainWindow):
         del self.labeled_frame.instances[idx.row()]
 
         self.plotFrame()
+        self.updateSeekbarLabels()
 
     def transposeInstance(self):
         # We're currently identifying instances by numeric index, so it's
@@ -610,11 +615,8 @@ class MainWindow(QMainWindow):
         self.plotFrame(self.mark_idx)
 
     def extractClip(self):
-        if self.mark_idx is None:
-            QMessageBox(text=f"You must first mark a frame to determine the range for extraction.").exec_()
-        else:
-            start = min(self.mark_idx, self.player.frame_idx)
-            end = max(self.mark_idx, self.player.frame_idx)
+        start, end = self.player.seekbar.getSelection()
+        if start < end:
             QMessageBox(text=f"Extract video frames: {start+1} to {end+1}. Not yet implemented.").exec_()
 
     def previousLabeledFrame(self):
