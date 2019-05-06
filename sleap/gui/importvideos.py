@@ -104,6 +104,12 @@ class ImportParamDialog(QDialog):
                         "type": "check"
                     }
                 ]
+            },
+            {
+                "video_type": "numpy",
+                "match": "npy",
+                "video_class": Video.from_numpy,
+                "params": []
             }
         ]
         

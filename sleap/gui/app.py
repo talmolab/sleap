@@ -11,6 +11,7 @@ from PySide2.QtWidgets import QMenu, QAction
 from PySide2.QtWidgets import QFileDialog, QMessageBox
 
 import os
+import sys
 
 from pathlib import PurePath
 
@@ -395,6 +396,9 @@ class MainWindow(QMainWindow):
         # Load video in player widget
         self.player.load_video(self.video)
 
+        # Annotate labelled frames on seekbar
+        self.updateSeekbarLabels()
+
         # Jump to last labeled frame
         last_label = self.labels.find_last(self.video)
         if last_label is not None:
@@ -483,6 +487,8 @@ class MainWindow(QMainWindow):
 
         self.plotFrame()
 
+    def updateSeekbarLabels(self):
+        self.player.seekbar.setLabels([frame.frame_idx for frame in self.labels.find(self.video)])
 
     def newInstance(self):
         if self.labeled_frame is None:
@@ -497,6 +503,7 @@ class MainWindow(QMainWindow):
             self.labels.append(self.labeled_frame)
 
         self.plotFrame()
+        self.updateSeekbarLabels()
 
     def deleteInstance(self):
         idx = self.instancesTable.currentIndex()
@@ -504,6 +511,7 @@ class MainWindow(QMainWindow):
         del self.labeled_frame.instances[idx.row()]
 
         self.plotFrame()
+        self.updateSeekbarLabels()
 
     def transposeInstance(self):
         # We're currently identifying instances by numeric index, so it's
@@ -517,7 +525,15 @@ class MainWindow(QMainWindow):
             self._transpose_instances((0,1))
         # If there are more than two, then we need the user to select the instances.
         else:
-            self.player.onSequenceSelect(seq_len = 2, on_success = self._transpose_instances)
+            self.player.onSequenceSelect(seq_len = 2,
+                                         on_success = self._transpose_instances,
+                                         on_each = self._transpose_message,
+                                         on_failure = lambda x:self.updateStatusMessage()
+                                         )
+
+    def _transpose_message(self, instance_ids:list):
+        word = "next" if len(instance_ids) else "first"
+        self.updateStatusMessage(f"Please select the {word} instance to transpose...")
 
     def _transpose_instances(self, instance_ids:list):
         if len(instance_ids) != 2: return
@@ -599,16 +615,14 @@ class MainWindow(QMainWindow):
         self.plotFrame(self.mark_idx)
 
     def extractClip(self):
-        if self.mark_idx is None:
-            QMessageBox(text=f"You must first mark a frame to determine the range for extraction.").exec_()
-        else:
-            start = min(self.mark_idx, self.player.frame_idx)
-            end = max(self.mark_idx, self.player.frame_idx)
+        start, end = self.player.seekbar.getSelection()
+        if start < end:
             QMessageBox(text=f"Extract video frames: {start+1} to {end+1}. Not yet implemented.").exec_()
 
     def previousLabeledFrame(self):
         cur_idx = self.player.frame_idx
         frame_indexes = [frame.frame_idx for frame in self.labels.find(self.video)]
+        frame_indexes.sort()
         if len(frame_indexes):
             prev_idx = max(filter(lambda idx: idx < cur_idx, frame_indexes), default=frame_indexes[-1])
             self.plotFrame(prev_idx)
@@ -616,6 +630,7 @@ class MainWindow(QMainWindow):
     def nextLabeledFrame(self):
         cur_idx = self.player.frame_idx
         frame_indexes = [frame.frame_idx for frame in self.labels.find(self.video)]
+        frame_indexes.sort()
         if len(frame_indexes):
             next_idx = min(filter(lambda idx: idx > cur_idx, frame_indexes), default=frame_indexes[0])
             self.plotFrame(next_idx)
@@ -669,22 +684,33 @@ class MainWindow(QMainWindow):
 
         player.view.updatedViewer.emit()
 
-        # self.statusBar().showMessage(f"Frame: {self.player.frame_idx+1}/{len(self.video)}  |  Labeled frames (video/total): {self.labels.instances[self.labels.instances.videoId == 1].frameIdx.nunique()}/{len(self.labels)}  |  Instances (frame/total): {len(frame_instances)}/{self.labels.points.instanceId.nunique()}")
-        self.statusBar().showMessage(f"Frame: {self.player.frame_idx+1}/{len(self.video)}")
+        self.updateStatusMessage()
 
+    def updateStatusMessage(self, message = None):
+        if message is None:
+            message = f"Frame: {self.player.frame_idx+1}/{len(self.video)}"
+
+        self.statusBar().showMessage(message)
+        # self.statusBar().showMessage(f"Frame: {self.player.frame_idx+1}/{len(self.video)}  |  Labeled frames (video/total): {self.labels.instances[self.labels.instances.videoId == 1].frameIdx.nunique()}/{len(self.labels)}  |  Instances (frame/total): {len(frame_instances)}/{self.labels.points.instanceId.nunique()}")
 
 def main(*args, **kwargs):
     app = QApplication([])
     app.setApplicationName("sLEAP Label")
 
-    filters = ["JSON labels (*.json)", "HDF5 dataset (*.h5 *.hdf5)"]
-    filename, selected_filter = QFileDialog.getOpenFileName(None, dir=None, caption="Open Project", filter=";;".join(filters))
+    if "import_data" not in kwargs:
+        filters = ["JSON labels (*.json)", "HDF5 dataset (*.h5 *.hdf5)"]
+        filename, selected_filter = QFileDialog.getOpenFileName(None, dir=None, caption="Open Project", filter=";;".join(filters))
 
-    if len(filename): kwargs["import_data"] = filename
+        if len(filename): kwargs["import_data"] = filename
 
     window = MainWindow(*args, **kwargs)
     window.showMaximized()
     app.exec_()
 
 if __name__ == "__main__":
-    main()
+
+    kwargs = dict()
+    if len(sys.argv) > 1:
+        kwargs["import_data"] = sys.argv[1]
+
+    main(**kwargs)
