@@ -704,6 +704,11 @@ class QtNodeLabel(QGraphicsTextItem):
         """
         self.node.mouseReleaseEvent(event)
 
+    def wheelEvent(self, event):
+        """ Pass events along so that clicking label is like clicking node.
+        """
+        self.node.wheelEvent(event)
+
 
 class QtNode(QGraphicsEllipseItem):
     """
