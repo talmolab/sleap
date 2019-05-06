@@ -323,7 +323,7 @@ class VideoSlider(QGraphicsView):
 if __name__ == "__main__":
     app = QApplication([])
 
-    window = VideoSlider(0, 100, 15, set((10,15)))
+    window = VideoSlider(min=0, max=100, val=15, labels=(10,15))
     window.valueChanged.connect(lambda x: print(x))
     window.show()
 
