@@ -667,7 +667,11 @@ class QtNodeLabel(QGraphicsTextItem):
     def adjustStyle(self):
         """ Update visual display of the label and its node.
         """
-        if self.node.point.complete:
+        if not self.node.point.visible:
+            self._base_font.setBold(False)
+            self.setFont(self._base_font)
+            self.setDefaultTextColor(self.node.pen().color())
+        elif self.node.point.complete:
             self._base_font.setBold(True)
             self.setFont(self._base_font)
             complete_color = QColor(80, 194, 159) # greenish
