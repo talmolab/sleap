@@ -622,6 +622,7 @@ class MainWindow(QMainWindow):
     def previousLabeledFrame(self):
         cur_idx = self.player.frame_idx
         frame_indexes = [frame.frame_idx for frame in self.labels.find(self.video)]
+        frame_indexes.sort()
         if len(frame_indexes):
             prev_idx = max(filter(lambda idx: idx < cur_idx, frame_indexes), default=frame_indexes[-1])
             self.plotFrame(prev_idx)
@@ -629,6 +630,7 @@ class MainWindow(QMainWindow):
     def nextLabeledFrame(self):
         cur_idx = self.player.frame_idx
         frame_indexes = [frame.frame_idx for frame in self.labels.find(self.video)]
+        frame_indexes.sort()
         if len(frame_indexes):
             next_idx = min(filter(lambda idx: idx > cur_idx, frame_indexes), default=frame_indexes[0])
             self.plotFrame(next_idx)
