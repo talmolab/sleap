@@ -396,6 +396,8 @@ class MainWindow(QMainWindow):
         # Load video in player widget
         self.player.load_video(self.video)
 
+        self.player.seekbar.setLabels([frame.frame_idx for frame in self.labels.find(self.video)])
+
         # Jump to last labeled frame
         last_label = self.labels.find_last(self.video)
         if last_label is not None:

@@ -35,6 +35,7 @@ from PySide2.QtWidgets import QGraphicsEllipseItem, QGraphicsLineItem, QGraphics
 from sleap.skeleton import Skeleton
 from sleap.instance import Instance, Point
 from sleap.io.video import Video, HDF5Video
+from sleap.gui.slider import VideoSlider
 
 import qimage2ndarray
 
@@ -58,7 +59,7 @@ class QtVideoPlayer(QWidget):
         self.frame_idx = -1
         self.view = GraphicsView()
 
-        self.seekbar = QSlider(Qt.Horizontal)
+        self.seekbar = VideoSlider()
         self.seekbar.valueChanged.connect(lambda evt: self.plot(self.seekbar.value()))
         self.seekbar.setEnabled(False)
 
