@@ -804,8 +804,9 @@ class QtNode(QGraphicsEllipseItem):
             
             self.point.complete = True
         elif event.button() == Qt.RightButton:
-            # Right-click to mark node missing from this instance
-            self.point.visible = False
+            # Right-click to toggle node as missing from this instance
+            self.point.visible = not self.point.visible
+            self.updatePoint()
         elif event.button() == Qt.MidButton:
             pass
 
