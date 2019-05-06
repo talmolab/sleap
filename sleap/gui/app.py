@@ -163,6 +163,8 @@ class MainWindow(QMainWindow):
         self.videosTable = VideosTable()
         videos_layout.addWidget(self.videosTable)
         hb = QHBoxLayout()
+        btn = QPushButton("Open video")
+        btn.clicked.connect(self.activateSelectedVideo); hb.addWidget(btn)
         btn = QPushButton("Add videos")
         btn.clicked.connect(self.addVideo); hb.addWidget(btn)
         btn = QPushButton("Remove video")
@@ -170,7 +172,7 @@ class MainWindow(QMainWindow):
         hbw = QWidget(); hbw.setLayout(hb)
         videos_layout.addWidget(hbw)
 
-        self.videosTable.doubleClicked.connect(lambda x: self.loadVideo(self.labels.videos[x.row()], x.row()))
+        self.videosTable.doubleClicked.connect(self.activateSelectedVideo)
 
         ####### Skeleton #######
         skeleton_layout = _make_dock("Skeleton", tab_with=videos_layout.parent().parent())
@@ -332,6 +334,12 @@ class MainWindow(QMainWindow):
 
             # Load first video
             self.loadVideo(self.labels.videos[0], 0)
+
+    def activateSelectedVideo(self, x):
+        # Get selected video
+        idx = self.videosTable.currentIndex()
+        if not idx.isValid(): return
+        self.loadVideo(self.labels.videos[idx.row()], idx.row())
 
     def addVideo(self, filename=None):
         # Browse for file
