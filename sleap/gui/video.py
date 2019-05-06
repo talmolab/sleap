@@ -577,20 +577,8 @@ class GraphicsView(QGraphicsView):
 
             self.zoomFactor = max(factor * self.zoomFactor, 1)
             self.updateViewer()
-
-            # transform = self.transform()
-
-            # print(self.sceneRect())
-            # print(self.transform())
-
-            # scale = max(transform.m11(), transform.m22())
-            # if scale * factor < 1.0:
-            #     factor = 1.0
-
-            # self.scale(factor, factor)
-
-            # https://stackoverflow.com/questions/19113532/qgraphicsview-zooming-in-and-out-under-mouse-position-using-mouse-wheel
-            # 
+        # trigger default event handler so event will pass to children
+        QGraphicsView.wheelEvent(self, event)
 
     def keyPressEvent(self, event):
         event.ignore() # Kicks the event up to parent
