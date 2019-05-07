@@ -19,7 +19,7 @@ from typing import List, Dict, Union
 
 import pandas as pd
 
-from sleap.skeleton import Skeleton
+from sleap.skeleton import Skeleton, Node
 from sleap.instance import Instance, Point
 from sleap.io.video import Video
 
@@ -75,15 +75,19 @@ class Labels(MutableSequence):
     labeled_frames: List[LabeledFrame] = attr.ib(default=attr.Factory(list))
     videos: List[Video] = attr.ib(default=attr.Factory(list))
     skeletons: List[Skeleton] = attr.ib(default=attr.Factory(list))
+    nodes: List[Node] = attr.ib(default=attr.Factory(list))
 
     def __attrs_post_init__(self):
 
         # Add any videos that are present in the labels but
         # missing from the video list
-        self.videos = self.videos + list({label.video for label in self.labels})
+        self.videos = list(set(self.videos).union({label.video for label in self.labels}))
 
         # Ditto for skeletons
-        self.skeletons = self.skeletons + list({instance.skeleton for label in self.labels for instance in label.instances})
+        self.skeletons = list(set(self.skeletons).union({instance.skeleton for label in self.labels for instance in label.instances}))
+
+        # Ditto for nodes
+        self.nodes = list(set(self.nodes).union({node for skeleton in self.skeletons for node in skeleton.nodes}))
 
     # Below are convenience methods for working with Labels as list.
     # Maybe we should just inherit from list? Maybe this class shouldn't
@@ -109,6 +113,8 @@ class Labels(MutableSequence):
             return item in self.videos
         elif isinstance(item, Skeleton):
             return item in self.skeletons
+        elif isinstance(item, Node):
+            return item in self.nodes
         elif isinstance(item, tuple) and len(item) == 2 and isinstance(item[0], Video) and isinstance(item[1], int):
             return self.find_first(*item) is not None
 
@@ -137,7 +143,7 @@ class Labels(MutableSequence):
 
     def find(self, video: Video, frame_idx: int = None) -> List[LabeledFrame]:
         """ Search for labeled frames given video and/or frame index. 
-        
+
         Args:
             video: a `Video` instance that is associated with the labeled frames
             frame_idx: an integer specifying the frame index within the video
@@ -154,7 +160,7 @@ class Labels(MutableSequence):
 
     def find_first(self, video: Video, frame_idx: int = None) -> LabeledFrame:
         """ Find the first occurrence of a labeled frame for the given video and/or frame index.
-        
+
         Args:
             video: a `Video` instance that is associated with the labeled frames
             frame_idx: an integer specifying the frame index within the video
@@ -170,7 +176,7 @@ class Labels(MutableSequence):
 
     def find_last(self, video: Video, frame_idx: int = None) -> LabeledFrame:
         """ Find the last occurrence of a labeled frame for the given video and/or frame index.
-        
+
         Args:
             video: A `Video` instance that is associated with the labeled frames
             frame_idx: An integer specifying the frame index within the video
@@ -187,7 +193,7 @@ class Labels(MutableSequence):
     @property
     def all_instances(self):
         return list(self.instances())
-    
+
     def instances(self, video: Video = None, skeleton: Skeleton = None):
         """ Iterate through all instances in the labels, optionally with filters.
 
@@ -214,6 +220,9 @@ class Labels(MutableSequence):
         for skeleton in {instance.skeleton for instance in new_label}:
             if skeleton not in self.skeletons:
                 self.skeletons.append(skeleton)
+                for node in skeleton.nodes:
+                    if node not in self.nodes:
+                        self.nodes.append(node)
 
     def __setitem__(self, index, value: LabeledFrame):
         # TODO: Maybe we should remove this method altogether?
@@ -277,19 +286,30 @@ class Labels(MutableSequence):
             The JSON representaiton of the string.
         """
 
+        # FIXME: Update list of nodes
+        # We shouldn't have to do this here, but for some reason we're missing nodes
+        # which are in the skeleton but don't have points (in the first instance?).
+        self.nodes = list(set(self.nodes).union({node for skeleton in self.skeletons for node in skeleton.nodes}))
+
         # Register some unstructure hooks since we don't want complete deserialization
         # of video and skeleton objects present in the labels. We will serialize these
         # as references to the above constructed lists to limit redundant data in the
         # json
         label_cattr = cattr.Converter()
-        # label_cattr.register_unstructure_hook(Skeleton, lambda x: skeletons.index(x))
+        label_cattr.register_unstructure_hook(Skeleton, lambda x: skeletons.index(x))
         label_cattr.register_unstructure_hook(Skeleton, lambda x: self.skeletons.index(x))
         label_cattr.register_unstructure_hook(Video, lambda x: self.videos.index(x))
+        label_cattr.register_unstructure_hook(Node, lambda x: self.nodes.index(x))
+
+        idx_to_node = {i:self.nodes[i] for i in range(len(self.nodes))}
+
+        skeleton_cattr = Skeleton.make_cattr(idx_to_node)
 
         # Serialize the skeletons, videos, and labels
         dicts = {
             'version': LABELS_JSON_FILE_VERSION,
-            'skeletons': Skeleton.make_cattr().unstructure(self.skeletons),
+            'skeletons': skeleton_cattr.unstructure(self.skeletons),
+            'nodes': cattr.unstructure(self.nodes),
             'videos': cattr.unstructure(self.videos),
             'labels': label_cattr.unstructure(self.labeled_frames)
          }
@@ -312,18 +332,25 @@ class Labels(MutableSequence):
         else:
             dicts = data
 
-        # First, deserialize the skeleton and videos lists, the labels reference these
-        # so we will need them while deserializing.
-        skeletons = Skeleton.make_cattr().structure(dicts['skeletons'], List[Skeleton])
+        # First, deserialize the skeletons, videos, and nodes lists.
+        # The labels reference these so we will need them while deserializing.
+        nodes = cattr.structure(dicts['nodes'], List[Node])
 
-        videos = Skeleton.make_cattr().structure(dicts['videos'], List[Video])
+        idx_to_node = {i:nodes[i] for i in range(len(nodes))}
+        skeletons = Skeleton.make_cattr(idx_to_node).structure(dicts['skeletons'], List[Skeleton])
+        videos = Skeleton.make_cattr(idx_to_node).structure(dicts['videos'], List[Video])
+
+#         print("NODES"); print(nodes)
+#         print("SKELETONS"); print(skeletons)
 
         label_cattr = cattr.Converter()
         label_cattr.register_structure_hook(Skeleton, lambda x,type: skeletons[x])
         label_cattr.register_structure_hook(Video, lambda x,type: videos[x])
+        label_cattr.register_structure_hook(Node, lambda x,type: x if isinstance(x,Node) else nodes[int(x)])
         labels = label_cattr.structure(dicts['labels'], List[LabeledFrame])
 
-        return cls(labeled_frames=labels, videos=videos, skeletons=skeletons)
+#         print("LABELS"); print(labels)
+        return cls(labeled_frames=labels, videos=videos, skeletons=skeletons, nodes=nodes)
 
     @classmethod
     def load_json(cls, filename: str):
@@ -344,6 +371,7 @@ class Labels(MutableSequence):
                 # Try to load the labels file.
                 try:
                     labels = Labels.from_json(dicts)
+
                 except FileNotFoundError:
 
                     # FIXME: We are going to the labels JSON that has references to
@@ -417,8 +445,8 @@ def load_labels_json_old(data_path: str, parsed_json: dict = None,
     edges = data["skeleton"]["edges"]
     if adjust_matlab_indexing:
         edges = np.array(edges) - 1
-    for (src, dst) in edges:
-        skeleton.add_edge(skeleton.nodes[src], skeleton.nodes[dst])
+    for (src_idx, dst_idx) in edges:
+        skeleton.add_edge(data["skeleton"]["nodeNames"][src_idx], data["skeleton"]["nodeNames"][dst_idx])
 
     if fix_rel_paths:
         for i, row in videos.iterrows():
@@ -448,7 +476,7 @@ def load_labels_json_old(data_path: str, parsed_json: dict = None,
         frame_instance_ids = np.unique(points["instanceId"][is_in_frame])
         for i, instance_id in enumerate(frame_instance_ids):
             is_instance = is_in_frame & (points["instanceId"] == instance_id)
-            instance_points = {skeleton.nodes[n]: Point(x, y, visible=v) for x, y, n, v in
+            instance_points = {data["skeleton"]["nodeNames"][n]: Point(x, y, visible=v) for x, y, n, v in
                                zip(*[points[k][is_instance] for k in ["x", "y", "node", "visible"]])}
 
             instance = Instance(skeleton=skeleton, points=instance_points)

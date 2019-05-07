@@ -67,13 +67,13 @@ def test_instance_point_iter(skeleton):
 
     instance = Instance(skeleton=skeleton, points=points)
 
-    assert [node for node in instance.nodes()] == ['head', 'left-wing', 'right-wing']
+    assert [node.name for node in instance.nodes()] == ['head', 'left-wing', 'right-wing']
     assert np.allclose([p.x for p in instance.points()], [1, 2, 3])
     assert np.allclose([p.y for p in instance.points()], [4, 5, 6])
 
     # Make sure we can iterate over tuples
     for (node, point) in instance.nodes_points():
-        assert points[node] == point
+        assert points[node.name] == point
 
 
 def test_instance_to_pandas_df(skeleton, instances):
@@ -82,7 +82,7 @@ def test_instance_to_pandas_df(skeleton, instances):
     """
 
     # How many columns are supposed to be in point DataFrame
-    NUM_COLS = 7
+    NUM_COLS = 8
 
     NUM_INSTANCES = len(instances)
 
@@ -121,7 +121,7 @@ def test_hdf5(instances, tmpdir):
 
     # Check that we get back the same instances
     for i in range(len(instances2)):
-        assert instances_copy[i] == instances2[i]
+        assert instances_copy[i].matches(instances2[i])
 
 
 def test_skeleton_node_name_change():
@@ -149,3 +149,23 @@ def test_skeleton_node_name_change():
     assert instance['A'] == Point(1, 2)
     assert instance['b'] == Point(3, 4)
 
+def test_instance_comparison(skeleton):
+
+    node_names = ["left-wing", "head", "right-wing"]
+    points = {"head": Point(1, 4), "left-wing": Point(2, 5), "right-wing": Point(3,6)}
+
+    instance1 = Instance(skeleton=skeleton, points=points)
+    instance2 = copy.deepcopy(instance1)
+
+    assert instance1.matches(instance1)
+
+    assert instance1 != instance2
+
+    assert instance1.matches(instance2)
+
+    instance2["head"].x = 42
+    assert not instance1.matches(instance2)
+
+    instance2 = copy.deepcopy(instance1)
+    instance2.skeleton.add_node('extra_node')
+    assert not instance1.matches(instance2)

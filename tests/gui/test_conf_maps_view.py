@@ -1,4 +1,4 @@
-from sleap.gui.video import VideoPlayer, QtVideoPlayer
+from sleap.gui.video import QtVideoPlayer
 from sleap.gui.confmapsplot import ConfMapsPlot
 
 from sleap.io.video import Video
@@ -14,3 +14,5 @@ def test_gui_conf_maps(qtbot, hdf5_confmaps):
     
     # make sure we're showing all the channels
     assert len(conf_maps.childItems()) == 6
+
+    assert vp.close()

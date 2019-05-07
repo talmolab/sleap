@@ -19,7 +19,8 @@ def test_gui_video(qtbot):
     cs.setSelected([1,2,3])
     assert cs.getSelected() == [1,2,3]
     
-    
     # Watch for the app.worker.finished signal, then start the worker.
     with qtbot.waitSignal(cs.selectionChanged, timeout=10):
         qtbot.mouseClick(cs.check_group.buttons()[0], QtCore.Qt.LeftButton)
+
+    assert cs.close()

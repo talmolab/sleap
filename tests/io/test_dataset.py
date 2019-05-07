@@ -33,7 +33,7 @@ def test_labels_json(tmpdir, multi_skel_vid_labels):
         np.allclose(expected_label.video.get_frame(0)[0:15,0:15,:], label.video.get_frame(0)[0:15,0:15,:])
 
         # Compare the instances
-        assert expected_label.instances == label.instances
+        assert all(i1.matches(i2) for (i1, i2) in zip(expected_label.instances,label.instances))
 
 
 def test_load_labels_json_old(tmpdir):
@@ -60,7 +60,7 @@ def test_load_labels_json_old(tmpdir):
         assert labels[40].frame_idx == 494
 
         # Check the skeleton
-        assert labels[0].instances[0].skeleton.nodes == skel_node_names
+        assert labels[0].instances[0].skeleton.node_names == skel_node_names
 
     labels = Labels.load_json("tests/data/json_format_v1/centered_pair.json")
     check_labels(labels)
