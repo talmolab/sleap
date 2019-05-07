@@ -647,7 +647,10 @@ class MainWindow(QMainWindow):
     def extractClip(self):
         start, end = self.player.seekbar.getSelection()
         if start < end:
-            QMessageBox(text=f"Extract video frames: {start+1} to {end+1}. Not yet implemented.").exec_()
+            clip_frames = self.video.get_frames(range(start, end))
+            clip_video = Video.from_numpy(clip_frames)
+            clip_window = QtVideoPlayer(video=clip_video)
+            clip_window.show()
 
     def previousLabeledFrame(self):
         cur_idx = self.player.frame_idx

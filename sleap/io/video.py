@@ -380,12 +380,12 @@ class Video:
         return cls(backend=backend)
 
     @classmethod
-    def from_numpy(cls, file: str, *args, **kwargs):
+    def from_numpy(cls, file, *args, **kwargs):
         """
         Create an instance of a video object from a numpy array.
 
         Args:
-            file: The numpy array.
+            file: The numpy array or the name of the file
 
         Returns:
             A Video object with a NumpyVideo backend
