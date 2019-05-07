@@ -9,3 +9,4 @@ opencv-python
 pandas
 psutil
 PySide2
+pyzmq
