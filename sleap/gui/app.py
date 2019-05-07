@@ -445,11 +445,11 @@ class MainWindow(QMainWindow):
 
         # Update data model
         self.skeletonNodesTable.model().skeleton = self.skeleton
-
-        # Update edges dropdown
+        self.skeletonEdgesTable.model().skeleton = self.skeleton
         self.skeletonEdgesSrc.model().skeleton = self.skeleton
+        self.skeletonEdgesDst.model().skeleton = self.skeleton
 
-        # TODO: Replot instances?
+        # Replot instances
         self.plotFrame()
 
     def selectSkeletonEdgeSrc(self):
