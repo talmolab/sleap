@@ -215,6 +215,14 @@ class MainWindow(QMainWindow):
         gb.setLayout(vb)
         skeleton_layout.addWidget(gb)
 
+        hb = QHBoxLayout()
+        btn = QPushButton("Load Skeleton")
+        btn.clicked.connect(self.openSkeleton); hb.addWidget(btn)
+        btn = QPushButton("Save Skeleton")
+        btn.clicked.connect(self.saveSkeleton); hb.addWidget(btn)
+        hbw = QWidget(); hbw.setLayout(hb)
+        skeleton_layout.addWidget(hbw)
+
         # update edge UI when change to nodes
         self.skeletonNodesTable.model().dataChanged.connect(self.updateEdges)
 
@@ -417,6 +425,36 @@ class MainWindow(QMainWindow):
         if last_label is not None:
             self.plotFrame(last_label.frame_idx)
 
+    def openSkeleton(self):
+        filters = ["JSON skeleton (*.json)", "HDF5 skeleton (*.h5 *.hdf5)"]
+        filename, selected_filter = QFileDialog.getOpenFileName(self, dir=None, caption="Open skeleton...", filter=";;".join(filters))
+
+        if len(filename) == 0: return
+
+        if filename.endswith(".json"):
+            self.skeleton = Skeleton.load_json(filename)
+        elif filename.endswith((".h5", ".hdf5")):
+            sk_list = Skeleton.load_all_hdf5(filename)
+            if len(sk_list):
+                self.skeleton = sk_list[0]
+
+        # Update data model
+        self.skeletonNodesTable.model().skeleton = self.skeleton
+        self.skeletonEdgesTable.model().skeleton = self.skeleton
+        self.skeletonEdgesSrc.model().skeleton = self.skeleton
+        self.skeletonEdgesDst.model().skeleton = self.skeleton
+
+    def saveSkeleton(self):
+        default_name = "skeleton.json"
+        filters = ["JSON skeleton (*.json)", "HDF5 skeleton (*.h5 *.hdf5)"]
+        filename, selected_filter = QFileDialog.getSaveFileName(self, caption="Save As...", dir=default_name, filter=";;".join(filters))
+
+        if len(filename) == 0: return
+
+        if filename.endswith(".json"):
+            self.skeleton.save_json(filename)
+        elif filename.endswith((".h5", ".hdf5")):
+            self.skeleton.save_hdf5(filename)
 
     def newNode(self):
         # Find new part name
