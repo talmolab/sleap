@@ -112,9 +112,9 @@ class Instance:
             if self._points and is_string_dict:
                 self._points = {self._node_to_index(name): point for name,point in self._points.items()}
 
-            if not is_string_dict and not is_int_dict:
+            if not is_string_dict and not is_node_dict:
                 raise ValueError("points dictionary must be keyed by either strings " +
-                                 "(node names) or integers (node indices).")
+                                 "(node names) or Nodes.")
 
     def _node_to_index(self, node_name):
         """
