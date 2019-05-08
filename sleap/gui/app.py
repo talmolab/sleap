@@ -507,21 +507,29 @@ class MainWindow(QMainWindow):
 
         copy_instance = None
 
+        # FIXME: filter by skeleton type
+
         if len(self.predicted_instances) > len(self.labeled_frame.instances):
             # If there are more predicted instances than instances in this frame,
             # copy the points from the first predicted instance without matching instance.
             copy_instance = self.predicted_instances[len(self.labeled_frame.instances)]
-        elif len(self.labeled_frame.instances):
-            # Otherwise if there are already instances in this frame,
-            # copy the points from the last instance added to frame.
-            # FIXME: filter by skeleton type
-            copy_instance = self.labeled_frame.instances[-1]
-
-        # TODO
-        # If there are no predicted instances and no instances in this frame,
-        # then copy the points from instance in previous frame.
-        # Specifically, if more instances in previous frame than current, then use the
-        # first unmatched instance; otherwise use last instance added to previous frame.
+        else:
+            # Otherwise, if there are instances in previous frames,
+            # copy the points from one of those instances.
+            prev_idx = self.previousLabeledFrameIndex()
+            if prev_idx is not None:
+                prev_instances = self.getInstancesFromFrameIdx(prev_idx)
+                if len(prev_instances) > len(self.labeled_frame.instances):
+                    # If more instances in previous frame than current, then use the
+                    # first unmatched instance.
+                    copy_instance = prev_instances[len(self.labeled_frame.instances)]
+                elif len(self.labeled_frame.instances):
+                    # Otherwise, if there are already instances in current frame,
+                    # copy the points from the last instance added to frame.
+                    copy_instance = self.labeled_frame.instances[-1]
+                elif len(prev_instances):
+                    # Otherwise use the last instance added to previous frame.
+                    copy_instance = prev_instances[-1]
 
         new_instance = Instance(skeleton=self.skeleton)
         for node in self.skeleton.nodes:
@@ -662,12 +670,18 @@ class MainWindow(QMainWindow):
             clip_window = QtVideoPlayer(video=clip_video)
             clip_window.show()
 
-    def previousLabeledFrame(self):
+    def previousLabeledFrameIndex(self):
+        prev_idx = None
         cur_idx = self.player.frame_idx
         frame_indexes = [frame.frame_idx for frame in self.labels.find(self.video)]
         frame_indexes.sort()
         if len(frame_indexes):
             prev_idx = max(filter(lambda idx: idx < cur_idx, frame_indexes), default=frame_indexes[-1])
+        return prev_idx
+
+    def previousLabeledFrame(self):
+        prev_idx = self.previousLabeledFrameIndex()
+        if prev_idx is not None:
             self.plotFrame(prev_idx)
 
     def nextLabeledFrame(self):
@@ -715,13 +729,18 @@ class MainWindow(QMainWindow):
     def trainPAFs(self):
         pass
 
+    def getInstancesFromFrameIdx(self, frame_idx):
+        labeled_frame = [label for label in self.labels.labels if label.video == self.video and label.frame_idx == frame_idx]
+        instances = labeled_frame[0].instances if len(labeled_frame) > 0 else []
+        return instances
 
     def newFrame(self, player, frame_idx):
 
         labeled_frame = [label for label in self.labels.labels if label.video == self.video and label.frame_idx == frame_idx]
         self.labeled_frame = labeled_frame[0] if len(labeled_frame) > 0 else LabeledFrame(video=self.video, frame_idx=frame_idx)
 
-        self.predicted_instances = [] # temp, nowhere to load these from yet
+        if self.predicted_instances is None:
+            self.predicted_instances = [] # temp, nowhere to load these from yet
 
         # TESTING: pretend first instance in frame is predicted instance
 #         if len(self.labeled_frame.instances) and not len(self.predicted_instances):
