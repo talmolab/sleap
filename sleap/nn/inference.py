@@ -14,6 +14,8 @@ from scipy.io import savemat, loadmat
 from keras.utils import multi_gpu_model
 
 
+
+
 def get_inference_model(confmap_model_path: str, paf_model_path: str) -> keras.Model:
     """ Loads and merges confmap and PAF models into one. """
 
@@ -121,289 +123,239 @@ def find_all_peaks(confmaps, min_thresh=0.3, sigma=3):
     return peaks, peak_vals
 
 
+def improfile(I, p0, p1, max_points=None):
+    """ Returns values of the image I evaluated along the line formed by points p0 and p1.
 
-class FlowShiftTracker:
-    """ Tracks unique individual identities from a set of matched instances in each frame.
+    Parameters
+    ----------
+    I : 2d array
+        Image to get values from
+    p0, p1 : 1d array with 2 elements
+        Start and end coordinates of the line
 
-    This will track identities by computing the optical flow from each point in each
-    reference frame to the current frame and apply this shift to their coordinates. Points
-    in the current frame will be matched at the instance-level with previous instances to
-    identify the same individual across time.
+    Returns
+    -------
+    vals : 1d array
+        Vector with the images values along the line formed by p0 and p1
     """
-    def __init__(self, window=10, of_win_size=(21,21), of_max_level=3, of_max_count=30, of_epsilon=0.01):
-        """ Initializes configuration and states for tracker.
+    # Make sure image is 2d
+    I = np.squeeze(I)
 
-        Args:
-            window: number of previous frames to use as reference when computing flow shift
-            of_win_size: window size for optical flow computation (see cv2.calcOpticalFlowPyrLK)
-            of_max_level: number of pyramid levels (see cv2.calcOpticalFlowPyrLK)
-            of_max_count: max iterations of optimization before stopping (see cv2.calcOpticalFlowPyrLK)
-            of_epsilon: minimum shift of search window befor stopping (see cv2.calcOpticalFlowPyrLK)
-        """
-        self.window = window
-        self.of_params = dict(
-            winSize=of_win_size,
-            maxLevel=of_max_level,
-            criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, of_max_count, of_epsilon)
-        )
+    # Find number of points to extract
+    n = np.sqrt((p0[0] - p1[0])**2 + (p0[1] - p1[1])**2)
+    n = max(n, 1)
+    if max_points is not None:
+        n = min(n, max_points)
+    n = int(n)
 
-        self.nodes = None # gets filled in when we get the first frame
-        self.uids = []
-        self.flow_assignment_costs = []
-        self.frames_refs = []
-        self.instances_refs = []
-        self.max_uid = -1
-        self.t0 = 0
+    # Compute coordinates
+    x = np.round(np.linspace(p0[0], p1[0], n)).astype("int32")
+    y = np.round(np.linspace(p0[1], p1[1], n)).astype("int32")
 
-    def track(self, frames, instances):
-        """ Track a batch of frames.
-
-        Args:
-            frames: images in THWC format
-            instances: a list of matched instances
-        """
-
-        for t in range(len(instances)):
-            # No instance in frame t? -> skip
-            if len(instances[t]) == 0:
-                self.uids.append([])
-                self.flow_assignment_costs.append([])
-                continue
-
-            # Initialize instances in the first frame
-            if self.max_uid < 0:
-                self.uids.append(np.arange(len(instances[t])))
-                self.flow_assignment_costs.append(np.nan)
-                self.max_uid = max(self.uids[t])
-
-                self.frames_refs.append(frames[t])
-                self.instances_refs.append(instances[t])
-
-                continue
+    # Extract values and concatenate into vector
+    vals = np.stack([I[yi,xi] for xi, yi in zip(x,y)])
+    return vals
 
 
-            # Initialize node count
-            if self.nodes is None:
-                self.nodes = instances[t][0].shape[0]
+def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton,
+    min_score_to_node_ratio=0.4, min_score_midpts=0.05, min_score_integral=0.8, add_last_edge=False):
+    """ Matches single frame """
+    # Effectively the original implementation:
+    # https://github.com/michalfaber/keras_Realtime_Multi-Person_Pose_Estimation/blob/master/demo_video.py#L107
 
-            # Get data and instances at current frame
-            frame_t = frames[t].copy()
-            instances_t = instances[t]
+    # Dumb
+    peak_ids = []
+    idx = 0
+    for i in range(len(peaks_t)):
+        idx_i = []
+        for j in range(len(peaks_t[i])):
+            idx_i.append(idx)
+            idx += 1
+        peak_ids.append(idx_i)
 
-            # Get reference window data
-#             t_refs = np.arange(max(t - self.window, 0), t, dtype=int)
-            t_refs = np.arange(start=-1, stop=max(-self.window, -len(self.frames_refs))-1, step=-1, dtype=int)
-            frames_refs = [self.frames_refs[t_w] for t_w in t_refs]
-            instances_refs = [self.instances_refs[t_w] for t_w in t_refs]
-            uids_refs = [self.uids[t_w] for t_w in t_refs]
-            cost_refs = []
+    # Score each edge
+    special_k = []
+    connection_all = []
+    for k in range(len(skeleton["edges"])):
+        edge = skeleton["edges"][k]
+        paf_x = pafs_t[...,2*k]
+        paf_y = pafs_t[...,2*k+1]
+        peaks_src = peaks_t[edge[0]]
+        peaks_dst = peaks_t[edge[1]]
+        peak_vals_src = peak_vals_t[edge[0]]
+        peak_vals_dst = peak_vals_t[edge[1]]
 
-            # Compute costs for window of ref frames via flow shifting
-            for frame_ref, instances_ref in zip(frames_refs, instances_refs):
-                # Merge instances into single point set
-                pts_ref = np.concatenate(instances_ref, axis=0)
+        if len(peaks_src) == 0 or len(peaks_dst) == 0:
+            special_k.append(k)
+            connection_all.append([])
+        else:
+            connection_candidates = []
+            for i, peak_src in enumerate(peaks_src):
+                for j, peak_dst in enumerate(peaks_dst):
+                    # Vector between peaks
+                    vec = peak_dst - peak_src
 
-                # Compute optical flow (note: pts_ref must be float32)
-                pts_ref_of, status, err = cv2.calcOpticalFlowPyrLK(frame_ref, frame_t, pts_ref.astype("float32"), None, **self.of_params)
+                    # Euclidean distance between points
+                    norm = np.sqrt(np.sum(vec ** 2))
 
-                # TODO: NaN out status == 0 points that were not found?
+                    # Failure if points overlap
+                    if norm == 0:
+                        continue
 
-                # Split flow-shifted points into instances
-                sections_ref = np.cumsum([len(x) for x in instances_ref])[:-1]
-                instances_ref_of = np.split(pts_ref_of, sections_ref, axis=0)
+                    # Convert to unit vector
+                    vec = vec / norm
 
-                # Compute cost
-                cost_ref = np.zeros((len(instances_ref_of), len(instances_t), self.nodes)) * np.nan
-                for i in range(len(instances_ref_of)):
-                    for j in range(len(instances_t)):
-                        cost_ref[i,j,:] = np.sqrt(np.sum((instances_ref_of[i] - instances_t[j]) ** 2, axis=1))
+                    # Get PAF values along edge
+                    vec_x = improfile(paf_x, peak_src, peak_dst)
+                    vec_y = improfile(paf_y, peak_src, peak_dst)
 
-                cost_refs.append(cost_ref)
+                    # Compute score
+                    score_midpts = vec_x * vec[0] + vec_y * vec[1]
+                    score_with_dist_prior = np.mean(score_midpts) + min(0.5 * paf_x.shape[0] / norm - 1, 0)
+                    score_integral = np.mean(score_midpts > min_score_midpts)
+                    if score_with_dist_prior > 0 and score_integral > min_score_integral:
+                        connection_candidates.append([i, j, score_with_dist_prior])
 
-            # Aggregate costs per unique instance
-            all_uids_ref = np.unique(np.concatenate(uids_refs,axis=0))
-            all_costs_ref = []
-            for uid_i in all_uids_ref:
-                # |ref instances with uid_i| x |instances_t| x nodes
-                costs_i = [cost[uid == uid_i] for cost, uid in zip(cost_refs, uids_refs)]
-                costs_i = np.concatenate(costs_i, axis=0)
+            # Sort candidates for current edge by descending score
+            connection_candidates = sorted(connection_candidates, key=lambda x: x[2], reverse=True)
 
-                # Reduce across ref instances and nodes
-                costs_i = -np.nansum(1 / (costs_i + 1e-10), axis=(0, 2))
+            # Add to list of candidates for next step
+            connection = np.zeros((0,5)) # src_id, dst_id, paf_score, i, j
+            for candidate in connection_candidates:
+                i, j, score = candidate
+                # Add to connections if node is not already included
+                if (i not in connection[:, 3]) and (j not in connection[:, 4]):
+                    id_i = peak_ids[skeleton["edges"][k][0]][i]
+                    id_j = peak_ids[skeleton["edges"][k][1]][j]
+                    connection = np.vstack([connection, [id_i, id_j, score, i, j]])
 
-                all_costs_ref.append(costs_i)
+                    # Stop when reached the max number of matches possible
+                    if len(connection) >= min(len(peaks_src), len(peaks_dst)):
+                        break
+            connection_all.append(connection)
 
-            # |instances_t| x |all_uids_ref|
-            all_costs_ref = np.stack(all_costs_ref, axis=1)
+    # Greedy matching of each edge candidate set
+    subset = -1 * np.ones((0, skeleton["nodes"]+2)) # ids, overall score, number of parts
+    candidate = np.array([y for x in peaks_t for y in x]) # flattened set of all points
+    candidate_scores = np.array([y for x in peak_vals_t for y in x]) # flattened set of all peak scores
+    for k in range(len(skeleton["edges"])):
+        # No matches for this edge
+        if k in special_k:
+            continue
 
-            # Compute assignments for each instance_t
-            row_ind, col_ind = linear_sum_assignment(all_costs_ref)
-            flow_assignment_cost = all_costs_ref[row_ind, col_ind].sum()
+        # Get IDs for current connection
+        partAs = connection_all[k][:,0]
+        partBs = connection_all[k][:,1]
 
-            # Assign existing unique IDs
-            uids_t = np.zeros(len(instances_t)) * np.nan
-            for r, c in zip(row_ind, col_ind):
-                uids_t[r] = all_uids_ref[c]
+        # Get edge
+        indexA, indexB = skeleton["edges"][k]
 
-            # Create new unique IDs if needed
-            for r in np.where(np.isnan(uids_t))[0]:
-                uids_t[r] = self.max_uid + 1
-                self.max_uid += 1
+        # Loop through all candidates for current edge
+        for i in range(len(connection_all[k])):
+            found = 0
+            subset_idx = [-1, -1]
 
-            # Save
-            self.uids.append(uids_t)
-            self.flow_assignment_costs.append(flow_assignment_cost)
-            self.frames_refs.append(frame_t)
-            self.instances_refs.append(instances_t)
+            # Search for current candidates in matched subset
+            for j in range(len(subset)):
+                if subset[j][indexA] == partAs[i] or subset[j][indexB] == partBs[i]:
+                    subset_idx[found] = j
+                    found += 1
 
-            # Keep only window buffer of frames/instances
-            while len(self.frames_refs) > self.window:
-                self.frames_refs.pop(0)
-                self.instances_refs.pop(0)
+            # One of the two candidate points found in matched subset
+            if found == 1:
+                j = subset_idx[0]
+                if subset[j][indexB] != partBs[i]: # did we already assign this part?
+                    subset[j][indexB] = partBs[i] # assign part
+                    subset[j][-1] += 1 # increment instance part counter
+                    subset[j][-2] += candidate_scores[int(partBs[i])] + connection_all[k][i][2] # add peak + edge score
 
-    def generate_tracks(self, instances):
-        """ Generates full coordinates tracks from stored UIDs.
+            # Both candidate points found in matched subset
+            elif found == 2:
+                j1, j2 = subset_idx # get indices in matched subset
+                membership = ((subset[j1] >= 0).astype(int) + (subset[j2] >= 0).astype(int))[:-2] # count number of instances per body parts
+                # All body parts are disjoint, merge them
+                if np.all(membership < 2):
+                    subset[j1][:-2] += (subset[j2][:-2] + 1)
+                    subset[j1][-2:] += subset[j2][-2:]
+                    subset[j1][-2] += connection_all[k][i][2]
+                    subset = np.delete(subset, j2, axis=0)
 
-        Args:
-            instances: list of matched instances per frame
+                # Treat them separately
+                else:
+                    subset[j1][indexB] = partBs[i]
+                    subset[j1][-1] += 1
+                    subset[j1][-2] += candidate_scores[partBs[i].astype(int)] + connection_all[k][i][2]
 
-        Returns:
-            tracked_instances: list of tracked instance timeseries
-        """
-        tracked_instances = []
-        all_uids = np.arange(self.max_uid+1)
-        for uid in all_uids:
-            track = np.zeros((len(self.uids), self.nodes, 2)) * np.nan
-            for t in range(len(self.uids)):
-                if uid in self.uids[t]:
-                    instances_t = np.stack(instances[t], axis=0)
-                    instance_uid = instances_t[np.where(self.uids[t] == uid)[0]]
-                    track[t] = instance_uid
-            tracked_instances.append(track)
+            # Neither point found, create a new subset (if not the last edge)
+            elif found == 0 and (add_last_edge or (k < (len(skeleton["edges"])-1))):
+                row = -1 * np.ones(skeleton["nodes"]+2)
+                row[indexA] = partAs[i] # ID
+                row[indexB] = partBs[i] # ID
+                row[-1] = 2 # initial count
+                row[-2] = sum(candidate_scores[connection_all[k][i, :2].astype(int)]) + connection_all[k][i][2] # score
+                subset = np.vstack([subset, row]) # add to matched subset
 
-        return tracked_instances
+    # Filter small instances
+    score_to_node_ratio = subset[:,-2] / subset[:,-1]
+    subset = subset[score_to_node_ratio > min_score_to_node_ratio, :]
 
+    # Done with all the matching! Gather the data
+    matched_instances_t = []
+    match_scores_t = []
+    matched_peak_vals_t = []
+    for match in subset:
+        pts = np.full((skeleton["nodes"], 2), np.nan)
+        peak_vals = np.full((skeleton["nodes"],), np.nan)
+        for i in range(len(pts)):
+            if match[i] >= 0:
+                pts[i,:] = candidate[int(match[i]),:2]
+                peak_vals[i] = candidate_scores[int(match[i])]
+        matched_instances_t.append(pts)
+        match_scores_t.append(match[-2]) # score
+        matched_peak_vals_t.append(peak_vals)
 
-if __name__ == "__main__":
-    # Params
-    # data_path = "W:/rebekah/20181204_102606/processed.h5.mp4"
-    data_path = sys.argv[1]
-    # confmap_model_path = "models/190131_192028_training.scale=0.50,sigma=10,unet,confmaps_n=42/newest_model.h5"
-    confmap_model_path = "models/190203_172137_training.scale=0.50,sigma=10,unet,confmaps_n=81/newest_model.h5"
-    # paf_model_path = "models/190131_200654_training.scale=0.50,sigma=10,leap_cnn,pafs_n=42/newest_model.h5"
-    paf_model_path = "models/190204_015357_training.scale=0.50,sigma=10,unet,pafs_n=81/newest_model.h5"
-    save_path = data_path + ".paf_tracking.mat"
-    skeleton_path = "skeleton_thorax_root.mat"
-    inference_batch_size = 32 # frames per inference batch (GPU memory limited)
-    read_chunk_size = inference_batch_size * 10 # frames to process at a time (CPU memory limited)
-    nms_min_thresh = 0.3
-    nms_sigma = 3
-    save_every = 50
-    params = dict(
-        data_path=data_path,
-        confmap_model_path=confmap_model_path,
-        paf_model_path=paf_model_path,
-        save_path=save_path,
-        skeleton_path=skeleton_path,
-        read_chunk_size=read_chunk_size,
-        inference_batch_size=inference_batch_size,
-        nms_min_thresh=nms_min_thresh,
-        nms_sigma=nms_sigma,
-        save_every=save_every,
-        )
+    return matched_instances_t, match_scores_t, matched_peak_vals_t
 
-    # Load skeleton
-    skeleton = loadmat(skeleton_path)
-    skeleton["nodes"] = skeleton["nodes"][0][0] # convert to scalar
-    skeleton["edges"] = skeleton["edges"] - 1 # convert to 0-based indexing
-    print("Skeleton (%d nodes):" % skeleton["nodes"])
-    print("  %s" % str(skeleton["edges"]))
+def match_peaks_paf(peaks, peak_vals, pafs, skeleton,
+    min_score_to_node_ratio=0.4, min_score_midpts=0.05, min_score_integral=0.8, add_last_edge=False):
+    """ Computes PAF-based peak matching via greedy assignment and other such dragons """
 
-    # Load model
-    model = get_inference_model(confmap_model_path, paf_model_path)
-    _, h, w, c = model.input_shape
-    print("Loaded models:")
-    print("  confmap:", confmap_model_path)
-    print("  paf:", paf_model_path)
-    print("  Input shape: %d x %d x %d" % (h, w, c))
-
-    # Initialize video
-    vid = cv2.VideoCapture(data_path)
-    num_frames = vid.get(cv2.CAP_PROP_FRAME_COUNT)
-    vid_h = vid.get(cv2.CAP_PROP_FRAME_HEIGHT)
-    scale = h / vid_h
-    print("Opened video:")
-    print("  Path:", data_path)
-    print("  Frames: %d" % num_frames)
-    print("  Frame shape: %d x %d" % (h, w))
-    print("  Scale: %f" % scale)
-
-    # Process chunk-by-chunk!
-    t0_start = time()
+    # Process each frame
     matched_instances = []
     match_scores = []
-    num_chunks = int(np.ceil(num_frames / read_chunk_size))
-    for chunk in range(num_chunks):
-        print("Processing chunk %d/%d:" % (chunk+1, num_chunks))
-        t0_chunk = time()
-        # Calculate how many frames to read
-        # num_chunk_frames = min(read_chunk_size, num_frames - int(vid.get(cv2.CAP_PROP_POS_FRAMES)))
+    matched_peak_vals = []
+    for peaks_t, peak_vals_t, pafs_t in zip(peaks, peak_vals, pafs):
+        matched_instances_i, match_scores_i, matched_peak_vals_i = match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton,
+            min_score_to_node_ratio=min_score_to_node_ratio, min_score_midpts=min_score_midpts, min_score_integral=min_score_integral, add_last_edge=add_last_edge)
 
-        # Read images
-        t0 = time()
-        mov = []
-        while True:
-            ret, I = vid.read()
+        matched_instances.append(matched_instances_i)
+        match_scores.append(match_scores_i)
+        matched_peak_vals.append(matched_peak_vals_i)
 
-            # No more frames left
-            if not ret:
-                break
+    return matched_instances, match_scores, matched_peak_vals
 
-            # Preprocess frame
-            I = I[:,:,0]
-            I = cv2.resize(I, (h, w))
-            mov.append(I)
+def match_peaks_paf_par(peaks, peak_vals, pafs, skeleton,
+    min_score_to_node_ratio=0.4, min_score_midpts=0.05, min_score_integral=0.8, add_last_edge=False, pool=None):
+    """ Parallel version of PAF peak matching """
 
-            if len(mov) >= read_chunk_size:
-                break
+    if pool is None:
+        pool = multiprocessing.Pool()
 
-        # Merge and add singleton dimension
-        mov = np.stack(mov, axis=0)
-        mov = mov[...,None]
-        print("  Read %d frames [%.1fs]" % (len(mov), time() - t0))
+    futures = []
+    for peaks_t, peak_vals_t, pafs_t in zip(peaks, peak_vals, pafs):
+        future = pool.apply_async(match_peaks_frame, [peaks_t, peak_vals_t, pafs_t, skeleton], dict(min_score_to_node_ratio=min_score_to_node_ratio, min_score_midpts=min_score_midpts, min_score_integral=min_score_integral, add_last_edge=add_last_edge))
+        futures.append(future)
 
-        # Run inference
-        t0 = time()
-        confmaps, pafs = model.predict(mov.astype("float32")/255, batch_size=inference_batch_size)
-        print("  Inferred confmaps and PAFs [%.1fs]" % (time() - t0))
+    matched_instances = []
+    match_scores = []
+    matched_peak_vals = []
+    for future in futures:
+        matched_instances_i, match_scores_i, matched_peak_vals_i = future.get()
 
-        # Find peaks
-        t0 = time()
-        peaks, peak_vals = find_all_peaks(confmaps, min_thresh=nms_min_thresh, sigma=nms_sigma)
-        print("  Found peaks [%.1fs]" % (time() - t0))
+        matched_instances.append(matched_instances_i)
+        match_scores.append(match_scores_i)
+        matched_peak_vals.append(matched_peak_vals_i)
 
-        # Match peaks via PAFs
-        t0 = time()
-        instances, scores = match_peaks_paf(peaks, peak_vals, pafs, skeleton)
-        print("  Matched peaks via PAFs [%.1fs]" % (time() - t0))
+    return matched_instances, match_scores, matched_peak_vals
 
-        # Adjust for input scale
-        for i in range(len(instances)):
-            for j in range(len(instances[i])):
-                instances[i][j] = instances[i][j] / scale
 
-        # Save
-        t0 = time()
-        matched_instances.extend(instances)
-        match_scores.extend(scores)
-        if chunk % save_every == 0 or chunk == (num_chunks-1):
-            savemat(save_path, dict(params=params, skeleton=skeleton, matched_instances=matched_instances, match_scores=match_scores))
-            print("  Saved to: %s [%.1fs]" % (save_path, time() - t0))
-
-        elapsed = time() - t0_chunk
-        total_elapsed = time() - t0_start
-        fps = len(matched_instances) / total_elapsed
-        frames_left = num_frames - len(matched_instances)
-        print("  Finished chunk [%.1fs / %.1f FPS/ ETA: %.1f min]" % (elapsed, fps, (frames_left / fps) / 60))
-
-    print("Total: %.1f min" % (total_elapsed / 60))

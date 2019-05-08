@@ -12,6 +12,7 @@ dependencies:
 - pandas
 - Shapely
 - psutil
+- pyzmq
 - pip
 - pip:
     - opencv-python

@@ -1,5 +1,5 @@
 import keras
-from keras.layers import Conv2D, Conv2DTranspose, Concatenate, MaxPool2D, UpSampling2D
+from keras.layers import Conv2D, Conv2DTranspose, MaxPool2D, UpSampling2D
 
 
 def leap_cnn(x_in, num_output_channels, down_blocks=3, up_blocks=3, upsampling_layers=True, num_filters=64, interp="bilinear"):
@@ -41,7 +41,7 @@ def leap_cnn(x_in, num_output_channels, down_blocks=3, up_blocks=3, upsampling_l
         
     for i in range(up_blocks, 0, -1):
         if upsampling_layers:
-            x = UpSampling2D(interpolation="bilinear")(x)
+            x = UpSampling2D(interpolation=interp)(x)
         else:
             x = Conv2DTranspose(num_filters * (2 ** i), kernel_size=3, strides=2, padding="same", activation="relu", kernel_initializer="glorot_normal")(x)
         x = Conv2D(num_filters * (2 ** i), kernel_size=3, padding="same", activation="relu")(x)
