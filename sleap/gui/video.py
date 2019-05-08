@@ -308,6 +308,7 @@ class GraphicsView(QGraphicsView):
         updatedViewer: Emitted after update to view (e.g., zoom)
             Used internally so we know when to update points for each instance.
         updatedSelection: Emitted after the user has selected/unselected an instance
+        instanceDoubleClicked: Emitted after an instance is double clicked
 
         leftMouseButtonPressed
         rightMouseButtonPressed
@@ -319,6 +320,7 @@ class GraphicsView(QGraphicsView):
 
     updatedViewer = Signal()
     updatedSelection = Signal()
+    instanceDoubleClicked = Signal(Instance)
     leftMouseButtonPressed = Signal(float, float)
     rightMouseButtonPressed = Signal(float, float)
     leftMouseButtonReleased = Signal(float, float)
@@ -879,6 +881,11 @@ class QtNode(QGraphicsEllipseItem):
             angle = event.delta() / 20 + self.parentObject().rotation()
             self.parentObject().setRotation(angle)
 
+    def mouseDoubleClickEvent(self, event):
+        scene = self.scene()
+        if scene is not None:
+            view = scene.views()[0]
+            view.instanceDoubleClicked.emit(self.parentObject().instance)
 
 class QtEdge(QGraphicsLineItem):
     """
