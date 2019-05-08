@@ -51,6 +51,7 @@ class MainWindow(QMainWindow):
         self.labels = Labels()
         self.skeleton = Skeleton()
         self.labeled_frame = None
+        self.predicted_instances = None
         self.video = None
         self.video_idx = None
         self.mark_idx = None
@@ -505,13 +506,22 @@ class MainWindow(QMainWindow):
             return
 
         copy_instance = None
-        if len(self.labeled_frame.instances):
+
+        if len(self.predicted_instances) > len(self.labeled_frame.instances):
+            # If there are more predicted instances than instances in this frame,
+            # copy the points from the first predicted instance without matching instance.
+            copy_instance = self.predicted_instances[len(self.labeled_frame.instances)]
+        elif len(self.labeled_frame.instances):
+            # Otherwise if there are already instances in this frame,
+            # copy the points from the last instance added to frame.
             # FIXME: filter by skeleton type
             copy_instance = self.labeled_frame.instances[-1]
 
         # TODO
-        # Look for instances in prior frames and copy if there are more instances
-        # than in the current frame.
+        # If there are no predicted instances and no instances in this frame,
+        # then copy the points from instance in previous frame.
+        # Specifically, if more instances in previous frame than current, then use the
+        # first unmatched instance; otherwise use last instance added to previous frame.
 
         new_instance = Instance(skeleton=self.skeleton)
         for node in self.skeleton.nodes:
@@ -710,10 +720,22 @@ class MainWindow(QMainWindow):
 
         labeled_frame = [label for label in self.labels.labels if label.video == self.video and label.frame_idx == frame_idx]
         self.labeled_frame = labeled_frame[0] if len(labeled_frame) > 0 else LabeledFrame(video=self.video, frame_idx=frame_idx)
+
+        self.predicted_instances = [] # temp, nowhere to load these from yet
+
+        # TESTING: pretend first instance in frame is predicted instance
+#         if len(self.labeled_frame.instances) and not len(self.predicted_instances):
+#             self.predicted_instances = self.labeled_frame.instances[:1]
+#             self.labeled_frame.instances = self.labeled_frame.instances[1:]
+#             print(f"{len(self.labeled_frame.instances)} {len(self.predicted_instances)}")
+
         self.instancesTable.model().labeled_frame = self.labeled_frame
 
         for i, instance in enumerate(self.labeled_frame.instances):
             player.addInstance(instance=instance, color=self.cmap[i%len(self.cmap)])
+
+        for instance in self.predicted_instances:
+            player.addInstance(instance=instance, predicted=True)
 
         player.view.updatedViewer.emit()
 

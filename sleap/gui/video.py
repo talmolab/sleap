@@ -110,6 +110,10 @@ class QtVideoPlayer(QWidget):
     @property
     def instances(self):
         return self.view.instances
+
+    @property
+    def predicted_instances(self):
+        return self.view.predicted_instances
         
     def addInstance(self, instance, **kwargs):
         """Add a skeleton instance to the video.
@@ -402,7 +406,17 @@ class GraphicsView(QGraphicsView):
         Order in list should match the order in which instances were added to scene.
         """
         return [item for item in self.scene.items(Qt.SortOrder.AscendingOrder)
-                if type(item) == QtInstance]
+                if type(item) == QtInstance and not item.predicted]
+
+    @property
+    def predicted_instances(self):
+        """
+        Returns a list of predicted instances.
+
+        Order in list should match the order in which instances were added to scene.
+        """
+        return [item for item in self.scene.items(Qt.SortOrder.AscendingOrder)
+                if type(item) == QtInstance and not predicted]
 
     def clearSelection(self):
         """ Clear instance skeleton selection.
@@ -490,7 +504,8 @@ class GraphicsView(QGraphicsView):
             if not has_moved:
                 # When just a tap, see if there's an item underneath to select
                 clicked = self.scene.items(scenePos, Qt.IntersectsItemBoundingRect)
-                clicked_instances = [item for item in clicked if type(item) == QtInstance]
+                clicked_instances = [item for item in clicked
+                                     if type(item) == QtInstance and not item.predicted]
                 # We only handle single instance selection so pick at most one from list
                 clicked_instance = clicked_instances[0] if len(clicked_instances) else None
                 for idx, instance in enumerate(self.instances):
@@ -596,9 +611,10 @@ class QtNodeLabel(QGraphicsTextItem):
         parent: The `QtInstance` which will contain this item.
     """
 
-    def __init__(self, node, parent, *args, **kwargs):
+    def __init__(self, node, parent, predicted=False, *args, **kwargs):
         self.node = node
         self.text = node.name
+        self.predicted = predicted
         self._parent = parent
         super(QtNodeLabel, self).__init__(self.text, parent=parent, *args, **kwargs)
 
@@ -667,7 +683,12 @@ class QtNodeLabel(QGraphicsTextItem):
     def adjustStyle(self):
         """ Update visual display of the label and its node.
         """
-        if not self.node.point.visible:
+
+        if self.predicted:
+            self._base_font.setBold(False)
+            self.setFont(self._base_font)
+            self.setDefaultTextColor(QColor(128, 128, 128))
+        elif not self.node.point.visible:
             self._base_font.setBold(False)
             self.setFont(self._base_font)
             self.setDefaultTextColor(self.node.pen().color())
@@ -727,12 +748,13 @@ class QtNode(QGraphicsEllipseItem):
         color: Color of the visual node item.
         callbacks: List of functions to call after we update to the `Point`.
     """
-    def __init__(self, parent, point:Point, radius:float, color:list, node_name:str = None, callbacks = None, *args, **kwargs):
+    def __init__(self, parent, point:Point, radius:float, color:list, node_name:str = None, predicted=False, callbacks = None, *args, **kwargs):
         self.point = point
         self.radius = radius
         self.color = color
         self.edges = []
         self.name = node_name
+        self.predicted = predicted
         self.callbacks = [] if callbacks is None else callbacks
         self.dragParent = False
 
@@ -742,16 +764,26 @@ class QtNode(QGraphicsEllipseItem):
             self.setToolTip(node_name)
 
         self.setFlag(QGraphicsItem.ItemIgnoresTransformations)
-        self.setFlag(QGraphicsItem.ItemIsMovable)
 
-        col_line = QColor(*self.color)
+        if self.predicted:
+            self.setFlag(QGraphicsItem.ItemIsMovable, False)
+
+            self.pen_default = QPen(QColor(250, 250, 10), 1)
+            self.pen_default.setCosmetic(True)
+            self.pen_missing = self.pen_default
+            self.brush = QBrush(QColor(128, 128, 128, 128))
+            self.brush_missing = self.brush
+        else:
+            self.setFlag(QGraphicsItem.ItemIsMovable)
+
+            col_line = QColor(*self.color)
         
-        self.pen_default = QPen(col_line, 1)
-        self.pen_default.setCosmetic(True) # https://stackoverflow.com/questions/13120486/adjusting-qpen-thickness-when-scaling-qgraphicsview
-        self.pen_missing = QPen(col_line, 1)
-        self.pen_missing.setCosmetic(True)
-        self.brush = QBrush(QColor(*self.color, a=128))
-        self.brush_missing = QBrush(QColor(*self.color, a=0))
+            self.pen_default = QPen(col_line, 1)
+            self.pen_default.setCosmetic(True) # https://stackoverflow.com/questions/13120486/adjusting-qpen-thickness-when-scaling-qgraphicsview
+            self.pen_missing = QPen(col_line, 1)
+            self.pen_missing.setCosmetic(True)
+            self.brush = QBrush(QColor(*self.color, a=128))
+            self.brush_missing = QBrush(QColor(*self.color, a=0))
 
         self.setPos(self.point.x, self.point.y)
         self.updatePoint()
@@ -790,6 +822,9 @@ class QtNode(QGraphicsEllipseItem):
     def mousePressEvent(self, event):
         """ Custom event handler for mouse press.
         """
+        # Do nothing if node is from predicted instance
+        if self.parentObject().predicted: return
+        
         if event.button() == Qt.LeftButton:
             # Alt-click to drag instance
             if event.modifiers() == Qt.AltModifier:
@@ -925,21 +960,30 @@ class QtInstance(QGraphicsObject):
     When instantiated, it creates `QtNode`, `QtEdge`, and
     `QtNodeLabel` items as children of itself.
     """
-    def __init__(self, skeleton:Skeleton = None, instance: Instance = None, color=(0, 114, 189), markerRadius=4, *args, **kwargs):
+    def __init__(self, skeleton:Skeleton = None, instance: Instance = None,
+                 predicted=False, color=(0, 114, 189), markerRadius=4, *args, **kwargs):
         super(QtInstance, self).__init__(*args, **kwargs)
         self.skeleton = skeleton if instance is None else instance.skeleton
         self.instance = instance
+        self.predicted = predicted
+        self.color = color
+        self.markerRadius = markerRadius
+
         self.nodes = {}
         self.edges = []
         self.edges_shown = True
         self.labels = {}
         self.labels_shown = True
-        self.color = color
-        self.markerRadius = markerRadius
         self._selected = False
         self._bounding_rect = QRectF()
         #self.setFlag(QGraphicsItem.ItemIsMovable)
         #self.setFlag(QGraphicsItem.ItemIsSelectable)
+
+        if self.predicted:
+            self.color = (128, 128, 128)
+            self.setZValue(0)
+        else:
+            self.setZValue(1)
 
         # Add box to go around instance
         self.box = QGraphicsRectItem(parent=self)
@@ -951,7 +995,7 @@ class QtInstance(QGraphicsObject):
         # Add nodes
         for (node, point) in self.instance.nodes_points():
             node_item = QtNode(parent=self, point=point, node_name=node.name,
-                               color=self.color, radius=self.markerRadius)
+                               predicted=self.predicted, color=self.color, radius=self.markerRadius)
             self.nodes[node.name] = node_item
 
         # Add edges
@@ -966,14 +1010,15 @@ class QtInstance(QGraphicsObject):
 
         # Add labels to nodes
         # We do this after adding edges so that we can position labels to avoid overlap
-        for node in self.nodes.values():
-            node_label = QtNodeLabel(node, parent=self)
-            node_label.adjustPos()
+        if not self.predicted:
+            for node in self.nodes.values():
+                node_label = QtNodeLabel(node, predicted=self.predicted, parent=self)
+                node_label.adjustPos()
 
-            self.labels[node.name] = node_label
-            # add callback to adjust position of label after node has moved
-            node.callbacks.append(node_label.adjustPos)
-            node.callbacks.append(self.updateBox)
+                self.labels[node.name] = node_label
+                # add callback to adjust position of label after node has moved
+                node.callbacks.append(node_label.adjustPos)
+                node.callbacks.append(self.updateBox)
 
         # Update size of box so it includes all the nodes/edges
         self.updateBox()
@@ -1135,6 +1180,8 @@ if __name__ == "__main__":
         frames = {k: f["frames"][k][:].flatten() for k in ["videoId", "frameIdx"]}
         points = {k: f["points"][k][:].flatten() for k in ["id", "frameIdx", "instanceId", "x", "y", "node", "visible"]}
 
+    window.seekbar.setLabels(range(len(frames["frameIdx"])))
+
     # points["frameIdx"] -= 1
     points["x"] *= scale
     points["y"] *= scale
@@ -1157,10 +1204,10 @@ if __name__ == "__main__":
 
             # Plot instance
             instance = Instance(skeleton=skeleton, points=instance_points)
+            vp.addInstance(instance=instance, predicted=True, color=cmap[i%len(cmap)])
             vp.addInstance(instance=instance, color=cmap[i%len(cmap)])
 
     window.changedPlot.connect(plot_instances)
-
 
     window.show()
     window.plot()
