@@ -89,6 +89,7 @@ class MainWindow(QMainWindow):
         ####### Video player #######
         self.player = QtVideoPlayer()
         self.player.changedPlot.connect(self.newFrame)
+        self.player.view.instanceDoubleClicked.connect(self.newInstance)
         self.setCentralWidget(self.player)
 
         ####### Status bar #######
@@ -329,6 +330,7 @@ class MainWindow(QMainWindow):
             self.videosTable.model().videos = self.labels.videos
             if len(self.labels.labels) > 0:
                 if len(self.labels.labels[0].instances) > 0:
+                    # TODO: add support for multiple skeletons
                     self.skeleton = self.labels.labels[0].instances[0].skeleton
                     self.skeletonNodesTable.model().skeleton = self.skeleton
                     self.skeletonEdgesTable.model().skeleton = self.skeleton
@@ -501,35 +503,38 @@ class MainWindow(QMainWindow):
     def updateSeekbarLabels(self):
         self.player.seekbar.setLabels([frame.frame_idx for frame in self.labels.find(self.video)])
 
-    def newInstance(self):
+    def newInstance(self, copy_instance=None):
         if self.labeled_frame is None:
             return
 
-        copy_instance = None
-
         # FIXME: filter by skeleton type
 
-        if len(self.predicted_instances) > len(self.labeled_frame.instances):
-            # If there are more predicted instances than instances in this frame,
-            # copy the points from the first predicted instance without matching instance.
-            copy_instance = self.predicted_instances[len(self.labeled_frame.instances)]
-        else:
-            # Otherwise, if there are instances in previous frames,
-            # copy the points from one of those instances.
-            prev_idx = self.previousLabeledFrameIndex()
-            if prev_idx is not None:
-                prev_instances = self.getInstancesFromFrameIdx(prev_idx)
-                if len(prev_instances) > len(self.labeled_frame.instances):
-                    # If more instances in previous frame than current, then use the
-                    # first unmatched instance.
-                    copy_instance = prev_instances[len(self.labeled_frame.instances)]
-                elif len(self.labeled_frame.instances):
-                    # Otherwise, if there are already instances in current frame,
-                    # copy the points from the last instance added to frame.
-                    copy_instance = self.labeled_frame.instances[-1]
-                elif len(prev_instances):
-                    # Otherwise use the last instance added to previous frame.
-                    copy_instance = prev_instances[-1]
+        if copy_instance is None:
+            selected_idx = self.player.view.getSelection()
+            if selected_idx is not None:
+                # If the user has selected an instance, copy that one.
+                copy_instance = self.labeled_frame.instances[selected_idx]
+            elif len(self.predicted_instances) > len(self.labeled_frame.instances):
+                # If there are more predicted instances than instances in this frame,
+                # copy the points from the first predicted instance without matching instance.
+                copy_instance = self.predicted_instances[len(self.labeled_frame.instances)]
+            else:
+                # Otherwise, if there are instances in previous frames,
+                # copy the points from one of those instances.
+                prev_idx = self.previousLabeledFrameIndex()
+                if prev_idx is not None:
+                    prev_instances = self.getInstancesFromFrameIdx(prev_idx)
+                    if len(prev_instances) > len(self.labeled_frame.instances):
+                        # If more instances in previous frame than current, then use the
+                        # first unmatched instance.
+                        copy_instance = prev_instances[len(self.labeled_frame.instances)]
+                    elif len(self.labeled_frame.instances):
+                        # Otherwise, if there are already instances in current frame,
+                        # copy the points from the last instance added to frame.
+                        copy_instance = self.labeled_frame.instances[-1]
+                    elif len(prev_instances):
+                        # Otherwise use the last instance added to previous frame.
+                        copy_instance = prev_instances[-1]
 
         new_instance = Instance(skeleton=self.skeleton)
         for node in self.skeleton.nodes:
@@ -590,7 +595,9 @@ class MainWindow(QMainWindow):
         idx_1 = instance_ids[1]
         self.labeled_frame.instances[idx_0], self.labeled_frame.instances[idx_1] = (
             self.labeled_frame.instances[idx_1], self.labeled_frame.instances[idx_0])
-            
+
+        # TODO: update track ids
+
         self.plotFrame()
 
     def newProject(self):
@@ -751,6 +758,7 @@ class MainWindow(QMainWindow):
         self.instancesTable.model().labeled_frame = self.labeled_frame
 
         for i, instance in enumerate(self.labeled_frame.instances):
+            # TODO: color by track id rather than list index
             player.addInstance(instance=instance, color=self.cmap[i%len(self.cmap)])
 
         for instance in self.predicted_instances:
