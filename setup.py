@@ -32,13 +32,13 @@ setup(
     author_email='talmo@princeton.edu',
     url='https://github.com/murthylab/sleap',
     keywords='deep learning, pose estimation, tracking, neuroscience',
-    license='Apache 2',
+    license='BSD3',
     packages=find_packages(exclude=['tensorflow']),
     entry_points = {
         'console_scripts': [
             'sleap-label=sleap.gui.app:main',
             'sleap-train=sleap.nn.training:main',
-            'sleap-predict=sleap.nn.tracking:main'
+            'sleap-track=sleap.nn.tracking:main'
         ],
     },
     python_requires='>=3.6'
