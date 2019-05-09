@@ -232,7 +232,7 @@ class MainWindow(QMainWindow):
         instances_layout.addWidget(self.instancesTable)
         hb = QHBoxLayout()
         btn = QPushButton("New instance")
-        btn.clicked.connect(self.newInstance); hb.addWidget(btn)
+        btn.clicked.connect(lambda x: self.newInstance()); hb.addWidget(btn)
         btn = QPushButton("Delete instance")
         btn.clicked.connect(self.deleteInstance); hb.addWidget(btn)
         hbw = QWidget(); hbw.setLayout(hb)
