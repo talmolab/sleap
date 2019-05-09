@@ -1,23 +1,21 @@
 import numpy as np
 import multiprocessing
 
-from scipy.optimize import linear_sum_assignment
-
+from sleap.io.dataset import LabeledFrame
+from sleap.nn.inference import Instance, PredictedInstance, Point, PredictedPoint
 
 def improfile(I, p0, p1, max_points=None):
-    """ Returns values of the image I evaluated along the line formed by points p0 and p1.
+    """
+    Returns values of the image I evaluated along the line formed by points p0 and p1.
 
-    Parameters
-    ----------
-    I : 2d array
-        Image to get values from
-    p0, p1 : 1d array with 2 elements
-        Start and end coordinates of the line
-
-    Returns
-    -------
-    vals : 1d array
-        Vector with the images values along the line formed by p0 and p1
+    Args:
+        I: Image to get values from
+        p0: The start coordindate of the line, a 1D array with two elements
+        p1: The end coordindate of the line, a 1D array with two elements.
+        max_points: The maxiumum number of points to sample on the line, None
+        means using floor of the distance.
+    Returns:
+        vals: Vector with the images values along the line formed by p0 and p1
     """
     # Make sure image is 2d
     I = np.squeeze(I)
@@ -39,8 +37,14 @@ def improfile(I, p0, p1, max_points=None):
 
 
 def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton,
-    min_score_to_node_ratio=0.4, min_score_midpts=0.05, min_score_integral=0.8, add_last_edge=False):
-    """ Matches single frame """
+                      min_score_to_node_ratio=0.4,
+                      min_score_midpts=0.05,
+                      min_score_integral=0.8,
+                      add_last_edge=False):
+    """
+    Matches single frame
+    """
+
     # Effectively the original implementation:
     # https://github.com/michalfaber/keras_Realtime_Multi-Person_Pose_Estimation/blob/master/demo_video.py#L107
 
@@ -183,62 +187,67 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton,
 
     # Done with all the matching! Gather the data
     matched_instances_t = []
-    match_scores_t = []
-    matched_peak_vals_t = []
     for match in subset:
-        pts = np.full((len(skeleton.nodes), 2), np.nan)
-        peak_vals = np.full((len(skeleton.nodes),), np.nan)
-        for i in range(len(pts)):
-            if match[i] >= 0:
-                pts[i,:] = candidate[int(match[i]),:2]
-                peak_vals[i] = candidate_scores[int(match[i])]
-        matched_instances_t.append(pts)
-        match_scores_t.append(match[-2]) # score
-        matched_peak_vals_t.append(peak_vals)
 
-    return matched_instances_t, match_scores_t, matched_peak_vals_t
+        # Get teh predicted points for this predicted instance
+        pts = []
+        for i in range(len(skeleton.nodes)):
+            if match[i] >= 0:
+                match_idx = int(match[i])
+                pt = PredictedPoint(x=candidate[match_idx,0], y=candidate[match_idx,1],
+                                    score=candidate_scores[match_idx])
+            else:
+                pt = PredictedPoint()
+            pts.append(pt)
+
+        matched_instances_t.append(PredictedInstance(skeleton=skeleton, points=pts, score=match[-2]))
+
+    return matched_instances_t
 
 def match_peaks_paf(peaks, peak_vals, pafs, skeleton,
-    min_score_to_node_ratio=0.4, min_score_midpts=0.05, min_score_integral=0.8, add_last_edge=False):
+                    video, frame_indices,
+                    min_score_to_node_ratio=0.4, min_score_midpts=0.05,
+                    min_score_integral=0.8, add_last_edge=False):
     """ Computes PAF-based peak matching via greedy assignment and other such dragons """
 
     # Process each frame
-    matched_instances = []
-    match_scores = []
-    matched_peak_vals = []
-    for peaks_t, peak_vals_t, pafs_t in zip(peaks, peak_vals, pafs):
-        matched_instances_i, match_scores_i, matched_peak_vals_i = match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton,
-            min_score_to_node_ratio=min_score_to_node_ratio, min_score_midpts=min_score_midpts, min_score_integral=min_score_integral, add_last_edge=add_last_edge)
+    predicted_frames = []
+    for peaks_t, peak_vals_t, pafs_t, frame_idx in zip(peaks, peak_vals, pafs, frame_indices):
+        instances = match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton,
+                                   min_score_to_node_ratio=min_score_to_node_ratio,
+                                   min_score_midpts=min_score_midpts,
+                                   min_score_integral=min_score_integral,
+                                   add_last_edge=add_last_edge)
+        predicted_frames.append(LabeledFrame(video=video, frame_idx=frame_idx, instances=instances))
 
-        matched_instances.append(matched_instances_i)
-        match_scores.append(match_scores_i)
-        matched_peak_vals.append(matched_peak_vals_i)
-
-    return matched_instances, match_scores, matched_peak_vals
+    return predicted_frames
 
 def match_peaks_paf_par(peaks, peak_vals, pafs, skeleton,
-    min_score_to_node_ratio=0.4, min_score_midpts=0.05, min_score_integral=0.8, add_last_edge=False, pool=None):
+                        video, frame_indices,
+                        min_score_to_node_ratio=0.4,
+                        min_score_midpts=0.05,
+                        min_score_integral=0.8,
+                        add_last_edge=False,
+                        pool=None):
     """ Parallel version of PAF peak matching """
 
     if pool is None:
         pool = multiprocessing.Pool()
-    # with multiprocessing.Pool() as pool:
 
     futures = []
-    for peaks_t, peak_vals_t, pafs_t in zip(peaks, peak_vals, pafs):
-        future = pool.apply_async(match_peaks_frame, [peaks_t, peak_vals_t, pafs_t, skeleton], dict(min_score_to_node_ratio=min_score_to_node_ratio, min_score_midpts=min_score_midpts, min_score_integral=min_score_integral, add_last_edge=add_last_edge))
+    for peaks_t, peak_vals_t, pafs_t, frame_idx in zip(peaks, peak_vals, pafs, frame_indices):
+        future = pool.apply_async(match_peaks_frame, [peaks_t, peak_vals_t, pafs_t, skeleton],
+                                  dict(min_score_to_node_ratio=min_score_to_node_ratio,
+                                       min_score_midpts=min_score_midpts,
+                                       min_score_integral=min_score_integral,
+                                       add_last_edge=add_last_edge))
         futures.append(future)
 
-    matched_instances = []
-    match_scores = []
-    matched_peak_vals = []
-    for future in futures:
-        matched_instances_i, match_scores_i, matched_peak_vals_i = future.get()
+    predicted_frames = []
+    for future, frame_idx in zip(futures, frame_indices):
+        instances = future.get()
+        predicted_frames.append(LabeledFrame(video=video, frame_idx=frame_idx, instances=instances))
 
-        matched_instances.append(matched_instances_i)
-        match_scores.append(match_scores_i)
-        matched_peak_vals.append(matched_peak_vals_i)
-
-    return matched_instances, match_scores, matched_peak_vals
+    return predicted_frames
 
 

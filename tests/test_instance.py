@@ -82,7 +82,7 @@ def test_instance_to_pandas_df(skeleton, instances):
     """
 
     # How many columns are supposed to be in point DataFrame
-    NUM_COLS = 8
+    NUM_COLS = 9
 
     NUM_INSTANCES = len(instances)
 

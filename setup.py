@@ -38,7 +38,7 @@ setup(
         'console_scripts': [
             'sleap-label=sleap.gui.app:main',
             'sleap-train=sleap.nn.training:main',
-            'sleap-track=sleap.nn.tracking:main'
+            'sleap-track=sleap.nn.inference:main'
         ],
     },
     python_requires='>=3.6'

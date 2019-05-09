@@ -296,7 +296,6 @@ class Labels(MutableSequence):
         # as references to the above constructed lists to limit redundant data in the
         # json
         label_cattr = cattr.Converter()
-        label_cattr.register_unstructure_hook(Skeleton, lambda x: skeletons.index(x))
         label_cattr.register_unstructure_hook(Skeleton, lambda x: self.skeletons.index(x))
         label_cattr.register_unstructure_hook(Video, lambda x: self.videos.index(x))
         label_cattr.register_unstructure_hook(Node, lambda x: self.nodes.index(x))
