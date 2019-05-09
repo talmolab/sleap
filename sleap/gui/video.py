@@ -594,11 +594,19 @@ class GraphicsView(QGraphicsView):
 
             self.zoomFactor = max(factor * self.zoomFactor, 1)
             self.updateViewer()
-            event.accept()
-        else:
-            event.ignore()
-        # trigger default event handler so event will pass to children
-        QGraphicsView.wheelEvent(self, event)
+
+        # Trigger wheelEvent for all child elements. This is a bit of a hack.
+        # We can't use QGraphicsView.wheelEvent(self, event) since that will scroll view.
+        # We want to trigger for all children, since wheelEvent should continue rotating
+        # an skeleton even if the skeleton node/node label is no longer under the cursor.
+        # Note that children expect a QGraphicsSceneWheelEvent event, which is why we're
+        # explicitly ignoring TypeErrors. Everything seems to work fine since we don't
+        # care about the mouse position; if we did, we'd need to map pos to scene.
+        for child in self.items():
+            try:
+                child.wheelEvent(event)
+            except TypeError:
+                pass
 
     def keyPressEvent(self, event):
         event.ignore() # Kicks the event up to parent
@@ -877,6 +885,7 @@ class QtNode(QGraphicsEllipseItem):
         else:
             super(QtNode, self).mouseReleaseEvent(event)
             self.updatePoint()
+        self.dragParent = False
 
     def wheelEvent(self, event):
         """Custom event handler for mouse scroll wheel."""
@@ -884,8 +893,6 @@ class QtNode(QGraphicsEllipseItem):
             angle = event.delta() / 20 + self.parentObject().rotation()
             self.parentObject().setRotation(angle)
             event.accept()
-        else:
-            event.ignore()
 
     def mouseDoubleClickEvent(self, event):
         scene = self.scene()
