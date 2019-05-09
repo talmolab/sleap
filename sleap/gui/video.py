@@ -594,6 +594,9 @@ class GraphicsView(QGraphicsView):
 
             self.zoomFactor = max(factor * self.zoomFactor, 1)
             self.updateViewer()
+            event.accept()
+        else:
+            event.ignore()
         # trigger default event handler so event will pass to children
         QGraphicsView.wheelEvent(self, event)
 
@@ -880,6 +883,9 @@ class QtNode(QGraphicsEllipseItem):
         if self.dragParent:
             angle = event.delta() / 20 + self.parentObject().rotation()
             self.parentObject().setRotation(angle)
+            event.accept()
+        else:
+            event.ignore()
 
     def mouseDoubleClickEvent(self, event):
         scene = self.scene()
