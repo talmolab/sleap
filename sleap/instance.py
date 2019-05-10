@@ -9,7 +9,7 @@ import numpy as np
 import h5py as h5
 import pandas as pd
 
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Tuple
 
 from sleap.skeleton import Skeleton, Node
 from sleap.io.video import Video
@@ -177,7 +177,6 @@ class Instance:
         """
         return self._node_to_index(node) in self._points
 
-
     def __setitem__(self, node, value):
 
         # Make sure node and value, if either are lists, are of compatible size
@@ -247,7 +246,7 @@ class Instance:
         names_to_points = {node: point for node, point in self._points.items()}
         return names_to_points.items()
 
-    def points(self):
+    def points(self) -> Tuple:
         """
         Return the list of labelled points, in order they were labelled.
 
@@ -255,6 +254,24 @@ class Instance:
             The list of labelled points, in order they were labelled.
         """
         return tuple(self._points.values())
+
+    def points_array(self) -> np.ndarray:
+        """
+        Return the instance's points in array form.
+
+        Returns:
+            A Nx2 array containing x and y coordinates of each point
+            as the rows of the array and N is the number of nodes in the skeleton.
+            The order of the rows corresponds to the ordering of the skeleton nodes.
+            Any skeleton node not defined will have NaNs present.
+        """
+        pts = np.ndarray((len(self.skeleton.nodes), 2))
+        for i, n in enumerate(self.skeleton.nodes):
+            p = self._points.get(n, Point())
+            pts[i, 0] = p.x
+            pts[i, 1] = p.y
+
+        return pts
 
     @classmethod
     def to_pandas_df(cls, instances: Union['Instance', List['Instance']], skip_nan:bool = True) -> pd.DataFrame:

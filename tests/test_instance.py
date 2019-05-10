@@ -169,3 +169,27 @@ def test_instance_comparison(skeleton):
     instance2 = copy.deepcopy(instance1)
     instance2.skeleton.add_node('extra_node')
     assert not instance1.matches(instance2)
+
+def test_points_array(skeleton):
+    """ Test conversion of instances to points array"""
+    
+    node_names = ["left-wing", "head", "right-wing"]
+    points = {"head": Point(1, 4), "left-wing": Point(2, 5), "right-wing": Point(3, 6)}
+
+    instance1 = Instance(skeleton=skeleton, points=points)
+
+    pts = instance1.points_array()
+
+    assert pts.shape == (len(skeleton.nodes), 2)
+    assert np.allclose(pts[skeleton.node_to_index('left-wing'), :], [2, 5])
+    assert np.allclose(pts[skeleton.node_to_index('head'), :], [1, 4])
+    assert np.allclose(pts[skeleton.node_to_index('right-wing'), :], [3, 6])
+    assert np.isnan(pts[skeleton.node_to_index('thorax'), :]).all()
+
+    # Now change a point, make sure it is reflected
+    instance1['head'].x = 0
+    instance1['thorax'] = Point(1, 2)
+    pts = instance1.points_array()
+    assert np.allclose(pts[skeleton.node_to_index('head'), :], [0, 4])
+    assert np.allclose(pts[skeleton.node_to_index('thorax'), :], [1, 2])
+

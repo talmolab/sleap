@@ -68,6 +68,9 @@ class FlowShiftTracker:
         # present.
         for img_idx, labeled_frame in enumerate(matched_instances):
 
+            # Convert the matched instances into
+            matched_instances_pts = [i.points_array() for i in matched_instances[img_idx].instances]
+
             # Copy the actual frame index for this labeled frame, we will
             # use this a lot.
             t = labeled_frame.frame_idx
@@ -75,8 +78,8 @@ class FlowShiftTracker:
             # If we do not have any active tracks, we will spawn one for each
             # matched instance and continue to the next frame.
             if len(self.tracks.tracks) == 0:
-                for i, instance in enumerate(matched_instances[img_idx].instances):
-                    self.tracks.add_instance(InstanceArray(points=instance.points_array() / img_scale,
+                for i, pts in enumerate(matched_instances_pts):
+                    self.tracks.add_instance(InstanceArray(points=pts / img_scale,
                                                       frame_idx=t,
                                                       track=Track(spawned_on=t, name=f"{i}")))
                 if self.verbosity > 0:
@@ -116,13 +119,13 @@ class FlowShiftTracker:
                                  if np.sum(found) > 0]
             self.tracks.add_instances(shifted_instances)
 
-            if len(matched_instances[img_idx]) == 0:
+            if len(matched_instances_pts) == 0:
                 if self.verbosity > 0:
                     logging.info(f"[t = {t}] No matched instances to assign to tracks")
                 continue
 
             # Reduce distances by track
-            unassigned_pts = np.stack(matched_instances[img_idx], axis=0) / img_scale # instances x nodes x 2
+            unassigned_pts = np.stack(matched_instances_pts, axis=0) / img_scale # instances x nodes x 2
             shifted_tracks = list({instance.track for instance in shifted_instances})
             if self.verbosity > 0:
                 logging.info(f"[t = {t}] Flow shift matching {len(unassigned_pts)} "
