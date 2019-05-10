@@ -1,7 +1,7 @@
 import logging
 logger = logging.getLogger(__name__)
 
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Union
 
 import numpy as np
 import cv2
@@ -9,8 +9,37 @@ import attr
 
 from scipy.optimize import linear_sum_assignment
 
-from sleap.instance import InstanceArray, ShiftedInstance, Tracks, Track
+from sleap.instance import InstanceArray, ShiftedInstance, Track
 from sleap.io.dataset import Labels, LabeledFrame
+
+
+@attr.s(slots=True)
+class Tracks:
+    instances: Dict[int, list] = attr.ib(default=attr.Factory(dict))
+    tracks: List[Track] = attr.ib(factory=list)
+
+    def get_frame_instances(self, frame_idx: int, max_shift=None):
+
+        instances = self.instances.get(frame_idx, [])
+
+        # Filter
+        if max_shift is not None:
+            instances = [instance for instance in instances if isinstance(instance, InstanceArray) or (
+                        isinstance(instance, ShiftedInstance) and (
+                            (frame_idx - instance.source.frame_idx) <= max_shift))]
+
+        return instances
+
+    def add_instance(self, instance: Union[InstanceArray, ShiftedInstance]):
+        frame_instances = self.instances.get(instance.frame_idx, [])
+        frame_instances.append(instance)
+        self.instances[instance.frame_idx] = frame_instances
+        if instance.track not in self.tracks:
+            self.tracks.append(instance.track)
+
+    def add_instances(self, instances: list):
+        for instance in instances:
+            self.add_instance(instance)
 
 
 @attr.s(auto_attribs=True)

@@ -6,7 +6,7 @@ import pytest
 import numpy as np
 
 from sleap.skeleton import Skeleton
-from sleap.instance import Instance, Point
+from sleap.instance import Instance, InstanceArray, Point
 
 def test_instance_node_get_set_item(skeleton):
     """
@@ -172,7 +172,7 @@ def test_instance_comparison(skeleton):
 
 def test_points_array(skeleton):
     """ Test conversion of instances to points array"""
-    
+
     node_names = ["left-wing", "head", "right-wing"]
     points = {"head": Point(1, 4), "left-wing": Point(2, 5), "right-wing": Point(3, 6)}
 
@@ -192,4 +192,21 @@ def test_points_array(skeleton):
     pts = instance1.points_array()
     assert np.allclose(pts[skeleton.node_to_index('head'), :], [0, 4])
     assert np.allclose(pts[skeleton.node_to_index('thorax'), :], [1, 2])
+
+def test_from_instance_array(skeleton):
+    """Test conversion of InstanceArray to Instance"""
+
+    node_names = ["left-wing", "head", "right-wing"]
+    points = {"head": Point(1, 4), "left-wing": Point(2, 5), "right-wing": Point(3, 6)}
+    instance1 = Instance(skeleton=skeleton, points=points)
+
+    # Get the points array
+    pts = instance1.points_array()
+
+    # Make and InstanceArray
+    iarray = InstanceArray(points=pts, frame_idx=0, track=None)
+
+    instance2 = Instance.from_instance_array(iarray=iarray, skeleton=skeleton)
+
+    assert(instance1.matches(instance2))
 
