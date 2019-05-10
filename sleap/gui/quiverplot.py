@@ -269,7 +269,7 @@ if __name__ == "__main__":
 
         window.view.scene.addItem(aff_fields_item)
 
-    window.callbacks.append(plot_fields)
+    window.changedPlot.connect(plot_fields)
 
     window.show()
     window.plot()

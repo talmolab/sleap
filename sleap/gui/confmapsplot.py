@@ -182,7 +182,7 @@ if __name__ == "__main__":
         conf_maps = ConfMapsPlot(conf_data.get_frame(parent.frame_idx), selected)
         window.view.scene.addItem(conf_maps)
 
-    window.callbacks.append(plot_confmaps)
+    window.changedPlot.connect(plot_confmaps)
 
     window.show()
     window.plot()

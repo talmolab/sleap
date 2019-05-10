@@ -592,4 +592,3 @@ class Tracks:
         for instance in instances:
             self.add_instance(instance)
 
-

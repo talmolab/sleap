@@ -326,14 +326,18 @@ class SkeletonNodeModel(QtCore.QStringListModel):
     def _valid_dst(self):
         # get source node using callback
         src_node = self._src_node()
-        # Find destination nodes
-        dst_nodes = set(self.skeleton.node_names) - {src_node}
 
-        # Find valid edges
-        valid_edges = {(src_node, dst_node) for dst_node in dst_nodes} - set(self.skeleton.edge_names)
+        def is_valid_dst(node):
+            # node cannot be dst of itself
+            if node == src_node:
+                return False
+            # node cannot be dst if it's already dst of this src
+            if (src_node, node) in self.skeleton.edge_names:
+                return False
+            return True
 
         # Filter down to valid destination nodes
-        valid_dst_nodes = [dst_node for src_node, dst_node in valid_edges]
+        valid_dst_nodes = list(filter(is_valid_dst, self.skeleton.node_names))
 
         return valid_dst_nodes
 

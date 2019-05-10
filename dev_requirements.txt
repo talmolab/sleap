@@ -1,3 +1,4 @@
 pytest
 pytest-qt
 pytest-cov
+ipython

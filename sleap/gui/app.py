@@ -11,6 +11,8 @@ from PySide2.QtWidgets import QMenu, QAction
 from PySide2.QtWidgets import QFileDialog, QMessageBox
 
 import os
+import sys
+import copy
 
 from pathlib import PurePath
 
@@ -49,6 +51,7 @@ class MainWindow(QMainWindow):
         self.labels = Labels()
         self.skeleton = Skeleton()
         self.labeled_frame = None
+        self.predicted_instances = None
         self.video = None
         self.video_idx = None
         self.mark_idx = None
@@ -86,6 +89,7 @@ class MainWindow(QMainWindow):
         ####### Video player #######
         self.player = QtVideoPlayer()
         self.player.changedPlot.connect(self.newFrame)
+        self.player.view.instanceDoubleClicked.connect(self.newInstance)
         self.setCentralWidget(self.player)
 
         ####### Status bar #######
@@ -118,6 +122,7 @@ class MainWindow(QMainWindow):
 
         labelMenu = self.menuBar().addMenu("Labels")
         labelMenu.addAction("Add Instance", self.newInstance, Qt.CTRL + Qt.Key_I)
+        labelMenu.addAction("Delete Instance", self.deleteSelectedInstance, Qt.CTRL + Qt.Key_Backspace)
         labelMenu.addAction("Transpose Instances", self.transposeInstance, Qt.CTRL + Qt.Key_T)
         labelMenu.addAction("Select Next Instance", self.player.view.nextSelection, QKeySequence(Qt.Key.Key_QuoteLeft))
         labelMenu.addAction("Clear Selection", self.player.view.clearSelection, QKeySequence(Qt.Key.Key_Escape))
@@ -162,6 +167,8 @@ class MainWindow(QMainWindow):
         self.videosTable = VideosTable()
         videos_layout.addWidget(self.videosTable)
         hb = QHBoxLayout()
+        btn = QPushButton("Open video")
+        btn.clicked.connect(self.activateSelectedVideo); hb.addWidget(btn)
         btn = QPushButton("Add videos")
         btn.clicked.connect(self.addVideo); hb.addWidget(btn)
         btn = QPushButton("Remove video")
@@ -169,7 +176,7 @@ class MainWindow(QMainWindow):
         hbw = QWidget(); hbw.setLayout(hb)
         videos_layout.addWidget(hbw)
 
-        self.videosTable.doubleClicked.connect(lambda x: self.loadVideo(self.labels.videos[x.row()], x.row()))
+        self.videosTable.doubleClicked.connect(self.activateSelectedVideo)
 
         ####### Skeleton #######
         skeleton_layout = _make_dock("Skeleton", tab_with=videos_layout.parent().parent())
@@ -208,6 +215,14 @@ class MainWindow(QMainWindow):
         gb.setLayout(vb)
         skeleton_layout.addWidget(gb)
 
+        hb = QHBoxLayout()
+        btn = QPushButton("Load Skeleton")
+        btn.clicked.connect(self.openSkeleton); hb.addWidget(btn)
+        btn = QPushButton("Save Skeleton")
+        btn.clicked.connect(self.saveSkeleton); hb.addWidget(btn)
+        hbw = QWidget(); hbw.setLayout(hb)
+        skeleton_layout.addWidget(hbw)
+
         # update edge UI when change to nodes
         self.skeletonNodesTable.model().dataChanged.connect(self.updateEdges)
 
@@ -217,7 +232,7 @@ class MainWindow(QMainWindow):
         instances_layout.addWidget(self.instancesTable)
         hb = QHBoxLayout()
         btn = QPushButton("New instance")
-        btn.clicked.connect(self.newInstance); hb.addWidget(btn)
+        btn.clicked.connect(lambda x: self.newInstance()); hb.addWidget(btn)
         btn = QPushButton("Delete instance")
         btn.clicked.connect(self.deleteInstance); hb.addWidget(btn)
         hbw = QWidget(); hbw.setLayout(hb)
@@ -323,6 +338,7 @@ class MainWindow(QMainWindow):
             self.videosTable.model().videos = self.labels.videos
             if len(self.labels.labels) > 0:
                 if len(self.labels.labels[0].instances) > 0:
+                    # TODO: add support for multiple skeletons
                     self.skeleton = self.labels.labels[0].instances[0].skeleton
                     self.skeletonNodesTable.model().skeleton = self.skeleton
                     self.skeletonEdgesTable.model().skeleton = self.skeleton
@@ -331,6 +347,12 @@ class MainWindow(QMainWindow):
 
             # Load first video
             self.loadVideo(self.labels.videos[0], 0)
+
+    def activateSelectedVideo(self, x):
+        # Get selected video
+        idx = self.videosTable.currentIndex()
+        if not idx.isValid(): return
+        self.loadVideo(self.labels.videos[idx.row()], idx.row())
 
     def addVideo(self, filename=None):
         # Browse for file
@@ -395,11 +417,44 @@ class MainWindow(QMainWindow):
         # Load video in player widget
         self.player.load_video(self.video)
 
+        # Annotate labelled frames on seekbar
+        self.updateSeekbarLabels()
+
         # Jump to last labeled frame
         last_label = self.labels.find_last(self.video)
         if last_label is not None:
             self.plotFrame(last_label.frame_idx)
 
+    def openSkeleton(self):
+        filters = ["JSON skeleton (*.json)", "HDF5 skeleton (*.h5 *.hdf5)"]
+        filename, selected_filter = QFileDialog.getOpenFileName(self, dir=None, caption="Open skeleton...", filter=";;".join(filters))
+
+        if len(filename) == 0: return
+
+        if filename.endswith(".json"):
+            self.skeleton = Skeleton.load_json(filename)
+        elif filename.endswith((".h5", ".hdf5")):
+            sk_list = Skeleton.load_all_hdf5(filename)
+            if len(sk_list):
+                self.skeleton = sk_list[0]
+
+        # Update data model
+        self.skeletonNodesTable.model().skeleton = self.skeleton
+        self.skeletonEdgesTable.model().skeleton = self.skeleton
+        self.skeletonEdgesSrc.model().skeleton = self.skeleton
+        self.skeletonEdgesDst.model().skeleton = self.skeleton
+
+    def saveSkeleton(self):
+        default_name = "skeleton.json"
+        filters = ["JSON skeleton (*.json)", "HDF5 skeleton (*.h5 *.hdf5)"]
+        filename, selected_filter = QFileDialog.getSaveFileName(self, caption="Save As...", dir=default_name, filter=";;".join(filters))
+
+        if len(filename) == 0: return
+
+        if filename.endswith(".json"):
+            self.skeleton.save_json(filename)
+        elif filename.endswith((".h5", ".hdf5")):
+            self.skeleton.save_hdf5(filename)
 
     def newNode(self):
         # Find new part name
@@ -431,11 +486,11 @@ class MainWindow(QMainWindow):
 
         # Update data model
         self.skeletonNodesTable.model().skeleton = self.skeleton
-
-        # Update edges dropdown
+        self.skeletonEdgesTable.model().skeleton = self.skeleton
         self.skeletonEdgesSrc.model().skeleton = self.skeleton
+        self.skeletonEdgesDst.model().skeleton = self.skeleton
 
-        # TODO: Replot instances?
+        # Replot instances
         self.plotFrame()
 
     def selectSkeletonEdgeSrc(self):
@@ -483,20 +538,63 @@ class MainWindow(QMainWindow):
 
         self.plotFrame()
 
+    def updateSeekbarLabels(self):
+        self.player.seekbar.setLabels([frame.frame_idx for frame in self.labels.find(self.video)])
 
-    def newInstance(self):
+    def newInstance(self, copy_instance=None):
         if self.labeled_frame is None:
             return
 
+        # FIXME: filter by skeleton type
+
+        if copy_instance is None:
+            selected_idx = self.player.view.getSelection()
+            if selected_idx is not None:
+                # If the user has selected an instance, copy that one.
+                copy_instance = self.labeled_frame.instances[selected_idx]
+            elif len(self.predicted_instances) > len(self.labeled_frame.instances):
+                # If there are more predicted instances than instances in this frame,
+                # copy the points from the first predicted instance without matching instance.
+                copy_instance = self.predicted_instances[len(self.labeled_frame.instances)]
+            else:
+                # Otherwise, if there are instances in previous frames,
+                # copy the points from one of those instances.
+                prev_idx = self.previousLabeledFrameIndex()
+                if prev_idx is not None:
+                    prev_instances = self.getInstancesFromFrameIdx(prev_idx)
+                    if len(prev_instances) > len(self.labeled_frame.instances):
+                        # If more instances in previous frame than current, then use the
+                        # first unmatched instance.
+                        copy_instance = prev_instances[len(self.labeled_frame.instances)]
+                    elif len(self.labeled_frame.instances):
+                        # Otherwise, if there are already instances in current frame,
+                        # copy the points from the last instance added to frame.
+                        copy_instance = self.labeled_frame.instances[-1]
+                    elif len(prev_instances):
+                        # Otherwise use the last instance added to previous frame.
+                        copy_instance = prev_instances[-1]
+
         new_instance = Instance(skeleton=self.skeleton)
         for node in self.skeleton.nodes:
-            new_instance[node] = Point(x=np.random.rand() * self.video.width * 0.5, y=np.random.rand() * self.video.height * 0.5, visible=True)
+            if copy_instance is not None and node in copy_instance:
+                new_instance[node] = copy.copy(copy_instance[node])
+            else:
+                new_instance[node] = Point(x=np.random.rand() * self.video.width * 0.5, y=np.random.rand() * self.video.height * 0.5, visible=True)
         self.labeled_frame.instances.append(new_instance)
 
         if self.labeled_frame not in self.labels.labels:
             self.labels.append(self.labeled_frame)
 
         self.plotFrame()
+        self.updateSeekbarLabels()
+
+    def deleteSelectedInstance(self):
+        idx = self.player.view.getSelection()
+        if idx is None: return
+        del self.labeled_frame.instances[idx]
+
+        self.plotFrame()
+        self.updateSeekbarLabels()
 
     def deleteInstance(self):
         idx = self.instancesTable.currentIndex()
@@ -504,6 +602,7 @@ class MainWindow(QMainWindow):
         del self.labeled_frame.instances[idx.row()]
 
         self.plotFrame()
+        self.updateSeekbarLabels()
 
     def transposeInstance(self):
         # We're currently identifying instances by numeric index, so it's
@@ -517,7 +616,15 @@ class MainWindow(QMainWindow):
             self._transpose_instances((0,1))
         # If there are more than two, then we need the user to select the instances.
         else:
-            self.player.onSequenceSelect(seq_len = 2, on_success = self._transpose_instances)
+            self.player.onSequenceSelect(seq_len = 2,
+                                         on_success = self._transpose_instances,
+                                         on_each = self._transpose_message,
+                                         on_failure = lambda x:self.updateStatusMessage()
+                                         )
+
+    def _transpose_message(self, instance_ids:list):
+        word = "next" if len(instance_ids) else "first"
+        self.updateStatusMessage(f"Please select the {word} instance to transpose...")
 
     def _transpose_instances(self, instance_ids:list):
         if len(instance_ids) != 2: return
@@ -526,7 +633,9 @@ class MainWindow(QMainWindow):
         idx_1 = instance_ids[1]
         self.labeled_frame.instances[idx_0], self.labeled_frame.instances[idx_1] = (
             self.labeled_frame.instances[idx_1], self.labeled_frame.instances[idx_0])
-            
+
+        # TODO: update track ids
+
         self.plotFrame()
 
     def newProject(self):
@@ -599,23 +708,31 @@ class MainWindow(QMainWindow):
         self.plotFrame(self.mark_idx)
 
     def extractClip(self):
-        if self.mark_idx is None:
-            QMessageBox(text=f"You must first mark a frame to determine the range for extraction.").exec_()
-        else:
-            start = min(self.mark_idx, self.player.frame_idx)
-            end = max(self.mark_idx, self.player.frame_idx)
-            QMessageBox(text=f"Extract video frames: {start+1} to {end+1}. Not yet implemented.").exec_()
+        start, end = self.player.seekbar.getSelection()
+        if start < end:
+            clip_frames = self.video.get_frames(range(start, end))
+            clip_video = Video.from_numpy(clip_frames)
+            clip_window = QtVideoPlayer(video=clip_video)
+            clip_window.show()
 
-    def previousLabeledFrame(self):
+    def previousLabeledFrameIndex(self):
+        prev_idx = None
         cur_idx = self.player.frame_idx
         frame_indexes = [frame.frame_idx for frame in self.labels.find(self.video)]
+        frame_indexes.sort()
         if len(frame_indexes):
             prev_idx = max(filter(lambda idx: idx < cur_idx, frame_indexes), default=frame_indexes[-1])
+        return prev_idx
+
+    def previousLabeledFrame(self):
+        prev_idx = self.previousLabeledFrameIndex()
+        if prev_idx is not None:
             self.plotFrame(prev_idx)
 
     def nextLabeledFrame(self):
         cur_idx = self.player.frame_idx
         frame_indexes = [frame.frame_idx for frame in self.labels.find(self.video)]
+        frame_indexes.sort()
         if len(frame_indexes):
             next_idx = min(filter(lambda idx: idx > cur_idx, frame_indexes), default=frame_indexes[0])
             self.plotFrame(next_idx)
@@ -657,34 +774,63 @@ class MainWindow(QMainWindow):
     def trainPAFs(self):
         pass
 
+    def getInstancesFromFrameIdx(self, frame_idx):
+        labeled_frame = [label for label in self.labels.labels if label.video == self.video and label.frame_idx == frame_idx]
+        instances = labeled_frame[0].instances if len(labeled_frame) > 0 else []
+        return instances
 
     def newFrame(self, player, frame_idx):
 
         labeled_frame = [label for label in self.labels.labels if label.video == self.video and label.frame_idx == frame_idx]
         self.labeled_frame = labeled_frame[0] if len(labeled_frame) > 0 else LabeledFrame(video=self.video, frame_idx=frame_idx)
+
+        if self.predicted_instances is None:
+            self.predicted_instances = [] # temp, nowhere to load these from yet
+
+        # TESTING: pretend first instance in frame is predicted instance
+#         if len(self.labeled_frame.instances) and not len(self.predicted_instances):
+#             self.predicted_instances = self.labeled_frame.instances[:1]
+#             self.labeled_frame.instances = self.labeled_frame.instances[1:]
+#             print(f"{len(self.labeled_frame.instances)} {len(self.predicted_instances)}")
+
         self.instancesTable.model().labeled_frame = self.labeled_frame
 
         for i, instance in enumerate(self.labeled_frame.instances):
+            # TODO: color by track id rather than list index
             player.addInstance(instance=instance, color=self.cmap[i%len(self.cmap)])
+
+        for instance in self.predicted_instances:
+            player.addInstance(instance=instance, predicted=True)
 
         player.view.updatedViewer.emit()
 
-        # self.statusBar().showMessage(f"Frame: {self.player.frame_idx+1}/{len(self.video)}  |  Labeled frames (video/total): {self.labels.instances[self.labels.instances.videoId == 1].frameIdx.nunique()}/{len(self.labels)}  |  Instances (frame/total): {len(frame_instances)}/{self.labels.points.instanceId.nunique()}")
-        self.statusBar().showMessage(f"Frame: {self.player.frame_idx+1}/{len(self.video)}")
+        self.updateStatusMessage()
 
+    def updateStatusMessage(self, message = None):
+        if message is None:
+            message = f"Frame: {self.player.frame_idx+1}/{len(self.video)}"
+
+        self.statusBar().showMessage(message)
+        # self.statusBar().showMessage(f"Frame: {self.player.frame_idx+1}/{len(self.video)}  |  Labeled frames (video/total): {self.labels.instances[self.labels.instances.videoId == 1].frameIdx.nunique()}/{len(self.labels)}  |  Instances (frame/total): {len(frame_instances)}/{self.labels.points.instanceId.nunique()}")
 
 def main(*args, **kwargs):
     app = QApplication([])
     app.setApplicationName("sLEAP Label")
 
-    filters = ["JSON labels (*.json)", "HDF5 dataset (*.h5 *.hdf5)"]
-    filename, selected_filter = QFileDialog.getOpenFileName(None, dir=None, caption="Open Project", filter=";;".join(filters))
+    if "import_data" not in kwargs:
+        filters = ["JSON labels (*.json)", "HDF5 dataset (*.h5 *.hdf5)"]
+        filename, selected_filter = QFileDialog.getOpenFileName(None, dir=None, caption="Open Project", filter=";;".join(filters))
 
-    if len(filename): kwargs["import_data"] = filename
+        if len(filename): kwargs["import_data"] = filename
 
     window = MainWindow(*args, **kwargs)
     window.showMaximized()
     app.exec_()
 
 if __name__ == "__main__":
-    main()
+
+    kwargs = dict()
+    if len(sys.argv) > 1:
+        kwargs["import_data"] = sys.argv[1]
+
+    main(**kwargs)

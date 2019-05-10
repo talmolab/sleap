@@ -17,7 +17,7 @@ from PySide2.QtWidgets import QLabel, QPushButton, QSlider
 from PySide2.QtWidgets import QAction
 
 from PySide2.QtWidgets import QGraphicsView, QGraphicsScene
-from PySide2.QtGui import QImage, QPixmap, QPainter, QPainterPath
+from PySide2.QtGui import QImage, QPixmap, QPainter, QPainterPath, QTransform
 from PySide2.QtGui import QPen, QBrush, QColor, QFont
 from PySide2.QtGui import QKeyEvent
 from PySide2.QtCore import Qt, Signal, Slot
@@ -35,6 +35,7 @@ from PySide2.QtWidgets import QGraphicsEllipseItem, QGraphicsLineItem, QGraphics
 from sleap.skeleton import Skeleton
 from sleap.instance import Instance, Point
 from sleap.io.video import Video, HDF5Video
+from sleap.gui.slider import VideoSlider
 
 import qimage2ndarray
 
@@ -58,7 +59,7 @@ class QtVideoPlayer(QWidget):
         self.frame_idx = -1
         self.view = GraphicsView()
 
-        self.seekbar = QSlider(Qt.Horizontal)
+        self.seekbar = VideoSlider()
         self.seekbar.valueChanged.connect(lambda evt: self.plot(self.seekbar.value()))
         self.seekbar.setEnabled(False)
 
@@ -109,6 +110,10 @@ class QtVideoPlayer(QWidget):
     @property
     def instances(self):
         return self.view.instances
+
+    @property
+    def predicted_instances(self):
+        return self.view.predicted_instances
         
     def addInstance(self, instance, **kwargs):
         """Add a skeleton instance to the video.
@@ -211,11 +216,12 @@ class QtVideoPlayer(QWidget):
     def zoomToFit(self):
         """ Zoom view to fit all instances
         """
-        zoom_rect = self.view.instancesBoundingRect(margin=30, keepAspectRatio=True)
+        zoom_rect = self.view.instancesBoundingRect(margin=20)
         if not zoom_rect.size().isEmpty():
-            self.view.zoomToRect(zoom_rect, relative = False)
+            self.view.zoomToRect(zoom_rect)
 
-    def onSequenceSelect(self, seq_len: int, on_success: Callable, on_failure = None):
+    def onSequenceSelect(self, seq_len: int, on_success: Callable,
+                         on_each = None, on_failure = None):
         """
         Collect a sequence of instances (through user selection) and call `on_success`.
         If the user cancels (by unselecting without new selection), call `on_failure`.
@@ -238,6 +244,7 @@ class QtVideoPlayer(QWidget):
         def handle_selection(seq_len=seq_len,
                              indexes=indexes,
                              on_success=on_success,
+                             on_each=on_each,
                              on_failure=on_failure):
             # Get the index of the currently selected instance
             new_idx = self.view.getSelection()
@@ -249,6 +256,7 @@ class QtVideoPlayer(QWidget):
                 self.view.updatedSelection.disconnect(handle_selection)
                 if callable(on_failure):
                     on_failure(indexes)
+                return
             
             # If we have all the instances we want in our sequence, we're done
             if len(indexes) >= seq_len:
@@ -256,8 +264,15 @@ class QtVideoPlayer(QWidget):
                 self.view.updatedSelection.disconnect(handle_selection)
                 # trigger success, passing the list of selected indexes
                 on_success(indexes)
+            # If we're still in progress...
+            else:
+                if callable(on_each):
+                    on_each(indexes)
 
         self.view.updatedSelection.connect(handle_selection)
+
+        if callable(on_each):
+            on_each(indexes)
 
     def keyPressEvent(self, event: QKeyEvent):
         """ Custom event handler.
@@ -293,6 +308,7 @@ class GraphicsView(QGraphicsView):
         updatedViewer: Emitted after update to view (e.g., zoom)
             Used internally so we know when to update points for each instance.
         updatedSelection: Emitted after the user has selected/unselected an instance
+        instanceDoubleClicked: Emitted after an instance is double clicked
 
         leftMouseButtonPressed
         rightMouseButtonPressed
@@ -304,6 +320,7 @@ class GraphicsView(QGraphicsView):
 
     updatedViewer = Signal()
     updatedSelection = Signal()
+    instanceDoubleClicked = Signal(Instance)
     leftMouseButtonPressed = Signal(float, float)
     rightMouseButtonPressed = Signal(float, float)
     leftMouseButtonReleased = Signal(float, float)
@@ -328,7 +345,6 @@ class GraphicsView(QGraphicsView):
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
-        self.zoomStack = []
         self.canZoom = True
         self.canPan = True
 
@@ -371,23 +387,17 @@ class GraphicsView(QGraphicsView):
 
     def updateViewer(self):
         """ Show current zoom (if showing entire image, apply current aspect ratio mode).
-        """
+        """        
         if not self.hasImage():
             return
-        if len(self.zoomStack) and self.sceneRect().contains(self.zoomStack[-1]):
-            self.fitInView(self.zoomStack[-1], Qt.IgnoreAspectRatio)  # Show zoomed rect (ignore aspect ratio).
-        else:
-            self.zoomStack = []  # Clear the zoom stack (in case we got here because of an invalid zoom).
 
-            rect = self.sceneRect()
-            # print(self.transform())
-            # print(rect)
-            # print(self.rect())
-            self.fitInView(rect, self.aspectRatioMode)  # Show entire image (use current aspect ratio mode).
-            self.scale(self.zoomFactor, self.zoomFactor)
-            # TODO: fix this so that it's a single operation
-            #   Maybe adjust the self.sceneRect() to account for zooming?
-            # print(self.mapFromScene(self.sceneRect()))
+        base_w_scale = self.width() / self.sceneRect().width()
+        base_h_scale = self.height() / self.sceneRect().height()
+        base_scale = min(base_w_scale, base_h_scale)
+
+        transform = QTransform()
+        transform.scale(base_scale * self.zoomFactor, base_scale * self.zoomFactor)
+        self.setTransform(transform)
         self.updatedViewer.emit()
 
     @property
@@ -398,7 +408,17 @@ class GraphicsView(QGraphicsView):
         Order in list should match the order in which instances were added to scene.
         """
         return [item for item in self.scene.items(Qt.SortOrder.AscendingOrder)
-                if type(item) == QtInstance]
+                if type(item) == QtInstance and not item.predicted]
+
+    @property
+    def predicted_instances(self):
+        """
+        Returns a list of predicted instances.
+
+        Order in list should match the order in which instances were added to scene.
+        """
+        return [item for item in self.scene.items(Qt.SortOrder.AscendingOrder)
+                if type(item) == QtInstance and not predicted]
 
     def clearSelection(self):
         """ Clear instance skeleton selection.
@@ -486,7 +506,8 @@ class GraphicsView(QGraphicsView):
             if not has_moved:
                 # When just a tap, see if there's an item underneath to select
                 clicked = self.scene.items(scenePos, Qt.IntersectsItemBoundingRect)
-                clicked_instances = [item for item in clicked if type(item) == QtInstance]
+                clicked_instances = [item for item in clicked
+                                     if type(item) == QtInstance and not item.predicted]
                 # We only handle single instance selection so pick at most one from list
                 clicked_instance = clicked_instances[0] if len(clicked_instances) else None
                 for idx, instance in enumerate(self.instances):
@@ -501,11 +522,12 @@ class GraphicsView(QGraphicsView):
         elif event.button() == Qt.RightButton:
             if self.canZoom:
                 zoom_rect = self.scene.selectionArea().boundingRect()
-                self.zoomToRect(zoom_rect, relative = True)
+                self.scene.setSelectionArea(QPainterPath()) # clear selection
+                self.zoomToRect(zoom_rect)
             self.setDragMode(QGraphicsView.NoDrag)
             self.rightMouseButtonReleased.emit(scenePos.x(), scenePos.y())
 
-    def zoomToRect(self, zoom_rect: QRectF, relative: bool = False):
+    def zoomToRect(self, zoom_rect: QRectF):
         """
         Method to zoom scene to a given rectangle.
 
@@ -517,29 +539,28 @@ class GraphicsView(QGraphicsView):
             zoom_rect: The `QRectF` to which we want to zoom.
             relative: Controls whether rect is relative to current zoom.
         """
-        # If rect is not relative to current zoom, clear zoomStack
-        if not relative: self.zoomStack = []
 
-        viewBBox = self.zoomStack[-1] if len(self.zoomStack) else self.sceneRect()
-        selectionBBox = zoom_rect.intersected(viewBBox)
-        self.scene.setSelectionArea(QPainterPath())  # Clear current selection area.
-        if selectionBBox.isValid() and (selectionBBox != viewBBox):
-            self.zoomStack.append(selectionBBox)
-            self.updateViewer()
+        if zoom_rect.isNull(): return
+
+        scale_h = self.scene.height()/zoom_rect.height()
+        scale_w = self.scene.width()/zoom_rect.width()
+        scale = min(scale_h, scale_w)
+        
+        self.zoomFactor = scale
+        self.updateViewer()    
+        self.centerOn(zoom_rect.center())
 
     def clearZoom(self):
         """ Clear zoom stack. Doesn't update display.
         """
-        self.zoomStack = []
+        self.zoomFactor = 1
 
-    def instancesBoundingRect(self, margin=0, keepAspectRatio=True):
+    def instancesBoundingRect(self, margin=0):
         """
         Returns a rect which contains all displayed skeleton instances.
 
         Args:
             margin: Margin for padding the rect.
-            keepAspectRatio: If True, grows rect so that it maintains aspect
-                ratio for the video.
         Returns:
             The `QRectF` which contains the skeleton instances.
         """
@@ -548,12 +569,6 @@ class GraphicsView(QGraphicsView):
             rect = rect.united(item.boundingRect())
         if margin > 0:
             rect = rect.marginsAdded(QMarginsF(margin, margin, margin, margin))
-        if keepAspectRatio:
-            size = QSizeF(self.sceneRect().width(), self.sceneRect().height())
-            size.scale(rect.width(), rect.height(), Qt.AspectRatioMode.KeepAspectRatioByExpanding)
-            extra_width = size.width() - rect.width()
-            extra_height = size.height() - rect.height()
-            rect = rect.marginsAdded(QMarginsF(extra_width/2, extra_height/2, extra_width/2, extra_height/2))
         return rect
 
     def mouseDoubleClickEvent(self, event):
@@ -564,7 +579,7 @@ class GraphicsView(QGraphicsView):
             self.leftMouseButtonDoubleClicked.emit(scenePos.x(), scenePos.y())
         elif event.button() == Qt.RightButton:
             if self.canZoom:
-                self.zoomStack = []  # Clear zoom stack.
+                self.clearZoom()
                 self.updateViewer()
             self.rightMouseButtonDoubleClicked.emit(scenePos.x(), scenePos.y())
         QGraphicsView.mouseDoubleClickEvent(self, event)
@@ -580,21 +595,18 @@ class GraphicsView(QGraphicsView):
             self.zoomFactor = max(factor * self.zoomFactor, 1)
             self.updateViewer()
 
-        QGraphicsView.wheelEvent(self, event)
-
-            # transform = self.transform()
-
-            # print(self.sceneRect())
-            # print(self.transform())
-
-            # scale = max(transform.m11(), transform.m22())
-            # if scale * factor < 1.0:
-            #     factor = 1.0
-
-            # self.scale(factor, factor)
-
-            # https://stackoverflow.com/questions/19113532/qgraphicsview-zooming-in-and-out-under-mouse-position-using-mouse-wheel
-            # 
+        # Trigger wheelEvent for all child elements. This is a bit of a hack.
+        # We can't use QGraphicsView.wheelEvent(self, event) since that will scroll view.
+        # We want to trigger for all children, since wheelEvent should continue rotating
+        # an skeleton even if the skeleton node/node label is no longer under the cursor.
+        # Note that children expect a QGraphicsSceneWheelEvent event, which is why we're
+        # explicitly ignoring TypeErrors. Everything seems to work fine since we don't
+        # care about the mouse position; if we did, we'd need to map pos to scene.
+        for child in self.items():
+            try:
+                child.wheelEvent(event)
+            except TypeError:
+                pass
 
     def keyPressEvent(self, event):
         event.ignore() # Kicks the event up to parent
@@ -612,9 +624,10 @@ class QtNodeLabel(QGraphicsTextItem):
         parent: The `QtInstance` which will contain this item.
     """
 
-    def __init__(self, node, parent, *args, **kwargs):
+    def __init__(self, node, parent, predicted=False, *args, **kwargs):
         self.node = node
         self.text = node.name
+        self.predicted = predicted
         self._parent = parent
         super(QtNodeLabel, self).__init__(self.text, parent=parent, *args, **kwargs)
 
@@ -683,7 +696,16 @@ class QtNodeLabel(QGraphicsTextItem):
     def adjustStyle(self):
         """ Update visual display of the label and its node.
         """
-        if self.node.point.complete:
+
+        if self.predicted:
+            self._base_font.setBold(False)
+            self.setFont(self._base_font)
+            self.setDefaultTextColor(QColor(128, 128, 128))
+        elif not self.node.point.visible:
+            self._base_font.setBold(False)
+            self.setFont(self._base_font)
+            self.setDefaultTextColor(self.node.pen().color())
+        elif self.node.point.complete:
             self._base_font.setBold(True)
             self.setFont(self._base_font)
             complete_color = QColor(80, 194, 159) # greenish
@@ -705,6 +727,26 @@ class QtNodeLabel(QGraphicsTextItem):
         """
         super(QtNodeLabel, self).paint(*args, **kwargs)
 
+    def mousePressEvent(self, event):
+        """ Pass events along so that clicking label is like clicking node.
+        """
+        self.node.mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        """ Pass events along so that clicking label is like clicking node.
+        """
+        self.node.mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        """ Pass events along so that clicking label is like clicking node.
+        """
+        self.node.mouseReleaseEvent(event)
+
+    def wheelEvent(self, event):
+        """ Pass events along so that clicking label is like clicking node.
+        """
+        self.node.wheelEvent(event)
+
 
 class QtNode(QGraphicsEllipseItem):
     """
@@ -716,13 +758,16 @@ class QtNode(QGraphicsEllipseItem):
             Note that this is a mutable object so we're able to directly access
             the very same `Point` object that's defined outside our class.
         radius: Radius of the visual node item.
+        color: Color of the visual node item.
         callbacks: List of functions to call after we update to the `Point`.
     """
-    def __init__(self, parent, point:Point, radius=1.5, node_name:str = None, callbacks = None, *args, **kwargs):
+    def __init__(self, parent, point:Point, radius:float, color:list, node_name:str = None, predicted=False, callbacks = None, *args, **kwargs):
         self.point = point
         self.radius = radius
+        self.color = color
         self.edges = []
         self.name = node_name
+        self.predicted = predicted
         self.callbacks = [] if callbacks is None else callbacks
         self.dragParent = False
 
@@ -731,7 +776,30 @@ class QtNode(QGraphicsEllipseItem):
         if node_name is not None:
             self.setToolTip(node_name)
 
+        self.setFlag(QGraphicsItem.ItemIgnoresTransformations)
+
+        if self.predicted:
+            self.setFlag(QGraphicsItem.ItemIsMovable, False)
+
+            self.pen_default = QPen(QColor(250, 250, 10), 1)
+            self.pen_default.setCosmetic(True)
+            self.pen_missing = self.pen_default
+            self.brush = QBrush(QColor(128, 128, 128, 128))
+            self.brush_missing = self.brush
+        else:
+            self.setFlag(QGraphicsItem.ItemIsMovable)
+
+            col_line = QColor(*self.color)
+        
+            self.pen_default = QPen(col_line, 1)
+            self.pen_default.setCosmetic(True) # https://stackoverflow.com/questions/13120486/adjusting-qpen-thickness-when-scaling-qgraphicsview
+            self.pen_missing = QPen(col_line, 1)
+            self.pen_missing.setCosmetic(True)
+            self.brush = QBrush(QColor(*self.color, a=128))
+            self.brush_missing = QBrush(QColor(*self.color, a=0))
+
         self.setPos(self.point.x, self.point.y)
+        self.updatePoint()
 
     def calls(self):
         """ Method to call all callbacks.
@@ -746,6 +814,16 @@ class QtNode(QGraphicsEllipseItem):
         self.point.x = self.scenePos().x()
         self.point.y = self.scenePos().y()
 
+        if self.point.visible:
+            radius = self.radius
+            self.setPen(self.pen_default)
+            self.setBrush(self.brush)
+        else:
+            radius = self.radius / 2.
+            self.setPen(self.pen_missing)
+            self.setBrush(self.brush_missing)
+        self.setRect(-radius, -radius, radius*2, radius*2)
+
         for edge in self.edges:
             edge.updateEdge(self)
             # trigger callbacks for other connected nodes
@@ -757,20 +835,31 @@ class QtNode(QGraphicsEllipseItem):
     def mousePressEvent(self, event):
         """ Custom event handler for mouse press.
         """
+        # Do nothing if node is from predicted instance
+        if self.parentObject().predicted: return
+        
         if event.button() == Qt.LeftButton:
+            # Alt-click to drag instance
             if event.modifiers() == Qt.AltModifier:
                 self.dragParent = True
                 self.parentObject().setFlag(QGraphicsItem.ItemIsMovable)
                 # set origin to point clicked so that we can rotate around this point
                 self.parentObject().setTransformOriginPoint(self.scenePos())
                 self.parentObject().mousePressEvent(event)
+            # Shift-click to mark all points as complete
             elif event.modifiers() == Qt.ShiftModifier:
                 self.parentObject().updatePoints(complete=True)
             else:
                 self.dragParent = False
                 super(QtNode, self).mousePressEvent(event)
                 self.updatePoint()
+            
             self.point.complete = True
+        elif event.button() == Qt.RightButton:
+            # Right-click to toggle node as missing from this instance
+            self.point.visible = not self.point.visible
+            self.point.complete = True
+            self.updatePoint()
         elif event.button() == Qt.MidButton:
             pass
 
@@ -796,13 +885,20 @@ class QtNode(QGraphicsEllipseItem):
         else:
             super(QtNode, self).mouseReleaseEvent(event)
             self.updatePoint()
+        self.dragParent = False
 
     def wheelEvent(self, event):
         """Custom event handler for mouse scroll wheel."""
         if self.dragParent:
-            angle = event.delta() / 10 + self.parentObject().rotation()
+            angle = event.delta() / 20 + self.parentObject().rotation()
             self.parentObject().setRotation(angle)
+            event.accept()
 
+    def mouseDoubleClickEvent(self, event):
+        scene = self.scene()
+        if scene is not None:
+            view = scene.views()[0]
+            view.instanceDoubleClicked.emit(self.parentObject().instance)
 
 class QtEdge(QGraphicsLineItem):
     """
@@ -812,11 +908,15 @@ class QtEdge(QGraphicsLineItem):
         src: The `QtNode` source node for the edge.
         dst: The `QtNode` destination node for the edge.
     """
-    def __init__(self, parent, src:QtNode, dst:QtNode, *args, **kwargs):
+    def __init__(self, parent, src:QtNode, dst:QtNode, color, *args, **kwargs):
         self.src = src
         self.dst = dst
 
         super(QtEdge, self).__init__(self.src.point.x, self.src.point.y, self.dst.point.x, self.dst.point.y, parent=parent, *args, **kwargs)
+
+        pen = QPen(QColor(*color), 1)
+        pen.setCosmetic(True)
+        self.setPen(pen)
 
     def connected_to(self, node):
         """
@@ -881,53 +981,42 @@ class QtInstance(QGraphicsObject):
     When instantiated, it creates `QtNode`, `QtEdge`, and
     `QtNodeLabel` items as children of itself.
     """
-    def __init__(self, skeleton:Skeleton = None, instance: Instance = None, color=(0, 114, 189), markerRadius=1.5, *args, **kwargs):
+    def __init__(self, skeleton:Skeleton = None, instance: Instance = None,
+                 predicted=False, color=(0, 114, 189), markerRadius=4, *args, **kwargs):
         super(QtInstance, self).__init__(*args, **kwargs)
         self.skeleton = skeleton if instance is None else instance.skeleton
         self.instance = instance
+        self.predicted = predicted
+        self.color = color
+        self.markerRadius = markerRadius
+
         self.nodes = {}
         self.edges = []
         self.edges_shown = True
         self.labels = {}
         self.labels_shown = True
-        self.color = color
-        self.markerRadius = markerRadius
         self._selected = False
         self._bounding_rect = QRectF()
         #self.setFlag(QGraphicsItem.ItemIsMovable)
         #self.setFlag(QGraphicsItem.ItemIsSelectable)
 
-        col_line = QColor(*self.color)
-        pen = QPen(col_line, 1)
-        pen.setCosmetic(True) # https://stackoverflow.com/questions/13120486/adjusting-qpen-thickness-when-scaling-qgraphicsview
-
-        pen_missing = QPen(col_line, 1)
-        pen_missing.setCosmetic(True)
-
-        col_fill = QColor(*self.color, a=128)
-        brush = QBrush(col_fill)
-
-        col_fill_missing = QColor(*self.color, a=0)
-        brush_missing = QBrush(col_fill_missing)
+        if self.predicted:
+            self.color = (128, 128, 128)
+            self.setZValue(0)
+        else:
+            self.setZValue(1)
 
         # Add box to go around instance
         self.box = QGraphicsRectItem(parent=self)
-        box_pen = QPen(col_line, 1)
+        box_pen = QPen(QColor(*self.color), 1)
         box_pen.setStyle(Qt.DashLine)
         box_pen.setCosmetic(True)
         self.box.setPen(box_pen)
 
         # Add nodes
         for (node, point) in self.instance.nodes_points:
-            if point.visible:
-                node_item = QtNode(parent=self, point=point, radius=self.markerRadius, node_name = node.name)
-                node_item.setPen(pen)
-                node_item.setBrush(brush)
-            else:
-                node_item = QtNode(parent=self, point=point, radius=self.markerRadius * 0.5, node_name = node.name)
-                node_item.setPen(pen_missing)
-                node_item.setBrush(brush_missing)
-            node_item.setFlag(QGraphicsItem.ItemIsMovable)
+            node_item = QtNode(parent=self, point=point, node_name=node.name,
+                               predicted=self.predicted, color=self.color, radius=self.markerRadius)
 
             self.nodes[node.name] = node_item
 
@@ -935,22 +1024,23 @@ class QtInstance(QGraphicsObject):
         for (src, dst) in self.skeleton.edge_names:
             # Make sure that both nodes are present in this instance before drawing edge
             if src in self.nodes and dst in self.nodes:
-                edge_item = QtEdge(parent=self, src=self.nodes[src], dst=self.nodes[dst])
-                edge_item.setPen(pen)
+                edge_item = QtEdge(parent=self, src=self.nodes[src], dst=self.nodes[dst],
+                                   color=self.color)
                 self.nodes[src].edges.append(edge_item)
                 self.nodes[dst].edges.append(edge_item)
                 self.edges.append(edge_item)
 
         # Add labels to nodes
         # We do this after adding edges so that we can position labels to avoid overlap
-        for node in self.nodes.values():
-            node_label = QtNodeLabel(node, parent=self)
-            node_label.adjustPos()
+        if not self.predicted:
+            for node in self.nodes.values():
+                node_label = QtNodeLabel(node, predicted=self.predicted, parent=self)
+                node_label.adjustPos()
 
-            self.labels[node.name] = node_label
-            # add callback to adjust position of label after node has moved
-            node.callbacks.append(node_label.adjustPos)
-            node.callbacks.append(self.updateBox)
+                self.labels[node.name] = node_label
+                # add callback to adjust position of label after node has moved
+                node.callbacks.append(node_label.adjustPos)
+                node.callbacks.append(self.updateBox)
 
         # Update size of box so it includes all the nodes/edges
         self.updateBox()
@@ -1112,6 +1202,8 @@ if __name__ == "__main__":
         frames = {k: f["frames"][k][:].flatten() for k in ["videoId", "frameIdx"]}
         points = {k: f["points"][k][:].flatten() for k in ["id", "frameIdx", "instanceId", "x", "y", "node", "visible"]}
 
+    window.seekbar.setLabels(range(len(frames["frameIdx"])))
+
     # points["frameIdx"] -= 1
     points["x"] *= scale
     points["y"] *= scale
@@ -1134,10 +1226,10 @@ if __name__ == "__main__":
 
             # Plot instance
             instance = Instance(skeleton=skeleton, points=instance_points)
+            vp.addInstance(instance=instance, predicted=True, color=cmap[i%len(cmap)])
             vp.addInstance(instance=instance, color=cmap[i%len(cmap)])
 
     window.changedPlot.connect(plot_instances)
-
 
     window.show()
     window.plot()

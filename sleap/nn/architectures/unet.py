@@ -35,6 +35,10 @@ def unet(x_in, num_output_channels, depth=3, convs_per_depth=2, num_filters=16, 
     if x_in.shape[-2] % (2**depth) != 0 or x_in.shape[-2] % (2**depth) != 0:
         raise ValueError("Input tensor must have width and height dimensions divisible by %d." % (2**depth))
 
+    # Ensure we have a tuple in case scalar provided
+    kernel_size = expand_to_n(kernel_size, 2)
+
+    # Input tensor
     x = x_in
     
     # Downsampling
@@ -116,10 +120,11 @@ def stacked_unet(x_in, num_output_channels, num_stacks=3, depth=3, convs_per_dep
         if i > 0 and intermediate_inputs:
             x = Concatenate()([x, x_in])
 
-        x, x_out = unet(x, num_output_channels, depth=depth[i], convs_per_depth=convs_per_depth[i], 
-            num_filters=num_filters[i], kernel_size=kernel_size[i], upsampling_layers=upsampling_layers[i], 
-            intermediate_inputs=intermediate_inputs[i], interp=interp[i])
+        x_out = unet(x, num_output_channels, depth=depth[i], convs_per_depth=convs_per_depth[i], 
+            num_filters=num_filters[i], kernel_size=kernel_size[i],
+            upsampling_layers=upsampling_layers[i], interp=interp[i])
         x_outs.append(x_out)
+        x = x_out
         
     return x_outs
     
