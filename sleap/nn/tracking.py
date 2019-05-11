@@ -72,6 +72,7 @@ class FlowShiftTracker:
 
     def __attrs_post_init__(self):
         self.tracks = Tracks()
+        self.last_img = None
 
     def process(self,
                 imgs: np.ndarray,
@@ -113,28 +114,27 @@ class FlowShiftTracker:
                                                       track=Track(spawned_on=t, name=f"{i}")))
                 if self.verbosity > 0:
                     logger.info(f"[t = {t}] Created {len(self.tracks.tracks)} initial tracks")
-                last_img = imgs[img_idx].copy()
+                self.last_img = imgs[img_idx].copy()
                 continue
-                
+
             # Get all points in reference frame
             instances_ref = self.tracks.get_frame_instances(t - 1, max_shift=self.window - 1)
             pts_ref = [instance.points for instance in instances_ref]
             if self.verbosity > 0:
                 tmp = min([instance.frame_idx for instance in instances_ref] +
                           [instance.source.frame_idx for instance in
-                           instances_ref if
-                           isinstance(instance, ShiftedInstance)])
+                           instances_ref if isinstance(instance, ShiftedInstance)])
                 logger.info(f"[t = {t}] Using {len(instances_ref)} refs back to t = {tmp}")
 
 
             pts_fs, status, err = \
-                cv2.calcOpticalFlowPyrLK(last_img, imgs[img_idx],
+                cv2.calcOpticalFlowPyrLK(self.last_img, imgs[img_idx],
                                          (np.concatenate(pts_ref, axis=0)).astype("float32") * img_scale,
                                           None, winSize=self.of_win_size,
                                           maxLevel=self.of_max_level,
                                           criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,
                                                     self.of_max_count, self.of_epsilon))
-            last_img = imgs[img_idx].copy()
+            self.last_img = imgs[img_idx].copy()
 
             # Split by instance
             sections = np.cumsum([len(x) for x in pts_ref])[:-1]

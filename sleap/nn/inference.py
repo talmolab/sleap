@@ -48,6 +48,19 @@ class PredictedInstance(Instance):
     score: float = attr.ib(default=0.0)
 
 
+
+def get_available_gpus():
+    """
+    Get the list of available GPUs
+
+    Returns:
+        List of available GPU device names
+    """
+
+    from tensorflow.python.client import device_lib
+    local_device_protos = device_lib.list_local_devices()
+    return [x.name for x in local_device_protos if x.device_type == 'GPU']
+
 def get_inference_model(confmap_model_path: str, paf_model_path: str) -> keras.Model:
     """ Loads and merges confmap and PAF models into one. """
 
@@ -73,11 +86,15 @@ def get_inference_model(confmap_model_path: str, paf_model_path: str) -> keras.M
     # Combine models with tuple output
     model = keras.Model(new_input, [confmap_model(new_input), paf_model(new_input)])
 
-    try:
-        model = multi_gpu_model(model, gpus=4)
-    except:
-        logging.warning("Multi-GPU inference not available. Ignore this warning if you don't have multiple GPUs.")
-        pass
+    gpu_list = get_available_gpus()
+
+    if len(gpu_list) == 0:
+        logger.warn('No GPU devices, this is going to be really slow, something is wrong, dont do this!!!')
+    else:
+        logger.info(f'Detected {len(gpu_list)} GPU(s) for inference')
+
+    if len(gpu_list) > 1:
+        model = multi_gpu_model(model, gpus=len(gpu_list))
 
     return model
 
@@ -220,8 +237,6 @@ def match_peaks_frame2(peaks_t, peak_vals_t, pafs_t, skeleton,
         peak_vals_src = peak_vals_t[edge[0]]
         peak_vals_dst = peak_vals_t[edge[1]]
 
-        print(f"Correct: edge = f{edge}")
-
         if len(peaks_src) == 0 or len(peaks_dst) == 0:
             special_k.append(k)
             connection_all.append([])
@@ -333,7 +348,6 @@ def match_peaks_frame2(peaks_t, peak_vals_t, pafs_t, skeleton,
                 subset = np.vstack([subset, row]) # add to matched subset
 
     # Filter small instances
-    print(f"Correct: Subset({subset.shape}):\n", subset)
     score_to_node_ratio = subset[:,-2] / subset[:,-1]
     subset = subset[score_to_node_ratio > min_score_to_node_ratio, :]
 
@@ -388,8 +402,6 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton,
         peaks_dst = peaks_t[dst_node_idx]
         peak_vals_src = peak_vals_t[src_node_idx]
         peak_vals_dst = peak_vals_t[dst_node_idx]
-
-        print(f"Incorrect: edge = f{(src_node_idx, dst_node_idx)}")
 
         if len(peaks_src) == 0 or len(peaks_dst) == 0:
             special_k.append(k)
@@ -502,7 +514,6 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton,
                 subset = np.vstack([subset, row]) # add to matched subset
 
     # Filter small instances
-    print(f"Incorrect: Subset({subset.shape}):\n", subset)
     score_to_node_ratio = subset[:,-2] / subset[:,-1]
     subset = subset[score_to_node_ratio > min_score_to_node_ratio, :]
 
@@ -598,8 +609,8 @@ class Predictor:
 
     model: keras.Model = attr.ib()
     skeleton: Skeleton = attr.ib()
-    inference_batch_size: int = 1
-    read_chunk_size: int = 1
+    inference_batch_size: int = 4
+    read_chunk_size: int = 256
     save_frequency: int = 30 # chunks
     nms_min_thresh = 0.3
     nms_sigma = 3
@@ -621,9 +632,6 @@ class Predictor:
         Returns:
             None
         """
-
-        print(self.skeleton.node_names[0])
-
 
         # Load model
         _, h, w, c = self.model.input_shape
@@ -663,22 +671,20 @@ class Predictor:
         t0_start = time()
         matched_instances: List[LabeledFrame] = []
         num_chunks = int(np.ceil(num_frames / self.read_chunk_size))
-        frame_idx = 0
         for chunk in range(num_chunks):
             logger.info("Processing chunk %d/%d:" % (chunk + 1, num_chunks))
             t0_chunk = time()
-            # Calculate how many frames to read
-            # num_chunk_frames = min(read_chunk_size, num_frames - int(vid.get(cv2.CAP_PROP_POS_FRAMES)))
 
             # Read the next batch of images
             t0 = time()
 
             # Read the next chunk of frames
-            frame_end = frame_idx + self.read_chunk_size
+            frame_start = self.read_chunk_size * chunk
+            frame_end = frame_start + self.read_chunk_size
             if frame_end > vid.num_frames:
                 frame_end = vid.num_frames
-            frames_idx = np.arange(frame_idx, frame_end)
-            mov = vid[frame_idx:frame_end]
+            frames_idx = np.arange(frame_start, frame_end)
+            mov = vid[frame_start:frame_end]
 
             # Preprocess the frames
             if model_channels == 1:
@@ -707,16 +713,16 @@ class Predictor:
             peaks, peak_vals = find_all_peaks(confmaps, min_thresh=self.nms_min_thresh, sigma=self.nms_sigma)
             logger.info("  Found peaks [%.1fs]" % (time() - t0))
 
-            from scipy.io import loadmat, savemat
-            skeleton = loadmat('skeleton_legs.mat')
-            skeleton["nodes"] = skeleton["nodes"][0][0]  # convert to scalar
-            skeleton["edges"] = skeleton["edges"] - 1  # convert to 0-based indexing
-            instance2 = match_peaks_paf(peaks, peak_vals, pafs, skeleton,
-                                            video=vid, frame_indices=frames_idx,
-                                            min_score_to_node_ratio=self.min_score_to_node_ratio,
-                                            min_score_midpts=self.min_score_midpts,
-                                            min_score_integral=self.min_score_integral,
-                                            add_last_edge=self.add_last_edge)
+#            from scipy.io import loadmat, savemat
+#            skeleton = loadmat('skeleton_legs.mat')
+#            skeleton["nodes"] = skeleton["nodes"][0][0]  # convert to scalar
+#            skeleton["edges"] = skeleton["edges"] - 1  # convert to 0-based indexing
+#            instance2 = match_peaks_paf(peaks, peak_vals, pafs, skeleton,
+#                                            video=vid, frame_indices=frames_idx,
+#                                            min_score_to_node_ratio=self.min_score_to_node_ratio,
+#                                            min_score_midpts=self.min_score_midpts,
+#                                            min_score_integral=self.min_score_integral,
+#                                            add_last_edge=self.add_last_edge)
 
             # Match peaks via PAFs
             t0 = time()
@@ -728,14 +734,6 @@ class Predictor:
                                             add_last_edge=self.add_last_edge, pool=pool)
             logger.info("  Matched peaks via PAFs [%.1fs]" % (time() - t0))
 
-            for labeled_frame in instances:
-                print(f"Frame {labeled_frame.frame_idx}: Num Instances={len(labeled_frame.instances)}")
-                print(f"{[i.points_array() for i in labeled_frame.instances]}")
-                break
-
-            import sys
-            sys.exit(0)
-
             # Track
             t0 = time()
             tracker.process(mov, instances)
@@ -746,7 +744,6 @@ class Predictor:
 
             # Get the parameters used for this inference.
             params = attr.asdict(self, filter=lambda attr, value: attr.name not in ["model", "skeleton"])
-            print(params)
 
             if chunk % self.save_frequency == 0 or chunk == (num_chunks - 1):
                 t0 = time()
