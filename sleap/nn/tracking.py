@@ -112,7 +112,7 @@ class FlowShiftTracker:
                                                       frame_idx=t,
                                                       track=Track(spawned_on=t, name=f"{i}")))
                 if self.verbosity > 0:
-                    logging.info(f"[t = {t}] Created {len(self.tracks.tracks)} initial tracks")
+                    logger.info(f"[t = {t}] Created {len(self.tracks.tracks)} initial tracks")
                 last_img = imgs[img_idx].copy()
                 continue
                 
@@ -124,7 +124,7 @@ class FlowShiftTracker:
                           [instance.source.frame_idx for instance in
                            instances_ref if
                            isinstance(instance, ShiftedInstance)])
-                logging.info(f"[t = {t}] Using {len(instances_ref)} refs back to t = {tmp}")
+                logger.info(f"[t = {t}] Using {len(instances_ref)} refs back to t = {tmp}")
 
 
             pts_fs, status, err = \
@@ -150,14 +150,14 @@ class FlowShiftTracker:
 
             if len(matched_instances_pts) == 0:
                 if self.verbosity > 0:
-                    logging.info(f"[t = {t}] No matched instances to assign to tracks")
+                    logger.info(f"[t = {t}] No matched instances to assign to tracks")
                 continue
 
             # Reduce distances by track
             unassigned_pts = np.stack(matched_instances_pts, axis=0) / img_scale # instances x nodes x 2
             shifted_tracks = list({instance.track for instance in shifted_instances})
             if self.verbosity > 0:
-                logging.info(f"[t = {t}] Flow shift matching {len(unassigned_pts)} "
+                logger.info(f"[t = {t}] Flow shift matching {len(unassigned_pts)} "
                              f"instances to {len(shifted_tracks)} ref tracks")
 
             cost_matrix = np.full((len(unassigned_pts), len(shifted_tracks)), np.nan)
@@ -186,7 +186,7 @@ class FlowShiftTracker:
                     InstanceArray(points=unassigned_pts[i], track=shifted_tracks[j], frame_idx=t)
                 )
                 if self.verbosity > 0:
-                    logging.info(f"[t = {t}] Assigned instance {i} to existing track "
+                    logger.info(f"[t = {t}] Assigned instance {i} to existing track "
                                  f"{shifted_tracks[j].name} (cost = {cost_matrix[i,j]})")
 
             # Spawn new tracks for unassigned instances
@@ -197,7 +197,7 @@ class FlowShiftTracker:
                                     name=f"{len(self.tracks.tracks)}"), frame_idx=t)
                 self.tracks.add_instance(instance)
                 if self.verbosity > 0:
-                    logging.info(f"[t = {t}] Assigned remaining instance {i} to newly "
+                    logger.info(f"[t = {t}] Assigned remaining instance {i} to newly "
                                  f"spawned track {instance.track.name} "
                                  f"(best cost = {cost_matrix[i,:].min()})")
 

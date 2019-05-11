@@ -267,6 +267,9 @@ class Skeleton:
         Returns:
             None
         """
+        if type(name) is not str:
+            raise TypeError("Cannot add nodes to the skeleton that are not str")
+
         if name in self.node_names:
             raise ValueError("Skeleton already has a node named ({})".format(name))
 
@@ -798,6 +801,7 @@ class Skeleton:
         skel_mat["edges"] = skel_mat["edges"] - 1    # convert to 0-based indexing
 
         node_names = skel_mat['nodeNames']
+        node_names = [str(n[0][0]) for n in node_names]
         skeleton.add_nodes(node_names)
         for k in range(len(skel_mat["edges"])):
             edge = skel_mat["edges"][k]
