@@ -85,7 +85,12 @@ class Skeleton:
         if name is None or type(name) is not str or len(name) == 0:
             name = "Skeleton-" + str(self._skeleton_idx)
 
-        self._graph: nx.MultiDiGraph = nx.MultiDiGraph(name=name)
+
+        # Since networkx does not keep edges in the order we insert them we need
+        # to keep track of how many edges have been inserted so we can number them
+        # as they are inserted and sort them by this numbering when the edge list
+        # is returned.
+        self._graph: nx.MultiDiGraph = nx.MultiDiGraph(name=name, num_edges_inserted=0)
 
     def matches(self, other):
         """
@@ -201,7 +206,16 @@ class Skeleton:
         Returns:
             list of (src_node, dst_node)
         """
-        return [(src, dst) for src, dst, key, edge_type in self._graph.edges(keys=True, data="type") if edge_type == EdgeType.BODY]
+        edge_list = [(d['edge_insert_idx'], src, dst)
+                     for src, dst, key, d in self._graph.edges(keys=True, data=True)
+                     if d['type'] == EdgeType.BODY]
+
+        # We don't want to return the edge list in the order it is stored. We
+        # want to use the insertion order. Sort by the insertion index for each
+        # edge then drop it from the edge list.
+        edge_list = [(src, dst) for _, src, dst in sorted(edge_list)]
+
+        return edge_list
 
     @property
     def edge_names(self):
@@ -210,6 +224,15 @@ class Skeleton:
         Returns:
             list of (src_node.name, dst_node.name)
         """
+        edge_list = [(d['edge_insert_idx'], src.name, dst.name)
+                     for src, dst, key, d in self._graph.edges(keys=True, data=True)
+                     if d['type'] == EdgeType.BODY]
+
+        # We don't want to return the edge list in the order it is stored. We
+        # want to use the insertion order. Sort by the insertion index for each
+        # edge then drop it from the edge list.
+        edge_list = [(src, dst) for _, src, dst in sorted(edge_list)]
+
         return [(src.name, dst.name) for src, dst in self.edges]
 
     @property
@@ -356,7 +379,9 @@ class Skeleton:
         if self._graph.has_edge(source_node, destination_node):
             raise ValueError("Skeleton already has an edge between ({}) and ({}).".format(source, destination))
 
-        self._graph.add_edge(source_node, destination_node, type = EdgeType.BODY)
+        self._graph.add_edge(source_node, destination_node, type = EdgeType.BODY,
+                             edge_insert_idx = self._graph.graph['num_edges_inserted'])
+        self._graph.graph['num_edges_inserted'] = self._graph.graph['num_edges_inserted'] + 1
 
     def delete_edge(self, source: str, destination: str):
         """Delete an edge between two nodes.
@@ -558,7 +583,7 @@ class Skeleton:
             True for yes, False for no.
 
         """
-        current_node_name = self.node_names
+        current_node_names = self.node_names
         for name in names:
             if name not in current_node_names:
                 return False
