@@ -244,37 +244,65 @@ def test_load_mat_format():
     assert(len(skeleton.nodes) == 24)
     assert(len(skeleton.edges) == 23)
 
-    node_names = ['head',
-    'neck',
-    'thorax',
-    'abdomen',
-    'wingL',
-    'wingR',
-    'forelegL1',
-    'forelegL2',
-    'forelegL3',
-    'forelegR1',
-    'forelegR2',
-    'forelegR3',
-    'midlegL1' ,
-    'midlegL2' ,
-    'midlegL3' ,
-    'midlegR1' ,
-    'midlegR2' ,
-    'midlegR3' ,
-    'hindlegL1',
-    'hindlegL2',
-    'hindlegL3',
-    'hindlegR1',
-    'hindlegR2',
-    'hindlegR3']
+    # The node and edge list that should be present in skeleton_legs.mat
+    node_names = [
+        'head',
+        'neck',
+        'thorax',
+        'abdomen',
+        'wingL',
+        'wingR',
+        'forelegL1',
+        'forelegL2',
+        'forelegL3',
+        'forelegR1',
+        'forelegR2',
+        'forelegR3',
+        'midlegL1' ,
+        'midlegL2' ,
+        'midlegL3' ,
+        'midlegR1' ,
+        'midlegR2' ,
+        'midlegR3' ,
+        'hindlegL1',
+        'hindlegL2',
+        'hindlegL3',
+        'hindlegR1',
+        'hindlegR2',
+        'hindlegR3']
+
+    edges = [
+       [ 2,  1],
+       [ 1,  0],
+       [ 2,  3],
+       [ 2,  4],
+       [ 2,  5],
+       [ 2,  6],
+       [ 6,  7],
+       [ 7,  8],
+       [ 2,  9],
+       [ 9, 10],
+       [10, 11],
+       [ 2, 12],
+       [12, 13],
+       [13, 14],
+       [ 2, 15],
+       [15, 16],
+       [16, 17],
+       [ 2, 18],
+       [18, 19],
+       [19, 20],
+       [ 2, 21],
+       [21, 22],
+       [22, 23]]
 
     assert [n.name for n in skeleton.nodes] == node_names
 
-    # Check some edges
-    assert skeleton.has_edge('thorax', 'neck')
-    assert skeleton.has_edge('thorax', 'wingL')
-    assert skeleton.has_edge('thorax', 'wingR')
-    assert skeleton.has_edge('thorax', 'abdomen')
-    
+    # Check the edges and their order
+    for i, edge in enumerate(skeleton.edge_names):
+        assert tuple(edges[i]) == (skeleton.node_to_index(edge[0]), skeleton.node_to_index(edge[1]))
 
+def test_edge_order():
+    """Test is edge list order is maintained upon insertion"""
+
+    skeleton = Skeleton("Test")
