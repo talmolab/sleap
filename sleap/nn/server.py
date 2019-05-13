@@ -32,11 +32,11 @@ def run_data_gen(labels_file, results):
     from sleap.nn.datagen import generate_images, generate_confidence_maps
 
     results["times"]["start_imgs"] = time()
-    results["imgs"] = generate_images(labels)
+    imgs = generate_images(labels)
     results["times"]["end_imgs"] = time()
     
     results["times"]["start_conf"] = time()
-    results["confmaps"] = generate_confidence_maps(labels, sigma=5)
+    confmaps = generate_confidence_maps(labels, sigma=5)
     results["times"]["end_conf"] = time()
     
     results["times"]["end_time"] = time()
@@ -51,7 +51,19 @@ def run_data_gen(labels_file, results):
     pub.send_string(jsonpickle.encode(dict(event="data_gen done",results=results)))
 #     pub.send(umsgpack.packb(dict(event="data_gen done",results=results)))
     pub.close()
+    
+    # store in shared memory, but don't include in zmq message
+    results["imgs"] = imgs
+    results["confmaps"] = confmaps
+    
     print("done with data_gen")
+
+def run_training():
+    from sleap.nn.training import train
+    
+    Process(target=train,
+        args=(results["imgs"], results["confmaps"]),
+        kwargs=dict(val_size=0.1, batch_norm=False, num_filters=16, batch_size=4, num_epochs=100, steps_per_epoch=100, arch="unet")).start()
 
 if __name__ == "__main__":
 
@@ -85,6 +97,8 @@ if __name__ == "__main__":
             elif msg["command"] == "data_gen":
                 #data_gen(msg["labels_file"], training_data)
                 threading.Thread(target=run_data_gen, args=(msg["labels_file"], training_data)).start()
+            elif msg["command"] == "train":
+                run_training()
 
         time.sleep(1)
     print("server finished")

@@ -147,7 +147,11 @@ class TrainingDialog(QtWidgets.QWidget):
 if __name__ == "__main__":
 
     
-    server_address = "127.0.0.1"#"128.112.217.175"
+#     server_address = "127.0.0.1"
+#     server_address = "10.9.111.77" # me (temp)
+    server_address = "128.112.217.175" # talmo
+
+    print(f"starting client to {server_address}")
 
     ctx = zmq.Context()
 
@@ -158,10 +162,10 @@ if __name__ == "__main__":
     app.setQuitOnLastWindowClosed(True)
     app.processEvents()
 
-    # Progress monitoring
+    # Result monitoring
     sub = ctx.socket(zmq.SUB)
     sub.subscribe("")
-    sub.connect(f"tcp://{server_address}:8999")
+    sub.connect(f"tcp://{server_address}:9001")
 
     def poll(timeout=10):
         if sub.poll(timeout, zmq.POLLIN):
