@@ -44,6 +44,7 @@ class TrainingDialog(QtWidgets.QWidget):
         self.debug_button.clicked.connect(self.debug)
         
         self.training_button = QtWidgets.QPushButton("Start Training")
+        self.training_button.clicked.connect(self.runTraining)
 
         # UI Group Widgets
         
@@ -110,7 +111,8 @@ class TrainingDialog(QtWidgets.QWidget):
         self.zmq_ctrl.send_string(jsonpickle.encode(cmd))
 
     def runTraining(self, *args):
-        pass
+        self.zmq_ctrl.send_string(jsonpickle.encode(dict(command="train",)))
+        print("sent train command")
 
     def preview(self):
         from sleap.io.video import Video
@@ -144,7 +146,8 @@ class TrainingDialog(QtWidgets.QWidget):
 
 if __name__ == "__main__":
 
-    server_address = "10.9.111.77"
+    
+    server_address = "127.0.0.1"#"128.112.217.175"
 
     ctx = zmq.Context()
 
@@ -158,7 +161,7 @@ if __name__ == "__main__":
     # Progress monitoring
     sub = ctx.socket(zmq.SUB)
     sub.subscribe("")
-    sub.connect(f"tcp://{server_address}:9001")
+    sub.connect(f"tcp://{server_address}:8999")
 
     def poll(timeout=10):
         if sub.poll(timeout, zmq.POLLIN):
@@ -174,7 +177,7 @@ if __name__ == "__main__":
             if msg["event"] == "data_gen done":
                 for key in msg["results"].keys():
                     window.training_data[key] = msg["results"][key]
-                window.preview()
+                # window.preview()
                 pass
             window.refresh()
 
