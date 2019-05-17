@@ -123,7 +123,8 @@ class QtVideoPlayer(QWidget):
             
             Any other named args are passed along if/when creating QtInstance.
         """
-        if type(instance) == Instance:
+        # Check if instance is an Instance (or subclass of Instance)
+        if issubclass(type(instance), Instance):
             instance = QtInstance(instance=instance, **kwargs)
         if type(instance) != QtInstance: return
     
