@@ -576,7 +576,7 @@ class MainWindow(QMainWindow):
 
         new_instance = Instance(skeleton=self.skeleton)
         for node in self.skeleton.nodes:
-            if copy_instance is not None and node in copy_instance:
+            if copy_instance is not None and node in copy_instance.nodes:
                 new_instance[node] = copy.copy(copy_instance[node])
             else:
                 new_instance[node] = Point(x=np.random.rand() * self.video.width * 0.5, y=np.random.rand() * self.video.height * 0.5, visible=True)
