@@ -419,7 +419,17 @@ class GraphicsView(QGraphicsView):
         Order in list should match the order in which instances were added to scene.
         """
         return [item for item in self.scene.items(Qt.SortOrder.AscendingOrder)
-                if type(item) == QtInstance and not predicted]
+                if type(item) == QtInstance and item.predicted]
+
+    @property
+    def all_instances(self):
+        """
+        Returns a list of instances and predicted instances.
+
+        Order in list should match the order in which instances were added to scene.
+        """
+        return [item for item in self.scene.items(Qt.SortOrder.AscendingOrder)
+                if type(item) == QtInstance]
 
     def clearSelection(self):
         """ Clear instance skeleton selection.
@@ -464,10 +474,8 @@ class GraphicsView(QGraphicsView):
         """ Returns the index of the currently selected instance.
         If no instance selected, returns None.
         """
-        instances = self.instances
+        instances = self.all_instances
         if len(instances) == 0: return None
-        select_inst = instances[0] # default to selecting first instance
-        select_idx = 0
         for idx, instance in enumerate(instances):
             if instance.selected:
                 return idx
