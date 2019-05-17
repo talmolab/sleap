@@ -1,8 +1,8 @@
 import os
 import pytest
 
-from sleap.instance import Instance, Point
-from sleap.io.dataset import LabeledFrame, Labels
+from sleap.instance import Instance, Point, LabeledFrame
+from sleap.io.dataset import Labels
 
 
 TEST_JSON_LABELS = "tests/data/json_format_v1/centered_pair.json"

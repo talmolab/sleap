@@ -1,4 +1,8 @@
+import functools
 import logging
+
+from attr import __init__
+
 logger = logging.getLogger(__name__)
 
 from typing import List, Tuple, Dict, Union
@@ -9,8 +13,8 @@ import attr
 
 from scipy.optimize import linear_sum_assignment
 
-from sleap.instance import InstanceArray, ShiftedInstance, Track
-from sleap.io.dataset import Labels, LabeledFrame
+from sleap.instance import Instance, Track, LabeledFrame
+from sleap.io.dataset import Labels
 
 
 @attr.s(slots=True)
@@ -24,13 +28,13 @@ class Tracks:
 
         # Filter
         if max_shift is not None:
-            instances = [instance for instance in instances if isinstance(instance, InstanceArray) or (
-                        isinstance(instance, ShiftedInstance) and (
+            instances = [instance for instance in instances if isinstance(instance, Instance) or (
+                        isinstance(instance, 'ShiftedInstance') and (
                             (frame_idx - instance.source.frame_idx) <= max_shift))]
 
         return instances
 
-    def add_instance(self, instance: Union[InstanceArray, ShiftedInstance]):
+    def add_instance(self, instance: Union[Instance, 'ShiftedInstance']):
         frame_instances = self.instances.get(instance.frame_idx, [])
         frame_instances.append(instance)
         self.instances[instance.frame_idx] = frame_instances
@@ -76,14 +80,14 @@ class FlowShiftTracker:
 
     def process(self,
                 imgs: np.ndarray,
-                matched_instances: List[LabeledFrame]):
+                labeled_frames: List[LabeledFrame]):
         """
         Flow shift track a batch of frames with matched instances for each frame represented as
         a list of LabeledFrame's.
 
         Args:
             imgs: A 4D array containing a batch of image frames to run tracking on.
-            matched_instances: A list of labeled frames containing matched instances from
+            labeled_frames: A list of labeled frames containing matched instances from
             the inference pipeline. This list must be the same length as imgs. img[i] and
             matched_instances[i] correspond to the same frame.
 
@@ -96,22 +100,21 @@ class FlowShiftTracker:
 
         # Go through each labeled frame and track all the instances
         # present.
-        for img_idx, labeled_frame in enumerate(matched_instances):
-
-            # Convert the matched instances into
-            matched_instances_pts = [i.points_array() for i in matched_instances[img_idx].instances]
+        for img_idx, frame in enumerate(labeled_frames):
 
             # Copy the actual frame index for this labeled frame, we will
             # use this a lot.
-            t = labeled_frame.frame_idx
+            t = frame.frame_idx
+
+            instances_pts = [i.points_array(cached=True) for i in frame.instances]
 
             # If we do not have any active tracks, we will spawn one for each
             # matched instance and continue to the next frame.
             if len(self.tracks.tracks) == 0:
-                for i, pts in enumerate(matched_instances_pts):
-                    self.tracks.add_instance(InstanceArray(points=pts / img_scale,
-                                                      frame_idx=t,
-                                                      track=Track(spawned_on=t, name=f"{i}")))
+                for i, instance in enumerate(frame.instances):
+                    instance.track = Track(spawned_on=t, name=f"{i}")
+                    self.tracks.add_instance(instance)
+
                 if self.verbosity > 0:
                     logger.info(f"[t = {t}] Created {len(self.tracks.tracks)} initial tracks")
                 self.last_img = imgs[img_idx].copy()
@@ -119,7 +122,7 @@ class FlowShiftTracker:
 
             # Get all points in reference frame
             instances_ref = self.tracks.get_frame_instances(t - 1, max_shift=self.window - 1)
-            pts_ref = [instance.points for instance in instances_ref]
+            pts_ref = [instance.points_array(cached=True) for instance in instances_ref]
             if self.verbosity > 0:
                 tmp = min([instance.frame_idx for instance in instances_ref] +
                           [instance.source.frame_idx for instance in
@@ -129,7 +132,7 @@ class FlowShiftTracker:
 
             pts_fs, status, err = \
                 cv2.calcOpticalFlowPyrLK(self.last_img, imgs[img_idx],
-                                         (np.concatenate(pts_ref, axis=0)).astype("float32") * img_scale,
+                                         (np.concatenate(pts_ref, axis=0)).astype("float32"),
                                           None, winSize=self.of_win_size,
                                           maxLevel=self.of_max_level,
                                           criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,
@@ -138,23 +141,23 @@ class FlowShiftTracker:
 
             # Split by instance
             sections = np.cumsum([len(x) for x in pts_ref])[:-1]
-            pts_fs = np.split(pts_fs / img_scale, sections, axis=0)
+            pts_fs = np.split(pts_fs, sections, axis=0)
             status = np.split(status, sections, axis=0)
             err = np.split(err, sections, axis=0)
 
             # Store shifted instances with metadata
-            shifted_instances = [ShiftedInstance(parent=ref, points=pts, frame_idx=t)
+            shifted_instances = [ShiftedInstance(parent=ref, points=pts, frame=frame)
                                  for ref, pts, found in zip(instances_ref, pts_fs, status)
                                  if np.sum(found) > 0]
             self.tracks.add_instances(shifted_instances)
 
-            if len(matched_instances_pts) == 0:
+            if len(frame.instances) == 0:
                 if self.verbosity > 0:
                     logger.info(f"[t = {t}] No matched instances to assign to tracks")
                 continue
 
             # Reduce distances by track
-            unassigned_pts = np.stack(matched_instances_pts, axis=0) / img_scale # instances x nodes x 2
+            unassigned_pts = np.stack(instances_pts, axis=0) # instances x nodes x 2
             shifted_tracks = list({instance.track for instance in shifted_instances})
             if self.verbosity > 0:
                 logger.info(f"[t = {t}] Flow shift matching {len(unassigned_pts)} "
@@ -163,11 +166,12 @@ class FlowShiftTracker:
             cost_matrix = np.full((len(unassigned_pts), len(shifted_tracks)), np.nan)
             for i, track in enumerate(shifted_tracks):
                 # Get shifted points for current track
-                track_pts = np.stack([instance.points for instance in shifted_instances
+                track_pts = np.stack([instance.points_array(cached=True)
+                                      for instance in shifted_instances
                                       if instance.track == track], axis=0) # track_instances x nodes x 2
 
                 # Compute pairwise distances between points
-                distances = np.sqrt(np.sum((np.expand_dims(unassigned_pts, axis=1) -
+                distances = np.sqrt(np.sum((np.expand_dims(unassigned_pts / img_scale, axis=1) -
                                             np.expand_dims(track_pts, axis=0)) ** 2,
                                            axis=-1)) # unassigned_instances x track_instances x nodes
 
@@ -182,9 +186,9 @@ class FlowShiftTracker:
 
             # Save assigned instances
             for i, j in zip(assigned_ind, track_ind):
-                self.tracks.add_instance(
-                    InstanceArray(points=unassigned_pts[i], track=shifted_tracks[j], frame_idx=t)
-                )
+                frame.instances[i].track = shifted_tracks[j]
+                self.tracks.add_instance(frame.instances[i])
+
                 if self.verbosity > 0:
                     logger.info(f"[t = {t}] Assigned instance {i} to existing track "
                                  f"{shifted_tracks[j].name} (cost = {cost_matrix[i,j]})")
@@ -192,9 +196,7 @@ class FlowShiftTracker:
             # Spawn new tracks for unassigned instances
             for i, pts in enumerate(unassigned_pts):
                 if i in assigned_ind: continue
-                instance = InstanceArray(points=pts,
-                                    track=Track(spawned_on=t,
-                                    name=f"{len(self.tracks.tracks)}"), frame_idx=t)
+                frame.instances[i].track = Track(spawned_on=t, name=f"{len(self.tracks.tracks)}")
                 self.tracks.add_instance(instance)
                 if self.verbosity > 0:
                     logger.info(f"[t = {t}] Assigned remaining instance {i} to newly "
@@ -244,3 +246,41 @@ class FlowShiftTracker:
 
         return track_id, frame_idx, frame_idx_source, points
 
+
+@attr.s(cmp=False, slots=True)
+class ShiftedInstance:
+    """
+    During tracking, optical flow shifted instances are represented to help track instances
+    across frames. This class encapsulates an Instance object that has been optical flow
+    shifted.
+
+    Args:
+        parent: The Instance that this optical flow shifted instance is derived from.
+    """
+    parent: Union[Instance, 'ShiftedInstance'] = attr.ib()
+    frame: Union[LabeledFrame, None] = attr.ib()
+    points: np.ndarray = attr.ib()
+
+    @property
+    @functools.lru_cache()
+    def source(self) -> 'Instance':
+        """
+        Recursively discover root instance to a chain of flow shifted instances.
+
+        Returns:
+            The root InstanceArray of a flow shifted instance.
+        """
+        if isinstance(self.parent, Instance):
+            return self.parent
+        else:
+            return self.parent.source
+
+    @property
+    def track(self) -> Track:
+        """
+        Get the track object for root flow shifted instance.
+
+        Returns:
+            The track object of the root flow shifted instance.
+        """
+        return self.source.track

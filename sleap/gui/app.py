@@ -20,9 +20,9 @@ import numpy as np
 import pandas as pd
 
 from sleap.skeleton import Skeleton, Node
-from sleap.instance import Instance, Point
+from sleap.instance import Instance, Point, LabeledFrame
 from sleap.io.video import Video, HDF5Video, MediaVideo
-from sleap.io.dataset import Labels, LabeledFrame
+from sleap.io.dataset import Labels
 from sleap.gui.video import QtVideoPlayer
 from sleap.gui.dataviews import VideosTable, SkeletonNodesTable, SkeletonEdgesTable, LabeledFrameTable, SkeletonNodeModel
 from sleap.gui.importvideos import ImportVideos

@@ -15,39 +15,13 @@ import json
 import numpy as np
 
 from collections import MutableSequence
-from typing import List, Dict, Union
+from typing import List, Union
 
 import pandas as pd
 
 from sleap.skeleton import Skeleton, Node
-from sleap.instance import Instance, Point
+from sleap.instance import Instance, Point, LabeledFrame
 from sleap.io.video import Video
-
-
-@attr.s(auto_attribs=True)
-class LabeledFrame:
-    video: Video = attr.ib()
-    frame_idx: int = attr.ib(converter=int)
-    instances: List[Instance] = attr.ib(default=attr.Factory(list))
-
-    def __len__(self):
-        return len(self.instances)
-
-    def __getitem__(self, index):
-        return self.instances.__getitem__(index)
-
-    def index(self, value: Instance):
-        return self.instances.index(value)
-
-    def __delitem__(self, index):
-        self.instances.__delitem__(index)
-
-    def insert(self, index, value: Instance):
-        self.instances.insert(index, value)
-
-    def __setitem__(self, index, value: Instance):
-        self.instances.__setitem__(index, value)
-
 
 """
 The version number to put in the Labels JSON format.

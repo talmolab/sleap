@@ -16,8 +16,8 @@ from typing import List, Dict, Union
 from scipy.ndimage import maximum_filter, gaussian_filter
 from keras.utils import multi_gpu_model
 
-from sleap.instance import Point, Instance
-from sleap.io.dataset import LabeledFrame, Labels
+from sleap.instance import Point, Instance, LabeledFrame
+from sleap.io.dataset import Labels
 from sleap.io.video import Video
 from sleap.skeleton import Skeleton
 from sleap.util import usable_cpu_count, save_dict_to_hdf5
@@ -35,6 +35,20 @@ class PredictedPoint(Point):
     """
     score: float = attr.ib(default=0.0)
 
+    @classmethod
+    def from_point(cls, point: Point, score: float = 0.0):
+        """
+        Create a PredictedPoint from a Point
+
+        Args:
+            point: The point to copy all data from.
+            score: The score for this predicted point.
+
+        Returns:
+            A scored point based on the point passed in.
+        """
+        return cls(**{**attr.asdict(point), 'score': score})
+
 
 @attr.s(auto_attribs=True, slots=True)
 class PredictedInstance(Instance):
@@ -47,6 +61,27 @@ class PredictedInstance(Instance):
     """
     score: float = attr.ib(default=0.0)
 
+    @classmethod
+    def from_instance(cls, instance: Instance, score):
+        """
+        Create a PredictedInstance from and Instance object. The fields are
+        copied in a shallow manner with the exception of points. For each
+        point in the instance an PredictedPoint is created with score set
+        to default value.
+
+        Args:
+            instance: The Instance object to shallow copy data from.
+            score: The score for this instance.
+
+        Returns:
+            A PredictedInstance for the given Instance.
+        """
+        kw_args = attr.asdict(instance, recurse=False)
+        kw_args['points'] = {key: PredictedPoint.from_point(val)
+                             for key, val in kw_args['_points'].items()}
+        del kw_args['_points']
+        kw_args['score'] = score
+        return cls(**kw_args)
 
 
 def get_available_gpus():

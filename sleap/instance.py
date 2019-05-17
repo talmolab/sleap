@@ -3,7 +3,6 @@
 """
 
 import math
-import shelve
 
 import numpy as np
 import h5py as h5
@@ -16,7 +15,6 @@ from sleap.io.video import Video
 from sleap.util import attr_to_dtype
 
 import attr
-import functools
 
 
 # This can probably be a namedtuple but has been made a full class just in case
@@ -69,8 +67,12 @@ class Track:
     spawned_on: int = attr.ib()
     name: str = attr.ib(default="")
 
+# NOTE:
+# Instance cannot be a slotted class at the moment. This is because it creates
+# attributes _frame and _point_array_cache after init. These are private variables
+# that are created in post init so they are not serialized.
 
-@attr.s(auto_attribs=True, slots=True)
+@attr.s(auto_attribs=True)
 class Instance:
     """
     The class :class:`Instance` represents a labelled instance of skeleton
@@ -122,6 +124,14 @@ class Instance:
             if not is_string_dict and not is_node_dict:
                 raise ValueError("points dictionary must be keyed by either strings " +
                                  "(node names) or Nodes.")
+
+        # Create here in post init so it is not serialized by cattrs, wish there was better way
+        # This field keeps track of any labeled frame that this Instance has been associated with.
+        self.frame: Union[LabeledFrame, None] = None
+
+        # A variable used to cache a constructed points_array call to save on time. This is only
+        # used when cached=True is passed to points_array
+        self._points_array_cache: Union[np.array, None] = None
 
     def _node_to_index(self, node_name):
         """
@@ -221,6 +231,13 @@ class Instance:
         if not self.skeleton.matches(other.skeleton):
             return False
 
+        if not self.track == other.track:
+            return False
+
+        # Make sure the frame indices match
+        if not self.frame_idx == other.frame_idx:
+            return False
+
         return True
 
     @property
@@ -255,23 +272,30 @@ class Instance:
         """
         return tuple(self._points.values())
 
-    def points_array(self) -> np.ndarray:
+    def points_array(self, cached=False) -> np.ndarray:
         """
         Return the instance's points in array form.
 
+        Args:
+            cached: If True, use a cached version of the points data if available,
+            create cache if it doesn't exist. If False, recompute and cache each
+            call.
         Returns:
             A Nx2 array containing x and y coordinates of each point
             as the rows of the array and N is the number of nodes in the skeleton.
             The order of the rows corresponds to the ordering of the skeleton nodes.
             Any skeleton node not defined will have NaNs present.
         """
-        pts = np.ndarray((len(self.skeleton.nodes), 2))
-        for i, n in enumerate(self.skeleton.nodes):
-            p = self._points.get(n, Point())
-            pts[i, 0] = p.x
-            pts[i, 1] = p.y
+        if not cached or (cached and self._points_array_cache is None):
+            pts = np.ndarray((len(self.skeleton.nodes), 2))
+            for i, n in enumerate(self.skeleton.nodes):
+                p = self._points.get(n, Point())
+                pts[i, 0] = p.x
+                pts[i, 1] = p.y
 
-        return pts
+            self._points_array_cache = pts
+
+        return self._points_array_cache
 
     @classmethod
     def to_pandas_df(cls, instances: Union['Instance', List['Instance']], skip_nan:bool = True) -> pd.DataFrame:
@@ -518,87 +542,89 @@ class Instance:
         for i in instances:
             i.drop_nan_points()
 
-    @classmethod
-    def from_instance_array(cls, iarray: 'InstanceArray', skeleton: Skeleton):
+    @property
+    def frame_idx(self) -> Union[None, int]:
         """
-        Given an instance in the form of an InstanceArray, convert to an Instance object.
+        Get the index of the frame that this instance was found on. This is a convenience
+        method for Instance.frame.frame_idx.
+
+        Returns:
+            The frame number this instance was found on.
+        """
+        if self.frame is None:
+            return None
+        else:
+            return self.frame.frame_idx
+
+
+@attr.s(auto_attribs=True)
+class LabeledFrame:
+    video: Video = attr.ib()
+    frame_idx: int = attr.ib(converter=int)
+    _instances: List[Instance] = attr.ib(default=attr.Factory(list))
+
+    def __attrs_post_init__(self):
+
+        # Make sure all instances have a reference to this frame
+        for instance in self.instances:
+            instance.frame = self
+
+    def __len__(self):
+        return len(self.instances)
+
+    def __getitem__(self, index):
+        return self.instances.__getitem__(index)
+
+    def index(self, value: Instance):
+        return self.instances.index(value)
+
+    def __delitem__(self, index):
+        value = self.instances.__getitem__(index)
+
+        self.instances.__delitem__(index)
+
+        # Modify the instance to remove reference to this frame
+        value.frame = None
+
+    def insert(self, index, value: Instance):
+        self.instances.insert(index, value)
+
+        # Modify the instance to have a reference back to this frame
+        value.frame = self
+
+    def __setitem__(self, index, value: Instance):
+        self.instances.__setitem__(index, value)
+
+        # Modify the instance to have a reference back to this frame
+        value.frame = self
+
+    @property
+    def instances(self):
+        """
+        A list of instances to associated with this frame.
+
+        Returns:
+            A list of instances to associated with this frame.
+        """
+        return self._instances
+
+    @instances.setter
+    def instances(self, instances: List[Instance]):
+        """
+        Set the list of instances assigned to this frame. Note: whenever an instance
+        is associated with a LabeledFrame that Instance objects frame property will
+        be overwritten to the LabeledFrame.
 
         Args:
-            iarray: The instance to convert.
-            skeleton: The skeleton that this instance represents.
+            instances: A list of instances to associated with this frame.
 
         Returns:
-            An instance created from the points array and skeleton of iarray.
+            None
         """
-        pts = {}
-        for i, node_name in enumerate(skeleton.node_names):
-            if not np.isnan(iarray.points[i,:]).any():
-                pts[node_name] = Point(x=iarray.points[i,0], y=iarray.points[i,1])
 
-        return cls(skeleton=skeleton, points=pts)
+        # Make sure to set the frame for each instance to this LabeledFrame
+        for instance in instances:
+            instance.frame = self
 
+        self._instances = instances
 
-@attr.s(slots=True, cmp=False)
-class InstanceArray:
-    """
-    A lightweight version of the Instance object used during tracking because
-    it is useful to have the skeleton points represented as a numpy array instead
-    of a points dict, for computational efficiency purposes. Despite the name, this object
-    does not represent and array of Instances, but a single instance whose points are
-    stored as a np.array. There are also some convenience attributes for the frame
-    index the instance is found on.
-
-    Args:
-        points: A Nx2 array where N is the number of nodes in the skeleton. It defines
-        the location of each node in the skeleton on in the image frame. The rows of
-        points are in the same order as the skeleton.nodes list.
-        frame_idx: In index of the frame that in the video that this index belongs too.
-        track: Any track associated with this instance.
-    """
-
-    points: np.ndarray = attr.ib()
-    frame_idx: int = attr.ib()
-    track: Track = attr.ib()
-
-
-@attr.s(slots=True, cmp=False)
-class ShiftedInstance:
-    """
-    During tracking, optical flow shifted instances are represented to help track instances
-    across frames. This class encapsulates an InstanceArray object that has been flows shifted.
-
-    Args:
-        points: A Nx2 array where N is the number of nodes in the skeleton. It defines
-        the location of each node in the skeleton on in the image frame. The rows of
-        points are in the same order as the skeleton.nodes list.
-        frame_idx: In index of the frame that in the video that this index belongs too.
-        track: Any track associated with this instance.
-    """
-
-    frame_idx: int = attr.ib()
-    parent: InstanceArray = attr.ib()
-    points: np.ndarray = attr.ib()
-
-    @property
-    @functools.lru_cache()
-    def source(self) -> InstanceArray:
-        """
-        Recursively discover root instance to a chain of flow shifted instances.
-
-        Returns:
-            The root InstanceArray of a flow shifted instance.
-        """
-        if isinstance(self.parent, InstanceArray):
-            return self.parent
-        else:
-            return self.parent.source
-    
-    @property
-    def track(self):
-        """
-        Get the track object for root flow shifted instance.
-
-        Returns:
-            The track object of the root flow shifted instance.
-        """
-        return self.source.track

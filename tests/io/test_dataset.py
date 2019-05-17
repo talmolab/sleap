@@ -3,9 +3,9 @@ import pytest
 import numpy as np
 
 from sleap.skeleton import Skeleton
-from sleap.instance import Instance, Point
+from sleap.instance import Instance, Point, LabeledFrame
 from sleap.io.video import Video, MediaVideo
-from sleap.io.dataset import LabeledFrame, Labels, load_labels_json_old
+from sleap.io.dataset import Labels, load_labels_json_old
 
 TEST_H5_DATASET = 'tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5'
 
@@ -179,4 +179,4 @@ def test_instance_access():
     assert len(labels.all_instances) == 50
     assert len(list(labels.instances(video=dummy_video))) == 20
     assert len(list(labels.instances(video=dummy_video2))) == 30
-    
+

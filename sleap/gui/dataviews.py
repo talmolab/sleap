@@ -20,7 +20,8 @@ from typing import Callable
 
 from sleap.gui.video import QtVideoPlayer, QtInstance, QtEdge, QtNode
 from sleap.io.video import Video, HDF5Video, MediaVideo
-from sleap.io.dataset import Labels, load_labels_json_old, LabeledFrame
+from sleap.io.dataset import Labels, load_labels_json_old
+from sleap.instance import LabeledFrame
 from sleap.skeleton import Skeleton, Node
 
 
