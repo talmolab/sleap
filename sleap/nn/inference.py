@@ -13,77 +13,17 @@ import keras
 import attr
 
 from time import time
-from typing import List, Dict, Union
+from typing import List, Union
 
 from scipy.ndimage import maximum_filter, gaussian_filter
 from keras.utils import multi_gpu_model
 
-from sleap.instance import Point, Instance, LabeledFrame
+from sleap.instance import LabeledFrame, PredictedPoint, PredictedInstance
 from sleap.io.dataset import Labels
 from sleap.io.video import Video
 from sleap.skeleton import Skeleton
-from sleap.util import usable_cpu_count, save_dict_to_hdf5
+from sleap.util import usable_cpu_count
 from sleap.nn.tracking import FlowShiftTracker, Track
-
-
-@attr.s(auto_attribs=True, slots=True)
-class PredictedPoint(Point):
-    """
-    A predicted point is an output of the inference procedure. It has all
-    the properties of a labeled point with an accompanying score.
-
-    Args:
-        score: The point level prediction score.
-    """
-    score: float = attr.ib(default=0.0)
-
-    @classmethod
-    def from_point(cls, point: Point, score: float = 0.0):
-        """
-        Create a PredictedPoint from a Point
-
-        Args:
-            point: The point to copy all data from.
-            score: The score for this predicted point.
-
-        Returns:
-            A scored point based on the point passed in.
-        """
-        return cls(**{**attr.asdict(point), 'score': score})
-
-
-@attr.s(auto_attribs=True, slots=True)
-class PredictedInstance(Instance):
-    """
-    A predicted instance is an output of the inference procedure. It is
-    the main output of the inference procedure.
-
-    Args:
-        score: The instance level prediction score.
-    """
-    score: float = attr.ib(default=0.0)
-
-    @classmethod
-    def from_instance(cls, instance: Instance, score):
-        """
-        Create a PredictedInstance from and Instance object. The fields are
-        copied in a shallow manner with the exception of points. For each
-        point in the instance an PredictedPoint is created with score set
-        to default value.
-
-        Args:
-            instance: The Instance object to shallow copy data from.
-            score: The score for this instance.
-
-        Returns:
-            A PredictedInstance for the given Instance.
-        """
-        kw_args = attr.asdict(instance, recurse=False)
-        kw_args['points'] = {key: PredictedPoint.from_point(val)
-                             for key, val in kw_args['_points'].items()}
-        del kw_args['_points']
-        kw_args['score'] = score
-        return cls(**kw_args)
 
 
 def get_available_gpus():
@@ -563,7 +503,7 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton,
         for node_name in skeleton.node_names:
             if match[i] >= 0:
                 match_idx = int(match[i])
-                pt = PredictedPoint(x=candidate[match_idx,0], y=candidate[match_idx,1],
+                pt = PredictedPoint(x=candidate[match_idx, 0], y=candidate[match_idx, 1],
                                     score=candidate_scores[match_idx])
             else:
                 pt = PredictedPoint()
