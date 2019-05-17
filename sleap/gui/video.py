@@ -1013,6 +1013,12 @@ class QtInstance(QGraphicsObject):
         box_pen.setCosmetic(True)
         self.box.setPen(box_pen)
 
+        self.track_label = QGraphicsTextItem(parent=self)
+        self.track_label.setDefaultTextColor(QColor(*self.color))
+        self.track_label.setFlag(QGraphicsItem.ItemIgnoresTransformations)
+        if self.instance.track is not None:
+            self.track_label.setHtml(f"<b>Track</b>: {self.instance.track.name}")
+
         # Add nodes
         for (node, point) in self.instance.nodes_points:
             node_item = QtNode(parent=self, point=point, node_name=node.name,
@@ -1102,6 +1108,8 @@ class QtInstance(QGraphicsObject):
         self._bounding_rect = rect
         rect = rect.marginsAdded(QMarginsF(10, 10, 10, 10))
         self.box.setRect(rect)
+        self.track_label.setOpacity(op)
+        self.track_label.setPos(rect.bottomLeft() + QPointF(0, 5))
 
     @property
     def selected(self):
