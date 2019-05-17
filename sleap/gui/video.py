@@ -1026,7 +1026,10 @@ class QtInstance(QGraphicsObject):
         self.track_label.setDefaultTextColor(QColor(*self.color))
         self.track_label.setFlag(QGraphicsItem.ItemIgnoresTransformations)
         if self.instance.track is not None:
-            self.track_label.setHtml(f"<b>Track</b>: {self.instance.track.name}")
+            track_name = self.instance.track.name
+        else:
+            track_name = "[none]"
+        self.track_label.setHtml(f"<b>Track</b>: {track_name}")
 
         # Add nodes
         for (node, point) in self.instance.nodes_points:
