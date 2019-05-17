@@ -15,12 +15,13 @@ import networkx as nx
 import h5py as h5
 import copy
 
-
 from enum import Enum
 from itertools import count
 from typing import Iterable, Union, List, Dict
 
 from networkx.readwrite import json_graph
+from scipy.io import loadmat, savemat
+
 
 class EdgeType(Enum):
     """
@@ -67,7 +68,7 @@ class Skeleton:
 
     """
     A index variable used to give skeletons a default name that attemtpts to be
-    unique across all skeletons. Will be non-
+    unique across all skeletons. 
     """
     _skeleton_idx = count(0)
 
@@ -84,7 +85,12 @@ class Skeleton:
         if name is None or type(name) is not str or len(name) == 0:
             name = "Skeleton-" + str(self._skeleton_idx)
 
-        self._graph: nx.MultiDiGraph = nx.MultiDiGraph(name=name)
+
+        # Since networkx does not keep edges in the order we insert them we need
+        # to keep track of how many edges have been inserted so we can number them
+        # as they are inserted and sort them by this numbering when the edge list
+        # is returned.
+        self._graph: nx.MultiDiGraph = nx.MultiDiGraph(name=name, num_edges_inserted=0)
 
     def matches(self, other):
         """
@@ -200,7 +206,16 @@ class Skeleton:
         Returns:
             list of (src_node, dst_node)
         """
-        return [(src, dst) for src, dst, key, edge_type in self._graph.edges(keys=True, data="type") if edge_type == EdgeType.BODY]
+        edge_list = [(d['edge_insert_idx'], src, dst)
+                     for src, dst, key, d in self._graph.edges(keys=True, data=True)
+                     if d['type'] == EdgeType.BODY]
+
+        # We don't want to return the edge list in the order it is stored. We
+        # want to use the insertion order. Sort by the insertion index for each
+        # edge then drop it from the edge list.
+        edge_list = [(src, dst) for _, src, dst in sorted(edge_list)]
+
+        return edge_list
 
     @property
     def edge_names(self):
@@ -209,6 +224,15 @@ class Skeleton:
         Returns:
             list of (src_node.name, dst_node.name)
         """
+        edge_list = [(d['edge_insert_idx'], src.name, dst.name)
+                     for src, dst, key, d in self._graph.edges(keys=True, data=True)
+                     if d['type'] == EdgeType.BODY]
+
+        # We don't want to return the edge list in the order it is stored. We
+        # want to use the insertion order. Sort by the insertion index for each
+        # edge then drop it from the edge list.
+        edge_list = [(src, dst) for _, src, dst in sorted(edge_list)]
+
         return [(src.name, dst.name) for src, dst in self.edges]
 
     @property
@@ -255,7 +279,7 @@ class Skeleton:
         Returns:
             The index of the node in the graph.
         """
-        return self.find_node(node_name)
+        return list(self.graph.nodes).index(self.find_node(node_name))
 
     def add_node(self, name: str):
         """Add a node representing an animal part to the skeleton.
@@ -266,6 +290,9 @@ class Skeleton:
         Returns:
             None
         """
+        if type(name) is not str:
+            raise TypeError("Cannot add nodes to the skeleton that are not str")
+
         if name in self.node_names:
             raise ValueError("Skeleton already has a node named ({})".format(name))
 
@@ -352,7 +379,9 @@ class Skeleton:
         if self._graph.has_edge(source_node, destination_node):
             raise ValueError("Skeleton already has an edge between ({}) and ({}).".format(source, destination))
 
-        self._graph.add_edge(source_node, destination_node, type = EdgeType.BODY)
+        self._graph.add_edge(source_node, destination_node, type = EdgeType.BODY,
+                             edge_insert_idx = self._graph.graph['num_edges_inserted'])
+        self._graph.graph['num_edges_inserted'] = self._graph.graph['num_edges_inserted'] + 1
 
     def delete_edge(self, source: str, destination: str):
         """Delete an edge between two nodes.
@@ -554,7 +583,7 @@ class Skeleton:
             True for yes, False for no.
 
         """
-        current_node_name = self.node_names
+        current_node_names = self.node_names
         for name in names:
             if name not in current_node_names:
                 return False
@@ -774,6 +803,36 @@ class Skeleton:
         # Write the dataset to JSON string, then store it in a string
         # attribute
         all_sk_group.attrs[self.name] = np.string_(self.to_json())
+
+    @classmethod
+    def load_mat(cls, filename: str):
+        """
+        Load the skeleton from a Matlab MAT file. This is to support backwards
+        compatibility with old LEAP MATLAB code and datasets.
+
+        Args:
+            filename: The file name of the skeleton
+
+        Returns:
+            An instance of the skeleton.
+        """
+
+        # Lets create a skeleton object, use the filename for the name since old LEAP
+        # skeletons did not have names.
+        skeleton = cls(name=filename)
+
+        skel_mat = loadmat(filename)
+        skel_mat["nodes"] = skel_mat["nodes"][0][0]  # convert to scalar
+        skel_mat["edges"] = skel_mat["edges"] - 1    # convert to 0-based indexing
+
+        node_names = skel_mat['nodeNames']
+        node_names = [str(n[0][0]) for n in node_names]
+        skeleton.add_nodes(node_names)
+        for k in range(len(skel_mat["edges"])):
+            edge = skel_mat["edges"][k]
+            skeleton.add_edge(source=node_names[edge[0]], destination=node_names[edge[1]])
+
+        return skeleton
 
     def __str__(self):
         return "%s(name=%r)" % (self.__class__.__name__, self.name)

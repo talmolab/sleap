@@ -1014,9 +1014,10 @@ class QtInstance(QGraphicsObject):
         self.box.setPen(box_pen)
 
         # Add nodes
-        for (node, point) in self.instance.nodes_points():
+        for (node, point) in self.instance.nodes_points:
             node_item = QtNode(parent=self, point=point, node_name=node.name,
                                predicted=self.predicted, color=self.color, radius=self.markerRadius)
+
             self.nodes[node.name] = node_item
 
         # Add edges

@@ -22,8 +22,12 @@ def hdf5_affinity():
 
 
 TEST_SMALL_ROBOT_MP4_FILE = "tests/data/videos/small_robot.mp4"
+TEST_SMALL_CENTERED_PAIR_VID = "tests/data/videos/centered_pair_small.mp4"
 
 @pytest.fixture
 def small_robot_mp4_vid():
     return Video.from_media(TEST_SMALL_ROBOT_MP4_FILE)
 
+@pytest.fixture
+def centered_pair_vid():
+    return Video.from_media(TEST_SMALL_CENTERED_PAIR_VID)
