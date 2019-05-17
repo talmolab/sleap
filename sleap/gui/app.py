@@ -20,7 +20,7 @@ import numpy as np
 import pandas as pd
 
 from sleap.skeleton import Skeleton, Node
-from sleap.instance import Instance, Point, LabeledFrame
+from sleap.instance import Instance, PredictedInstance, Point, LabeledFrame
 from sleap.io.video import Video, HDF5Video, MediaVideo
 from sleap.io.dataset import Labels
 from sleap.gui.video import QtVideoPlayer
@@ -547,15 +547,25 @@ class MainWindow(QMainWindow):
 
         # FIXME: filter by skeleton type
 
+        used_tracks = [inst.track
+                       for inst in self.labeled_frame.instances
+                       if type(inst) == Instance
+                       ]
+        unused_predictions = [inst
+                              for inst in self.labeled_frame.instances
+                              if inst.track not in used_tracks
+                              and type(inst) == PredictedInstance
+                              ]
+
         if copy_instance is None:
             selected_idx = self.player.view.getSelection()
             if selected_idx is not None:
                 # If the user has selected an instance, copy that one.
                 copy_instance = self.labeled_frame.instances[selected_idx]
-            elif len(self.predicted_instances) > len(self.labeled_frame.instances):
-                # If there are more predicted instances than instances in this frame,
-                # copy the points from the first predicted instance without matching instance.
-                copy_instance = self.predicted_instances[len(self.labeled_frame.instances)]
+            elif len(unused_predictions):
+                # If there are predicted instances that don't correspond to an instance
+                # in this frame, use the first predicted instance without matching instance.
+                copy_instance = unused_predictions[0]
             else:
                 # Otherwise, if there are instances in previous frames,
                 # copy the points from one of those instances.
@@ -580,6 +590,9 @@ class MainWindow(QMainWindow):
                 new_instance[node] = copy.copy(copy_instance[node])
             else:
                 new_instance[node] = Point(x=np.random.rand() * self.video.width * 0.5, y=np.random.rand() * self.video.height * 0.5, visible=True)
+        # If we're copying a predicted instance, copy the track
+        if hasattr(copy_instance, "score"):
+            new_instance.track = copy_instance.track
         self.labeled_frame.instances.append(new_instance)
 
         if self.labeled_frame not in self.labels.labels:
@@ -628,13 +641,13 @@ class MainWindow(QMainWindow):
 
     def _transpose_instances(self, instance_ids:list):
         if len(instance_ids) != 2: return
-        
+
         idx_0 = instance_ids[0]
         idx_1 = instance_ids[1]
-        self.labeled_frame.instances[idx_0], self.labeled_frame.instances[idx_1] = (
-            self.labeled_frame.instances[idx_1], self.labeled_frame.instances[idx_0])
-
-        # TODO: update track ids
+        instance_0 = self.labeled_frame.instances[idx_0]
+        instance_1 = self.labeled_frame.instances[idx_1]
+        # Swap tracks
+        instance_0.track, instance_1.track = instance_1.track, instance_0.track
 
         self.plotFrame()
 
@@ -784,23 +797,22 @@ class MainWindow(QMainWindow):
         labeled_frame = [label for label in self.labels.labels if label.video == self.video and label.frame_idx == frame_idx]
         self.labeled_frame = labeled_frame[0] if len(labeled_frame) > 0 else LabeledFrame(video=self.video, frame_idx=frame_idx)
 
-        if self.predicted_instances is None:
-            self.predicted_instances = [] # temp, nowhere to load these from yet
-
-        # TESTING: pretend first instance in frame is predicted instance
-#         if len(self.labeled_frame.instances) and not len(self.predicted_instances):
-#             self.predicted_instances = self.labeled_frame.instances[:1]
-#             self.labeled_frame.instances = self.labeled_frame.instances[1:]
-#             print(f"{len(self.labeled_frame.instances)} {len(self.predicted_instances)}")
-
         self.instancesTable.model().labeled_frame = self.labeled_frame
 
-        for i, instance in enumerate(self.labeled_frame.instances):
-            # TODO: color by track id rather than list index
-            player.addInstance(instance=instance, color=self.cmap[i%len(self.cmap)])
+        count_no_track = 0
 
-        for instance in self.predicted_instances:
-            player.addInstance(instance=instance, predicted=True)
+        for i, instance in enumerate(self.labeled_frame.instances):
+            if instance.track in self.labels.tracks:
+                track_idx = self.labels.tracks.index(instance.track)
+            else:
+                # Instance without track
+                track_idx = len(self.labels.tracks) + count_no_track
+                count_no_track += 1
+            is_predicted = hasattr(instance,"score")
+            # TODO: color by track id rather than list index
+            player.addInstance(instance=instance,
+                               color=self.cmap[track_idx%len(self.cmap)],
+                               predicted=is_predicted)
 
         player.view.updatedViewer.emit()
 
