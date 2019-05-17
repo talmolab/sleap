@@ -1,7 +1,7 @@
 import pytest
 
-from sleap.instance import Instance, Point
-from sleap.nn.inference import PredictedInstance
+from sleap.instance import Instance, Point, PredictedInstance
+
 
 @pytest.fixture
 def instances(skeleton):
