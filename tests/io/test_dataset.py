@@ -56,8 +56,8 @@ def test_load_labels_json_old(tmpdir):
         assert labels[0].video.get_frame(0).shape == (384, 384, 1)
 
         # Check some frame objects.
-        assert labels[0].frame_idx == 118
-        assert labels[40].frame_idx == 494
+        assert labels[0].frame_idx == 0
+        assert labels[40].frame_idx == 573
 
         # Check the skeleton
         assert labels[0].instances[0].skeleton.node_names == skel_node_names
@@ -81,18 +81,18 @@ def test_label_accessors(centered_pair_labels):
     assert labels[video] == labels.find(video)
 
     assert labels[0].video == video
-    assert labels[0].frame_idx == 118
+    assert labels[0].frame_idx == 0
 
     assert labels[61].video == video
-    assert labels[61].frame_idx == 100
+    assert labels[61].frame_idx == 954
 
-    assert len(labels.find(video, frame_idx=100)) == 1
-    assert len(labels.find(video, 100)) == 1
-    assert labels.find(video, 100)[0] == labels[61]
+    assert len(labels.find(video, frame_idx=954)) == 1
+    assert len(labels.find(video, 954)) == 1
+    assert labels.find(video, 954)[0] == labels[61]
     assert labels.find_first(video) == labels[0]
-    assert labels.find_first(video, 100) == labels[61]
-    assert labels[video, 100] == labels[61]
-    assert labels[video, 118] == labels[0]
+    assert labels.find_first(video, 954) == labels[61]
+    assert labels[video, 954] == labels[61]
+    assert labels[video, 0] == labels[0]
     assert labels[video] == labels.labels
 
     assert len(labels.find(video, 101)) == 0
