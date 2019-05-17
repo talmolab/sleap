@@ -64,7 +64,7 @@ class PredictedPoint(Point):
     Args:
         score: The point level prediction score.
     """
-    score: float = attr.ib(default=0.0)
+    score: float = attr.ib(default=0.0, converter=float)
 
     @classmethod
     def from_point(cls, point: Point, score: float = 0.0):
@@ -601,7 +601,7 @@ class Instance:
             return self.frame.frame_idx
 
 
-@attr.s(auto_attribs=True, slots=True)
+@attr.s(auto_attribs=True)
 class PredictedInstance(Instance):
     """
     A predicted instance is an output of the inference procedure. It is
@@ -610,7 +610,7 @@ class PredictedInstance(Instance):
     Args:
         score: The instance level prediction score.
     """
-    score: float = attr.ib(default=0.0)
+    score: float = attr.ib(default=0.0, converter=float)
 
     @classmethod
     def from_instance(cls, instance: Instance, score):
