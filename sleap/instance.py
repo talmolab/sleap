@@ -61,11 +61,23 @@ class Track:
     space.
 
     Args:
-        spawned_on: The frame of the video that this track was spawned on. FIXME: Correct?
+        spawned_on: The frame of the video that this track was spawned on.
         name: A name given to this track for identifying purposes.
     """
-    spawned_on: int = attr.ib()
-    name: str = attr.ib(default="")
+    spawned_on: int = attr.ib(converter=int)
+    name: str = attr.ib(default="", converter=str)
+
+    def matches(self, other: 'Track'):
+        """
+        Check if two tracks match by value.
+
+        Args:
+            other: The other track to check
+
+        Returns:
+            True if they match, False otherwise.
+        """
+        return attr.asdict(self) == attr.asdict(other)
 
 # NOTE:
 # Instance cannot be a slotted class at the moment. This is because it creates
@@ -85,7 +97,7 @@ class Instance:
     """
 
     skeleton: Skeleton
-    track: Union[Track, None] = attr.ib(default=None)
+    track: Track = attr.ib(default=None)
     _points: Dict[Node, Point] = attr.ib(default=attr.Factory(dict))
 
     @_points.validator
@@ -231,7 +243,10 @@ class Instance:
         if not self.skeleton.matches(other.skeleton):
             return False
 
-        if not self.track == other.track:
+        if self.track and other.track and not self.track.matches(other.track):
+            return False
+
+        if self.track and not other.track or not self.track and other.track:
             return False
 
         # Make sure the frame indices match
