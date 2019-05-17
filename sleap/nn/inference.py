@@ -819,7 +819,8 @@ class Predictor:
 
         logger.info("Total: %.1f min" % (total_elapsed / 60))
 
-def load_prediced_labels_json_old(
+
+def load_predicted_labels_json_old(
         data_path: str, parsed_json: dict = None,
         adjust_matlab_indexing: bool = True,
         fix_rel_paths: bool = True) -> Labels:
@@ -916,7 +917,8 @@ def load_prediced_labels_json_old(
         return instances
 
     # Get the unique labeled frames and construct a list of LabeledFrame objects for them.
-    frame_keys = {(videoId, frameIdx) for videoId, frameIdx in zip(predicted_points["videoId"], predicted_points["frameIdx"])}
+    frame_keys = list({(videoId, frameIdx) for videoId, frameIdx in zip(predicted_points["videoId"], predicted_points["frameIdx"])})
+    frame_keys.sort()
     labels = []
     for videoId, frameIdx in frame_keys:
         label = LabeledFrame(video=video_objects[videoId], frame_idx=frameIdx,

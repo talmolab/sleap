@@ -73,7 +73,6 @@ class Labels(MutableSequence):
         # Lets sort the tracks by spawned on and then name
         self.tracks.sort(key=lambda t:(t.spawned_on, t.name))
 
-
     # Below are convenience methods for working with Labels as list.
     # Maybe we should just inherit from list? Maybe this class shouldn't
     # exists since it is just a list really with some class methods. I
@@ -470,7 +469,8 @@ def load_labels_json_old(data_path: str, parsed_json: dict = None,
         return instances
 
     # Get the unique labeled frames and construct a list of LabeledFrame objects for them.
-    frame_keys = {(videoId, frameIdx) for videoId, frameIdx in zip(points["videoId"], points["frameIdx"])}
+    frame_keys = list({(videoId, frameIdx) for videoId, frameIdx in zip(points["videoId"], points["frameIdx"])})
+    frame_keys.sort()
     labels = []
     for videoId, frameIdx in frame_keys:
         label = LabeledFrame(video=video_objects[videoId], frame_idx=frameIdx,

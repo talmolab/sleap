@@ -1,13 +1,17 @@
 from sleap.nn.inference import PredictedInstance, PredictedPoint, \
-    load_prediced_labels_json_old
+    load_predicted_labels_json_old
 
 from sleap.io.dataset import Labels
 
 def test_load_old_json():
-    labels = load_prediced_labels_json_old("tests/data/json_format_v1/centered_pair.json")
+    labels = load_predicted_labels_json_old("tests/data/json_format_v1/centered_pair.json")
 
     # Make sure there are 1100 frames
     assert len(labels) == 1100
+
+    # Make sure frames are in order
+    for i, frame in enumerate(labels):
+        assert frame.frame_idx == i
 
     # Make sure that we only found [2,3,4,5] number of instances
     assert set([len(f.instances) for f in labels]) == {2,3,4,5}
@@ -24,6 +28,10 @@ def test_save_load_json(centered_pair_predictions):
 
     # Make sure there are 1100 frames
     assert len(labels) == 1100
+
+    # Make sure frames are in order
+    for i, frame in enumerate(labels):
+        assert frame.frame_idx == i
 
     # Make sure that we only found [2,3,4,5] number of instances
     assert set([len(f.instances) for f in labels]) == {2, 3, 4, 5}

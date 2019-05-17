@@ -17,6 +17,67 @@ from sleap.instance import Instance, Track, LabeledFrame
 from sleap.io.dataset import Labels
 
 
+@attr.s(cmp=False, slots=True)
+class ShiftedInstance:
+    """
+    During tracking, optical flow shifted instances are represented to help track instances
+    across frames. This class encapsulates an Instance object that has been optical flow
+    shifted.
+
+    Args:
+        parent: The Instance that this optical flow shifted instance is derived from.
+    """
+    parent: Union[Instance, 'ShiftedInstance'] = attr.ib()
+    frame: Union[LabeledFrame, None] = attr.ib()
+    points: np.ndarray = attr.ib()
+
+    @property
+    @functools.lru_cache()
+    def source(self) -> 'Instance':
+        """
+        Recursively discover root instance to a chain of flow shifted instances.
+
+        Returns:
+            The root InstanceArray of a flow shifted instance.
+        """
+        if isinstance(self.parent, Instance):
+            return self.parent
+        else:
+            return self.parent.source
+
+    @property
+    def track(self) -> Track:
+        """
+        Get the track object for root flow shifted instance.
+
+        Returns:
+            The track object of the root flow shifted instance.
+        """
+        return self.source.track
+
+    @property
+    def frame_idx(self) -> int:
+        """
+        A convenience method to return the frame index this instance is
+        assigned to last.
+
+        Returns:
+            The frame index.
+        """
+        return self.frame.frame_idx
+
+    def points_array(self, *args, **kwargs):
+        """
+        Return the ShiftedInstance as a numpy array. ShiftedInstance stores its
+        points as an array always, unlike the Instance class. This method provides
+        and identical interface to the points_array method inf Instance.
+
+        Returns:
+            The instances points as a Nx2 numpy array. Where N is the number of
+            skeleton nodes. Each row represents a point.
+        """
+        return self.points
+
 @attr.s(slots=True)
 class Tracks:
     instances: Dict[int, list] = attr.ib(default=attr.Factory(dict))
@@ -29,7 +90,7 @@ class Tracks:
         # Filter
         if max_shift is not None:
             instances = [instance for instance in instances if isinstance(instance, Instance) or (
-                        isinstance(instance, 'ShiftedInstance') and (
+                        isinstance(instance, ShiftedInstance) and (
                             (frame_idx - instance.source.frame_idx) <= max_shift))]
 
         return instances
@@ -117,7 +178,13 @@ class FlowShiftTracker:
 
                 if self.verbosity > 0:
                     logger.info(f"[t = {t}] Created {len(self.tracks.tracks)} initial tracks")
-                self.last_img = imgs[img_idx].copy()
+                self.last_img = np.squeeze(imgs[img_idx].copy())
+
+                # If we still have 3 dimensions the image is color, need to convert
+                # to grayscale for optical flow.
+                if len(self.last_img.shape) == 3:
+                    self.last_img = cv2.cvtColor(self.last_img, cv2.COLOR_RGB2GRAY)
+
                 continue
 
             # Get all points in reference frame
@@ -125,19 +192,25 @@ class FlowShiftTracker:
             pts_ref = [instance.points_array(cached=True) for instance in instances_ref]
             if self.verbosity > 0:
                 tmp = min([instance.frame_idx for instance in instances_ref] +
-                          [instance.source.frame_idx for instance in
-                           instances_ref if isinstance(instance, ShiftedInstance)])
+                          [instance.source.frame_idx for instance in instances_ref
+                           if isinstance(instance, ShiftedInstance)])
                 logger.info(f"[t = {t}] Using {len(instances_ref)} refs back to t = {tmp}")
 
+            curr_img = np.squeeze(imgs[img_idx].copy())
+
+            # If we still have 3 dimensions the image is color, need to convert
+            # to grayscale for optical flow.
+            if len(curr_img.shape) == 3:
+                curr_img = cv2.cvtColor(curr_img, cv2.COLOR_RGB2GRAY)
 
             pts_fs, status, err = \
-                cv2.calcOpticalFlowPyrLK(self.last_img, imgs[img_idx],
+                cv2.calcOpticalFlowPyrLK(self.last_img, curr_img,
                                          (np.concatenate(pts_ref, axis=0)).astype("float32"),
                                           None, winSize=self.of_win_size,
                                           maxLevel=self.of_max_level,
                                           criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,
                                                     self.of_max_count, self.of_epsilon))
-            self.last_img = imgs[img_idx].copy()
+            self.last_img = curr_img
 
             # Split by instance
             sections = np.cumsum([len(x) for x in pts_ref])[:-1]
@@ -196,7 +269,8 @@ class FlowShiftTracker:
             # Spawn new tracks for unassigned instances
             for i, pts in enumerate(unassigned_pts):
                 if i in assigned_ind: continue
-                frame.instances[i].track = Track(spawned_on=t, name=f"{len(self.tracks.tracks)}")
+                instance = frame.instances[i]
+                instance.track = Track(spawned_on=t, name=f"{len(self.tracks.tracks)}")
                 self.tracks.add_instance(instance)
                 if self.verbosity > 0:
                     logger.info(f"[t = {t}] Assigned remaining instance {i} to newly "
@@ -209,7 +283,7 @@ class FlowShiftTracker:
         occ = np.zeros((len(self.tracks.tracks), int(num_frames)), dtype="bool")
         for t in range(int(num_frames)):
             instances = self.tracks.get_frame_instances(t)
-            instances = [instance for instance in instances if isinstance(instance, InstanceArray)]
+            instances = [instance for instance in instances if isinstance(instance, Instance)]
             for instance in instances:
                 occ[self.tracks.tracks.index(instance.track),t] = True
 
@@ -226,7 +300,7 @@ class FlowShiftTracker:
         instance_tracks = np.full((num_frames, num_nodes, 2, num_tracks), np.nan)
         for t in range(num_frames):
             instances = self.tracks.get_frame_instances(t)
-            instances = [instance for instance in instances if isinstance(instance, InstanceArray)]
+            instances = [instance for instance in instances if isinstance(instance, Instance)]
 
             for instance in instances:
                 instance_tracks[t, :, :, self.tracks.tracks.index(instance.track)] = instance.points
@@ -245,42 +319,3 @@ class FlowShiftTracker:
         points = np.stack([instance.points for instance in shifted_instances], axis=0)
 
         return track_id, frame_idx, frame_idx_source, points
-
-
-@attr.s(cmp=False, slots=True)
-class ShiftedInstance:
-    """
-    During tracking, optical flow shifted instances are represented to help track instances
-    across frames. This class encapsulates an Instance object that has been optical flow
-    shifted.
-
-    Args:
-        parent: The Instance that this optical flow shifted instance is derived from.
-    """
-    parent: Union[Instance, 'ShiftedInstance'] = attr.ib()
-    frame: Union[LabeledFrame, None] = attr.ib()
-    points: np.ndarray = attr.ib()
-
-    @property
-    @functools.lru_cache()
-    def source(self) -> 'Instance':
-        """
-        Recursively discover root instance to a chain of flow shifted instances.
-
-        Returns:
-            The root InstanceArray of a flow shifted instance.
-        """
-        if isinstance(self.parent, Instance):
-            return self.parent
-        else:
-            return self.parent.source
-
-    @property
-    def track(self) -> Track:
-        """
-        Get the track object for root flow shifted instance.
-
-        Returns:
-            The track object of the root flow shifted instance.
-        """
-        return self.source.track
