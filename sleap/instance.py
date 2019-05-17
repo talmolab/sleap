@@ -3,20 +3,19 @@
 """
 
 import math
-import shelve
 
 import numpy as np
 import h5py as h5
 import pandas as pd
 
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Tuple
 
 from sleap.skeleton import Skeleton, Node
 from sleap.io.video import Video
 from sleap.util import attr_to_dtype
 
 import attr
-import functools
+
 
 # This can probably be a namedtuple but has been made a full class just in case
 # we need more complicated functionality later.
@@ -56,17 +55,36 @@ class Point:
 
 @attr.s(slots=True, cmp=False)
 class Track:
-    spawned_on: int = attr.ib()
-    name: str = attr.ib(default="")
+    """
+    A track object is associated with a set of animal/object instances across multiple
+    frames of video. This allows tracking of unique entities in the video over time and
+    space.
 
-@attr.s(slots=True, cmp=False)
-class InstanceArray:
-    # TODO: integrate this with the full instance class below or rename as PredictedInstance?
-    track: Track = attr.ib()
-    frame_idx: int = attr.ib()
-    points: np.ndarray = attr.ib()
+    Args:
+        spawned_on: The frame of the video that this track was spawned on.
+        name: A name given to this track for identifying purposes.
+    """
+    spawned_on: int = attr.ib(converter=int)
+    name: str = attr.ib(default="", converter=str)
 
-@attr.s(auto_attribs=True, slots=True)
+    def matches(self, other: 'Track'):
+        """
+        Check if two tracks match by value.
+
+        Args:
+            other: The other track to check
+
+        Returns:
+            True if they match, False otherwise.
+        """
+        return attr.asdict(self) == attr.asdict(other)
+
+# NOTE:
+# Instance cannot be a slotted class at the moment. This is because it creates
+# attributes _frame and _point_array_cache after init. These are private variables
+# that are created in post init so they are not serialized.
+
+@attr.s(auto_attribs=True)
 class Instance:
     """
     The class :class:`Instance` represents a labelled instance of skeleton
@@ -74,9 +92,12 @@ class Instance:
     Args:
         skeleton: The skeleton that this instance is associated with.
         points: A dictionary where keys are skeleton node names and values are _points.
+        track: An optional multi-frame object track associated with this instance. This allows
+        individual animals/objects to be tracked across frames.
     """
 
     skeleton: Skeleton
+    track: Track = attr.ib(default=None)
     _points: Dict[Node, Point] = attr.ib(default=attr.Factory(dict))
 
     @_points.validator
@@ -110,11 +131,19 @@ class Instance:
             # convert to node indices so we don't break references to skeleton nodes
             # if the node name is relabeled.
             if self._points and is_string_dict:
-                self._points = {self._node_to_index(name): point for name,point in self._points.items()}
+                self._points = {self.skeleton.find_node(name): point for name,point in self._points.items()}
 
             if not is_string_dict and not is_node_dict:
                 raise ValueError("points dictionary must be keyed by either strings " +
                                  "(node names) or Nodes.")
+
+        # Create here in post init so it is not serialized by cattrs, wish there was better way
+        # This field keeps track of any labeled frame that this Instance has been associated with.
+        self.frame: Union[LabeledFrame, None] = None
+
+        # A variable used to cache a constructed points_array call to save on time. This is only
+        # used when cached=True is passed to points_array
+        self._points_array_cache: Union[np.array, None] = None
 
     def _node_to_index(self, node_name):
         """
@@ -170,7 +199,6 @@ class Instance:
         """
         return self._node_to_index(node) in self._points
 
-
     def __setitem__(self, node, value):
 
         # Make sure node and value, if either are lists, are of compatible size
@@ -215,8 +243,19 @@ class Instance:
         if not self.skeleton.matches(other.skeleton):
             return False
 
+        if self.track and other.track and not self.track.matches(other.track):
+            return False
+
+        if self.track and not other.track or not self.track and other.track:
+            return False
+
+        # Make sure the frame indices match
+        if not self.frame_idx == other.frame_idx:
+            return False
+
         return True
 
+    @property
     def nodes(self):
         """
         Get the list of nodes that have been labelled for this instance.
@@ -225,8 +264,9 @@ class Instance:
             A list of nodes that have been labelled for this instance.
 
         """
-        return self._points.keys()
+        return tuple(self._points.keys())
 
+    @property
     def nodes_points(self):
         """
         Return view object that displays a list of the instance's (node, point) tuple pairs
@@ -238,14 +278,39 @@ class Instance:
         names_to_points = {node: point for node, point in self._points.items()}
         return names_to_points.items()
 
-    def points(self):
+    def points(self) -> Tuple:
         """
         Return the list of labelled points, in order they were labelled.
 
         Returns:
             The list of labelled points, in order they were labelled.
         """
-        return self._points.values()
+        return tuple(self._points.values())
+
+    def points_array(self, cached=False) -> np.ndarray:
+        """
+        Return the instance's points in array form.
+
+        Args:
+            cached: If True, use a cached version of the points data if available,
+            create cache if it doesn't exist. If False, recompute and cache each
+            call.
+        Returns:
+            A Nx2 array containing x and y coordinates of each point
+            as the rows of the array and N is the number of nodes in the skeleton.
+            The order of the rows corresponds to the ordering of the skeleton nodes.
+            Any skeleton node not defined will have NaNs present.
+        """
+        if not cached or (cached and self._points_array_cache is None):
+            pts = np.ndarray((len(self.skeleton.nodes), 2))
+            for i, n in enumerate(self.skeleton.nodes):
+                p = self._points.get(n, Point())
+                pts[i, 0] = p.x
+                pts[i, 1] = p.y
+
+            self._points_array_cache = pts
+
+        return self._points_array_cache
 
     @classmethod
     def to_pandas_df(cls, instances: Union['Instance', List['Instance']], skip_nan:bool = True) -> pd.DataFrame:
@@ -291,7 +356,7 @@ class Instance:
 
             # FIXME: Do the same for the video
 
-            for (node, point) in instance.nodes_points():
+            for (node, point) in instance.nodes_points:
 
                 # Skip any NaN points if the user has asked for it.
                 if skip_nan and (math.isnan(point.x) or math.isnan(point.y)):
@@ -492,49 +557,89 @@ class Instance:
         for i in instances:
             i.drop_nan_points()
 
-
-
-@attr.s(slots=True, cmp=False)
-class ShiftedInstance:
-    frame_idx: int = attr.ib()
-    parent = attr.ib()
-    points: np.ndarray = attr.ib()
-        
     @property
-    @functools.lru_cache()
-    def source(self):
-        if isinstance(self.parent, InstanceArray):
-            return self.parent
+    def frame_idx(self) -> Union[None, int]:
+        """
+        Get the index of the frame that this instance was found on. This is a convenience
+        method for Instance.frame.frame_idx.
+
+        Returns:
+            The frame number this instance was found on.
+        """
+        if self.frame is None:
+            return None
         else:
-            return self.parent.source
-    
+            return self.frame.frame_idx
+
+
+@attr.s(auto_attribs=True)
+class LabeledFrame:
+    video: Video = attr.ib()
+    frame_idx: int = attr.ib(converter=int)
+    _instances: List[Instance] = attr.ib(default=attr.Factory(list))
+
+    def __attrs_post_init__(self):
+
+        # Make sure all instances have a reference to this frame
+        for instance in self.instances:
+            instance.frame = self
+
+    def __len__(self):
+        return len(self.instances)
+
+    def __getitem__(self, index):
+        return self.instances.__getitem__(index)
+
+    def index(self, value: Instance):
+        return self.instances.index(value)
+
+    def __delitem__(self, index):
+        value = self.instances.__getitem__(index)
+
+        self.instances.__delitem__(index)
+
+        # Modify the instance to remove reference to this frame
+        value.frame = None
+
+    def insert(self, index, value: Instance):
+        self.instances.insert(index, value)
+
+        # Modify the instance to have a reference back to this frame
+        value.frame = self
+
+    def __setitem__(self, index, value: Instance):
+        self.instances.__setitem__(index, value)
+
+        # Modify the instance to have a reference back to this frame
+        value.frame = self
+
     @property
-    def track(self):
-        return self.source.track
+    def instances(self):
+        """
+        A list of instances to associated with this frame.
 
+        Returns:
+            A list of instances to associated with this frame.
+        """
+        return self._instances
 
-@attr.s(slots=True)
-class Tracks:
-    instances: Dict[int, list] = attr.ib(default=attr.Factory(dict))
-    tracks: List[Track] = attr.ib(factory=list)
-        
-    def get_frame_instances(self, frame_idx: int, max_shift = None):
-        
-        instances = self.instances.get(frame_idx, [])
-        
-        # Filter
-        if max_shift is not None:
-            instances = [instance for instance in instances if isinstance(instance, InstanceArray) or (isinstance(instance, ShiftedInstance) and ((frame_idx - instance.source.frame_idx) <= max_shift))]
-            
-        return instances
-    
-    def add_instance(self, instance: Union[InstanceArray, ShiftedInstance]):
-        frame_instances = self.instances.get(instance.frame_idx, [])
-        frame_instances.append(instance)
-        self.instances[instance.frame_idx] = frame_instances
-        if instance.track not in self.tracks:
-            self.tracks.append(instance.track)
-            
-    def add_instances(self, instances: list):
+    @instances.setter
+    def instances(self, instances: List[Instance]):
+        """
+        Set the list of instances assigned to this frame. Note: whenever an instance
+        is associated with a LabeledFrame that Instance objects frame property will
+        be overwritten to the LabeledFrame.
+
+        Args:
+            instances: A list of instances to associated with this frame.
+
+        Returns:
+            None
+        """
+
+        # Make sure to set the frame for each instance to this LabeledFrame
         for instance in instances:
-            self.add_instance(instance)
+            instance.frame = self
+
+        self._instances = instances
+

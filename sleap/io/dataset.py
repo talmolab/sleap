@@ -15,45 +15,18 @@ import json
 import numpy as np
 
 from collections import MutableSequence
-from typing import List, Dict, Union
+from typing import List, Union
 
 import pandas as pd
 
 from sleap.skeleton import Skeleton, Node
-from sleap.instance import Instance, Point
+from sleap.instance import Instance, Point, LabeledFrame, Track
 from sleap.io.video import Video
-
-
-@attr.s(auto_attribs=True)
-class LabeledFrame:
-    video: Video = attr.ib()
-    frame_idx: int = attr.ib(converter=int)
-    instances: List[Instance] = attr.ib(default=attr.Factory(list))
-
-    def __len__(self):
-        return len(self.instances)
-
-    def __getitem__(self, index):
-        return self.instances.__getitem__(index)
-
-    def index(self, value: Instance):
-        return self.instances.index(value)
-
-    def __delitem__(self, index):
-        self.instances.__delitem__(index)
-
-    def insert(self, index, value: Instance):
-        self.instances.insert(index, value)
-
-    def __setitem__(self, index, value: Instance):
-        self.instances.__setitem__(index, value)
-
 
 """
 The version number to put in the Labels JSON format.
 """
 LABELS_JSON_FILE_VERSION = "2.0.0"
-
 
 @attr.s(auto_attribs=True)
 class Labels(MutableSequence):
@@ -70,12 +43,14 @@ class Labels(MutableSequence):
         That is, every LabeledFrame's video will be in videos but a Video
         object from videos might not have any LabeledFrame.
         skeletons: A list of skeletons that these labels may or may not reference.
+        tracks: A list of tracks that isntances can belong to.
     """
 
     labeled_frames: List[LabeledFrame] = attr.ib(default=attr.Factory(list))
     videos: List[Video] = attr.ib(default=attr.Factory(list))
     skeletons: List[Skeleton] = attr.ib(default=attr.Factory(list))
     nodes: List[Node] = attr.ib(default=attr.Factory(list))
+    tracks: List[Track] = attr.ib(default=attr.Factory(list))
 
     def __attrs_post_init__(self):
 
@@ -88,6 +63,15 @@ class Labels(MutableSequence):
 
         # Ditto for nodes
         self.nodes = list(set(self.nodes).union({node for skeleton in self.skeletons for node in skeleton.nodes}))
+
+        # Ditto for tracks, a pattern is emerging here
+        self.tracks = list(set(self.tracks).union({instance.track
+                                                   for frame in self.labels
+                                                   for instance in frame.instances
+                                                   if instance.track}))
+
+        # Lets sort the tracks by spawned on and then name
+        self.tracks.sort(key=lambda t:(t.spawned_on, t.name))
 
     # Below are convenience methods for working with Labels as list.
     # Maybe we should just inherit from list? Maybe this class shouldn't
@@ -296,10 +280,10 @@ class Labels(MutableSequence):
         # as references to the above constructed lists to limit redundant data in the
         # json
         label_cattr = cattr.Converter()
-        label_cattr.register_unstructure_hook(Skeleton, lambda x: skeletons.index(x))
         label_cattr.register_unstructure_hook(Skeleton, lambda x: self.skeletons.index(x))
         label_cattr.register_unstructure_hook(Video, lambda x: self.videos.index(x))
         label_cattr.register_unstructure_hook(Node, lambda x: self.nodes.index(x))
+        label_cattr.register_unstructure_hook(Track, lambda x: self.tracks.index(x))
 
         idx_to_node = {i:self.nodes[i] for i in range(len(self.nodes))}
 
@@ -311,7 +295,8 @@ class Labels(MutableSequence):
             'skeletons': skeleton_cattr.unstructure(self.skeletons),
             'nodes': cattr.unstructure(self.nodes),
             'videos': cattr.unstructure(self.videos),
-            'labels': label_cattr.unstructure(self.labeled_frames)
+            'labels': label_cattr.unstructure(self.labeled_frames),
+            'tracks': cattr.unstructure(self.tracks)
          }
 
         return json.dumps(dicts)
@@ -339,14 +324,13 @@ class Labels(MutableSequence):
         idx_to_node = {i:nodes[i] for i in range(len(nodes))}
         skeletons = Skeleton.make_cattr(idx_to_node).structure(dicts['skeletons'], List[Skeleton])
         videos = Skeleton.make_cattr(idx_to_node).structure(dicts['videos'], List[Video])
-
-#         print("NODES"); print(nodes)
-#         print("SKELETONS"); print(skeletons)
+        tracks = cattr.structure(dicts['tracks'], List[Track])
 
         label_cattr = cattr.Converter()
         label_cattr.register_structure_hook(Skeleton, lambda x,type: skeletons[x])
         label_cattr.register_structure_hook(Video, lambda x,type: videos[x])
         label_cattr.register_structure_hook(Node, lambda x,type: x if isinstance(x,Node) else nodes[int(x)])
+        label_cattr.register_structure_hook(Track, lambda x, type: None if x is None else tracks[x])
         labels = label_cattr.structure(dicts['labels'], List[LabeledFrame])
 
 #         print("LABELS"); print(labels)
@@ -485,7 +469,8 @@ def load_labels_json_old(data_path: str, parsed_json: dict = None,
         return instances
 
     # Get the unique labeled frames and construct a list of LabeledFrame objects for them.
-    frame_keys = {(videoId, frameIdx) for videoId, frameIdx in zip(points["videoId"], points["frameIdx"])}
+    frame_keys = list({(videoId, frameIdx) for videoId, frameIdx in zip(points["videoId"], points["frameIdx"])})
+    frame_keys.sort()
     labels = []
     for videoId, frameIdx in frame_keys:
         label = LabeledFrame(video=video_objects[videoId], frame_idx=frameIdx,
