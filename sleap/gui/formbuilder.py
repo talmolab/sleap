@@ -1,5 +1,7 @@
 """Custom QFormLayout which populates itself from list of form fields."""
 
+from PySide2 import QtWidgets
+
 class FormBuilderLayout(QtWidgets.QFormLayout):
     """
     Custom QFormLayout which populates itself from list of form fields.
