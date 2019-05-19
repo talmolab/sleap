@@ -1,118 +1,134 @@
+import numpy as np
 import multiprocessing as mp
+from multiprocessing import sharedctypes
 import threading
 import zmq
 import jsonpickle
-import umsgpack
+import yaml
 
 from PySide2 import QtCore, QtWidgets
 
-class TrainingDialog(QtWidgets.QWidget):
+from sleap.gui.slider import VideoSlider
+from sleap.gui.formbuilder import FormBuilderLayout
+from sleap.nn.monitor import LossViewer
 
-    def __init__(self, zmq_context, server="127.0.0.1", *args, **kwargs):
+class TrainingDialog(QtWidgets.QMainWindow):
+
+    def __init__(self, zmq_context=None, server="127.0.0.1", *args, **kwargs):
         super(TrainingDialog, self).__init__(*args, **kwargs)
 
         self.zmq_context = zmq_context
 
         # Controller
-        self.zmq_ctrl = self.zmq_context.socket(zmq.PUB)
-        self.zmq_ctrl.connect(f"tcp://{server}:9000")
+        if self.zmq_context is not None:
+            self.zmq_ctrl = self.zmq_context.socket(zmq.PUB)
+            self.zmq_ctrl.connect(f"tcp://{server}:9000")
 
         # Data
 
         self.labels_file = "tests/data/json_format_v1/centered_pair.json"
         self.default_scale = 1
         self.is_training = False
-        self.training_data = dict(ready=False, times=None)
+        self.training_data = dict(ready=False, times=None, update=threading.Event())
 
         # UI Widgets
 
-        self.labels_status = QtWidgets.QLabel()
+        with open("sleap/nn/training-forms.yaml", 'r') as forms_yaml:
+            items_to_create = yaml.load(forms_yaml, Loader=yaml.SafeLoader)
 
-        self.fetch_labels_button = QtWidgets.QPushButton("Load Labels")
-        self.fetch_labels_button.clicked.connect(self.fetchLabelsFile)
-        self.fetch_labels_button.clicked.connect(self.refresh)
+        # Data Gen form
+        data_gen_form = FormBuilderLayout(items_to_create["data_gen"])
+        data_gen_form.valueChanged.connect(self.refresh)
 
-        self.scale_label = QtWidgets.QLabel()
-        self.scale_label.setText("Scale:")
-        self.scale = QtWidgets.QSpinBox()
-        self.scale.setValue(self.default_scale)
-#         self.scale.setRange(1, 3)
         self.data_gen_button = QtWidgets.QPushButton("Generate Data")
         self.data_gen_button.clicked.connect(self.generateData)
         self.data_gen_button.clicked.connect(self.refresh)
         self.debug_button = QtWidgets.QPushButton("Debug")
         self.debug_button.clicked.connect(self.debug)
-        
+        data_gen_form.addRow(self.data_gen_button)
+        data_gen_form.addRow(self.debug_button)
+
+        # Training form
+        training_form = FormBuilderLayout(items_to_create["training"])
+
         self.training_button = QtWidgets.QPushButton("Start Training")
         self.training_button.clicked.connect(self.runTraining)
+        training_form.addRow(self.training_button)
 
         # UI Group Widgets
-        
-        gb = QtWidgets.QGroupBox("Training Labels")
-        vb = QtWidgets.QVBoxLayout()
-        vb.addWidget(self.labels_status)
-        vb.addWidget(self.fetch_labels_button)
-        gb.setLayout(vb)
-        self.labels_group = gb
 
-        gb = QtWidgets.QGroupBox("Data Generation")
-        vb = QtWidgets.QVBoxLayout()
-        vb.addWidget(self.scale_label)
-        vb.addWidget(self.scale)
-        vb.addWidget(self.data_gen_button)
-        vb.addWidget(self.debug_button)
-        gb.setLayout(vb)
-        self.gen_group = gb
+        self.gen_group = QtWidgets.QGroupBox("Data Generation")
+        self.gen_group.setLayout(data_gen_form)
 
-        gb = QtWidgets.QGroupBox("Training")
-        vb = QtWidgets.QVBoxLayout()
-        vb.addWidget(self.training_button)
-        gb.setLayout(vb)
-        self.training_group = gb
+        self.training_group = QtWidgets.QGroupBox("Training")
+        self.training_group.setLayout(training_form)
 
         # UI Layout
 
         self.layout = QtWidgets.QVBoxLayout()
-        self.layout.addWidget(self.labels_group)
         self.layout.addWidget(self.gen_group)
         self.layout.addWidget(self.training_group)
 
-        self.setLayout(self.layout)
+#         self.setLayout(self.layout)
+        self.main_widget = QtWidgets.QWidget()
+        self.main_widget.setLayout(self.layout)
+        self.setCentralWidget(self.main_widget)
 
         self.refresh()
 
     def refresh(self, *args):
         print("refresh called")
 
+        self.labels_file = self.gen_group.layout().get_form_data()["labels_file"]
+
         has_labels = self.labels_file != ""
         has_data = self.training_data["ready"]
         print(f"has_data: {has_data}")
-        labels_status = self.labels_file if has_labels else "[no labels loaded]"
-        self.labels_status.setText(labels_status)
 
         self.data_gen_button.setEnabled(has_labels)
-        
+
         training_button_text = "Stop Training" if self.is_training else "Start Training"
 #         training_button_text = str(has_data)
         self.training_button.setText(training_button_text)
         self.training_button.setEnabled(has_data)
 
-    def fetchLabelsFile(self, *args):
-        filters = ["JSON Labels (*.json)"]
-        filename, selected_filter = QtWidgets.QFileDialog.getOpenFileName(None, directory=None, caption="Open File", filter=";;".join(filters))
-    
-        if len(filename):
-            self.labels_file = filename
-            self.training_data = dict(ready=False)
-
     def generateData(self, *args):
-#         mp.Process(target=data_gen, args=(self.labels_file,)).start()
-        cmd = dict(command="data_gen", labels_file=self.labels_file)
-        self.zmq_ctrl.send_string(jsonpickle.encode(cmd))
+#         run_data_gen(self.labels_file, self.training_data)
+        threading.Thread(target=run_data_gen, args=(self.labels_file, self.training_data)).start()
+#         cmd = dict(command="data_gen", labels_file=self.labels_file)
+#         self.zmq_ctrl.send_string(jsonpickle.encode(cmd))
 
     def runTraining(self, *args):
-        self.zmq_ctrl.send_string(jsonpickle.encode(dict(command="train",)))
-        print("sent train command")
+        if not self.is_training:
+            if False:
+                from sleap.nn.training import train
+                Process(target=train,
+                    args=(self.training_data["imgs"], self.training_data["confmaps"]),
+                    kwargs=self.training_group.layout().get_form_data()
+                    ).start()
+            else:
+                print("SET TO NOT RUN TRAINING")
+                print(self.training_group.layout().get_form_data())
+
+            # TODO: open training monitor(s)
+            loss_viewer = LossViewer(zmq_context=self.zmq_context,parent=self)
+            loss_viewer.resize(600, 400)
+            loss_viewer.show()
+            timer = QtCore.QTimer()
+            timer.timeout.connect(loss_viewer.check_messages)
+            timer.start(0)
+
+            self.is_training = True
+        else:
+            if self.zmq_context is not None:
+                # send command to stop training
+                self.zmq_ctrl.send_string(jsonpickle.encode(dict(command="stop",)))
+            self.is_training = False
+
+        self.refresh()
+
+#         self.zmq_ctrl.send_string(jsonpickle.encode(dict(command="train",)))
+#         print("sent train command")
 
     def preview(self):
         from sleap.io.video import Video
@@ -127,7 +143,6 @@ class TrainingDialog(QtWidgets.QWidget):
         vid = Video.from_numpy(imgs * 255)
         conf_window = QtVideoPlayer(video=vid)
         conf_window.show()
-        app.processEvents()
 
         def plot_confmaps(parent, item_idx):
             frame_conf_map = ConfMapsPlot(confmaps[parent.frame_idx,...])
@@ -136,59 +151,95 @@ class TrainingDialog(QtWidgets.QWidget):
         conf_window.changedPlot.connect(plot_confmaps)
         conf_window.plot()
 
+    def check_messages(self, *args):
+         if self.training_data["update"].is_set():
+            self.training_data["update"].clear()
+#             training_window.training_data["imgs"] = np.ctypeslib.as_array(training_window.training_data["imgs_raw"])
+#             training_window.training_data["confmaps"] = np.ctypeslib.as_array(training_window.training_data["confmaps_raw"])
+            self.preview()
+            self.refresh()
+
     def debug(self, *args):
-        if "imgs" in self.training_data:
-            print(self.training_data["imgs"].shape)
-        print(self.training_data["times"])
-        self.zmq_ctrl.send_string(jsonpickle.encode(dict(command="debug",)))
-        print("sent zmq message")
-#         print([t.getName() for t in threading.enumerate()])
+        print(self.gen_group.layout().get_form_data())
+        print(self.training_group.layout().get_form_data())
+        self.preview()
+
+def run_data_gen(labels_file, results):
+#     local_data = threading.local()
+#     local_data.results = dict()
+#     results = dict()
+
+#     ctx = zmq.Context()
+#     pub = ctx.socket(zmq.PUB)
+#     pub.bind("tcp://*:9001")
+#     pub.send_string(jsonpickle.encode(dict(event="starting data_gen",)))
+#     pub.send(umsgpack.packb(dict(event="starting data_gen")))
+
+    from time import time, sleep
+    results["ready"] = False
+    results["times"] = dict()
+    results["times"]["start_time"] = time()
+
+    results["times"]["start_io"] = time()
+    from sleap.io.dataset import Labels
+    labels = Labels.load_json(labels_file)
+    results["times"]["end_io"] = time()
+
+    # TESTING: just use a few frames
+    labels.labeled_frames = labels.labeled_frames[0:2]
+
+    from sleap.nn.datagen import generate_images, generate_confidence_maps
+
+    results["times"]["start_imgs"] = time()
+    imgs = generate_images(labels)
+    results["times"]["end_imgs"] = time()
+
+    results["times"]["start_conf"] = time()
+    confmaps = generate_confidence_maps(labels, sigma=5)
+    results["times"]["end_conf"] = time()
+
+    results["times"]["end_time"] = time()
+
+    results["times"]["total"] = results["times"]["end_time"] - results["times"]["start_time"]
+    results["times"]["io"] = results["times"]["end_io"] - results["times"]["start_io"]
+    results["times"]["imgs"] = results["times"]["end_imgs"] - results["times"]["start_imgs"]
+    results["times"]["conf"] = results["times"]["end_conf"] - results["times"]["start_conf"]
+
+#     imgs_ctypes = np.ctypeslib.as_ctypes(imgs)
+#     imgs_raw = sharedctypes.RawArray(imgs_ctypes._type_, imgs_ctypes)
+#     confmaps_ctypes = np.ctypeslib.as_ctypes(confmaps)
+#     confmaps_raw = sharedctypes.RawArray(confmaps_ctypes._type_, confmaps_ctypes)
+
+    results["imgs"] = imgs#_raw
+    results["confmaps"] = confmaps#_raw
+
+    results["ready"] = True
+    results["update"].set()
+
+#     pub.send_string(jsonpickle.encode(dict(event="data_gen done",results=results)))
+#     pub.send(umsgpack.packb(dict(event="data_gen done",results=results)))
+#     pub.close()
+
+    print("done with data_gen")
+
 
 if __name__ == "__main__":
 
-    
-#     server_address = "127.0.0.1"
-#     server_address = "10.9.111.77" # me (temp)
-    server_address = "128.112.217.175" # talmo
+    server_address = "127.0.0.1"
 
     print(f"starting client to {server_address}")
 
+    ctx = None
     ctx = zmq.Context()
 
     app = QtWidgets.QApplication([])
-    window = TrainingDialog(zmq_context=ctx, server=server_address)
-    window.show()
-
     app.setQuitOnLastWindowClosed(True)
-    app.processEvents()
 
-    # Result monitoring
-    sub = ctx.socket(zmq.SUB)
-    sub.subscribe("")
-    sub.connect(f"tcp://{server_address}:9001")
+    training_window = TrainingDialog(zmq_context=ctx, server=server_address)
+    training_window.show()
 
-    def poll(timeout=10):
-        if sub.poll(timeout, zmq.POLLIN):
-#             return umsgpack.unpackb(sub.recv())
-            return jsonpickle.decode(sub.recv_string())
-        return None
+    timer = QtCore.QTimer()
+    timer.timeout.connect(training_window.check_messages)
+    timer.start(0)
 
-    epoch = 0
-    while True:
-        msg = poll()
-        if msg is not None:
-            print(f"msg event: {msg['event']}")
-            if msg["event"] == "data_gen done":
-                for key in msg["results"].keys():
-                    window.training_data[key] = msg["results"][key]
-                # window.preview()
-                pass
-            window.refresh()
-
-        app.processEvents()
-
-    # Stop training
-    ctrl.send_string(jsonpickle.encode(dict(command="stop")))
-
-    while True:
-        app.processEvents()
+    app.exec_()
