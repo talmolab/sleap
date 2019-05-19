@@ -10,6 +10,8 @@ import pandas as pd
 
 from typing import Dict, List, Union, Tuple
 
+from attr import __init__
+
 from sleap.skeleton import Skeleton, Node
 from sleap.io.video import Video
 from sleap.util import attr_to_dtype
@@ -53,6 +55,32 @@ class Point:
         return math.isnan(self.x) or math.isnan(self.y)
 
 
+@attr.s(auto_attribs=True, slots=True)
+class PredictedPoint(Point):
+    """
+    A predicted point is an output of the inference procedure. It has all
+    the properties of a labeled point with an accompanying score.
+
+    Args:
+        score: The point level prediction score.
+    """
+    score: float = attr.ib(default=0.0, converter=float)
+
+    @classmethod
+    def from_point(cls, point: Point, score: float = 0.0):
+        """
+        Create a PredictedPoint from a Point
+
+        Args:
+            point: The point to copy all data from.
+            score: The score for this predicted point.
+
+        Returns:
+            A scored point based on the point passed in.
+        """
+        return cls(**{**attr.asdict(point), 'score': score})
+
+
 @attr.s(slots=True, cmp=False)
 class Track:
     """
@@ -79,6 +107,7 @@ class Track:
         """
         return attr.asdict(self) == attr.asdict(other)
 
+
 # NOTE:
 # Instance cannot be a slotted class at the moment. This is because it creates
 # attributes _frame and _point_array_cache after init. These are private variables
@@ -98,7 +127,7 @@ class Instance:
 
     skeleton: Skeleton
     track: Track = attr.ib(default=None)
-    _points: Dict[Node, Point] = attr.ib(default=attr.Factory(dict))
+    _points: Dict[Node, Union[Point, PredictedPoint]] = attr.ib(default=attr.Factory(dict))
 
     @_points.validator
     def _validate_all_points(self, attribute, points):
@@ -573,10 +602,44 @@ class Instance:
 
 
 @attr.s(auto_attribs=True)
+class PredictedInstance(Instance):
+    """
+    A predicted instance is an output of the inference procedure. It is
+    the main output of the inference procedure.
+
+    Args:
+        score: The instance level prediction score.
+    """
+    score: float = attr.ib(default=0.0, converter=float)
+
+    @classmethod
+    def from_instance(cls, instance: Instance, score):
+        """
+        Create a PredictedInstance from and Instance object. The fields are
+        copied in a shallow manner with the exception of points. For each
+        point in the instance an PredictedPoint is created with score set
+        to default value.
+
+        Args:
+            instance: The Instance object to shallow copy data from.
+            score: The score for this instance.
+
+        Returns:
+            A PredictedInstance for the given Instance.
+        """
+        kw_args = attr.asdict(instance, recurse=False)
+        kw_args['points'] = {key: PredictedPoint.from_point(val)
+                             for key, val in kw_args['_points'].items()}
+        del kw_args['_points']
+        kw_args['score'] = score
+        return cls(**kw_args)
+
+
+@attr.s(auto_attribs=True)
 class LabeledFrame:
     video: Video = attr.ib()
     frame_idx: int = attr.ib(converter=int)
-    _instances: List[Instance] = attr.ib(default=attr.Factory(list))
+    _instances: Union[List[Instance], List[PredictedInstance]] = attr.ib(default=attr.Factory(list))
 
     def __attrs_post_init__(self):
 

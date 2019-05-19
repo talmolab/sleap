@@ -40,6 +40,6 @@ def test_gui_video_instances(qtbot, small_robot_mp4_vid, centered_pair_labels):
     vp.instances[0].updatePoints(complete=True)
     
     # Check that node is marked as complete
-    assert vp.instances[0].childItems()[1].point.complete
+    assert vp.instances[0].childItems()[3].point.complete
 
     assert vp.close()

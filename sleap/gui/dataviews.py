@@ -272,7 +272,7 @@ class LabeledFrameTableModel(QtCore.QAbstractTableModel):
                 instance = self.labeled_frame.instances[idx]
 
                 if prop == "points":
-                    return f"{len(instance.nodes())}/{len(instance.skeleton.nodes)}"
+                    return f"{len(instance.nodes)}/{len(instance.skeleton.nodes)}"
                 elif prop == "track_id":
                     return None
                 elif prop == "skeleton":

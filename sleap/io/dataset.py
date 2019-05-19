@@ -20,7 +20,8 @@ from typing import List, Union
 import pandas as pd
 
 from sleap.skeleton import Skeleton, Node
-from sleap.instance import Instance, Point, LabeledFrame, Track
+from sleap.instance import Instance, Point, LabeledFrame, \
+    Track, PredictedPoint, PredictedInstance
 from sleap.io.video import Video
 
 """
@@ -59,7 +60,9 @@ class Labels(MutableSequence):
         self.videos = list(set(self.videos).union({label.video for label in self.labels}))
 
         # Ditto for skeletons
-        self.skeletons = list(set(self.skeletons).union({instance.skeleton for label in self.labels for instance in label.instances}))
+        self.skeletons = list(set(self.skeletons).union({instance.skeleton
+                                                         for label in self.labels
+                                                         for instance in label.instances}))
 
         # Ditto for nodes
         self.nodes = list(set(self.nodes).union({node for skeleton in self.skeletons for node in skeleton.nodes}))
@@ -208,6 +211,14 @@ class Labels(MutableSequence):
                     if node not in self.nodes:
                         self.nodes.append(node)
 
+        # Add any new Tracks as well
+        for instance in new_label.instances:
+            if instance.track and instance.track not in self.tracks:
+                self.tracks.append(instance.track)
+
+        # Sort the tracks again
+        self.tracks.sort(key=lambda t: (t.spawned_on, t.name))
+
     def __setitem__(self, index, value: LabeledFrame):
         # TODO: Maybe we should remove this method altogether?
         self.labeled_frames.__setitem__(index, value)
@@ -331,6 +342,23 @@ class Labels(MutableSequence):
         label_cattr.register_structure_hook(Video, lambda x,type: videos[x])
         label_cattr.register_structure_hook(Node, lambda x,type: x if isinstance(x,Node) else nodes[int(x)])
         label_cattr.register_structure_hook(Track, lambda x, type: None if x is None else tracks[x])
+
+        def structure_points(x, type):
+            if 'score' in x.keys():
+                return cattr.structure(x, PredictedPoint)
+            else:
+                return cattr.structure(x, Point)
+
+        label_cattr.register_structure_hook(Union[Point, PredictedPoint], structure_points)
+
+        def structure_instances_list(x, type):
+            if 'score' in x[0].keys():
+                return label_cattr.structure(x, List[PredictedInstance])
+            else:
+                return label_cattr.structure(x, List[Instance])
+
+        label_cattr.register_structure_hook(Union[List[Instance], List[PredictedInstance]],
+                                            structure_instances_list)
         labels = label_cattr.structure(dicts['labels'], List[LabeledFrame])
 
 #         print("LABELS"); print(labels)
