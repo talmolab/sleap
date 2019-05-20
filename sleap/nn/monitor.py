@@ -55,13 +55,13 @@ class LossViewer(QtWidgets.QMainWindow):
 
     def update_runtime(self):
         if self.t0 is not None:
-            dt = time() - t0
+            dt = time() - self.t0
             dt_min, dt_sec = divmod(dt, 60)
             self.chart.setTitle(f"Runtime: {int(dt_min):02}:{int(dt_sec):02}")
 
     def check_messages(self, timeout=10):
-        if sub.poll(timeout, zmq.POLLIN):
-            msg = jsonpickle.decode(sub.recv_string())
+        if self.sub.poll(timeout, zmq.POLLIN):
+            msg = jsonpickle.decode(self.sub.recv_string())
 
             print(msg)
             if msg["event"] == "train_begin":
