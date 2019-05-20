@@ -22,7 +22,7 @@ class TrainingDialog(QtWidgets.QMainWindow):
         # Controller
         if self.zmq_context is not None:
             self.zmq_ctrl = self.zmq_context.socket(zmq.PUB)
-            self.zmq_ctrl.connect(f"tcp://{server}:9000")
+            self.zmq_ctrl.bind("tcp://*:9000")
 
         # Data
 
@@ -100,18 +100,24 @@ class TrainingDialog(QtWidgets.QMainWindow):
 
     def runTraining(self, *args):
         if not self.is_training:
-            if False:
+            if True:
+                # Get data from form fields
+                training_params = self.training_group.layout().get_form_data()
+                # Adjust raw data from form fields
+                if training_params.get("save_dir", "") == "":
+                    training_params["save_dir"] = None
+                # Start training process
                 from sleap.nn.training import train
-                Process(target=train,
+                mp.Process(target=train,
                     args=(self.training_data["imgs"], self.training_data["confmaps"]),
-                    kwargs=self.training_group.layout().get_form_data()
+                    kwargs=training_params
                     ).start()
             else:
                 print("SET TO NOT RUN TRAINING")
                 print(self.training_group.layout().get_form_data())
 
             # TODO: open training monitor(s)
-            loss_viewer = LossViewer(zmq_context=self.zmq_context,parent=self)
+            loss_viewer = LossViewer(zmq_context=self.zmq_context, parent=self)
             loss_viewer.resize(600, 400)
             loss_viewer.show()
             timer = QtCore.QTimer()
@@ -122,6 +128,7 @@ class TrainingDialog(QtWidgets.QMainWindow):
         else:
             if self.zmq_context is not None:
                 # send command to stop training
+                print("Sending command to stop training")
                 self.zmq_ctrl.send_string(jsonpickle.encode(dict(command="stop",)))
             self.is_training = False
 
@@ -160,9 +167,10 @@ class TrainingDialog(QtWidgets.QMainWindow):
             self.refresh()
 
     def debug(self, *args):
-        print(self.gen_group.layout().get_form_data())
-        print(self.training_group.layout().get_form_data())
-        self.preview()
+        # print(self.gen_group.layout().get_form_data())
+        # print(self.training_group.layout().get_form_data())
+        self.zmq_ctrl.send_string(jsonpickle.encode(dict(command="test command",)))
+        # self.preview()
 
 def run_data_gen(labels_file, results):
 #     local_data = threading.local()
