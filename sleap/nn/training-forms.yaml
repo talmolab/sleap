@@ -46,7 +46,7 @@ training:
   default: unet
   options: hourglass,leap_cnn,unet,stacked_unet
 
-- name: output_dir
+- name: save_dir
   label: Output Directory
   type: file_dir
   default: 
