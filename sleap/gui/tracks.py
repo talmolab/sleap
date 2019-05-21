@@ -68,7 +68,8 @@ class TrackTrailManager():
 
         tracks_in_frame = [instance.track for frame in self.labels.labeled_frames for instance in frame
                            if frame.frame_idx == frame_idx]
-        for track_i, track in enumerate(tracks_in_frame):
+        for track in tracks_in_frame:
+            track_i = self.labels.tracks.index(track)
             trails = self.get_track_trails(frame_selection, track)
 
             color = QtGui.QColor(*self.color_maps[track_i%len(self.color_maps)])
