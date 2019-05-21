@@ -770,13 +770,16 @@ class QtNode(QGraphicsEllipseItem):
         color: Color of the visual node item.
         callbacks: List of functions to call after we update to the `Point`.
     """
-    def __init__(self, parent, point:Point, radius:float, color:list, node_name:str = None, predicted=False, callbacks = None, *args, **kwargs):
+    def __init__(self, parent, point:Point, radius:float, color:list, node_name:str = None,
+                    predicted=False, color_predicted=False,
+                    callbacks = None, *args, **kwargs):
         self.point = point
         self.radius = radius
         self.color = color
         self.edges = []
         self.name = node_name
         self.predicted = predicted
+        self.color_predicted = color_predicted
         self.callbacks = [] if callbacks is None else callbacks
         self.dragParent = False
 
@@ -787,10 +790,15 @@ class QtNode(QGraphicsEllipseItem):
 
         self.setFlag(QGraphicsItem.ItemIgnoresTransformations)
 
+        col_line = QColor(*self.color)
+
         if self.predicted:
             self.setFlag(QGraphicsItem.ItemIsMovable, False)
 
-            self.pen_default = QPen(QColor(250, 250, 10), 1)
+            if self.color_predicted:
+                self.pen_default = QPen(col_line, 1)
+            else:
+                self.pen_default = QPen(QColor(250, 250, 10), 1)
             self.pen_default.setCosmetic(True)
             self.pen_missing = self.pen_default
             self.brush = QBrush(QColor(128, 128, 128, 128))
@@ -798,8 +806,6 @@ class QtNode(QGraphicsEllipseItem):
         else:
             self.setFlag(QGraphicsItem.ItemIsMovable)
 
-            col_line = QColor(*self.color)
-        
             self.pen_default = QPen(col_line, 1)
             self.pen_default.setCosmetic(True) # https://stackoverflow.com/questions/13120486/adjusting-qpen-thickness-when-scaling-qgraphicsview
             self.pen_missing = QPen(col_line, 1)
@@ -991,11 +997,13 @@ class QtInstance(QGraphicsObject):
     `QtNodeLabel` items as children of itself.
     """
     def __init__(self, skeleton:Skeleton = None, instance: Instance = None,
-                 predicted=False, color=(0, 114, 189), markerRadius=4, *args, **kwargs):
+                 predicted=False, color_predicted=False,
+                 color=(0, 114, 189), markerRadius=4, *args, **kwargs):
         super(QtInstance, self).__init__(*args, **kwargs)
         self.skeleton = skeleton if instance is None else instance.skeleton
         self.instance = instance
         self.predicted = predicted
+        self.color_predicted = color_predicted
         self.color = color
         self.markerRadius = markerRadius
 
@@ -1010,8 +1018,9 @@ class QtInstance(QGraphicsObject):
         #self.setFlag(QGraphicsItem.ItemIsSelectable)
 
         if self.predicted:
-            self.color = (128, 128, 128)
             self.setZValue(0)
+            if not self.color_predicted:
+                self.color = (128, 128, 128)
         else:
             self.setZValue(1)
 
@@ -1034,7 +1043,8 @@ class QtInstance(QGraphicsObject):
         # Add nodes
         for (node, point) in self.instance.nodes_points:
             node_item = QtNode(parent=self, point=point, node_name=node.name,
-                               predicted=self.predicted, color=self.color, radius=self.markerRadius)
+                               predicted=self.predicted, color_predicted=self.color_predicted,
+                               color=self.color, radius=self.markerRadius)
 
             self.nodes[node.name] = node_item
 

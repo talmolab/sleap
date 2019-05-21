@@ -64,6 +64,7 @@ class MainWindow(QMainWindow):
         self._show_labels = True
         self._show_edges = True
         self._show_trails = False
+        self._color_predicted = False
         self._auto_zoom = False
 
         self.initialize_gui()
@@ -137,12 +138,14 @@ class MainWindow(QMainWindow):
         self.menuAction["show labels"] = labelMenu.addAction("Show Node Names", self.toggleLabels, Qt.ALT + Qt.Key_Tab)
         self.menuAction["show edges"] = labelMenu.addAction("Show Edges", self.toggleEdges, Qt.ALT + Qt.SHIFT + Qt.Key_Tab)
         self.menuAction["show trails"] = labelMenu.addAction("Show Trails", self.toggleTrails)
+        self.menuAction["color predicted"] = labelMenu.addAction("Color Predicted Instances", self.toggleColorPredicted)
         labelMenu.addSeparator()
         self.menuAction["fit"] = labelMenu.addAction("Fit Instances to View", self.toggleAutoZoom, Qt.CTRL + Qt.Key_Equal)
 
         self.menuAction["show labels"].setCheckable(True); self.menuAction["show labels"].setChecked(self._show_labels)
         self.menuAction["show edges"].setCheckable(True); self.menuAction["show edges"].setChecked(self._show_edges)
         self.menuAction["show trails"].setCheckable(True); self.menuAction["show trails"].setChecked(self._show_trails)
+        self.menuAction["color predicted"].setCheckable(True); self.menuAction["color predicted"].setChecked(self._color_predicted)
         self.menuAction["fit"].setCheckable(True)
 
         viewMenu = self.menuBar().addMenu("View")
@@ -777,6 +780,11 @@ class MainWindow(QMainWindow):
         self.menuAction["show trails"].setChecked(self._show_trails)
         self.plotFrame()
 
+    def toggleColorPredicted(self):
+        self._color_predicted = not self._color_predicted
+        self.menuAction["color predicted"].setChecked(self._color_predicted)
+        self.plotFrame()
+
     def toggleAutoZoom(self):
         self._auto_zoom = not self._auto_zoom
         self.menuAction["fit"].setChecked(self._auto_zoom)
@@ -829,7 +837,8 @@ class MainWindow(QMainWindow):
 
             player.addInstance(instance=instance,
                                color=self.cmap[track_idx%len(self.cmap)],
-                               predicted=is_predicted)
+                               predicted=is_predicted,
+                               color_predicted=self._color_predicted)
 
         if self._trail_manager is not None and self._show_trails:
             self._trail_manager.add_trails_to_scene(frame_idx)
