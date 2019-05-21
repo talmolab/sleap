@@ -65,7 +65,7 @@ class VideoSlider(QGraphicsView):
     def _toPos(self, val, center=False):
         x = val
         x -= self._val_min
-        x /= (self._val_max-self._val_min)
+        x /= max(1, (self._val_max-self._val_min))
         x *= self._sliderWidth()
         if center:
             x  += self.handle.rect().width()/2.
@@ -74,7 +74,7 @@ class VideoSlider(QGraphicsView):
     def _toVal(self, x, center=False):
         val = x
         val /= self._sliderWidth()
-        val *= (self._val_max-self._val_min)
+        val *= max(1, (self._val_max-self._val_min))
         val += self._val_min
         val = round(val)
         return val
