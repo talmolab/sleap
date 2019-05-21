@@ -128,7 +128,8 @@ class MainWindow(QMainWindow):
         labelMenu = self.menuBar().addMenu("Labels")
         labelMenu.addAction("Add Instance", self.newInstance, Qt.CTRL + Qt.Key_I)
         labelMenu.addAction("Delete Instance", self.deleteSelectedInstance, Qt.CTRL + Qt.Key_Backspace)
-        labelMenu.addAction("Transpose Instances", self.transposeInstance, Qt.CTRL + Qt.Key_T)
+        self.track_menu = labelMenu.addMenu("Set Instance Track")
+        labelMenu.addAction("Transpose Instance Tracks", self.transposeInstance, Qt.CTRL + Qt.Key_T)
         labelMenu.addAction("Select Next Instance", self.player.view.nextSelection, QKeySequence(Qt.Key.Key_QuoteLeft))
         labelMenu.addAction("Clear Selection", self.player.view.clearSelection, QKeySequence(Qt.Key.Key_Escape))
         labelMenu.addSeparator()
@@ -357,6 +358,17 @@ class MainWindow(QMainWindow):
 
             # Load first video
             self.loadVideo(self.labels.videos[0], 0)
+
+            # Update track menu options
+            self.updateTrackMenu()
+
+    def updateTrackMenu(self):
+        self.track_menu.clear()
+        for track in self.labels.tracks:
+            key_command = ""
+            if self.labels.tracks.index(track) < 9:
+                key_command = Qt.CTRL + Qt.Key_0 + self.labels.tracks.index(track) + 1
+            self.track_menu.addAction(f"{track.name}", lambda x=track:self.setInstanceTrack(x), key_command)
 
     def activateSelectedVideo(self, x):
         # Get selected video
@@ -632,11 +644,44 @@ class MainWindow(QMainWindow):
         self.plotFrame()
         self.updateSeekbarMarks()
 
+    def setInstanceTrack(self, new_track):
+        idx = self.player.view.getSelection()
+        if idx is None: return
+
+        selected_instance = self.labeled_frame.instances[idx]
+        old_track = selected_instance.track
+
+        self._swap_tracks_starting_on_frame(new_track, old_track, self.player.frame_idx)
+
+        self.player.view.selectInstance(idx)
+
+    def _swap_tracks_starting_on_frame(self, new_track, old_track, frame_idx):
+        # get all instances in current and subsequent frames on old/new tracks
+        old_track_instances = self._get_track_instances(old_track, frame_idx)
+        new_track_instances = self._get_track_instances(new_track, frame_idx)
+
+        # swap new to old tracks on all instances in current and subsequent frames
+        for instance in old_track_instances:
+            instance.track = new_track
+        for instance in new_track_instances:
+            instance.track = old_track
+
+        self.plotFrame()
+        self.updateSeekbarMarks()
+
+    def _get_track_instances(self, track, frame=None):
+        track_instances = [instance
+                            for labeled_frame in self.labels.labeled_frames
+                            for instance in labeled_frame.instances
+                            if instance.track is track
+                                and (frame is None or labeled_frame.frame_idx >= frame)]
+        return track_instances
+
     def transposeInstance(self):
         # We're currently identifying instances by numeric index, so it's
         # impossible to (e.g.) have a single instance which we identify
         # as the second instance in some other frame.
-        
+
         # For the present, we can only "transpose" if there are multiple instances.
         if len(self.labeled_frame.instances) < 2: return
         # If there are just two instances, transpose them.
@@ -659,10 +704,15 @@ class MainWindow(QMainWindow):
 
         idx_0 = instance_ids[0]
         idx_1 = instance_ids[1]
+        # Swap order in array (just for this frame) for when we don't have tracks
         instance_0 = self.labeled_frame.instances[idx_0]
         instance_1 = self.labeled_frame.instances[idx_1]
-        # Swap tracks
-        instance_0.track, instance_1.track = instance_1.track, instance_0.track
+        # Swap tracks for current and subsequent frames
+        old_track, new_track = instance_0.track, instance_1.track
+        if old_track is not None and new_track is not None:
+            self._swap_tracks_starting_on_frame(new_track, old_track, self.player.frame_idx)
+
+        # instance_0.track, instance_1.track = instance_1.track, instance_0.track
 
         self.plotFrame()
 
