@@ -24,6 +24,7 @@ from sleap.instance import Instance, PredictedInstance, Point, LabeledFrame
 from sleap.io.video import Video, HDF5Video, MediaVideo
 from sleap.io.dataset import Labels
 from sleap.gui.video import QtVideoPlayer
+from sleap.gui.tracks import TrackTrailManager
 from sleap.gui.dataviews import VideosTable, SkeletonNodesTable, SkeletonEdgesTable, LabeledFrameTable, SkeletonNodeModel
 from sleap.gui.importvideos import ImportVideos
 
@@ -58,8 +59,11 @@ class MainWindow(QMainWindow):
         self.filename = None
         self.menuAction = dict()
 
+        self._trail_manager = None
+
         self._show_labels = True
         self._show_edges = True
+        self._show_trails = False
         self._auto_zoom = False
 
         self.initialize_gui()
@@ -132,11 +136,13 @@ class MainWindow(QMainWindow):
         labelMenu.addSeparator()
         self.menuAction["show labels"] = labelMenu.addAction("Show Node Names", self.toggleLabels, Qt.ALT + Qt.Key_Tab)
         self.menuAction["show edges"] = labelMenu.addAction("Show Edges", self.toggleEdges, Qt.ALT + Qt.SHIFT + Qt.Key_Tab)
+        self.menuAction["show trails"] = labelMenu.addAction("Show Trails", self.toggleTrails)
         labelMenu.addSeparator()
         self.menuAction["fit"] = labelMenu.addAction("Fit Instances to View", self.toggleAutoZoom, Qt.CTRL + Qt.Key_Equal)
 
         self.menuAction["show labels"].setCheckable(True); self.menuAction["show labels"].setChecked(self._show_labels)
         self.menuAction["show edges"].setCheckable(True); self.menuAction["show edges"].setChecked(self._show_edges)
+        self.menuAction["show trails"].setCheckable(True); self.menuAction["show trails"].setChecked(self._show_trails)
         self.menuAction["fit"].setCheckable(True)
 
         viewMenu = self.menuBar().addMenu("View")
@@ -329,6 +335,7 @@ class MainWindow(QMainWindow):
 
         if filename.endswith(".json"):
             self.labels = Labels.load_json(filename)
+            self._trail_manager = TrackTrailManager(self.labels, self.player.view.scene)
 
             if show_msg:
                 msgBox = QMessageBox(text=f"Imported {len(self.labels)} labeled frames.")
@@ -760,6 +767,11 @@ class MainWindow(QMainWindow):
         self.menuAction["show edges"].setChecked(self._show_edges)
         self.player.showEdges(self._show_edges)
 
+    def toggleTrails(self):
+        self._show_trails = not self._show_trails
+        self.menuAction["show trails"].setChecked(self._show_trails)
+        self.plotFrame()
+
     def toggleAutoZoom(self):
         self._auto_zoom = not self._auto_zoom
         self.menuAction["fit"].setChecked(self._auto_zoom)
@@ -809,10 +821,13 @@ class MainWindow(QMainWindow):
                 track_idx = len(self.labels.tracks) + count_no_track
                 count_no_track += 1
             is_predicted = hasattr(instance,"score")
-            # TODO: color by track id rather than list index
+
             player.addInstance(instance=instance,
                                color=self.cmap[track_idx%len(self.cmap)],
                                predicted=is_predicted)
+
+        if self._trail_manager is not None and self._show_trails:
+            self._trail_manager.add_trails_to_scene(frame_idx)
 
         player.view.updatedViewer.emit()
 
