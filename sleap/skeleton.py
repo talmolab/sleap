@@ -83,7 +83,7 @@ class Skeleton:
 
         # If no skeleton was create, try to create a unique name for this Skeleton.
         if name is None or type(name) is not str or len(name) == 0:
-            name = "Skeleton-" + str(self._skeleton_idx)
+            name = "Skeleton-" + str(next(self._skeleton_idx))
 
 
         # Since networkx does not keep edges in the order we insert them we need

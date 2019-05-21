@@ -226,7 +226,7 @@ class Instance:
         Returns:
             bool: True if the point with the node name specified has a point in this instance.
         """
-        return self._node_to_index(node) in self._points
+        return node in self._points
 
     def __setitem__(self, node, value):
 
