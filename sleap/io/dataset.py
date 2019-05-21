@@ -60,7 +60,9 @@ class Labels(MutableSequence):
         self.videos = list(set(self.videos).union({label.video for label in self.labels}))
 
         # Ditto for skeletons
-        self.skeletons = list(set(self.skeletons).union({instance.skeleton for label in self.labels for instance in label.instances}))
+        self.skeletons = list(set(self.skeletons).union({instance.skeleton
+                                                         for label in self.labels
+                                                         for instance in label.instances}))
 
         # Ditto for nodes
         self.nodes = list(set(self.nodes).union({node for skeleton in self.skeletons for node in skeleton.nodes}))
@@ -208,6 +210,14 @@ class Labels(MutableSequence):
                 for node in skeleton.nodes:
                     if node not in self.nodes:
                         self.nodes.append(node)
+
+        # Add any new Tracks as well
+        for instance in new_label.instances:
+            if instance.track and instance.track not in self.tracks:
+                self.tracks.append(instance.track)
+
+        # Sort the tracks again
+        self.tracks.sort(key=lambda t: (t.spawned_on, t.name))
 
     def __setitem__(self, index, value: LabeledFrame):
         # TODO: Maybe we should remove this method altogether?
