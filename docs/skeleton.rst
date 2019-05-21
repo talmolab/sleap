@@ -1,5 +1,5 @@
 Skeleton
 =========
 
-.. automodule:: leap.skeleton
+.. automodule:: sleap.skeleton
    :members:
