@@ -143,11 +143,11 @@ def generate_pafs(labels:Labels, sigma=5.0, scale=1.0, output_size=None):
 
 if __name__ == "__main__":
     import os
-    data_path = "C:/Users/tdp/OneDrive/code/sandbox/leap_wt_gold_pilot/centered_pair.json"
-    if not os.path.exists(data_path):
-        data_path = "D:/OneDrive/code/sandbox/leap_wt_gold_pilot/centered_pair.json"
-    
+
+    data_path = "tests/data/json_format_v1/centered_pair.json"
+
     labels = Labels.load_json(data_path)
+    labels.labeled_frames = labels.labeled_frames[0:3]
 
     imgs = generate_images(labels)
     print(imgs.shape)
