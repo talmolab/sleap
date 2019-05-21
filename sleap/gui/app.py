@@ -24,6 +24,7 @@ from sleap.instance import Instance, PredictedInstance, Point, LabeledFrame
 from sleap.io.video import Video, HDF5Video, MediaVideo
 from sleap.io.dataset import Labels
 from sleap.gui.video import QtVideoPlayer
+from sleap.gui.tracks import TrackTrailManager
 from sleap.gui.dataviews import VideosTable, SkeletonNodesTable, SkeletonEdgesTable, LabeledFrameTable, SkeletonNodeModel
 from sleap.gui.importvideos import ImportVideos
 
@@ -58,8 +59,12 @@ class MainWindow(QMainWindow):
         self.filename = None
         self.menuAction = dict()
 
+        self._trail_manager = None
+
         self._show_labels = True
         self._show_edges = True
+        self._show_trails = False
+        self._color_predicted = False
         self._auto_zoom = False
 
         self.initialize_gui()
@@ -123,7 +128,8 @@ class MainWindow(QMainWindow):
         labelMenu = self.menuBar().addMenu("Labels")
         labelMenu.addAction("Add Instance", self.newInstance, Qt.CTRL + Qt.Key_I)
         labelMenu.addAction("Delete Instance", self.deleteSelectedInstance, Qt.CTRL + Qt.Key_Backspace)
-        labelMenu.addAction("Transpose Instances", self.transposeInstance, Qt.CTRL + Qt.Key_T)
+        self.track_menu = labelMenu.addMenu("Set Instance Track")
+        labelMenu.addAction("Transpose Instance Tracks", self.transposeInstance, Qt.CTRL + Qt.Key_T)
         labelMenu.addAction("Select Next Instance", self.player.view.nextSelection, QKeySequence(Qt.Key.Key_QuoteLeft))
         labelMenu.addAction("Clear Selection", self.player.view.clearSelection, QKeySequence(Qt.Key.Key_Escape))
         labelMenu.addSeparator()
@@ -132,11 +138,15 @@ class MainWindow(QMainWindow):
         labelMenu.addSeparator()
         self.menuAction["show labels"] = labelMenu.addAction("Show Node Names", self.toggleLabels, Qt.ALT + Qt.Key_Tab)
         self.menuAction["show edges"] = labelMenu.addAction("Show Edges", self.toggleEdges, Qt.ALT + Qt.SHIFT + Qt.Key_Tab)
+        self.menuAction["show trails"] = labelMenu.addAction("Show Trails", self.toggleTrails)
+        self.menuAction["color predicted"] = labelMenu.addAction("Color Predicted Instances", self.toggleColorPredicted)
         labelMenu.addSeparator()
         self.menuAction["fit"] = labelMenu.addAction("Fit Instances to View", self.toggleAutoZoom, Qt.CTRL + Qt.Key_Equal)
 
         self.menuAction["show labels"].setCheckable(True); self.menuAction["show labels"].setChecked(self._show_labels)
         self.menuAction["show edges"].setCheckable(True); self.menuAction["show edges"].setChecked(self._show_edges)
+        self.menuAction["show trails"].setCheckable(True); self.menuAction["show trails"].setChecked(self._show_trails)
+        self.menuAction["color predicted"].setCheckable(True); self.menuAction["color predicted"].setChecked(self._color_predicted)
         self.menuAction["fit"].setCheckable(True)
 
         viewMenu = self.menuBar().addMenu("View")
@@ -245,59 +255,59 @@ class MainWindow(QMainWindow):
         # points_layout.addWidget(self.pointsTable)
 
         ####### Training #######
-        training_layout = _make_dock("Training")
-        gb = QGroupBox("Data representation")
-        fl = QFormLayout()
-        self.dataRange = QComboBox(); self.dataRange.addItems(["[0, 1]", "[-1, 1]"]); self.dataRange.setEditable(False)
-        fl.addRow("Range:", self.dataRange)
-        # TODO: range ([0, 1], [-1, 1])
-        # TODO: normalization (z-score, CLAHE)
-        self.dataScale = QDoubleSpinBox(); self.dataScale.setMinimum(0.25); self.dataScale.setValue(1.0)
-        fl.addRow("Scale:", self.dataScale)
-
-        gb.setLayout(fl)
-        training_layout.addWidget(gb)
-
-        gb = QGroupBox("Augmentation")
-        fl = QFormLayout()
-        self.augmentationRotation = QDoubleSpinBox(); self.augmentationRotation.setRange(0, 180); self.augmentationRotation.setValue(15.0)
-        fl.addRow("Rotation:", self.augmentationRotation)
-        self.augmentationFlipH = QCheckBox()
-        fl.addRow("Flip (horizontal):", self.augmentationFlipH)
-        # self.augmentationScaling = QDoubleSpinBox(); self.augmentationScaling.setRange(0.1, 2); self.augmentationScaling.setValue(1.0)
-        # fl.addRow("Scaling:", self.augmentationScaling)
-        gb.setLayout(fl)
-        training_layout.addWidget(gb)
-
-        gb = QGroupBox("Confidence maps")
-        fl = QFormLayout()
-        self.confmapsArchitecture = QComboBox(); self.confmapsArchitecture.addItems(["leap_cnn", "unet", "hourglass", "stacked_hourglass"]); self.confmapsArchitecture.setCurrentIndex(1); self.confmapsArchitecture.setEditable(False)
-        fl.addRow("Architecture:", self.confmapsArchitecture)
-        self.confmapsFilters = QSpinBox(); self.confmapsFilters.setMinimum(1); self.confmapsFilters.setValue(32)
-        fl.addRow("Filters:", self.confmapsFilters)
-        self.confmapsDepth = QSpinBox(); self.confmapsDepth.setMinimum(1); self.confmapsDepth.setValue(3)
-        fl.addRow("Depth:", self.confmapsDepth)
-        self.confmapsSigma = QDoubleSpinBox(); self.confmapsSigma.setMinimum(0.1); self.confmapsSigma.setValue(5.0)
-        fl.addRow("Sigma:", self.confmapsSigma)
-        btn = QPushButton("Train"); btn.clicked.connect(self.trainConfmaps)
-        fl.addRow(btn)
-        gb.setLayout(fl)
-        training_layout.addWidget(gb)
-
-        gb = QGroupBox("PAFs")
-        fl = QFormLayout()
-        self.pafsArchitecture = QComboBox(); self.pafsArchitecture.addItems(["leap_cnn", "unet", "hourglass", "stacked_hourglass"]); self.pafsArchitecture.setEditable(False)
-        fl.addRow("Architecture:", self.pafsArchitecture)
-        self.pafsFilters = QSpinBox(); self.pafsFilters.setMinimum(1); self.pafsFilters.setValue(32)
-        fl.addRow("Filters:", self.pafsFilters)
-        self.pafsDepth = QSpinBox(); self.pafsDepth.setMinimum(1); self.pafsDepth.setValue(3)
-        fl.addRow("Depth:", self.pafsDepth)
-        self.pafsSigma = QDoubleSpinBox(); self.pafsSigma.setMinimum(0.1); self.pafsSigma.setValue(5.0)
-        fl.addRow("Sigma:", self.pafsSigma)
-        btn = QPushButton("Train"); btn.clicked.connect(self.trainPAFs)
-        fl.addRow(btn)
-        gb.setLayout(fl)
-        training_layout.addWidget(gb)
+#         training_layout = _make_dock("Training")
+#         gb = QGroupBox("Data representation")
+#         fl = QFormLayout()
+#         self.dataRange = QComboBox(); self.dataRange.addItems(["[0, 1]", "[-1, 1]"]); self.dataRange.setEditable(False)
+#         fl.addRow("Range:", self.dataRange)
+#         # TODO: range ([0, 1], [-1, 1])
+#         # TODO: normalization (z-score, CLAHE)
+#         self.dataScale = QDoubleSpinBox(); self.dataScale.setMinimum(0.25); self.dataScale.setValue(1.0)
+#         fl.addRow("Scale:", self.dataScale)
+# 
+#         gb.setLayout(fl)
+#         training_layout.addWidget(gb)
+# 
+#         gb = QGroupBox("Augmentation")
+#         fl = QFormLayout()
+#         self.augmentationRotation = QDoubleSpinBox(); self.augmentationRotation.setRange(0, 180); self.augmentationRotation.setValue(15.0)
+#         fl.addRow("Rotation:", self.augmentationRotation)
+#         self.augmentationFlipH = QCheckBox()
+#         fl.addRow("Flip (horizontal):", self.augmentationFlipH)
+#         # self.augmentationScaling = QDoubleSpinBox(); self.augmentationScaling.setRange(0.1, 2); self.augmentationScaling.setValue(1.0)
+#         # fl.addRow("Scaling:", self.augmentationScaling)
+#         gb.setLayout(fl)
+#         training_layout.addWidget(gb)
+# 
+#         gb = QGroupBox("Confidence maps")
+#         fl = QFormLayout()
+#         self.confmapsArchitecture = QComboBox(); self.confmapsArchitecture.addItems(["leap_cnn", "unet", "hourglass", "stacked_hourglass"]); self.confmapsArchitecture.setCurrentIndex(1); self.confmapsArchitecture.setEditable(False)
+#         fl.addRow("Architecture:", self.confmapsArchitecture)
+#         self.confmapsFilters = QSpinBox(); self.confmapsFilters.setMinimum(1); self.confmapsFilters.setValue(32)
+#         fl.addRow("Filters:", self.confmapsFilters)
+#         self.confmapsDepth = QSpinBox(); self.confmapsDepth.setMinimum(1); self.confmapsDepth.setValue(3)
+#         fl.addRow("Depth:", self.confmapsDepth)
+#         self.confmapsSigma = QDoubleSpinBox(); self.confmapsSigma.setMinimum(0.1); self.confmapsSigma.setValue(5.0)
+#         fl.addRow("Sigma:", self.confmapsSigma)
+#         btn = QPushButton("Train"); btn.clicked.connect(self.trainConfmaps)
+#         fl.addRow(btn)
+#         gb.setLayout(fl)
+#         training_layout.addWidget(gb)
+# 
+#         gb = QGroupBox("PAFs")
+#         fl = QFormLayout()
+#         self.pafsArchitecture = QComboBox(); self.pafsArchitecture.addItems(["leap_cnn", "unet", "hourglass", "stacked_hourglass"]); self.pafsArchitecture.setEditable(False)
+#         fl.addRow("Architecture:", self.pafsArchitecture)
+#         self.pafsFilters = QSpinBox(); self.pafsFilters.setMinimum(1); self.pafsFilters.setValue(32)
+#         fl.addRow("Filters:", self.pafsFilters)
+#         self.pafsDepth = QSpinBox(); self.pafsDepth.setMinimum(1); self.pafsDepth.setValue(3)
+#         fl.addRow("Depth:", self.pafsDepth)
+#         self.pafsSigma = QDoubleSpinBox(); self.pafsSigma.setMinimum(0.1); self.pafsSigma.setValue(5.0)
+#         fl.addRow("Sigma:", self.pafsSigma)
+#         btn = QPushButton("Train"); btn.clicked.connect(self.trainPAFs)
+#         fl.addRow(btn)
+#         gb.setLayout(fl)
+#         training_layout.addWidget(gb)
 
 
     def keyPressEvent(self, event: QKeyEvent):
@@ -329,6 +339,7 @@ class MainWindow(QMainWindow):
 
         if filename.endswith(".json"):
             self.labels = Labels.load_json(filename)
+            self._trail_manager = TrackTrailManager(self.labels, self.player.view.scene)
 
             if show_msg:
                 msgBox = QMessageBox(text=f"Imported {len(self.labels)} labeled frames.")
@@ -347,6 +358,17 @@ class MainWindow(QMainWindow):
 
             # Load first video
             self.loadVideo(self.labels.videos[0], 0)
+
+            # Update track menu options
+            self.updateTrackMenu()
+
+    def updateTrackMenu(self):
+        self.track_menu.clear()
+        for track in self.labels.tracks:
+            key_command = ""
+            if self.labels.tracks.index(track) < 9:
+                key_command = Qt.CTRL + Qt.Key_0 + self.labels.tracks.index(track) + 1
+            self.track_menu.addAction(f"{track.name}", lambda x=track:self.setInstanceTrack(x), key_command)
 
     def activateSelectedVideo(self, x):
         # Get selected video
@@ -418,7 +440,7 @@ class MainWindow(QMainWindow):
         self.player.load_video(self.video)
 
         # Annotate labelled frames on seekbar
-        self.updateSeekbarLabels()
+        self.updateSeekbarMarks()
 
         # Jump to last labeled frame
         last_label = self.labels.find_last(self.video)
@@ -538,8 +560,13 @@ class MainWindow(QMainWindow):
 
         self.plotFrame()
 
-    def updateSeekbarLabels(self):
-        self.player.seekbar.setLabels([frame.frame_idx for frame in self.labels.find(self.video)])
+    def updateSeekbarMarks(self):
+        # If there are tracks, mark whether track has instance in frame.
+        if len(self.labels.tracks):
+            self.player.seekbar.setTracksFromLabels(self.labels)
+        # Otherwise, mark which frames have any instances.
+        else:
+            self.player.seekbar.setMarks([frame.frame_idx for frame in self.labels.find(self.video)])
 
     def newInstance(self, copy_instance=None):
         if self.labeled_frame is None:
@@ -599,7 +626,7 @@ class MainWindow(QMainWindow):
             self.labels.append(self.labeled_frame)
 
         self.plotFrame()
-        self.updateSeekbarLabels()
+        self.updateSeekbarMarks()
 
     def deleteSelectedInstance(self):
         idx = self.player.view.getSelection()
@@ -607,7 +634,7 @@ class MainWindow(QMainWindow):
         del self.labeled_frame.instances[idx]
 
         self.plotFrame()
-        self.updateSeekbarLabels()
+        self.updateSeekbarMarks()
 
     def deleteInstance(self):
         idx = self.instancesTable.currentIndex()
@@ -615,13 +642,46 @@ class MainWindow(QMainWindow):
         del self.labeled_frame.instances[idx.row()]
 
         self.plotFrame()
-        self.updateSeekbarLabels()
+        self.updateSeekbarMarks()
+
+    def setInstanceTrack(self, new_track):
+        idx = self.player.view.getSelection()
+        if idx is None: return
+
+        selected_instance = self.labeled_frame.instances[idx]
+        old_track = selected_instance.track
+
+        self._swap_tracks_starting_on_frame(new_track, old_track, self.player.frame_idx)
+
+        self.player.view.selectInstance(idx)
+
+    def _swap_tracks_starting_on_frame(self, new_track, old_track, frame_idx):
+        # get all instances in current and subsequent frames on old/new tracks
+        old_track_instances = self._get_track_instances(old_track, frame_idx)
+        new_track_instances = self._get_track_instances(new_track, frame_idx)
+
+        # swap new to old tracks on all instances in current and subsequent frames
+        for instance in old_track_instances:
+            instance.track = new_track
+        for instance in new_track_instances:
+            instance.track = old_track
+
+        self.plotFrame()
+        self.updateSeekbarMarks()
+
+    def _get_track_instances(self, track, frame=None):
+        track_instances = [instance
+                            for labeled_frame in self.labels.labeled_frames
+                            for instance in labeled_frame.instances
+                            if instance.track is track
+                                and (frame is None or labeled_frame.frame_idx >= frame)]
+        return track_instances
 
     def transposeInstance(self):
         # We're currently identifying instances by numeric index, so it's
         # impossible to (e.g.) have a single instance which we identify
         # as the second instance in some other frame.
-        
+
         # For the present, we can only "transpose" if there are multiple instances.
         if len(self.labeled_frame.instances) < 2: return
         # If there are just two instances, transpose them.
@@ -644,10 +704,15 @@ class MainWindow(QMainWindow):
 
         idx_0 = instance_ids[0]
         idx_1 = instance_ids[1]
+        # Swap order in array (just for this frame) for when we don't have tracks
         instance_0 = self.labeled_frame.instances[idx_0]
         instance_1 = self.labeled_frame.instances[idx_1]
-        # Swap tracks
-        instance_0.track, instance_1.track = instance_1.track, instance_0.track
+        # Swap tracks for current and subsequent frames
+        old_track, new_track = instance_0.track, instance_1.track
+        if old_track is not None and new_track is not None:
+            self._swap_tracks_starting_on_frame(new_track, old_track, self.player.frame_idx)
+
+        # instance_0.track, instance_1.track = instance_1.track, instance_0.track
 
         self.plotFrame()
 
@@ -760,6 +825,16 @@ class MainWindow(QMainWindow):
         self.menuAction["show edges"].setChecked(self._show_edges)
         self.player.showEdges(self._show_edges)
 
+    def toggleTrails(self):
+        self._show_trails = not self._show_trails
+        self.menuAction["show trails"].setChecked(self._show_trails)
+        self.plotFrame()
+
+    def toggleColorPredicted(self):
+        self._color_predicted = not self._color_predicted
+        self.menuAction["color predicted"].setChecked(self._color_predicted)
+        self.plotFrame()
+
     def toggleAutoZoom(self):
         self._auto_zoom = not self._auto_zoom
         self.menuAction["fit"].setChecked(self._auto_zoom)
@@ -809,10 +884,14 @@ class MainWindow(QMainWindow):
                 track_idx = len(self.labels.tracks) + count_no_track
                 count_no_track += 1
             is_predicted = hasattr(instance,"score")
-            # TODO: color by track id rather than list index
+
             player.addInstance(instance=instance,
                                color=self.cmap[track_idx%len(self.cmap)],
-                               predicted=is_predicted)
+                               predicted=is_predicted,
+                               color_predicted=self._color_predicted)
+
+        if self._trail_manager is not None and self._show_trails:
+            self._trail_manager.add_trails_to_scene(frame_idx)
 
         player.view.updatedViewer.emit()
 
