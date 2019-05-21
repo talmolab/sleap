@@ -16,7 +16,10 @@ class VideoSlider(QGraphicsView):
         min: initial minimum value
         max: initial maximum value
         val: initial value
-        labels: initial set of values to label on slider
+        marks: initial set of values to mark on slider
+            this can be either
+            * list of values to mark
+            * list of (track, value)-tuples to mark
     """
 
     mousePressed = Signal(float, float)
@@ -25,7 +28,9 @@ class VideoSlider(QGraphicsView):
     valueChanged = Signal(int)
     selectionChanged = Signal(int, int)
 
-    def __init__(self, orientation=-1, min=0, max=100, val=0, labels=None, *args, **kwargs):
+    def __init__(self, orientation=-1, min=0, max=100, val=0,
+            marks=None, tracks=0,
+            *args, **kwargs):
         super(VideoSlider, self).__init__(*args, **kwargs)
 
         self.scene = QGraphicsScene()
@@ -34,7 +39,19 @@ class VideoSlider(QGraphicsView):
 
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
-        height = 19
+        self.color_maps = [
+            [0,   114,   189],
+            [217,  83,    25],
+            [237, 177,    32],
+            [126,  47,   142],
+            [119, 172,    48],
+            [77,  190,   238],
+            [162,  20,    47],
+            ]
+
+        self._track_height = 3
+        height = 19 if tracks == 0 else 8 + (self._track_height * tracks)
+        if height < 19: height = 19
         slider_rect = QRect(0, 0, 200, height-3)
         handle_width = 6
         handle_rect = QRect(0, 1, handle_width, slider_rect.height()-2)
@@ -60,7 +77,47 @@ class VideoSlider(QGraphicsView):
         self.setMinimum(min)
         self.setMaximum(max)
         self.setValue(val)
-        self.setLabels(labels)
+        self.setMarks(marks)
+
+    def setTracksFromLabels(self, labels):
+        """Set slider marks using track information from `Labels` object.
+        
+        Args:
+            labels: the `labels` with tracks and labeled_frames
+        """
+        track_count = len(labels.tracks)
+        slider_marks = [(labels.tracks.index(instance.track), instance.frame_idx)
+                            for labeled_frame in labels.labeled_frames
+                            for instance in labeled_frame.instances
+                            if instance.track is not None
+                                and instance.frame_idx is not None]
+        self.setTracks(track_count)
+        self.setMarks(slider_marks)
+
+    def setTracks(self, tracks):
+        """Set the number of tracks to show in slider.
+        
+        Args:
+            tracks: the number of tracks to show
+        """
+        height = 19 if tracks == 0 else 8 + (self._track_height * tracks)
+        if height < 19: height = 19
+        self._set_height(height)
+
+    def _set_height(self, height):
+        slider_rect = self.slider.rect()
+        handle_rect = self.handle.rect()
+        select_box_rect = self.select_box.rect()
+
+        slider_rect.setHeight(height-3)
+        handle_rect.setHeight(slider_rect.height()-2)
+        select_box_rect.setHeight(slider_rect.height()-2)
+
+        self.slider.setRect(slider_rect)
+        self.handle.setRect(handle_rect)
+        self.select_box.setRect(select_box_rect)
+
+        self.setMaximumHeight(height)
 
     def _toPos(self, val, center=False):
         x = val
@@ -190,47 +247,68 @@ class VideoSlider(QGraphicsView):
         anchor_val = self._toVal(x)
         self.endSelection(anchor_val)
 
-    def clearLabels(self):
-        """Clear all labeled values for slider."""
-        if hasattr(self, "_label_items"):
-            for item in self._label_items.values():
+    def clearMarks(self):
+        """Clear all marked values for slider."""
+        if hasattr(self, "_mark_items"):
+            for item in self._mark_items.values():
                 self.scene.removeItem(item)
-        self._labels = set()
-        self._label_items = dict()
+        self._marks = set()
+        self._mark_items = dict()
 
-    def setLabels(self, labels):
-        """Set all labeled values for the slider.
-
-        Args:
-            labels: iterable with all values to label
-        """
-        self.clearLabels()
-        self._labels = set() if labels is None else set(labels)
-        for v in self._labels:
-            line = self.scene.addLine(0, 3, 0, self.slider.rect().height()-3,
-                                      QPen(QColor("black")))
-            self._label_items[v] = line
-        self.updatePos()
-
-    def addLabel(self, new_label):
-        """Add a labeled value to the slider.
+    def setMarks(self, marks):
+        """Set all marked values for the slider.
 
         Args:
-            new_label: value to label
+            marks: iterable with all values to mark
         """
-        self._labels.add(new_label)
-        line = self.scene.addLine(0, 3, 0, self.slider.rect().height()-3,
-                                  QPen(QColor("black")))
-        self._label_items[new_label] = line
+        self.clearMarks()
+        if marks is not None:
+            for mark in marks:
+                self.addMark(mark, update=False)
         self.updatePos()
+
+    def addMark(self, new_mark, update=True):
+        """Add a marked value to the slider.
+
+        Args:
+            new_mark: value to mark
+        """
+        self._marks.add(new_mark)
+
+        if type(new_mark) == tuple:
+            track = new_mark[0]
+            v_offset = 3 + (self._track_height * track)
+            height = 1
+            color = QColor(*self.color_maps[track%len(self.color_maps)])
+        else:
+            v_offset = 3
+            height = self.slider.rect().height()-6
+            color = QColor("black")
+
+        line = self.scene.addRect(0, v_offset, 0, height,
+                                  QPen(color), QBrush(color))
+        self._mark_items[new_mark] = line
+        if update: self.updatePos()
 
     def updatePos(self):
         """Update the visual position of handle and slider annotations."""
         x = self._toPos(self.value())
         self.handle.setPos(x, 0)
-        for v in self._label_items.keys():
+        for mark in self._mark_items.keys():
+            if type(mark) == tuple:
+                in_track = True
+                v = mark[1]
+            else:
+                in_track = False
+                v = mark
             x = self._toPos(v, center=True)
-            self._label_items[v].setPos(x, 0)
+            self._mark_items[mark].setPos(x, 0)
+
+            rect = self._mark_items[mark].rect()
+            width = 0 if not in_track else self._toPos(1)
+            rect.setWidth(width)
+
+            self._mark_items[mark].setRect(rect)
 
     def moveHandle(self, x, y):
         """Move handle in response to mouse position.
@@ -323,7 +401,14 @@ class VideoSlider(QGraphicsView):
 if __name__ == "__main__":
     app = QApplication([])
 
-    window = VideoSlider(min=0, max=100, val=15, labels=(10,15))
+    window = VideoSlider(
+                min=0, max=500, val=15,
+                marks=(10,15)#((0,10),(0,15),(1,10),(1,11),(2,12)), tracks=3
+                )
+    window.setTracks(5)
+    mark_positions = ((0,10),(0,15),(1,10),(1,11),(2,12),(3,12),(3,13),(3,14),(4,15),(4,16),(4,21))
+#     mark_positions = [(0,i) for i in range(200)]
+    window.setMarks(mark_positions)
     window.valueChanged.connect(lambda x: print(x))
     window.show()
 

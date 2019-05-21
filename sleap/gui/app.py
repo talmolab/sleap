@@ -425,7 +425,7 @@ class MainWindow(QMainWindow):
         self.player.load_video(self.video)
 
         # Annotate labelled frames on seekbar
-        self.updateSeekbarLabels()
+        self.updateSeekbarMarks()
 
         # Jump to last labeled frame
         last_label = self.labels.find_last(self.video)
@@ -545,8 +545,13 @@ class MainWindow(QMainWindow):
 
         self.plotFrame()
 
-    def updateSeekbarLabels(self):
-        self.player.seekbar.setLabels([frame.frame_idx for frame in self.labels.find(self.video)])
+    def updateSeekbarMarks(self):
+        # If there are tracks, mark whether track has instance in frame.
+        if len(self.labels.tracks):
+            self.player.seekbar.setTracksFromLabels(self.labels)
+        # Otherwise, mark which frames have any instances.
+        else:
+            self.player.seekbar.setMarks([frame.frame_idx for frame in self.labels.find(self.video)])
 
     def newInstance(self, copy_instance=None):
         if self.labeled_frame is None:
@@ -606,7 +611,7 @@ class MainWindow(QMainWindow):
             self.labels.append(self.labeled_frame)
 
         self.plotFrame()
-        self.updateSeekbarLabels()
+        self.updateSeekbarMarks()
 
     def deleteSelectedInstance(self):
         idx = self.player.view.getSelection()
@@ -614,7 +619,7 @@ class MainWindow(QMainWindow):
         del self.labeled_frame.instances[idx]
 
         self.plotFrame()
-        self.updateSeekbarLabels()
+        self.updateSeekbarMarks()
 
     def deleteInstance(self):
         idx = self.instancesTable.currentIndex()
@@ -622,7 +627,7 @@ class MainWindow(QMainWindow):
         del self.labeled_frame.instances[idx.row()]
 
         self.plotFrame()
-        self.updateSeekbarLabels()
+        self.updateSeekbarMarks()
 
     def transposeInstance(self):
         # We're currently identifying instances by numeric index, so it's
