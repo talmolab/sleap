@@ -144,64 +144,100 @@ def generate_pafs(labels:Labels, sigma=5.0, scale=1.0, output_size=None):
 if __name__ == "__main__":
     import os
 
-    data_path = "tests/data/json_format_v1/centered_pair.json"
+    data_path = "C:/Users/tdp/OneDrive/code/sandbox/leap_wt_gold_pilot/centered_pair.json"
+    if not os.path.exists(data_path):
+        data_path = "tests/data/json_format_v2/minimal_instance.json"
 
     labels = Labels.load_json(data_path)
-    labels.labeled_frames = labels.labeled_frames[0:3]
 
     imgs = generate_images(labels)
+    print("--imgs--")
     print(imgs.shape)
     print(imgs.dtype)
     print(np.ptp(imgs))
 
+    from PySide2 import QtWidgets
+    from sleap.io.video import Video
+    from sleap.gui.video import QtVideoPlayer
+    from sleap.gui.confmapsplot import ConfMapsPlot
+    from sleap.gui.quiverplot import MultiQuiverPlot
+
+    app = QtWidgets.QApplication([])
+    vid = Video.from_numpy(imgs * 255)
+    conf_window = QtVideoPlayer(video=vid)
+    conf_window.setWindowTitle("confmaps")
+    conf_window.show()
+
     confmaps = generate_confidence_maps(labels)
+    print("--confmaps--")
     print(confmaps.shape)
     print(confmaps.dtype)
     print(np.ptp(confmaps))
 
+    def plot_confmaps(parent, item_idx):
+        frame_conf_map = ConfMapsPlot(confmaps[parent.frame_idx,...])
+        conf_window.view.scene.addItem(frame_conf_map)
+
+    conf_window.changedPlot.connect(plot_confmaps)
+    conf_window.plot()
+
     pafs = generate_pafs(labels)
+    print("--pafs--")
     print(pafs.shape)
     print(pafs.dtype)
     print(np.ptp(pafs))
 
-    import matplotlib.pyplot as plt
+    window_pafs = QtVideoPlayer(video=vid)
+    window_pafs.setWindowTitle("pafs")
+    window_pafs.show()
 
-    cmap = np.array([
-        [0,   114,   189],
-        [217,  83,    25],
-        [237, 177,    32],
-        [126,  47,   142],
-        [119, 172,    48],
-        [77,  190,   238],
-        [162,  20,    47],
-        ]).astype("float32") / 255
+    def plot_fields(parent, i):
+        aff_fields_item = MultiQuiverPlot(pafs[parent.frame_idx,...], show=None, decimation=1)
+        window_pafs.view.scene.addItem(aff_fields_item)
 
-    idx = 0
-    img = imgs[idx]
-    confmap = confmaps[idx]
-    paf = pafs[idx]
+    window_pafs.changedPlot.connect(plot_fields)
+    window_pafs.plot()
 
-    plt.figure()
-    plt.subplot(1,3,1)
-    plt.imshow(img.squeeze(), cmap="gray")
+    app.exec_()
 
-    plt.subplot(1,3,2)
-    plt.imshow(img.squeeze(), cmap="gray")
-    for i in range(confmap.shape[-1]):
-        col = cmap[i % len(cmap)]
-        I = confmap[...,i][...,None] * col[None][None]
-        I = np.concatenate((I, confmap[...,i][...,None]), axis=-1) # add alpha
-        plt.imshow(I)
-
-    # Warning: VERY SLOW to plot these vector fields in matplotlib
-    # Reimplement in Qt with polyline or 3 lines?
-    plt.subplot(1,3,3)
-    plt.imshow(img.squeeze(), cmap="gray")
-    for e in range(paf.shape[-1] // 2):
-        col = cmap[e % len(cmap)]
-        paf_x = paf[..., e * 2]
-        paf_y = paf[..., (e * 2) + 1]
-        plt.quiver(np.arange(paf.shape[1]), np.arange(paf.shape[0]), paf_x, paf_y, color=col,
-            angles="xy", scale=1, scale_units="xy")
-
-    plt.show()
+#     import matplotlib.pyplot as plt
+# 
+#     cmap = np.array([
+#         [0,   114,   189],
+#         [217,  83,    25],
+#         [237, 177,    32],
+#         [126,  47,   142],
+#         [119, 172,    48],
+#         [77,  190,   238],
+#         [162,  20,    47],
+#         ]).astype("float32") / 255
+# 
+#     idx = 0
+#     img = imgs[idx]
+#     confmap = confmaps[idx]
+#     paf = pafs[idx]
+# 
+#     plt.figure()
+#     plt.subplot(1,3,1)
+#     plt.imshow(img.squeeze(), cmap="gray")
+# 
+#     plt.subplot(1,3,2)
+#     plt.imshow(img.squeeze(), cmap="gray")
+#     for i in range(confmap.shape[-1]):
+#         col = cmap[i % len(cmap)]
+#         I = confmap[...,i][...,None] * col[None][None]
+#         I = np.concatenate((I, confmap[...,i][...,None]), axis=-1) # add alpha
+#         plt.imshow(I)
+# 
+#     # Warning: VERY SLOW to plot these vector fields in matplotlib
+#     # Reimplement in Qt with polyline or 3 lines?
+#     plt.subplot(1,3,3)
+#     plt.imshow(img.squeeze(), cmap="gray")
+#     for e in range(paf.shape[-1] // 2):
+#         col = cmap[e % len(cmap)]
+#         paf_x = paf[..., e * 2]
+#         paf_y = paf[..., (e * 2) + 1]
+#         plt.quiver(np.arange(paf.shape[1]), np.arange(paf.shape[0]), paf_x, paf_y, color=col,
+#             angles="xy", scale=1, scale_units="xy")
+# 
+#     plt.show()
