@@ -20,7 +20,7 @@ import numpy as np
 import pandas as pd
 
 from sleap.skeleton import Skeleton, Node
-from sleap.instance import Instance, PredictedInstance, Point, LabeledFrame
+from sleap.instance import Instance, PredictedInstance, Point, LabeledFrame, Track
 from sleap.io.video import Video, HDF5Video, MediaVideo
 from sleap.io.dataset import Labels
 from sleap.gui.video import QtVideoPlayer
@@ -369,6 +369,7 @@ class MainWindow(QMainWindow):
             if self.labels.tracks.index(track) < 9:
                 key_command = Qt.CTRL + Qt.Key_0 + self.labels.tracks.index(track) + 1
             self.track_menu.addAction(f"{track.name}", lambda x=track:self.setInstanceTrack(x), key_command)
+        self.track_menu.addAction("New Track", self.addTrack, Qt.CTRL + Qt.Key_0)
 
     def activateSelectedVideo(self, x):
         # Get selected video
@@ -643,6 +644,15 @@ class MainWindow(QMainWindow):
 
         self.plotFrame()
         self.updateSeekbarMarks()
+
+    def addTrack(self):
+        track_numbers_used = [int(track.name)
+                                for track in self.labels.tracks
+                                if track.name.isnumeric()]
+        next_number = max(track_numbers_used, default=0) + 1
+        new_track = Track(spawned_on=self.player.frame_idx, name=next_number)
+        self.labels.tracks.append(new_track)
+        self.setInstanceTrack(new_track)
 
     def setInstanceTrack(self, new_track):
         idx = self.player.view.getSelection()
