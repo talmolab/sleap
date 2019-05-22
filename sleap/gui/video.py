@@ -580,7 +580,7 @@ class GraphicsView(QGraphicsView):
             The `QRectF` which contains the skeleton instances.
         """
         rect = QRectF()
-        for item in self.instances:
+        for item in self.all_instances:
             rect = rect.united(item.boundingRect())
         if margin > 0:
             rect = rect.marginsAdded(QMarginsF(margin, margin, margin, margin))
