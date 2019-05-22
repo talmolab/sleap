@@ -700,6 +700,10 @@ class MainWindow(QMainWindow):
         self.setInstanceTrack(new_track)
         self.changestack_end_atomic()
 
+        # update track menu and seekbar
+        self.updateTrackMenu()
+        self.updateSeekbarMarks()
+
     def setInstanceTrack(self, new_track):
         idx = self.player.view.getSelection()
         if idx is None: return
@@ -731,7 +735,7 @@ class MainWindow(QMainWindow):
         for instance in new_track_instances:
             instance.track = old_track
 
-        self.start_atomic_change("swap tracks")
+        self.changestack_push("swap tracks")
 
         self.plotFrame()
         self.updateSeekbarMarks()
