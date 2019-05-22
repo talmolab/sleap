@@ -20,7 +20,7 @@ import numpy as np
 import pandas as pd
 
 from sleap.skeleton import Skeleton, Node
-from sleap.instance import Instance, PredictedInstance, Point, LabeledFrame
+from sleap.instance import Instance, PredictedInstance, Point, LabeledFrame, Track
 from sleap.io.video import Video, HDF5Video, MediaVideo
 from sleap.io.dataset import Labels
 from sleap.gui.video import QtVideoPlayer
@@ -67,6 +67,7 @@ class MainWindow(QMainWindow):
         self._color_predicted = False
         self._auto_zoom = False
 
+        self.changestack_clear()
         self.initialize_gui()
 
         if data_path is not None:
@@ -79,6 +80,31 @@ class MainWindow(QMainWindow):
         # TODO: auto-select video if data provided, or add it to project
         if video is not None:
             self.addVideo(video)
+
+    def changestack_push(self, change=None):
+        """Add to stack of changes made by user."""
+        # Currently the change doesn't store any data, and we're only using this
+        # to determine if there are unsaved changes. Eventually we could use this
+        # to support undo/redo.
+        self._change_stack.append(change)
+
+    def changestack_savepoint(self):
+        self.changestack_push("SAVE")
+
+    def changestack_clear(self):
+        self._change_stack = list()
+
+    def changestack_start_atomic(self, change=None):
+        pass
+
+    def changestack_end_atomic(self):
+        pass
+
+    def changestack_has_changes(self) -> bool:
+        # True iff there are no unsaved changed
+        if len(self._change_stack) == 0: return False
+        if self._change_stack[-1] == "SAVE": return False
+        return True
 
     @property
     def filename(self):
@@ -94,6 +120,7 @@ class MainWindow(QMainWindow):
         ####### Video player #######
         self.player = QtVideoPlayer()
         self.player.changedPlot.connect(self.newFrame)
+        self.player.changedData.connect(lambda inst: self.changestack_push("viewer change"))
         self.player.view.instanceDoubleClicked.connect(self.newInstance)
         self.setCentralWidget(self.player)
 
@@ -339,6 +366,7 @@ class MainWindow(QMainWindow):
 
         if filename.endswith(".json"):
             self.labels = Labels.load_json(filename)
+            self.changestack_clear()
             self._trail_manager = TrackTrailManager(self.labels, self.player.view.scene)
 
             if show_msg:
@@ -369,6 +397,7 @@ class MainWindow(QMainWindow):
             if self.labels.tracks.index(track) < 9:
                 key_command = Qt.CTRL + Qt.Key_0 + self.labels.tracks.index(track) + 1
             self.track_menu.addAction(f"{track.name}", lambda x=track:self.setInstanceTrack(x), key_command)
+        self.track_menu.addAction("New Track", self.addTrack, Qt.CTRL + Qt.Key_0)
 
     def activateSelectedVideo(self, x):
         # Get selected video
@@ -390,6 +419,7 @@ class MainWindow(QMainWindow):
                 video = Video.from_filename(**import_item["params"])
                 # Add to labels
                 self.labels.add_video(video)
+                self.changestack_push("add video")
 
         # Load if no video currently loaded
         if self.video is None:
@@ -415,8 +445,9 @@ class MainWindow(QMainWindow):
 
         # Remove video
         self.labels.remove_video(video)
+        self.changestack_push("remove video")
 
-        # TODO: Update data model?
+        # Update data model
         self.videosTable.model().videos = self.labels.videos
 
         # Update view if this was the current video
@@ -488,6 +519,7 @@ class MainWindow(QMainWindow):
 
         # Add the node to the skeleton
         self.skeleton.add_node(part_name)
+        self.changestack_push("new node")
 
         # Update data model
         self.skeletonNodesTable.model().skeleton = self.skeleton
@@ -505,6 +537,7 @@ class MainWindow(QMainWindow):
 
         # Remove
         self.skeleton.delete_node(node)
+        self.changestack_push("delete node")
 
         # Update data model
         self.skeletonNodesTable.model().skeleton = self.skeleton
@@ -537,6 +570,7 @@ class MainWindow(QMainWindow):
 
         # Add edge
         self.skeleton.add_edge(source=src_node, destination=dst_node)
+        self.changestack_push("new edge")
 
         # Update data model
         self.skeletonEdgesTable.model().skeleton = self.skeleton
@@ -554,6 +588,7 @@ class MainWindow(QMainWindow):
 
         # Delete edge
         self.skeleton.delete_edge(source=edge[0], destination=edge[1])
+        self.changestack_push("delete edge")
 
         # Update data model
         self.skeletonEdgesTable.model().skeleton = self.skeleton
@@ -620,10 +655,14 @@ class MainWindow(QMainWindow):
         # If we're copying a predicted instance, copy the track
         if hasattr(copy_instance, "score"):
             new_instance.track = copy_instance.track
+
+        # Add the instance
         self.labeled_frame.instances.append(new_instance)
+        self.changestack_push("new instance")
 
         if self.labeled_frame not in self.labels.labels:
             self.labels.append(self.labeled_frame)
+            self.changestack_push("new labeled frame")
 
         self.plotFrame()
         self.updateSeekbarMarks()
@@ -631,7 +670,9 @@ class MainWindow(QMainWindow):
     def deleteSelectedInstance(self):
         idx = self.player.view.getSelection()
         if idx is None: return
+
         del self.labeled_frame.instances[idx]
+        self.changestack_push("delete instance")
 
         self.plotFrame()
         self.updateSeekbarMarks()
@@ -639,9 +680,28 @@ class MainWindow(QMainWindow):
     def deleteInstance(self):
         idx = self.instancesTable.currentIndex()
         if not idx.isValid(): return
+
         del self.labeled_frame.instances[idx.row()]
+        self.changestack_push("delete instance")
 
         self.plotFrame()
+        self.updateSeekbarMarks()
+
+    def addTrack(self):
+        track_numbers_used = [int(track.name)
+                                for track in self.labels.tracks
+                                if track.name.isnumeric()]
+        next_number = max(track_numbers_used, default=0) + 1
+        new_track = Track(spawned_on=self.player.frame_idx, name=next_number)
+
+        self.changestack_start_atomic("add track")
+        self.labels.tracks.append(new_track)
+        self.changestack_push("new track")
+        self.setInstanceTrack(new_track)
+        self.changestack_end_atomic()
+
+        # update track menu and seekbar
+        self.updateTrackMenu()
         self.updateSeekbarMarks()
 
     def setInstanceTrack(self, new_track):
@@ -651,30 +711,51 @@ class MainWindow(QMainWindow):
         selected_instance = self.labeled_frame.instances[idx]
         old_track = selected_instance.track
 
-        self._swap_tracks_starting_on_frame(new_track, old_track, self.player.frame_idx)
+        self._swap_tracks(new_track, old_track)
 
         self.player.view.selectInstance(idx)
 
-    def _swap_tracks_starting_on_frame(self, new_track, old_track, frame_idx):
-        # get all instances in current and subsequent frames on old/new tracks
-        old_track_instances = self._get_track_instances(old_track, frame_idx)
-        new_track_instances = self._get_track_instances(new_track, frame_idx)
+    def _swap_tracks(self, new_track, old_track):
 
-        # swap new to old tracks on all instances in current and subsequent frames
+        start, end = self.player.seekbar.getSelection()
+        if start < end:
+            # If range is selected in seekbar, use that
+            frame_range = range(start, end)
+        else:
+            # Otherwise, range is current to last frame
+            frame_range = range(self.player.frame_idx, self.video.frames)
+
+        # get all instances in old/new tracks
+        old_track_instances = self._get_track_instances(old_track, frame_range)
+        new_track_instances = self._get_track_instances(new_track, frame_range)
+
+        # swap new to old tracks on all instances
         for instance in old_track_instances:
             instance.track = new_track
         for instance in new_track_instances:
             instance.track = old_track
 
+        self.changestack_push("swap tracks")
+
         self.plotFrame()
         self.updateSeekbarMarks()
 
-    def _get_track_instances(self, track, frame=None):
+    def _get_track_instances(self, track, frame_range=None):
+        """Get instances for a given track.
+
+        Args:
+            track: the `Track`
+            frame_range (optional):
+                If specific, only return instances on frames in range.
+                If None, return all instances for given track.
+        Returns:
+            list of `Instance` objects
+        """
         track_instances = [instance
                             for labeled_frame in self.labels.labeled_frames
                             for instance in labeled_frame.instances
                             if instance.track is track
-                                and (frame is None or labeled_frame.frame_idx >= frame)]
+                                and (frame_range is None or labeled_frame.frame_idx in frame_range)]
         return track_instances
 
     def transposeInstance(self):
@@ -710,7 +791,7 @@ class MainWindow(QMainWindow):
         # Swap tracks for current and subsequent frames
         old_track, new_track = instance_0.track, instance_1.track
         if old_track is not None and new_track is not None:
-            self._swap_tracks_starting_on_frame(new_track, old_track, self.player.frame_idx)
+            self._swap_tracks(new_track, old_track)
 
         # instance_0.track, instance_1.track = instance_1.track, instance_0.track
 
@@ -738,8 +819,13 @@ class MainWindow(QMainWindow):
             filename = self.filename
             if filename.endswith(".json"):
                 Labels.save_json(labels = self.labels, filename = filename)
+            # Mark savepoint in change stack
+            self.changestack_savepoint()
             # Redraw. Not sure why, but sometimes we need to do this.
             self.plotFrame()
+        else:
+            # No filename (must be new project), so treat as "Save as"
+            self.saveProjectAs()
 
     def saveProjectAs(self):
         default_name = self.filename if self.filename is not None else "untitled.json"
@@ -754,10 +840,37 @@ class MainWindow(QMainWindow):
         if filename.endswith(".json"):
             Labels.save_json(labels = self.labels, filename = filename)
             self.filename = filename
+            # Mark savepoint in change stack
+            self.changestack_savepoint()
             # Redraw. Not sure why, but sometimes we need to do this.
             self.plotFrame()
         else:
             QMessageBox(text=f"File not saved. Only .json currently implemented.")
+
+    def closeEvent(self, event):
+        if not self.changestack_has_changes():
+            # No unsaved changes, so accept event (close)
+            event.accept()
+        else:
+            msgBox = QMessageBox()
+            msgBox.setText("Do you want to save the changes to this project?")
+            msgBox.setInformativeText("If you don't save, your changes will be lost.")
+            msgBox.setStandardButtons(QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel)
+            msgBox.setDefaultButton(QMessageBox.Save)
+
+            ret_val = msgBox.exec_()
+
+            if ret_val == QMessageBox.Cancel:
+                # cancel close by ignoring event
+                event.ignore()
+            elif ret_val == QMessageBox.Discard:
+                # don't save, just close
+                event.accept()
+            elif ret_val == QMessageBox.Save:
+                # save
+                self.saveProject()
+                # accept avent (close)
+                event.accept()
 
     def exportData(self):
         pass

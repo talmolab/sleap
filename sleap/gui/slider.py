@@ -86,11 +86,18 @@ class VideoSlider(QGraphicsView):
             labels: the `labels` with tracks and labeled_frames
         """
         track_count = len(labels.tracks)
-        slider_marks = [(labels.tracks.index(instance.track), instance.frame_idx)
-                            for labeled_frame in labels.labeled_frames
-                            for instance in labeled_frame.instances
-                            if instance.track is not None
-                                and instance.frame_idx is not None]
+        slider_marks = []
+
+        for labeled_frame in labels.labeled_frames:
+            for instance in labeled_frame.instances:
+                if instance.frame_idx is not None:
+                    if instance.track is not None:
+                        # Add mark with track
+                        slider_marks.append((labels.tracks.index(instance.track), instance.frame_idx))
+                    else:
+                        # Add mark without track
+                        slider_marks.append(instance.frame_idx)
+
         self.setTracks(track_count)
         self.setMarks(slider_marks)
 
