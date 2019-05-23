@@ -310,8 +310,30 @@ class LabeledFrameTableModel(QtCore.QAbstractTableModel):
 
         return None
 
+    def setData(self, index: QtCore.QModelIndex, value: str, role=Qt.EditRole):
+        if role == Qt.EditRole:
+            idx = index.row()
+            prop = self._props[index.column()]
+            instance = self.labeled_frame.instances[idx]
+            if prop == "track":
+                if len(value) > 0:
+                    instance.track.name = value
+
+            # send signal that data has changed
+            self.dataChanged.emit(index, index)
+
+            return True
+        return False
+
     def flags(self, index: QtCore.QModelIndex):
-        return Qt.ItemIsEnabled | Qt.ItemIsSelectable
+        f = Qt.ItemIsEnabled | Qt.ItemIsSelectable
+        if index.isValid():
+            idx = index.row()
+            instance = self.labeled_frame.instances[idx]
+            prop = self._props[index.column()]
+            if prop == "track" and instance.track is not None:
+                f |= Qt.ItemIsEditable
+        return f
 
 
 class SkeletonNodeModel(QtCore.QStringListModel):

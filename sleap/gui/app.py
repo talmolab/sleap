@@ -262,6 +262,7 @@ class MainWindow(QMainWindow):
 
         # update edge UI when change to nodes
         self.skeletonNodesTable.model().dataChanged.connect(self.updateEdges)
+        self.skeletonNodesTable.model().dataChanged.connect(self.changestack_push)
 
         ####### Instances #######
         instances_layout = _make_dock("Instances")
@@ -274,6 +275,10 @@ class MainWindow(QMainWindow):
         btn.clicked.connect(self.deleteInstance); hb.addWidget(btn)
         hbw = QWidget(); hbw.setLayout(hb)
         instances_layout.addWidget(hbw)
+
+        # update track UI when change to track name
+        self.instancesTable.model().dataChanged.connect(self.updateTrackMenu)
+        self.instancesTable.model().dataChanged.connect(self.changestack_push)
 
         ####### Points #######
         # points_layout = _make_dock("Points", tab_with=instances_layout.parent().parent())
