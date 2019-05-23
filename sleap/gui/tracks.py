@@ -8,6 +8,40 @@ import itertools
 
 from PySide2 import QtCore, QtWidgets, QtGui
 
+class TrackColorManager():
+    """Class to determine color to use for track. The color depends on the order of
+    the tracks in `Labels` object, so we need to initialize with `Labels`.
+
+    Args:
+        labels: `Labels` object which contains the tracks for which we want colors
+    """
+
+    def __init__(self, labels):
+        self._labels = labels
+
+        self._color_maps = [
+            [0,   114,   189],
+            [217,  83,    25],
+            [237, 177,    32],
+            [126,  47,   142],
+            [119, 172,    48],
+            [77,  190,   238],
+            [162,  20,    47],
+            ]
+
+    def get_color(self, track):
+        """Return the color to use for a given track.
+
+        Args:
+            track: `Track` object
+        Returns:
+            (r, g, b)-tuple
+        """
+        track_i = self._labels.tracks.index(track)
+        color = self._color_maps[track_i%len(self._color_maps)]
+        return color
+
+
 class TrackTrailManager():
     """Class to show track trails. You initialize this object with both its data source
     and its visual output scene, and it handles both extracting the relevant data for a
@@ -27,16 +61,7 @@ class TrackTrailManager():
         self.labels = labels
         self.scene = scene
         self.trail_length = trail_length
-
-        self.color_maps = [
-            [0,   114,   189],
-            [217,  83,    25],
-            [237, 177,    32],
-            [126,  47,   142],
-            [119, 172,    48],
-            [77,  190,   238],
-            [162,  20,    47],
-            ]
+        self._color_manager = TrackColorManager(labels)
 
     def get_track_trails(self, frame_selection, track):
         """Get data needed to draw track trail.
@@ -98,10 +123,10 @@ class TrackTrailManager():
         tracks_in_frame = self.get_tracks_in_frame(frame_idx)
 
         for track in tracks_in_frame:
-            track_i = self.labels.tracks.index(track)
+
             trails = self.get_track_trails(frame_selection, track)
 
-            color = QtGui.QColor(*self.color_maps[track_i%len(self.color_maps)])
+            color = QtGui.QColor(*self._color_manager.get_color(track))
             pen = QtGui.QPen()
             pen.setCosmetic(True)
 
