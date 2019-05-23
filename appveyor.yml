@@ -65,17 +65,15 @@ for:
 
   # On success for master, build and deploy our documentation.
   on_success:
-    on_success:
-    - git config --global credential.helper store
+    - cmd: git config --global credential.helper store
     - ps: Add-Content "$HOME\.git-credentials" "https://$($env:access_token):x-oauth-basic@github.com`n"
-    - git config --global user.email "davidt0x@gmail.com"
-    - git config --global user.name "David Turner"
+    - cmd: git config --global user.email "davidt0x@gmail.com"
+    - cmd: git config --global user.name "David Turner"
     - cmd: activate sleap_appveyor
     - cmd: mkdir sleap-docs
     - cmd: cd sleap-docs
-    - git clone https://github.com/murthylab/sleap.git html
+    - cmd: git clone https://github.com/murthylab/sleap.git html
     - cmd: cd html
-    - git checkout -b gh-pages remotes/origin/gh-pages
+    - cmd: git checkout -b gh-pages remotes/origin/gh-pages
     - cmd: cd ..\..\sleap\docs
     - cmd: make html push
-
