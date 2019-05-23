@@ -1,5 +1,4 @@
-from sleap.gui.tracks import TrackTrailManager
-
+from sleap.gui.tracks import TrackColorManager, TrackTrailManager
 from sleap.io.video import Video
 
 def test_track_trails(centered_pair_predictions):
@@ -28,3 +27,11 @@ def test_track_trails(centered_pair_predictions):
         (226.0, 199.0)
         ]
     assert test_trail in trails
+    
+    # Test track colors
+    color_manager = TrackColorManager(labels=labels)
+
+    tracks = trail_manager.get_tracks_in_frame(1099)
+    assert len(tracks) == 5
+
+    assert color_manager.get_color(tracks[3]) == [119, 172, 48]
