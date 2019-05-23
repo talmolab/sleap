@@ -58,11 +58,14 @@ class QtVideoPlayer(QWidget):
     def __init__(self, video: Video = None, *args, **kwargs):
         super(QtVideoPlayer, self).__init__(*args, **kwargs)
 
+        self._shift_key_down = False
         self.frame_idx = -1
         self.view = GraphicsView()
 
         self.seekbar = VideoSlider()
         self.seekbar.valueChanged.connect(lambda evt: self.plot(self.seekbar.value()))
+        self.seekbar.keyPress.connect(self.keyPressEvent)
+        self.seekbar.keyRelease.connect(self.keyReleaseEvent)
         self.seekbar.setEnabled(False)
 
         self.layout = QVBoxLayout()
@@ -281,11 +284,21 @@ class QtVideoPlayer(QWidget):
         if callable(on_each):
             on_each(indexes)
 
+    def keyReleaseEvent(self, event: QKeyEvent):
+        if event.key() == Qt.Key.Key_Shift:
+            self._shift_key_down = False
+        event.ignore()
+
     def keyPressEvent(self, event: QKeyEvent):
         """ Custom event handler.
         Move between frames, toggle display of edges/labels, and select instances.
         """
-        if event.key() == Qt.Key.Key_Left:
+        ignore = False
+        frame_t0 = self.frame_idx
+
+        if event.key() == Qt.Key.Key_Shift:
+            self._shift_key_down = True
+        elif event.key() == Qt.Key.Key_Left:
             self.prevFrame()
         elif event.key() == Qt.Key.Key_Right:
             self.nextFrame()
@@ -304,6 +317,15 @@ class QtVideoPlayer(QWidget):
             event.ignore() # Kicks the event up to parent
             # print(event.key())
 
+        # If user is holding down shift and action resulted in moving to another frame
+        # event.modifiers() == Qt.ShiftModifier and
+        if self._shift_key_down and frame_t0 != self.frame_idx:
+            # If there's no select, start seekbar selection at frame before action
+            start, end = self.seekbar.getSelection()
+            if start == end:
+                self.seekbar.startSelection(frame_t0)
+            # Set endpoint to frame after action
+            self.seekbar.endSelection(self.frame_idx, update=True)
 
 class GraphicsView(QGraphicsView):
     """
@@ -1251,7 +1273,7 @@ if __name__ == "__main__":
         frames = {k: f["frames"][k][:].flatten() for k in ["videoId", "frameIdx"]}
         points = {k: f["points"][k][:].flatten() for k in ["id", "frameIdx", "instanceId", "x", "y", "node", "visible"]}
 
-    window.seekbar.setLabels(range(len(frames["frameIdx"])))
+    window.seekbar.setMarks(range(len(frames["frameIdx"])))
 
     # points["frameIdx"] -= 1
     points["x"] *= scale

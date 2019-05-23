@@ -8,8 +8,44 @@ import itertools
 
 from PySide2 import QtCore, QtWidgets, QtGui
 
+class TrackColorManager():
+    """Class to determine color to use for track. The color depends on the order of
+    the tracks in `Labels` object, so we need to initialize with `Labels`.
+
+    Args:
+        labels: `Labels` object which contains the tracks for which we want colors
+    """
+
+    def __init__(self, labels):
+        self._labels = labels
+
+        self._color_maps = [
+            [0,   114,   189],
+            [217,  83,    25],
+            [237, 177,    32],
+            [126,  47,   142],
+            [119, 172,    48],
+            [77,  190,   238],
+            [162,  20,    47],
+            ]
+
+    def get_color(self, track):
+        """Return the color to use for a given track.
+
+        Args:
+            track: `Track` object
+        Returns:
+            (r, g, b)-tuple
+        """
+        track_i = self._labels.tracks.index(track)
+        color = self._color_maps[track_i%len(self._color_maps)]
+        return color
+
+
 class TrackTrailManager():
-    """Class to show track trails.
+    """Class to show track trails. You initialize this object with both its data source
+    and its visual output scene, and it handles both extracting the relevant data for a
+    given frame and plotting it in the output.
 
     Args:
         labels: `Labels` object from which to get data
@@ -25,18 +61,20 @@ class TrackTrailManager():
         self.labels = labels
         self.scene = scene
         self.trail_length = trail_length
-
-        self.color_maps = [
-            [0,   114,   189],
-            [217,  83,    25],
-            [237, 177,    32],
-            [126,  47,   142],
-            [119, 172,    48],
-            [77,  190,   238],
-            [162,  20,    47],
-            ]
+        self._color_manager = TrackColorManager(labels)
 
     def get_track_trails(self, frame_selection, track):
+        """Get data needed to draw track trail.
+
+        Args:
+            frame_selection: an interable with the `LabeledFrame`s to include in trail
+            track: the `Track` for which to get trail
+
+        Returns:
+            list of lists of (x, y) tuples
+                i.e., for every node in instance, we get a list of positions
+        """
+
         all_trails = [[] for _ in range(len(self.labels.nodes))]
 
         for frame in frame_selection:
@@ -61,18 +99,34 @@ class TrackTrailManager():
 
         return all_trails
 
-    def add_trails_to_scene(self, frame_idx):
+    def get_frame_selection(self, frame_idx):
+        """Return list of `LabeledFrame`s to include in trail for specificed frame."""
         frame_selection = [frame for frame in self.labels.labeled_frames
                            if frame.frame_idx in range(frame_idx-self.trail_length, frame_idx)]
         frame_selection.sort(key=lambda x: x.frame_idx)
+        return frame_selection
 
+    def get_tracks_in_frame(self, frame_idx):
+        """Return list of tracks that have instance in specified frame."""
         tracks_in_frame = [instance.track for frame in self.labels.labeled_frames for instance in frame
                            if frame.frame_idx == frame_idx]
+        return tracks_in_frame
+
+    def add_trails_to_scene(self, frame_idx):
+        """Plot the trail on a given frame.
+
+        Args:
+            frame_idx: index of the frame to which the trail is attached
+        """
+
+        frame_selection = self.get_frame_selection(frame_idx)
+        tracks_in_frame = self.get_tracks_in_frame(frame_idx)
+
         for track in tracks_in_frame:
-            track_i = self.labels.tracks.index(track)
+
             trails = self.get_track_trails(frame_selection, track)
 
-            color = QtGui.QColor(*self.color_maps[track_i%len(self.color_maps)])
+            color = QtGui.QColor(*self._color_manager.get_color(track))
             pen = QtGui.QPen()
             pen.setCosmetic(True)
 
@@ -91,73 +145,9 @@ class TrackTrailManager():
 
     @staticmethod
     def map_to_qt_polygon(point_list):
+        """Converts a list of (x, y)-tuples to a `QPolygonF`."""
         return QtGui.QPolygonF(list(itertools.starmap(QtCore.QPointF, point_list)))
 
-
-
-def get_track_paths_for_plt(labels, frame_selection, track):
-    all_paths = {node: dict(x=[],y=[],z=[]) for node in labels.nodes}
-
-    for frame_offset, frame in enumerate(frame_selection):
-        frame_idx = frame.frame_idx
-
-        inst_on_track = [instance for instance in frame if instance.track == track]
-        if inst_on_track:
-            # just use the first instance from this track in this frame
-            inst = inst_on_track[0]
-            # loop through all nodes
-            for node in labels.nodes:
-
-                if node in inst.nodes and inst[node].visible:
-
-                    all_paths[node]["x"].append(inst[node].x)
-                    all_paths[node]["y"].append(inst[node].y)
-                    all_paths[node]["z"].append(frame_offset)
-
-    return all_paths
-
-def matplotlib_plot_paths():
-
-    frame_selection = [frame for frame in labels.labeled_frames
-                       if frame.frame_idx in range(0, 1000)]
-    frame_selection.sort(key=lambda x: x.frame_idx)
-
-    colors = "blue orange red green yellow".split()
-
-    commands = """
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-fig = plt.figure()
-ax = fig.gca(projection='3d')
-"""
-
-    for track_i, track in enumerate(labels.tracks):
-        all_plt_paths = get_track_paths_for_plt(labels, frame_selection, track)
-
-        for plt_path in all_plt_paths.values():
-            if len(plt_path["x"]):
-                xs, ys, zs = plt_path["x"], plt_path["y"], plt_path["z"]
-                c = colors[track_i%len(colors)]
-                commands += f"ax.plot({xs}, {ys}, {zs}, linewidth=.5, c='{c}')\n"
-
-    commands += "plt.show()"
-
-    with open("sample_plt.py", "w") as f:
-        f.write(commands)
-
-def show_video_with_trails():
-
-    app = QtWidgets.QApplication([])
-    window = QtVideoPlayer(video=vid)
-
-    trail_manager = TrackTrailManager(labels=labels, scene=window.view.scene)
-
-    window.changedPlot.connect(lambda parent, i:
-                                    trail_manager.add_trails_to_scene(parent.frame_idx))
-    window.plot()
-    window.show()
-
-    app.exec_()
 
 if __name__ == "__main__":
 
@@ -167,5 +157,15 @@ if __name__ == "__main__":
     data_path = "tests/data/json_format_v2/centered_pair_low_quality.mp4"
     vid = Video.from_filename(data_path)
 
-    matplotlib_plot_paths()
-    show_video_with_trails()
+    app = QtWidgets.QApplication([])
+    window = QtVideoPlayer(video=vid)
+    scene = window.view.scene
+
+    trail_manager = TrackTrailManager(labels=labels, scene=scene, trail_length = 5)
+
+    window.changedPlot.connect(lambda parent, i:
+                                    trail_manager.add_trails_to_scene(parent.frame_idx))
+    window.plot()
+    window.show()
+
+    app.exec_()

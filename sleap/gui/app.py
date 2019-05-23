@@ -262,6 +262,7 @@ class MainWindow(QMainWindow):
 
         # update edge UI when change to nodes
         self.skeletonNodesTable.model().dataChanged.connect(self.updateEdges)
+        self.skeletonNodesTable.model().dataChanged.connect(self.changestack_push)
 
         ####### Instances #######
         instances_layout = _make_dock("Instances")
@@ -274,6 +275,10 @@ class MainWindow(QMainWindow):
         btn.clicked.connect(self.deleteInstance); hb.addWidget(btn)
         hbw = QWidget(); hbw.setLayout(hb)
         instances_layout.addWidget(hbw)
+
+        # update track UI when change to track name
+        self.instancesTable.model().dataChanged.connect(self.updateTrackMenu)
+        self.instancesTable.model().dataChanged.connect(self.changestack_push)
 
         ####### Points #######
         # points_layout = _make_dock("Points", tab_with=instances_layout.parent().parent())
@@ -374,6 +379,7 @@ class MainWindow(QMainWindow):
                 msgBox.exec_()
 
             # Update UI tables
+            self.instancesTable.model().labels = self.labels
             self.videosTable.model().videos = self.labels.videos
             if len(self.labels.labels) > 0:
                 if len(self.labels.labels[0].instances) > 0:
@@ -698,6 +704,7 @@ class MainWindow(QMainWindow):
         self.labels.tracks.append(new_track)
         self.changestack_push("new track")
         self.setInstanceTrack(new_track)
+        self.changestack_push("set track")
         self.changestack_end_atomic()
 
         # update track menu and seekbar
@@ -709,14 +716,20 @@ class MainWindow(QMainWindow):
         if idx is None: return
 
         selected_instance = self.labeled_frame.instances[idx]
+
         old_track = selected_instance.track
+
+        # When setting track for an instance that doesn't already have a track set,
+        # we don't want to update *every* instance that also doesn't have a track.
+        # Instead, we'll use index in instance list as pseudo-track.
+        if old_track is None:
+            old_track = idx
 
         self._swap_tracks(new_track, old_track)
 
         self.player.view.selectInstance(idx)
 
     def _swap_tracks(self, new_track, old_track):
-
         start, end = self.player.seekbar.getSelection()
         if start < end:
             # If range is selected in seekbar, use that
@@ -732,8 +745,12 @@ class MainWindow(QMainWindow):
         # swap new to old tracks on all instances
         for instance in old_track_instances:
             instance.track = new_track
-        for instance in new_track_instances:
-            instance.track = old_track
+        # old_track can be `Track` or int
+        # If int, it's index in instance list which we'll use as a pseudo-track,
+        # but we won't set instances currently on new_track to old_track.
+        if type(old_track) == Track:
+            for instance in new_track_instances:
+                instance.track = old_track
 
         self.changestack_push("swap tracks")
 
@@ -744,17 +761,27 @@ class MainWindow(QMainWindow):
         """Get instances for a given track.
 
         Args:
-            track: the `Track`
+            track: the `Track` or int ("pseudo-track" index to instance list)
             frame_range (optional):
                 If specific, only return instances on frames in range.
                 If None, return all instances for given track.
         Returns:
             list of `Instance` objects
         """
+
+        def does_track_match(inst, tr, labeled_frame):
+            match = False
+            if type(tr) == Track and inst.track is tr:
+                match = True
+            elif (type(tr) == int and labeled_frame.instances.index(inst) == tr
+                    and inst.track is None):
+                match = True
+            return match
+
         track_instances = [instance
                             for labeled_frame in self.labels.labeled_frames
                             for instance in labeled_frame.instances
-                            if instance.track is track
+                            if does_track_match(instance, track, labeled_frame)
                                 and (frame_range is None or labeled_frame.frame_idx in frame_range)]
         return track_instances
 
