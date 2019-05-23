@@ -1,0 +1,747 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Training &mdash; LEAP  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Inference" href="inference.html" />
+    <link rel="prev" title="Datasets" href="dataset.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> LEAP
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">sLEAP Package</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="skeleton.html">Skeleton</a></li>
+<li class="toctree-l1"><a class="reference internal" href="video.html">Video</a></li>
+<li class="toctree-l1"><a class="reference internal" href="instance.html">Instance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset.html">Datasets</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Training</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-sleap.nn.architectures.hourglass">Architectures</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gui.html">GUI</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">LEAP</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Training</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/training.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-sleap.nn.training">
+<span id="training"></span><h1>Training<a class="headerlink" href="#module-sleap.nn.training" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="sleap.nn.training.ProgressReporterZMQ">
+<em class="property">class </em><code class="descclassname">sleap.nn.training.</code><code class="descname">ProgressReporterZMQ</code><span class="sig-paren">(</span><em>address='tcp://*'</em>, <em>port=9001</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/training.html#ProgressReporterZMQ"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.ProgressReporterZMQ" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="sleap.nn.training.ProgressReporterZMQ.on_batch_begin">
+<code class="descname">on_batch_begin</code><span class="sig-paren">(</span><em>batch</em>, <em>logs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/training.html#ProgressReporterZMQ.on_batch_begin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.ProgressReporterZMQ.on_batch_begin" title="Permalink to this definition">¶</a></dt>
+<dd><p>A backwards compatibility alias for <cite>on_train_batch_begin</cite>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.training.ProgressReporterZMQ.on_batch_end">
+<code class="descname">on_batch_end</code><span class="sig-paren">(</span><em>batch</em>, <em>logs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/training.html#ProgressReporterZMQ.on_batch_end"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.ProgressReporterZMQ.on_batch_end" title="Permalink to this definition">¶</a></dt>
+<dd><p>A backwards compatibility alias for <cite>on_train_batch_end</cite>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.training.ProgressReporterZMQ.on_epoch_begin">
+<code class="descname">on_epoch_begin</code><span class="sig-paren">(</span><em>epoch</em>, <em>logs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/training.html#ProgressReporterZMQ.on_epoch_begin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.ProgressReporterZMQ.on_epoch_begin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called at the start of an epoch.
+Subclasses should override for any actions to run. This function should only
+be called during train mode.
+# Arguments</p>
+<blockquote>
+<div><p>epoch: integer, index of epoch.
+logs: dict, currently no data is passed to this argument for this method</p>
+<blockquote>
+<div><p>but that may change in the future.</p>
+</div></blockquote>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.training.ProgressReporterZMQ.on_epoch_end">
+<code class="descname">on_epoch_end</code><span class="sig-paren">(</span><em>epoch</em>, <em>logs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/training.html#ProgressReporterZMQ.on_epoch_end"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.ProgressReporterZMQ.on_epoch_end" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called at the end of an epoch.
+Subclasses should override for any actions to run. This function should only
+be called during train mode.
+# Arguments</p>
+<blockquote>
+<div><p>epoch: integer, index of epoch.
+logs: dict, metric results for this training epoch, and for the</p>
+<blockquote>
+<div><p>validation epoch if validation is performed. Validation result keys
+are prefixed with <cite>val_</cite>.</p>
+</div></blockquote>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.training.ProgressReporterZMQ.on_train_begin">
+<code class="descname">on_train_begin</code><span class="sig-paren">(</span><em>logs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/training.html#ProgressReporterZMQ.on_train_begin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.ProgressReporterZMQ.on_train_begin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called at the beginning of training.
+Subclasses should override for any actions to run.
+# Arguments</p>
+<blockquote>
+<div><dl class="simple">
+<dt>logs: dict, currently no data is passed to this argument for this method</dt><dd><p>but that may change in the future.</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.training.ProgressReporterZMQ.on_train_end">
+<code class="descname">on_train_end</code><span class="sig-paren">(</span><em>logs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/training.html#ProgressReporterZMQ.on_train_end"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.ProgressReporterZMQ.on_train_end" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called at the end of training.
+Subclasses should override for any actions to run.
+# Arguments</p>
+<blockquote>
+<div><dl class="simple">
+<dt>logs: dict, currently no data is passed to this argument for this method</dt><dd><p>but that may change in the future.</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sleap.nn.training.TrainingControllerZMQ">
+<em class="property">class </em><code class="descclassname">sleap.nn.training.</code><code class="descname">TrainingControllerZMQ</code><span class="sig-paren">(</span><em>address='tcp://127.0.0.1'</em>, <em>port=9000</em>, <em>topic=''</em>, <em>poll_timeout=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/training.html#TrainingControllerZMQ"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.TrainingControllerZMQ" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="sleap.nn.training.TrainingControllerZMQ.on_batch_end">
+<code class="descname">on_batch_end</code><span class="sig-paren">(</span><em>batch</em>, <em>logs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/training.html#TrainingControllerZMQ.on_batch_end"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.TrainingControllerZMQ.on_batch_end" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called at the end of a training batch.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.training.TrainingControllerZMQ.set_lr">
+<code class="descname">set_lr</code><span class="sig-paren">(</span><em>lr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/training.html#TrainingControllerZMQ.set_lr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.TrainingControllerZMQ.set_lr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adjust the model learning rate.</p>
+<p>This is the based off of the implementation used in the native learning rate scheduling callbacks.</p>
+</dd></dl>
+
+</dd></dl>
+
+<div class="section" id="module-sleap.nn.architectures.hourglass">
+<span id="architectures"></span><h2>Architectures<a class="headerlink" href="#module-sleap.nn.architectures.hourglass" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sleap.nn.architectures.hourglass.hourglass_block">
+<code class="descclassname">sleap.nn.architectures.hourglass.</code><code class="descname">hourglass_block</code><span class="sig-paren">(</span><em>x_in</em>, <em>num_output_channels</em>, <em>num_filters</em>, <em>depth=3</em>, <em>batch_norm=True</em>, <em>upsampling_layers=True</em>, <em>interp='bilinear'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/hourglass.html#hourglass_block"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.hourglass.hourglass_block" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a single hourglass block.</p>
+<p>This function builds an hourglass block from residual blocks and max pooling.</p>
+<p>The hourglass is defined as a set of <cite>depth</cite> residual blocks followed by 2-strided
+max pooling for downsampling, then an intermediate residual block, followed by
+<cite>depth</cite> blocks of upsampling -&gt; skip Add -&gt; residual blocks.</p>
+<p>The output tensors are then produced by linear activation with 1x1 convs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_in</strong> – Input 4-D tf.Tensor or instantiated layer. Must have <cite>num_filters</cite>
+channels since the hourglass adds a residual to this input.</p></li>
+<li><p><strong>num_output_channels</strong> – The number of output channels of the block. These
+are the final output tensors on which intermediate supervision may be
+applied.</p></li>
+<li><p><strong>num_filters</strong> – The number feature channels of the block. These features are
+used throughout the hourglass and will be passed on to the next block
+and need not match the <cite>num_output_channels</cite>. Must be divisible by 2.</p></li>
+<li><p><strong>depth</strong> – The number of pooling steps applied to the input. The input must
+be a tensor with <cite>2^depth</cite> height and width to allow for symmetric
+pooling and upsampling with skip connections.</p></li>
+<li><p><strong>batch_norm</strong> – Apply batch normalization after each convolution</p></li>
+<li><p><strong>upsampling_layers</strong> – Use upsampling instead of transposed convolutions.</p></li>
+<li><p><strong>interp</strong> – Method to use for interpolation when upsampling smaller features.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>tf.Tensor of the features output by the block with <cite>num_filters</cite></dt><dd><p>channels. This tensor can be passed on to the next hourglass or
+ignored if this is the last hourglass.</p>
+</dd>
+<dt>x_out: tf.Tensor of the output of the block of the same width and height</dt><dd><p>as the input with <cite>num_output_channels</cite> channels.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>x</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.nn.architectures.hourglass.stacked_hourglass">
+<code class="descclassname">sleap.nn.architectures.hourglass.</code><code class="descname">stacked_hourglass</code><span class="sig-paren">(</span><em>x_in</em>, <em>num_output_channels</em>, <em>num_hourglass_blocks=3</em>, <em>num_filters=32</em>, <em>depth=3</em>, <em>batch_norm=True</em>, <em>intermediate_inputs=True</em>, <em>upsampling_layers=True</em>, <em>interp='bilinear'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/hourglass.html#stacked_hourglass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.hourglass.stacked_hourglass" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stacked hourglass block.</p>
+<p>This function builds and connects multiple hourglass blocks. See <cite>hourglass</cite> for
+more specifics on the implementation.</p>
+<p>Individual hourglasses can be customized by providing an iterable of hyperparameters
+for each of the arguments of the function (except <cite>num_output_channels</cite>). If scalars
+are provided, all hourglasses will share the same hyperparameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_in</strong> – Input 4-D tf.Tensor or instantiated layer. If the number of channels
+are not the same as <cite>num_filters</cite>, an additional residual block is
+applied to this input.</p></li>
+<li><p><strong>num_output_channels</strong> – The number of output channels of the block. These
+are the final output tensors on which intermediate supervision may be
+applied.</p></li>
+<li><p><strong>num_filters</strong> – The number feature channels of the block. These features are
+used throughout the hourglass and will be passed on to the next block
+and need not match the <cite>num_output_channels</cite>. Must be divisible by 2.</p></li>
+<li><p><strong>depth</strong> – The number of pooling steps applied to the input. The input must
+be a tensor with <cite>2^depth</cite> height and width to allow for symmetric
+pooling and upsampling with skip connections.</p></li>
+<li><p><strong>batch_norm</strong> – Apply batch normalization after each convolution</p></li>
+<li><p><strong>intermediate_inputs</strong> – Re-introduce the input tensor <cite>x_in</cite> after each hourglass
+by concatenating with intermediate outputs</p></li>
+<li><p><strong>upsampling_layers</strong> – Use upsampling instead of transposed convolutions.</p></li>
+<li><p><strong>interp</strong> – Method to use for interpolation when upsampling smaller features.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>List of tf.Tensors of the output of the block of the same width and height</dt><dd><p>as the input with <cite>num_output_channels</cite> channels.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>x_outs</p>
+</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-sleap.nn.architectures.densenet"></span><p>DenseNet models for Keras.
+# Reference paper
+- [Densely Connected Convolutional Networks]</p>
+<blockquote>
+<div><p>(<a class="reference external" href="https://arxiv.org/abs/1608.06993">https://arxiv.org/abs/1608.06993</a>) (CVPR 2017 Best Paper Award)</p>
+</div></blockquote>
+<p># Reference implementation
+- [Torch DenseNets]</p>
+<blockquote>
+<div><p>(<a class="reference external" href="https://github.com/liuzhuang13/DenseNet/blob/master/models/densenet.lua">https://github.com/liuzhuang13/DenseNet/blob/master/models/densenet.lua</a>)</p>
+</div></blockquote>
+<ul class="simple">
+<li><p>[TensorNets]
+(<a class="reference external" href="https://github.com/taehoonlee/tensornets/blob/master/tensornets/densenets.py">https://github.com/taehoonlee/tensornets/blob/master/tensornets/densenets.py</a>)</p></li>
+</ul>
+<p><a class="reference external" href="https://github.com/keras-team/keras-applications/blob/master/keras_applications/densenet.py">https://github.com/keras-team/keras-applications/blob/master/keras_applications/densenet.py</a></p>
+<dl class="function">
+<dt id="sleap.nn.architectures.densenet.DenseNet">
+<code class="descclassname">sleap.nn.architectures.densenet.</code><code class="descname">DenseNet</code><span class="sig-paren">(</span><em>blocks</em>, <em>output_channels</em>, <em>input_tensor=None</em>, <em>input_shape=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/densenet.html#DenseNet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.densenet.DenseNet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiates the DenseNet architecture.
+Optionally loads weights pre-trained on ImageNet.
+Note that the data format convention used by the model is
+the one specified in your Keras config at <cite>~/.keras/keras.json</cite>.
+# Arguments</p>
+<blockquote>
+<div><p>blocks: numbers of building blocks for the four dense layers.
+include_top: whether to include the fully-connected</p>
+<blockquote>
+<div><p>layer at the top of the network.</p>
+</div></blockquote>
+<dl>
+<dt>weights: one of <cite>None</cite> (random initialization),</dt><dd><p>‘imagenet’ (pre-training on ImageNet),
+or the path to the weights file to be loaded.</p>
+</dd>
+<dt>input_tensor: optional Keras tensor</dt><dd><p>(i.e. output of <cite>layers.Input()</cite>)
+to use as image input for the model.</p>
+</dd>
+<dt>input_shape: optional shape tuple, only to be specified</dt><dd><p>if <cite>include_top</cite> is False (otherwise the input shape
+has to be <cite>(224, 224, 3)</cite> (with <cite>‘channels_last’</cite> data format)
+or <cite>(3, 224, 224)</cite> (with <cite>‘channels_first’</cite> data format).
+It should have exactly 3 inputs channels,
+and width and height should be no smaller than 32.
+E.g. <cite>(200, 200, 3)</cite> would be one valid value.</p>
+</dd>
+<dt>pooling: optional pooling mode for feature extraction</dt><dd><p>when <cite>include_top</cite> is <cite>False</cite>.
+- <cite>None</cite> means that the output of the model will be</p>
+<blockquote>
+<div><p>the 4D tensor output of the
+last convolutional block.</p>
+</div></blockquote>
+<ul class="simple">
+<li><dl class="simple">
+<dt><cite>avg</cite> means that global average pooling</dt><dd><p>will be applied to the output of the
+last convolutional block, and thus
+the output of the model will be a 2D tensor.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><cite>max</cite> means that global max pooling will</dt><dd><p>be applied.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt>classes: optional number of classes to classify images</dt><dd><p>into, only to be specified if <cite>include_top</cite> is True, and
+if no <cite>weights</cite> argument is specified.</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="simple">
+<dt># Returns</dt><dd><p>A Keras model instance.</p>
+</dd>
+<dt># Raises</dt><dd><dl class="simple">
+<dt>ValueError: in case of invalid argument for <cite>weights</cite>,</dt><dd><p>or invalid input shape.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.nn.architectures.densenet.conv_block">
+<code class="descclassname">sleap.nn.architectures.densenet.</code><code class="descname">conv_block</code><span class="sig-paren">(</span><em>x</em>, <em>growth_rate</em>, <em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/densenet.html#conv_block"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.densenet.conv_block" title="Permalink to this definition">¶</a></dt>
+<dd><p>A building block for a dense block.
+# Arguments</p>
+<blockquote>
+<div><p>x: input tensor.
+growth_rate: float, growth rate at dense layers.
+name: string, block label.</p>
+</div></blockquote>
+<dl class="simple">
+<dt># Returns</dt><dd><p>Output tensor for the block.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.nn.architectures.densenet.dense_block">
+<code class="descclassname">sleap.nn.architectures.densenet.</code><code class="descname">dense_block</code><span class="sig-paren">(</span><em>x</em>, <em>blocks</em>, <em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/densenet.html#dense_block"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.densenet.dense_block" title="Permalink to this definition">¶</a></dt>
+<dd><p>A dense block.
+# Arguments</p>
+<blockquote>
+<div><p>x: input tensor.
+blocks: integer, the number of building blocks.
+name: string, block label.</p>
+</div></blockquote>
+<dl class="simple">
+<dt># Returns</dt><dd><p>output tensor for the block.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.nn.architectures.densenet.transition_block">
+<code class="descclassname">sleap.nn.architectures.densenet.</code><code class="descname">transition_block</code><span class="sig-paren">(</span><em>x</em>, <em>reduction</em>, <em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/densenet.html#transition_block"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.densenet.transition_block" title="Permalink to this definition">¶</a></dt>
+<dd><p>A transition block.
+# Arguments</p>
+<blockquote>
+<div><p>x: input tensor.
+reduction: float, compression rate at transition layers.
+name: string, block label.</p>
+</div></blockquote>
+<dl class="simple">
+<dt># Returns</dt><dd><p>output tensor for the block.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-sleap.nn.architectures.leap"></span><dl class="function">
+<dt id="sleap.nn.architectures.leap.leap_cnn">
+<code class="descclassname">sleap.nn.architectures.leap.</code><code class="descname">leap_cnn</code><span class="sig-paren">(</span><em>x_in</em>, <em>num_output_channels</em>, <em>down_blocks=3</em>, <em>up_blocks=3</em>, <em>upsampling_layers=True</em>, <em>num_filters=64</em>, <em>interp='bilinear'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/leap.html#leap_cnn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.leap.leap_cnn" title="Permalink to this definition">¶</a></dt>
+<dd><p>LEAP CNN block.</p>
+<p>Implementation generalized from original paper (<a class="reference external" href="https://www.nature.com/articles/s41592-018-0234-5">Pereira et al., 2019</a>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_in</strong> – Input 4-D tf.Tensor or instantiated layer. Must have height and width
+that are divisible by <cite>2^down_blocks</cite>.</p></li>
+<li><p><strong>num_output_channels</strong> – The number of output channels of the block. These
+are the final output tensors on which intermediate supervision may be
+applied.</p></li>
+<li><p><strong>down_blocks</strong> – The number of pooling steps applied to the input. The input
+must be a tensor with <cite>2^down_blocks</cite> height and width.</p></li>
+<li><p><strong>up_blocks</strong> – The number of upsampling steps applied after downsampling.</p></li>
+<li><p><strong>upsampling_layers</strong> – If True, use upsampling instead of transposed convs.</p></li>
+<li><p><strong>num_filters</strong> – The base number feature channels of the block. The number of
+filters is doubled at each pooling step.</p></li>
+<li><p><strong>interp</strong> – Method to use for interpolation when upsampling smaller features.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>tf.Tensor of the output of the block of with <cite>num_output_channels</cite> channels.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>x_out</p>
+</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-sleap.nn.architectures.unet"></span><dl class="function">
+<dt id="sleap.nn.architectures.unet.stacked_unet">
+<code class="descclassname">sleap.nn.architectures.unet.</code><code class="descname">stacked_unet</code><span class="sig-paren">(</span><em>x_in</em>, <em>num_output_channels</em>, <em>num_stacks=3</em>, <em>depth=3</em>, <em>convs_per_depth=2</em>, <em>num_filters=16</em>, <em>kernel_size=5</em>, <em>upsampling_layers=True</em>, <em>intermediate_inputs=True</em>, <em>interp='bilinear'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/unet.html#stacked_unet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.unet.stacked_unet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stacked U-net block.</p>
+<p>See <cite>unet</cite> for more specifics on the implementation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_in</strong> – Input 4-D tf.Tensor or instantiated layer. Must have height and width
+that are divisible by <cite>2^depth</cite>.</p></li>
+<li><p><strong>num_output_channels</strong> – The number of output channels of the block. These
+are the final output tensors on which intermediate supervision may be
+applied.</p></li>
+<li><p><strong>num_stacks</strong> – The number of blocks to stack on top of each other.</p></li>
+<li><p><strong>depth</strong> – The number of pooling steps applied to the input. The input must
+be a tensor with <cite>2^depth</cite> height and width to allow for symmetric
+pooling and upsampling with skip connections.</p></li>
+<li><p><strong>convs_per_depth</strong> – The number of convolutions applied before pooling or
+after upsampling.</p></li>
+<li><p><strong>num_filters</strong> – The base number feature channels of the block. The number of
+filters is doubled at each pooling step.</p></li>
+<li><p><strong>kernel_size</strong> – Size of the convolutional kernels for each filter.</p></li>
+<li><p><strong>intermediate_inputs</strong> – Re-introduce the input tensor <cite>x_in</cite> after each block
+by concatenating with intermediate outputs</p></li>
+<li><p><strong>upsampling_layers</strong> – Use upsampling instead of transposed convolutions.</p></li>
+<li><p><strong>interp</strong> – Method to use for interpolation when upsampling smaller features.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>tf.Tensor of the output of the block of the same width and height</dt><dd><p>as the input with <cite>num_output_channels</cite> channels.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>x_outs</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.nn.architectures.unet.unet">
+<code class="descclassname">sleap.nn.architectures.unet.</code><code class="descname">unet</code><span class="sig-paren">(</span><em>x_in</em>, <em>num_output_channels</em>, <em>depth=3</em>, <em>convs_per_depth=2</em>, <em>num_filters=16</em>, <em>kernel_size=5</em>, <em>upsampling_layers=True</em>, <em>interp='bilinear'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/unet.html#unet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.unet.unet" title="Permalink to this definition">¶</a></dt>
+<dd><p>U-net block.</p>
+<p>Implementation based off of <a class="reference external" href="https://github.com/CSBDeep/CSBDeep/blob/master/csbdeep/internals/nets.py">CARE</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_in</strong> – Input 4-D tf.Tensor or instantiated layer. Must have height and width
+that are divisible by <cite>2^depth</cite>.</p></li>
+<li><p><strong>num_output_channels</strong> – The number of output channels of the block. These
+are the final output tensors on which intermediate supervision may be
+applied.</p></li>
+<li><p><strong>depth</strong> – The number of pooling steps applied to the input. The input must
+be a tensor with <cite>2^depth</cite> height and width to allow for symmetric
+pooling and upsampling with skip connections.</p></li>
+<li><p><strong>convs_per_depth</strong> – The number of convolutions applied before pooling or
+after upsampling.</p></li>
+<li><p><strong>num_filters</strong> – The base number feature channels of the block. The number of
+filters is doubled at each pooling step.</p></li>
+<li><p><strong>kernel_size</strong> – Size of the convolutional kernels for each filter.</p></li>
+<li><p><strong>upsampling_layers</strong> – Use upsampling instead of transposed convolutions.</p></li>
+<li><p><strong>interp</strong> – Method to use for interpolation when upsampling smaller features.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>tf.Tensor of the output of the block of the same width and height</dt><dd><p>as the input with <cite>num_output_channels</cite> channels.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>x_out</p>
+</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-sleap.nn.architectures.common"></span><dl class="function">
+<dt id="sleap.nn.architectures.common.conv">
+<code class="descclassname">sleap.nn.architectures.common.</code><code class="descname">conv</code><span class="sig-paren">(</span><em>num_filters</em>, <em>kernel_size=(3</em>, <em>3)</em>, <em>activation='relu'</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/common.html#conv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.common.conv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience presets for Conv2D.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_filters</strong> – Number of output filters (channels)</p></li>
+<li><p><strong>kernel_size</strong> – Size of convolution kernel</p></li>
+<li><p><strong>activation</strong> – Activation function applied to output</p></li>
+<li><p><strong>**kwargs</strong> – Arbitrary keyword arguments passed on to keras.layers.Conv2D</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>keras.layers.Conv2D instance built with presets</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.nn.architectures.common.conv1">
+<code class="descclassname">sleap.nn.architectures.common.</code><code class="descname">conv1</code><span class="sig-paren">(</span><em>num_filters</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/common.html#conv1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.common.conv1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience presets for 1x1 Conv2D.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_filters</strong> – Number of output filters (channels)</p></li>
+<li><p><strong>**kwargs</strong> – Arbitrary keyword arguments passed on to keras.layers.Conv2D</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>keras.layers.Conv2D instance built with presets</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.nn.architectures.common.conv3">
+<code class="descclassname">sleap.nn.architectures.common.</code><code class="descname">conv3</code><span class="sig-paren">(</span><em>num_filters</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/common.html#conv3"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.common.conv3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience presets for 3x3 Conv2D.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_filters</strong> – Number of output filters (channels)</p></li>
+<li><p><strong>**kwargs</strong> – Arbitrary keyword arguments passed on to keras.layers.Conv2D</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>keras.layers.Conv2D instance built with presets</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.nn.architectures.common.expand_to_n">
+<code class="descclassname">sleap.nn.architectures.common.</code><code class="descname">expand_to_n</code><span class="sig-paren">(</span><em>x</em>, <em>n</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/common.html#expand_to_n"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.common.expand_to_n" title="Permalink to this definition">¶</a></dt>
+<dd><p>Expands an object <cite>x</cite> to <cite>n</cite> elements if scalar.</p>
+<p>This is a utility function that wraps np.tile functionality.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – Scalar of any type</p></li>
+<li><p><strong>n</strong> – Number of repetitions</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Tiled version of <cite>x</cite> with __len__ == <cite>n</cite>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.nn.architectures.common.residual_block">
+<code class="descclassname">sleap.nn.architectures.common.</code><code class="descname">residual_block</code><span class="sig-paren">(</span><em>x_in</em>, <em>num_filters=None</em>, <em>batch_norm=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/common.html#residual_block"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.common.residual_block" title="Permalink to this definition">¶</a></dt>
+<dd><p>Residual bottleneck block.</p>
+<p>This function builds a residual block that is used at every step of stacked
+hourglass construction. Note that the layers are actually instantiated and
+connected.</p>
+<p>The bottleneck is constructed by applying a 1x1 conv with <cite>num_filters / 2</cite>
+channels, a 3x3 conv with <cite>num_filters / 2</cite> channels, and a 1x1 conv with
+<cite>num_filters</cite>. The output of this last conv is skip-connected with the input
+via an Add layer (the residual).</p>
+<p>If the input <cite>x_in</cite> has a different number of channels as <cite>num_filters</cite>, an
+additional 1x1 conv is applied to the input whose output will be used for the
+skip connection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_in</strong> – Input 4-D tf.Tensor or instantiated layer</p></li>
+<li><p><strong>num_filters</strong> – The number output channels of the block. If not specified,
+defaults to the same number of channels as the input tensor. Must be
+divisible by 2 since the bottleneck halves the number of filters in
+the intermediate convs.</p></li>
+<li><p><strong>batch_norm</strong> – Apply batch normalization after each convolution</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>tf.Tensor of the output of the block of the same width and height</dt><dd><p>as the input with <cite>num_filters</cite> channels.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>x_out</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="inference.html" class="btn btn-neutral float-right" title="Inference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="dataset.html" class="btn btn-neutral float-left" title="Datasets" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Murthy Lab @ Princeton
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

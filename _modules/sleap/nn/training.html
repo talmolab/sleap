@@ -1,0 +1,644 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>sleap.nn.training &mdash; LEAP  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> LEAP
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">sLEAP Package</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../skeleton.html">Skeleton</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../video.html">Video</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instance.html">Instance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dataset.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../training.html">Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../gui.html">GUI</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">LEAP</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>sleap.nn.training</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for sleap.nn.training</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="k">import</span> <span class="n">time</span><span class="p">,</span> <span class="n">sleep</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
+
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">keras</span>
+<span class="kn">from</span> <span class="nn">keras</span> <span class="k">import</span> <span class="n">backend</span> <span class="k">as</span> <span class="n">K</span>
+
+<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="k">import</span> <span class="n">train_test_split</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.augmentation</span> <span class="k">import</span> <span class="n">Augmenter</span>
+
+<span class="kn">from</span> <span class="nn">keras.layers</span> <span class="k">import</span> <span class="n">Input</span><span class="p">,</span> <span class="n">Conv2D</span><span class="p">,</span> <span class="n">BatchNormalization</span><span class="p">,</span> <span class="n">Add</span><span class="p">,</span> <span class="n">MaxPool2D</span><span class="p">,</span> <span class="n">UpSampling2D</span><span class="p">,</span> <span class="n">Concatenate</span>
+<span class="kn">from</span> <span class="nn">keras.callbacks</span> <span class="k">import</span> <span class="n">ReduceLROnPlateau</span><span class="p">,</span> <span class="n">EarlyStopping</span><span class="p">,</span> <span class="n">TensorBoard</span><span class="p">,</span> <span class="n">LambdaCallback</span><span class="p">,</span> <span class="n">ModelCheckpoint</span>
+
+<span class="kn">from</span> <span class="nn">sleap.nn.architectures.common</span> <span class="k">import</span> <span class="n">conv</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.architectures.hourglass</span> <span class="k">import</span> <span class="n">stacked_hourglass</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.architectures.unet</span> <span class="k">import</span> <span class="n">unet</span><span class="p">,</span> <span class="n">stacked_unet</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.architectures.leap</span> <span class="k">import</span> <span class="n">leap_cnn</span>
+
+<span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="k">import</span> <span class="n">Process</span>
+<span class="kn">import</span> <span class="nn">zmq</span>
+<span class="kn">import</span> <span class="nn">jsonpickle</span>
+
+
+<div class="viewcode-block" id="TrainingControllerZMQ"><a class="viewcode-back" href="../../../training.html#sleap.nn.training.TrainingControllerZMQ">[docs]</a><span class="k">class</span> <span class="nc">TrainingControllerZMQ</span><span class="p">(</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">Callback</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">address</span><span class="o">=</span><span class="s2">&quot;tcp://127.0.0.1&quot;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">9000</span><span class="p">,</span> <span class="n">topic</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">poll_timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">address</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">:</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">address</span><span class="p">,</span> <span class="n">port</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">topic</span> <span class="o">=</span> <span class="n">topic</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span> <span class="o">=</span> <span class="n">poll_timeout</span>
+
+        <span class="c1"># Initialize ZMQ</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">context</span> <span class="o">=</span> <span class="n">zmq</span><span class="o">.</span><span class="n">Context</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">SUB</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">topic</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">address</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Training controller subscribed to: </span><span class="si">{self.address}</span><span class="s2"> (topic: </span><span class="si">{self.topic}</span><span class="s2">)&quot;</span><span class="p">)</span>
+
+        <span class="c1"># TODO: catch/throw exception about failure to connect</span>
+
+        <span class="c1"># Callback initialization</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="TrainingControllerZMQ.on_batch_end"><a class="viewcode-back" href="../../../training.html#sleap.nn.training.TrainingControllerZMQ.on_batch_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_batch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Called at the end of a training batch. &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">poll</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">timeout</span><span class="p">,</span> <span class="n">zmq</span><span class="o">.</span><span class="n">POLLIN</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="n">jsonpickle</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">recv_string</span><span class="p">())</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Received control message: </span><span class="si">{msg}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Stop training</span>
+            <span class="k">if</span> <span class="n">msg</span><span class="p">[</span><span class="s2">&quot;command&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;stop&quot;</span><span class="p">:</span>
+                <span class="c1"># self.model is set when training begins in Model.fit_generator</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">stop_training</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="c1"># Adjust learning rate</span>
+            <span class="k">elif</span> <span class="n">msg</span><span class="p">[</span><span class="s2">&quot;command&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;set_lr&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">set_lr</span><span class="p">(</span><span class="n">msg</span><span class="p">[</span><span class="s2">&quot;lr&quot;</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="TrainingControllerZMQ.set_lr"><a class="viewcode-back" href="../../../training.html#sleap.nn.training.TrainingControllerZMQ.set_lr">[docs]</a>    <span class="k">def</span> <span class="nf">set_lr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lr</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Adjust the model learning rate. </span>
+
+<span class="sd">        This is the based off of the implementation used in the native learning rate scheduling callbacks.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lr</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)):</span>
+            <span class="n">lr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">lr</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="n">K</span><span class="o">.</span><span class="n">set_value</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">lr</span><span class="p">,</span> <span class="n">lr</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="ProgressReporterZMQ"><a class="viewcode-back" href="../../../training.html#sleap.nn.training.ProgressReporterZMQ">[docs]</a><span class="k">class</span> <span class="nc">ProgressReporterZMQ</span><span class="p">(</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">Callback</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">address</span><span class="o">=</span><span class="s2">&quot;tcp://*&quot;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">9001</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">address</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">:</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">address</span><span class="p">,</span> <span class="n">port</span><span class="p">)</span>
+
+        <span class="c1"># Initialize ZMQ</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">context</span> <span class="o">=</span> <span class="n">zmq</span><span class="o">.</span><span class="n">Context</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">PUB</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">address</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Progress reporter publishing on: </span><span class="si">{self.address}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># TODO: catch/throw exception about failure to connect</span>
+
+        <span class="c1"># Callback initialization</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="ProgressReporterZMQ.on_train_begin"><a class="viewcode-back" href="../../../training.html#sleap.nn.training.ProgressReporterZMQ.on_train_begin">[docs]</a>    <span class="k">def</span> <span class="nf">on_train_begin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called at the beginning of training.</span>
+<span class="sd">        Subclasses should override for any actions to run.</span>
+<span class="sd">        # Arguments</span>
+<span class="sd">            logs: dict, currently no data is passed to this argument for this method</span>
+<span class="sd">                but that may change in the future.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># self.logger.info(&quot;train_begin&quot;)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">send_string</span><span class="p">(</span><span class="n">jsonpickle</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">event</span><span class="o">=</span><span class="s2">&quot;train_begin&quot;</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="n">logs</span><span class="p">)))</span></div>
+
+
+<div class="viewcode-block" id="ProgressReporterZMQ.on_batch_begin"><a class="viewcode-back" href="../../../training.html#sleap.nn.training.ProgressReporterZMQ.on_batch_begin">[docs]</a>    <span class="k">def</span> <span class="nf">on_batch_begin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A backwards compatibility alias for `on_train_batch_begin`.&quot;&quot;&quot;</span>
+        <span class="c1"># self.logger.info(&quot;batch_begin&quot;)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">send_string</span><span class="p">(</span><span class="n">jsonpickle</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">event</span><span class="o">=</span><span class="s2">&quot;batch_begin&quot;</span><span class="p">,</span> <span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="n">logs</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="ProgressReporterZMQ.on_batch_end"><a class="viewcode-back" href="../../../training.html#sleap.nn.training.ProgressReporterZMQ.on_batch_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_batch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A backwards compatibility alias for `on_train_batch_end`.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">send_string</span><span class="p">(</span><span class="n">jsonpickle</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">event</span><span class="o">=</span><span class="s2">&quot;batch_end&quot;</span><span class="p">,</span> <span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="n">logs</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="ProgressReporterZMQ.on_epoch_begin"><a class="viewcode-back" href="../../../training.html#sleap.nn.training.ProgressReporterZMQ.on_epoch_begin">[docs]</a>    <span class="k">def</span> <span class="nf">on_epoch_begin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called at the start of an epoch.</span>
+<span class="sd">        Subclasses should override for any actions to run. This function should only</span>
+<span class="sd">        be called during train mode.</span>
+<span class="sd">        # Arguments</span>
+<span class="sd">            epoch: integer, index of epoch.</span>
+<span class="sd">            logs: dict, currently no data is passed to this argument for this method</span>
+<span class="sd">                but that may change in the future.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">send_string</span><span class="p">(</span><span class="n">jsonpickle</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">event</span><span class="o">=</span><span class="s2">&quot;epoch_begin&quot;</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="n">epoch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="n">logs</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="ProgressReporterZMQ.on_epoch_end"><a class="viewcode-back" href="../../../training.html#sleap.nn.training.ProgressReporterZMQ.on_epoch_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_epoch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called at the end of an epoch.</span>
+<span class="sd">        Subclasses should override for any actions to run. This function should only</span>
+<span class="sd">        be called during train mode.</span>
+<span class="sd">        # Arguments</span>
+<span class="sd">            epoch: integer, index of epoch.</span>
+<span class="sd">            logs: dict, metric results for this training epoch, and for the</span>
+<span class="sd">                validation epoch if validation is performed. Validation result keys</span>
+<span class="sd">                are prefixed with `val_`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">send_string</span><span class="p">(</span><span class="n">jsonpickle</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">event</span><span class="o">=</span><span class="s2">&quot;epoch_end&quot;</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="n">epoch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="n">logs</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="ProgressReporterZMQ.on_train_end"><a class="viewcode-back" href="../../../training.html#sleap.nn.training.ProgressReporterZMQ.on_train_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_train_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called at the end of training.</span>
+<span class="sd">        Subclasses should override for any actions to run.</span>
+<span class="sd">        # Arguments</span>
+<span class="sd">            logs: dict, currently no data is passed to this argument for this method</span>
+<span class="sd">                but that may change in the future.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">send_string</span><span class="p">(</span><span class="n">jsonpickle</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">event</span><span class="o">=</span><span class="s2">&quot;train_end&quot;</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="n">logs</span><span class="p">)))</span></div></div>
+
+
+<span class="k">def</span> <span class="nf">train</span><span class="p">(</span>
+    <span class="c1"># Data</span>
+    <span class="n">imgs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">output_type</span><span class="o">=</span><span class="s2">&quot;confmaps&quot;</span><span class="p">,</span> <span class="n">val_size</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+    <span class="c1"># Architecture</span>
+    <span class="n">arch</span><span class="o">=</span><span class="s2">&quot;unet&quot;</span><span class="p">,</span> <span class="n">num_stacks</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">convs_per_depth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">num_filters</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">batch_norm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">upsampling</span><span class="o">=</span><span class="s2">&quot;bilinear&quot;</span><span class="p">,</span> <span class="n">intermediate_inputs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">intermediate_outputs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="c1"># Optimizer</span>
+    <span class="n">optimizer</span><span class="o">=</span><span class="s2">&quot;adam&quot;</span><span class="p">,</span> <span class="n">learning_rate</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">amsgrad</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="c1"># Augmentation</span>
+    <span class="n">augment_rotation</span><span class="o">=</span><span class="mi">180</span><span class="p">,</span> <span class="n">augment_scale_min</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">augment_scale_max</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="c1"># Training loop</span>
+    <span class="n">batch_size</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">num_epochs</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">steps_per_epoch</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">shuffle_initially</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">multiprocessing_workers</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="c1"># Saving</span>
+    <span class="n">save_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">run_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">save_viz</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="c1"># Callbacks: Intermediate saving</span>
+    <span class="n">save_every_epoch</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">save_best_val</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="c1"># Callbacks: Shuffle after every epoch</span>
+    <span class="n">shuffle_every_epoch</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="c1"># Callbacks: LR reduction</span>
+    <span class="n">reduce_lr_min_delta</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span> <span class="n">reduce_lr_factor</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">reduce_lr_patience</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">reduce_lr_cooldown</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">reduce_lr_min_lr</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">,</span>
+    <span class="c1"># Callbacks: Early stopping</span>
+    <span class="n">early_stopping_min_delta</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">,</span> <span class="n">early_stopping_patience</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="c1"># Callbacks: Tensorboard</span>
+    <span class="n">tensorboard_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="c1"># Callbacks: ZMQ control</span>
+    <span class="n">control_zmq_port</span><span class="o">=</span><span class="mi">9000</span><span class="p">,</span>
+    <span class="c1"># Callbacks: ZMQ progress reporter</span>
+    <span class="n">progress_report_zmq_port</span><span class="o">=</span><span class="mi">9001</span><span class="p">,</span>
+    <span class="c1"># Callbacks: ZMQ visualization preview</span>
+    <span class="n">viz_preview_zmq_port</span><span class="o">=</span><span class="mi">9002</span><span class="p">,</span>
+    <span class="p">):</span>
+
+    <span class="c1"># Split data into train/validation</span>
+    <span class="n">imgs_train</span><span class="p">,</span> <span class="n">imgs_val</span><span class="p">,</span> <span class="n">outputs_train</span><span class="p">,</span> <span class="n">outputs_val</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">imgs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="n">val_size</span><span class="p">)</span>
+    <span class="k">del</span> <span class="n">imgs</span><span class="p">,</span> <span class="n">outputs</span>
+
+    <span class="c1"># Infer shapes</span>
+    <span class="n">num_train</span><span class="p">,</span> <span class="n">img_height</span><span class="p">,</span> <span class="n">img_width</span><span class="p">,</span> <span class="n">img_channels</span> <span class="o">=</span> <span class="n">imgs_train</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">num_val</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">imgs_val</span><span class="p">)</span>
+    <span class="n">num_total</span> <span class="o">=</span> <span class="n">num_train</span> <span class="o">+</span> <span class="n">num_val</span>
+    <span class="n">outputs_channels</span> <span class="o">=</span> <span class="n">outputs_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Training set: </span><span class="si">{imgs_train.shape}</span><span class="s2"> -&gt; </span><span class="si">{outputs_train.shape}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Validation set: </span><span class="si">{imgs_val.shape}</span><span class="s2"> -&gt; </span><span class="si">{outputs_val.shape}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Build model architecture</span>
+    <span class="c1"># TODO: separate architecture builder</span>
+
+    <span class="c1"># Input layer</span>
+    <span class="n">img_input</span> <span class="o">=</span> <span class="n">Input</span><span class="p">((</span><span class="n">img_height</span><span class="p">,</span> <span class="n">img_width</span><span class="p">,</span> <span class="n">img_channels</span><span class="p">))</span>
+
+    <span class="c1"># Rectify image sizes not divisible by pooling factor</span>
+    <span class="n">pool_factor</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="n">depth</span>
+    <span class="k">if</span> <span class="n">img_height</span> <span class="o">%</span> <span class="n">pool_factor</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">img_width</span> <span class="o">%</span> <span class="n">pool_factor</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Image dimensions (</span><span class="si">{img_height}</span><span class="s2">, </span><span class="si">{img_width}</span><span class="s2">) are not divisible by the pooling factor (</span><span class="si">{pool_factor}</span><span class="s2">).&quot;</span><span class="p">)</span>
+        <span class="c1"># gap_height = (np.ceil(img_height / pool_factor) * pool_factor) - img_height</span>
+        <span class="c1"># gap_width = (np.ceil(img_width / pool_factor) * pool_factor) - img_width</span>
+
+        <span class="c1"># TODO: combination of ZeroPadding2D and Cropping2D</span>
+        <span class="c1">#   - can&#39;t do non-symmetric padding, so pad first and then crop left/top so coordinates aren&#39;t messed up</span>
+        <span class="c1">#   - Solution: https://www.tensorflow.org/api_docs/python/tf/pad + Lambda layer + corresponding crop at the end?</span>
+
+    <span class="c1"># Backbone</span>
+    <span class="k">if</span> <span class="n">arch</span> <span class="o">==</span> <span class="s2">&quot;unet&quot;</span><span class="p">:</span>
+        <span class="n">x_outs</span> <span class="o">=</span> <span class="n">unet</span><span class="p">(</span><span class="n">img_input</span><span class="p">,</span> <span class="n">outputs_channels</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="n">depth</span><span class="p">,</span> <span class="n">convs_per_depth</span><span class="o">=</span><span class="n">convs_per_depth</span><span class="p">,</span> <span class="n">num_filters</span><span class="o">=</span><span class="n">num_filters</span><span class="p">,</span> <span class="n">interp</span><span class="o">=</span><span class="n">upsampling</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">arch</span> <span class="o">==</span> <span class="s2">&quot;stacked_unet&quot;</span><span class="p">:</span>
+        <span class="n">x_outs</span> <span class="o">=</span> <span class="n">stacked_unet</span><span class="p">(</span><span class="n">img_input</span><span class="p">,</span> <span class="n">outputs_channels</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="n">depth</span><span class="p">,</span> <span class="n">convs_per_depth</span><span class="o">=</span><span class="n">convs_per_depth</span><span class="p">,</span> <span class="n">num_filters</span><span class="o">=</span><span class="n">num_filters</span><span class="p">,</span> <span class="n">num_stacks</span><span class="o">=</span><span class="n">num_stacks</span><span class="p">,</span> <span class="n">interp</span><span class="o">=</span><span class="n">upsampling</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">arch</span> <span class="o">==</span> <span class="s2">&quot;hourglass&quot;</span><span class="p">:</span>
+        <span class="c1"># Initial downsampling</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">conv</span><span class="p">(</span><span class="n">num_filters</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">))(</span><span class="n">img_input</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">batch_norm</span><span class="p">:</span> <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">()(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="c1"># Stacked hourglass modules</span>
+        <span class="n">x_outs</span> <span class="o">=</span> <span class="n">stacked_hourglass</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">outputs_channels</span><span class="p">,</span> <span class="n">num_hourglass_blocks</span><span class="o">=</span><span class="n">num_stacks</span><span class="p">,</span> <span class="n">num_filters</span><span class="o">=</span><span class="n">num_filters</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="n">depth</span><span class="p">,</span> <span class="n">batch_norm</span><span class="o">=</span><span class="n">batch_norm</span><span class="p">,</span> <span class="n">interp</span><span class="o">=</span><span class="n">upsampling</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">arch</span> <span class="o">==</span> <span class="s2">&quot;leap&quot;</span> <span class="ow">or</span> <span class="n">arch</span> <span class="o">==</span> <span class="s2">&quot;leap_cnn&quot;</span><span class="p">:</span>
+        <span class="n">x_outs</span> <span class="o">=</span> <span class="n">leap_cnn</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">outputs_channels</span><span class="p">,</span> <span class="n">down_blocks</span><span class="o">=</span><span class="n">depth</span><span class="p">,</span> <span class="n">up_blocks</span><span class="o">=</span><span class="n">depth</span><span class="p">,</span> <span class="n">upsampling_layers</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">num_filters</span><span class="o">=</span><span class="n">num_filters</span><span class="p">,</span> <span class="n">interp</span><span class="o">=</span><span class="n">upsampling</span><span class="p">)</span>
+
+    <span class="c1"># Create training model</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">img_input</span><span class="p">,</span> <span class="n">outputs</span><span class="o">=</span><span class="n">x_outs</span><span class="p">)</span>
+
+    <span class="c1"># Create optimizer</span>
+    <span class="k">if</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;adam&quot;</span><span class="p">:</span>
+        <span class="n">_optimizer</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">lr</span><span class="o">=</span><span class="n">learning_rate</span><span class="p">,</span> <span class="n">amsgrad</span><span class="o">=</span><span class="n">amsgrad</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;rmsprop&quot;</span><span class="p">:</span>
+        <span class="n">_optimizer</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">RMSprop</span><span class="p">(</span><span class="n">lr</span><span class="o">=</span><span class="n">learning_rate</span><span class="p">)</span>
+
+    <span class="c1"># Compile</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+        <span class="n">optimizer</span><span class="o">=</span><span class="n">_optimizer</span><span class="p">,</span>
+        <span class="n">loss</span><span class="o">=</span><span class="s2">&quot;mean_squared_error&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Params: </span><span class="si">{:,}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">count_params</span><span class="p">()))</span>
+
+    <span class="c1"># Default to one loop through dataset per epoch</span>
+    <span class="k">if</span> <span class="n">steps_per_epoch</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">steps_per_epoch</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">imgs_train</span><span class="p">)</span> <span class="o">/</span> <span class="n">batch_size</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="c1"># Setup saving</span>
+    <span class="n">save_path</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">save_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Generate run name</span>
+        <span class="k">if</span> <span class="n">run_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%y%m</span><span class="si">%d</span><span class="s2">_%H%M%S&quot;</span><span class="p">)</span>
+            <span class="n">run_name</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;</span><span class="si">{timestamp}</span><span class="s2">.</span><span class="si">{output_type}</span><span class="s2">.</span><span class="si">{arch}</span><span class="s2">.n=</span><span class="si">{num_total}</span><span class="s2">&quot;</span>
+
+        <span class="c1"># Build save path</span>
+        <span class="n">save_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save_dir</span><span class="p">,</span> <span class="n">run_name</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Save path: </span><span class="si">{save_path}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Check if it already exists</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">save_path</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Warning: Save path already exists. Previous run data may be overwritten.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Create run folder</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># TODO: save serialized training info</span>
+
+    <span class="c1"># Initialize data generator with augmentation</span>
+    <span class="n">train_datagen</span> <span class="o">=</span> <span class="n">Augmenter</span><span class="p">(</span><span class="n">imgs_train</span><span class="p">,</span> <span class="n">outputs_train</span><span class="p">,</span> <span class="n">output_names</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">output_names</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="n">shuffle_initially</span><span class="p">,</span>
+        <span class="n">rotation</span><span class="o">=</span><span class="n">augment_rotation</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="p">(</span><span class="n">augment_scale_min</span><span class="p">,</span> <span class="n">augment_scale_max</span><span class="p">))</span>
+
+    <span class="c1"># Setup callbacks</span>
+    <span class="n">callbacks</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Callbacks: Intermediate saving</span>
+    <span class="k">if</span> <span class="n">save_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">save_every_epoch</span><span class="p">:</span>
+            <span class="n">callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">ModelCheckpoint</span><span class="p">(</span><span class="n">filepath</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="s2">&quot;newest_model.h5&quot;</span><span class="p">),</span> <span class="n">monitor</span><span class="o">=</span><span class="s2">&quot;val_loss&quot;</span><span class="p">,</span> <span class="n">save_best_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">save_weights_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                <span class="p">)</span>
+        <span class="k">if</span> <span class="n">save_best_val</span><span class="p">:</span>
+            <span class="n">callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">ModelCheckpoint</span><span class="p">(</span><span class="n">filepath</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="s2">&quot;best_model.h5&quot;</span><span class="p">),</span> <span class="n">monitor</span><span class="o">=</span><span class="s2">&quot;val_loss&quot;</span><span class="p">,</span> <span class="n">save_best_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">save_weights_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                <span class="p">)</span>
+
+    <span class="c1"># Callbacks: Shuffle after every epoch</span>
+    <span class="k">if</span> <span class="n">shuffle_every_epoch</span><span class="p">:</span>
+        <span class="n">callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">LambdaCallback</span><span class="p">(</span><span class="n">on_epoch_end</span><span class="o">=</span><span class="k">lambda</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">logs</span><span class="p">:</span> <span class="n">train_datagen</span><span class="o">.</span><span class="n">shuffle</span><span class="p">())</span>
+            <span class="p">)</span>
+
+    <span class="c1"># Callbacks: LR reduction</span>
+    <span class="n">callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+        <span class="n">ReduceLROnPlateau</span><span class="p">(</span><span class="n">min_delta</span><span class="o">=</span><span class="n">reduce_lr_min_delta</span><span class="p">,</span> <span class="n">factor</span><span class="o">=</span><span class="n">reduce_lr_factor</span><span class="p">,</span> <span class="n">patience</span><span class="o">=</span><span class="n">reduce_lr_patience</span><span class="p">,</span>
+            <span class="n">cooldown</span><span class="o">=</span><span class="n">reduce_lr_cooldown</span><span class="p">,</span> <span class="n">min_lr</span><span class="o">=</span><span class="n">reduce_lr_min_lr</span><span class="p">,</span> <span class="n">monitor</span><span class="o">=</span><span class="s2">&quot;val_loss&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">,)</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Callbacks: Early stopping</span>
+    <span class="n">callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+        <span class="n">EarlyStopping</span><span class="p">(</span><span class="n">monitor</span><span class="o">=</span><span class="s2">&quot;val_loss&quot;</span><span class="p">,</span> <span class="n">min_delta</span><span class="o">=</span><span class="n">early_stopping_min_delta</span><span class="p">,</span> <span class="n">patience</span><span class="o">=</span><span class="n">early_stopping_patience</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Callbacks: Tensorboard</span>
+    <span class="k">if</span> <span class="n">tensorboard_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">TensorBoard</span><span class="p">(</span><span class="n">log_dir</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{tensorboard_dir}</span><span class="s2">/</span><span class="si">{arch}</span><span class="s2">{time()}&quot;</span><span class="p">,</span>
+                <span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">update_freq</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">histogram_freq</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="n">write_graph</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">write_grads</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">write_images</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">embeddings_freq</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">embeddings_layer_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">embeddings_metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">embeddings_data</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+            <span class="p">)</span>
+
+    <span class="c1"># Callbacks: ZMQ control</span>
+    <span class="k">if</span> <span class="n">control_zmq_port</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">TrainingControllerZMQ</span><span class="p">(</span><span class="n">address</span><span class="o">=</span><span class="s2">&quot;tcp://127.0.0.1&quot;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="n">control_zmq_port</span><span class="p">,</span> <span class="n">topic</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">poll_timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+            <span class="p">)</span>
+
+    <span class="c1"># Callbacks: ZMQ progress reporter</span>
+    <span class="k">if</span> <span class="n">progress_report_zmq_port</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">ProgressReporterZMQ</span><span class="p">(</span><span class="n">port</span><span class="o">=</span><span class="n">progress_report_zmq_port</span><span class="p">)</span>
+            <span class="p">)</span>
+
+    <span class="c1"># Callbacks: ZMQ visualization preview</span>
+    <span class="c1"># viz_preview_zmq_port=9002,</span>
+
+    <span class="c1"># Train!</span>
+    <span class="n">history</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit_generator</span><span class="p">(</span>
+        <span class="n">train_datagen</span><span class="p">,</span>
+        <span class="n">steps_per_epoch</span><span class="o">=</span><span class="n">steps_per_epoch</span><span class="p">,</span>
+        <span class="n">epochs</span><span class="o">=</span><span class="n">num_epochs</span><span class="p">,</span>
+        <span class="n">validation_data</span><span class="o">=</span><span class="p">(</span><span class="n">imgs_val</span><span class="p">,</span> <span class="p">{</span><span class="n">output_name</span><span class="p">:</span> <span class="n">outputs_val</span> <span class="k">for</span> <span class="n">output_name</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">output_names</span><span class="p">}),</span>
+        <span class="n">callbacks</span><span class="o">=</span><span class="n">callbacks</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="n">use_multiprocessing</span><span class="o">=</span><span class="n">multiprocessing_workers</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">workers</span><span class="o">=</span><span class="n">multiprocessing_workers</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Save once done training</span>
+    <span class="k">if</span> <span class="n">save_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">final_model_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="s2">&quot;final_model.h5&quot;</span><span class="p">)</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">filepath</span><span class="o">=</span><span class="n">final_model_path</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">include_optimizer</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Saved final model: </span><span class="si">{final_model_path}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># TODO: save metadata (e.g., skeleton)</span>
+        <span class="c1"># TODO: save training history</span>
+
+    <span class="k">return</span> <span class="n">model</span>
+
+
+
+<span class="kn">from</span> <span class="nn">PySide2</span> <span class="k">import</span> <span class="n">QtCore</span><span class="p">,</span> <span class="n">QtWidgets</span><span class="p">,</span> <span class="n">QtGui</span><span class="p">,</span> <span class="n">QtCharts</span>
+<span class="k">class</span> <span class="nc">LossViewer</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QMainWindow</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">LossViewer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">chart</span> <span class="o">=</span> <span class="n">QtCharts</span><span class="o">.</span><span class="n">QtCharts</span><span class="o">.</span><span class="n">QChart</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">series</span> <span class="o">=</span> <span class="n">QtCharts</span><span class="o">.</span><span class="n">QtCharts</span><span class="o">.</span><span class="n">QScatterSeries</span><span class="p">()</span>
+        <span class="n">pen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">series</span><span class="o">.</span><span class="n">pen</span><span class="p">()</span>
+        <span class="n">pen</span><span class="o">.</span><span class="n">setWidth</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="c1"># pen.setColor(r,g,b,alpha)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chart</span><span class="o">.</span><span class="n">addSeries</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">series</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">chart</span><span class="o">.</span><span class="n">createDefaultAxes</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chart</span><span class="o">.</span><span class="n">axisX</span><span class="p">()</span><span class="o">.</span><span class="n">setLabelFormat</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chart</span><span class="o">.</span><span class="n">axisX</span><span class="p">()</span><span class="o">.</span><span class="n">setTitleText</span><span class="p">(</span><span class="s2">&quot;Batches&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chart</span><span class="o">.</span><span class="n">axisY</span><span class="p">()</span><span class="o">.</span><span class="n">setTitleText</span><span class="p">(</span><span class="s2">&quot;Loss&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">chart</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">chartView</span> <span class="o">=</span> <span class="n">QtCharts</span><span class="o">.</span><span class="n">QtCharts</span><span class="o">.</span><span class="n">QChartView</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chart</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chartView</span><span class="o">.</span><span class="n">setRenderHint</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QPainter</span><span class="o">.</span><span class="n">Antialiasing</span><span class="p">);</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setCentralWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chartView</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Y</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t0</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">add_datapoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">series</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+        <span class="n">dx</span> <span class="o">=</span> <span class="mf">0.5</span>
+        <span class="n">dy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ptp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.02</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chart</span><span class="o">.</span><span class="n">axisX</span><span class="p">()</span><span class="o">.</span><span class="n">setRange</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">)</span> <span class="o">-</span> <span class="n">dx</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">)</span> <span class="o">+</span> <span class="n">dx</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chart</span><span class="o">.</span><span class="n">axisY</span><span class="p">()</span><span class="o">.</span><span class="n">setRange</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">)</span> <span class="o">-</span> <span class="n">dy</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">)</span> <span class="o">+</span> <span class="n">dy</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">set_start_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t0</span> <span class="o">=</span> <span class="n">t0</span>
+
+    <span class="k">def</span> <span class="nf">update_runtime</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">t0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">dt</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span>
+            <span class="n">dt_min</span><span class="p">,</span> <span class="n">dt_sec</span> <span class="o">=</span> <span class="nb">divmod</span><span class="p">(</span><span class="n">dt</span><span class="p">,</span> <span class="mi">60</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">chart</span><span class="o">.</span><span class="n">setTitle</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Runtime: {int(dt_min):02}:{int(dt_sec):02}&quot;</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    
+    <span class="kn">from</span> <span class="nn">sleap.io.dataset</span> <span class="k">import</span> <span class="n">Labels</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">load_json</span><span class="p">(</span><span class="s2">&quot;tests/data/json_format_v1/centered_pair.json&quot;</span><span class="p">)</span>
+
+    <span class="kn">from</span> <span class="nn">sleap.nn.datagen</span> <span class="k">import</span> <span class="n">generate_images</span><span class="p">,</span> <span class="n">generate_confidence_maps</span>
+    <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
+    <span class="n">imgs</span> <span class="o">=</span> <span class="n">generate_images</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+    <span class="n">confmaps</span> <span class="o">=</span> <span class="n">generate_confidence_maps</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Generated training data. [{time() - t0:.2f}s]&quot;</span><span class="p">)</span>
+
+    <span class="n">proc</span> <span class="o">=</span> <span class="n">Process</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">train</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">imgs</span><span class="p">,</span> <span class="n">confmaps</span><span class="p">),</span> <span class="n">kwargs</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">val_size</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">batch_norm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">num_filters</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">num_epochs</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">steps_per_epoch</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">arch</span><span class="o">=</span><span class="s2">&quot;unet&quot;</span><span class="p">))</span>
+
+    <span class="n">proc</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+    <span class="n">app</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QApplication</span><span class="p">()</span>
+    <span class="n">loss_viewer</span> <span class="o">=</span> <span class="n">LossViewer</span><span class="p">()</span>
+    <span class="n">loss_viewer</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="mi">600</span><span class="p">,</span> <span class="mi">400</span><span class="p">)</span>
+    <span class="n">loss_viewer</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">setQuitOnLastWindowClosed</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">processEvents</span><span class="p">()</span>
+
+    <span class="c1"># sleep(15)</span>
+
+    <span class="n">ctx</span> <span class="o">=</span> <span class="n">zmq</span><span class="o">.</span><span class="n">Context</span><span class="p">()</span>
+
+    <span class="c1"># Controller</span>
+    <span class="n">ctrl</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">PUB</span><span class="p">)</span>
+    <span class="n">ctrl</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;tcp://*:9000&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Progress monitoring</span>
+    <span class="n">sub</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">SUB</span><span class="p">)</span>
+    <span class="n">sub</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="n">sub</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s2">&quot;tcp://127.0.0.1:9001&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">poll</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">sub</span><span class="o">.</span><span class="n">poll</span><span class="p">(</span><span class="n">timeout</span><span class="p">,</span> <span class="n">zmq</span><span class="o">.</span><span class="n">POLLIN</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">jsonpickle</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">sub</span><span class="o">.</span><span class="n">recv_string</span><span class="p">())</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
+
+    <span class="n">epoch</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">30</span><span class="p">:</span>
+    <span class="c1"># while True:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="n">poll</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">msg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">msg</span><span class="p">[</span><span class="s2">&quot;event&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;train_begin&quot;</span><span class="p">:</span>
+                <span class="n">loss_viewer</span><span class="o">.</span><span class="n">set_start_time</span><span class="p">(</span><span class="n">time</span><span class="p">())</span>
+            <span class="k">elif</span> <span class="n">msg</span><span class="p">[</span><span class="s2">&quot;event&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;epoch_begin&quot;</span><span class="p">:</span>
+                <span class="n">epoch</span> <span class="o">=</span> <span class="n">msg</span><span class="p">[</span><span class="s2">&quot;epoch&quot;</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">msg</span><span class="p">[</span><span class="s2">&quot;event&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;batch_end&quot;</span><span class="p">:</span>
+                <span class="n">loss_viewer</span><span class="o">.</span><span class="n">add_datapoint</span><span class="p">((</span><span class="n">epoch</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span> <span class="o">+</span> <span class="n">msg</span><span class="p">[</span><span class="s2">&quot;logs&quot;</span><span class="p">][</span><span class="s2">&quot;batch&quot;</span><span class="p">],</span> <span class="n">msg</span><span class="p">[</span><span class="s2">&quot;logs&quot;</span><span class="p">][</span><span class="s2">&quot;loss&quot;</span><span class="p">])</span>
+
+        <span class="n">loss_viewer</span><span class="o">.</span><span class="n">update_runtime</span><span class="p">()</span>
+        <span class="n">app</span><span class="o">.</span><span class="n">processEvents</span><span class="p">()</span>
+
+    <span class="c1"># Stop training</span>
+    <span class="n">ctrl</span><span class="o">.</span><span class="n">send_string</span><span class="p">(</span><span class="n">jsonpickle</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">command</span><span class="o">=</span><span class="s2">&quot;stop&quot;</span><span class="p">)))</span>
+
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">app</span><span class="o">.</span><span class="n">processEvents</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Murthy Lab @ Princeton
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

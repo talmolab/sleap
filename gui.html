@@ -1,0 +1,1479 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>GUI &mdash; LEAP  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Inference" href="inference.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> LEAP
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">sLEAP Package</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="skeleton.html">Skeleton</a></li>
+<li class="toctree-l1"><a class="reference internal" href="video.html">Video</a></li>
+<li class="toctree-l1"><a class="reference internal" href="instance.html">Instance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training.html">Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inference.html">Inference</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">GUI</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">LEAP</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>GUI</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/gui.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-sleap.gui.app">
+<span id="gui"></span><h1>GUI<a class="headerlink" href="#module-sleap.gui.app" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-sleap.gui.video"></span><p>Module for showing and manipulating skeleton instances within a video.</p>
+<p>All interactions should go through <cite>QtVideoPlayer</cite>.</p>
+<dl>
+<dt>Example usage:</dt><dd><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_video</span> <span class="o">=</span> <span class="n">Video</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_instance</span> <span class="o">=</span> <span class="n">Instance</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">color</span> <span class="o">=</span> <span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">vp</span> <span class="o">=</span> <span class="n">QtVideoPlayer</span><span class="p">(</span><span class="n">video</span> <span class="o">=</span> <span class="n">my_video</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">vp</span><span class="o">.</span><span class="n">addInstance</span><span class="p">(</span><span class="n">instance</span> <span class="o">=</span> <span class="n">my_instance</span><span class="p">,</span> <span class="n">color</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<dl class="class">
+<dt id="sleap.gui.video.GraphicsView">
+<em class="property">class </em><code class="descclassname">sleap.gui.video.</code><code class="descname">GraphicsView</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#GraphicsView"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.GraphicsView" title="Permalink to this definition">¶</a></dt>
+<dd><p>QGraphicsView used by QtVideoPlayer.</p>
+<p>This contains elements for display of video and event handlers for zoom/selection.</p>
+<dl>
+<dt>Signals:</dt><dd><dl class="simple">
+<dt>updatedViewer: Emitted after update to view (e.g., zoom)</dt><dd><p>Used internally so we know when to update points for each instance.</p>
+</dd>
+</dl>
+<p>updatedSelection: Emitted after the user has selected/unselected an instance
+instanceDoubleClicked: Emitted after an instance is double clicked</p>
+<p>leftMouseButtonPressed
+rightMouseButtonPressed
+leftMouseButtonReleased
+rightMouseButtonReleased
+leftMouseButtonDoubleClicked
+rightMouseButtonDoubleClicked</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="sleap.gui.video.GraphicsView.clear">
+<code class="descname">clear</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#GraphicsView.clear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.GraphicsView.clear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the displayed frame from the scene.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.GraphicsView.clearSelection">
+<code class="descname">clearSelection</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#GraphicsView.clearSelection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.GraphicsView.clearSelection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear instance skeleton selection.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.GraphicsView.clearZoom">
+<code class="descname">clearZoom</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#GraphicsView.clearZoom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.GraphicsView.clearZoom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear zoom stack. Doesn’t update display.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.GraphicsView.getSelection">
+<code class="descname">getSelection</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#GraphicsView.getSelection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.GraphicsView.getSelection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the index of the currently selected instance.
+If no instance selected, returns None.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.GraphicsView.hasImage">
+<code class="descname">hasImage</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#GraphicsView.hasImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.GraphicsView.hasImage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether or not the scene contains an image pixmap.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sleap.gui.video.GraphicsView.instances">
+<code class="descname">instances</code><a class="headerlink" href="#sleap.gui.video.GraphicsView.instances" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of instances.</p>
+<p>Order in list should match the order in which instances were added to scene.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.GraphicsView.instancesBoundingRect">
+<code class="descname">instancesBoundingRect</code><span class="sig-paren">(</span><em>margin=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#GraphicsView.instancesBoundingRect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.GraphicsView.instancesBoundingRect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a rect which contains all displayed skeleton instances.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>margin</strong> – Margin for padding the rect.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The <cite>QRectF</cite> which contains the skeleton instances.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.GraphicsView.mouseDoubleClickEvent">
+<code class="descname">mouseDoubleClickEvent</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#GraphicsView.mouseDoubleClickEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.GraphicsView.mouseDoubleClickEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Custom event handler. Show entire image.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.GraphicsView.mousePressEvent">
+<code class="descname">mousePressEvent</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#GraphicsView.mousePressEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.GraphicsView.mousePressEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start mouse pan or zoom mode.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.GraphicsView.mouseReleaseEvent">
+<code class="descname">mouseReleaseEvent</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#GraphicsView.mouseReleaseEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.GraphicsView.mouseReleaseEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stop mouse pan or zoom mode (apply zoom if valid).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.GraphicsView.nextSelection">
+<code class="descname">nextSelection</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#GraphicsView.nextSelection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.GraphicsView.nextSelection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Select next instance (or first, if none currently selected).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sleap.gui.video.GraphicsView.predicted_instances">
+<code class="descname">predicted_instances</code><a class="headerlink" href="#sleap.gui.video.GraphicsView.predicted_instances" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of predicted instances.</p>
+<p>Order in list should match the order in which instances were added to scene.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.GraphicsView.resizeEvent">
+<code class="descname">resizeEvent</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#GraphicsView.resizeEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.GraphicsView.resizeEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maintain current zoom on resize.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.GraphicsView.selectInstance">
+<code class="descname">selectInstance</code><span class="sig-paren">(</span><em>select_idx</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#GraphicsView.selectInstance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.GraphicsView.selectInstance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Select a particular skeleton instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>select_idx</strong> – index of skeleton to select</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.GraphicsView.setImage">
+<code class="descname">setImage</code><span class="sig-paren">(</span><em>image</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#GraphicsView.setImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.GraphicsView.setImage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the scene’s current image pixmap to the input QImage or QPixmap.
+Raises a RuntimeError if the input image has type other than QImage or QPixmap.
+:type image: QImage | QPixmap</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.GraphicsView.updateViewer">
+<code class="descname">updateViewer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#GraphicsView.updateViewer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.GraphicsView.updateViewer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Show current zoom (if showing entire image, apply current aspect ratio mode).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.GraphicsView.wheelEvent">
+<code class="descname">wheelEvent</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#GraphicsView.wheelEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.GraphicsView.wheelEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Custom event handler. Zoom in/out based on scroll wheel change.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.GraphicsView.zoomToRect">
+<code class="descname">zoomToRect</code><span class="sig-paren">(</span><em>zoom_rect: PySide2.QtCore.QRectF</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#GraphicsView.zoomToRect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.GraphicsView.zoomToRect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to zoom scene to a given rectangle.</p>
+<p>The rect can either be given relative to the current zoom
+(this is useful if it’s the rect drawn by user) or it can be
+given in absolute coordinates for displayed frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>zoom_rect</strong> – The <cite>QRectF</cite> to which we want to zoom.</p></li>
+<li><p><strong>relative</strong> – Controls whether rect is relative to current zoom.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sleap.gui.video.QtEdge">
+<em class="property">class </em><code class="descclassname">sleap.gui.video.</code><code class="descname">QtEdge</code><span class="sig-paren">(</span><em>parent</em>, <em>src: sleap.gui.video.QtNode</em>, <em>dst: sleap.gui.video.QtNode</em>, <em>color</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtEdge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtEdge" title="Permalink to this definition">¶</a></dt>
+<dd><p>QGraphicsLineItem to handle display of edge between skeleton instance nodes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>src</strong> – The <cite>QtNode</cite> source node for the edge.</p></li>
+<li><p><strong>dst</strong> – The <cite>QtNode</cite> destination node for the edge.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="sleap.gui.video.QtEdge.angle_to">
+<code class="descname">angle_to</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtEdge.angle_to"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtEdge.angle_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the angle from one edge node to the other.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>node</strong> – The node from which we’re measuring the angle.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Angle (in radians) to the other node.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.QtEdge.connected_to">
+<code class="descname">connected_to</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtEdge.connected_to"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtEdge.connected_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the other node along the edge.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>node</strong> – One of the edge’s nodes.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The other node (or None if edge doesn’t have node).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.QtEdge.updateEdge">
+<code class="descname">updateEdge</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtEdge.updateEdge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtEdge.updateEdge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the visual display of node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>node</strong> – The node to update.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sleap.gui.video.QtInstance">
+<em class="property">class </em><code class="descclassname">sleap.gui.video.</code><code class="descname">QtInstance</code><span class="sig-paren">(</span><em>skeleton: sleap.skeleton.Skeleton = None</em>, <em>instance: sleap.instance.Instance = None</em>, <em>predicted=False</em>, <em>color=(0</em>, <em>114</em>, <em>189)</em>, <em>markerRadius=4</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtInstance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtInstance" title="Permalink to this definition">¶</a></dt>
+<dd><p>QGraphicsObject for skeleton instances.</p>
+<p>This object stores the data for one skeleton instance
+and handles the events to manipulate the skeleton within
+a video frame (i.e., moving, rotating, marking nodes).</p>
+<p>It should be instatiated with a <cite>Skeleton</cite> or <cite>Instance</cite>
+and added to the relevant <cite>QGraphicsScene</cite>.</p>
+<p>When instantiated, it creates <cite>QtNode</cite>, <cite>QtEdge</cite>, and
+<cite>QtNodeLabel</cite> items as children of itself.</p>
+<dl class="method">
+<dt id="sleap.gui.video.QtInstance.boundingRect">
+<code class="descname">boundingRect</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtInstance.boundingRect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtInstance.boundingRect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method required Qt to determine bounding rect for item.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.QtInstance.getPointsBoundingRect">
+<code class="descname">getPointsBoundingRect</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtInstance.getPointsBoundingRect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtInstance.getPointsBoundingRect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a rect which contains all the nodes in the skeleton.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.QtInstance.paint">
+<code class="descname">paint</code><span class="sig-paren">(</span><em>painter</em>, <em>option</em>, <em>widget=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtInstance.paint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtInstance.paint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method required by Qt.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.QtInstance.showEdges">
+<code class="descname">showEdges</code><span class="sig-paren">(</span><em>show=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtInstance.showEdges"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtInstance.showEdges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draws/hides the edges for this skeleton instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>show</strong> – Show edges if True, hide them otherwise.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.QtInstance.showLabels">
+<code class="descname">showLabels</code><span class="sig-paren">(</span><em>show</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtInstance.showLabels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtInstance.showLabels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draws/hides the labels for this skeleton instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>show</strong> – Show labels if True, hide them otherwise.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.QtInstance.toggleEdges">
+<code class="descname">toggleEdges</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtInstance.toggleEdges"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtInstance.toggleEdges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Toggle whether or not edges are shown for this skeleton instance.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.QtInstance.toggleLabels">
+<code class="descname">toggleLabels</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtInstance.toggleLabels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtInstance.toggleLabels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Toggle whether or not labels are shown for this skeleton instance.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.QtInstance.updateBox">
+<code class="descname">updateBox</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtInstance.updateBox"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtInstance.updateBox" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the box drawn around a selected skeleton.</p>
+<p>This updates both the box attribute stored and the visual box.
+The box attribute is used to determine whether a click should
+select this instance.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.QtInstance.updatePoints">
+<code class="descname">updatePoints</code><span class="sig-paren">(</span><em>complete: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtInstance.updatePoints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtInstance.updatePoints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates data and display for all points in skeleton.</p>
+<p>This is called any time the skeleton is manipulated as a whole.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>complete</strong> (<em>optional</em>) – If set, we mark the state of all
+nodes in the skeleton to “complete”.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sleap.gui.video.QtNode">
+<em class="property">class </em><code class="descclassname">sleap.gui.video.</code><code class="descname">QtNode</code><span class="sig-paren">(</span><em>parent</em>, <em>point: sleap.instance.Point</em>, <em>radius: float</em>, <em>color: list</em>, <em>node_name: str = None</em>, <em>predicted=False</em>, <em>callbacks=None</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>QGraphicsEllipseItem to handle display of skeleton instance node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>parent</strong> – The <cite>QtInstance</cite> which will contain this item.</p></li>
+<li><p><strong>point</strong> – The <cite>Point</cite> where this node is located.
+Note that this is a mutable object so we’re able to directly access
+the very same <cite>Point</cite> object that’s defined outside our class.</p></li>
+<li><p><strong>radius</strong> – Radius of the visual node item.</p></li>
+<li><p><strong>color</strong> – Color of the visual node item.</p></li>
+<li><p><strong>callbacks</strong> – List of functions to call after we update to the <cite>Point</cite>.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="sleap.gui.video.QtNode.calls">
+<code class="descname">calls</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtNode.calls"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtNode.calls" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to call all callbacks.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.QtNode.mouseMoveEvent">
+<code class="descname">mouseMoveEvent</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtNode.mouseMoveEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtNode.mouseMoveEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Custom event handler for mouse move.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.QtNode.mousePressEvent">
+<code class="descname">mousePressEvent</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtNode.mousePressEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtNode.mousePressEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Custom event handler for mouse press.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.QtNode.mouseReleaseEvent">
+<code class="descname">mouseReleaseEvent</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtNode.mouseReleaseEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtNode.mouseReleaseEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Custom event handler for mouse release.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.QtNode.updatePoint">
+<code class="descname">updatePoint</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtNode.updatePoint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtNode.updatePoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to update data for node/edge after user manipulates visual point.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.QtNode.wheelEvent">
+<code class="descname">wheelEvent</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtNode.wheelEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtNode.wheelEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Custom event handler for mouse scroll wheel.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sleap.gui.video.QtNodeLabel">
+<em class="property">class </em><code class="descclassname">sleap.gui.video.</code><code class="descname">QtNodeLabel</code><span class="sig-paren">(</span><em>node</em>, <em>parent</em>, <em>predicted=False</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtNodeLabel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtNodeLabel" title="Permalink to this definition">¶</a></dt>
+<dd><p>QGraphicsTextItem to handle display of node text label.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>node</strong> – The <cite>QtNode</cite> to which this label is attached.</p></li>
+<li><p><strong>parent</strong> – The <cite>QtInstance</cite> which will contain this item.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="sleap.gui.video.QtNodeLabel.adjustPos">
+<code class="descname">adjustPos</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtNodeLabel.adjustPos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtNodeLabel.adjustPos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the position of the label based on the position of the node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>arbitrary arguments so we can connect to various signals.</strong> (<em>Accepts</em>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.QtNodeLabel.adjustStyle">
+<code class="descname">adjustStyle</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtNodeLabel.adjustStyle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtNodeLabel.adjustStyle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update visual display of the label and its node.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.QtNodeLabel.boundingRect">
+<code class="descname">boundingRect</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtNodeLabel.boundingRect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtNodeLabel.boundingRect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method required by Qt.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.QtNodeLabel.mouseMoveEvent">
+<code class="descname">mouseMoveEvent</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtNodeLabel.mouseMoveEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtNodeLabel.mouseMoveEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pass events along so that clicking label is like clicking node.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.QtNodeLabel.mousePressEvent">
+<code class="descname">mousePressEvent</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtNodeLabel.mousePressEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtNodeLabel.mousePressEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pass events along so that clicking label is like clicking node.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.QtNodeLabel.mouseReleaseEvent">
+<code class="descname">mouseReleaseEvent</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtNodeLabel.mouseReleaseEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtNodeLabel.mouseReleaseEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pass events along so that clicking label is like clicking node.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.QtNodeLabel.paint">
+<code class="descname">paint</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtNodeLabel.paint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtNodeLabel.paint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method required by Qt.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.QtNodeLabel.wheelEvent">
+<code class="descname">wheelEvent</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtNodeLabel.wheelEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtNodeLabel.wheelEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pass events along so that clicking label is like clicking node.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sleap.gui.video.QtVideoPlayer">
+<em class="property">class </em><code class="descclassname">sleap.gui.video.</code><code class="descname">QtVideoPlayer</code><span class="sig-paren">(</span><em>video: sleap.io.video.Video = None</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtVideoPlayer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtVideoPlayer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main QWidget for displaying video with skeleton instances.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>video</strong> (<em>optional</em>) – the <code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code> to display</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Signals:</dt><dd><p>changedPlot: Emitted whenever the plot is redrawn</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="sleap.gui.video.QtVideoPlayer.addInstance">
+<code class="descname">addInstance</code><span class="sig-paren">(</span><em>instance</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtVideoPlayer.addInstance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtVideoPlayer.addInstance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a skeleton instance to the video.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>instance</strong> – this can be either a <cite>QtInstance</cite> or an <cite>Instance</cite></p></li>
+<li><p><strong>other named args are passed along if/when creating QtInstance.</strong> (<em>Any</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.QtVideoPlayer.keyPressEvent">
+<code class="descname">keyPressEvent</code><span class="sig-paren">(</span><em>event: PySide2.QtGui.QKeyEvent</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtVideoPlayer.keyPressEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtVideoPlayer.keyPressEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Custom event handler.
+Move between frames, toggle display of edges/labels, and select instances.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.QtVideoPlayer.load_video">
+<code class="descname">load_video</code><span class="sig-paren">(</span><em>video: sleap.io.video.Video</em>, <em>initial_frame=0</em>, <em>plot=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtVideoPlayer.load_video"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtVideoPlayer.load_video" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load video into viewer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>video</strong> – the <code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code> to display</p></li>
+<li><p><strong>initial_frame</strong> (<em>optional</em>) – display this frame of video</p></li>
+<li><p><strong>plot</strong> – If True, plot the video frame. Otherwise, just load the data.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.QtVideoPlayer.nextFrame">
+<code class="descname">nextFrame</code><span class="sig-paren">(</span><em>dt=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtVideoPlayer.nextFrame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtVideoPlayer.nextFrame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Go to next frame.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.QtVideoPlayer.onSequenceSelect">
+<code class="descname">onSequenceSelect</code><span class="sig-paren">(</span><em>seq_len: int</em>, <em>on_success: Callable</em>, <em>on_each=None</em>, <em>on_failure=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtVideoPlayer.onSequenceSelect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtVideoPlayer.onSequenceSelect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collect a sequence of instances (through user selection) and call <cite>on_success</cite>.
+If the user cancels (by unselecting without new selection), call <cite>on_failure</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>seq_len</strong> – number of instances we expect user to select</p></li>
+<li><p><strong>on_success</strong> – callback after use has selected desired number of instances</p></li>
+<li><p><strong>on_failure</strong> (<em>optional</em>) – callback if user cancels selection</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If successful, we call
+&gt;&gt;&gt; on_success(sequence_of_selected_instance_indexes)</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.QtVideoPlayer.plot">
+<code class="descname">plot</code><span class="sig-paren">(</span><em>idx=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtVideoPlayer.plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtVideoPlayer.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Do the actual plotting of the video frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>idx</strong> (<em>optional</em>) – Go to frame idx. If None, stay on current frame.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.QtVideoPlayer.prevFrame">
+<code class="descname">prevFrame</code><span class="sig-paren">(</span><em>dt=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtVideoPlayer.prevFrame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtVideoPlayer.prevFrame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Go to previous frame.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.QtVideoPlayer.reset">
+<code class="descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtVideoPlayer.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtVideoPlayer.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset viewer by removing all video data.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.QtVideoPlayer.showEdges">
+<code class="descname">showEdges</code><span class="sig-paren">(</span><em>show</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtVideoPlayer.showEdges"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtVideoPlayer.showEdges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Show/hide node edges for all instances in viewer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>show</strong> – Show if True, hide otherwise.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.QtVideoPlayer.showLabels">
+<code class="descname">showLabels</code><span class="sig-paren">(</span><em>show</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtVideoPlayer.showLabels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtVideoPlayer.showLabels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Show/hide node labels for all instances in viewer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>show</strong> – Show if True, hide otherwise.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.QtVideoPlayer.toggleEdges">
+<code class="descname">toggleEdges</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtVideoPlayer.toggleEdges"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtVideoPlayer.toggleEdges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Toggle current show/hide state of edges for all instances.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.QtVideoPlayer.toggleLabels">
+<code class="descname">toggleLabels</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtVideoPlayer.toggleLabels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtVideoPlayer.toggleLabels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Toggle current show/hide state of node labels for all instances.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.QtVideoPlayer.zoomToFit">
+<code class="descname">zoomToFit</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtVideoPlayer.zoomToFit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtVideoPlayer.zoomToFit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Zoom view to fit all instances</p>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-sleap.gui.importvideos"></span><p>Interface to handle the UI for importing videos.</p>
+<p>Usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">import_list</span> <span class="o">=</span> <span class="n">ImportVideos</span><span class="p">()</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>This will show the user a file-selection dialog, and then a second dialog
+to select the import parameters for each file.</p>
+<p>It returns a list with data about each file selected by the user.
+In particular, we’ll have the name of the file and all of the parameters
+relevant for that specific type of file. It also includes a reference
+to the relevant method of <code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code>.</p>
+<p>For each <cite>item</cite> in <cite>import_list</cite>, we can load the video by calling this
+method while passing the user-selected params as the named parameters:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">vid</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;video_class&quot;</span><span class="p">](</span><span class="o">**</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;params&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+<dl class="class">
+<dt id="sleap.gui.importvideos.ImportItemWidget">
+<em class="property">class </em><code class="descclassname">sleap.gui.importvideos.</code><code class="descname">ImportItemWidget</code><span class="sig-paren">(</span><em>file_path: str</em>, <em>import_type: dict</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/importvideos.html#ImportItemWidget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.importvideos.ImportItemWidget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Widget for selecting parameters with preview when importing video.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_path</strong> (<em>str</em>) – Full path to selected video file.</p></li>
+<li><p><strong>import_type</strong> (<em>dict</em>) – Data about user-selectable import parameters.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="sleap.gui.importvideos.ImportItemWidget.boundingRect">
+<code class="descname">boundingRect</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; PySide2.QtCore.QRectF<a class="reference internal" href="_modules/sleap/gui/importvideos.html#ImportItemWidget.boundingRect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.importvideos.ImportItemWidget.boundingRect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method required by Qt.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.importvideos.ImportItemWidget.get_data">
+<code class="descname">get_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; dict<a class="reference internal" href="_modules/sleap/gui/importvideos.html#ImportItemWidget.get_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.importvideos.ImportItemWidget.get_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get all data (fixed and user-selected) for imported video.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Dict with data for this video.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.importvideos.ImportItemWidget.is_enabled">
+<code class="descname">is_enabled</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/importvideos.html#ImportItemWidget.is_enabled"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.importvideos.ImportItemWidget.is_enabled" title="Permalink to this definition">¶</a></dt>
+<dd><p>Am I enabled?</p>
+<p>Our UI provides a way to enable/disable this item (file).
+We only want to import enabled items.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Am I enabled?</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Boolean</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.importvideos.ImportItemWidget.paint">
+<code class="descname">paint</code><span class="sig-paren">(</span><em>painter</em>, <em>option</em>, <em>widget=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/importvideos.html#ImportItemWidget.paint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.importvideos.ImportItemWidget.paint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method required by Qt.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.importvideos.ImportItemWidget.update_video">
+<code class="descname">update_video</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/importvideos.html#ImportItemWidget.update_video"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.importvideos.ImportItemWidget.update_video" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update preview video using current param values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sleap.gui.importvideos.ImportParamDialog">
+<em class="property">class </em><code class="descclassname">sleap.gui.importvideos.</code><code class="descname">ImportParamDialog</code><span class="sig-paren">(</span><em>file_names: list</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/importvideos.html#ImportParamDialog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.importvideos.ImportParamDialog" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dialog for selecting parameters with preview when importing video.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>file_names</strong> (<em>list</em>) – List of files we want to import.</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="sleap.gui.importvideos.ImportParamDialog.boundingRect">
+<code class="descname">boundingRect</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; PySide2.QtCore.QRectF<a class="reference internal" href="_modules/sleap/gui/importvideos.html#ImportParamDialog.boundingRect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.importvideos.ImportParamDialog.boundingRect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method required by Qt.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.importvideos.ImportParamDialog.get_data">
+<code class="descname">get_data</code><span class="sig-paren">(</span><em>import_result=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/importvideos.html#ImportParamDialog.get_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.importvideos.ImportParamDialog.get_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to get results from import.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>import_result</strong> (<em>optional</em>) – If specified, we’ll insert data into this.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of dicts with data for each (enabled) imported file.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.importvideos.ImportParamDialog.paint">
+<code class="descname">paint</code><span class="sig-paren">(</span><em>painter</em>, <em>option</em>, <em>widget=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/importvideos.html#ImportParamDialog.paint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.importvideos.ImportParamDialog.paint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method required by Qt.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sleap.gui.importvideos.ImportParamWidget">
+<em class="property">class </em><code class="descclassname">sleap.gui.importvideos.</code><code class="descname">ImportParamWidget</code><span class="sig-paren">(</span><em>file_path: str</em>, <em>import_type: dict</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/importvideos.html#ImportParamWidget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.importvideos.ImportParamWidget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Widget for allowing user to select video parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_path</strong> – file path/name</p></li>
+<li><p><strong>import_type</strong> – data about the parameters for this type of video</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Object is a widget with the UI for params specific to this video type.</p>
+</div>
+<dl class="method">
+<dt id="sleap.gui.importvideos.ImportParamWidget.boundingRect">
+<code class="descname">boundingRect</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; PySide2.QtCore.QRectF<a class="reference internal" href="_modules/sleap/gui/importvideos.html#ImportParamWidget.boundingRect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.importvideos.ImportParamWidget.boundingRect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method required by Qt.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.importvideos.ImportParamWidget.get_values">
+<code class="descname">get_values</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/importvideos.html#ImportParamWidget.get_values"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.importvideos.ImportParamWidget.get_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to get current user-selected values for import parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>None.</strong> – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Dict of param keys/values.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>It’s easiest if the return dict matches the arguments we need
+for the Video object, so we’ll add the file name to the dict
+even though it’s not a user-selectable param.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.importvideos.ImportParamWidget.make_layout">
+<code class="descname">make_layout</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; PySide2.QtWidgets.QLayout<a class="reference internal" href="_modules/sleap/gui/importvideos.html#ImportParamWidget.make_layout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.importvideos.ImportParamWidget.make_layout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds the layout of widgets for user-selected import parameters.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.importvideos.ImportParamWidget.paint">
+<code class="descname">paint</code><span class="sig-paren">(</span><em>painter</em>, <em>option</em>, <em>widget=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/importvideos.html#ImportParamWidget.paint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.importvideos.ImportParamWidget.paint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method required by Qt.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sleap.gui.importvideos.ImportVideos">
+<em class="property">class </em><code class="descclassname">sleap.gui.importvideos.</code><code class="descname">ImportVideos</code><a class="reference internal" href="_modules/sleap/gui/importvideos.html#ImportVideos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.importvideos.ImportVideos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to handle video importing UI.</p>
+<dl class="method">
+<dt id="sleap.gui.importvideos.ImportVideos.go">
+<code class="descname">go</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/importvideos.html#ImportVideos.go"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.importvideos.ImportVideos.go" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs the import UI.</p>
+<ol class="arabic simple">
+<li><p>Show file selection dialog.</p></li>
+<li><p>Show import parameter dialog with widget for each file.</p></li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>None.</strong> – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List with dict of the parameters for each file to import.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sleap.gui.importvideos.VideoPreviewWidget">
+<em class="property">class </em><code class="descclassname">sleap.gui.importvideos.</code><code class="descname">VideoPreviewWidget</code><span class="sig-paren">(</span><em>video: sleap.io.video.Video = None</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/importvideos.html#VideoPreviewWidget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.importvideos.VideoPreviewWidget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Widget to show video preview. Based on <code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code> class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>video</strong> – the video to show</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This widget is used by ImportItemWidget.</p>
+</div>
+<dl class="method">
+<dt id="sleap.gui.importvideos.VideoPreviewWidget.boundingRect">
+<code class="descname">boundingRect</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; PySide2.QtCore.QRectF<a class="reference internal" href="_modules/sleap/gui/importvideos.html#VideoPreviewWidget.boundingRect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.importvideos.VideoPreviewWidget.boundingRect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method required by Qt.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.importvideos.VideoPreviewWidget.clear_video">
+<code class="descname">clear_video</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/importvideos.html#VideoPreviewWidget.clear_video"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.importvideos.VideoPreviewWidget.clear_video" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear the video preview.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.importvideos.VideoPreviewWidget.load_video">
+<code class="descname">load_video</code><span class="sig-paren">(</span><em>video: sleap.io.video.Video</em>, <em>initial_frame=0</em>, <em>plot=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/importvideos.html#VideoPreviewWidget.load_video"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.importvideos.VideoPreviewWidget.load_video" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load the video preview and display label text.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.importvideos.VideoPreviewWidget.paint">
+<code class="descname">paint</code><span class="sig-paren">(</span><em>painter</em>, <em>option</em>, <em>widget=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/importvideos.html#VideoPreviewWidget.paint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.importvideos.VideoPreviewWidget.paint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method required by Qt.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.importvideos.VideoPreviewWidget.plot">
+<code class="descname">plot</code><span class="sig-paren">(</span><em>idx=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/importvideos.html#VideoPreviewWidget.plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.importvideos.VideoPreviewWidget.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Show the video preview.</p>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-sleap.gui.confmapsplot"></span><p>Module for showing confidence maps as an overlay within a QtVideoPlayer.</p>
+<p class="rubric">Example</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cm</span> <span class="o">=</span> <span class="n">ConfMapsPlot</span><span class="p">(</span><span class="n">conf_data</span><span class="o">.</span><span class="n">get_frame</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">window</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">cm</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="class">
+<dt id="sleap.gui.confmapsplot.ConfMapPlot">
+<em class="property">class </em><code class="descclassname">sleap.gui.confmapsplot.</code><code class="descname">ConfMapPlot</code><span class="sig-paren">(</span><em>confmap: numpy.array = None, color=[255, 255, 255], *args, **kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/confmapsplot.html#ConfMapPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.confmapsplot.ConfMapPlot" title="Permalink to this definition">¶</a></dt>
+<dd><p>QGraphicsPixmapItem object for drawing single channel of confidence map.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>confmap</strong> (<em>numpy.array</em>) – (h, w) array of one confidence map channel.</p></li>
+<li><p><strong>color</strong> (<em>list</em>) – optional (r, g, b) array for channel color.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In most cases this should only be called by ConfMapsPlot.</p>
+</div>
+<dl class="method">
+<dt id="sleap.gui.confmapsplot.ConfMapPlot.get_conf_image">
+<code class="descname">get_conf_image</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; PySide2.QtGui.QImage<a class="reference internal" href="_modules/sleap/gui/confmapsplot.html#ConfMapPlot.get_conf_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.confmapsplot.ConfMapPlot.get_conf_image" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts array data stored in object to QImage.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>QImage.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sleap.gui.confmapsplot.ConfMapsPlot">
+<em class="property">class </em><code class="descclassname">sleap.gui.confmapsplot.</code><code class="descname">ConfMapsPlot</code><span class="sig-paren">(</span><em>frame: numpy.array = None</em>, <em>show=None</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/confmapsplot.html#ConfMapsPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.confmapsplot.ConfMapsPlot" title="Permalink to this definition">¶</a></dt>
+<dd><p>QGraphicsObject to display multiple confidence maps in a QGraphicsView.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>frame</strong> (<em>numpy.array</em>) – Data for one frame of confidence map data.
+Shape of array should be (channels, height, width).</p></li>
+<li><p><strong>show</strong> (<em>list</em><em>, </em><em>optional</em>) – List of channels to show. If None, show all channels.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+<p>When initialized, creates one child ConfMapPlot item for each channel.</p>
+<dl class="method">
+<dt id="sleap.gui.confmapsplot.ConfMapsPlot.boundingRect">
+<code class="descname">boundingRect</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; PySide2.QtCore.QRectF<a class="reference internal" href="_modules/sleap/gui/confmapsplot.html#ConfMapsPlot.boundingRect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.confmapsplot.ConfMapsPlot.boundingRect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method required by Qt.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.confmapsplot.ConfMapsPlot.paint">
+<code class="descname">paint</code><span class="sig-paren">(</span><em>painter</em>, <em>option</em>, <em>widget=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/confmapsplot.html#ConfMapsPlot.paint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.confmapsplot.ConfMapsPlot.paint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method required by Qt.</p>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-sleap.gui.quiverplot"></span><dl class="class">
+<dt id="sleap.gui.quiverplot.MultiQuiverPlot">
+<em class="property">class </em><code class="descclassname">sleap.gui.quiverplot.</code><code class="descname">MultiQuiverPlot</code><span class="sig-paren">(</span><em>frame: numpy.array = None</em>, <em>show: list = None</em>, <em>decimation: int = 9</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/quiverplot.html#MultiQuiverPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.quiverplot.MultiQuiverPlot" title="Permalink to this definition">¶</a></dt>
+<dd><p>QGraphicsObject to display multiple quiver plots in a QGraphicsView.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>frame</strong> (<em>numpy.array</em>) – Data for one frame of quiver plot data.
+Shape of array should be (channels, height, width).</p></li>
+<li><p><strong>show</strong> (<em>list</em><em>, </em><em>optional</em>) – List of channels to show. If None, show all channels.</p></li>
+<li><p><strong>decimation</strong> (<em>int</em><em>, </em><em>optional</em>) – Decimation factor. If 1, show every arrow.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Each channel corresponds to two (h, w) arrays: x and y for the vector.</p>
+</div>
+<p>When initialized, creates one child QuiverPlot item for each channel.</p>
+<dl class="method">
+<dt id="sleap.gui.quiverplot.MultiQuiverPlot.boundingRect">
+<code class="descname">boundingRect</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; PySide2.QtCore.QRectF<a class="reference internal" href="_modules/sleap/gui/quiverplot.html#MultiQuiverPlot.boundingRect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.quiverplot.MultiQuiverPlot.boundingRect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method required by Qt.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.quiverplot.MultiQuiverPlot.paint">
+<code class="descname">paint</code><span class="sig-paren">(</span><em>painter</em>, <em>option</em>, <em>widget=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/quiverplot.html#MultiQuiverPlot.paint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.quiverplot.MultiQuiverPlot.paint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method required by Qt.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sleap.gui.quiverplot.QuiverPlot">
+<em class="property">class </em><code class="descclassname">sleap.gui.quiverplot.</code><code class="descname">QuiverPlot</code><span class="sig-paren">(</span><em>field_x: numpy.array = None, field_y: numpy.array = None, color=[255, 255, 255], decimation=1, *args, **kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/quiverplot.html#QuiverPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.quiverplot.QuiverPlot" title="Permalink to this definition">¶</a></dt>
+<dd><p>QGraphicsObject for drawing single quiver plot.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>field_x</strong> (<em>numpy.array</em>) – (h, w) array of x component of vectors.</p></li>
+<li><p><strong>field_y</strong> (<em>numpy.array</em>) – (h, w) array of y component of vectors.</p></li>
+<li><p><strong>color</strong> (<em>list</em><em>, </em><em>optional</em>) – Arrow color. Format as (r, g, b) array.</p></li>
+<li><p><strong>decimation</strong> (<em>int</em><em>, </em><em>optional</em>) – Decimation factor. If 1, show every arrow.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="sleap.gui.quiverplot.QuiverPlot.boundingRect">
+<code class="descname">boundingRect</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; PySide2.QtCore.QRectF<a class="reference internal" href="_modules/sleap/gui/quiverplot.html#QuiverPlot.boundingRect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.quiverplot.QuiverPlot.boundingRect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method called by Qt in order to determine whether object is in visible frame.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.quiverplot.QuiverPlot.paint">
+<code class="descname">paint</code><span class="sig-paren">(</span><em>painter</em>, <em>option</em>, <em>widget=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/quiverplot.html#QuiverPlot.paint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.quiverplot.QuiverPlot.paint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method called by Qt to draw object.</p>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-sleap.gui.dataviews"></span><dl class="class">
+<dt id="sleap.gui.dataviews.LabeledFrameTable">
+<em class="property">class </em><code class="descclassname">sleap.gui.dataviews.</code><code class="descname">LabeledFrameTable</code><span class="sig-paren">(</span><em>labeled_frame: sleap.instance.LabeledFrame = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#LabeledFrameTable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.LabeledFrameTable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Table view widget backed by a custom data model for displaying
+lists of Video instances.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sleap.gui.dataviews.SkeletonEdgesTable">
+<em class="property">class </em><code class="descclassname">sleap.gui.dataviews.</code><code class="descname">SkeletonEdgesTable</code><span class="sig-paren">(</span><em>skeleton: sleap.skeleton.Skeleton</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#SkeletonEdgesTable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.SkeletonEdgesTable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Table view widget backed by a custom data model for displaying and
+editing Skeleton edges.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sleap.gui.dataviews.SkeletonNodesTable">
+<em class="property">class </em><code class="descclassname">sleap.gui.dataviews.</code><code class="descname">SkeletonNodesTable</code><span class="sig-paren">(</span><em>skeleton: sleap.skeleton.Skeleton</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#SkeletonNodesTable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.SkeletonNodesTable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Table view widget backed by a custom data model for displaying and
+editing Skeleton nodes.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sleap.gui.dataviews.VideosTable">
+<em class="property">class </em><code class="descclassname">sleap.gui.dataviews.</code><code class="descname">VideosTable</code><span class="sig-paren">(</span><em>videos: list = []</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#VideosTable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.VideosTable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Table view widget backed by a custom data model for displaying
+lists of Video instances.</p>
+</dd></dl>
+
+<span class="target" id="module-sleap.gui.multicheck"></span><p>Module for Qt Widget to show multiple checkboxes for selecting from a sequence of numbers.</p>
+<p class="rubric">Example</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span> <span class="o">=</span> <span class="n">MultiCheckWidget</span><span class="p">(</span><span class="n">count</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">selected</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;My Items&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">me</span><span class="o">.</span><span class="n">selectionChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">window</span><span class="o">.</span><span class="n">plot</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">window</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="class">
+<dt id="sleap.gui.multicheck.MultiCheckWidget">
+<em class="property">class </em><code class="descclassname">sleap.gui.multicheck.</code><code class="descname">MultiCheckWidget</code><span class="sig-paren">(</span><em>*args</em>, <em>count</em>, <em>title=''</em>, <em>selected=None</em>, <em>default=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/multicheck.html#MultiCheckWidget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.multicheck.MultiCheckWidget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Qt Widget to show multiple checkboxes for selecting from a sequence of numbers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>count</strong> (<em>int</em>) – The number of checkboxes to show.</p></li>
+<li><p><strong>title</strong> (<em>str</em><em>, </em><em>optional</em>) – Display title for group of checkboxes.</p></li>
+<li><p><strong>selected</strong> (<em>list</em><em>, </em><em>optional</em>) – List of checkbox numbers to initially have checked.</p></li>
+<li><p><strong>default</strong> (<em>bool</em><em>, </em><em>optional</em>) – Default to checked/unchecked (ignored if selected arg given).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="sleap.gui.multicheck.MultiCheckWidget.boundingRect">
+<code class="descname">boundingRect</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; PySide2.QtCore.QRectF<a class="reference internal" href="_modules/sleap/gui/multicheck.html#MultiCheckWidget.boundingRect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.multicheck.MultiCheckWidget.boundingRect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method required by Qt.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.multicheck.MultiCheckWidget.getSelected">
+<code class="descname">getSelected</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; list<a class="reference internal" href="_modules/sleap/gui/multicheck.html#MultiCheckWidget.getSelected"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.multicheck.MultiCheckWidget.getSelected" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to get list of the checked checkboxes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>list of checked checkboxes</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.multicheck.MultiCheckWidget.paint">
+<code class="descname">paint</code><span class="sig-paren">(</span><em>painter</em>, <em>option</em>, <em>widget=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/multicheck.html#MultiCheckWidget.paint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.multicheck.MultiCheckWidget.paint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method required by Qt.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.multicheck.MultiCheckWidget.setSelected">
+<code class="descname">setSelected</code><span class="sig-paren">(</span><em>selected: list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/multicheck.html#MultiCheckWidget.setSelected"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.multicheck.MultiCheckWidget.setSelected" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to set some checkboxes as checked.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>selected</strong> (<em>list</em>) – List of checkboxes to check.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-sleap.gui.slider"></span><p>Drop-in replacement for QSlider with additional features.</p>
+<dl class="class">
+<dt id="sleap.gui.slider.VideoSlider">
+<em class="property">class </em><code class="descclassname">sleap.gui.slider.</code><code class="descname">VideoSlider</code><span class="sig-paren">(</span><em>orientation=-1</em>, <em>min=0</em>, <em>max=100</em>, <em>val=0</em>, <em>labels=None</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider" title="Permalink to this definition">¶</a></dt>
+<dd><p>Drop-in replacement for QSlider with additional features.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>orientation</strong> – ignored (here for compatibility with QSlider)</p></li>
+<li><p><strong>min</strong> – initial minimum value</p></li>
+<li><p><strong>max</strong> – initial maximum value</p></li>
+<li><p><strong>val</strong> – initial value</p></li>
+<li><p><strong>labels</strong> – initial set of values to label on slider</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.addLabel">
+<code class="descname">addLabel</code><span class="sig-paren">(</span><em>new_label</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.addLabel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.addLabel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a labeled value to the slider.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>new_label</strong> – value to label</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.boundingRect">
+<code class="descname">boundingRect</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; PySide2.QtCore.QRectF<a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.boundingRect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.boundingRect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method required by Qt.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.clearLabels">
+<code class="descname">clearLabels</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.clearLabels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.clearLabels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear all labeled values for slider.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.clearSelection">
+<code class="descname">clearSelection</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.clearSelection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.clearSelection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear selection endpoints.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.drawSelection">
+<code class="descname">drawSelection</code><span class="sig-paren">(</span><em>a</em>, <em>b</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.drawSelection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.drawSelection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw selection box on slider.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>a</strong> – one endpoint value</p></li>
+<li><p><strong>b</strong> – other endpoint value</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.enabled">
+<code class="descname">enabled</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.enabled"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.enabled" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether slider is enabled.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.endSelection">
+<code class="descname">endSelection</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.endSelection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.endSelection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add final selection endpoint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>val</strong> – value of endpoint</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.getSelection">
+<code class="descname">getSelection</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.getSelection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.getSelection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return start and end value of current selection endpoints.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.mouseMoveEvent">
+<code class="descname">mouseMoveEvent</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.mouseMoveEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.mouseMoveEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override method to emid mouseMoved signal on drag.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.mousePressEvent">
+<code class="descname">mousePressEvent</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.mousePressEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.mousePressEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override method to move handle for mouse press/drag.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>event</strong> – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.mouseReleaseEvent">
+<code class="descname">mouseReleaseEvent</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.mouseReleaseEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.mouseReleaseEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override method to emit mouseReleased signal on release.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.moveHandle">
+<code class="descname">moveHandle</code><span class="sig-paren">(</span><em>x</em>, <em>y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.moveHandle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.moveHandle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Move handle in response to mouse position.</p>
+<p>Emits valueChanged signal if value of slider changed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – x position of mouse</p></li>
+<li><p><strong>y</strong> – y position of mouse</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.moveSelectionAnchor">
+<code class="descname">moveSelectionAnchor</code><span class="sig-paren">(</span><em>x</em>, <em>y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.moveSelectionAnchor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.moveSelectionAnchor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Move selection anchor in response to mouse position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – x position of mouse</p></li>
+<li><p><strong>y</strong> – y position of mouse</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.paint">
+<code class="descname">paint</code><span class="sig-paren">(</span><em>painter</em>, <em>option</em>, <em>widget=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.paint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.paint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method required by Qt.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.releaseSelectionAnchor">
+<code class="descname">releaseSelectionAnchor</code><span class="sig-paren">(</span><em>x</em>, <em>y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.releaseSelectionAnchor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.releaseSelectionAnchor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finish selection in response to mouse release.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – x position of mouse</p></li>
+<li><p><strong>y</strong> – y position of mouse</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.resizeEvent">
+<code class="descname">resizeEvent</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.resizeEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.resizeEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override method to update visual size when necessary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>event</strong> – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.setEnabled">
+<code class="descname">setEnabled</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.setEnabled"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.setEnabled" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set whether the slider is enabled.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.setLabels">
+<code class="descname">setLabels</code><span class="sig-paren">(</span><em>labels</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.setLabels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.setLabels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set all labeled values for the slider.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>labels</strong> – iterable with all values to label</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.setMaximum">
+<code class="descname">setMaximum</code><span class="sig-paren">(</span><em>max</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.setMaximum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.setMaximum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set maximum value for slider.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.setMinimum">
+<code class="descname">setMinimum</code><span class="sig-paren">(</span><em>min</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.setMinimum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.setMinimum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set minimum value for slider.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.setValue">
+<code class="descname">setValue</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.setValue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.setValue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set value of slider.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.startSelection">
+<code class="descname">startSelection</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.startSelection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.startSelection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add initial selection endpoint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>val</strong> – value of endpoint</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.updatePos">
+<code class="descname">updatePos</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.updatePos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.updatePos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the visual position of handle and slider annotations.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.value">
+<code class="descname">value</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get value of slider.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="inference.html" class="btn btn-neutral float-left" title="Inference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Murthy Lab @ Princeton
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

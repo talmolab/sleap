@@ -1,0 +1,352 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Inference &mdash; LEAP  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="GUI" href="gui.html" />
+    <link rel="prev" title="Training" href="training.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> LEAP
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">sLEAP Package</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="skeleton.html">Skeleton</a></li>
+<li class="toctree-l1"><a class="reference internal" href="video.html">Video</a></li>
+<li class="toctree-l1"><a class="reference internal" href="instance.html">Instance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training.html">Training</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gui.html">GUI</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">LEAP</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Inference</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/inference.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-sleap.nn.inference">
+<span id="inference"></span><h1>Inference<a class="headerlink" href="#module-sleap.nn.inference" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="sleap.nn.inference.Predictor">
+<em class="property">class </em><code class="descclassname">sleap.nn.inference.</code><code class="descname">Predictor</code><span class="sig-paren">(</span><em>model: keras.engine.training.Model</em>, <em>skeleton: sleap.skeleton.Skeleton</em>, <em>inference_batch_size: int = 4</em>, <em>read_chunk_size: int = 256</em>, <em>save_frequency: int = 30</em>, <em>min_score_to_node_ratio: float = 0.2</em>, <em>min_score_midpts: float = 0.05</em>, <em>min_score_integral: float = 0.6</em>, <em>add_last_edge: bool = True</em>, <em>flow_window: int = 15</em>, <em>save_shifted_instances: bool = True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/inference.html#Predictor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.Predictor" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Predictor class takes a trained sLEAP model and runs
+the complete inference pipeline from confidence map/part affinity field
+inference, non-maximum suppression peak finding, paf part matching, to tracking.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> – A trained keras model used for confidence map and paf inference. FIXME: Should this be a keras model or a sLEAP model class</p></li>
+<li><p><strong>skeleton</strong> – The skeleton(s) to use for prediction. FIXME. This should be stored with the model I think</p></li>
+<li><p><strong>inference_batch_size</strong> – Frames per inference batch (GPU memory limited)</p></li>
+<li><p><strong>read_chunk_size</strong> – How many frames to read into CPU memory at a time (CPU memory limited)</p></li>
+<li><p><strong>nms_min_thresh</strong> – A threshold of non-max suppression peak finding in confidence maps. All</p></li>
+<li><p><strong>below this minimum threshold will be set to zero before peak finding algorithm</strong> (<em>values</em>) – </p></li>
+<li><p><strong>run.</strong> (<em>is</em>) – </p></li>
+<li><p><strong>nms_sigma</strong> – Gaussian blur is applied to confidence maps before non-max supression peak</p></li>
+<li><p><strong>occurs. This is the standard deviation of the kernel applied to the image.</strong> (<em>finding</em>) – </p></li>
+<li><p><strong>min_score_to_node_ratio</strong> – FIXME</p></li>
+<li><p><strong>min_score_midpts</strong> – FIXME</p></li>
+<li><p><strong>min_score_integral</strong> – FIXME</p></li>
+<li><p><strong>add_last_edge</strong> – FIXME</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="sleap.nn.inference.Predictor.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>input_video: Union[str, sleap.io.video.Video], output_path: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/inference.html#Predictor.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.Predictor.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run the entire inference pipeline on an input video or file object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_video</strong> – Either a video object or video filename.</p></li>
+<li><p><strong>output_path</strong> – The output path to save the results.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.nn.inference.find_all_peaks">
+<code class="descclassname">sleap.nn.inference.</code><code class="descname">find_all_peaks</code><span class="sig-paren">(</span><em>confmaps</em>, <em>min_thresh=0.3</em>, <em>sigma=3</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/inference.html#find_all_peaks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.find_all_peaks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds peaks for all frames/channels in a stack of confidence maps</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.nn.inference.get_available_gpus">
+<code class="descclassname">sleap.nn.inference.</code><code class="descname">get_available_gpus</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/inference.html#get_available_gpus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.get_available_gpus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the list of available GPUs</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>List of available GPU device names</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.nn.inference.get_inference_model">
+<code class="descclassname">sleap.nn.inference.</code><code class="descname">get_inference_model</code><span class="sig-paren">(</span><em>confmap_model_path: str</em>, <em>paf_model_path: str</em><span class="sig-paren">)</span> &#x2192; keras.engine.training.Model<a class="reference internal" href="_modules/sleap/nn/inference.html#get_inference_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.get_inference_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads and merges confmap and PAF models into one.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.nn.inference.impeaksnms">
+<code class="descclassname">sleap.nn.inference.</code><code class="descname">impeaksnms</code><span class="sig-paren">(</span><em>I</em>, <em>min_thresh=0.3</em>, <em>sigma=3</em>, <em>return_val=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/inference.html#impeaksnms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.impeaksnms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find peaks via non-maximum suppresion.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.nn.inference.impeaksnms_cv">
+<code class="descclassname">sleap.nn.inference.</code><code class="descname">impeaksnms_cv</code><span class="sig-paren">(</span><em>I</em>, <em>min_thresh=0.3</em>, <em>sigma=3</em>, <em>return_val=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/inference.html#impeaksnms_cv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.impeaksnms_cv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find peaks via non-maximum suppresion using OpenCV.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.nn.inference.improfile">
+<code class="descclassname">sleap.nn.inference.</code><code class="descname">improfile</code><span class="sig-paren">(</span><em>I</em>, <em>p0</em>, <em>p1</em>, <em>max_points=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/inference.html#improfile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.improfile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns values of the image I evaluated along the line formed by points p0 and p1.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>I</strong> (<em>2d array</em>) – Image to get values from</p></li>
+<li><p><strong>p1</strong> (<em>p0</em><em>,</em>) – Start and end coordinates of the line</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>vals</strong> – Vector with the images values along the line formed by p0 and p1</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>1d array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.nn.inference.load_predicted_labels_json_old">
+<code class="descclassname">sleap.nn.inference.</code><code class="descname">load_predicted_labels_json_old</code><span class="sig-paren">(</span><em>data_path: str</em>, <em>parsed_json: dict = None</em>, <em>adjust_matlab_indexing: bool = True</em>, <em>fix_rel_paths: bool = True</em><span class="sig-paren">)</span> &#x2192; sleap.io.dataset.Labels<a class="reference internal" href="_modules/sleap/nn/inference.html#load_predicted_labels_json_old"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.load_predicted_labels_json_old" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simple utitlity code to load data from Talmo’s old JSON format into newer
+Labels object. This loads the prediced instances</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data_path</strong> – The path to the JSON file.</p></li>
+<li><p><strong>parsed_json</strong> – The parsed json if already loaded. Save some time if already parsed.</p></li>
+<li><p><strong>adjust_matlab_indexing</strong> – Do we need to adjust indexing from MATLAB.</p></li>
+<li><p><strong>fix_rel_paths</strong> – Fix paths to videos to absolute paths.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A newly constructed Labels object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.nn.inference.match_peaks_frame">
+<code class="descclassname">sleap.nn.inference.</code><code class="descname">match_peaks_frame</code><span class="sig-paren">(</span><em>peaks_t</em>, <em>peak_vals_t</em>, <em>pafs_t</em>, <em>skeleton</em>, <em>min_score_to_node_ratio=0.4</em>, <em>min_score_midpts=0.05</em>, <em>min_score_integral=0.8</em>, <em>add_last_edge=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/inference.html#match_peaks_frame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.match_peaks_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Matches single frame</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.nn.inference.match_peaks_frame2">
+<code class="descclassname">sleap.nn.inference.</code><code class="descname">match_peaks_frame2</code><span class="sig-paren">(</span><em>peaks_t</em>, <em>peak_vals_t</em>, <em>pafs_t</em>, <em>skeleton</em>, <em>min_score_to_node_ratio=0.4</em>, <em>min_score_midpts=0.05</em>, <em>min_score_integral=0.8</em>, <em>add_last_edge=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/inference.html#match_peaks_frame2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.match_peaks_frame2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Matches single frame</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.nn.inference.match_peaks_paf">
+<code class="descclassname">sleap.nn.inference.</code><code class="descname">match_peaks_paf</code><span class="sig-paren">(</span><em>peaks</em>, <em>peak_vals</em>, <em>pafs</em>, <em>skeleton</em>, <em>video</em>, <em>frame_indices</em>, <em>min_score_to_node_ratio=0.4</em>, <em>min_score_midpts=0.05</em>, <em>min_score_integral=0.8</em>, <em>add_last_edge=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/inference.html#match_peaks_paf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.match_peaks_paf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes PAF-based peak matching via greedy assignment and other such dragons</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.nn.inference.match_peaks_paf_par">
+<code class="descclassname">sleap.nn.inference.</code><code class="descname">match_peaks_paf_par</code><span class="sig-paren">(</span><em>peaks</em>, <em>peak_vals</em>, <em>pafs</em>, <em>skeleton</em>, <em>video</em>, <em>frame_indices</em>, <em>min_score_to_node_ratio=0.4</em>, <em>min_score_midpts=0.05</em>, <em>min_score_integral=0.8</em>, <em>add_last_edge=False</em>, <em>pool=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/inference.html#match_peaks_paf_par"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.match_peaks_paf_par" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parallel version of PAF peak matching</p>
+</dd></dl>
+
+<span class="target" id="module-sleap.nn.tracking"></span></div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="gui.html" class="btn btn-neutral float-right" title="GUI" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="training.html" class="btn btn-neutral float-left" title="Training" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Murthy Lab @ Princeton
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

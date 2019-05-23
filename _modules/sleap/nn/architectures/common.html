@@ -1,0 +1,318 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>sleap.nn.architectures.common &mdash; LEAP  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> LEAP
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">sLEAP Package</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../skeleton.html">Skeleton</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../video.html">Video</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../instance.html">Instance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dataset.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../training.html">Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../gui.html">GUI</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">LEAP</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>sleap.nn.architectures.common</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for sleap.nn.architectures.common</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">wraps</span>
+
+<span class="kn">from</span> <span class="nn">keras.layers</span> <span class="k">import</span> <span class="n">Conv2D</span><span class="p">,</span> <span class="n">BatchNormalization</span><span class="p">,</span> <span class="n">Add</span>
+
+<div class="viewcode-block" id="expand_to_n"><a class="viewcode-back" href="../../../../training.html#sleap.nn.architectures.common.expand_to_n">[docs]</a><span class="k">def</span> <span class="nf">expand_to_n</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Expands an object `x` to `n` elements if scalar.</span>
+
+<span class="sd">    This is a utility function that wraps np.tile functionality.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        x: Scalar of any type</span>
+<span class="sd">        n: Number of repetitions</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Tiled version of `x` with __len__ == `n`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">collections</span><span class="o">.</span><span class="n">Sequence</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">,]</span>
+        
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">!=</span> <span class="n">n</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Variable to expand must be scalar.&quot;</span><span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">x</span></div>
+
+
+
+<div class="viewcode-block" id="conv"><a class="viewcode-back" href="../../../../training.html#sleap.nn.architectures.common.conv">[docs]</a><span class="k">def</span> <span class="nf">conv</span><span class="p">(</span><span class="n">num_filters</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;relu&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convenience presets for Conv2D.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        num_filters: Number of output filters (channels)</span>
+<span class="sd">        kernel_size: Size of convolution kernel</span>
+<span class="sd">        activation: Activation function applied to output</span>
+<span class="sd">        **kwargs: Arbitrary keyword arguments passed on to keras.layers.Conv2D</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        keras.layers.Conv2D instance built with presets</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">Conv2D</span><span class="p">(</span><span class="n">num_filters</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="n">activation</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="conv1"><a class="viewcode-back" href="../../../../training.html#sleap.nn.architectures.common.conv1">[docs]</a><span class="k">def</span> <span class="nf">conv1</span><span class="p">(</span><span class="n">num_filters</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convenience presets for 1x1 Conv2D.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        num_filters: Number of output filters (channels)</span>
+<span class="sd">        **kwargs: Arbitrary keyword arguments passed on to keras.layers.Conv2D</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        keras.layers.Conv2D instance built with presets</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">conv</span><span class="p">(</span><span class="n">num_filters</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="conv3"><a class="viewcode-back" href="../../../../training.html#sleap.nn.architectures.common.conv3">[docs]</a><span class="k">def</span> <span class="nf">conv3</span><span class="p">(</span><span class="n">num_filters</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convenience presets for 3x3 Conv2D.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        num_filters: Number of output filters (channels)</span>
+<span class="sd">        **kwargs: Arbitrary keyword arguments passed on to keras.layers.Conv2D</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        keras.layers.Conv2D instance built with presets</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">conv</span><span class="p">(</span><span class="n">num_filters</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="residual_block"><a class="viewcode-back" href="../../../../training.html#sleap.nn.architectures.common.residual_block">[docs]</a><span class="k">def</span> <span class="nf">residual_block</span><span class="p">(</span><span class="n">x_in</span><span class="p">,</span> <span class="n">num_filters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">batch_norm</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Residual bottleneck block.</span>
+
+<span class="sd">    This function builds a residual block that is used at every step of stacked</span>
+<span class="sd">    hourglass construction. Note that the layers are actually instantiated and</span>
+<span class="sd">    connected.</span>
+
+<span class="sd">    The bottleneck is constructed by applying a 1x1 conv with `num_filters / 2`</span>
+<span class="sd">    channels, a 3x3 conv with `num_filters / 2` channels, and a 1x1 conv with</span>
+<span class="sd">    `num_filters`. The output of this last conv is skip-connected with the input</span>
+<span class="sd">    via an Add layer (the residual).</span>
+
+<span class="sd">    If the input `x_in` has a different number of channels as `num_filters`, an</span>
+<span class="sd">    additional 1x1 conv is applied to the input whose output will be used for the</span>
+<span class="sd">    skip connection.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        x_in: Input 4-D tf.Tensor or instantiated layer</span>
+<span class="sd">        num_filters: The number output channels of the block. If not specified,</span>
+<span class="sd">            defaults to the same number of channels as the input tensor. Must be</span>
+<span class="sd">            divisible by 2 since the bottleneck halves the number of filters in</span>
+<span class="sd">            the intermediate convs.</span>
+<span class="sd">        batch_norm: Apply batch normalization after each convolution</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        x_out: tf.Tensor of the output of the block of the same width and height</span>
+<span class="sd">            as the input with `num_filters` channels.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Default to output the same number of channels as input</span>
+    <span class="k">if</span> <span class="n">num_filters</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">num_filters</span> <span class="o">=</span> <span class="n">x_in</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        
+    <span class="c1"># Number of output channels must be divisible by 2</span>
+    <span class="k">if</span> <span class="n">num_filters</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Number of output filters must be divisible by 2 in residual blocks.&quot;</span><span class="p">)</span>
+    
+    <span class="c1"># If number of input and output channels are different, add a 1x1 conv to use as the</span>
+    <span class="c1"># identity tensor to which we add the residual at the end</span>
+    <span class="n">x_identity</span> <span class="o">=</span> <span class="n">x_in</span>
+    <span class="k">if</span> <span class="n">x_in</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">num_filters</span><span class="p">:</span>
+        <span class="n">x_identity</span> <span class="o">=</span> <span class="n">conv1</span><span class="p">(</span><span class="n">num_filters</span><span class="p">)(</span><span class="n">x_in</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">batch_norm</span><span class="p">:</span> <span class="n">x_identity</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">()(</span><span class="n">x_identity</span><span class="p">)</span>
+    
+    <span class="c1"># Bottleneck: 1x1 -&gt; 3x3 -&gt; 1x1 -&gt; Add residual to identity</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">conv1</span><span class="p">(</span><span class="n">num_filters</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)(</span><span class="n">x_in</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">batch_norm</span><span class="p">:</span> <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">()(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">conv3</span><span class="p">(</span><span class="n">num_filters</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">batch_norm</span><span class="p">:</span> <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">()(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">conv1</span><span class="p">(</span><span class="n">num_filters</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">batch_norm</span><span class="p">:</span> <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">()(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">x_out</span> <span class="o">=</span> <span class="n">Add</span><span class="p">()([</span><span class="n">x_identity</span><span class="p">,</span> <span class="n">x</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">x_out</span></div>
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Murthy Lab @ Princeton
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,902 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>sleap.instance &mdash; LEAP  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> LEAP
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">sLEAP Package</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../skeleton.html">Skeleton</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../video.html">Video</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../instance.html">Instance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataset.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../training.html">Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../gui.html">GUI</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">LEAP</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>sleap.instance</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for sleap.instance</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">math</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">h5py</span> <span class="k">as</span> <span class="nn">h5</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">from</span> <span class="nn">attr</span> <span class="k">import</span> <span class="fm">__init__</span>
+
+<span class="kn">from</span> <span class="nn">sleap.skeleton</span> <span class="k">import</span> <span class="n">Skeleton</span><span class="p">,</span> <span class="n">Node</span>
+<span class="kn">from</span> <span class="nn">sleap.io.video</span> <span class="k">import</span> <span class="n">Video</span>
+<span class="kn">from</span> <span class="nn">sleap.util</span> <span class="k">import</span> <span class="n">attr_to_dtype</span>
+
+<span class="kn">import</span> <span class="nn">attr</span>
+
+
+<span class="c1"># This can probably be a namedtuple but has been made a full class just in case</span>
+<span class="c1"># we need more complicated functionality later.</span>
+<div class="viewcode-block" id="Point"><a class="viewcode-back" href="../../instance.html#sleap.instance.Point">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">Point</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A very simple class to define a labelled point and any metadata associated with it.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        x: The horizontal pixel location of the point within the image frame.</span>
+<span class="sd">        y: The vertical pixel location of the point within the image frame.</span>
+<span class="sd">        visible: Whether point is visible in the labelled image or not.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">x</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">converter</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">y</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">converter</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">visible</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">complete</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">f</span><span class="s2">&quot;(</span><span class="si">{self.x}</span><span class="s2">, </span><span class="si">{self.y}</span><span class="s2">)&quot;</span>
+
+<div class="viewcode-block" id="Point.dtype"><a class="viewcode-back" href="../../instance.html#sleap.instance.Point.dtype">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">dtype</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the compound numpy dtype of a point. This is very important for</span>
+<span class="sd">        serialization.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The compound numpy dtype of the point</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">attr_to_dtype</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">isnan</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">)</span> <span class="ow">or</span> <span class="n">math</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PredictedPoint"><a class="viewcode-back" href="../../instance.html#sleap.instance.PredictedPoint">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">PredictedPoint</span><span class="p">(</span><span class="n">Point</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A predicted point is an output of the inference procedure. It has all</span>
+<span class="sd">    the properties of a labeled point with an accompanying score.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        score: The point level prediction score.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">score</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PredictedPoint.from_point"><a class="viewcode-back" href="../../instance.html#sleap.instance.PredictedPoint.from_point">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_point</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">point</span><span class="p">:</span> <span class="n">Point</span><span class="p">,</span> <span class="n">score</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a PredictedPoint from a Point</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            point: The point to copy all data from.</span>
+<span class="sd">            score: The score for this predicted point.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A scored point based on the point passed in.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="o">**</span><span class="n">attr</span><span class="o">.</span><span class="n">asdict</span><span class="p">(</span><span class="n">point</span><span class="p">),</span> <span class="s1">&#39;score&#39;</span><span class="p">:</span> <span class="n">score</span><span class="p">})</span></div></div>
+
+
+<div class="viewcode-block" id="Track"><a class="viewcode-back" href="../../instance.html#sleap.instance.Track">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="nb">cmp</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">Track</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A track object is associated with a set of animal/object instances across multiple</span>
+<span class="sd">    frames of video. This allows tracking of unique entities in the video over time and</span>
+<span class="sd">    space.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        spawned_on: The frame of the video that this track was spawned on.</span>
+<span class="sd">        name: A name given to this track for identifying purposes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">spawned_on</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">converter</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">converter</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Track.matches"><a class="viewcode-back" href="../../instance.html#sleap.instance.Track.matches">[docs]</a>    <span class="k">def</span> <span class="nf">matches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;Track&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if two tracks match by value.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            other: The other track to check</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            True if they match, False otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">attr</span><span class="o">.</span><span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="n">attr</span><span class="o">.</span><span class="n">asdict</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div></div>
+
+
+<span class="c1"># NOTE:</span>
+<span class="c1"># Instance cannot be a slotted class at the moment. This is because it creates</span>
+<span class="c1"># attributes _frame and _point_array_cache after init. These are private variables</span>
+<span class="c1"># that are created in post init so they are not serialized.</span>
+
+<div class="viewcode-block" id="Instance"><a class="viewcode-back" href="../../instance.html#sleap.instance.Instance">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">Instance</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The class :class:`Instance` represents a labelled instance of skeleton</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        skeleton: The skeleton that this instance is associated with.</span>
+<span class="sd">        points: A dictionary where keys are skeleton node names and values are _points.</span>
+<span class="sd">        track: An optional multi-frame object track associated with this instance. This allows</span>
+<span class="sd">        individual animals/objects to be tracked across frames.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">skeleton</span><span class="p">:</span> <span class="n">Skeleton</span>
+    <span class="n">track</span><span class="p">:</span> <span class="n">Track</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">_points</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Node</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">Point</span><span class="p">,</span> <span class="n">PredictedPoint</span><span class="p">]]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">Factory</span><span class="p">(</span><span class="nb">dict</span><span class="p">))</span>
+
+    <span class="nd">@_points</span><span class="o">.</span><span class="n">validator</span>
+    <span class="k">def</span> <span class="nf">_validate_all_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">points</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Function that makes sure all the _points defined for the skeleton are found in the skeleton.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If a point is associated with a skeleton node name that doesn&#39;t exist.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">is_string_dict</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">))</span> <span class="o">==</span> <span class="p">{</span><span class="nb">str</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">is_string_dict</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">node_name</span> <span class="ow">in</span> <span class="n">points</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">has_node</span><span class="p">(</span><span class="n">node_name</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;There is no node named </span><span class="si">{node_name}</span><span class="s2"> in </span><span class="si">{self.skeleton}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="c1"># If the points dict is non-empty, validate it.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">:</span>
+            <span class="c1"># Check if the dict contains all strings</span>
+            <span class="n">is_string_dict</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">))</span> <span class="o">==</span> <span class="p">{</span><span class="nb">str</span><span class="p">}</span>
+
+            <span class="c1"># Check if the dict contains all Node objects</span>
+            <span class="n">is_node_dict</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">))</span> <span class="o">==</span> <span class="p">{</span><span class="n">Node</span><span class="p">}</span>
+
+            <span class="c1"># If the user fed in a dict whose keys are strings, these are node names,</span>
+            <span class="c1"># convert to node indices so we don&#39;t break references to skeleton nodes</span>
+            <span class="c1"># if the node name is relabeled.</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_points</span> <span class="ow">and</span> <span class="n">is_string_dict</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_points</span> <span class="o">=</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">name</span><span class="p">):</span> <span class="n">point</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span><span class="n">point</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_string_dict</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_node_dict</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;points dictionary must be keyed by either strings &quot;</span> <span class="o">+</span>
+                                 <span class="s2">&quot;(node names) or Nodes.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Create here in post init so it is not serialized by cattrs, wish there was better way</span>
+        <span class="c1"># This field keeps track of any labeled frame that this Instance has been associated with.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">LabeledFrame</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># A variable used to cache a constructed points_array call to save on time. This is only</span>
+        <span class="c1"># used when cached=True is passed to points_array</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_points_array_cache</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">_node_to_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Helper method to get the index of a node from its name.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            node_name: The name of the node.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The index of the node on skeleton graph.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">node_to_index</span><span class="p">(</span><span class="n">node_name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the _points associated with particular skeleton node or list of skeleton nodes</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            node: A single node or list of nodes within the skeleton associated with this instance.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A single point of list of _points related to the nodes provided as argument.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># If the node is a list of nodes, use get item recursively and return a list of _points.</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">node</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
+            <span class="n">ret_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">node</span><span class="p">:</span>
+                <span class="n">ret_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+
+            <span class="k">return</span> <span class="n">ret_list</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="n">Point</span><span class="p">()</span>
+
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">[</span><span class="n">node</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;The underlying skeleton (</span><span class="si">{self.skeleton}</span><span class="s2">) has no node &#39;</span><span class="si">{node}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns True if this instance has a point with the specified node.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            node: node name</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: True if the point with the node name specified has a point in this instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_node_to_index</span><span class="p">(</span><span class="n">node</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_points</span>
+
+    <span class="k">def</span> <span class="nf">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+
+        <span class="c1"># Make sure node and value, if either are lists, are of compatible size</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">node</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s2">&quot;Node list for indexing must be same length and value list.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">node</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s2">&quot;Node list for indexing must be same length and value list.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># If we are dealing with lists, do multiple assignment recursively, this should be ok because</span>
+        <span class="c1"># skeletons and instances are small.</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">node</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="fm">__setitem__</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span><span class="nb">str</span><span class="p">):</span>
+                <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;The underlying skeleton (</span><span class="si">{self.skeleton}</span><span class="s2">) has no node &#39;</span><span class="si">{node}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Delete node key and points associated with that node. &quot;&quot;&quot;</span>
+        <span class="c1"># TODO: handle this case somehow?</span>
+        <span class="k">pass</span>
+
+<div class="viewcode-block" id="Instance.matches"><a class="viewcode-back" href="../../instance.html#sleap.instance.Instance.matches">[docs]</a>    <span class="k">def</span> <span class="nf">matches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compare this `Instance` to another, modulo the particular `Node` objects.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            other: The other instance.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            True if match, False otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">())</span> <span class="o">!=</span> <span class="nb">list</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">points</span><span class="p">()):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">matches</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">skeleton</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">track</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">track</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">track</span><span class="o">.</span><span class="n">matches</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">track</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">track</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">other</span><span class="o">.</span><span class="n">track</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">track</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">track</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="c1"># Make sure the frame indices match</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame_idx</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">frame_idx</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the list of nodes that have been labelled for this instance.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A list of nodes that have been labelled for this instance.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">nodes_points</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return view object that displays a list of the instance&#39;s (node, point) tuple pairs</span>
+<span class="sd">        for all labelled point.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The instance&#39;s (node, point) tuple pairs for all labelled point.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">names_to_points</span> <span class="o">=</span> <span class="p">{</span><span class="n">node</span><span class="p">:</span> <span class="n">point</span> <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">point</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="k">return</span> <span class="n">names_to_points</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Instance.points"><a class="viewcode-back" href="../../instance.html#sleap.instance.Instance.points">[docs]</a>    <span class="k">def</span> <span class="nf">points</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the list of labelled points, in order they were labelled.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The list of labelled points, in order they were labelled.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="o">.</span><span class="n">values</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="Instance.points_array"><a class="viewcode-back" href="../../instance.html#sleap.instance.Instance.points_array">[docs]</a>    <span class="k">def</span> <span class="nf">points_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cached</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the instance&#39;s points in array form.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            cached: If True, use a cached version of the points data if available,</span>
+<span class="sd">            create cache if it doesn&#39;t exist. If False, recompute and cache each</span>
+<span class="sd">            call.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            A Nx2 array containing x and y coordinates of each point</span>
+<span class="sd">            as the rows of the array and N is the number of nodes in the skeleton.</span>
+<span class="sd">            The order of the rows corresponds to the ordering of the skeleton nodes.</span>
+<span class="sd">            Any skeleton node not defined will have NaNs present.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">cached</span> <span class="ow">or</span> <span class="p">(</span><span class="n">cached</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_points_array_cache</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="n">pts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">nodes</span><span class="p">),</span> <span class="mi">2</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">nodes</span><span class="p">):</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">Point</span><span class="p">())</span>
+                <span class="n">pts</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">x</span>
+                <span class="n">pts</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">y</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_points_array_cache</span> <span class="o">=</span> <span class="n">pts</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_points_array_cache</span></div>
+
+<div class="viewcode-block" id="Instance.to_pandas_df"><a class="viewcode-back" href="../../instance.html#sleap.instance.Instance.to_pandas_df">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">to_pandas_df</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">instances</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s1">&#39;Instance&#39;</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="s1">&#39;Instance&#39;</span><span class="p">]],</span> <span class="n">skip_nan</span><span class="p">:</span><span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Given an instance or list of instances, generate a pandas DataFrame that contains</span>
+<span class="sd">        all of the data in normalized form.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            instances: A single instance or list of instances.</span>
+<span class="sd">            skip_nan: Whether to drop points that have NaN values for x or y.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A pandas DataFrame that contains all of the isntance&#39;s points level data</span>
+<span class="sd">            in and normalized form. The columns of the DataFrame are:</span>
+
+<span class="sd">            * id - A unique number for each row of the table.</span>
+<span class="sd">            * instanceId - a unique id for each unique instance.</span>
+<span class="sd">            * skeleton - the name of the skeleton that this point is a part of.</span>
+<span class="sd">            * node - A string specifying the name of the skeleton node that this point value corresponds.</span>
+<span class="sd">            * videoId - A string specifying the video that this instance is in.</span>
+<span class="sd">            * frameIdx - The frame number of the video that this instance occurs on.</span>
+<span class="sd">            * visible - Whether the point in this row for this instance is visible.</span>
+<span class="sd">            * x - The horizontal pixel position of this node for this instance.</span>
+<span class="sd">            * y - The vertical pixel position of this node for this instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># If this is a single instance, make it a list</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">instances</span><span class="p">)</span> <span class="ow">is</span> <span class="n">Instance</span><span class="p">:</span>
+            <span class="n">instances</span> <span class="o">=</span> <span class="p">[</span><span class="n">instances</span><span class="p">]</span>
+
+        <span class="c1"># Lets construct a list of dicts which will be records for the pandas data frame</span>
+        <span class="n">records</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Extract all the data from each instance and its points</span>
+        <span class="nb">id</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">instance_id</span><span class="p">,</span> <span class="n">instance</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">instances</span><span class="p">):</span>
+
+            <span class="c1"># Get all the attributes from the instance except the points dict</span>
+            <span class="n">irecord</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="nb">id</span><span class="p">,</span> <span class="s1">&#39;instance_id&#39;</span><span class="p">:</span> <span class="n">instance_id</span><span class="p">,</span>
+                       <span class="o">**</span><span class="n">attr</span><span class="o">.</span><span class="n">asdict</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="k">lambda</span> <span class="n">attr</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">attr</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="s2">&quot;_points&quot;</span><span class="p">)}</span>
+
+            <span class="c1"># Convert the skeleton to it&#39;s name</span>
+            <span class="n">irecord</span><span class="p">[</span><span class="s1">&#39;skeleton&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">irecord</span><span class="p">[</span><span class="s1">&#39;skeleton&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
+
+            <span class="c1"># FIXME: Do the same for the video</span>
+
+            <span class="k">for</span> <span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span> <span class="ow">in</span> <span class="n">instance</span><span class="o">.</span><span class="n">nodes_points</span><span class="p">:</span>
+
+                <span class="c1"># Skip any NaN points if the user has asked for it.</span>
+                <span class="k">if</span> <span class="n">skip_nan</span> <span class="ow">and</span> <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">point</span><span class="o">.</span><span class="n">x</span><span class="p">)</span> <span class="ow">or</span> <span class="n">math</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">point</span><span class="o">.</span><span class="n">y</span><span class="p">)):</span>
+                    <span class="k">continue</span>
+
+                <span class="n">precord</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;node&#39;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">attr</span><span class="o">.</span><span class="n">asdict</span><span class="p">(</span><span class="n">point</span><span class="p">)}</span> <span class="c1"># FIXME: save other node attributes?</span>
+
+                <span class="n">records</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="o">**</span><span class="n">irecord</span><span class="p">,</span> <span class="o">**</span><span class="n">precord</span><span class="p">})</span>
+
+        <span class="nb">id</span> <span class="o">=</span> <span class="nb">id</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="c1"># Construct a pandas data frame from this list of instances</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">records</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_records</span><span class="p">(</span><span class="n">records</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_records</span><span class="p">(</span><span class="n">records</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">df</span></div>
+
+<div class="viewcode-block" id="Instance.save_hdf5"><a class="viewcode-back" href="../../instance.html#sleap.instance.Instance.save_hdf5">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">save_hdf5</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">h5</span><span class="o">.</span><span class="n">File</span><span class="p">],</span>
+                  <span class="n">instances</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s1">&#39;Instance&#39;</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="s1">&#39;Instance&#39;</span><span class="p">]],</span>
+                  <span class="n">skip_nan</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write the instance point level data to an HDF5 file and group. This</span>
+<span class="sd">        function writes the data to an HDF5 group not a dataset. Each</span>
+<span class="sd">        column of the data is a dataset. The datasets within the group</span>
+<span class="sd">        will be all the same length (the total number of points across all</span>
+<span class="sd">        instances). They are as follows:</span>
+
+<span class="sd">            * id - A unique number for each row of the table.</span>
+<span class="sd">            * instanceId - a unique id for each unique instance.</span>
+<span class="sd">            * skeleton - the name of the skeleton that this point is a part of.</span>
+<span class="sd">            * node - A string specifying the name of the skeleton node that this point value corresponds.</span>
+<span class="sd">            * videoId - A string specifying the video that this instance is in.</span>
+<span class="sd">            * frameIdx - The frame number of the video that this instance occurs on.</span>
+<span class="sd">            * visible - Whether the point in this row for this instance is visible.</span>
+<span class="sd">            * x - The horizontal pixel position of this node for this instance.</span>
+<span class="sd">            * y - The vertical pixel position of this node for this instance.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            file: The HDF5 file to save the instance data to.</span>
+<span class="sd">            instances: A single instance or list of instances.</span>
+<span class="sd">            skip_nan: Whether to drop points that have NaN values for x or y.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Make it into a list of length one if needed.</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">instances</span><span class="p">)</span> <span class="ow">is</span> <span class="n">Instance</span><span class="p">:</span>
+            <span class="n">instances</span> <span class="o">=</span> <span class="p">[</span><span class="n">instances</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">h5</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="k">as</span> <span class="n">_file</span><span class="p">:</span>
+                <span class="n">Instance</span><span class="o">.</span><span class="n">_save_hdf5</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">_file</span><span class="p">,</span> <span class="n">instances</span><span class="o">=</span><span class="n">instances</span><span class="p">,</span> <span class="n">skip_nan</span><span class="o">=</span><span class="n">skip_nan</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">Instance</span><span class="o">.</span><span class="n">_save_hdf5</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">,</span> <span class="n">instances</span><span class="o">=</span><span class="n">instances</span><span class="p">,</span> <span class="n">skip_nan</span><span class="o">=</span><span class="n">skip_nan</span><span class="p">)</span></div>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_save_hdf5</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="n">h5</span><span class="o">.</span><span class="n">File</span><span class="p">,</span> <span class="n">instances</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="s1">&#39;Instance&#39;</span><span class="p">],</span> <span class="n">skip_nan</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+
+        <span class="c1"># Get all the unique skeleton objects in this list of instances</span>
+        <span class="c1"># This is a set comprehension, slick python, but unreadable</span>
+        <span class="n">skeletons</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="o">.</span><span class="n">skeleton</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">instances</span><span class="p">}</span>
+
+        <span class="c1"># First, lets save the skeletons to the file</span>
+        <span class="n">Skeleton</span><span class="o">.</span><span class="n">save_all_hdf5</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">,</span> <span class="n">skeletons</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">skeletons</span><span class="p">))</span>
+
+        <span class="c1"># Second, lets get the instance data as a pandas data frame.</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">to_pandas_df</span><span class="p">(</span><span class="n">instances</span><span class="o">=</span><span class="n">instances</span><span class="p">,</span> <span class="n">skip_nan</span><span class="o">=</span><span class="n">skip_nan</span><span class="p">)</span>
+
+        <span class="c1"># If the group doesn&#39;t exists, create it, but do so with track order.</span>
+        <span class="c1"># If it does exists, leave it be.</span>
+        <span class="k">if</span> <span class="s1">&#39;points&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">group</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="s1">&#39;points&#39;</span><span class="p">,</span> <span class="n">track_order</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">group</span> <span class="o">=</span> <span class="n">file</span><span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">]</span>
+
+        <span class="c1"># Write each column as a data frame.</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">df</span><span class="p">:</span>
+            <span class="n">vals</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+            <span class="k">if</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">group</span><span class="p">:</span>
+                <span class="k">del</span> <span class="n">group</span><span class="p">[</span><span class="n">col</span><span class="p">]</span>
+
+            <span class="c1"># If the column are objects (should be strings), convert to dtype=S, strings as per</span>
+            <span class="c1"># h5py recommendations.</span>
+            <span class="k">if</span> <span class="n">vals</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;O&#39;</span><span class="p">):</span>
+                <span class="n">dtype</span> <span class="o">=</span> <span class="n">h5</span><span class="o">.</span><span class="n">special_dtype</span><span class="p">(</span><span class="n">vlen</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+                <span class="n">group</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">col</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                                     <span class="n">data</span><span class="o">=</span><span class="n">vals</span><span class="p">,</span>
+                                     <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
+                                     <span class="n">compression</span><span class="o">=</span><span class="s2">&quot;gzip&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">group</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">col</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                                     <span class="n">data</span><span class="o">=</span><span class="n">vals</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="s2">&quot;gzip&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Instance.load_hdf5"><a class="viewcode-back" href="../../instance.html#sleap.instance.Instance.load_hdf5">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">load_hdf5</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">h5</span><span class="o">.</span><span class="n">File</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="s1">&#39;Instance&#39;</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load instance data from an HDF5 dataset.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            file: The name of the HDF5 file or the open h5.File object.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A list of Instance objects.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">h5</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="k">as</span> <span class="n">_file</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">Instance</span><span class="o">.</span><span class="n">_load_hdf5</span><span class="p">(</span><span class="n">_file</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Instance</span><span class="o">.</span><span class="n">_load_hdf5</span><span class="p">(</span><span class="n">file</span><span class="p">)</span></div>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_load_hdf5</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="n">h5</span><span class="o">.</span><span class="n">File</span><span class="p">):</span>
+
+        <span class="c1"># First, get all the skeletons in the HDF5 file</span>
+        <span class="n">skeletons</span> <span class="o">=</span> <span class="n">Skeleton</span><span class="o">.</span><span class="n">load_all_hdf5</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">,</span> <span class="n">return_dict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s1">&#39;points&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">file</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No instance data found in dataset.&quot;</span><span class="p">)</span>
+
+        <span class="n">group</span> <span class="o">=</span> <span class="n">file</span><span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">]</span>
+
+        <span class="c1"># Next get a dict that contains all the datasets for the instance</span>
+        <span class="c1"># data.</span>
+        <span class="n">records</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">dset</span> <span class="ow">in</span> <span class="n">group</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">records</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">dset</span><span class="p">[</span><span class="o">...</span><span class="p">]</span>
+
+        <span class="c1"># Convert to a data frame.</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">records</span><span class="p">)</span>
+
+        <span class="c1"># Lets first create all the points, start by grabbing the Point columns, grab only</span>
+        <span class="c1"># columns that exist. This is just in case we are reading an older form of the dataset</span>
+        <span class="c1"># format and the fields don&#39;t line up.</span>
+        <span class="n">point_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">attr</span><span class="o">.</span><span class="n">fields</span><span class="p">(</span><span class="n">Point</span><span class="p">)]</span>
+        <span class="n">point_cols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">group</span><span class="p">,</span> <span class="n">point_cols</span><span class="p">))</span>
+
+        <span class="c1"># Extract the points columns and convert dicts of keys and values.</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="n">df</span><span class="p">[[</span><span class="o">*</span><span class="n">point_cols</span><span class="p">]]</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="s1">&#39;records&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Convert to points dicts to points objects</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="p">[</span><span class="n">Point</span><span class="p">(</span><span class="o">**</span><span class="n">args</span><span class="p">)</span> <span class="k">for</span> <span class="n">args</span> <span class="ow">in</span> <span class="n">points</span><span class="p">]</span>
+
+        <span class="c1"># Instance columns</span>
+        <span class="n">instance_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">attr</span><span class="o">.</span><span class="n">fields</span><span class="p">(</span><span class="n">Instance</span><span class="p">)]</span>
+        <span class="n">instance_cols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">group</span><span class="p">,</span> <span class="n">instance_cols</span><span class="p">))</span>
+
+        <span class="n">instance_records</span> <span class="o">=</span> <span class="n">df</span><span class="p">[[</span><span class="o">*</span><span class="n">instance_cols</span><span class="p">]]</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="s1">&#39;records&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Convert skeletons references to skeleton objects</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">instance_records</span><span class="p">:</span>
+            <span class="n">r</span><span class="p">[</span><span class="s1">&#39;skeleton&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">skeletons</span><span class="p">[</span><span class="n">r</span><span class="p">[</span><span class="s1">&#39;skeleton&#39;</span><span class="p">]]</span>
+
+        <span class="n">instances</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Instance</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">curr_id</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="c1"># Start with an invalid instance id so condition is tripped</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">instance_records</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">curr_id</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">or</span> <span class="n">curr_id</span> <span class="o">!=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;instance_id&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">idx</span><span class="p">]:</span>
+                <span class="n">curr_id</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;instance_id&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+                <span class="n">curr_instance</span> <span class="o">=</span> <span class="n">Instance</span><span class="p">(</span><span class="o">**</span><span class="n">r</span><span class="p">)</span>
+                <span class="n">instances</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">curr_instance</span><span class="p">)</span>
+
+            <span class="c1"># Add the point the instance</span>
+            <span class="n">curr_instance</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;node&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">idx</span><span class="p">]]</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">instances</span>
+
+<div class="viewcode-block" id="Instance.drop_nan_points"><a class="viewcode-back" href="../../instance.html#sleap.instance.Instance.drop_nan_points">[docs]</a>    <span class="k">def</span> <span class="nf">drop_nan_points</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Drop any points for the instance that are not completely specified.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">is_nan</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">isnan</span><span class="p">():</span>
+                <span class="n">is_nan</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+        <span class="c1"># Remove them</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">is_nan</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Instance.drop_all_nan_points"><a class="viewcode-back" href="../../instance.html#sleap.instance.Instance.drop_all_nan_points">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">drop_all_nan_points</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">instances</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="s1">&#39;Instance&#39;</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Call drop_nan_points on a list of Instances.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            instances: The list of instances to call drop_nan_points() on.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">instances</span><span class="p">:</span>
+            <span class="n">i</span><span class="o">.</span><span class="n">drop_nan_points</span><span class="p">()</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">frame_idx</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the index of the frame that this instance was found on. This is a convenience</span>
+<span class="sd">        method for Instance.frame.frame_idx.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The frame number this instance was found on.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">frame_idx</span></div>
+
+
+<div class="viewcode-block" id="PredictedInstance"><a class="viewcode-back" href="../../instance.html#sleap.instance.PredictedInstance">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">PredictedInstance</span><span class="p">(</span><span class="n">Instance</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A predicted instance is an output of the inference procedure. It is</span>
+<span class="sd">    the main output of the inference procedure.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        score: The instance level prediction score.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">score</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PredictedInstance.from_instance"><a class="viewcode-back" href="../../instance.html#sleap.instance.PredictedInstance.from_instance">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_instance</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">instance</span><span class="p">:</span> <span class="n">Instance</span><span class="p">,</span> <span class="n">score</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a PredictedInstance from and Instance object. The fields are</span>
+<span class="sd">        copied in a shallow manner with the exception of points. For each</span>
+<span class="sd">        point in the instance an PredictedPoint is created with score set</span>
+<span class="sd">        to default value.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            instance: The Instance object to shallow copy data from.</span>
+<span class="sd">            score: The score for this instance.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A PredictedInstance for the given Instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">kw_args</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">asdict</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="n">recurse</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">kw_args</span><span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">PredictedPoint</span><span class="o">.</span><span class="n">from_point</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+                             <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">kw_args</span><span class="p">[</span><span class="s1">&#39;_points&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="k">del</span> <span class="n">kw_args</span><span class="p">[</span><span class="s1">&#39;_points&#39;</span><span class="p">]</span>
+        <span class="n">kw_args</span><span class="p">[</span><span class="s1">&#39;score&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">score</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">kw_args</span><span class="p">)</span></div></div>
+
+
+<span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">LabeledFrame</span><span class="p">:</span>
+    <span class="n">video</span><span class="p">:</span> <span class="n">Video</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>
+    <span class="n">frame_idx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">converter</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">_instances</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Instance</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">PredictedInstance</span><span class="p">]]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">Factory</span><span class="p">(</span><span class="nb">list</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="c1"># Make sure all instances have a reference to this frame</span>
+        <span class="k">for</span> <span class="n">instance</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">instances</span><span class="p">:</span>
+            <span class="n">instance</span><span class="o">.</span><span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instances</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">instances</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Instance</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">instances</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">instances</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">instances</span><span class="o">.</span><span class="fm">__delitem__</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="c1"># Modify the instance to remove reference to this frame</span>
+        <span class="n">value</span><span class="o">.</span><span class="n">frame</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Instance</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instances</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+        <span class="c1"># Modify the instance to have a reference back to this frame</span>
+        <span class="n">value</span><span class="o">.</span><span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Instance</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instances</span><span class="o">.</span><span class="fm">__setitem__</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+        <span class="c1"># Modify the instance to have a reference back to this frame</span>
+        <span class="n">value</span><span class="o">.</span><span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">instances</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A list of instances to associated with this frame.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A list of instances to associated with this frame.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_instances</span>
+
+    <span class="nd">@instances</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">instances</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instances</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Instance</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the list of instances assigned to this frame. Note: whenever an instance</span>
+<span class="sd">        is associated with a LabeledFrame that Instance objects frame property will</span>
+<span class="sd">        be overwritten to the LabeledFrame.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            instances: A list of instances to associated with this frame.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Make sure to set the frame for each instance to this LabeledFrame</span>
+        <span class="k">for</span> <span class="n">instance</span> <span class="ow">in</span> <span class="n">instances</span><span class="p">:</span>
+            <span class="n">instance</span><span class="o">.</span><span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_instances</span> <span class="o">=</span> <span class="n">instances</span>
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Murthy Lab @ Princeton
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
