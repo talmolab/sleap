@@ -63,8 +63,8 @@ for:
     only:
       - master
 
-  # On success for master, build and deploy our documentation.
-  on_success:
+  # After deploy for master, build and deploy our documentation.
+  after_deploy:
     - cmd: git config --global credential.helper store
     - ps: Add-Content "$HOME\.git-credentials" "https://$($env:access_token):x-oauth-basic@github.com`n"
     - cmd: git config --global user.email "davidt0x@gmail.com"
