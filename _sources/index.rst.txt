@@ -44,11 +44,11 @@ Once the environment is finished installing, it can be activated using the follo
     (base) C:\> conda activate sleap_env
     (sleap_env) C:\>
 
-Any Python installation commands (:`conda install`:code:: or :`pip install`:code::) issued after activating an
+Any Python installation commands (:code:`conda install` or :code:`pip install`) issued after activating an
 environment will only effect the environment. Thus it is important to make sure the environment is active when issuing
 any commands that deal with Python on the command line.
 
-**sLEAP** is now installed in the :`sleap_env`:code:: conda environment. With the envirnoment active, enter
+**sLEAP** is now installed in the :code:`sleap_env` conda environment. With the envirnoment active, enter
 
 .. _Anaconda: https://www.anaconda.com/distribution/
 .. _Anaconda_Environments: https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html
