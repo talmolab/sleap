@@ -374,6 +374,7 @@ class MainWindow(QMainWindow):
                 msgBox.exec_()
 
             # Update UI tables
+            self.instancesTable.model().labels = self.labels
             self.videosTable.model().videos = self.labels.videos
             if len(self.labels.labels) > 0:
                 if len(self.labels.labels[0].instances) > 0:
