@@ -95,6 +95,10 @@ class HDF5Video:
     def dtype(self):
         return self.__dataset_h5.dtype
 
+    @property
+    def filename(self):
+        return self.file
+
     def get_frame(self, idx) -> np.ndarray:
         """
         Get a frame from the underlying HDF5 video data.
@@ -128,6 +132,7 @@ class MediaVideo:
     filename: str = attr.ib()
     # grayscale: bool = attr.ib(default=None, converter=bool)
     grayscale: bool = attr.ib()
+    bgr: bool = attr.ib(default=True)
     _detect_grayscale = False
 
     @grayscale.default
@@ -193,7 +198,72 @@ class MediaVideo:
         if grayscale:
             frame = frame[...,0][...,None]
 
+        if self.bgr:
+            frame = frame[...,::-1]
+
         return frame
+
+
+@attr.s(auto_attribs=True, cmp=False)
+class NumpyVideo:
+    """
+    Video data stored as Numpy array.
+
+    Args:
+        file: Either a filename to load or a numpy array of the data.
+
+        * numpy data shape: (frames, width, height, channels)
+    """
+    file: attr.ib()
+
+    def __attrs_post_init__(self):
+
+        self.__frame_idx = 0
+        self.__width_idx = 1
+        self.__height_idx = 2
+        self.__channel_idx = 3
+
+        # Handle cases where the user feeds in np.array instead of filename
+        if isinstance(self.file, np.ndarray):
+            self.__data = self.file
+            self.file = "Raw Video Data"
+        elif type(self.file) is str:
+            try:
+                self.__data = np.load(self.file)
+            except OSError as ex:
+                raise FileNotFoundError(f"Could not find file {self.file}") from ex
+        else:
+            self.__data = None
+
+    # The properties and methods below complete our contract with the
+    # higher level Video interface.
+
+    @property
+    def filename(self):
+        return self.file
+
+    @property
+    def frames(self):
+        return self.__data.shape[self.__frame_idx]
+
+    @property
+    def channels(self):
+        return self.__data.shape[self.__channel_idx]
+
+    @property
+    def width(self):
+        return self.__data.shape[self.__width_idx]
+
+    @property
+    def height(self):
+        return self.__data.shape[self.__height_idx]
+
+    @property
+    def dtype(self):
+        return self.__data.dtype
+
+    def get_frame(self, idx):
+        return self.__data[idx]
 
 
 @attr.s(auto_attribs=True, cmp=False)
@@ -229,7 +299,7 @@ class Video:
 
     """
 
-    backend: Union[HDF5Video, MediaVideo] = attr.ib()
+    backend: Union[HDF5Video, NumpyVideo, MediaVideo] = attr.ib()
 
     # Delegate to the backend
     def __getattr__(self, item):
@@ -310,6 +380,20 @@ class Video:
         return cls(backend=backend)
 
     @classmethod
+    def from_numpy(cls, file, *args, **kwargs):
+        """
+        Create an instance of a video object from a numpy array.
+
+        Args:
+            file: The numpy array or the name of the file
+
+        Returns:
+            A Video object with a NumpyVideo backend
+        """
+        backend = NumpyVideo(file=file, *args, **kwargs)
+        return cls(backend=backend)
+
+    @classmethod
     def from_media(cls, file: str, *args, **kwargs):
         """
         Create an instance of a video object from a typical media file (e.g. .mp4, .avi).
@@ -334,9 +418,15 @@ class Video:
         Returns:
             A Video object with the detected backend
         """
-        if file.endswith(("h5", "hdf5")):
+        if file.lower().endswith(("h5", "hdf5")):
             return cls(backend=HDF5Video(file=file, *args, **kwargs))
-        elif file.endswith(("mp4", "avi")):
+        elif file.endswith(("npy")):
+            return cls(backend=NumpyVideo(file=file, *args, **kwargs))
+        elif file.lower().endswith(("mp4", "avi")):
             return cls(backend=MediaVideo(filename=file, *args, **kwargs))
         else:
             raise ValueError("Could not detect backend for specified filename.")
+
+    @classmethod
+    def to_numpy(cls, frame_data: np.array, file_name: str):
+        np.save(file_name, frame_data, 'w')

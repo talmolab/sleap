@@ -11,6 +11,8 @@ dependencies:
 - h5py
 - pandas
 - Shapely
+- psutil
+- pyzmq
 - pip
 - pip:
     - opencv-python

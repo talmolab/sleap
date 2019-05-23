@@ -1,6 +1,6 @@
 import pytest
 
-from sleap.instance import Instance, Point
+from sleap.instance import Instance, Point, PredictedInstance
 
 
 @pytest.fixture
@@ -23,6 +23,9 @@ def instances(skeleton):
 
     return instances
 
+@pytest.fixture
+def predicted_instances(instances):
+    return [PredictedInstance.from_instance(i, 1.0) for i in instances]
 
 @pytest.fixture
 def multi_skel_instances(skeleton, stickman):

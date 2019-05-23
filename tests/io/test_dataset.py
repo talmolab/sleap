@@ -3,9 +3,9 @@ import pytest
 import numpy as np
 
 from sleap.skeleton import Skeleton
-from sleap.instance import Instance, Point
+from sleap.instance import Instance, Point, LabeledFrame
 from sleap.io.video import Video, MediaVideo
-from sleap.io.dataset import LabeledFrame, Labels, load_labels_json_old
+from sleap.io.dataset import Labels, load_labels_json_old
 
 TEST_H5_DATASET = 'tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5'
 
@@ -33,7 +33,7 @@ def test_labels_json(tmpdir, multi_skel_vid_labels):
         np.allclose(expected_label.video.get_frame(0)[0:15,0:15,:], label.video.get_frame(0)[0:15,0:15,:])
 
         # Compare the instances
-        assert expected_label.instances == label.instances
+        assert all(i1.matches(i2) for (i1, i2) in zip(expected_label.instances,label.instances))
 
 
 def test_load_labels_json_old(tmpdir):
@@ -56,11 +56,11 @@ def test_load_labels_json_old(tmpdir):
         assert labels[0].video.get_frame(0).shape == (384, 384, 1)
 
         # Check some frame objects.
-        assert labels[0].frame_idx == 118
-        assert labels[40].frame_idx == 494
+        assert labels[0].frame_idx == 0
+        assert labels[40].frame_idx == 573
 
         # Check the skeleton
-        assert labels[0].instances[0].skeleton.nodes == skel_node_names
+        assert labels[0].instances[0].skeleton.node_names == skel_node_names
 
     labels = Labels.load_json("tests/data/json_format_v1/centered_pair.json")
     check_labels(labels)
@@ -81,18 +81,18 @@ def test_label_accessors(centered_pair_labels):
     assert labels[video] == labels.find(video)
 
     assert labels[0].video == video
-    assert labels[0].frame_idx == 118
+    assert labels[0].frame_idx == 0
 
     assert labels[61].video == video
-    assert labels[61].frame_idx == 100
+    assert labels[61].frame_idx == 954
 
-    assert len(labels.find(video, frame_idx=100)) == 1
-    assert len(labels.find(video, 100)) == 1
-    assert labels.find(video, 100)[0] == labels[61]
+    assert len(labels.find(video, frame_idx=954)) == 1
+    assert len(labels.find(video, 954)) == 1
+    assert labels.find(video, 954)[0] == labels[61]
     assert labels.find_first(video) == labels[0]
-    assert labels.find_first(video, 100) == labels[61]
-    assert labels[video, 100] == labels[61]
-    assert labels[video, 118] == labels[0]
+    assert labels.find_first(video, 954) == labels[61]
+    assert labels[video, 954] == labels[61]
+    assert labels[video, 0] == labels[0]
     assert labels[video] == labels.labels
 
     assert len(labels.find(video, 101)) == 0
@@ -179,4 +179,4 @@ def test_instance_access():
     assert len(labels.all_instances) == 50
     assert len(list(labels.instances(video=dummy_video))) == 20
     assert len(list(labels.instances(video=dummy_video2))) == 30
-    
+

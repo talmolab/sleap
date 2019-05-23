@@ -1,7 +1,7 @@
 from PySide2 import QtCore
 from PySide2.QtCore import Qt
 
-from PySide2.QtGui import QKeyEvent
+from PySide2.QtGui import QKeyEvent, QColor
 
 from PySide2.QtWidgets import QApplication, QMainWindow, QWidget, QDockWidget
 from PySide2.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QFormLayout
@@ -12,14 +12,18 @@ from PySide2.QtWidgets import QMenu, QAction
 from PySide2.QtWidgets import QFileDialog, QMessageBox
 
 import os
-import matplotlib.pyplot as plt
+
 import numpy as np
 import pandas as pd
 
+from typing import Callable
+
 from sleap.gui.video import QtVideoPlayer, QtInstance, QtEdge, QtNode
+from sleap.gui.tracks import TrackColorManager
 from sleap.io.video import Video, HDF5Video, MediaVideo
-from sleap.io.dataset import Labels, load_labels_json_old, LabeledFrame
-from sleap.skeleton import Skeleton
+from sleap.io.dataset import Labels, load_labels_json_old
+from sleap.instance import LabeledFrame
+from sleap.skeleton import Skeleton, Node
 
 
 class VideosTable(QTableView):
@@ -28,6 +32,7 @@ class VideosTable(QTableView):
     def __init__(self, videos: list = []):
         super(VideosTable, self).__init__()
         self.setModel(VideosTableModel(videos))
+        self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setSelectionMode(QAbstractItemView.SingleSelection)
 
 class VideosTableModel(QtCore.QAbstractTableModel):
@@ -56,7 +61,7 @@ class VideosTableModel(QtCore.QAbstractTableModel):
                 video = self.videos[idx]
 
                 if prop == "filename":
-                    return video.filename
+                    return os.path.basename(video.filename) # just show the name, not full path
                 elif prop == "frames":
                     return video.frames
                 elif prop == "height":
@@ -93,6 +98,7 @@ class SkeletonNodesTable(QTableView):
     def __init__(self, skeleton: Skeleton):
         super(SkeletonNodesTable, self).__init__()
         self.setModel(SkeletonNodesTableModel(skeleton))
+        self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setSelectionMode(QAbstractItemView.SingleSelection)
 
 class SkeletonNodesTableModel(QtCore.QAbstractTableModel):
@@ -116,12 +122,13 @@ class SkeletonNodesTableModel(QtCore.QAbstractTableModel):
         if role == Qt.DisplayRole and index.isValid():
             node_idx = index.row()
             prop = self._props[index.column()]
-            node_name = self.skeleton.nodes[node_idx]
+            node = self.skeleton.nodes[node_idx] # FIXME? can we assume order is stable?
+            node_name = node.name
 
             if prop == "name":
                 return node_name
             elif prop == "symmetry":
-                return self.skeleton.get_symmetry(node_name)
+                return self.skeleton.get_symmetry_name(node_name)
 
         return None
 
@@ -144,8 +151,7 @@ class SkeletonNodesTableModel(QtCore.QAbstractTableModel):
         if role == Qt.EditRole:
             node_idx = index.row()
             prop = self._props[index.column()]
-            node_name = self.skeleton.nodes[node_idx]
-
+            node_name = self.skeleton.nodes[node_idx].name
             try:
                 if prop == "name":
                     if len(value) > 0:
@@ -157,6 +163,9 @@ class SkeletonNodesTableModel(QtCore.QAbstractTableModel):
                         self._skeleton.add_symmetry(node_name, value)
                     else:
                         self._skeleton.delete_symmetry(node_name, self._skeleton.get_symmetry(node_name))
+
+                # send signal that data has changed
+                self.dataChanged.emit(index, index)
 
                 return True
             except:
@@ -175,6 +184,7 @@ class SkeletonEdgesTable(QTableView):
     def __init__(self, skeleton: Skeleton):
         super(SkeletonEdgesTable, self).__init__()
         self.setModel(SkeletonEdgesTableModel(skeleton))
+        self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setSelectionMode(QAbstractItemView.SingleSelection)
 
 class SkeletonEdgesTableModel(QtCore.QAbstractTableModel):
@@ -201,9 +211,9 @@ class SkeletonEdgesTableModel(QtCore.QAbstractTableModel):
             edge = self.skeleton.edges[idx]
 
             if prop == "source":
-                return edge[0]
+                return edge[0].name
             elif prop == "destination":
-                return edge[1]
+                return edge[1].name
 
         return None
 
@@ -231,16 +241,18 @@ class SkeletonEdgesTableModel(QtCore.QAbstractTableModel):
 class LabeledFrameTable(QTableView):
     """Table view widget backed by a custom data model for displaying
     lists of Video instances. """
-    def __init__(self, labeled_frame: LabeledFrame = None):
+    def __init__(self, labeled_frame: LabeledFrame = None, labels: Labels = None):
         super(LabeledFrameTable, self).__init__()
-        self.setModel(LabeledFrameTableModel(labeled_frame))
+        self.setModel(LabeledFrameTableModel(labeled_frame, labels))
+        self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setSelectionMode(QAbstractItemView.SingleSelection)
 
 class LabeledFrameTableModel(QtCore.QAbstractTableModel):
-    _props = ["points", "track_id", "skeleton",]
+    _props = ["points", "track", "skeleton",]
 
-    def __init__(self, labeled_frame: LabeledFrame):
+    def __init__(self, labeled_frame: LabeledFrame, labels: Labels):
         super(LabeledFrameTableModel, self).__init__()
+        self.labels = labels
         self._labeled_frame = labeled_frame
 
     @property
@@ -253,20 +265,33 @@ class LabeledFrameTableModel(QtCore.QAbstractTableModel):
         self._labeled_frame = val
         self.endResetModel()
 
+    @property
+    def labels(self):
+        return self._labels
+
+    @labels.setter
+    def labels(self, val):
+        self._labels = val
+        self._color_manager = TrackColorManager(self._labels)
+
     def data(self, index: QtCore.QModelIndex, role=Qt.DisplayRole):
-        if role == Qt.DisplayRole and index.isValid():
+        if index.isValid():
             idx = index.row()
             prop = self._props[index.column()]
 
             if len(self.labeled_frame.instances) > (idx - 1):
                 instance = self.labeled_frame.instances[idx]
 
-                if prop == "points":
-                    return f"{len(instance.nodes())}/{len(instance.skeleton.nodes)}"
-                elif prop == "track_id":
-                    return None
-                elif prop == "skeleton":
-                    return instance.skeleton.name
+                if role == Qt.DisplayRole:
+                    if prop == "points":
+                        return f"{len(instance.nodes)}/{len(instance.skeleton.nodes)}"
+                    elif prop == "track" and instance.track is not None:
+                        return instance.track.name
+                    elif prop == "skeleton":
+                        return instance.skeleton.name
+                elif role == Qt.ForegroundRole:
+                    if prop == "track" and instance.track is not None:
+                        return QColor(*self._color_manager.get_color(instance.track))
 
         return None
 
@@ -285,21 +310,106 @@ class LabeledFrameTableModel(QtCore.QAbstractTableModel):
 
         return None
 
+    def setData(self, index: QtCore.QModelIndex, value: str, role=Qt.EditRole):
+        if role == Qt.EditRole:
+            idx = index.row()
+            prop = self._props[index.column()]
+            instance = self.labeled_frame.instances[idx]
+            if prop == "track":
+                if len(value) > 0:
+                    instance.track.name = value
+
+            # send signal that data has changed
+            self.dataChanged.emit(index, index)
+
+            return True
+        return False
+
+    def flags(self, index: QtCore.QModelIndex):
+        f = Qt.ItemIsEnabled | Qt.ItemIsSelectable
+        if index.isValid():
+            idx = index.row()
+            instance = self.labeled_frame.instances[idx]
+            prop = self._props[index.column()]
+            if prop == "track" and instance.track is not None:
+                f |= Qt.ItemIsEditable
+        return f
+
+
+class SkeletonNodeModel(QtCore.QStringListModel):
+
+    def __init__(self, skeleton: Skeleton, src_node: Callable = None):
+        super(SkeletonNodeModel, self).__init__()
+        self._src_node = src_node
+        self.skeleton = skeleton
+
+    @property
+    def skeleton(self):
+        return self._skeleton
+
+    @skeleton.setter
+    def skeleton(self, val):
+        self.beginResetModel()
+
+        self._skeleton = val
+        # if this is a dst node, then determine list based on source node
+        if self._src_node is not None:
+            self._node_list = self._valid_dst()
+        # otherwise, show all nodes for skeleton
+        else:
+            self._node_list = self.skeleton.node_names
+
+        self.endResetModel()
+
+    def _valid_dst(self):
+        # get source node using callback
+        src_node = self._src_node()
+
+        def is_valid_dst(node):
+            # node cannot be dst of itself
+            if node == src_node:
+                return False
+            # node cannot be dst if it's already dst of this src
+            if (src_node, node) in self.skeleton.edge_names:
+                return False
+            return True
+
+        # Filter down to valid destination nodes
+        valid_dst_nodes = list(filter(is_valid_dst, self.skeleton.node_names))
+
+        return valid_dst_nodes
+
+    def data(self, index: QtCore.QModelIndex, role=Qt.DisplayRole):
+        if role == Qt.DisplayRole and index.isValid():
+            idx = index.row()
+            return self._node_list[idx]
+
+        return None
+
+    def rowCount(self, parent):
+        return len(self._node_list)
+
+    def columnCount(self, parent):
+        return 1
+
     def flags(self, index: QtCore.QModelIndex):
         return Qt.ItemIsEnabled | Qt.ItemIsSelectable
 
 
 if __name__ == "__main__":
 
-    labels = load_labels_json_old("tests/data/json_format_v1/centered_pair.json")
+    labels = Labels.load_json("tests/data/json_format_v2/centered_pair_predictions.json")
     skeleton = labels.labels[0].instances[0].skeleton
 
+    Labels.save_json(labels, "test.json")
+    del labels
+    labels = Labels.load_json("test.json")
 
     app = QApplication([])
     # table = SkeletonNodesTable(skeleton)
     # table = SkeletonEdgesTable(skeleton)
     # table = VideosTable(labels.videos)
-    table = LabeledFrameTable(labels.labels[0])
+    table = LabeledFrameTable(labels.labels[0], labels)
     table.show()
 
     app.exec_()
