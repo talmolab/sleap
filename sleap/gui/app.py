@@ -211,7 +211,7 @@ class MainWindow(QMainWindow):
         self.videosTable = VideosTable()
         videos_layout.addWidget(self.videosTable)
         hb = QHBoxLayout()
-        btn = QPushButton("Open video")
+        btn = QPushButton("Show video")
         btn.clicked.connect(self.activateSelectedVideo); hb.addWidget(btn)
         btn = QPushButton("Add videos")
         btn.clicked.connect(self.addVideo); hb.addWidget(btn)
