@@ -20,8 +20,8 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- Project information -----------------------------------------------------
 
 project = 'LEAP'
-copyright = '2019, Talmo D. Pereira, David M. Turner'
-author = 'Talmo D. Pereira, David M. Turner'
+copyright = '2019, Murthy Lab @ Princeton'
+author = 'Talmo D. Pereira, Nat Tabris, David M. Turner'
 
 # The short X.Y version
 version = ''
@@ -105,7 +105,7 @@ html_static_path = ['_static']
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'LEAPdoc'
+htmlhelp_basename = 'sLEAPdoc'
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -132,7 +132,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'LEAP.tex', 'LEAP Documentation',
+    (master_doc, 'sLEAP.tex', 'sLEAP Documentation',
      'Talmo D. Pereira, David M. Turner', 'manual'),
 ]
 
@@ -142,7 +142,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'sleap', 'LEAP Documentation',
+    (master_doc, 'sleap', 'sLEAP Documentation',
      [author], 1)
 ]
 
@@ -153,8 +153,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'LEAP', 'LEAP Documentation',
-     author, 'LEAP', 'One line description of project.',
+    (master_doc, 'sLEAP', 'sLEAP Documentation',
+     author, 'sLEAP', 'One line description of project.',
      'Miscellaneous'),
 ]
 
@@ -176,5 +176,8 @@ epub_title = project
 # A list of files that should not be packed into the epub file.
 epub_exclude_files = ['search.html']
 
+html_static_path = []
+
+html_theme = "sphinx_rtd_theme"
 
 # -- Extension configuration -------------------------------------------------
