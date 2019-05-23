@@ -267,8 +267,8 @@ class VideoSlider(QGraphicsView):
         if hasattr(self, "_mark_items"):
             for item in self._mark_items.values():
                 self.scene.removeItem(item)
-        self._marks = set()
-        self._mark_items = dict()
+        self._marks = set() # holds mark position
+        self._mark_items = dict() # holds visual Qt object for plotting mark
 
     def setMarks(self, marks):
         """Set all marked values for the slider.
@@ -281,6 +281,13 @@ class VideoSlider(QGraphicsView):
             for mark in marks:
                 self.addMark(mark, update=False)
         self.updatePos()
+
+    def getMarks(self):
+        """Return list of marks.
+
+        Each mark is either val or (track, val)-tuple.
+        """
+        return self._marks
 
     def addMark(self, new_mark, update=True):
         """Add a marked value to the slider.
