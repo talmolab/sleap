@@ -166,6 +166,13 @@ class MainWindow(QMainWindow):
         self.menuAction["show labels"] = labelMenu.addAction("Show Node Names", self.toggleLabels, Qt.ALT + Qt.Key_Tab)
         self.menuAction["show edges"] = labelMenu.addAction("Show Edges", self.toggleEdges, Qt.ALT + Qt.SHIFT + Qt.Key_Tab)
         self.menuAction["show trails"] = labelMenu.addAction("Show Trails", self.toggleTrails)
+
+        self.trailLengthMenu = labelMenu.addMenu("Trail Length")
+        for length_option in (4, 10, 20):
+            menu_item = self.trailLengthMenu.addAction(f"{length_option}",
+                            lambda x=length_option: self.setTrailLength(x))
+            menu_item.setCheckable(True)
+
         self.menuAction["color predicted"] = labelMenu.addAction("Color Predicted Instances", self.toggleColorPredicted)
         labelMenu.addSeparator()
         self.menuAction["fit"] = labelMenu.addAction("Fit Instances to View", self.toggleAutoZoom, Qt.CTRL + Qt.Key_Equal)
@@ -373,6 +380,7 @@ class MainWindow(QMainWindow):
             self.labels = Labels.load_json(filename)
             self.changestack_clear()
             self._trail_manager = TrackTrailManager(self.labels, self.player.view.scene)
+            self.setTrailLength(self._trail_manager.trail_length)
 
             if show_msg:
                 msgBox = QMessageBox(text=f"Imported {len(self.labels)} labeled frames.")
@@ -969,6 +977,17 @@ class MainWindow(QMainWindow):
         self._show_trails = not self._show_trails
         self.menuAction["show trails"].setChecked(self._show_trails)
         self.plotFrame()
+
+    def setTrailLength(self, trail_length):
+        self._trail_manager.trail_length = trail_length
+
+        for menu_item in self.trailLengthMenu.children():
+            if menu_item.text() == str(trail_length):
+                menu_item.setChecked(True)
+            else:
+                menu_item.setChecked(False)
+
+        if self.video is not None: self.plotFrame()
 
     def toggleColorPredicted(self):
         self._color_predicted = not self._color_predicted
