@@ -5,7 +5,7 @@ Drop-in replacement for QSlider with additional features.
 from PySide2.QtWidgets import QApplication, QWidget, QLayout, QAbstractSlider
 from PySide2.QtWidgets import QGraphicsView, QGraphicsScene, QGraphicsItem
 from PySide2.QtWidgets import QSizePolicy, QLabel, QGraphicsRectItem
-from PySide2.QtGui import QPainter, QPen, QBrush, QColor
+from PySide2.QtGui import QPainter, QPen, QBrush, QColor, QKeyEvent
 from PySide2.QtCore import Qt, Signal, QRect, QRectF
 
 class VideoSlider(QGraphicsView):
@@ -25,6 +25,8 @@ class VideoSlider(QGraphicsView):
     mousePressed = Signal(float, float)
     mouseMoved = Signal(float, float)
     mouseReleased = Signal(float, float)
+    keyPress = Signal(QKeyEvent)
+    keyRelease = Signal(QKeyEvent)
     valueChanged = Signal(int)
     selectionChanged = Signal(int, int)
 
@@ -185,12 +187,16 @@ class VideoSlider(QGraphicsView):
         """
         self._selection.append(val)
 
-    def endSelection(self, val):
+    def endSelection(self, val, update=False):
         """Add final selection endpoint.
 
         Args:
             val: value of endpoint
         """
+        # If we want to update endpoint and there's already one, remove it
+        if update and len(self._selection)%2==0:
+            self._selection.pop()
+        # Add the selection endpoint
         self._selection.append(val)
         a, b = self._selection[-2:]
         if a == b:
@@ -362,7 +368,9 @@ class VideoSlider(QGraphicsView):
         # Do nothing if click outside slider area
         if not self.slider.rect().contains(scenePos): return
 
-        if event.modifiers() == Qt.AltModifier:
+        move_function = None
+
+        if event.modifiers() == Qt.ShiftModifier:
             move_function = self.moveSelectionAnchor
             release_function = self.releaseSelectionAnchor
 
@@ -373,7 +381,8 @@ class VideoSlider(QGraphicsView):
             release_function = None
 
         # Connect to signals
-        self.mouseMoved.connect(move_function)
+        if move_function is not None:
+            self.mouseMoved.connect(move_function)
 
         def done(x, y):
             if release_function is not None:
@@ -396,6 +405,14 @@ class VideoSlider(QGraphicsView):
         """Override method to emit mouseReleased signal on release."""
         scenePos = self.mapToScene(event.pos())
         self.mouseReleased.emit(scenePos.x(), scenePos.y())
+
+    def keyPressEvent(self, event):
+        self.keyPress.emit(event)
+        event.ignore()
+
+    def keyReleaseEvent(self, event):
+        self.keyRelease.emit(event)
+        event.ignore()
 
     def boundingRect(self) -> QRectF:
         """Method required by Qt."""
