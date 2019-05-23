@@ -70,6 +70,7 @@ for:
     - cmd: git config --global user.email "davidt0x@gmail.com"
     - cmd: git config --global user.name "David Turner"
     - cmd: activate sleap_appveyor
+    - cmd: cd ..\
     - cmd: mkdir sleap-docs
     - cmd: cd sleap-docs
     - cmd: git clone https://github.com/murthylab/sleap.git html
