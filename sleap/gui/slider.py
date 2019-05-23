@@ -83,7 +83,9 @@ class VideoSlider(QGraphicsView):
 
     def setTracksFromLabels(self, labels):
         """Set slider marks using track information from `Labels` object.
-        
+
+        Note that this is the only method coupled to a SLEAP object.
+
         Args:
             labels: the `labels` with tracks and labeled_frames
         """
@@ -369,6 +371,7 @@ class VideoSlider(QGraphicsView):
         if not self.slider.rect().contains(scenePos): return
 
         move_function = None
+        release_function = None
 
         if event.modifiers() == Qt.ShiftModifier:
             move_function = self.moveSelectionAnchor
@@ -407,12 +410,14 @@ class VideoSlider(QGraphicsView):
         self.mouseReleased.emit(scenePos.x(), scenePos.y())
 
     def keyPressEvent(self, event):
+        """Catch event and emit signal so something else can handle event."""
         self.keyPress.emit(event)
-        event.ignore()
+        event.accept()
 
     def keyReleaseEvent(self, event):
+        """Catch event and emit signal so something else can handle event."""
         self.keyRelease.emit(event)
-        event.ignore()
+        event.accept()
 
     def boundingRect(self) -> QRectF:
         """Method required by Qt."""
