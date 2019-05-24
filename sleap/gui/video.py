@@ -1168,11 +1168,12 @@ class QtInstance(QGraphicsObject):
         self.box.setOpacity(op)
         # Update the position for the box
         rect = self.getPointsBoundingRect()
-        self._bounding_rect = rect
-        rect = rect.marginsAdded(QMarginsF(10, 10, 10, 10))
-        self.box.setRect(rect)
-        self.track_label.setOpacity(op)
-        self.track_label.setPos(rect.bottomLeft() + QPointF(0, 5))
+        if rect is not None:
+            self._bounding_rect = rect
+            rect = rect.marginsAdded(QMarginsF(10, 10, 10, 10))
+            self.box.setRect(rect)
+            self.track_label.setOpacity(op)
+            self.track_label.setPos(rect.bottomLeft() + QPointF(0, 5))
 
     @property
     def selected(self):

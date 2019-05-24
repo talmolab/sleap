@@ -23,15 +23,17 @@ class HDF5Video:
         file_h5: The h5.File object that the underlying dataset is stored.
         dataset_h5: The h5.Dataset object that the underlying data is stored.
         input_format: A string value equal to either "channels_last" or "channels_first".
-        This specifies whether the underlying video data is stored as:
+            This specifies whether the underlying video data is stored as:
 
-            * "channels_first": shape = (frames, channels, width, height)
-            * "channels_last": shape = (frames, width, height, channels)
+                * "channels_first": shape = (frames, channels, width, height)
+                * "channels_last": shape = (frames, width, height, channels)
+        convert_range: Whether we should convert data to [0, 255]-range
     """
 
     file: str = attr.ib(default=None)
     dataset: str = attr.ib(default=None)
     input_format: str = attr.ib(default="channels_last")
+    convert_range: bool = attr.ib(default=True)
 
     def __attrs_post_init__(self):
 
@@ -99,7 +101,7 @@ class HDF5Video:
     def filename(self):
         return self.file
 
-    def get_frame(self, idx) -> np.ndarray:
+    def get_frame(self, idx):# -> np.ndarray:
         """
         Get a frame from the underlying HDF5 video data.
 
@@ -113,6 +115,9 @@ class HDF5Video:
 
         if self.input_format == "channels_first":
             frame = np.transpose(frame, (2, 1, 0))
+
+        if self.convert_range and np.max(frame) <= 1.:
+            frame = (frame * 255).astype(int)
 
         return frame
 
@@ -362,7 +367,8 @@ class Video:
     @classmethod
     def from_hdf5(cls, dataset: Union[str, h5.Dataset],
                   file: Union[str, h5.File] = None,
-                  input_format: str = "channels_last"):
+                  input_format: str = "channels_last",
+                  convert_range: bool = True):
         """
         Create an instance of a video object from an HDF5 file and dataset. This
         is a helper method that invokes the HDF5Video backend.
@@ -372,11 +378,17 @@ class Video:
             h5.File, dataset must be a str of the dataset name.
             file: The name of the HDF5 file or and open h5.File object.
             input_format: Whether the data is oriented with "channels_first" or "channels_last"
+            convert_range: Whether we should convert data to [0, 255]-range
 
         Returns:
             A Video object with HDF5Video backend.
         """
-        backend = HDF5Video(file=file, dataset=dataset, input_format=input_format)
+        backend = HDF5Video(
+                    file=file,
+                    dataset=dataset,
+                    input_format=input_format,
+                    convert_range=convert_range
+                    )
         return cls(backend=backend)
 
     @classmethod

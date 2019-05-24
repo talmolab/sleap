@@ -18,7 +18,7 @@ def hdf5_confmaps():
     
 @pytest.fixture
 def hdf5_affinity():
-    return Video.from_hdf5(file=TEST_H5_FILE, dataset=TEST_H5_AFFINITY, input_format=TEST_H5_INPUT_FORMAT)
+    return Video.from_hdf5(file=TEST_H5_FILE, dataset=TEST_H5_AFFINITY, input_format=TEST_H5_INPUT_FORMAT, convert_range=False)
 
 
 TEST_SMALL_ROBOT_MP4_FILE = "tests/data/videos/small_robot.mp4"
