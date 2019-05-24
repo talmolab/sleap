@@ -198,21 +198,26 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        video (optional): the :class:`Video` to display</span>
-<span class="sd">        </span>
+
 <span class="sd">    Signals:</span>
 <span class="sd">        changedPlot: Emitted whenever the plot is redrawn</span>
+<span class="sd">        changedData: Emitted whenever data is changed by user</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">changedPlot</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">QWidget</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+    <span class="n">changedData</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">Instance</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">QtVideoPlayer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shift_key_down</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">frame_idx</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">view</span> <span class="o">=</span> <span class="n">GraphicsView</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">seekbar</span> <span class="o">=</span> <span class="n">VideoSlider</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">seekbar</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="k">lambda</span> <span class="n">evt</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seekbar</span><span class="o">.</span><span class="n">value</span><span class="p">()))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seekbar</span><span class="o">.</span><span class="n">keyPress</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keyPressEvent</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seekbar</span><span class="o">.</span><span class="n">keyRelease</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keyReleaseEvent</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">seekbar</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">layout</span> <span class="o">=</span> <span class="n">QVBoxLayout</span><span class="p">()</span>
@@ -266,20 +271,25 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">predicted_instances</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">predicted_instances</span>
-        
+
 <div class="viewcode-block" id="QtVideoPlayer.addInstance"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.QtVideoPlayer.addInstance">[docs]</a>    <span class="k">def</span> <span class="nf">addInstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Add a skeleton instance to the video.</span>
-<span class="sd">        </span>
+
 <span class="sd">        Args:</span>
 <span class="sd">            instance: this can be either a `QtInstance` or an `Instance`</span>
-<span class="sd">            </span>
+
 <span class="sd">            Any other named args are passed along if/when creating QtInstance.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">instance</span><span class="p">)</span> <span class="o">==</span> <span class="n">Instance</span><span class="p">:</span>
+        <span class="c1"># Check if instance is an Instance (or subclass of Instance)</span>
+        <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">instance</span><span class="p">),</span> <span class="n">Instance</span><span class="p">):</span>
             <span class="n">instance</span> <span class="o">=</span> <span class="n">QtInstance</span><span class="p">(</span><span class="n">instance</span><span class="o">=</span><span class="n">instance</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">instance</span><span class="p">)</span> <span class="o">!=</span> <span class="n">QtInstance</span><span class="p">:</span> <span class="k">return</span>
-    
+
         <span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">instance</span><span class="p">)</span>
+
+        <span class="c1"># connect signal from instance</span>
+        <span class="n">instance</span><span class="o">.</span><span class="n">changedData</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">changedData</span><span class="p">)</span>
+
 
         <span class="c1"># connect signal so we can adjust QtNodeLabel positions after zoom</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">updatedViewer</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">updatePoints</span><span class="p">)</span></div>
@@ -377,21 +387,21 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Collect a sequence of instances (through user selection) and call `on_success`.</span>
 <span class="sd">        If the user cancels (by unselecting without new selection), call `on_failure`.</span>
-<span class="sd">        </span>
+
 <span class="sd">        Args:</span>
 <span class="sd">            seq_len: number of instances we expect user to select</span>
 <span class="sd">            on_success: callback after use has selected desired number of instances</span>
 <span class="sd">            on_failure (optional): callback if user cancels selection</span>
-<span class="sd">            </span>
+
 <span class="sd">        Note:</span>
 <span class="sd">            If successful, we call</span>
 <span class="sd">            &gt;&gt;&gt; on_success(sequence_of_selected_instance_indexes)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="n">indexes</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">getSelection</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">indexes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">getSelection</span><span class="p">())</span>
-        
+
         <span class="c1"># Define function that will be called when user selects another instance</span>
         <span class="k">def</span> <span class="nf">handle_selection</span><span class="p">(</span><span class="n">seq_len</span><span class="o">=</span><span class="n">seq_len</span><span class="p">,</span>
                              <span class="n">indexes</span><span class="o">=</span><span class="n">indexes</span><span class="p">,</span>
@@ -409,7 +419,7 @@
                 <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">on_failure</span><span class="p">):</span>
                     <span class="n">on_failure</span><span class="p">(</span><span class="n">indexes</span><span class="p">)</span>
                 <span class="k">return</span>
-            
+
             <span class="c1"># If we have all the instances we want in our sequence, we&#39;re done</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">indexes</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">seq_len</span><span class="p">:</span>
                 <span class="c1"># remove this handler</span>
@@ -426,11 +436,21 @@
         <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">on_each</span><span class="p">):</span>
             <span class="n">on_each</span><span class="p">(</span><span class="n">indexes</span><span class="p">)</span></div>
 
+    <span class="k">def</span> <span class="nf">keyReleaseEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">QKeyEvent</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key</span><span class="o">.</span><span class="n">Key_Shift</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_shift_key_down</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">event</span><span class="o">.</span><span class="n">ignore</span><span class="p">()</span>
+
 <div class="viewcode-block" id="QtVideoPlayer.keyPressEvent"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.QtVideoPlayer.keyPressEvent">[docs]</a>    <span class="k">def</span> <span class="nf">keyPressEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">QKeyEvent</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Custom event handler.</span>
 <span class="sd">        Move between frames, toggle display of edges/labels, and select instances.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key</span><span class="o">.</span><span class="n">Key_Left</span><span class="p">:</span>
+        <span class="n">ignore</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">frame_t0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame_idx</span>
+
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key</span><span class="o">.</span><span class="n">Key_Shift</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_shift_key_down</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key</span><span class="o">.</span><span class="n">Key_Left</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">prevFrame</span><span class="p">()</span>
         <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key</span><span class="o">.</span><span class="n">Key_Right</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">nextFrame</span><span class="p">()</span>
@@ -446,16 +466,25 @@
             <span class="c1"># decrement by 1 since instances are 0-indexed</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">selectInstance</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">chr</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()))</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">event</span><span class="o">.</span><span class="n">ignore</span><span class="p">()</span> <span class="c1"># Kicks the event up to parent</span></div></div>
+            <span class="n">event</span><span class="o">.</span><span class="n">ignore</span><span class="p">()</span> <span class="c1"># Kicks the event up to parent</span>
             <span class="c1"># print(event.key())</span>
 
+        <span class="c1"># If user is holding down shift and action resulted in moving to another frame</span>
+        <span class="c1"># event.modifiers() == Qt.ShiftModifier and</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shift_key_down</span> <span class="ow">and</span> <span class="n">frame_t0</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame_idx</span><span class="p">:</span>
+            <span class="c1"># If there&#39;s no select, start seekbar selection at frame before action</span>
+            <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">seekbar</span><span class="o">.</span><span class="n">getSelection</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">start</span> <span class="o">==</span> <span class="n">end</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">seekbar</span><span class="o">.</span><span class="n">startSelection</span><span class="p">(</span><span class="n">frame_t0</span><span class="p">)</span>
+            <span class="c1"># Set endpoint to frame after action</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">seekbar</span><span class="o">.</span><span class="n">endSelection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frame_idx</span><span class="p">,</span> <span class="n">update</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div></div>
 
 <div class="viewcode-block" id="GraphicsView"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.GraphicsView">[docs]</a><span class="k">class</span> <span class="nc">GraphicsView</span><span class="p">(</span><span class="n">QGraphicsView</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    QGraphicsView used by QtVideoPlayer.</span>
 
 <span class="sd">    This contains elements for display of video and event handlers for zoom/selection.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Signals:</span>
 <span class="sd">        updatedViewer: Emitted after update to view (e.g., zoom)</span>
 <span class="sd">            Used internally so we know when to update points for each instance.</span>
@@ -539,7 +568,7 @@
 
 <div class="viewcode-block" id="GraphicsView.updateViewer"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.GraphicsView.updateViewer">[docs]</a>    <span class="k">def</span> <span class="nf">updateViewer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Show current zoom (if showing entire image, apply current aspect ratio mode).</span>
-<span class="sd">        &quot;&quot;&quot;</span>        
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasImage</span><span class="p">():</span>
             <span class="k">return</span>
 
@@ -570,7 +599,17 @@
 <span class="sd">        Order in list should match the order in which instances were added to scene.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">items</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">SortOrder</span><span class="o">.</span><span class="n">AscendingOrder</span><span class="p">)</span>
-                <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="o">==</span> <span class="n">QtInstance</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">predicted</span><span class="p">]</span>
+                <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="o">==</span> <span class="n">QtInstance</span> <span class="ow">and</span> <span class="n">item</span><span class="o">.</span><span class="n">predicted</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">all_instances</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a list of instances and predicted instances.</span>
+
+<span class="sd">        Order in list should match the order in which instances were added to scene.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">items</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">SortOrder</span><span class="o">.</span><span class="n">AscendingOrder</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="o">==</span> <span class="n">QtInstance</span><span class="p">]</span>
 
 <div class="viewcode-block" id="GraphicsView.clearSelection"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.GraphicsView.clearSelection">[docs]</a>    <span class="k">def</span> <span class="nf">clearSelection</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Clear instance skeleton selection.</span>
@@ -615,10 +654,8 @@
         <span class="sd">&quot;&quot;&quot; Returns the index of the currently selected instance.</span>
 <span class="sd">        If no instance selected, returns None.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">instances</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">instances</span>
+        <span class="n">instances</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_instances</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">instances</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="k">return</span> <span class="kc">None</span>
-        <span class="n">select_inst</span> <span class="o">=</span> <span class="n">instances</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># default to selecting first instance</span>
-        <span class="n">select_idx</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">instance</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">instances</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">instance</span><span class="o">.</span><span class="n">selected</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">idx</span></div>
@@ -697,9 +734,9 @@
         <span class="n">scale_h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">height</span><span class="p">()</span><span class="o">/</span><span class="n">zoom_rect</span><span class="o">.</span><span class="n">height</span><span class="p">()</span>
         <span class="n">scale_w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">width</span><span class="p">()</span><span class="o">/</span><span class="n">zoom_rect</span><span class="o">.</span><span class="n">width</span><span class="p">()</span>
         <span class="n">scale</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">scale_h</span><span class="p">,</span> <span class="n">scale_w</span><span class="p">)</span>
-        
+
         <span class="bp">self</span><span class="o">.</span><span class="n">zoomFactor</span> <span class="o">=</span> <span class="n">scale</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">updateViewer</span><span class="p">()</span>    
+        <span class="bp">self</span><span class="o">.</span><span class="n">updateViewer</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">centerOn</span><span class="p">(</span><span class="n">zoom_rect</span><span class="o">.</span><span class="n">center</span><span class="p">())</span></div>
 
 <div class="viewcode-block" id="GraphicsView.clearZoom"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.GraphicsView.clearZoom">[docs]</a>    <span class="k">def</span> <span class="nf">clearZoom</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -717,7 +754,7 @@
 <span class="sd">            The `QRectF` which contains the skeleton instances.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">rect</span> <span class="o">=</span> <span class="n">QRectF</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">instances</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_instances</span><span class="p">:</span>
             <span class="n">rect</span> <span class="o">=</span> <span class="n">rect</span><span class="o">.</span><span class="n">united</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">boundingRect</span><span class="p">())</span>
         <span class="k">if</span> <span class="n">margin</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">rect</span> <span class="o">=</span> <span class="n">rect</span><span class="o">.</span><span class="n">marginsAdded</span><span class="p">(</span><span class="n">QMarginsF</span><span class="p">(</span><span class="n">margin</span><span class="p">,</span> <span class="n">margin</span><span class="p">,</span> <span class="n">margin</span><span class="p">,</span> <span class="n">margin</span><span class="p">))</span>
@@ -913,13 +950,17 @@
 <span class="sd">        color: Color of the visual node item.</span>
 <span class="sd">        callbacks: List of functions to call after we update to the `Point`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">point</span><span class="p">:</span><span class="n">Point</span><span class="p">,</span> <span class="n">radius</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span> <span class="n">color</span><span class="p">:</span><span class="nb">list</span><span class="p">,</span> <span class="n">node_name</span><span class="p">:</span><span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">predicted</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">callbacks</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">point</span><span class="p">:</span><span class="n">Point</span><span class="p">,</span> <span class="n">radius</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span> <span class="n">color</span><span class="p">:</span><span class="nb">list</span><span class="p">,</span> <span class="n">node_name</span><span class="p">:</span><span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">predicted</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">color_predicted</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">callbacks</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span> <span class="o">=</span> <span class="n">parent</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">point</span> <span class="o">=</span> <span class="n">point</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">radius</span> <span class="o">=</span> <span class="n">radius</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="n">color</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">edges</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">node_name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">predicted</span> <span class="o">=</span> <span class="n">predicted</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">color_predicted</span> <span class="o">=</span> <span class="n">color_predicted</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span> <span class="o">=</span> <span class="p">[]</span> <span class="k">if</span> <span class="n">callbacks</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">callbacks</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dragParent</span> <span class="o">=</span> <span class="kc">False</span>
 
@@ -930,10 +971,15 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">setFlag</span><span class="p">(</span><span class="n">QGraphicsItem</span><span class="o">.</span><span class="n">ItemIgnoresTransformations</span><span class="p">)</span>
 
+        <span class="n">col_line</span> <span class="o">=</span> <span class="n">QColor</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">color</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">predicted</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">setFlag</span><span class="p">(</span><span class="n">QGraphicsItem</span><span class="o">.</span><span class="n">ItemIsMovable</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 
-            <span class="bp">self</span><span class="o">.</span><span class="n">pen_default</span> <span class="o">=</span> <span class="n">QPen</span><span class="p">(</span><span class="n">QColor</span><span class="p">(</span><span class="mi">250</span><span class="p">,</span> <span class="mi">250</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">color_predicted</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">pen_default</span> <span class="o">=</span> <span class="n">QPen</span><span class="p">(</span><span class="n">col_line</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">pen_default</span> <span class="o">=</span> <span class="n">QPen</span><span class="p">(</span><span class="n">QColor</span><span class="p">(</span><span class="mi">250</span><span class="p">,</span> <span class="mi">250</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">pen_default</span><span class="o">.</span><span class="n">setCosmetic</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">pen_missing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pen_default</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">brush</span> <span class="o">=</span> <span class="n">QBrush</span><span class="p">(</span><span class="n">QColor</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">))</span>
@@ -941,8 +987,6 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">setFlag</span><span class="p">(</span><span class="n">QGraphicsItem</span><span class="o">.</span><span class="n">ItemIsMovable</span><span class="p">)</span>
 
-            <span class="n">col_line</span> <span class="o">=</span> <span class="n">QColor</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">color</span><span class="p">)</span>
-        
             <span class="bp">self</span><span class="o">.</span><span class="n">pen_default</span> <span class="o">=</span> <span class="n">QPen</span><span class="p">(</span><span class="n">col_line</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">pen_default</span><span class="o">.</span><span class="n">setCosmetic</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># https://stackoverflow.com/questions/13120486/adjusting-qpen-thickness-when-scaling-qgraphicsview</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">pen_missing</span> <span class="o">=</span> <span class="n">QPen</span><span class="p">(</span><span class="n">col_line</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
@@ -951,7 +995,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">brush_missing</span> <span class="o">=</span> <span class="n">QBrush</span><span class="p">(</span><span class="n">QColor</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">color</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">setPos</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">updatePoint</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">updatePoint</span><span class="p">(</span><span class="n">user_change</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
 <div class="viewcode-block" id="QtNode.calls"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.QtNode.calls">[docs]</a>    <span class="k">def</span> <span class="nf">calls</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Method to call all callbacks.</span>
@@ -960,8 +1004,11 @@
             <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">callback</span><span class="p">):</span>
                 <span class="n">callback</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="QtNode.updatePoint"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.QtNode.updatePoint">[docs]</a>    <span class="k">def</span> <span class="nf">updatePoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="QtNode.updatePoint"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.QtNode.updatePoint">[docs]</a>    <span class="k">def</span> <span class="nf">updatePoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_change</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Method to update data for node/edge after user manipulates visual point.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            user_change (optional): Is this being called because of change by user?</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scenePos</span><span class="p">()</span><span class="o">.</span><span class="n">x</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scenePos</span><span class="p">()</span><span class="o">.</span><span class="n">y</span><span class="p">()</span>
@@ -982,14 +1029,17 @@
             <span class="n">edge</span><span class="o">.</span><span class="n">connected_to</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">calls</span><span class="p">()</span>
 
         <span class="c1"># trigger callbacks for this node</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">calls</span><span class="p">()</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calls</span><span class="p">()</span>
+
+        <span class="c1"># Emit event if we&#39;re updating from a user change</span>
+        <span class="k">if</span> <span class="n">user_change</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span><span class="o">.</span><span class="n">changedData</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parent</span><span class="o">.</span><span class="n">instance</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="QtNode.mousePressEvent"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.QtNode.mousePressEvent">[docs]</a>    <span class="k">def</span> <span class="nf">mousePressEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Custom event handler for mouse press.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Do nothing if node is from predicted instance</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parentObject</span><span class="p">()</span><span class="o">.</span><span class="n">predicted</span><span class="p">:</span> <span class="k">return</span>
-        
+
         <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">button</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">LeftButton</span><span class="p">:</span>
             <span class="c1"># Alt-click to drag instance</span>
             <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">modifiers</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">AltModifier</span><span class="p">:</span>
@@ -1000,12 +1050,12 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">parentObject</span><span class="p">()</span><span class="o">.</span><span class="n">mousePressEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
             <span class="c1"># Shift-click to mark all points as complete</span>
             <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">modifiers</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">ShiftModifier</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">parentObject</span><span class="p">()</span><span class="o">.</span><span class="n">updatePoints</span><span class="p">(</span><span class="n">complete</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">parentObject</span><span class="p">()</span><span class="o">.</span><span class="n">updatePoints</span><span class="p">(</span><span class="n">complete</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">user_change</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">dragParent</span> <span class="o">=</span> <span class="kc">False</span>
                 <span class="nb">super</span><span class="p">(</span><span class="n">QtNode</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">mousePressEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">updatePoint</span><span class="p">()</span>
-            
+
             <span class="bp">self</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">complete</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">button</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">RightButton</span><span class="p">:</span>
             <span class="c1"># Right-click to toggle node as missing from this instance</span>
@@ -1023,7 +1073,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">parentObject</span><span class="p">()</span><span class="o">.</span><span class="n">mouseMoveEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="nb">super</span><span class="p">(</span><span class="n">QtNode</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">mouseMoveEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">updatePoint</span><span class="p">()</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">updatePoint</span><span class="p">(</span><span class="n">user_change</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="c1"># don&#39;t count change until mouse release</span></div>
 
 <div class="viewcode-block" id="QtNode.mouseReleaseEvent"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.QtNode.mouseReleaseEvent">[docs]</a>    <span class="k">def</span> <span class="nf">mouseReleaseEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Custom event handler for mouse release.</span>
@@ -1033,7 +1083,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">parentObject</span><span class="p">()</span><span class="o">.</span><span class="n">mouseReleaseEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">parentObject</span><span class="p">()</span><span class="o">.</span><span class="n">setSelected</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">parentObject</span><span class="p">()</span><span class="o">.</span><span class="n">setFlag</span><span class="p">(</span><span class="n">QGraphicsItem</span><span class="o">.</span><span class="n">ItemIsMovable</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">parentObject</span><span class="p">()</span><span class="o">.</span><span class="n">updatePoints</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parentObject</span><span class="p">()</span><span class="o">.</span><span class="n">updatePoints</span><span class="p">(</span><span class="n">user_change</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="nb">super</span><span class="p">(</span><span class="n">QtNode</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">mouseReleaseEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">updatePoint</span><span class="p">()</span>
@@ -1133,12 +1183,17 @@
 <span class="sd">    When instantiated, it creates `QtNode`, `QtEdge`, and</span>
 <span class="sd">    `QtNodeLabel` items as children of itself.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">changedData</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">Instance</span><span class="p">)</span>
+
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">skeleton</span><span class="p">:</span><span class="n">Skeleton</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">instance</span><span class="p">:</span> <span class="n">Instance</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-                 <span class="n">predicted</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">114</span><span class="p">,</span> <span class="mi">189</span><span class="p">),</span> <span class="n">markerRadius</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                 <span class="n">predicted</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">color_predicted</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">color</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">114</span><span class="p">,</span> <span class="mi">189</span><span class="p">),</span> <span class="n">markerRadius</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">QtInstance</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span> <span class="o">=</span> <span class="n">skeleton</span> <span class="k">if</span> <span class="n">instance</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">instance</span><span class="o">.</span><span class="n">skeleton</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">instance</span> <span class="o">=</span> <span class="n">instance</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">predicted</span> <span class="o">=</span> <span class="n">predicted</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">color_predicted</span> <span class="o">=</span> <span class="n">color_predicted</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="n">color</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">markerRadius</span> <span class="o">=</span> <span class="n">markerRadius</span>
 
@@ -1153,8 +1208,9 @@
         <span class="c1">#self.setFlag(QGraphicsItem.ItemIsSelectable)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">predicted</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">setZValue</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">color_predicted</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">setZValue</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
@@ -1165,10 +1221,20 @@
         <span class="n">box_pen</span><span class="o">.</span><span class="n">setCosmetic</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">box</span><span class="o">.</span><span class="n">setPen</span><span class="p">(</span><span class="n">box_pen</span><span class="p">)</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">track_label</span> <span class="o">=</span> <span class="n">QGraphicsTextItem</span><span class="p">(</span><span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">track_label</span><span class="o">.</span><span class="n">setDefaultTextColor</span><span class="p">(</span><span class="n">QColor</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">color</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">track_label</span><span class="o">.</span><span class="n">setFlag</span><span class="p">(</span><span class="n">QGraphicsItem</span><span class="o">.</span><span class="n">ItemIgnoresTransformations</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">track</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">track_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">track</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">track_name</span> <span class="o">=</span> <span class="s2">&quot;[none]&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">track_label</span><span class="o">.</span><span class="n">setHtml</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;&lt;b&gt;Track&lt;/b&gt;: </span><span class="si">{track_name}</span><span class="s2">&quot;</span><span class="p">)</span>
+
         <span class="c1"># Add nodes</span>
         <span class="k">for</span> <span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">nodes_points</span><span class="p">:</span>
             <span class="n">node_item</span> <span class="o">=</span> <span class="n">QtNode</span><span class="p">(</span><span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">point</span><span class="o">=</span><span class="n">point</span><span class="p">,</span> <span class="n">node_name</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-                               <span class="n">predicted</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">predicted</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">color</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">markerRadius</span><span class="p">)</span>
+                               <span class="n">predicted</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">predicted</span><span class="p">,</span> <span class="n">color_predicted</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">color_predicted</span><span class="p">,</span>
+                               <span class="n">color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">color</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">markerRadius</span><span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">node_item</span>
 
@@ -1197,7 +1263,7 @@
         <span class="c1"># Update size of box so it includes all the nodes/edges</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">updateBox</span><span class="p">()</span>
 
-<div class="viewcode-block" id="QtInstance.updatePoints"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.QtInstance.updatePoints">[docs]</a>    <span class="k">def</span> <span class="nf">updatePoints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">complete</span><span class="p">:</span><span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="QtInstance.updatePoints"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.QtInstance.updatePoints">[docs]</a>    <span class="k">def</span> <span class="nf">updatePoints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">complete</span><span class="p">:</span><span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">user_change</span><span class="p">:</span><span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Updates data and display for all points in skeleton.</span>
 
@@ -1206,6 +1272,7 @@
 <span class="sd">        Args:</span>
 <span class="sd">            complete (optional): If set, we mark the state of all</span>
 <span class="sd">                nodes in the skeleton to &quot;complete&quot;.</span>
+<span class="sd">            user_change (optional): Is this being called because of change by user?</span>
 <span class="sd">        Returns:</span>
 <span class="sd">            None.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1216,7 +1283,7 @@
             <span class="n">node_item</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">node_item</span><span class="o">.</span><span class="n">scenePos</span><span class="p">()</span><span class="o">.</span><span class="n">y</span><span class="p">()</span>
             <span class="n">node_item</span><span class="o">.</span><span class="n">setPos</span><span class="p">(</span><span class="n">node_item</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">node_item</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">complete</span><span class="p">:</span> <span class="n">node_item</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">complete</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="c1"># Wait to run callbacks until all noces are updated</span>
+        <span class="c1"># Wait to run callbacks until all nodes are updated</span>
         <span class="c1"># Otherwise the label positions aren&#39;t correct since</span>
         <span class="c1"># they depend on the edge vectors to old node positions.</span>
         <span class="k">for</span> <span class="n">node_item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
@@ -1229,7 +1296,9 @@
             <span class="n">edge_item</span><span class="o">.</span><span class="n">updateEdge</span><span class="p">(</span><span class="n">edge_item</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
             <span class="n">edge_item</span><span class="o">.</span><span class="n">updateEdge</span><span class="p">(</span><span class="n">edge_item</span><span class="o">.</span><span class="n">dst</span><span class="p">)</span>
         <span class="c1"># Update box for instance selection</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">updateBox</span><span class="p">()</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">updateBox</span><span class="p">()</span>
+        <span class="c1"># Emit event if we&#39;re updating from a user change</span>
+        <span class="k">if</span> <span class="n">user_change</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">changedData</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="QtInstance.getPointsBoundingRect"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.QtInstance.getPointsBoundingRect">[docs]</a>    <span class="k">def</span> <span class="nf">getPointsBoundingRect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns a rect which contains all the nodes in the skeleton.&quot;&quot;&quot;</span>
@@ -1253,7 +1322,9 @@
         <span class="n">rect</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getPointsBoundingRect</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_bounding_rect</span> <span class="o">=</span> <span class="n">rect</span>
         <span class="n">rect</span> <span class="o">=</span> <span class="n">rect</span><span class="o">.</span><span class="n">marginsAdded</span><span class="p">(</span><span class="n">QMarginsF</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">box</span><span class="o">.</span><span class="n">setRect</span><span class="p">(</span><span class="n">rect</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">box</span><span class="o">.</span><span class="n">setRect</span><span class="p">(</span><span class="n">rect</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">track_label</span><span class="o">.</span><span class="n">setOpacity</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">track_label</span><span class="o">.</span><span class="n">setPos</span><span class="p">(</span><span class="n">rect</span><span class="o">.</span><span class="n">bottomLeft</span><span class="p">()</span> <span class="o">+</span> <span class="n">QPointF</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">selected</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1354,7 +1425,7 @@
         <span class="n">frames</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;frames&quot;</span><span class="p">][</span><span class="n">k</span><span class="p">][:]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;videoId&quot;</span><span class="p">,</span> <span class="s2">&quot;frameIdx&quot;</span><span class="p">]}</span>
         <span class="n">points</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;points&quot;</span><span class="p">][</span><span class="n">k</span><span class="p">][:]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;frameIdx&quot;</span><span class="p">,</span> <span class="s2">&quot;instanceId&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;node&quot;</span><span class="p">,</span> <span class="s2">&quot;visible&quot;</span><span class="p">]}</span>
 
-    <span class="n">window</span><span class="o">.</span><span class="n">seekbar</span><span class="o">.</span><span class="n">setLabels</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">frames</span><span class="p">[</span><span class="s2">&quot;frameIdx&quot;</span><span class="p">])))</span>
+    <span class="n">window</span><span class="o">.</span><span class="n">seekbar</span><span class="o">.</span><span class="n">setMarks</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">frames</span><span class="p">[</span><span class="s2">&quot;frameIdx&quot;</span><span class="p">])))</span>
 
     <span class="c1"># points[&quot;frameIdx&quot;] -= 1</span>
     <span class="n">points</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span> <span class="o">*=</span> <span class="n">scale</span>

@@ -188,6 +188,13 @@ leftMouseButtonDoubleClicked
 rightMouseButtonDoubleClicked</p>
 </dd>
 </dl>
+<dl class="attribute">
+<dt id="sleap.gui.video.GraphicsView.all_instances">
+<code class="descname">all_instances</code><a class="headerlink" href="#sleap.gui.video.GraphicsView.all_instances" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of instances and predicted instances.</p>
+<p>Order in list should match the order in which instances were added to scene.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="sleap.gui.video.GraphicsView.clear">
 <code class="descname">clear</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#GraphicsView.clear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.GraphicsView.clear" title="Permalink to this definition">¶</a></dt>
@@ -382,7 +389,7 @@ given in absolute coordinates for displayed frame.</p>
 
 <dl class="class">
 <dt id="sleap.gui.video.QtInstance">
-<em class="property">class </em><code class="descclassname">sleap.gui.video.</code><code class="descname">QtInstance</code><span class="sig-paren">(</span><em>skeleton: sleap.skeleton.Skeleton = None</em>, <em>instance: sleap.instance.Instance = None</em>, <em>predicted=False</em>, <em>color=(0</em>, <em>114</em>, <em>189)</em>, <em>markerRadius=4</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtInstance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtInstance" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">sleap.gui.video.</code><code class="descname">QtInstance</code><span class="sig-paren">(</span><em>skeleton: sleap.skeleton.Skeleton = None</em>, <em>instance: sleap.instance.Instance = None</em>, <em>predicted=False</em>, <em>color_predicted=False</em>, <em>color=(0</em>, <em>114</em>, <em>189)</em>, <em>markerRadius=4</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtInstance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtInstance" title="Permalink to this definition">¶</a></dt>
 <dd><p>QGraphicsObject for skeleton instances.</p>
 <p>This object stores the data for one skeleton instance
 and handles the events to manipulate the skeleton within
@@ -454,13 +461,16 @@ select this instance.</p>
 
 <dl class="method">
 <dt id="sleap.gui.video.QtInstance.updatePoints">
-<code class="descname">updatePoints</code><span class="sig-paren">(</span><em>complete: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtInstance.updatePoints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtInstance.updatePoints" title="Permalink to this definition">¶</a></dt>
+<code class="descname">updatePoints</code><span class="sig-paren">(</span><em>complete: bool = False</em>, <em>user_change: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtInstance.updatePoints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtInstance.updatePoints" title="Permalink to this definition">¶</a></dt>
 <dd><p>Updates data and display for all points in skeleton.</p>
 <p>This is called any time the skeleton is manipulated as a whole.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>complete</strong> (<em>optional</em>) – If set, we mark the state of all
-nodes in the skeleton to “complete”.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>complete</strong> (<em>optional</em>) – If set, we mark the state of all
+nodes in the skeleton to “complete”.</p></li>
+<li><p><strong>user_change</strong> (<em>optional</em>) – Is this being called because of change by user?</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>None.</p>
@@ -472,7 +482,7 @@ nodes in the skeleton to “complete”.</p>
 
 <dl class="class">
 <dt id="sleap.gui.video.QtNode">
-<em class="property">class </em><code class="descclassname">sleap.gui.video.</code><code class="descname">QtNode</code><span class="sig-paren">(</span><em>parent</em>, <em>point: sleap.instance.Point</em>, <em>radius: float</em>, <em>color: list</em>, <em>node_name: str = None</em>, <em>predicted=False</em>, <em>callbacks=None</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtNode" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">sleap.gui.video.</code><code class="descname">QtNode</code><span class="sig-paren">(</span><em>parent</em>, <em>point: sleap.instance.Point</em>, <em>radius: float</em>, <em>color: list</em>, <em>node_name: str = None</em>, <em>predicted=False</em>, <em>color_predicted=False</em>, <em>callbacks=None</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtNode" title="Permalink to this definition">¶</a></dt>
 <dd><p>QGraphicsEllipseItem to handle display of skeleton instance node.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -513,8 +523,13 @@ the very same <cite>Point</cite> object that’s defined outside our class.</p><
 
 <dl class="method">
 <dt id="sleap.gui.video.QtNode.updatePoint">
-<code class="descname">updatePoint</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtNode.updatePoint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtNode.updatePoint" title="Permalink to this definition">¶</a></dt>
+<code class="descname">updatePoint</code><span class="sig-paren">(</span><em>user_change=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtNode.updatePoint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtNode.updatePoint" title="Permalink to this definition">¶</a></dt>
 <dd><p>Method to update data for node/edge after user manipulates visual point.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>user_change</strong> (<em>optional</em>) – Is this being called because of change by user?</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -602,7 +617,8 @@ the very same <cite>Point</cite> object that’s defined outside our class.</p><
 </dd>
 </dl>
 <dl class="simple">
-<dt>Signals:</dt><dd><p>changedPlot: Emitted whenever the plot is redrawn</p>
+<dt>Signals:</dt><dd><p>changedPlot: Emitted whenever the plot is redrawn
+changedData: Emitted whenever data is changed by user</p>
 </dd>
 </dl>
 <dl class="method">
@@ -1116,7 +1132,7 @@ Shape of array should be (channels, height, width).</p></li>
 
 <span class="target" id="module-sleap.gui.dataviews"></span><dl class="class">
 <dt id="sleap.gui.dataviews.LabeledFrameTable">
-<em class="property">class </em><code class="descclassname">sleap.gui.dataviews.</code><code class="descname">LabeledFrameTable</code><span class="sig-paren">(</span><em>labeled_frame: sleap.instance.LabeledFrame = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#LabeledFrameTable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.LabeledFrameTable" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">sleap.gui.dataviews.</code><code class="descname">LabeledFrameTable</code><span class="sig-paren">(</span><em>labeled_frame: sleap.instance.LabeledFrame = None</em>, <em>labels: sleap.io.dataset.Labels = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#LabeledFrameTable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.LabeledFrameTable" title="Permalink to this definition">¶</a></dt>
 <dd><p>Table view widget backed by a custom data model for displaying
 lists of Video instances.</p>
 </dd></dl>
@@ -1205,7 +1221,7 @@ lists of Video instances.</p>
 <span class="target" id="module-sleap.gui.slider"></span><p>Drop-in replacement for QSlider with additional features.</p>
 <dl class="class">
 <dt id="sleap.gui.slider.VideoSlider">
-<em class="property">class </em><code class="descclassname">sleap.gui.slider.</code><code class="descname">VideoSlider</code><span class="sig-paren">(</span><em>orientation=-1</em>, <em>min=0</em>, <em>max=100</em>, <em>val=0</em>, <em>labels=None</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">sleap.gui.slider.</code><code class="descname">VideoSlider</code><span class="sig-paren">(</span><em>orientation=-1</em>, <em>min=0</em>, <em>max=100</em>, <em>val=0</em>, <em>marks=None</em>, <em>tracks=0</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider" title="Permalink to this definition">¶</a></dt>
 <dd><p>Drop-in replacement for QSlider with additional features.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1214,17 +1230,20 @@ lists of Video instances.</p>
 <li><p><strong>min</strong> – initial minimum value</p></li>
 <li><p><strong>max</strong> – initial maximum value</p></li>
 <li><p><strong>val</strong> – initial value</p></li>
-<li><p><strong>labels</strong> – initial set of values to label on slider</p></li>
+<li><p><strong>marks</strong> – initial set of values to mark on slider
+this can be either
+* list of values to mark
+* list of (track, value)-tuples to mark</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="method">
-<dt id="sleap.gui.slider.VideoSlider.addLabel">
-<code class="descname">addLabel</code><span class="sig-paren">(</span><em>new_label</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.addLabel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.addLabel" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add a labeled value to the slider.</p>
+<dt id="sleap.gui.slider.VideoSlider.addMark">
+<code class="descname">addMark</code><span class="sig-paren">(</span><em>new_mark</em>, <em>update=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.addMark"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.addMark" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a marked value to the slider.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>new_label</strong> – value to label</p>
+<dd class="field-odd"><p><strong>new_mark</strong> – value to mark</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1236,9 +1255,9 @@ lists of Video instances.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="sleap.gui.slider.VideoSlider.clearLabels">
-<code class="descname">clearLabels</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.clearLabels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.clearLabels" title="Permalink to this definition">¶</a></dt>
-<dd><p>Clear all labeled values for slider.</p>
+<dt id="sleap.gui.slider.VideoSlider.clearMarks">
+<code class="descname">clearMarks</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.clearMarks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.clearMarks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear all marked values for slider.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1269,7 +1288,7 @@ lists of Video instances.</p>
 
 <dl class="method">
 <dt id="sleap.gui.slider.VideoSlider.endSelection">
-<code class="descname">endSelection</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.endSelection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.endSelection" title="Permalink to this definition">¶</a></dt>
+<code class="descname">endSelection</code><span class="sig-paren">(</span><em>val</em>, <em>update=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.endSelection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.endSelection" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add final selection endpoint.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1279,9 +1298,28 @@ lists of Video instances.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.getMarks">
+<code class="descname">getMarks</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.getMarks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.getMarks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return list of marks.</p>
+<p>Each mark is either val or (track, val)-tuple.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.gui.slider.VideoSlider.getSelection">
 <code class="descname">getSelection</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.getSelection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.getSelection" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return start and end value of current selection endpoints.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.keyPressEvent">
+<code class="descname">keyPressEvent</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.keyPressEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.keyPressEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Catch event and emit signal so something else can handle event.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.keyReleaseEvent">
+<code class="descname">keyReleaseEvent</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.keyReleaseEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.keyReleaseEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Catch event and emit signal so something else can handle event.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1374,12 +1412,12 @@ lists of Video instances.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="sleap.gui.slider.VideoSlider.setLabels">
-<code class="descname">setLabels</code><span class="sig-paren">(</span><em>labels</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.setLabels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.setLabels" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set all labeled values for the slider.</p>
+<dt id="sleap.gui.slider.VideoSlider.setMarks">
+<code class="descname">setMarks</code><span class="sig-paren">(</span><em>marks</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.setMarks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.setMarks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set all marked values for the slider.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>labels</strong> – iterable with all values to label</p>
+<dd class="field-odd"><p><strong>marks</strong> – iterable with all values to mark</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1394,6 +1432,29 @@ lists of Video instances.</p>
 <dt id="sleap.gui.slider.VideoSlider.setMinimum">
 <code class="descname">setMinimum</code><span class="sig-paren">(</span><em>min</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.setMinimum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.setMinimum" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set minimum value for slider.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.setTracks">
+<code class="descname">setTracks</code><span class="sig-paren">(</span><em>tracks</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.setTracks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.setTracks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the number of tracks to show in slider.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>tracks</strong> – the number of tracks to show</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.setTracksFromLabels">
+<code class="descname">setTracksFromLabels</code><span class="sig-paren">(</span><em>labels</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.setTracksFromLabels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.setTracksFromLabels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set slider marks using track information from <cite>Labels</cite> object.</p>
+<p>Note that this is the only method coupled to a SLEAP object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>labels</strong> – the <cite>labels</cite> with tracks and labeled_frames</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">

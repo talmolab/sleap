@@ -337,166 +337,6 @@
     <span class="n">vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">I</span><span class="p">[</span><span class="n">yi</span><span class="p">,</span><span class="n">xi</span><span class="p">]</span> <span class="k">for</span> <span class="n">xi</span><span class="p">,</span> <span class="n">yi</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)])</span>
     <span class="k">return</span> <span class="n">vals</span></div>
 
-
-<div class="viewcode-block" id="match_peaks_frame2"><a class="viewcode-back" href="../../../inference.html#sleap.nn.inference.match_peaks_frame2">[docs]</a><span class="k">def</span> <span class="nf">match_peaks_frame2</span><span class="p">(</span><span class="n">peaks_t</span><span class="p">,</span> <span class="n">peak_vals_t</span><span class="p">,</span> <span class="n">pafs_t</span><span class="p">,</span> <span class="n">skeleton</span><span class="p">,</span>
-    <span class="n">min_score_to_node_ratio</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">min_score_midpts</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">min_score_integral</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">add_last_edge</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; Matches single frame &quot;&quot;&quot;</span>
-    <span class="c1"># Effectively the original implementation:</span>
-    <span class="c1"># https://github.com/michalfaber/keras_Realtime_Multi-Person_Pose_Estimation/blob/master/demo_video.py#L107</span>
-
-    <span class="c1"># Dumb</span>
-    <span class="n">peak_ids</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">idx</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">peaks_t</span><span class="p">)):</span>
-        <span class="n">idx_i</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">peaks_t</span><span class="p">[</span><span class="n">i</span><span class="p">])):</span>
-            <span class="n">idx_i</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
-            <span class="n">idx</span> <span class="o">+=</span> <span class="mi">1</span>
-        <span class="n">peak_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">idx_i</span><span class="p">)</span>
-
-    <span class="c1"># Score each edge</span>
-    <span class="n">special_k</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">connection_all</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">skeleton</span><span class="p">[</span><span class="s2">&quot;edges&quot;</span><span class="p">])):</span>
-        <span class="n">edge</span> <span class="o">=</span> <span class="n">skeleton</span><span class="p">[</span><span class="s2">&quot;edges&quot;</span><span class="p">][</span><span class="n">k</span><span class="p">]</span>
-        <span class="n">paf_x</span> <span class="o">=</span> <span class="n">pafs_t</span><span class="p">[</span><span class="o">...</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">k</span><span class="p">]</span>
-        <span class="n">paf_y</span> <span class="o">=</span> <span class="n">pafs_t</span><span class="p">[</span><span class="o">...</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">peaks_src</span> <span class="o">=</span> <span class="n">peaks_t</span><span class="p">[</span><span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
-        <span class="n">peaks_dst</span> <span class="o">=</span> <span class="n">peaks_t</span><span class="p">[</span><span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
-        <span class="n">peak_vals_src</span> <span class="o">=</span> <span class="n">peak_vals_t</span><span class="p">[</span><span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
-        <span class="n">peak_vals_dst</span> <span class="o">=</span> <span class="n">peak_vals_t</span><span class="p">[</span><span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
-
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">peaks_src</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">peaks_dst</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">special_k</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
-            <span class="n">connection_all</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">connection_candidates</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">peak_src</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">peaks_src</span><span class="p">):</span>
-                <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">peak_dst</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">peaks_dst</span><span class="p">):</span>
-                    <span class="c1"># Vector between peaks</span>
-                    <span class="n">vec</span> <span class="o">=</span> <span class="n">peak_dst</span> <span class="o">-</span> <span class="n">peak_src</span>
-
-                    <span class="c1"># Euclidean distance between points</span>
-                    <span class="n">norm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">vec</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
-
-                    <span class="c1"># Failure if points overlap</span>
-                    <span class="k">if</span> <span class="n">norm</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                        <span class="k">continue</span>
-
-                    <span class="c1"># Convert to unit vector</span>
-                    <span class="n">vec</span> <span class="o">=</span> <span class="n">vec</span> <span class="o">/</span> <span class="n">norm</span>
-
-                    <span class="c1"># Get PAF values along edge</span>
-                    <span class="n">vec_x</span> <span class="o">=</span> <span class="n">improfile</span><span class="p">(</span><span class="n">paf_x</span><span class="p">,</span> <span class="n">peak_src</span><span class="p">,</span> <span class="n">peak_dst</span><span class="p">)</span>
-                    <span class="n">vec_y</span> <span class="o">=</span> <span class="n">improfile</span><span class="p">(</span><span class="n">paf_y</span><span class="p">,</span> <span class="n">peak_src</span><span class="p">,</span> <span class="n">peak_dst</span><span class="p">)</span>
-
-                    <span class="c1"># Compute score</span>
-                    <span class="n">score_midpts</span> <span class="o">=</span> <span class="n">vec_x</span> <span class="o">*</span> <span class="n">vec</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">vec_y</span> <span class="o">*</span> <span class="n">vec</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-                    <span class="n">score_with_dist_prior</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">score_midpts</span><span class="p">)</span> <span class="o">+</span> <span class="nb">min</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">paf_x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">norm</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-                    <span class="n">score_integral</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">score_midpts</span> <span class="o">&gt;</span> <span class="n">min_score_midpts</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="n">score_with_dist_prior</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">score_integral</span> <span class="o">&gt;</span> <span class="n">min_score_integral</span><span class="p">:</span>
-                        <span class="n">connection_candidates</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">score_with_dist_prior</span><span class="p">])</span>
-
-            <span class="c1"># Sort candidates for current edge by descending score</span>
-            <span class="n">connection_candidates</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">connection_candidates</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-            <span class="c1"># Add to list of candidates for next step</span>
-            <span class="n">connection</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">5</span><span class="p">))</span> <span class="c1"># src_id, dst_id, paf_score, i, j</span>
-            <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">connection_candidates</span><span class="p">:</span>
-                <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">score</span> <span class="o">=</span> <span class="n">candidate</span>
-                <span class="c1"># Add to connections if node is not already included</span>
-                <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">connection</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">])</span> <span class="ow">and</span> <span class="p">(</span><span class="n">j</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">connection</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]):</span>
-                    <span class="n">id_i</span> <span class="o">=</span> <span class="n">peak_ids</span><span class="p">[</span><span class="n">skeleton</span><span class="p">[</span><span class="s2">&quot;edges&quot;</span><span class="p">][</span><span class="n">k</span><span class="p">][</span><span class="mi">0</span><span class="p">]][</span><span class="n">i</span><span class="p">]</span>
-                    <span class="n">id_j</span> <span class="o">=</span> <span class="n">peak_ids</span><span class="p">[</span><span class="n">skeleton</span><span class="p">[</span><span class="s2">&quot;edges&quot;</span><span class="p">][</span><span class="n">k</span><span class="p">][</span><span class="mi">1</span><span class="p">]][</span><span class="n">j</span><span class="p">]</span>
-                    <span class="n">connection</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">connection</span><span class="p">,</span> <span class="p">[</span><span class="n">id_i</span><span class="p">,</span> <span class="n">id_j</span><span class="p">,</span> <span class="n">score</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]])</span>
-
-                    <span class="c1"># Stop when reached the max number of matches possible</span>
-                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">connection</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">peaks_src</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">peaks_dst</span><span class="p">)):</span>
-                        <span class="k">break</span>
-            <span class="n">connection_all</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">connection</span><span class="p">)</span>
-
-    <span class="c1"># Greedy matching of each edge candidate set</span>
-    <span class="n">subset</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">skeleton</span><span class="p">[</span><span class="s2">&quot;nodes&quot;</span><span class="p">]</span><span class="o">+</span><span class="mi">2</span><span class="p">))</span> <span class="c1"># ids, overall score, number of parts</span>
-    <span class="n">candidate</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">y</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">peaks_t</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">x</span><span class="p">])</span> <span class="c1"># flattened set of all points</span>
-    <span class="n">candidate_scores</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">y</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">peak_vals_t</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">x</span><span class="p">])</span> <span class="c1"># flattened set of all peak scores</span>
-    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">skeleton</span><span class="p">[</span><span class="s2">&quot;edges&quot;</span><span class="p">])):</span>
-        <span class="c1"># No matches for this edge</span>
-        <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">special_k</span><span class="p">:</span>
-            <span class="k">continue</span>
-
-        <span class="c1"># Get IDs for current connection</span>
-        <span class="n">partAs</span> <span class="o">=</span> <span class="n">connection_all</span><span class="p">[</span><span class="n">k</span><span class="p">][:,</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">partBs</span> <span class="o">=</span> <span class="n">connection_all</span><span class="p">[</span><span class="n">k</span><span class="p">][:,</span><span class="mi">1</span><span class="p">]</span>
-
-        <span class="c1"># Get edge</span>
-        <span class="n">indexA</span><span class="p">,</span> <span class="n">indexB</span> <span class="o">=</span> <span class="n">skeleton</span><span class="p">[</span><span class="s2">&quot;edges&quot;</span><span class="p">][</span><span class="n">k</span><span class="p">]</span>
-
-        <span class="c1"># Loop through all candidates for current edge</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">connection_all</span><span class="p">[</span><span class="n">k</span><span class="p">])):</span>
-            <span class="n">found</span> <span class="o">=</span> <span class="mi">0</span>
-            <span class="n">subset_idx</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-
-            <span class="c1"># Search for current candidates in matched subset</span>
-            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">subset</span><span class="p">)):</span>
-                <span class="k">if</span> <span class="n">subset</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">indexA</span><span class="p">]</span> <span class="o">==</span> <span class="n">partAs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">or</span> <span class="n">subset</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">indexB</span><span class="p">]</span> <span class="o">==</span> <span class="n">partBs</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
-                    <span class="n">subset_idx</span><span class="p">[</span><span class="n">found</span><span class="p">]</span> <span class="o">=</span> <span class="n">j</span>
-                    <span class="n">found</span> <span class="o">+=</span> <span class="mi">1</span>
-
-            <span class="c1"># One of the two candidate points found in matched subset</span>
-            <span class="k">if</span> <span class="n">found</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="n">j</span> <span class="o">=</span> <span class="n">subset_idx</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-                <span class="k">if</span> <span class="n">subset</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">indexB</span><span class="p">]</span> <span class="o">!=</span> <span class="n">partBs</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span> <span class="c1"># did we already assign this part?</span>
-                    <span class="n">subset</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">indexB</span><span class="p">]</span> <span class="o">=</span> <span class="n">partBs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="c1"># assign part</span>
-                    <span class="n">subset</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span> <span class="c1"># increment instance part counter</span>
-                    <span class="n">subset</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="n">candidate_scores</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">partBs</span><span class="p">[</span><span class="n">i</span><span class="p">])]</span> <span class="o">+</span> <span class="n">connection_all</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span> <span class="c1"># add peak + edge score</span>
-
-            <span class="c1"># Both candidate points found in matched subset</span>
-            <span class="k">elif</span> <span class="n">found</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
-                <span class="n">j1</span><span class="p">,</span> <span class="n">j2</span> <span class="o">=</span> <span class="n">subset_idx</span> <span class="c1"># get indices in matched subset</span>
-                <span class="n">membership</span> <span class="o">=</span> <span class="p">((</span><span class="n">subset</span><span class="p">[</span><span class="n">j1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">subset</span><span class="p">[</span><span class="n">j2</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">))[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="c1"># count number of instances per body parts</span>
-                <span class="c1"># All body parts are disjoint, merge them</span>
-                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">membership</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">):</span>
-                    <span class="n">subset</span><span class="p">[</span><span class="n">j1</span><span class="p">][:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span><span class="n">subset</span><span class="p">[</span><span class="n">j2</span><span class="p">][:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
-                    <span class="n">subset</span><span class="p">[</span><span class="n">j1</span><span class="p">][</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span> <span class="o">+=</span> <span class="n">subset</span><span class="p">[</span><span class="n">j2</span><span class="p">][</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span>
-                    <span class="n">subset</span><span class="p">[</span><span class="n">j1</span><span class="p">][</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="n">connection_all</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
-                    <span class="n">subset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">subset</span><span class="p">,</span> <span class="n">j2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-
-                <span class="c1"># Treat them separately</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">subset</span><span class="p">[</span><span class="n">j1</span><span class="p">][</span><span class="n">indexB</span><span class="p">]</span> <span class="o">=</span> <span class="n">partBs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-                    <span class="n">subset</span><span class="p">[</span><span class="n">j1</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
-                    <span class="n">subset</span><span class="p">[</span><span class="n">j1</span><span class="p">][</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="n">candidate_scores</span><span class="p">[</span><span class="n">partBs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)]</span> <span class="o">+</span> <span class="n">connection_all</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
-
-            <span class="c1"># Neither point found, create a new subset (if not the last edge)</span>
-            <span class="k">elif</span> <span class="n">found</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="p">(</span><span class="n">add_last_edge</span> <span class="ow">or</span> <span class="p">(</span><span class="n">k</span> <span class="o">&lt;</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">skeleton</span><span class="p">[</span><span class="s2">&quot;edges&quot;</span><span class="p">])</span><span class="o">-</span><span class="mi">1</span><span class="p">))):</span>
-                <span class="n">row</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">skeleton</span><span class="p">[</span><span class="s2">&quot;nodes&quot;</span><span class="p">]</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span>
-                <span class="n">row</span><span class="p">[</span><span class="n">indexA</span><span class="p">]</span> <span class="o">=</span> <span class="n">partAs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="c1"># ID</span>
-                <span class="n">row</span><span class="p">[</span><span class="n">indexB</span><span class="p">]</span> <span class="o">=</span> <span class="n">partBs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="c1"># ID</span>
-                <span class="n">row</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span> <span class="c1"># initial count</span>
-                <span class="n">row</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">candidate_scores</span><span class="p">[</span><span class="n">connection_all</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)])</span> <span class="o">+</span> <span class="n">connection_all</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span> <span class="c1"># score</span>
-                <span class="n">subset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">subset</span><span class="p">,</span> <span class="n">row</span><span class="p">])</span> <span class="c1"># add to matched subset</span>
-
-    <span class="c1"># Filter small instances</span>
-    <span class="n">score_to_node_ratio</span> <span class="o">=</span> <span class="n">subset</span><span class="p">[:,</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="n">subset</span><span class="p">[:,</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">subset</span> <span class="o">=</span> <span class="n">subset</span><span class="p">[</span><span class="n">score_to_node_ratio</span> <span class="o">&gt;</span> <span class="n">min_score_to_node_ratio</span><span class="p">,</span> <span class="p">:]</span>
-
-    <span class="c1"># Done with all the matching! Gather the data</span>
-    <span class="n">matched_instances_t</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">match_scores_t</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">matched_peak_vals_t</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">subset</span><span class="p">:</span>
-        <span class="n">pts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="n">skeleton</span><span class="p">[</span><span class="s2">&quot;nodes&quot;</span><span class="p">],</span> <span class="mi">2</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
-        <span class="n">peak_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="n">skeleton</span><span class="p">[</span><span class="s2">&quot;nodes&quot;</span><span class="p">],),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pts</span><span class="p">)):</span>
-            <span class="k">if</span> <span class="n">match</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">pts</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span> <span class="o">=</span> <span class="n">candidate</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">match</span><span class="p">[</span><span class="n">i</span><span class="p">]),:</span><span class="mi">2</span><span class="p">]</span>
-                <span class="n">peak_vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">candidate_scores</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">match</span><span class="p">[</span><span class="n">i</span><span class="p">])]</span>
-        <span class="n">matched_instances_t</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pts</span><span class="p">)</span>
-        <span class="n">match_scores_t</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">match</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span> <span class="c1"># score</span>
-        <span class="n">matched_peak_vals_t</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">peak_vals</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">matched_instances_t</span><span class="p">,</span> <span class="n">match_scores_t</span><span class="p">,</span> <span class="n">matched_peak_vals_t</span></div>
-
 <div class="viewcode-block" id="match_peaks_frame"><a class="viewcode-back" href="../../../inference.html#sleap.nn.inference.match_peaks_frame">[docs]</a><span class="k">def</span> <span class="nf">match_peaks_frame</span><span class="p">(</span><span class="n">peaks_t</span><span class="p">,</span> <span class="n">peak_vals_t</span><span class="p">,</span> <span class="n">pafs_t</span><span class="p">,</span> <span class="n">skeleton</span><span class="p">,</span>
                       <span class="n">min_score_to_node_ratio</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span>
                       <span class="n">min_score_midpts</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
@@ -674,7 +514,7 @@
     <span class="c1"># Process each frame</span>
     <span class="n">predicted_frames</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">peaks_t</span><span class="p">,</span> <span class="n">peak_vals_t</span><span class="p">,</span> <span class="n">pafs_t</span><span class="p">,</span> <span class="n">frame_idx</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">peaks</span><span class="p">,</span> <span class="n">peak_vals</span><span class="p">,</span> <span class="n">pafs</span><span class="p">,</span> <span class="n">frame_indices</span><span class="p">):</span>
-        <span class="n">instances</span> <span class="o">=</span> <span class="n">match_peaks_frame2</span><span class="p">(</span><span class="n">peaks_t</span><span class="p">,</span> <span class="n">peak_vals_t</span><span class="p">,</span> <span class="n">pafs_t</span><span class="p">,</span> <span class="n">skeleton</span><span class="p">,</span>
+        <span class="n">instances</span> <span class="o">=</span> <span class="n">match_peaks_frame</span><span class="p">(</span><span class="n">peaks_t</span><span class="p">,</span> <span class="n">peak_vals_t</span><span class="p">,</span> <span class="n">pafs_t</span><span class="p">,</span> <span class="n">skeleton</span><span class="p">,</span>
                                    <span class="n">min_score_to_node_ratio</span><span class="o">=</span><span class="n">min_score_to_node_ratio</span><span class="p">,</span>
                                    <span class="n">min_score_midpts</span><span class="o">=</span><span class="n">min_score_midpts</span><span class="p">,</span>
                                    <span class="n">min_score_integral</span><span class="o">=</span><span class="n">min_score_integral</span><span class="p">,</span>
@@ -707,6 +547,15 @@
     <span class="n">predicted_frames</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">future</span><span class="p">,</span> <span class="n">frame_idx</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">futures</span><span class="p">,</span> <span class="n">frame_indices</span><span class="p">):</span>
         <span class="n">instances</span> <span class="o">=</span> <span class="n">future</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+
+        <span class="c1"># Ok, since we are doing this in parallel. Objects are getting serialized and sent</span>
+        <span class="c1"># back and forth. This causes all instances to have a different skeleton object</span>
+        <span class="c1"># This will cause problems later because checking if two skeletons are equal is</span>
+        <span class="c1"># an expensive operation.</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">instances</span><span class="p">)):</span>
+            <span class="n">points</span> <span class="o">=</span> <span class="p">{</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">point</span> <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">instances</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">nodes_points</span><span class="p">}</span>
+            <span class="n">instances</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">PredictedInstance</span><span class="p">(</span><span class="n">skeleton</span><span class="o">=</span><span class="n">skeleton</span><span class="p">,</span> <span class="n">points</span><span class="o">=</span><span class="n">points</span><span class="p">,</span> <span class="n">score</span><span class="o">=</span><span class="n">instances</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">score</span><span class="p">)</span>
+
         <span class="n">predicted_frames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">LabeledFrame</span><span class="p">(</span><span class="n">video</span><span class="o">=</span><span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="o">=</span><span class="n">frame_idx</span><span class="p">,</span> <span class="n">instances</span><span class="o">=</span><span class="n">instances</span><span class="p">))</span>
 
     <span class="k">return</span> <span class="n">predicted_frames</span></div>
@@ -740,7 +589,7 @@
     <span class="n">skeleton</span><span class="p">:</span> <span class="n">Skeleton</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>
     <span class="n">inference_batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span>
     <span class="n">read_chunk_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">256</span>
-    <span class="n">save_frequency</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span> <span class="c1"># chunks</span>
+    <span class="n">save_frequency</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span> <span class="c1"># chunks</span>
     <span class="n">nms_min_thresh</span> <span class="o">=</span> <span class="mf">0.3</span>
     <span class="n">nms_sigma</span> <span class="o">=</span> <span class="mi">3</span>
     <span class="n">min_score_to_node_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span>
@@ -798,7 +647,7 @@
 
         <span class="c1"># Process chunk-by-chunk!</span>
         <span class="n">t0_start</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
-        <span class="n">matched_instances</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">LabeledFrame</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">predicted_frames</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">LabeledFrame</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">num_chunks</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">num_frames</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_chunk_size</span><span class="p">))</span>
         <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_chunks</span><span class="p">):</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Processing chunk </span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2">:&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">chunk</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">num_chunks</span><span class="p">))</span>
@@ -842,20 +691,9 @@
             <span class="n">peaks</span><span class="p">,</span> <span class="n">peak_vals</span> <span class="o">=</span> <span class="n">find_all_peaks</span><span class="p">(</span><span class="n">confmaps</span><span class="p">,</span> <span class="n">min_thresh</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nms_min_thresh</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nms_sigma</span><span class="p">)</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;  Found peaks [</span><span class="si">%.1f</span><span class="s2">s]&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span><span class="p">))</span>
 
-<span class="c1">#            from scipy.io import loadmat, savemat</span>
-<span class="c1">#            skeleton = loadmat(&#39;skeleton_legs.mat&#39;)</span>
-<span class="c1">#            skeleton[&quot;nodes&quot;] = skeleton[&quot;nodes&quot;][0][0]  # convert to scalar</span>
-<span class="c1">#            skeleton[&quot;edges&quot;] = skeleton[&quot;edges&quot;] - 1  # convert to 0-based indexing</span>
-<span class="c1">#            instance2 = match_peaks_paf(peaks, peak_vals, pafs, skeleton,</span>
-<span class="c1">#                                            video=vid, frame_indices=frames_idx,</span>
-<span class="c1">#                                            min_score_to_node_ratio=self.min_score_to_node_ratio,</span>
-<span class="c1">#                                            min_score_midpts=self.min_score_midpts,</span>
-<span class="c1">#                                            min_score_integral=self.min_score_integral,</span>
-<span class="c1">#                                            add_last_edge=self.add_last_edge)</span>
-
             <span class="c1"># Match peaks via PAFs</span>
             <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
-            <span class="n">instances</span> <span class="o">=</span> <span class="n">match_peaks_paf_par</span><span class="p">(</span><span class="n">peaks</span><span class="p">,</span> <span class="n">peak_vals</span><span class="p">,</span> <span class="n">pafs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="p">,</span>
+            <span class="n">predicted_frames_chunk</span> <span class="o">=</span> <span class="n">match_peaks_paf_par</span><span class="p">(</span><span class="n">peaks</span><span class="p">,</span> <span class="n">peak_vals</span><span class="p">,</span> <span class="n">pafs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="p">,</span>
                                             <span class="n">video</span><span class="o">=</span><span class="n">vid</span><span class="p">,</span> <span class="n">frame_indices</span><span class="o">=</span><span class="n">frames_idx</span><span class="p">,</span>
                                             <span class="n">min_score_to_node_ratio</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_score_to_node_ratio</span><span class="p">,</span>
                                             <span class="n">min_score_midpts</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_score_midpts</span><span class="p">,</span>
@@ -865,11 +703,11 @@
 
             <span class="c1"># Track</span>
             <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
-            <span class="n">tracker</span><span class="o">.</span><span class="n">process</span><span class="p">(</span><span class="n">mov</span><span class="p">,</span> <span class="n">instances</span><span class="p">)</span>
+            <span class="n">tracker</span><span class="o">.</span><span class="n">process</span><span class="p">(</span><span class="n">mov</span><span class="p">,</span> <span class="n">predicted_frames_chunk</span><span class="p">)</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;  Tracked IDs via flow shift [</span><span class="si">%.1f</span><span class="s2">s]&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span><span class="p">))</span>
 
             <span class="c1"># Save</span>
-            <span class="n">matched_instances</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">instances</span><span class="p">)</span>
+            <span class="n">predicted_frames</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">predicted_frames_chunk</span><span class="p">)</span>
 
             <span class="c1"># Get the parameters used for this inference.</span>
             <span class="n">params</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="k">lambda</span> <span class="n">attr</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">attr</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">,</span> <span class="s2">&quot;skeleton&quot;</span><span class="p">])</span>
@@ -877,37 +715,21 @@
             <span class="k">if</span> <span class="n">chunk</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_frequency</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">chunk</span> <span class="o">==</span> <span class="p">(</span><span class="n">num_chunks</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
                 <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
 
-                <span class="n">save_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
-                    <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
-                    <span class="n">matched_instances</span><span class="o">=</span><span class="n">matched_instances</span><span class="p">,</span>
-                    <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span>
-                    <span class="n">tracks</span><span class="o">=</span><span class="n">tracker</span><span class="o">.</span><span class="n">generate_tracks</span><span class="p">(),</span>
-                    <span class="n">track_occupancy</span><span class="o">=</span><span class="n">tracker</span><span class="o">.</span><span class="n">occupancy</span><span class="p">()</span>
-                <span class="p">)</span>
-
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_shifted_instances</span><span class="p">:</span>
-                    <span class="n">shifted_track_id</span><span class="p">,</span> <span class="n">shifted_frame_idx</span><span class="p">,</span> <span class="n">shifted_frame_idx_source</span><span class="p">,</span> <span class="n">shifted_points</span> <span class="o">=</span> <span class="n">tracker</span><span class="o">.</span><span class="n">generate_shifted_data</span><span class="p">()</span>
-                    <span class="n">save_dict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span>
-                        <span class="n">shifted_track_id</span><span class="o">=</span><span class="n">shifted_track_id</span><span class="p">,</span>
-                        <span class="n">shifted_frame_idx</span><span class="o">=</span><span class="n">shifted_frame_idx</span><span class="p">,</span>
-                        <span class="n">shifted_frame_idx_source</span><span class="o">=</span><span class="n">shifted_frame_idx_source</span><span class="p">,</span>
-                        <span class="n">shifted_points</span><span class="o">=</span><span class="n">shifted_points</span><span class="p">,</span> <span class="p">))</span>
-
-                <span class="c1"># with h5.File(output_path, &#39;w&#39;) as f:</span>
-                <span class="c1">#     save_dict_to_hdf5(f, &#39;/&#39;, save_dict)</span>
-                <span class="c1">#</span>
-                <span class="c1">#     # Save the skeleton as well, in JSON to the HDF5</span>
-                <span class="c1">#     self.skeleton.save_hdf5(f)</span>
+                <span class="c1"># FIXME: We are re-writing the whole output each time, this is dumb.</span>
+                <span class="c1">#  We should save in chunks then combine at the end.</span>
+                <span class="n">labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="p">(</span><span class="n">labeled_frames</span><span class="o">=</span><span class="n">predicted_frames</span><span class="p">)</span>
+                <span class="n">Labels</span><span class="o">.</span><span class="n">save_json</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">output_path</span><span class="p">)</span>
 
                 <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;  Saved to: </span><span class="si">%s</span><span class="s2"> [</span><span class="si">%.1f</span><span class="s2">s]&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">output_path</span><span class="p">,</span> <span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span><span class="p">))</span>
 
             <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0_chunk</span>
             <span class="n">total_elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0_start</span>
-            <span class="n">fps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">matched_instances</span><span class="p">)</span> <span class="o">/</span> <span class="n">total_elapsed</span>
-            <span class="n">frames_left</span> <span class="o">=</span> <span class="n">num_frames</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">matched_instances</span><span class="p">)</span>
+            <span class="n">fps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">predicted_frames</span><span class="p">)</span> <span class="o">/</span> <span class="n">total_elapsed</span>
+            <span class="n">frames_left</span> <span class="o">=</span> <span class="n">num_frames</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">predicted_frames</span><span class="p">)</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;  Finished chunk [</span><span class="si">%.1f</span><span class="s2">s / </span><span class="si">%.1f</span><span class="s2"> FPS / ETA: </span><span class="si">%.1f</span><span class="s2"> min]&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">elapsed</span><span class="p">,</span> <span class="n">fps</span><span class="p">,</span> <span class="p">(</span><span class="n">frames_left</span> <span class="o">/</span> <span class="n">fps</span><span class="p">)</span> <span class="o">/</span> <span class="mi">60</span><span class="p">))</span>
 
             <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
 
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Total: </span><span class="si">%.1f</span><span class="s2"> min&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">total_elapsed</span> <span class="o">/</span> <span class="mi">60</span><span class="p">))</span></div></div>
 
@@ -1032,7 +854,7 @@
     <span class="n">data_path</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">data_path</span>
     <span class="n">confmap_model_path</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">confmap_model_path</span>
     <span class="n">paf_model_path</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">paf_model_path</span>
-    <span class="n">save_path</span> <span class="o">=</span> <span class="n">data_path</span> <span class="o">+</span> <span class="s2">&quot;.paf_tracking.h5&quot;</span>
+    <span class="n">save_path</span> <span class="o">=</span> <span class="n">data_path</span> <span class="o">+</span> <span class="s2">&quot;.predictions.json&quot;</span>
     <span class="n">skeleton_path</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">skeleton_path</span>
 
     <span class="c1"># Load the model</span>
