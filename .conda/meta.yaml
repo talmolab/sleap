@@ -1,21 +1,10 @@
-# Setup a list of packages that aren't conda installable
-{% set conda_skip = (
-    "cattrs",
-    "opencv-python",
-    "PySide2",
-    "imgaug"
-) %}
-
 {% set data = load_setup_py_data() %}
-
-source:
-  path: ../
 
 package:
   # Repeating name because of the following issue:
   # https://github.com/conda/conda-build/issues/2475
   name: sleap
-  version: 0.1.0
+  version: {{ GIT_DESCRIBE_TAG[1:] }}
 
 about:
   home: {{ data.get('url') }}
@@ -23,7 +12,7 @@ about:
   summary: {{ data.get('description') }}
 
 build:
-  number: 0
+  number: {{ GIT_DESCRIBE_NUMBER }}
 
 source:
   path: ../
