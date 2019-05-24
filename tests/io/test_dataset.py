@@ -180,3 +180,6 @@ def test_instance_access():
     assert len(list(labels.instances(video=dummy_video))) == 20
     assert len(list(labels.instances(video=dummy_video2))) == 30
 
+def test_load_labels_mat(mat_labels):
+    assert len(mat_labels.nodes) == 6
+    assert len(mat_labels) == 43
