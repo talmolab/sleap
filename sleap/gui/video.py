@@ -967,6 +967,7 @@ class QtEdge(QGraphicsLineItem):
         pen = QPen(QColor(*color), 1)
         pen.setCosmetic(True)
         self.setPen(pen)
+        self.full_opacity = 1
 
     def connected_to(self, node):
         """
@@ -1006,6 +1007,12 @@ class QtEdge(QGraphicsLineItem):
         Args:
             node: The node to update.
         """
+        if self.src.point.visible and self.dst.point.visible:
+            self.full_opacity = 1
+        else:
+            self.full_opacity = .5
+        self.setOpacity(self.full_opacity)
+
         if node == self.src:
             line = self.line()
             line.setP1(node.scenePos())
@@ -1214,8 +1221,8 @@ class QtInstance(QGraphicsObject):
         Args:
             show: Show edges if True, hide them otherwise.
         """
-        op = 1 if show else 0
         for edge in self.edges:
+            op = edge.full_opacity if show else 0
             edge.setOpacity(op)
         self.edges_shown = show
 
