@@ -70,18 +70,16 @@ for:
   # for details on how to set this up.
   deploy_script:
     - git config --global credential.helper store
-    - ps: Add-Content "$HOME\.git-credentials" "https://$($env:access_token):x-oauth-basic@github.com`n" 
-    - git config --global user.email "davidt0x@gmail.com"
+    - ps: Add-Content "$HOME\.git-credentials" "https://x-oauth-basic:$($env:access_token)@github.com`n" 
+    - git config --global user.email "dmturner@princeton.edu"
     - git config --global user.name "David Turner"
     - activate sleap_appveyor
     - cd ..\
     - mkdir sleap-docs
     - cd sleap-docs
-    - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
-    - timeout 3600
     - git clone https://github.com/murthylab/sleap.git html
     - cd html
-    - git remote set-url origin https://davidt0x@github.com/murthylab/sleap.git
+    - git remote set-url origin https://x-oauth-basic@github.com/murthylab/sleap.git
     - git checkout -b gh-pages remotes/origin/gh-pages
     - git remote -v
     - cd ..\..\sleap\docs
