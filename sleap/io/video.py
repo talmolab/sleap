@@ -99,7 +99,7 @@ class HDF5Video:
     def filename(self):
         return self.file
 
-    def get_frame(self, idx) -> np.ndarray:
+    def get_frame(self, idx):# -> np.ndarray:
         """
         Get a frame from the underlying HDF5 video data.
 
@@ -113,6 +113,9 @@ class HDF5Video:
 
         if self.input_format == "channels_first":
             frame = np.transpose(frame, (2, 1, 0))
+
+        if np.max(frame) <= 1.:
+            frame = (frame * 255).astype(int)
 
         return frame
 
