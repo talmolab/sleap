@@ -365,19 +365,20 @@ class MainWindow(QMainWindow):
 
     def importData(self, filename=None):
         show_msg = False
-        # if filename is None:
-#         if not isinstance(filename, str):
-#             filters = ["JSON labels (*.json)", "HDF5 dataset (*.h5 *.hdf5)"]
-#             # filename, selected_filter = QFileDialog.getOpenFileName(self, dir="C:/Users/tdp/OneDrive/code/sandbox/leap_wt_gold_pilot", caption="Import labeled data...", filter=";;".join(filters))
-#             filename, selected_filter = QFileDialog.getOpenFileName(self, dir=None, caption="Import labeled data...", filter=";;".join(filters))
-#             show_msg = True
 
         if len(filename) == 0: return
 
         self.filename = filename
 
+        has_loaded = False
         if filename.endswith(".json"):
             self.labels = Labels.load_json(filename)
+            has_loaded = True
+        elif filename.endswith(".mat"):
+            self.labels = Labels.load_mat(filename)
+            has_loaded = True
+
+        if has_loaded:
             self.changestack_clear()
             self._trail_manager = TrackTrailManager(self.labels, self.player.view.scene)
             self.setTrailLength(self._trail_manager.trail_length)
@@ -836,13 +837,13 @@ class MainWindow(QMainWindow):
         window = MainWindow()
         window.showMaximized()
 
-    def openProject(self):
-        filters = ["JSON labels (*.json)", "HDF5 dataset (*.h5 *.hdf5)"]
+    def openProject(self, first_open=False):
+        filters = ["JSON labels (*.json)", "HDF5 dataset (*.h5 *.hdf5)", "Matlab dataset (*.mat)"]
         filename, selected_filter = QFileDialog.getOpenFileName(self, dir=None, caption="Import labeled data...", filter=";;".join(filters))
 
         if len(filename) == 0: return
 
-        if OPEN_IN_NEW:
+        if OPEN_IN_NEW and not first_open:
             new_window = MainWindow()
             new_window.showMaximized()
             new_window.importData(filename)
@@ -1067,14 +1068,12 @@ def main(*args, **kwargs):
     app = QApplication([])
     app.setApplicationName("sLEAP Label")
 
-    if "import_data" not in kwargs:
-        filters = ["JSON labels (*.json)", "HDF5 dataset (*.h5 *.hdf5)"]
-        filename, selected_filter = QFileDialog.getOpenFileName(None, dir=None, caption="Open Project", filter=";;".join(filters))
-
-        if len(filename): kwargs["import_data"] = filename
-
     window = MainWindow(*args, **kwargs)
     window.showMaximized()
+
+    if "import_data" not in kwargs:
+        window.openProject(first_open=True)
+
     app.exec_()
 
 if __name__ == "__main__":

@@ -13,6 +13,7 @@ import attr
 import cattr
 import json
 import numpy as np
+import scipy.io as sio
 
 from collections import MutableSequence
 from typing import List, Union
@@ -408,6 +409,71 @@ class Labels(MutableSequence):
 
             else:
                 return load_labels_json_old(data_path=filename, parsed_json=dicts)
+
+    @staticmethod
+    def _unwrap_mat_scalar(a):
+        if a.shape == (1,):
+            return Labels._unwrap_mat_scalar(a[0])
+        else:
+            return a
+
+    @staticmethod
+    def _unwrap_mat_array(a):
+        b = a[0][0]
+        c = [Labels._unwrap_mat_scalar(x) for x in b]
+        return c
+
+    @classmethod
+    def load_mat(cls, filename):
+        mat_contents = sio.loadmat(filename)
+
+        box_path = Labels._unwrap_mat_scalar(mat_contents["boxPath"])
+
+        # If the video file isn't found, try in the same dir as the mat file
+        if not os.path.exists(box_path):
+            file_dir = os.path.dirname(filename)
+            box_path_name = box_path.split("\\")[-1] # assume windows path
+            box_path = os.path.join(file_dir, box_path_name)
+
+        if os.path.exists(box_path):
+            vid = Video.from_hdf5(dataset="box", file=box_path, input_format="channels_first")
+        else:
+            vid = None
+
+        nodes_ = mat_contents["skeleton"]["nodes"]
+        edges_ = mat_contents["skeleton"]["edges"]
+        points_ = mat_contents["positions"]
+
+        edges_ = edges_ - 1 # convert matlab 1-indexing to python 0-indexing
+
+        nodes = Labels._unwrap_mat_array(nodes_)
+        edges = Labels._unwrap_mat_array(edges_)
+
+        nodes = list(map(str, nodes)) # convert np._str to str
+
+        sk = Skeleton(name=filename)
+        sk.add_nodes(nodes)
+        for edge in edges:
+            sk.add_edge(source=nodes[edge[0]], destination=nodes[edge[1]])
+
+        labeled_frames = []
+        node_count, _, frame_count = points_.shape
+
+        for i in range(frame_count):
+            new_inst = Instance(skeleton = sk)
+            for node_idx, node in enumerate(nodes):
+                x = points_[node_idx][0][i]
+                y = points_[node_idx][1][i]
+                new_inst[node] = Point(x, y)
+            new_inst.drop_nan_points()
+            if len(new_inst.points()):
+                new_frame = LabeledFrame(video=vid, frame_idx=i)
+                new_frame.instances = new_inst,
+                labeled_frames.append(new_frame)
+
+        labels = cls(labeled_frames=labeled_frames, videos=[vid], skeletons=[sk])
+
+        return labels
 
 
 def load_labels_json_old(data_path: str, parsed_json: dict = None,
