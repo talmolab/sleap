@@ -3,22 +3,29 @@ import pytestqt
 
 from PySide2.QtWidgets import QApplication
 from sleap.skeleton import Skeleton
-from sleap.gui.dataviews import SkeletonNodesTable
+from sleap.gui.dataviews import (
+    VideosTable,
+    SkeletonNodesTable,
+    SkeletonEdgesTable,
+    LabeledFrameTable,
+    SkeletonNodeModel
+    )
 
 
-def test_skeleton_nodes(qtbot):
-    skeleton = Skeleton("skeleton")
-    skeleton.add_nodes(['1','2','3','4','5','6'])
-    skeleton.add_edge('1', '2')
-    skeleton.add_edge('3', '4')
-    skeleton.add_edge('5', '6')
-    skeleton.add_symmetry('1', '5')
-    skeleton.add_symmetry('3', '6')
+def test_skeleton_nodes(qtbot, centered_pair_predictions):
 
-    # app = QApplication([])
-    table = SkeletonNodesTable(skeleton)
-    qtbot.addWidget(table)
-    table.show()
-    # app.exec_()
+    table = SkeletonNodesTable(centered_pair_predictions.skeletons[0])
+    table.selectRow(1)
+    assert table.model().data(table.currentIndex()) == "neck"
 
-    
+    table = SkeletonEdgesTable(centered_pair_predictions.skeletons[0])
+    table.selectRow(2)
+    assert table.model().data(table.currentIndex()) == "thorax"
+
+    table = VideosTable(centered_pair_predictions.videos)
+    table.selectRow(0)
+    assert table.model().data(table.currentIndex()) == "centered_pair_low_quality.mp4"
+
+    table = LabeledFrameTable(centered_pair_predictions.labels[13], centered_pair_predictions)
+    table.selectRow(1)
+    assert table.model().data(table.currentIndex()) == "21/24"
