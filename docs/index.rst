@@ -29,9 +29,9 @@ Anaconda_ python distribution to simplify installation.
 
 Once Anaconda_ has been installed, go to start menu and type in *Anaconda*, which should bring up a menu entry
 **Anaconda Prompt** which opens a command line with the base anaconda environment activated. One of the key
-advantages to using Anaconda_Environments_ is the ability to create separate Python installations for different
-projects, mitigating issues of managing complex dependencies. To create a new conda enviroment for **sLEAP** related
-development and use:
+advantages to using `Anaconda Environments`_ is the ability to create separate Python installations (environments) for
+different projects, mitigating issues of managing complex dependencies. To create a new conda environment for
+**sLEAP** related development and use:
 
 ::
 
@@ -48,15 +48,35 @@ Any Python installation commands (:code:`conda install` or :code:`pip install`) 
 environment will only effect the environment. Thus it is important to make sure the environment is active when issuing
 any commands that deal with Python on the command line.
 
-**sLEAP** is now installed in the :code:`sleap_env` conda environment. With the envirnoment active, enter
-
-.. _Anaconda: https://www.anaconda.com/distribution/
-.. _Anaconda_Environments: https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html
-
+**sLEAP** is now installed in the :code:`sleap_env` conda environment. With the environment active,
+you can run the labeling GUI by entering the following command:
 
 ::
 
-    pip install sleap
+(sleap_env) C:\> sleap-label
+
+.. _Anaconda: https://www.anaconda.com/distribution/
+.. _Anaconda Environments: https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html
+
+Linux
+-----
+
+No linux conda packages are currently provided by the **sLEAP** channel. However, installing via :code:`pip` should not
+be difficult on most Linux systems. The first step is to get a working version of tensorflow installed in your python
+environment. Follow official directions for installing TensorFlow_ with GPU support. Once tensor flow is installed, simple
+issue the following command to install **sLEAP**
+
+.. _TensorFlow: https://www.tensorflow.org/install/gpu
+
+::
+
+    pip install git+https://github.com/murthylab/sleap.git
+
+**sLEAP** is now installed you can run the labeling GUI by entering the following command:
+
+::
+
+> sleap-label
 
 .. _sleap_package:
 .. toctree::
