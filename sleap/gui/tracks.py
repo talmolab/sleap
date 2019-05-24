@@ -57,7 +57,7 @@ class TrackTrailManager():
         to plot the trails in scene.
     """
 
-    def __init__(self, labels, scene, trail_length=20):
+    def __init__(self, labels, scene, trail_length=4):
         self.labels = labels
         self.scene = scene
         self.trail_length = trail_length
@@ -102,9 +102,9 @@ class TrackTrailManager():
     def get_frame_selection(self, frame_idx):
         """Return list of `LabeledFrame`s to include in trail for specificed frame."""
         frame_selection = [frame for frame in self.labels.labeled_frames
-                           if frame.frame_idx in range(frame_idx-self.trail_length, frame_idx)]
+                           if frame.frame_idx <= frame_idx]
         frame_selection.sort(key=lambda x: x.frame_idx)
-        return frame_selection
+        return frame_selection[-self.trail_length:]
 
     def get_tracks_in_frame(self, frame_idx):
         """Return list of tracks that have instance in specified frame."""

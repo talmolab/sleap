@@ -166,6 +166,13 @@ class MainWindow(QMainWindow):
         self.menuAction["show labels"] = labelMenu.addAction("Show Node Names", self.toggleLabels, Qt.ALT + Qt.Key_Tab)
         self.menuAction["show edges"] = labelMenu.addAction("Show Edges", self.toggleEdges, Qt.ALT + Qt.SHIFT + Qt.Key_Tab)
         self.menuAction["show trails"] = labelMenu.addAction("Show Trails", self.toggleTrails)
+
+        self.trailLengthMenu = labelMenu.addMenu("Trail Length")
+        for length_option in (4, 10, 20):
+            menu_item = self.trailLengthMenu.addAction(f"{length_option}",
+                            lambda x=length_option: self.setTrailLength(x))
+            menu_item.setCheckable(True)
+
         self.menuAction["color predicted"] = labelMenu.addAction("Color Predicted Instances", self.toggleColorPredicted)
         labelMenu.addSeparator()
         self.menuAction["fit"] = labelMenu.addAction("Fit Instances to View", self.toggleAutoZoom, Qt.CTRL + Qt.Key_Equal)
@@ -204,7 +211,7 @@ class MainWindow(QMainWindow):
         self.videosTable = VideosTable()
         videos_layout.addWidget(self.videosTable)
         hb = QHBoxLayout()
-        btn = QPushButton("Open video")
+        btn = QPushButton("Show video")
         btn.clicked.connect(self.activateSelectedVideo); hb.addWidget(btn)
         btn = QPushButton("Add videos")
         btn.clicked.connect(self.addVideo); hb.addWidget(btn)
@@ -358,21 +365,23 @@ class MainWindow(QMainWindow):
 
     def importData(self, filename=None):
         show_msg = False
-        # if filename is None:
-#         if not isinstance(filename, str):
-#             filters = ["JSON labels (*.json)", "HDF5 dataset (*.h5 *.hdf5)"]
-#             # filename, selected_filter = QFileDialog.getOpenFileName(self, dir="C:/Users/tdp/OneDrive/code/sandbox/leap_wt_gold_pilot", caption="Import labeled data...", filter=";;".join(filters))
-#             filename, selected_filter = QFileDialog.getOpenFileName(self, dir=None, caption="Import labeled data...", filter=";;".join(filters))
-#             show_msg = True
 
         if len(filename) == 0: return
 
         self.filename = filename
 
+        has_loaded = False
         if filename.endswith(".json"):
             self.labels = Labels.load_json(filename)
+            has_loaded = True
+        elif filename.endswith(".mat"):
+            self.labels = Labels.load_mat(filename)
+            has_loaded = True
+
+        if has_loaded:
             self.changestack_clear()
             self._trail_manager = TrackTrailManager(self.labels, self.player.view.scene)
+            self.setTrailLength(self._trail_manager.trail_length)
 
             if show_msg:
                 msgBox = QMessageBox(text=f"Imported {len(self.labels)} labeled frames.")
@@ -828,13 +837,13 @@ class MainWindow(QMainWindow):
         window = MainWindow()
         window.showMaximized()
 
-    def openProject(self):
-        filters = ["JSON labels (*.json)", "HDF5 dataset (*.h5 *.hdf5)"]
+    def openProject(self, first_open=False):
+        filters = ["JSON labels (*.json)", "HDF5 dataset (*.h5 *.hdf5)", "Matlab dataset (*.mat)"]
         filename, selected_filter = QFileDialog.getOpenFileName(self, dir=None, caption="Import labeled data...", filter=";;".join(filters))
 
         if len(filename) == 0: return
 
-        if OPEN_IN_NEW:
+        if OPEN_IN_NEW and not first_open:
             new_window = MainWindow()
             new_window.showMaximized()
             new_window.importData(filename)
@@ -970,6 +979,17 @@ class MainWindow(QMainWindow):
         self.menuAction["show trails"].setChecked(self._show_trails)
         self.plotFrame()
 
+    def setTrailLength(self, trail_length):
+        self._trail_manager.trail_length = trail_length
+
+        for menu_item in self.trailLengthMenu.children():
+            if menu_item.text() == str(trail_length):
+                menu_item.setChecked(True)
+            else:
+                menu_item.setChecked(False)
+
+        if self.video is not None: self.plotFrame()
+
     def toggleColorPredicted(self):
         self._color_predicted = not self._color_predicted
         self.menuAction["color predicted"].setChecked(self._color_predicted)
@@ -1048,14 +1068,12 @@ def main(*args, **kwargs):
     app = QApplication([])
     app.setApplicationName("sLEAP Label")
 
-    if "import_data" not in kwargs:
-        filters = ["JSON labels (*.json)", "HDF5 dataset (*.h5 *.hdf5)"]
-        filename, selected_filter = QFileDialog.getOpenFileName(None, dir=None, caption="Open Project", filter=";;".join(filters))
-
-        if len(filename): kwargs["import_data"] = filename
-
     window = MainWindow(*args, **kwargs)
     window.showMaximized()
+
+    if "import_data" not in kwargs:
+        window.openProject(first_open=True)
+
     app.exec_()
 
 if __name__ == "__main__":

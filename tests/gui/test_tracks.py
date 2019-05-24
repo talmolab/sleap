@@ -4,10 +4,10 @@ from sleap.io.video import Video
 def test_track_trails(centered_pair_predictions):
     
     labels = centered_pair_predictions
-    trail_manager = TrackTrailManager(labels=labels, scene=None, trail_length = 5)
+    trail_manager = TrackTrailManager(labels=labels, scene=None, trail_length = 6)
     
     frames = trail_manager.get_frame_selection(27)
-    assert len(frames) == 5
+    assert len(frames) == 6
     assert frames[0].frame_idx == 22
     
     tracks = trail_manager.get_tracks_in_frame(27)
@@ -19,12 +19,12 @@ def test_track_trails(centered_pair_predictions):
     
     assert len(trails) == 24
     
-    test_trail = [
-        (222.0, 205.0),
-        (222.0, 203.0),
-        (223.0, 203.0),
-        (225.0, 201.0),
-        (226.0, 199.0)
+    test_trail = [(245.0, 208.0),
+        (245.0, 207.0),
+        (245.0, 206.0),
+        (246.0, 205.0),
+        (247.0, 203.0),
+        (248.0, 202.0)
         ]
     assert test_trail in trails
     
