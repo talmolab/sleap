@@ -158,7 +158,7 @@
 <p>Video reading and writing interfaces for different formats.</p>
 <dl class="class">
 <dt id="sleap.io.video.HDF5Video">
-<em class="property">class </em><code class="descclassname">sleap.io.video.</code><code class="descname">HDF5Video</code><span class="sig-paren">(</span><em>file: str = None</em>, <em>dataset: str = None</em>, <em>input_format: str = 'channels_last'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/video.html#HDF5Video"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.HDF5Video" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">sleap.io.video.</code><code class="descname">HDF5Video</code><span class="sig-paren">(</span><em>file: str = None</em>, <em>dataset: str = None</em>, <em>input_format: str = 'channels_last'</em>, <em>convert_range: bool = True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/video.html#HDF5Video"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.HDF5Video" title="Permalink to this definition">¶</a></dt>
 <dd><p>Video data stored as 4D datasets in HDF5 files can be imported into
 the sLEAP system with this class.</p>
 <dl class="field-list simple">
@@ -168,18 +168,22 @@ the sLEAP system with this class.</p>
 <li><p><strong>dataset</strong> – The name of the HDF5 dataset where the video data is stored.</p></li>
 <li><p><strong>file_h5</strong> – The h5.File object that the underlying dataset is stored.</p></li>
 <li><p><strong>dataset_h5</strong> – The h5.Dataset object that the underlying data is stored.</p></li>
-<li><p><strong>input_format</strong> – A string value equal to either “channels_last” or “channels_first”.</p></li>
-<li><p><strong>specifies whether the underlying video data is stored as</strong> (<em>This</em>) – <ul>
-<li><p>“channels_first”: shape = (frames, channels, width, height)</p></li>
+<li><p><strong>input_format</strong> – <p>A string value equal to either “channels_last” or “channels_first”.
+This specifies whether the underlying video data is stored as:</p>
+<blockquote>
+<div><ul>
+<li><p>”channels_first”: shape = (frames, channels, width, height)</p></li>
 <li><p>”channels_last”: shape = (frames, width, height, channels)</p></li>
 </ul>
+</div></blockquote>
 </p></li>
+<li><p><strong>convert_range</strong> – Whether we should convert data to [0, 255]-range</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="method">
 <dt id="sleap.io.video.HDF5Video.get_frame">
-<code class="descname">get_frame</code><span class="sig-paren">(</span><em>idx</em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="_modules/sleap/io/video.html#HDF5Video.get_frame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.HDF5Video.get_frame" title="Permalink to this definition">¶</a></dt>
+<code class="descname">get_frame</code><span class="sig-paren">(</span><em>idx</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/video.html#HDF5Video.get_frame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.HDF5Video.get_frame" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a frame from the underlying HDF5 video data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -212,7 +216,7 @@ OpenCV’s VideoCapture class.</p>
 
 <dl class="class">
 <dt id="sleap.io.video.NumpyVideo">
-<em class="property">class </em><code class="descclassname">sleap.io.video.</code><code class="descname">NumpyVideo</code><span class="sig-paren">(</span><em>file: _CountingAttr(counter=21</em>, <em>_default=NOTHING</em>, <em>repr=True</em>, <em>cmp=True</em>, <em>hash=None</em>, <em>init=True</em>, <em>metadata={})</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/video.html#NumpyVideo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.NumpyVideo" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">sleap.io.video.</code><code class="descname">NumpyVideo</code><span class="sig-paren">(</span><em>file: _CountingAttr(counter=22</em>, <em>_default=NOTHING</em>, <em>repr=True</em>, <em>cmp=True</em>, <em>hash=None</em>, <em>init=True</em>, <em>metadata={})</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/video.html#NumpyVideo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.NumpyVideo" title="Permalink to this definition">¶</a></dt>
 <dd><p>Video data stored as Numpy array.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -275,7 +279,7 @@ for different formats. For example:</p>
 
 <dl class="classmethod">
 <dt id="sleap.io.video.Video.from_hdf5">
-<em class="property">classmethod </em><code class="descname">from_hdf5</code><span class="sig-paren">(</span><em>dataset: Union[str, h5py._hl.dataset.Dataset], file: Union[str, h5py._hl.files.File] = None, input_format: str = 'channels_last'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/video.html#Video.from_hdf5"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.Video.from_hdf5" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="descname">from_hdf5</code><span class="sig-paren">(</span><em>dataset: Union[str, h5py._hl.dataset.Dataset], file: Union[str, h5py._hl.files.File] = None, input_format: str = 'channels_last', convert_range: bool = True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/video.html#Video.from_hdf5"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.Video.from_hdf5" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create an instance of a video object from an HDF5 file and dataset. This
 is a helper method that invokes the HDF5Video backend.</p>
 <dl class="field-list simple">
@@ -285,6 +289,7 @@ is a helper method that invokes the HDF5Video backend.</p>
 <li><p><strong>dataset must be a str of the dataset name.</strong> (<em>h5.File</em><em>,</em>) – </p></li>
 <li><p><strong>file</strong> – The name of the HDF5 file or and open h5.File object.</p></li>
 <li><p><strong>input_format</strong> – Whether the data is oriented with “channels_first” or “channels_last”</p></li>
+<li><p><strong>convert_range</strong> – Whether we should convert data to [0, 255]-range</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>

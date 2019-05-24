@@ -165,6 +165,7 @@
 <span class="kn">import</span> <span class="nn">cattr</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.io</span> <span class="k">as</span> <span class="nn">sio</span>
 
 <span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">MutableSequence</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
@@ -559,7 +560,72 @@
                 <span class="k">return</span> <span class="n">labels</span>
 
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">load_labels_json_old</span><span class="p">(</span><span class="n">data_path</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="n">parsed_json</span><span class="o">=</span><span class="n">dicts</span><span class="p">)</span></div>
+                <span class="k">return</span> <span class="n">load_labels_json_old</span><span class="p">(</span><span class="n">data_path</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="n">parsed_json</span><span class="o">=</span><span class="n">dicts</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_unwrap_mat_scalar</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">1</span><span class="p">,):</span>
+            <span class="k">return</span> <span class="n">Labels</span><span class="o">.</span><span class="n">_unwrap_mat_scalar</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">a</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_unwrap_mat_array</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="p">[</span><span class="n">Labels</span><span class="o">.</span><span class="n">_unwrap_mat_scalar</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">b</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">c</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">load_mat</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="n">mat_contents</span> <span class="o">=</span> <span class="n">sio</span><span class="o">.</span><span class="n">loadmat</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+
+        <span class="n">box_path</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">_unwrap_mat_scalar</span><span class="p">(</span><span class="n">mat_contents</span><span class="p">[</span><span class="s2">&quot;boxPath&quot;</span><span class="p">])</span>
+
+        <span class="c1"># If the video file isn&#39;t found, try in the same dir as the mat file</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">box_path</span><span class="p">):</span>
+            <span class="n">file_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+            <span class="n">box_path_name</span> <span class="o">=</span> <span class="n">box_path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="c1"># assume windows path</span>
+            <span class="n">box_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">file_dir</span><span class="p">,</span> <span class="n">box_path_name</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">box_path</span><span class="p">):</span>
+            <span class="n">vid</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">from_hdf5</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;box&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">box_path</span><span class="p">,</span> <span class="n">input_format</span><span class="o">=</span><span class="s2">&quot;channels_first&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">vid</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">nodes_</span> <span class="o">=</span> <span class="n">mat_contents</span><span class="p">[</span><span class="s2">&quot;skeleton&quot;</span><span class="p">][</span><span class="s2">&quot;nodes&quot;</span><span class="p">]</span>
+        <span class="n">edges_</span> <span class="o">=</span> <span class="n">mat_contents</span><span class="p">[</span><span class="s2">&quot;skeleton&quot;</span><span class="p">][</span><span class="s2">&quot;edges&quot;</span><span class="p">]</span>
+        <span class="n">points_</span> <span class="o">=</span> <span class="n">mat_contents</span><span class="p">[</span><span class="s2">&quot;positions&quot;</span><span class="p">]</span>
+
+        <span class="n">edges_</span> <span class="o">=</span> <span class="n">edges_</span> <span class="o">-</span> <span class="mi">1</span> <span class="c1"># convert matlab 1-indexing to python 0-indexing</span>
+
+        <span class="n">nodes</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">_unwrap_mat_array</span><span class="p">(</span><span class="n">nodes_</span><span class="p">)</span>
+        <span class="n">edges</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">_unwrap_mat_array</span><span class="p">(</span><span class="n">edges_</span><span class="p">)</span>
+
+        <span class="n">nodes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">nodes</span><span class="p">))</span> <span class="c1"># convert np._str to str</span>
+
+        <span class="n">sk</span> <span class="o">=</span> <span class="n">Skeleton</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">filename</span><span class="p">)</span>
+        <span class="n">sk</span><span class="o">.</span><span class="n">add_nodes</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">:</span>
+            <span class="n">sk</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="n">nodes</span><span class="p">[</span><span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">destination</span><span class="o">=</span><span class="n">nodes</span><span class="p">[</span><span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
+
+        <span class="n">labeled_frames</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">node_count</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">frame_count</span> <span class="o">=</span> <span class="n">points_</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">frame_count</span><span class="p">):</span>
+            <span class="n">new_inst</span> <span class="o">=</span> <span class="n">Instance</span><span class="p">(</span><span class="n">skeleton</span> <span class="o">=</span> <span class="n">sk</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">node_idx</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">nodes</span><span class="p">):</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">points_</span><span class="p">[</span><span class="n">node_idx</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="n">points_</span><span class="p">[</span><span class="n">node_idx</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">new_inst</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+            <span class="n">new_inst</span><span class="o">.</span><span class="n">drop_nan_points</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_inst</span><span class="o">.</span><span class="n">points</span><span class="p">()):</span>
+                <span class="n">new_frame</span> <span class="o">=</span> <span class="n">LabeledFrame</span><span class="p">(</span><span class="n">video</span><span class="o">=</span><span class="n">vid</span><span class="p">,</span> <span class="n">frame_idx</span><span class="o">=</span><span class="n">i</span><span class="p">)</span>
+                <span class="n">new_frame</span><span class="o">.</span><span class="n">instances</span> <span class="o">=</span> <span class="n">new_inst</span><span class="p">,</span>
+                <span class="n">labeled_frames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_frame</span><span class="p">)</span>
+
+        <span class="n">labels</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">labeled_frames</span><span class="o">=</span><span class="n">labeled_frames</span><span class="p">,</span> <span class="n">videos</span><span class="o">=</span><span class="p">[</span><span class="n">vid</span><span class="p">],</span> <span class="n">skeletons</span><span class="o">=</span><span class="p">[</span><span class="n">sk</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">labels</span></div>
 
 
 <div class="viewcode-block" id="load_labels_json_old"><a class="viewcode-back" href="../../../dataset.html#sleap.io.dataset.load_labels_json_old">[docs]</a><span class="k">def</span> <span class="nf">load_labels_json_old</span><span class="p">(</span><span class="n">data_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">parsed_json</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
