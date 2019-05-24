@@ -71,6 +71,7 @@ for:
   deploy_script:
     - git config --global credential.helper store
     - ps: Add-Content "$HOME\.git-credentials" "https://$($env:access_token):x-oauth-basic@github.com`n"
+    - timeout 5
     - type "$HOME\.git-credentials" 
     - git config --global user.email "davidt0x@gmail.com"
     - git config --global user.name "David Turner"
