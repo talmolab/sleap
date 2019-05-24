@@ -48,7 +48,12 @@ Any Python installation commands (:code:`conda install` or :code:`pip install`) 
 environment will only effect the environment. Thus it is important to make sure the environment is active when issuing
 any commands that deal with Python on the command line.
 
-**sLEAP** is now installed in the :code:`sleap_env` conda environment. With the environment active, enter
+**sLEAP** is now installed in the :code:`sleap_env` conda environment. With the environment active,
+you can run the labeling GUI by entering the following command:
+
+::
+
+(sleap_env) C:\> sleap-label
 
 .. _Anaconda: https://www.anaconda.com/distribution/
 .. _Anaconda Environments: https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html
@@ -66,6 +71,13 @@ issue the following command to install **sLEAP**
 ::
 
     pip install git+https://github.com/murthylab/sleap.git
+
+**sLEAP** is now installed you can run the labeling GUI by entering the following command:
+
+::
+
+> sleap-label
+
 
 .. _sleap_package:
 .. toctree::
