@@ -173,9 +173,9 @@ work as well, however, this is untested as of now.</p>
 <a class="reference external" href="https://www.anaconda.com/distribution/">Anaconda</a> python distribution to simplify installation.</p>
 <p>Once <a class="reference external" href="https://www.anaconda.com/distribution/">Anaconda</a> has been installed, go to start menu and type in <em>Anaconda</em>, which should bring up a menu entry
 <strong>Anaconda Prompt</strong> which opens a command line with the base anaconda environment activated. One of the key
-advantages to using <a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html">Anaconda_Environments</a> is the ability to create separate Python installations for different
-projects, mitigating issues of managing complex dependencies. To create a new conda enviroment for <strong>sLEAP</strong> related
-development and use:</p>
+advantages to using <a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html">Anaconda Environments</a> is the ability to create separate Python installations (environments) for
+different projects, mitigating issues of managing complex dependencies. To create a new conda environment for
+<strong>sLEAP</strong> related development and use:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">base</span><span class="p">)</span> <span class="n">C</span><span class="p">:</span>\<span class="o">&gt;</span> <span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">sleap_env</span> <span class="n">python</span><span class="o">=</span><span class="mf">3.6</span> <span class="o">-</span><span class="n">c</span> <span class="n">sleap</span> <span class="n">sleap</span> <span class="o">-</span><span class="n">y</span>
 </pre></div>
 </div>
@@ -187,8 +187,23 @@ development and use:</p>
 <p>Any Python installation commands (<code class="code docutils literal notranslate"><span class="pre">conda</span> <span class="pre">install</span></code> or <code class="code docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code>) issued after activating an
 environment will only effect the environment. Thus it is important to make sure the environment is active when issuing
 any commands that deal with Python on the command line.</p>
-<p><strong>sLEAP</strong> is now installed in the <code class="code docutils literal notranslate"><span class="pre">sleap_env</span></code> conda environment. With the envirnoment active, enter</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">sleap</span>
+<p><strong>sLEAP</strong> is now installed in the <code class="code docutils literal notranslate"><span class="pre">sleap_env</span></code> conda environment. With the environment active,
+you can run the labeling GUI by entering the following command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">sleap_env</span><span class="p">)</span> <span class="n">C</span><span class="p">:</span>\<span class="o">&gt;</span> <span class="n">sleap</span><span class="o">-</span><span class="n">label</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="linux">
+<h2>Linux<a class="headerlink" href="#linux" title="Permalink to this headline">¶</a></h2>
+<p>No linux conda packages are currently provided by the <strong>sLEAP</strong> channel. However, installing via <code class="code docutils literal notranslate"><span class="pre">pip</span></code> should not
+be difficult on most Linux systems. The first step is to get a working version of tensorflow installed in your python
+environment. Follow official directions for installing <a class="reference external" href="https://www.tensorflow.org/install/gpu">TensorFlow</a> with GPU support. Once tensor flow is installed, simple
+issue the following command to install <strong>sLEAP</strong></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">git</span><span class="o">+</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">murthylab</span><span class="o">/</span><span class="n">sleap</span><span class="o">.</span><span class="n">git</span>
+</pre></div>
+</div>
+<p><strong>sLEAP</strong> is now installed you can run the labeling GUI by entering the following command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;</span> <span class="n">sleap</span><span class="o">-</span><span class="n">label</span>
 </pre></div>
 </div>
 <div class="toctree-wrapper compound" id="sleap-package">
