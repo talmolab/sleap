@@ -15,6 +15,7 @@ def test_gui_video(qtbot):
 
 def test_gui_video_instances(qtbot, small_robot_mp4_vid, centered_pair_labels):
     vp = QtVideoPlayer(small_robot_mp4_vid)
+    qtbot.addWidget(vp)
 
     test_frame_idx = 0
     labeled_frames = [_ for _ in centered_pair_labels if _.frame_idx == test_frame_idx]
@@ -41,5 +42,20 @@ def test_gui_video_instances(qtbot, small_robot_mp4_vid, centered_pair_labels):
     
     # Check that node is marked as complete
     assert vp.instances[0].childItems()[3].point.complete
+
+    # Check that selection via keyboard works
+    assert vp.view.getSelection() == None
+    qtbot.keyClick(vp, QtCore.Qt.Key_1)
+    assert vp.view.getSelection() == 0
+    qtbot.keyClick(vp, QtCore.Qt.Key_QuoteLeft)
+    assert vp.view.getSelection() == 1
+
+    # Check that sequence selection works
+    with qtbot.waitCallback() as cb:
+        vp.view.clearSelection()
+        vp.onSequenceSelect(2, cb)
+        qtbot.keyClick(vp, QtCore.Qt.Key_2)
+        qtbot.keyClick(vp, QtCore.Qt.Key_1)
+    assert cb.args[0] == [1, 0]
 
     assert vp.close()

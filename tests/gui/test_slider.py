@@ -23,3 +23,7 @@ def test_slider(qtbot, centered_pair_predictions):
     
     slider.setTracksFromLabels(labels)
     assert len(slider.getMarks()) == 2274
+
+    slider.moveSelectionAnchor(5, 5)
+    slider.releaseSelectionAnchor(100, 15)
+    assert slider.getSelection() == (13, 258)
