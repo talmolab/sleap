@@ -78,7 +78,6 @@ issue the following command to install **sLEAP**
 
 > sleap-label
 
-
 .. _sleap_package:
 .. toctree::
     :caption: sLEAP Package
