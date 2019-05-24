@@ -24,30 +24,37 @@ about:
 
 build:
   number: 0
-  noarch: python
 
 source:
   path: ../
 
 requirements:
   host:
-    - python
-    - setuptools
-    - pip
+    - python=3.6
     - attrs
     - jsonpickle
     - networkx
     - tensorflow-gpu
     - keras
+    - scikit-learn
     - h5py
+    - pandas
+    - Shapely
     - psutil
+    - pyzmq
+
 
   run:
-    - python
+    - python=3.6
     - attrs
     - jsonpickle
     - networkx
     - tensorflow-gpu
     - keras
+    - scikit-learn
     - h5py
+    - pandas
+    - Shapely
+    - psutil
+    - pyzmq
 
