@@ -81,5 +81,5 @@ for:
     - cmd: cd html
     - cmd: git checkout -b gh-pages remotes/origin/gh-pages
     - cmd: cd ..\..\sleap\docs
-    - cmd: make html
+    - cmd: make html push
 
