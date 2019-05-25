@@ -95,4 +95,6 @@ for:
   # Deploy the windows conda package to the sleap channel, only on tagged
   # builds though.
   after_deploy:
+    - cmd: cd ..\
+    - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
     - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (conda build .conda)
