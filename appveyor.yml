@@ -6,6 +6,8 @@ environment:
   access_token:
     secure: T7XuBtHDu85Tk/d1AeyfhW3CVyzaoddTWmR4xsPIdQ3di0R6x8ncWqw3KrYXkWJm
 
+  BUILD_DIR: "build"
+  
   conda_access_token:
     secure: d+v++uejbVEhIuaJSuFIOA==
   matrix:
@@ -31,9 +33,9 @@ install:
 
   # If this is a tag build, we will need to upload a deployment, set up login
   - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (conda install conda-build anaconda-client)
+  - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (anaconda logout)
   - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (anaconda login --username sleap --password %conda_access_token%)
-  - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (conda config --set anaconda_upload yes)
-
+ 
   # Take the environment.yml but replace tensorflow-gpu with tensorflow,
   # we don't have GPUs on appveyor nodes and this will make
   # building the environment faster.
@@ -57,9 +59,7 @@ build: off
 test_script:
   - cmd: activate sleap_appveyor
   - cmd: where python
-#  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
   - cmd: python -m pytest tests/
-
 
 # here we are going to override common configuration
 for:
@@ -96,5 +96,8 @@ for:
   # builds though.
   after_deploy:
     - cmd: cd ..\
+    - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (conda build .conda --output-folder %BUILD_DIR%)
+    - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (anaconda upload --force %BUILD_DIR%\win-64\*.tar.bz2)
+    - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (anaconda logout)
     - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
-    - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (conda build .conda)
+   
