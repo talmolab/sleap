@@ -30,6 +30,7 @@ install:
   - conda info -a
 
   # If this is a tag build, we will need to upload a deployment, set up login
+  - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (conda install conda-build anaconda-client)
   - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (anaconda login --username sleap --password %conda_access_token%)
   - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (conda config --set anaconda_upload yes)
 
