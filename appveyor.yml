@@ -33,8 +33,12 @@ install:
 
   # If this is a tag build, we will need to upload a deployment, set up login
   - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (conda install conda-build anaconda-client)
-  - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (anaconda logout)
-  - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (anaconda login --username sleap --password %conda_access_token%)
+  
+  # Look at this craziness, anaconda keeps a token based on hostname around and it
+  # prompts you to say yes to remove it. This holds up CI, no way to disable.
+  # The echo|set /p="yes" ouputs a yes with a single newline, otherwise it won't
+  # work!
+  - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (echo|set /p="yes" | anaconda login --username sleap --password %conda_access_token%)
  
   # Take the environment.yml but replace tensorflow-gpu with tensorflow,
   # we don't have GPUs on appveyor nodes and this will make
