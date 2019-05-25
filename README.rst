@@ -1,8 +1,13 @@
-.. image:: 
+|Appveyor Build Status| |GitHub release|
+
+.. |Appveyor Build Status| image:: 
    https://ci.appveyor.com/api/projects/status/tf5qlylwqse8ack5/branch/master?svg=true 
    :width: 300 
    :target: https://ci.appveyor.com/project/talmo/sleap 
    :alt: Appveyor build status
+
+.. |GitHub release| image:: https://img.shields.io/github/release/murthylab/sleap.js.svg
+   :target: https://GitHub.com/murthylab/sleap/releases/
 
 Social LEAP Estimates Animal Pose (sLEAP)
 =========================================
@@ -87,3 +92,5 @@ issue the following command to install **sLEAP**
 Research
 --------
 If you use **sLEAP** in your research please acknowledge ... 
+
+
