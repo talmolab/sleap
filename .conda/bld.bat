@@ -20,6 +20,9 @@ rem # While environment.yml contains the non pip dependencies, the only thing le
 rem # uninstalled should be the pip stuff because that is left out of meta.yml
 rem conda env update -f=environment.yml
 
+rem # Install requires setuptools-scm
+pip install setuptools-scm
+
 rem # Install sleap itself.
 rem # NOTE: This is the recommended way to install packages
 python setup.py install --single-version-externally-managed --record=record.txt
