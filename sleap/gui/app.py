@@ -268,7 +268,7 @@ class MainWindow(QMainWindow):
 
         ####### Instances #######
         instances_layout = _make_dock("Instances")
-        self.instancesTable = LabeledFrameTable()
+        self.instancesTable = LabeledFrameTable(labels=self.labels)
         instances_layout.addWidget(self.instancesTable)
         hb = QHBoxLayout()
         btn = QPushButton("New instance")
@@ -353,7 +353,7 @@ class MainWindow(QMainWindow):
         has_selected_instance = (self.player.view.getSelection() is not None)
         has_unsaved_changes = self.changestack_has_changes()
         has_multiple_videos = (self.labels is not None and len(self.labels.videos) > 1)
-        has_multiple_instances = (self.labels is not None and len(self.labeled_frame.instances) > 1)
+        has_multiple_instances = (self.labeled_frame is not None and len(self.labeled_frame.instances) > 1)
         # todo: exclude predicted instances from count
 
         # Update menus
@@ -703,8 +703,10 @@ class MainWindow(QMainWindow):
             self.labels.append(self.labeled_frame)
             self.changestack_push("new labeled frame")
 
+        # update display/ui
         self.plotFrame()
         self.updateSeekbarMarks()
+        self.updateTrackMenu()
 
     def deleteSelectedInstance(self):
         idx = self.player.view.getSelection()
