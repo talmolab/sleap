@@ -459,13 +459,13 @@ class GraphicsView(QGraphicsView):
         return [item for item in self.scene.items(Qt.SortOrder.AscendingOrder)
                 if type(item) == QtInstance]
 
-    def clearSelection(self):
+    def clearSelection(self, signal=True):
         """ Clear instance skeleton selection.
         """
-        for instance in self.instances:
+        for instance in self.all_instances:
             instance.selected = False
         # signal that the selection has changed (so we can update visual display)
-        self.updatedSelection.emit()
+        if signal: self.updatedSelection.emit()
 
     def nextSelection(self):
         """ Select next instance (or first, if none currently selected).
@@ -484,14 +484,15 @@ class GraphicsView(QGraphicsView):
         # signal that the selection has changed (so we can update visual display)
         self.updatedSelection.emit()
 
-    def selectInstance(self, select_idx):
+    def selectInstance(self, select_idx, from_all=False):
         """
         Select a particular skeleton instance.
 
         Args:
             select_idx: index of skeleton to select
         """
-        instances = self.instances
+        instances = self.instances if not from_all else self.all_instances
+        self.clearSelection(signal=False)
         if select_idx < len(instances):
             for idx, instance in enumerate(instances):
                 instance.selected = (select_idx == idx)
@@ -967,6 +968,7 @@ class QtEdge(QGraphicsLineItem):
         pen = QPen(QColor(*color), 1)
         pen.setCosmetic(True)
         self.setPen(pen)
+        self.full_opacity = 1
 
     def connected_to(self, node):
         """
@@ -1006,6 +1008,12 @@ class QtEdge(QGraphicsLineItem):
         Args:
             node: The node to update.
         """
+        if self.src.point.visible and self.dst.point.visible:
+            self.full_opacity = 1
+        else:
+            self.full_opacity = .5
+        self.setOpacity(self.full_opacity)
+
         if node == self.src:
             line = self.line()
             line.setP1(node.scenePos())
@@ -1214,8 +1222,8 @@ class QtInstance(QGraphicsObject):
         Args:
             show: Show edges if True, hide them otherwise.
         """
-        op = 1 if show else 0
         for edge in self.edges:
+            op = edge.full_opacity if show else 0
             edge.setOpacity(op)
         self.edges_shown = show
 

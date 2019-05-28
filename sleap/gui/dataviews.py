@@ -241,11 +241,22 @@ class SkeletonEdgesTableModel(QtCore.QAbstractTableModel):
 class LabeledFrameTable(QTableView):
     """Table view widget backed by a custom data model for displaying
     lists of Video instances. """
+
+    selectionChangedSignal = QtCore.Signal(int)
+
     def __init__(self, labeled_frame: LabeledFrame = None, labels: Labels = None):
         super(LabeledFrameTable, self).__init__()
         self.setModel(LabeledFrameTableModel(labeled_frame, labels))
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setSelectionMode(QAbstractItemView.SingleSelection)
+
+    def selectionChanged(self, new, old):
+        super(LabeledFrameTable, self).selectionChanged(new, old)
+        row_idx = -1
+        if len(new.indexes()):
+            row_idx = new.indexes()[0].row()
+        self.selectionChangedSignal.emit(row_idx)
+
 
 class LabeledFrameTableModel(QtCore.QAbstractTableModel):
     _props = ["points", "track", "skeleton",]

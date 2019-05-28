@@ -52,12 +52,11 @@ class MainWindow(QMainWindow):
         self.labels = Labels()
         self.skeleton = Skeleton()
         self.labeled_frame = None
-        self.predicted_instances = None
         self.video = None
         self.video_idx = None
         self.mark_idx = None
         self.filename = None
-        self.menuAction = dict()
+        self._menu_actions = dict()
 
         self._trail_manager = None
 
@@ -129,43 +128,39 @@ class MainWindow(QMainWindow):
 
         ####### Menus #######
         fileMenu = self.menuBar().addMenu("File")
-        fileMenu.addAction("&New Project", self.newProject, QKeySequence.New)
-        fileMenu.addAction("&Open Project...", self.openProject, QKeySequence.Open)
-        fileMenu.addAction("&Save", self.saveProject, QKeySequence.Save)
-        fileMenu.addAction("Save As...", self.saveProjectAs, QKeySequence.SaveAs)
+        self._menu_actions["new"] = fileMenu.addAction("&New Project", self.newProject, QKeySequence.New)
+        self._menu_actions["open"] = fileMenu.addAction("&Open Project...", self.openProject, QKeySequence.Open)
+        self._menu_actions["save"] = fileMenu.addAction("&Save", self.saveProject, QKeySequence.Save)
+        self._menu_actions["save as"] = fileMenu.addAction("Save As...", self.saveProjectAs, QKeySequence.SaveAs)
         fileMenu.addSeparator()
-#         fileMenu.addAction("Import...").triggered.connect(self.importData)
-#         fileMenu.addAction("Export...").triggered.connect(self.exportData)
-#         fileMenu.addSeparator()
-        fileMenu.addAction("&Quit", self.close)
+        self._menu_actions["close"] = fileMenu.addAction("&Quit", self.close)
 
         videoMenu = self.menuBar().addMenu("Video")
         # videoMenu.addAction("Check video encoding").triggered.connect(self.checkVideoEncoding)
         # videoMenu.addAction("Reencode for seeking").triggered.connect(self.reencodeForSeeking)
         # videoMenu.addSeparator()
-        videoMenu.addAction("Add Videos...", self.addVideo, Qt.CTRL + Qt.Key_A)
-        # videoMenu.addAction("Add folder").triggered.connect(self.addVideoFolder)
-        videoMenu.addAction("Next Video", self.nextVideo, QKeySequence.Forward)
-        videoMenu.addAction("Previous Video", self.previousVideo, QKeySequence.Back)
+        self._menu_actions["add videos"] = videoMenu.addAction("Add Videos...", self.addVideo, Qt.CTRL + Qt.Key_A)
+        self._menu_actions["next video"] = videoMenu.addAction("Next Video", self.nextVideo, QKeySequence.Forward)
+        self._menu_actions["prev video"] = videoMenu.addAction("Previous Video", self.previousVideo, QKeySequence.Back)
         videoMenu.addSeparator()
-        videoMenu.addAction("Mark Frame", self.markFrame, Qt.CTRL + Qt.Key_M)
-        videoMenu.addAction("Go to Marked Frame", self.goMarkedFrame, Qt.CTRL + Qt.SHIFT + Qt.Key_M)
-        videoMenu.addAction("Extract Clip...", self.extractClip, Qt.CTRL + Qt.Key_E)
+        self._menu_actions["mark frame"] = videoMenu.addAction("Mark Frame", self.markFrame, Qt.CTRL + Qt.Key_M)
+        self._menu_actions["goto marked"] = videoMenu.addAction("Go to Marked Frame", self.goMarkedFrame, Qt.CTRL + Qt.SHIFT + Qt.Key_M)
+        self._menu_actions["extract clip"] = videoMenu.addAction("Extract Clip...", self.extractClip, Qt.CTRL + Qt.Key_E)
 
         labelMenu = self.menuBar().addMenu("Labels")
-        labelMenu.addAction("Add Instance", self.newInstance, Qt.CTRL + Qt.Key_I)
-        labelMenu.addAction("Delete Instance", self.deleteSelectedInstance, Qt.CTRL + Qt.Key_Backspace)
+        self._menu_actions["add instance"] = labelMenu.addAction("Add Instance", self.newInstance, Qt.CTRL + Qt.Key_I)
+        self._menu_actions["delete instance"] = labelMenu.addAction("Delete Instance", self.deleteSelectedInstance, Qt.CTRL + Qt.Key_Backspace)
         self.track_menu = labelMenu.addMenu("Set Instance Track")
-        labelMenu.addAction("Transpose Instance Tracks", self.transposeInstance, Qt.CTRL + Qt.Key_T)
-        labelMenu.addAction("Select Next Instance", self.player.view.nextSelection, QKeySequence(Qt.Key.Key_QuoteLeft))
-        labelMenu.addAction("Clear Selection", self.player.view.clearSelection, QKeySequence(Qt.Key.Key_Escape))
+        self._menu_actions["transpose"] = labelMenu.addAction("Transpose Instance Tracks", self.transposeInstance, Qt.CTRL + Qt.Key_T)
+        self._menu_actions["select next"] = labelMenu.addAction("Select Next Instance", self.player.view.nextSelection, QKeySequence(Qt.Key.Key_QuoteLeft))
+        self._menu_actions["clear selection"] = labelMenu.addAction("Clear Selection", self.player.view.clearSelection, QKeySequence(Qt.Key.Key_Escape))
         labelMenu.addSeparator()
-        labelMenu.addAction("Next Labeled Frame", self.nextLabeledFrame, QKeySequence.FindNext)
-        labelMenu.addAction("Previous Labeled Frame", self.previousLabeledFrame, QKeySequence.FindPrevious)
+        self._menu_actions["goto next"] = labelMenu.addAction("Next Labeled Frame", self.nextLabeledFrame, QKeySequence.FindNext)
+        self._menu_actions["goto prev"] = labelMenu.addAction("Previous Labeled Frame", self.previousLabeledFrame, QKeySequence.FindPrevious)
         labelMenu.addSeparator()
-        self.menuAction["show labels"] = labelMenu.addAction("Show Node Names", self.toggleLabels, Qt.ALT + Qt.Key_Tab)
-        self.menuAction["show edges"] = labelMenu.addAction("Show Edges", self.toggleEdges, Qt.ALT + Qt.SHIFT + Qt.Key_Tab)
-        self.menuAction["show trails"] = labelMenu.addAction("Show Trails", self.toggleTrails)
+        self._menu_actions["show labels"] = labelMenu.addAction("Show Node Names", self.toggleLabels, Qt.ALT + Qt.Key_Tab)
+        self._menu_actions["show edges"] = labelMenu.addAction("Show Edges", self.toggleEdges, Qt.ALT + Qt.SHIFT + Qt.Key_Tab)
+        self._menu_actions["show trails"] = labelMenu.addAction("Show Trails", self.toggleTrails)
 
         self.trailLengthMenu = labelMenu.addMenu("Trail Length")
         for length_option in (4, 10, 20):
@@ -173,15 +168,15 @@ class MainWindow(QMainWindow):
                             lambda x=length_option: self.setTrailLength(x))
             menu_item.setCheckable(True)
 
-        self.menuAction["color predicted"] = labelMenu.addAction("Color Predicted Instances", self.toggleColorPredicted)
+        self._menu_actions["color predicted"] = labelMenu.addAction("Color Predicted Instances", self.toggleColorPredicted)
         labelMenu.addSeparator()
-        self.menuAction["fit"] = labelMenu.addAction("Fit Instances to View", self.toggleAutoZoom, Qt.CTRL + Qt.Key_Equal)
+        self._menu_actions["fit"] = labelMenu.addAction("Fit Instances to View", self.toggleAutoZoom, Qt.CTRL + Qt.Key_Equal)
 
-        self.menuAction["show labels"].setCheckable(True); self.menuAction["show labels"].setChecked(self._show_labels)
-        self.menuAction["show edges"].setCheckable(True); self.menuAction["show edges"].setChecked(self._show_edges)
-        self.menuAction["show trails"].setCheckable(True); self.menuAction["show trails"].setChecked(self._show_trails)
-        self.menuAction["color predicted"].setCheckable(True); self.menuAction["color predicted"].setChecked(self._color_predicted)
-        self.menuAction["fit"].setCheckable(True)
+        self._menu_actions["show labels"].setCheckable(True); self._menu_actions["show labels"].setChecked(self._show_labels)
+        self._menu_actions["show edges"].setCheckable(True); self._menu_actions["show edges"].setChecked(self._show_edges)
+        self._menu_actions["show trails"].setCheckable(True); self._menu_actions["show trails"].setChecked(self._show_trails)
+        self._menu_actions["color predicted"].setCheckable(True); self._menu_actions["color predicted"].setChecked(self._color_predicted)
+        self._menu_actions["fit"].setCheckable(True)
 
         viewMenu = self.menuBar().addMenu("View")
 
@@ -273,7 +268,7 @@ class MainWindow(QMainWindow):
 
         ####### Instances #######
         instances_layout = _make_dock("Instances")
-        self.instancesTable = LabeledFrameTable()
+        self.instancesTable = LabeledFrameTable(labels=self.labels)
         instances_layout.addWidget(self.instancesTable)
         hb = QHBoxLayout()
         btn = QPushButton("New instance")
@@ -283,9 +278,15 @@ class MainWindow(QMainWindow):
         hbw = QWidget(); hbw.setLayout(hb)
         instances_layout.addWidget(hbw)
 
+        self.instancesTable.selectionChangedSignal.connect(lambda row: self.player.view.selectInstance(row, from_all=True))
+
         # update track UI when change to track name
         self.instancesTable.model().dataChanged.connect(self.updateTrackMenu)
         self.instancesTable.model().dataChanged.connect(self.changestack_push)
+
+        self.update_gui_timer = QtCore.QTimer()
+        self.update_gui_timer.timeout.connect(self.update_gui_state)
+        self.update_gui_timer.start(0)
 
         ####### Points #######
         # points_layout = _make_dock("Points", tab_with=instances_layout.parent().parent())
@@ -348,6 +349,29 @@ class MainWindow(QMainWindow):
 #         gb.setLayout(fl)
 #         training_layout.addWidget(gb)
 
+    def update_gui_state(self):
+        has_selected_instance = (self.player.view.getSelection() is not None)
+        has_unsaved_changes = self.changestack_has_changes()
+        has_multiple_videos = (self.labels is not None and len(self.labels.videos) > 1)
+        has_multiple_instances = (self.labeled_frame is not None and len(self.labeled_frame.instances) > 1)
+        # todo: exclude predicted instances from count
+
+        # Update menus
+
+        self.track_menu.setEnabled(has_selected_instance)
+        self._menu_actions["clear selection"].setEnabled(has_selected_instance)
+        self._menu_actions["delete instance"].setEnabled(has_selected_instance)
+
+        self._menu_actions["transpose"].setEnabled(has_multiple_instances)
+
+        self._menu_actions["save"].setEnabled(has_unsaved_changes)
+        self._menu_actions["goto marked"].setEnabled(self.mark_idx is not None)
+
+        self._menu_actions["next video"].setEnabled(has_multiple_videos)
+        self._menu_actions["prev video"].setEnabled(has_multiple_videos)
+
+        # Update buttons
+        # TODO
 
     def keyPressEvent(self, event: QKeyEvent):
         if event.key() == Qt.Key_Q:
@@ -634,6 +658,7 @@ class MainWindow(QMainWindow):
                               and type(inst) == PredictedInstance
                               ]
 
+        from_prev_frame = False
         if copy_instance is None:
             selected_idx = self.player.view.getSelection()
             if selected_idx is not None:
@@ -653,6 +678,7 @@ class MainWindow(QMainWindow):
                         # If more instances in previous frame than current, then use the
                         # first unmatched instance.
                         copy_instance = prev_instances[len(self.labeled_frame.instances)]
+                        from_prev_frame = True
                     elif len(self.labeled_frame.instances):
                         # Otherwise, if there are already instances in current frame,
                         # copy the points from the last instance added to frame.
@@ -660,6 +686,7 @@ class MainWindow(QMainWindow):
                     elif len(prev_instances):
                         # Otherwise use the last instance added to previous frame.
                         copy_instance = prev_instances[-1]
+                        from_prev_frame = True
 
         new_instance = Instance(skeleton=self.skeleton)
         for node in self.skeleton.nodes:
@@ -667,8 +694,8 @@ class MainWindow(QMainWindow):
                 new_instance[node] = copy.copy(copy_instance[node])
             else:
                 new_instance[node] = Point(x=np.random.rand() * self.video.width * 0.5, y=np.random.rand() * self.video.height * 0.5, visible=True)
-        # If we're copying a predicted instance, copy the track
-        if hasattr(copy_instance, "score"):
+        # If we're copying a predicted instance or from another frame, copy the track
+        if hasattr(copy_instance, "score") or from_prev_frame:
             new_instance.track = copy_instance.track
 
         # Add the instance
@@ -679,8 +706,10 @@ class MainWindow(QMainWindow):
             self.labels.append(self.labeled_frame)
             self.changestack_push("new labeled frame")
 
+        # update display/ui
         self.plotFrame()
         self.updateSeekbarMarks()
+        self.updateTrackMenu()
 
     def deleteSelectedInstance(self):
         idx = self.player.view.getSelection()
@@ -966,17 +995,17 @@ class MainWindow(QMainWindow):
 
     def toggleLabels(self):
         self._show_labels = not self._show_labels
-        self.menuAction["show labels"].setChecked(self._show_labels)
+        self._menu_actions["show labels"].setChecked(self._show_labels)
         self.player.showLabels(self._show_labels)
 
     def toggleEdges(self):
         self._show_edges = not self._show_edges
-        self.menuAction["show edges"].setChecked(self._show_edges)
+        self._menu_actions["show edges"].setChecked(self._show_edges)
         self.player.showEdges(self._show_edges)
 
     def toggleTrails(self):
         self._show_trails = not self._show_trails
-        self.menuAction["show trails"].setChecked(self._show_trails)
+        self._menu_actions["show trails"].setChecked(self._show_trails)
         self.plotFrame()
 
     def setTrailLength(self, trail_length):
@@ -992,12 +1021,12 @@ class MainWindow(QMainWindow):
 
     def toggleColorPredicted(self):
         self._color_predicted = not self._color_predicted
-        self.menuAction["color predicted"].setChecked(self._color_predicted)
+        self._menu_actions["color predicted"].setChecked(self._color_predicted)
         self.plotFrame()
 
     def toggleAutoZoom(self):
         self._auto_zoom = not self._auto_zoom
-        self.menuAction["fit"].setChecked(self._auto_zoom)
+        self._menu_actions["fit"].setChecked(self._auto_zoom)
         if not self._auto_zoom:
             self.player.view.clearZoom()
         self.plotFrame()
