@@ -94,13 +94,13 @@ class VideoSlider(QGraphicsView):
 
         for labeled_frame in labels.labeled_frames:
             for instance in labeled_frame.instances:
-                if instance.frame_idx is not None:
-                    if instance.track is not None:
-                        # Add mark with track
-                        slider_marks.append((labels.tracks.index(instance.track), instance.frame_idx))
-                    else:
-                        # Add mark without track
-                        slider_marks.append(instance.frame_idx)
+                frame_idx = labeled_frame.frame_idx
+                if instance.track is not None:
+                    # Add mark with track
+                    slider_marks.append((labels.tracks.index(instance.track), frame_idx))
+                else:
+                    # Add mark without track
+                    slider_marks.append(frame_idx)
 
         self.setTracks(track_count)
         self.setMarks(slider_marks)
@@ -133,7 +133,7 @@ class VideoSlider(QGraphicsView):
     def _toPos(self, val, center=False):
         x = val
         x -= self._val_min
-        x /= (self._val_max-self._val_min)
+        x /= max(1, self._val_max-self._val_min)
         x *= self._sliderWidth()
         if center:
             x  += self.handle.rect().width()/2.
@@ -142,7 +142,7 @@ class VideoSlider(QGraphicsView):
     def _toVal(self, x, center=False):
         val = x
         val /= self._sliderWidth()
-        val *= (self._val_max-self._val_min)
+        val *= max(1, self._val_max-self._val_min)
         val += self._val_min
         val = round(val)
         return val
