@@ -7,6 +7,12 @@ SPHINXBUILD   = sphinx-build
 SOURCEDIR     = .
 BUILDDIR      = ..\..\sleap-docs
 
+# Export the BUILDDIR so we can pick it up in conf.py. We need this to
+# be able to copy some the files in _static to an alternative location
+# of docs/_static in order to have paths work for README.rst and index.rst
+# (which includes readme.rst)
+export BUILDDIR
+
 # Put it first so that "make" without argument is like "make help".
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)

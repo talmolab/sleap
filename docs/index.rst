@@ -1,12 +1,10 @@
-.. toctree::
-   :maxdepth: 2
+.. include:: ../README.rst
+  :start-after: inclusion-marker-do-not-remove
 
-   includeme
-
-.. _sleap_package:
+.. _sleap:
 .. toctree::
     :caption: sLEAP Package
-    :maxdepth: 1
+    :maxdepth: 3
 
     skeleton
     video
