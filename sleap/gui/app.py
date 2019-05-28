@@ -658,6 +658,7 @@ class MainWindow(QMainWindow):
                               and type(inst) == PredictedInstance
                               ]
 
+        from_prev_frame = False
         if copy_instance is None:
             selected_idx = self.player.view.getSelection()
             if selected_idx is not None:
@@ -677,6 +678,7 @@ class MainWindow(QMainWindow):
                         # If more instances in previous frame than current, then use the
                         # first unmatched instance.
                         copy_instance = prev_instances[len(self.labeled_frame.instances)]
+                        from_prev_frame = True
                     elif len(self.labeled_frame.instances):
                         # Otherwise, if there are already instances in current frame,
                         # copy the points from the last instance added to frame.
@@ -684,6 +686,7 @@ class MainWindow(QMainWindow):
                     elif len(prev_instances):
                         # Otherwise use the last instance added to previous frame.
                         copy_instance = prev_instances[-1]
+                        from_prev_frame = True
 
         new_instance = Instance(skeleton=self.skeleton)
         for node in self.skeleton.nodes:
@@ -691,8 +694,8 @@ class MainWindow(QMainWindow):
                 new_instance[node] = copy.copy(copy_instance[node])
             else:
                 new_instance[node] = Point(x=np.random.rand() * self.video.width * 0.5, y=np.random.rand() * self.video.height * 0.5, visible=True)
-        # If we're copying a predicted instance, copy the track
-        if hasattr(copy_instance, "score"):
+        # If we're copying a predicted instance or from another frame, copy the track
+        if hasattr(copy_instance, "score") or from_prev_frame:
             new_instance.track = copy_instance.track
 
         # Add the instance
