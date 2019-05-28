@@ -465,7 +465,7 @@ class GraphicsView(QGraphicsView):
         for instance in self.all_instances:
             instance.selected = False
         # signal that the selection has changed (so we can update visual display)
-        self.updatedSelection.emit()
+        if signal: self.updatedSelection.emit()
 
     def nextSelection(self):
         """ Select next instance (or first, if none currently selected).
