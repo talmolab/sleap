@@ -278,6 +278,8 @@ class MainWindow(QMainWindow):
         hbw = QWidget(); hbw.setLayout(hb)
         instances_layout.addWidget(hbw)
 
+        self.instancesTable.selectionChangedSignal.connect(lambda row: self.player.view.selectInstance(row, from_all=True))
+
         # update track UI when change to track name
         self.instancesTable.model().dataChanged.connect(self.updateTrackMenu)
         self.instancesTable.model().dataChanged.connect(self.changestack_push)

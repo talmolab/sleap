@@ -459,10 +459,10 @@ class GraphicsView(QGraphicsView):
         return [item for item in self.scene.items(Qt.SortOrder.AscendingOrder)
                 if type(item) == QtInstance]
 
-    def clearSelection(self):
+    def clearSelection(self, signal=True):
         """ Clear instance skeleton selection.
         """
-        for instance in self.instances:
+        for instance in self.all_instances:
             instance.selected = False
         # signal that the selection has changed (so we can update visual display)
         self.updatedSelection.emit()
@@ -484,14 +484,15 @@ class GraphicsView(QGraphicsView):
         # signal that the selection has changed (so we can update visual display)
         self.updatedSelection.emit()
 
-    def selectInstance(self, select_idx):
+    def selectInstance(self, select_idx, from_all=False):
         """
         Select a particular skeleton instance.
 
         Args:
             select_idx: index of skeleton to select
         """
-        instances = self.instances
+        instances = self.instances if not from_all else self.all_instances
+        self.clearSelection(signal=False)
         if select_idx < len(instances):
             for idx, instance in enumerate(instances):
                 instance.selected = (select_idx == idx)
