@@ -78,10 +78,7 @@
               
             
             
-              <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../includeme.html">Social LEAP Estimates Animal Pose (sLEAP)</a></li>
-</ul>
-<p class="caption"><span class="caption-text">sLEAP Package</span></p>
+              <p class="caption"><span class="caption-text">sLEAP Package</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../skeleton.html">Skeleton</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../video.html">Video</a></li>
@@ -614,13 +611,13 @@
         <span class="k">return</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">items</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">SortOrder</span><span class="o">.</span><span class="n">AscendingOrder</span><span class="p">)</span>
                 <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="o">==</span> <span class="n">QtInstance</span><span class="p">]</span>
 
-<div class="viewcode-block" id="GraphicsView.clearSelection"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.GraphicsView.clearSelection">[docs]</a>    <span class="k">def</span> <span class="nf">clearSelection</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="GraphicsView.clearSelection"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.GraphicsView.clearSelection">[docs]</a>    <span class="k">def</span> <span class="nf">clearSelection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">signal</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Clear instance skeleton selection.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">for</span> <span class="n">instance</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">instances</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">instance</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_instances</span><span class="p">:</span>
             <span class="n">instance</span><span class="o">.</span><span class="n">selected</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="c1"># signal that the selection has changed (so we can update visual display)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">updatedSelection</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span></div>
+        <span class="k">if</span> <span class="n">signal</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">updatedSelection</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="GraphicsView.nextSelection"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.GraphicsView.nextSelection">[docs]</a>    <span class="k">def</span> <span class="nf">nextSelection</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Select next instance (or first, if none currently selected).</span>
@@ -639,14 +636,15 @@
         <span class="c1"># signal that the selection has changed (so we can update visual display)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">updatedSelection</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="GraphicsView.selectInstance"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.GraphicsView.selectInstance">[docs]</a>    <span class="k">def</span> <span class="nf">selectInstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">select_idx</span><span class="p">):</span>
+<div class="viewcode-block" id="GraphicsView.selectInstance"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.GraphicsView.selectInstance">[docs]</a>    <span class="k">def</span> <span class="nf">selectInstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">select_idx</span><span class="p">,</span> <span class="n">from_all</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Select a particular skeleton instance.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            select_idx: index of skeleton to select</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">instances</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">instances</span>
+        <span class="n">instances</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">instances</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">from_all</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_instances</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clearSelection</span><span class="p">(</span><span class="n">signal</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">select_idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">instances</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">instance</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">instances</span><span class="p">):</span>
                 <span class="n">instance</span><span class="o">.</span><span class="n">selected</span> <span class="o">=</span> <span class="p">(</span><span class="n">select_idx</span> <span class="o">==</span> <span class="n">idx</span><span class="p">)</span>
@@ -1122,6 +1120,7 @@
         <span class="n">pen</span> <span class="o">=</span> <span class="n">QPen</span><span class="p">(</span><span class="n">QColor</span><span class="p">(</span><span class="o">*</span><span class="n">color</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">pen</span><span class="o">.</span><span class="n">setCosmetic</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">setPen</span><span class="p">(</span><span class="n">pen</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">full_opacity</span> <span class="o">=</span> <span class="mi">1</span>
 
 <div class="viewcode-block" id="QtEdge.connected_to"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.QtEdge.connected_to">[docs]</a>    <span class="k">def</span> <span class="nf">connected_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1161,6 +1160,12 @@
 <span class="sd">        Args:</span>
 <span class="sd">            node: The node to update.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">src</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">visible</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">dst</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">visible</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">full_opacity</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">full_opacity</span> <span class="o">=</span> <span class="o">.</span><span class="mi">5</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setOpacity</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">full_opacity</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="n">node</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">src</span><span class="p">:</span>
             <span class="n">line</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">line</span><span class="p">()</span>
             <span class="n">line</span><span class="o">.</span><span class="n">setP1</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">scenePos</span><span class="p">())</span>
@@ -1369,8 +1374,8 @@
 <span class="sd">        Args:</span>
 <span class="sd">            show: Show edges if True, hide them otherwise.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">op</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">show</span> <span class="k">else</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="p">:</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="n">edge</span><span class="o">.</span><span class="n">full_opacity</span> <span class="k">if</span> <span class="n">show</span> <span class="k">else</span> <span class="mi">0</span>
             <span class="n">edge</span><span class="o">.</span><span class="n">setOpacity</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">edges_shown</span> <span class="o">=</span> <span class="n">show</span></div>
 

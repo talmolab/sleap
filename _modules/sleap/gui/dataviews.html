@@ -78,10 +78,7 @@
               
             
             
-              <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../includeme.html">Social LEAP Estimates Animal Pose (sLEAP)</a></li>
-</ul>
-<p class="caption"><span class="caption-text">sLEAP Package</span></p>
+              <p class="caption"><span class="caption-text">sLEAP Package</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../skeleton.html">Skeleton</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../video.html">Video</a></li>
@@ -396,11 +393,22 @@
 <div class="viewcode-block" id="LabeledFrameTable"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.LabeledFrameTable">[docs]</a><span class="k">class</span> <span class="nc">LabeledFrameTable</span><span class="p">(</span><span class="n">QTableView</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Table view widget backed by a custom data model for displaying</span>
 <span class="sd">    lists of Video instances. &quot;&quot;&quot;</span>
+
+    <span class="n">selectionChangedSignal</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labeled_frame</span><span class="p">:</span> <span class="n">LabeledFrame</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">LabeledFrameTable</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">setModel</span><span class="p">(</span><span class="n">LabeledFrameTableModel</span><span class="p">(</span><span class="n">labeled_frame</span><span class="p">,</span> <span class="n">labels</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">setSelectionBehavior</span><span class="p">(</span><span class="n">QAbstractItemView</span><span class="o">.</span><span class="n">SelectRows</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">setSelectionMode</span><span class="p">(</span><span class="n">QAbstractItemView</span><span class="o">.</span><span class="n">SingleSelection</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setSelectionMode</span><span class="p">(</span><span class="n">QAbstractItemView</span><span class="o">.</span><span class="n">SingleSelection</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">selectionChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new</span><span class="p">,</span> <span class="n">old</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">LabeledFrameTable</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">selectionChanged</span><span class="p">(</span><span class="n">new</span><span class="p">,</span> <span class="n">old</span><span class="p">)</span>
+        <span class="n">row_idx</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">new</span><span class="o">.</span><span class="n">indexes</span><span class="p">()):</span>
+            <span class="n">row_idx</span> <span class="o">=</span> <span class="n">new</span><span class="o">.</span><span class="n">indexes</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">row</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">selectionChangedSignal</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">row_idx</span><span class="p">)</span></div>
+
 
 <span class="k">class</span> <span class="nc">LabeledFrameTableModel</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">QAbstractTableModel</span><span class="p">):</span>
     <span class="n">_props</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;points&quot;</span><span class="p">,</span> <span class="s2">&quot;track&quot;</span><span class="p">,</span> <span class="s2">&quot;skeleton&quot;</span><span class="p">,]</span>
