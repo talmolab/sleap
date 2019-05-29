@@ -1,9 +1,10 @@
+.. inclusion-marker-do-not-remove
+
 |Appveyor Build Status| |GitHub release|
 
 .. |Appveyor Build Status| image:: 
    https://ci.appveyor.com/api/projects/status/tf5qlylwqse8ack5/branch/master?svg=true 
-   :width: 300 
-   :target: https://ci.appveyor.com/project/talmo/sleap 
+   :target: https://ci.appveyor.com/project/talmo/sleap
    :alt: Appveyor build status
 
 .. |GitHub release| image:: https://img.shields.io/github/release/murthylab/sleap.js.svg
@@ -46,7 +47,7 @@ different projects, mitigating issues of managing complex dependencies. To creat
 
 ::
 
-    (base) C:\> conda create -n sleap_env python=3.6 -c sleap sleap -y
+    (base) C:\>  conda create -n sleap_env -c sleap sleap python=3.6 -y
 
 Once the environment is finished installing, it can be activated using the following command:
 
