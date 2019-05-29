@@ -133,7 +133,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'sLEAP.tex', 'sLEAP Documentation',
-     'Talmo D. Pereira, David M. Turner', 'manual'),
+     'Talmo D. Pereira, Nat Tabris, David M. Turner', 'manual'),
 ]
 
 
@@ -181,3 +181,11 @@ html_static_path = []
 html_theme = "sphinx_rtd_theme"
 
 # -- Extension configuration -------------------------------------------------
+# We copy some the files in _static to an alternative location
+# of docs/_static in order to have paths work for README.rst and index.rst
+# (which includes readme.rst)
+import os, shutil
+_docs_static_path =  f"{os.environ['BUILDDIR']}/html/docs/_static"
+if os.path.exists(_docs_static_path):
+    shutil.rmtree(_docs_static_path)
+shutil.copytree('_static', _docs_static_path)

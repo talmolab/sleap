@@ -6,6 +6,8 @@ environment:
   access_token:
     secure: T7XuBtHDu85Tk/d1AeyfhW3CVyzaoddTWmR4xsPIdQ3di0R6x8ncWqw3KrYXkWJm
 
+  BUILD_DIR: "build"
+  
   conda_access_token:
     secure: d+v++uejbVEhIuaJSuFIOA==
   matrix:
@@ -30,9 +32,14 @@ install:
   - conda info -a
 
   # If this is a tag build, we will need to upload a deployment, set up login
-  - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (anaconda login --username sleap --password %conda_access_token%)
-  - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (conda config --set anaconda_upload yes)
-
+  - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (conda install conda-build anaconda-client conda-verify)
+  
+  # Look at this craziness, anaconda keeps a token based on hostname around and it
+  # prompts you to say yes to remove it. This holds up CI, no way to disable.
+  # The echo|set /p="yes" ouputs a yes with a single newline, otherwise it won't
+  # work!
+  - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (echo|set /p="yes" | anaconda login --username sleap --password %conda_access_token%)
+ 
   # Take the environment.yml but replace tensorflow-gpu with tensorflow,
   # we don't have GPUs on appveyor nodes and this will make
   # building the environment faster.
@@ -56,9 +63,7 @@ build: off
 test_script:
   - cmd: activate sleap_appveyor
   - cmd: where python
-#  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
   - cmd: python -m pytest tests/
-
 
 # here we are going to override common configuration
 for:
@@ -83,7 +88,7 @@ for:
     - cd ..\
     - mkdir sleap-docs
     - cd sleap-docs
-    - git clone https://github.com/murthylab/sleap.git html
+    - git clone https://x-oauth-basic@github.com/murthylab/sleap.git html
     - cd html
     - git remote set-url origin https://x-oauth-basic@github.com/murthylab/sleap.git
     - git checkout -b gh-pages remotes/origin/gh-pages
@@ -94,4 +99,9 @@ for:
   # Deploy the windows conda package to the sleap channel, only on tagged
   # builds though.
   after_deploy:
-    - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (conda build .conda)
+    - cmd: cd ..\
+    - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (conda build .conda --output-folder %BUILD_DIR%)
+    - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (anaconda upload --force %BUILD_DIR%\win-64\*.tar.bz2)
+    - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (anaconda logout)
+#    - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+   
