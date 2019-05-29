@@ -388,9 +388,12 @@ class Labels(MutableSequence):
         videos = Skeleton.make_cattr(idx_to_node).structure(dicts['videos'], List[Video])
         tracks = cattr.structure(dicts['tracks'], List[Track])
 
-        suggestions_cattr = cattr.Converter()
-        suggestions_cattr.register_structure_hook(Video, lambda x,type: videos[int(x)])
-        suggestions = suggestions_cattr.structure(dicts['suggestions'], Dict[Video, List])
+        if "suggestions" in dicts:
+            suggestions_cattr = cattr.Converter()
+            suggestions_cattr.register_structure_hook(Video, lambda x,type: videos[int(x)])
+            suggestions = suggestions_cattr.structure(dicts['suggestions'], Dict[Video, List])
+        else:
+            suggestions = dict()
 
         label_cattr = cattr.Converter()
         label_cattr.register_structure_hook(Skeleton, lambda x,type: skeletons[x])
