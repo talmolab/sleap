@@ -25,7 +25,8 @@ from sleap.io.video import Video, HDF5Video, MediaVideo
 from sleap.io.dataset import Labels
 from sleap.gui.video import QtVideoPlayer
 from sleap.gui.tracks import TrackTrailManager
-from sleap.gui.dataviews import VideosTable, SkeletonNodesTable, SkeletonEdgesTable, LabeledFrameTable, SkeletonNodeModel
+from sleap.gui.dataviews import VideosTable, SkeletonNodesTable, SkeletonEdgesTable, \
+	LabeledFrameTable, SkeletonNodeModel, SuggestionsTable
 from sleap.gui.importvideos import ImportVideos
 
 OPEN_IN_NEW = True
@@ -155,8 +156,9 @@ class MainWindow(QMainWindow):
         self._menu_actions["select next"] = labelMenu.addAction("Select Next Instance", self.player.view.nextSelection, QKeySequence(Qt.Key.Key_QuoteLeft))
         self._menu_actions["clear selection"] = labelMenu.addAction("Clear Selection", self.player.view.clearSelection, QKeySequence(Qt.Key.Key_Escape))
         labelMenu.addSeparator()
-        self._menu_actions["goto next"] = labelMenu.addAction("Next Labeled Frame", self.nextLabeledFrame, QKeySequence.FindNext)
-        self._menu_actions["goto prev"] = labelMenu.addAction("Previous Labeled Frame", self.previousLabeledFrame, QKeySequence.FindPrevious)
+        self._menu_actions["goto next"] = labelMenu.addAction("Next Labeled Frame", self.nextLabeledFrame)
+        self._menu_actions["goto suggestion"] = labelMenu.addAction("Next Suggestion", self.nextSuggestedFrame, QKeySequence.FindNext)
+        self._menu_actions["goto prev"] = labelMenu.addAction("Previous Labeled Frame", self.previousLabeledFrame)
         labelMenu.addSeparator()
         self._menu_actions["show labels"] = labelMenu.addAction("Show Node Names", self.toggleLabels, Qt.ALT + Qt.Key_Tab)
         self._menu_actions["show edges"] = labelMenu.addAction("Show Edges", self.toggleEdges, Qt.ALT + Qt.SHIFT + Qt.Key_Tab)
@@ -284,6 +286,32 @@ class MainWindow(QMainWindow):
         self.instancesTable.model().dataChanged.connect(self.updateTrackMenu)
         self.instancesTable.model().dataChanged.connect(self.changestack_push)
 
+        ####### Suggestions #######
+        suggestions_layout = _make_dock("Labeling Suggestions")
+        self.suggestionsTable = SuggestionsTable(labels=self.labels)
+        suggestions_layout.addWidget(self.suggestionsTable)
+
+        hb = QHBoxLayout()
+        btn = QPushButton("Prev")
+        btn.clicked.connect(lambda:self.nextSuggestedFrame(-1)); hb.addWidget(btn)
+        self.suggested_count_label = QLabel()
+        hb.addWidget(self.suggested_count_label)
+        btn = QPushButton("Next")
+        btn.clicked.connect(lambda:self.nextSuggestedFrame()); hb.addWidget(btn)
+        hbw = QWidget(); hbw.setLayout(hb)
+        suggestions_layout.addWidget(hbw)
+
+        hb = QHBoxLayout()
+        btn = QPushButton("Generate Suggestions")
+        btn.clicked.connect(self.generateSuggestions); hb.addWidget(btn)
+        hbw = QWidget(); hbw.setLayout(hb)
+        suggestions_layout.addWidget(hbw)
+
+        self.suggestionsTable.doubleClicked.connect(lambda table_idx: self.gotoVideoAndFrame(*self.labels.get_suggestions()[table_idx.row()]))
+
+        #
+        # Set timer to update state of gui at regular intervals
+        #
         self.update_gui_timer = QtCore.QTimer()
         self.update_gui_timer.timeout.connect(self.update_gui_state)
         self.update_gui_timer.start(0)
@@ -373,6 +401,29 @@ class MainWindow(QMainWindow):
         # Update buttons
         # TODO
 
+    def update_data_views(self):
+        self.videosTable.model().videos = self.labels.videos
+
+        self.skeletonNodesTable.model().skeleton = self.skeleton
+        self.skeletonEdgesTable.model().skeleton = self.skeleton
+        self.skeletonEdgesSrc.model().skeleton = self.skeleton
+        self.skeletonEdgesDst.model().skeleton = self.skeleton
+
+        self.instancesTable.model().labels = self.labels
+        self.instancesTable.model().labeled_frame = self.labeled_frame
+
+        self.suggestionsTable.model().labels = self.labels
+
+        # update count of suggested frames w/ labeled instances
+        suggestion_status_text = ""
+        suggestion_list = self.labels.get_suggestions()
+        if len(suggestion_list):
+            suggestion_label_counts = [self.labels.instance_count(video, frame_idx)
+                for (video, frame_idx) in suggestion_list]
+            labeled_count = len(suggestion_list) - suggestion_label_counts.count(0)
+            suggestion_status_text = f"{labeled_count}/{len(suggestion_list)} labeled"
+        self.suggested_count_label.setText(suggestion_status_text)
+
     def keyPressEvent(self, event: QKeyEvent):
         if event.key() == Qt.Key_Q:
             self.close()
@@ -411,17 +462,13 @@ class MainWindow(QMainWindow):
                 msgBox = QMessageBox(text=f"Imported {len(self.labels)} labeled frames.")
                 msgBox.exec_()
 
-            # Update UI tables
-            self.instancesTable.model().labels = self.labels
-            self.videosTable.model().videos = self.labels.videos
             if len(self.labels.labels) > 0:
                 if len(self.labels.labels[0].instances) > 0:
                     # TODO: add support for multiple skeletons
                     self.skeleton = self.labels.labels[0].instances[0].skeleton
-                    self.skeletonNodesTable.model().skeleton = self.skeleton
-                    self.skeletonEdgesTable.model().skeleton = self.skeleton
-                    self.skeletonEdgesSrc.model().skeleton = self.skeleton
-                    self.skeletonEdgesDst.model().skeleton = self.skeleton
+
+            # Update UI tables
+            self.update_data_views()
 
             # Load first video
             self.loadVideo(self.labels.videos[0], 0)
@@ -465,7 +512,7 @@ class MainWindow(QMainWindow):
             self.loadVideo(video, len(self.labels.videos)-1)
 
         # Update data model/view
-        self.videosTable.model().videos = self.labels.videos
+        self.update_data_views()
 
     def removeVideo(self):
         # Get selected video
@@ -487,7 +534,7 @@ class MainWindow(QMainWindow):
         self.changestack_push("remove video")
 
         # Update data model
-        self.videosTable.model().videos = self.labels.videos
+        self.update_data_views()
 
         # Update view if this was the current video
         if self.video == video:
@@ -504,12 +551,12 @@ class MainWindow(QMainWindow):
 
         # Update current video instance
         self.video = video
-        self.video_idx = video_idx if video_idx is not None else self.video_idx
+        self.video_idx = video_idx if video_idx is not None else self.labels.videos.index(video)
 
         # Load video in player widget
         self.player.load_video(self.video)
 
-        # Annotate labelled frames on seekbar
+        # Annotate labeled frames on seekbar
         self.updateSeekbarMarks()
 
         # Jump to last labeled frame
@@ -531,10 +578,7 @@ class MainWindow(QMainWindow):
                 self.skeleton = sk_list[0]
 
         # Update data model
-        self.skeletonNodesTable.model().skeleton = self.skeleton
-        self.skeletonEdgesTable.model().skeleton = self.skeleton
-        self.skeletonEdgesSrc.model().skeleton = self.skeleton
-        self.skeletonEdgesDst.model().skeleton = self.skeleton
+        self.update_data_views()
 
     def saveSkeleton(self):
         default_name = "skeleton.json"
@@ -561,10 +605,7 @@ class MainWindow(QMainWindow):
         self.changestack_push("new node")
 
         # Update data model
-        self.skeletonNodesTable.model().skeleton = self.skeleton
-
-        # Update source edges dropdown
-        self.skeletonEdgesSrc.model().skeleton = self.skeleton
+        self.update_data_views()
 
         self.plotFrame()
 
@@ -579,10 +620,7 @@ class MainWindow(QMainWindow):
         self.changestack_push("delete node")
 
         # Update data model
-        self.skeletonNodesTable.model().skeleton = self.skeleton
-        self.skeletonEdgesTable.model().skeleton = self.skeleton
-        self.skeletonEdgesSrc.model().skeleton = self.skeleton
-        self.skeletonEdgesDst.model().skeleton = self.skeleton
+        self.update_data_views()
 
         # Replot instances
         self.plotFrame()
@@ -591,9 +629,7 @@ class MainWindow(QMainWindow):
         self.skeletonEdgesDst.model().skeleton = self.skeleton
 
     def updateEdges(self):
-        self.skeletonEdgesTable.model().skeleton = self.skeleton
-        self.skeletonEdgesSrc.model().skeleton = self.skeleton
-        self.skeletonEdgesDst.model().skeleton = self.skeleton
+        self.update_data_views()
         self.plotFrame()
 
     def newEdge(self):
@@ -612,7 +648,7 @@ class MainWindow(QMainWindow):
         self.changestack_push("new edge")
 
         # Update data model
-        self.skeletonEdgesTable.model().skeleton = self.skeleton
+        self.update_data_views()
 
         self.plotFrame()
 
@@ -630,7 +666,7 @@ class MainWindow(QMainWindow):
         self.changestack_push("delete edge")
 
         # Update data model
-        self.skeletonEdgesTable.model().skeleton = self.skeleton
+        self.update_data_views()
 
         self.plotFrame()
 
@@ -640,7 +676,20 @@ class MainWindow(QMainWindow):
             self.player.seekbar.setTracksFromLabels(self.labels)
         # Otherwise, mark which frames have any instances.
         else:
-            self.player.seekbar.setMarks([frame.frame_idx for frame in self.labels.find(self.video)])
+            labeled_marks = [frame.frame_idx for frame in self.labels.find(self.video)]
+            suggestion_marks = self.labels.get_video_suggestions(self.video)
+            all_marks = list(set(labeled_marks) | set(suggestion_marks))
+            self.player.seekbar.setMarks(all_marks)
+
+    def generateSuggestions(self):
+        suggestions_per_video = 10
+        new_suggestions = dict()
+        for video in self.labels.videos:
+            new_suggestions[video] = list(range(0, video.frames, video.frames//suggestions_per_video))
+        self.labels.set_suggestions(new_suggestions)
+        self.update_data_views()
+        self.updateSeekbarMarks()
+
 
     def newInstance(self, copy_instance=None):
         if self.labeled_frame is None:
@@ -993,6 +1042,20 @@ class MainWindow(QMainWindow):
             next_idx = min(filter(lambda idx: idx > cur_idx, frame_indexes), default=frame_indexes[0])
             self.plotFrame(next_idx)
 
+    def nextSuggestedFrame(self, seek_direction=1):
+        next_video, next_frame = self.labels.get_next_suggestion(self.video, self.player.frame_idx, seek_direction)
+        if next_video is not None:
+            self.gotoVideoAndFrame(next_video, next_frame)
+        if next_frame is not None:
+            selection_idx = self.labels.get_suggestions().index((next_video, next_frame))
+            self.suggestionsTable.selectRow(selection_idx)
+
+    def gotoVideoAndFrame(self, video, frame_idx):
+        if video != self.video:
+            # switch to the other video
+            self.loadVideo(video)
+        self.plotFrame(frame_idx)
+
     def toggleLabels(self):
         self._show_labels = not self._show_labels
         self._menu_actions["show labels"].setChecked(self._show_labels)
@@ -1061,7 +1124,7 @@ class MainWindow(QMainWindow):
         labeled_frame = [label for label in self.labels.labels if label.video == self.video and label.frame_idx == frame_idx]
         self.labeled_frame = labeled_frame[0] if len(labeled_frame) > 0 else LabeledFrame(video=self.video, frame_idx=frame_idx)
 
-        self.instancesTable.model().labeled_frame = self.labeled_frame
+        self.update_data_views()
 
         count_no_track = 0
 

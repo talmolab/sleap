@@ -407,6 +407,74 @@ class SkeletonNodeModel(QtCore.QStringListModel):
         return Qt.ItemIsEnabled | Qt.ItemIsSelectable
 
 
+class SuggestionsTable(QTableView):
+    """Table view widget backed by a custom data model for displaying
+    lists of Video instances. """
+    def __init__(self, labels):
+        super(SuggestionsTable, self).__init__()
+        self.setModel(SuggestionsTableModel(labels))
+        self.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.setSelectionMode(QAbstractItemView.SingleSelection)
+
+class SuggestionsTableModel(QtCore.QAbstractTableModel):
+    _props = ["video", "frame", "labeled",]
+
+    def __init__(self, labels):
+        super(SuggestionsTableModel, self).__init__()
+        self.labels = labels
+
+    @property
+    def labels(self):
+        return self._labels
+
+    @labels.setter
+    def labels(self, val):
+        self.beginResetModel()
+
+        self._labels = val
+        self._suggestions_list = self.labels.get_suggestions()
+
+        self.endResetModel()
+
+    def data(self, index: QtCore.QModelIndex, role=Qt.DisplayRole):
+        if role == Qt.DisplayRole and index.isValid():
+            idx = index.row()
+            prop = self._props[index.column()]
+
+            if idx < self.rowCount():
+                video = self._suggestions_list[idx][0]
+                frame_idx = self._suggestions_list[idx][1]
+
+                if prop == "video":
+                    return os.path.basename(video.filename) # just show the name, not full path
+                elif prop == "frame":
+                    return frame_idx
+                elif prop == "labeled":
+                    val = self._labels.instance_count(video, frame_idx)
+                    val = str(val) if val > 0 else ""
+                    return val
+
+        return None
+
+    def rowCount(self, *args):
+        return len(self._suggestions_list)
+
+    def columnCount(self, *args):
+        return len(self._props)
+
+    def headerData(self, section, orientation: QtCore.Qt.Orientation, role=Qt.DisplayRole):
+        if role == Qt.DisplayRole:
+            if orientation == QtCore.Qt.Horizontal:
+                return self._props[section]
+            elif orientation == QtCore.Qt.Vertical:
+                return section
+
+        return None
+
+    def flags(self, index: QtCore.QModelIndex):
+        return Qt.ItemIsEnabled | Qt.ItemIsSelectable
+
+
 if __name__ == "__main__":
 
     labels = Labels.load_json("tests/data/json_format_v2/centered_pair_predictions.json")
