@@ -8,7 +8,7 @@ if "%SPHINXBUILD%" == "" (
 	set SPHINXBUILD=sphinx-build
 )
 set SOURCEDIR=.
-set BUILDDIR=_build
+set BUILDDIR=..\..\sleap-docs
 
 if "%1" == "" goto help
 
@@ -33,3 +33,15 @@ goto end
 
 :end
 popd
+
+rem Commit the documents to the repo if the user passed push
+rem argument as a second parameter
+if "%2" == "push" (
+    echo "Pusing to github docs repo ... "
+    pushd .
+    cd "%BUILDDIR%\html"
+    git add .
+    git commit -m "rebuilt docs"
+    git push origin gh-pages
+    popd
+)
