@@ -1,0 +1,19 @@
+main:
+
+- name: method
+  label: Method
+  type: stacked
+  default: strides
+  options: strides
+
+  strides:
+  - name: strides_per_video
+    label: Suggestions per video
+    type: int
+    default: 10
+
+
+- name: generate_button
+  label: Generate Suggestions
+  type: button
+  default: main action

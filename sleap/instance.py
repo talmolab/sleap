@@ -706,3 +706,14 @@ class LabeledFrame:
 
         self._instances = instances
 
+    @property
+    def instances_to_show(self):
+        """
+        Return a list of instances associated with this frame, but excluding any
+        predicted instances for which there's a regular instance on the same track.
+        """
+        user_tracks = [inst.track for inst in self._instances
+            if type(inst) == Instance and inst.track is not None]
+        distinct_track_instances = [inst for inst in self._instances
+            if type(inst) == Instance or inst.track not in user_tracks]
+        return distinct_track_instances
