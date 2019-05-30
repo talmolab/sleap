@@ -158,8 +158,11 @@ class MainWindow(QMainWindow):
         self._menu_actions["clear selection"] = labelMenu.addAction("Clear Selection", self.player.view.clearSelection, QKeySequence(Qt.Key.Key_Escape))
         labelMenu.addSeparator()
         self._menu_actions["goto next"] = labelMenu.addAction("Next Labeled Frame", self.nextLabeledFrame)
-        self._menu_actions["goto suggestion"] = labelMenu.addAction("Next Suggestion", self.nextSuggestedFrame, QKeySequence.FindNext)
         self._menu_actions["goto prev"] = labelMenu.addAction("Previous Labeled Frame", self.previousLabeledFrame)
+
+        self._menu_actions["goto suggestion"] = labelMenu.addAction("Next Suggestion", self.nextSuggestedFrame, QKeySequence.FindNext)
+        self._menu_actions["goto prev suggestion"] = labelMenu.addAction("Previous Suggestion", lambda:self.nextSuggestedFrame(-1), QKeySequence.FindPrevious)
+
         labelMenu.addSeparator()
         self._menu_actions["show labels"] = labelMenu.addAction("Show Node Names", self.toggleLabels, Qt.ALT + Qt.Key_Tab)
         self._menu_actions["show edges"] = labelMenu.addAction("Show Edges", self.toggleEdges, Qt.ALT + Qt.SHIFT + Qt.Key_Tab)
@@ -380,6 +383,7 @@ class MainWindow(QMainWindow):
         has_selected_instance = (self.player.view.getSelection() is not None)
         has_unsaved_changes = self.changestack_has_changes()
         has_multiple_videos = (self.labels is not None and len(self.labels.videos) > 1)
+        has_labeled_frames = (len(self.labels.find(self.video)) > 0)
         has_multiple_instances = (self.labeled_frame is not None and len(self.labeled_frame.instances) > 1)
         # todo: exclude predicted instances from count
 
@@ -396,6 +400,9 @@ class MainWindow(QMainWindow):
 
         self._menu_actions["next video"].setEnabled(has_multiple_videos)
         self._menu_actions["prev video"].setEnabled(has_multiple_videos)
+
+        self._menu_actions["goto next"].setEnabled(has_labeled_frames)
+        self._menu_actions["goto prev"].setEnabled(has_labeled_frames)
 
         # Update buttons
         # TODO
