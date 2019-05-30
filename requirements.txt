@@ -10,3 +10,4 @@ pandas
 psutil
 PySide2
 pyzmq
+pyyaml
