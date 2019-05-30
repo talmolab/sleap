@@ -210,7 +210,8 @@ class QuiverPlot(QGraphicsObject):
             strides=(height * _strides[0], width * _strides[1], *_strides),
             writeable=False
         )
-        return np.mean(np.swapaxes(tiles,0,1), axis=(2,3))
+        if False: tiles = np.swapaxes(tiles,0,1) # why do we need to swap axes sometimes?
+        return np.mean(tiles, axis=(2,3))
 
     def boundingRect(self) -> QRectF:
         """Method called by Qt in order to determine whether object is in visible frame."""
