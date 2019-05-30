@@ -509,6 +509,16 @@ class GraphicsView(QGraphicsView):
             if instance.selected:
                 return idx
 
+    def getSelectionInstance(self):
+        """ Returns the currently selected instance.
+        If no instance selected, returns None.
+        """
+        instances = self.all_instances
+        if len(instances) == 0: return None
+        for idx, instance in enumerate(instances):
+            if instance.selected:
+                return instance.instance
+
     def resizeEvent(self, event):
         """ Maintain current zoom on resize.
         """

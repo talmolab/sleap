@@ -290,8 +290,8 @@ class LabeledFrameTableModel(QtCore.QAbstractTableModel):
             idx = index.row()
             prop = self._props[index.column()]
 
-            if len(self.labeled_frame.instances) > (idx - 1):
-                instance = self.labeled_frame.instances[idx]
+            if len(self.labeled_frame.instances_to_show) > (idx - 1):
+                instance = self.labeled_frame.instances_to_show[idx]
 
                 if role == Qt.DisplayRole:
                     if prop == "points":
@@ -307,7 +307,7 @@ class LabeledFrameTableModel(QtCore.QAbstractTableModel):
         return None
 
     def rowCount(self, parent):
-        return len(self.labeled_frame.instances) if self.labeled_frame is not None else 0
+        return len(self.labeled_frame.instances_to_show) if self.labeled_frame is not None else 0
 
     def columnCount(self, parent):
         return len(LabeledFrameTableModel._props)
@@ -325,7 +325,7 @@ class LabeledFrameTableModel(QtCore.QAbstractTableModel):
         if role == Qt.EditRole:
             idx = index.row()
             prop = self._props[index.column()]
-            instance = self.labeled_frame.instances[idx]
+            instance = self.labeled_frame.instances_to_show[idx]
             if prop == "track":
                 if len(value) > 0:
                     instance.track.name = value
@@ -340,7 +340,7 @@ class LabeledFrameTableModel(QtCore.QAbstractTableModel):
         f = Qt.ItemIsEnabled | Qt.ItemIsSelectable
         if index.isValid():
             idx = index.row()
-            instance = self.labeled_frame.instances[idx]
+            instance = self.labeled_frame.instances_to_show[idx]
             prop = self._props[index.column()]
             if prop == "track" and instance.track is not None:
                 f |= Qt.ItemIsEditable

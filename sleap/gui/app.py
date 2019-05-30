@@ -772,10 +772,10 @@ class MainWindow(QMainWindow):
         self.updateTrackMenu()
 
     def deleteSelectedInstance(self):
-        idx = self.player.view.getSelection()
-        if idx is None: return
+        selected_inst = self.player.view.getSelectionInstance()
+        if selected_inst is None: return
 
-        del self.labeled_frame.instances[idx]
+        self.labeled_frame.instances.remove(selected_inst)
         self.changestack_push("delete instance")
 
         self.plotFrame()
@@ -785,7 +785,7 @@ class MainWindow(QMainWindow):
         idx = self.instancesTable.currentIndex()
         if not idx.isValid(): return
 
-        del self.labeled_frame.instances[idx.row()]
+        del self.labeled_frame.instances_to_show[idx.row()]
         self.changestack_push("delete instance")
 
         self.plotFrame()
@@ -813,7 +813,7 @@ class MainWindow(QMainWindow):
         idx = self.player.view.getSelection()
         if idx is None: return
 
-        selected_instance = self.labeled_frame.instances[idx]
+        selected_instance = self.labeled_frame.instances_to_show[idx]
 
         old_track = selected_instance.track
 
@@ -911,8 +911,8 @@ class MainWindow(QMainWindow):
         idx_0 = instance_ids[0]
         idx_1 = instance_ids[1]
         # Swap order in array (just for this frame) for when we don't have tracks
-        instance_0 = self.labeled_frame.instances[idx_0]
-        instance_1 = self.labeled_frame.instances[idx_1]
+        instance_0 = self.labeled_frame.instances_to_show[idx_0]
+        instance_1 = self.labeled_frame.instances_to_show[idx_1]
         # Swap tracks for current and subsequent frames
         old_track, new_track = instance_0.track, instance_1.track
         if old_track is not None and new_track is not None:
@@ -1138,8 +1138,7 @@ class MainWindow(QMainWindow):
         self.update_data_views()
 
         count_no_track = 0
-
-        for i, instance in enumerate(self.labeled_frame.instances):
+        for i, instance in enumerate(self.labeled_frame.instances_to_show):
             if instance.track in self.labels.tracks:
                 track_idx = self.labels.tracks.index(instance.track)
             else:
