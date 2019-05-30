@@ -160,7 +160,7 @@ class MainWindow(QMainWindow):
         self._menu_actions["goto next"] = labelMenu.addAction("Next Labeled Frame", self.nextLabeledFrame)
         self._menu_actions["goto prev"] = labelMenu.addAction("Previous Labeled Frame", self.previousLabeledFrame)
 
-        self._menu_actions["goto suggestion"] = labelMenu.addAction("Next Suggestion", self.nextSuggestedFrame, QKeySequence.FindNext)
+        self._menu_actions["goto next suggestion"] = labelMenu.addAction("Next Suggestion", self.nextSuggestedFrame, QKeySequence.FindNext)
         self._menu_actions["goto prev suggestion"] = labelMenu.addAction("Previous Suggestion", lambda:self.nextSuggestedFrame(-1), QKeySequence.FindPrevious)
 
         labelMenu.addSeparator()
@@ -384,6 +384,7 @@ class MainWindow(QMainWindow):
         has_unsaved_changes = self.changestack_has_changes()
         has_multiple_videos = (self.labels is not None and len(self.labels.videos) > 1)
         has_labeled_frames = (len(self.labels.find(self.video)) > 0)
+        has_suggestions = (len(self.labels.suggestions) > 0)
         has_multiple_instances = (self.labeled_frame is not None and len(self.labeled_frame.instances) > 1)
         # todo: exclude predicted instances from count
 
@@ -403,6 +404,9 @@ class MainWindow(QMainWindow):
 
         self._menu_actions["goto next"].setEnabled(has_labeled_frames)
         self._menu_actions["goto prev"].setEnabled(has_labeled_frames)
+
+        self._menu_actions["goto next suggestion"].setEnabled(has_suggestions)
+        self._menu_actions["goto prev suggestion"].setEnabled(has_suggestions)
 
         # Update buttons
         # TODO
