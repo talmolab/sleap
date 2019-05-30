@@ -28,6 +28,7 @@ from sleap.gui.tracks import TrackTrailManager
 from sleap.gui.dataviews import VideosTable, SkeletonNodesTable, SkeletonEdgesTable, \
 	LabeledFrameTable, SkeletonNodeModel, SuggestionsTable
 from sleap.gui.importvideos import ImportVideos
+from sleap.gui.formbuilder import YamlFormWidget
 
 OPEN_IN_NEW = True
 
@@ -301,11 +302,9 @@ class MainWindow(QMainWindow):
         hbw = QWidget(); hbw.setLayout(hb)
         suggestions_layout.addWidget(hbw)
 
-        hb = QHBoxLayout()
-        btn = QPushButton("Generate Suggestions")
-        btn.clicked.connect(self.generateSuggestions); hb.addWidget(btn)
-        hbw = QWidget(); hbw.setLayout(hb)
-        suggestions_layout.addWidget(hbw)
+        form_wid = YamlFormWidget(yaml_file="sleap/gui/suggestions.yaml", title="Generate Suggestions")
+        form_wid.mainAction.connect(self.generateSuggestions)
+        suggestions_layout.addWidget(form_wid)
 
         self.suggestionsTable.doubleClicked.connect(lambda table_idx: self.gotoVideoAndFrame(*self.labels.get_suggestions()[table_idx.row()]))
 
@@ -690,12 +689,15 @@ class MainWindow(QMainWindow):
 
             self.player.seekbar.setMarks(all_marks)
 
-    def generateSuggestions(self):
-        suggestions_per_video = 10
-        new_suggestions = dict()
-        for video in self.labels.videos:
-            new_suggestions[video] = list(range(0, video.frames, video.frames//suggestions_per_video))
-        self.labels.set_suggestions(new_suggestions)
+    def generateSuggestions(self, params):
+        if params["method"] == "strides":
+            suggestions_per_video = params["strides_per_video"]
+            new_suggestions = dict()
+            for video in self.labels.videos:
+                new_suggestions[video] = list(range(0, video.frames, video.frames//suggestions_per_video))
+                new_suggestions[video] = new_suggestions[video][:suggestions_per_video]
+            self.labels.set_suggestions(new_suggestions)
+
         self.update_data_views()
         self.updateSeekbarMarks()
 
