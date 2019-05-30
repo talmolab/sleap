@@ -13,6 +13,7 @@ dependencies:
 - Shapely
 - psutil
 - pyzmq
+- pyyaml
 - pip
 - pip:
     - opencv-python

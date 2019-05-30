@@ -13,9 +13,10 @@ import attr
 import cattr
 import json
 import numpy as np
+import scipy.io as sio
 
 from collections import MutableSequence
-from typing import List, Union
+from typing import List, Union, Dict
 
 import pandas as pd
 
@@ -44,7 +45,8 @@ class Labels(MutableSequence):
         That is, every LabeledFrame's video will be in videos but a Video
         object from videos might not have any LabeledFrame.
         skeletons: A list of skeletons that these labels may or may not reference.
-        tracks: A list of tracks that isntances can belong to.
+        tracks: A list of tracks that instances can belong to.
+        suggestions: A dict with a list for each video of suggested frames to label.
     """
 
     labeled_frames: List[LabeledFrame] = attr.ib(default=attr.Factory(list))
@@ -52,6 +54,7 @@ class Labels(MutableSequence):
     skeletons: List[Skeleton] = attr.ib(default=attr.Factory(list))
     nodes: List[Node] = attr.ib(default=attr.Factory(list))
     tracks: List[Track] = attr.ib(default=attr.Factory(list))
+    suggestions: Dict[Video, list] = attr.ib(default=attr.Factory(dict))
 
     def __attrs_post_init__(self):
 
@@ -177,6 +180,13 @@ class Labels(MutableSequence):
                 if label.video == video and (frame_idx is None or (label.frame_idx == frame_idx)):
                     return label
 
+    def instance_count(self, video: Video, frame_idx: int) -> int:
+        count = 0
+        labeled_frame = self.find_first(video, frame_idx)
+        if labeled_frame is not None:
+            count = len([inst for inst in labeled_frame.instances if type(inst)==Instance])
+        return count
+
     @property
     def all_instances(self):
         return list(self.instances())
@@ -271,6 +281,46 @@ class Labels(MutableSequence):
         # Delete video
         self.videos.remove(video)
 
+    def get_video_suggestions(self, video:Video) -> list:
+        """
+        Returns the list of suggested frames for the specified video
+        or suggestions for all videos (if no video specified).
+        """
+        return self.suggestions.get(video, list())
+
+    def get_suggestions(self) -> list:
+        """Return all suggestions as a list of (video, frame) tuples."""
+        suggestion_list = [(video, frame_idx)
+            for video in self.videos
+            for frame_idx in self.get_video_suggestions(video)
+            ]
+        return suggestion_list
+
+    def get_next_suggestion(self, video, frame_idx, seek_direction=1) -> list:
+        """Returns a (video, frame_idx) tuple."""
+        # make sure we have valid seek_direction
+        if seek_direction not in (-1, 1): return (None, None)
+        # make sure the video belongs to this Labels object
+        if video not in self.videos: return (None, None)
+        # look for next (or previous) suggestion in current video
+        if seek_direction == 1:
+            frame_suggestion = min((i for i in self.get_video_suggestions(video) if i > frame_idx), default=None)
+        else:
+            frame_suggestion = max((i for i in self.get_video_suggestions(video) if i < frame_idx), default=None)
+        if frame_suggestion is not None: return (video, frame_suggestion)
+        # if we didn't find suggestion in current video,
+        # then we want earliest frame in next video with suggestions
+        next_video_idx = (self.videos.index(video) + seek_direction) % len(self.videos)
+        video = self.videos[next_video_idx]
+        if seek_direction == 1:
+            frame_suggestion = min((i for i in self.get_video_suggestions(video)), default=None)
+        else:
+            frame_suggestion = max((i for i in self.get_video_suggestions(video)), default=None)
+        return (video, frame_suggestion)
+
+    def set_suggestions(self, suggestions:Dict[Video, list]):
+        """Sets the suggested frames."""
+        self.suggestions = suggestions
 
     def to_json(self):
         """
@@ -307,7 +357,8 @@ class Labels(MutableSequence):
             'nodes': cattr.unstructure(self.nodes),
             'videos': cattr.unstructure(self.videos),
             'labels': label_cattr.unstructure(self.labeled_frames),
-            'tracks': cattr.unstructure(self.tracks)
+            'tracks': cattr.unstructure(self.tracks),
+            'suggestions': label_cattr.unstructure(self.suggestions)
          }
 
         return json.dumps(dicts)
@@ -337,6 +388,13 @@ class Labels(MutableSequence):
         videos = Skeleton.make_cattr(idx_to_node).structure(dicts['videos'], List[Video])
         tracks = cattr.structure(dicts['tracks'], List[Track])
 
+        if "suggestions" in dicts:
+            suggestions_cattr = cattr.Converter()
+            suggestions_cattr.register_structure_hook(Video, lambda x,type: videos[int(x)])
+            suggestions = suggestions_cattr.structure(dicts['suggestions'], Dict[Video, List])
+        else:
+            suggestions = dict()
+
         label_cattr = cattr.Converter()
         label_cattr.register_structure_hook(Skeleton, lambda x,type: skeletons[x])
         label_cattr.register_structure_hook(Video, lambda x,type: videos[x])
@@ -362,7 +420,7 @@ class Labels(MutableSequence):
         labels = label_cattr.structure(dicts['labels'], List[LabeledFrame])
 
 #         print("LABELS"); print(labels)
-        return cls(labeled_frames=labels, videos=videos, skeletons=skeletons, nodes=nodes)
+        return cls(labeled_frames=labels, videos=videos, skeletons=skeletons, nodes=nodes, suggestions=suggestions)
 
     @classmethod
     def load_json(cls, filename: str):
@@ -408,6 +466,73 @@ class Labels(MutableSequence):
 
             else:
                 return load_labels_json_old(data_path=filename, parsed_json=dicts)
+
+    @staticmethod
+    def _unwrap_mat_scalar(a):
+        if a.shape == (1,):
+            return Labels._unwrap_mat_scalar(a[0])
+        else:
+            return a
+
+    @staticmethod
+    def _unwrap_mat_array(a):
+        b = a[0][0]
+        c = [Labels._unwrap_mat_scalar(x) for x in b]
+        return c
+
+    @classmethod
+    def load_mat(cls, filename):
+        mat_contents = sio.loadmat(filename)
+
+        box_path = Labels._unwrap_mat_scalar(mat_contents["boxPath"])
+
+        # If the video file isn't found, try in the same dir as the mat file
+        if not os.path.exists(box_path):
+            file_dir = os.path.dirname(filename)
+            box_path_name = box_path.split("\\")[-1] # assume windows path
+            box_path = os.path.join(file_dir, box_path_name)
+
+        if os.path.exists(box_path):
+            vid = Video.from_hdf5(dataset="box", file=box_path, input_format="channels_first")
+        else:
+            vid = None
+
+        # TODO: prompt user to locate video
+
+        nodes_ = mat_contents["skeleton"]["nodes"]
+        edges_ = mat_contents["skeleton"]["edges"]
+        points_ = mat_contents["positions"]
+
+        edges_ = edges_ - 1 # convert matlab 1-indexing to python 0-indexing
+
+        nodes = Labels._unwrap_mat_array(nodes_)
+        edges = Labels._unwrap_mat_array(edges_)
+
+        nodes = list(map(str, nodes)) # convert np._str to str
+
+        sk = Skeleton(name=filename)
+        sk.add_nodes(nodes)
+        for edge in edges:
+            sk.add_edge(source=nodes[edge[0]], destination=nodes[edge[1]])
+
+        labeled_frames = []
+        node_count, _, frame_count = points_.shape
+
+        for i in range(frame_count):
+            new_inst = Instance(skeleton = sk)
+            for node_idx, node in enumerate(nodes):
+                x = points_[node_idx][0][i]
+                y = points_[node_idx][1][i]
+                new_inst[node] = Point(x, y)
+            new_inst.drop_nan_points()
+            if len(new_inst.points()):
+                new_frame = LabeledFrame(video=vid, frame_idx=i)
+                new_frame.instances = new_inst,
+                labeled_frames.append(new_frame)
+
+        labels = cls(labeled_frames=labeled_frames, videos=[vid], skeletons=[sk])
+
+        return labels
 
 
 def load_labels_json_old(data_path: str, parsed_json: dict = None,
