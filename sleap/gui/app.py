@@ -29,6 +29,7 @@ from sleap.gui.dataviews import VideosTable, SkeletonNodesTable, SkeletonEdgesTa
 	LabeledFrameTable, SkeletonNodeModel, SuggestionsTable
 from sleap.gui.importvideos import ImportVideos
 from sleap.gui.formbuilder import YamlFormWidget
+from sleap.gui.suggestions import VideoFrameSuggestions
 
 OPEN_IN_NEW = True
 
@@ -701,14 +702,10 @@ class MainWindow(QMainWindow):
             self.player.seekbar.setMarks(all_marks)
 
     def generateSuggestions(self, params):
-        if params["method"] == "strides":
-            suggestions_per_video = params["strides_per_video"]
-            new_suggestions = dict()
-            for video in self.labels.videos:
-                new_suggestions[video] = list(range(0, video.frames, video.frames//suggestions_per_video))
-                new_suggestions[video] = new_suggestions[video][:suggestions_per_video]
-            self.labels.set_suggestions(new_suggestions)
-
+        new_suggestions = dict()
+        for video in self.labels.videos:
+            new_suggestions[video] = VideoFrameSuggestions.suggest(video, params)
+        self.labels.set_suggestions(new_suggestions)
         self.update_data_views()
         self.updateSeekbarMarks()
 
