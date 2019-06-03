@@ -25,7 +25,7 @@ class VideoFrameSuggestions:
         """
 
         # map from method param value to corresponding class method
-        method_functions = dict(strides=cls.strides, pca=cls.pca_cluster, hog=cls.hog)
+        method_functions = dict(strides=cls.strides, pca=cls.pca_cluster, hog=cls.hog, brisk=cls.brisk)
 
         method = params["method"]
         if method_functions.get(method, None) is not None:
@@ -105,7 +105,7 @@ class VideoFrameSuggestions:
 
         feature_stack = None
         frame_idx_map = []
-        for frame_idx in range(1, video.frames, sample_step):
+        for frame_idx in range(0, video.frames, sample_step):
             img = video[frame_idx][0]
 
             kps, descs = brisk.detectAndCompute(img, None)
@@ -163,16 +163,14 @@ class VideoFrameSuggestions:
         """
 
         selected_by_cluster = cls.feature_stack_to_clusters(
-                feature_stack,
+                feature_stack=feature_stack,
+                frame_idx_map=frame_idx_map,
                 **kwargs)
 
-        if return_clusters:
-            cluster_lists = list(map(lambda x: cls.to_frame_idx_list(x, frame_idx_map), selected_by_cluster))
-            return cluster_lists
+        if return_clusters: return selected_by_cluster
 
         selected_list = cls.clusters_to_list(
                 selected_by_cluster=selected_by_cluster,
-                frame_idx_map=frame_idx_map,
                 **kwargs)
 
         return selected_list
@@ -181,12 +179,13 @@ class VideoFrameSuggestions:
     def feature_stack_to_clusters(
             cls,
             feature_stack,
+            frame_idx_map,
             clusters=5,
             per_cluster=5,
             pca_components=50,
             **kwargs):
         """
-        Turns feature stack matrix into list (per cluster) of list of row indexes.
+        Turns feature stack matrix into list (per cluster) of list of frame indexes.
 
         Args:
             feature_stack: (n * features) matrix
@@ -196,7 +195,7 @@ class VideoFrameSuggestions:
 
         Returns:
             list of lists
-            for each cluster, a list of row indexes for rows in feature stack
+            for each cluster, a list of frame indexes
         """
 
         stack_height = feature_stack.shape[0]
@@ -210,13 +209,16 @@ class VideoFrameSuggestions:
 
         # cluster based on features
         kmeans = KMeans(n_clusters=clusters)
-        frame_labels = kmeans.fit_predict(flat_small)
+        row_labels = kmeans.fit_predict(flat_small)
 
         # take samples from each cluster
         selected_by_cluster = []
         selected_set = set()
         for i in range(clusters):
-            cluster_items,  = np.where(frame_labels==i)
+            cluster_items,  = np.where(row_labels==i)
+
+            # convert from row indexes to frame indexes
+            cluster_items = cls.to_frame_idx_list(cluster_items, frame_idx_map)
 
             # remove items from cluster_items if they've already been sampled for another cluster
             # TODO: should this be controlled by a param?
@@ -224,15 +226,16 @@ class VideoFrameSuggestions:
 
             # pick [per_cluster] items from this cluster
             samples_from_bin = np.random.choice(cluster_items, min(len(cluster_items), per_cluster), False)
+            samples_from_bin.sort()
             selected_by_cluster.append(samples_from_bin)
             selected_set = selected_set.union( set(samples_from_bin) )
 
         return selected_by_cluster
 
     @classmethod
-    def clusters_to_list(cls, selected_by_cluster, frame_idx_map, interleave:bool = True, **kwargs) -> list:
+    def clusters_to_list(cls, selected_by_cluster, interleave:bool = True, **kwargs) -> list:
         """
-        Turns list (per cluster) of lists of row indexes into single list of frame indexes.
+        Turns list (per cluster) of lists of frame index into single list of frame indexes.
 
         Args:
             selected_by_cluster: the list of lists of row indexes
@@ -252,9 +255,6 @@ class VideoFrameSuggestions:
             all_selected = list(itertools.chain.from_iterable(selected_by_cluster))
             all_selected.sort()
 
-        # convert sample index back into frame_idx
-        all_selected = cls.to_frame_idx_list(all_selected, frame_idx_map)
-
         return all_selected
 
 
@@ -265,9 +265,9 @@ if __name__ == "__main__":
 
     print(np.ptp(video[13][0]))
 
-    debug=True
+    debug=False
 
-    x = VideoFrameSuggestions.brisk(video=video, sample_step=10,
+    x = VideoFrameSuggestions.brisk(video=video, sample_step=5,
                 clusters=5, per_cluster=5,
                 return_clusters=debug)
     print(x)
