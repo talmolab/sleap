@@ -115,7 +115,7 @@ class MainWindow(QMainWindow):
     @filename.setter
     def filename(self, x):
         self._filename = x
-        self.setWindowTitle(x)
+        if x is not None: self.setWindowTitle(x)
 
     def initialize_gui(self):
 
@@ -454,15 +454,19 @@ class MainWindow(QMainWindow):
 
         if len(filename) == 0: return
 
-        self.filename = filename
-
         has_loaded = False
-        if filename.endswith(".json"):
+        if type(filename) == Labels:
+            self.labels = filename
+            filename = None
+            has_loaded = True
+        elif filename.endswith(".json"):
             self.labels = Labels.load_json(filename)
             has_loaded = True
         elif filename.endswith(".mat"):
             self.labels = Labels.load_mat(filename)
             has_loaded = True
+
+        self.filename = filename
 
         if has_loaded:
             self.changestack_clear()
@@ -1035,9 +1039,22 @@ class MainWindow(QMainWindow):
     def extractClip(self):
         start, end = self.player.seekbar.getSelection()
         if start < end:
-            clip_frames = self.video.get_frames(range(start, end))
-            clip_video = Video.from_numpy(clip_frames)
-            clip_window = QtVideoPlayer(video=clip_video)
+            clip_labeled_frames = [copy.copy(lf) for lf in self.labels.labeled_frames if lf.frame_idx in range(start, end)]
+            clip_video_frames = self.video.get_frames(range(start, end))
+            clip_video = Video.from_numpy(clip_video_frames)
+
+            # adjust video and frame_idx for clip labeled frames
+            for lf in clip_labeled_frames:
+                lf.video = clip_video
+                lf.frame_idx -= start
+
+            # create new labels object with clip
+            clip_labels = Labels(clip_labeled_frames)
+
+            # clip_window = QtVideoPlayer(video=clip_video)
+            clip_window = MainWindow()
+            clip_window.showMaximized()
+            clip_window.importData(clip_labels)
             clip_window.show()
 
     def previousLabeledFrameIndex(self):
