@@ -100,10 +100,25 @@ class VideoFrameSuggestions:
         return (flat_stack, frame_idx_map)
 
     @staticmethod
-    def brisk_feature_stack(video:Video) -> tuple:
-        return ([], [])
-        # brisk = cv2.BRISK_create()
-        # kps, descs = brisk.detectAndCompute(img, None)
+    def brisk_feature_stack(video:Video, sample_step:int = 5) -> tuple:
+        brisk = cv2.BRISK_create()
+
+        feature_stack = None
+        frame_idx_map = []
+        for frame_idx in range(1, video.frames, sample_step):
+            img = video[frame_idx][0]
+
+            kps, descs = brisk.detectAndCompute(img, None)
+
+            # img2 = cv2.drawKeypoints(img, kps, None, color=(0,255,0), flags=0)
+
+            if feature_stack is None:
+                feature_stack = descs
+            else:
+                feature_stack = np.concatenate((feature_stack, descs))
+            frame_idx_map.extend([frame_idx] * descs.shape[0])
+
+        return (feature_stack, frame_idx_map)
 
     @staticmethod
     def hog_feature_stack(video:Video, sample_step:int = 5) -> tuple:
@@ -128,7 +143,7 @@ class VideoFrameSuggestions:
 
     @staticmethod
     def to_frame_idx_list(selected_list:list, frame_idx_map:dict) -> list:
-        # return list(map(lambda x: int(x*sample_step), selected_list))
+        """Convert list of row indexes to list of frame indexes."""
         return list(map(lambda x: frame_idx_map[x], selected_list))
 
     @classmethod
@@ -151,7 +166,9 @@ class VideoFrameSuggestions:
                 feature_stack,
                 **kwargs)
 
-        if return_clusters: return selected_by_cluster
+        if return_clusters:
+            cluster_lists = list(map(lambda x: cls.to_frame_idx_list(x, frame_idx_map), selected_by_cluster))
+            return cluster_lists
 
         selected_list = cls.clusters_to_list(
                 selected_by_cluster=selected_by_cluster,
@@ -182,7 +199,6 @@ class VideoFrameSuggestions:
             for each cluster, a list of row indexes for rows in feature stack
         """
 
-
         stack_height = feature_stack.shape[0]
 
         # limit number of components by number of samples
@@ -198,11 +214,18 @@ class VideoFrameSuggestions:
 
         # take samples from each cluster
         selected_by_cluster = []
+        selected_set = set()
         for i in range(clusters):
-            bin,  = np.where(frame_labels==i)
-            # print(f"{i}: {len(bin)}")
-            samples_from_bin = np.random.choice(bin, min(len(bin), per_cluster), False)
+            cluster_items,  = np.where(frame_labels==i)
+
+            # remove items from cluster_items if they've already been sampled for another cluster
+            # TODO: should this be controlled by a param?
+            cluster_items = list(set(cluster_items) - selected_set)
+
+            # pick [per_cluster] items from this cluster
+            samples_from_bin = np.random.choice(cluster_items, min(len(cluster_items), per_cluster), False)
             selected_by_cluster.append(samples_from_bin)
+            selected_set = selected_set.union( set(samples_from_bin) )
 
         return selected_by_cluster
 
@@ -242,10 +265,10 @@ if __name__ == "__main__":
 
     print(np.ptp(video[13][0]))
 
-    debug=False
+    debug=True
 
-    x = VideoFrameSuggestions.pca_cluster(video=video, sample_step=10,
-                clusters=10, per_cluster=10,
+    x = VideoFrameSuggestions.brisk(video=video, sample_step=10,
+                clusters=5, per_cluster=5,
                 return_clusters=debug)
     print(x)
 
@@ -260,7 +283,7 @@ if __name__ == "__main__":
         for r in range(rows):
             for c in range(cols):
                 if c < len(x[r]):
-                    frame_idx = x[r][c] * 10
+                    frame_idx = x[r][c]
                     frame = video[frame_idx]
                     ax[r, c].imshow(frame[0].squeeze(), cmap="gray")
                     ax[r, c].set_title(f"frame {frame_idx}")
@@ -268,12 +291,24 @@ if __name__ == "__main__":
         plt.show()
 
     # brisk = cv2.BRISK_create()
-    # kps, descs = brisk.detectAndCompute(img, None)
 
-    # img2 = cv2.drawKeypoints(img, kps, None, color=(0,255,0), flags=0)
+    # feature_stack = None
+    # frame_idx_map = []
+    # for frame_idx in range(1, video.frames, 200):
+    #     img = video[frame_idx][0]
 
-    # plt.imshow(img2.squeeze(), cmap="gray")
-    # plt.show()
+    #     kps, descs = brisk.detectAndCompute(img, None)
+
+    #     # img2 = cv2.drawKeypoints(img, kps, None, color=(0,255,0), flags=0)
+
+    #     if feature_stack is None:
+    #         feature_stack = descs
+    #     else:
+    #         feature_stack = np.concatenate((feature_stack, descs))
+    #     frame_idx_map.extend([frame_idx] * descs.shape[0])
+
+    # print(f"final result: {feature_stack.shape}")
+    # print(frame_idx_map)
 
 # for a,b in zip(kps,descs):
 #   print(f"{a}: {b}")
