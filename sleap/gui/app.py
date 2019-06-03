@@ -755,13 +755,14 @@ class MainWindow(QMainWindow):
                         # Otherwise use the last instance added to previous frame.
                         copy_instance = prev_instances[-1]
                         from_prev_frame = True
-
         new_instance = Instance(skeleton=self.skeleton)
         for node in self.skeleton.nodes:
             if copy_instance is not None and node in copy_instance.nodes:
                 new_instance[node] = copy.copy(copy_instance[node])
             else:
-                new_instance[node] = Point(x=np.random.rand() * self.video.width * 0.5, y=np.random.rand() * self.video.height * 0.5, visible=True)
+                # mark the node as not "visible" if we're copying from a predicted instance without this node
+                is_visible = copy_instance is None or not hasattr(copy_instance, "score")#type(copy_instance) != PredictedInstance
+                new_instance[node] = Point(x=np.random.rand() * self.video.width * 0.5, y=np.random.rand() * self.video.height * 0.5, visible=is_visible)
         # If we're copying a predicted instance or from another frame, copy the track
         if hasattr(copy_instance, "score") or from_prev_frame:
             new_instance.track = copy_instance.track
