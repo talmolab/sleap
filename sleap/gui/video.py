@@ -117,6 +117,10 @@ class QtVideoPlayer(QWidget):
         return self.view.instances
 
     @property
+    def selectable_instances(self):
+        return self.view.selectable_instances
+
+    @property
     def predicted_instances(self):
         return self.view.predicted_instances
 
@@ -199,7 +203,7 @@ class QtVideoPlayer(QWidget):
         Args:
             show: Show if True, hide otherwise.
         """
-        for inst in self.instances:
+        for inst in self.selectable_instances:
             inst.showLabels(show)
 
     def showEdges(self, show):
@@ -208,19 +212,19 @@ class QtVideoPlayer(QWidget):
         Args:
             show: Show if True, hide otherwise.
         """
-        for inst in self.instances:
+        for inst in self.selectable_instances:
             inst.showEdges(show)
 
     def toggleLabels(self):
         """ Toggle current show/hide state of node labels for all instances.
         """
-        for inst in self.instances:
+        for inst in self.selectable_instances:
             inst.toggleLabels()
 
     def toggleEdges(self):
         """ Toggle current show/hide state of edges for all instances.
         """
-        for inst in self.instances:
+        for inst in self.selectable_instances:
             inst.toggleEdges()
 
     def zoomToFit(self):
@@ -440,6 +444,11 @@ class GraphicsView(QGraphicsView):
                 if type(item) == QtInstance and not item.predicted]
 
     @property
+    def selectable_instances(self):
+        return [item for item in self.scene.items(Qt.SortOrder.AscendingOrder)
+                if type(item) == QtInstance and item.selectable]
+
+    @property
     def predicted_instances(self):
         """
         Returns a list of predicted instances.
@@ -470,7 +479,7 @@ class GraphicsView(QGraphicsView):
     def nextSelection(self):
         """ Select next instance (or first, if none currently selected).
         """
-        instances = self.instances
+        instances = self.selectable_instances
         if len(instances) == 0: return
         select_inst = instances[0] # default to selecting first instance
         select_idx = 0
@@ -491,7 +500,7 @@ class GraphicsView(QGraphicsView):
         Args:
             select_idx: index of skeleton to select
         """
-        instances = self.instances if not from_all else self.all_instances
+        instances = self.selectable_instances if not from_all else self.all_instances
         self.clearSelection(signal=False)
         if select_idx < len(instances):
             for idx, instance in enumerate(instances):
@@ -555,10 +564,10 @@ class GraphicsView(QGraphicsView):
                 # When just a tap, see if there's an item underneath to select
                 clicked = self.scene.items(scenePos, Qt.IntersectsItemBoundingRect)
                 clicked_instances = [item for item in clicked
-                                     if type(item) == QtInstance and not item.predicted]
+                                     if type(item) == QtInstance and item.selectable]
                 # We only handle single instance selection so pick at most one from list
                 clicked_instance = clicked_instances[0] if len(clicked_instances) else None
-                for idx, instance in enumerate(self.instances):
+                for idx, instance in enumerate(self.selectable_instances):
                     instance.selected = (instance == clicked_instance)
                     # If we want to allow selection of multiple instances, do this:
                     # instance.selected = (instance in clicked)
@@ -1060,6 +1069,7 @@ class QtInstance(QGraphicsObject):
         self.instance = instance
         self.predicted = predicted
         self.color_predicted = color_predicted
+        self.selectable = not self.predicted or self.color_predicted
         self.color = color
         self.markerRadius = markerRadius
 
