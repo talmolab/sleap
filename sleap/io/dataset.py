@@ -14,6 +14,7 @@ import cattr
 import json
 import numpy as np
 import scipy.io as sio
+import h5py as h5
 
 from collections import MutableSequence
 from typing import List, Union
@@ -24,6 +25,7 @@ from sleap.skeleton import Skeleton, Node
 from sleap.instance import Instance, Point, LabeledFrame, \
     Track, PredictedPoint, PredictedInstance
 from sleap.io.video import Video
+from sleap.util import save_dict_to_hdf5
 
 """
 The version number to put in the Labels JSON format.
@@ -272,16 +274,22 @@ class Labels(MutableSequence):
         # Delete video
         self.videos.remove(video)
 
-
-    def to_json(self):
+    def to_dict(self):
         """
-        Serialize all labels in the underling list of LabeledFrame(s) to a
-        JSON structured string.
+        Serialize all labels in the underling list of LabeledFrames to a
+        dict structure. This function returns a nested dict structure
+        composed entirely of primitive python types. It is used to create
+        JSON and HDF5 serialized datasets.
 
         Returns:
-            The JSON representaiton of the string.
+            A dict containing the followings top level keys:
+            * version - The version of the dict/json serialization format.
+            * skeletons - The skeletons associated with these underlying instances.
+            * nodes - The nodes that the skeletons represent.
+            * videos - The videos that that the instances occur on.
+            * labels - The labeled frames
+            * tracks - The tracks associated with each instance.
         """
-
         # FIXME: Update list of nodes
         # We shouldn't have to do this here, but for some reason we're missing nodes
         # which are in the skeleton but don't have points (in the first instance?).
@@ -297,21 +305,31 @@ class Labels(MutableSequence):
         label_cattr.register_unstructure_hook(Node, lambda x: self.nodes.index(x))
         label_cattr.register_unstructure_hook(Track, lambda x: self.tracks.index(x))
 
-        idx_to_node = {i:self.nodes[i] for i in range(len(self.nodes))}
+        idx_to_node = {i: self.nodes[i] for i in range(len(self.nodes))}
 
         skeleton_cattr = Skeleton.make_cattr(idx_to_node)
 
         # Serialize the skeletons, videos, and labels
         dicts = {
-            'version': LABELS_JSON_FILE_VERSION,
             'skeletons': skeleton_cattr.unstructure(self.skeletons),
             'nodes': cattr.unstructure(self.nodes),
             'videos': cattr.unstructure(self.videos),
             'labels': label_cattr.unstructure(self.labeled_frames),
             'tracks': cattr.unstructure(self.tracks)
-         }
+        }
 
-        return json.dumps(dicts)
+        return dicts
+
+    def to_json(self):
+        """
+        Serialize all labels in the underling list of LabeledFrame(s) to a
+        JSON structured string.
+
+        Returns:
+            The JSON representaiton of the string.
+        """
+        return json.dumps(
+            {'version': LABELS_JSON_FILE_VERSION, **self.to_dict()})
 
     @staticmethod
     def save_json(labels: 'Labels', filename: str):
@@ -409,6 +427,80 @@ class Labels(MutableSequence):
 
             else:
                 return load_labels_json_old(data_path=filename, parsed_json=dicts)
+
+    def save_hdf5(self, filename: str, save_frame_data: bool = True):
+        """
+        Serialize the labels dataset to an HDF5 file.
+
+        Args:
+            filename: The file to serialize the dataset to.
+            save_frame_data: Whether to save the image frame data for any
+            labeled frame as well. This is useful for uploading the HDF5 for
+            model training when video files are to large to move. This will only
+            save video frames that have some labeled instances.
+
+        Returns:
+            None
+        """
+
+        # Unstructure this labels dataset to a bunch of dicts, same as we do for
+        # JSON serialization.
+        d = self.to_dict()
+
+        # Delete the file if it exists, we want to start from scratch since
+        # h5py truncates the file which seems to not actually delete data
+        # from the file.
+        if os.path.exists(filename):
+            os.unlink(filename)
+
+        with h5.File(filename, 'w') as f:
+
+            # Save the skeletons
+            Skeleton.save_all_hdf5(file=f, skeletons=self.skeletons)
+
+            # Save the frame data for the videos. For each video, we will
+            # save a dataset that contains only the frame data that has been
+            # labelled.
+            if save_frame_data:
+
+                #
+                # # All videos data will be put in the videos group
+                # if 'frames' not in f:
+                #     frames_group = f.create_group('frames', track_order=True)
+                # else:
+                #     frames_group = f.require_group('frames')
+
+                for v_idx, v in enumerate(self.videos):
+                    frame_idxs = [f.frame_idx for f in self.labeled_frames if v == f.video]
+
+                    frames_filename = f'frame_data_{v_idx}'
+                    import shutil
+                    if os.path.exists(frames_filename):
+                        shutil.rmtree(frames_filename)
+
+                    import imgstore
+                    store = imgstore.new_for_format('png',
+                                                    mode='w', basedir=frames_filename,
+                                                    imgshape=v.get_frame(0).shape,
+                                                    chunksize=1000)
+
+                    import time
+                    for frame_idx in frame_idxs:
+                        store.add_image(v.get_frame(frame_idx), frame_idx, time.time())
+
+                    store.close()
+
+                    #
+                    # dset = f.create_dataset(f"/frames/{v_idx}",
+                    #                         data=v.get_frames(frame_idxs),
+                    #                         compression="gzip")
+                    #
+                    # # Write the dataset to JSON string, then store it in a string
+                    # # attribute
+                    # dset.attrs[f"video_json"] = np.string_(json.dumps(d['videos'][v_idx]))
+
+            # Save the instance level data
+            Instance.save_hdf5(file=f, instances=self.all_instances)
 
     @staticmethod
     def _unwrap_mat_scalar(a):

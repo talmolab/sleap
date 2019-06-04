@@ -183,3 +183,8 @@ def test_instance_access():
 def test_load_labels_mat(mat_labels):
     assert len(mat_labels.nodes) == 6
     assert len(mat_labels) == 43
+
+
+def test_save_labels_hdf5(multi_skel_vid_labels):
+    multi_skel_vid_labels.save_hdf5(filename='test.h5', save_frame_data=True)
+    Labels.save_json(labels=multi_skel_vid_labels, filename='test.json')

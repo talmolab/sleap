@@ -15,8 +15,9 @@ dependencies:
 - pyzmq
 - pip
 - pip:
-    - opencv-python
+    - opencv-python==3.4.2.17
     - PySide2==5.12.0
     - imgaug
     - cattrs==1.0.0rc0
     - qimage2ndarray==1.8
+    - imgstore
