@@ -1247,9 +1247,9 @@ class QtInstance(QGraphicsObject):
         """
         pass
 
-def video_demo(labels):
+def video_demo(labels, standalone=False):
     video = labels.videos[0]
-    app = QApplication([])
+    if standalone: app = QApplication([])
     window = QtVideoPlayer(video=video)
 
 
@@ -1278,7 +1278,7 @@ def video_demo(labels):
     window.show()
     window.plot()
 
-    app.exec_()
+    if standalone: app.exec_()
 
 if __name__ == "__main__":
 
