@@ -1,6 +1,7 @@
 """ Data generation routines """
 
 import numpy as np
+import math
 from sleap.io.dataset import Labels
 
 def generate_images(labels:Labels, scale=1.0, output_size=None):
@@ -55,8 +56,8 @@ def generate_confidence_maps(labels:Labels, sigma=5.0, scale=1.0, output_size=No
     for i, labeled_frame in enumerate(labels):
         for instance in labeled_frame.instances:
             for node in skeleton.nodes:
-                if instance[node].visible:
-                    j = skeleton.nodes.index(node)
+                if instance[node].visible and not math.isnan(instance[node].y) and not math.isnan(instance[node].y):
+                    j = skeleton.node_to_index(node.name)
                     confmaps[i, :, :, j] = np.maximum(
                         confmaps[i, :, :, j],
                         np.exp(-((YY - instance[node].y) ** 2 + (XX - instance[node].x) ** 2) / (2 * sigma ** 2))

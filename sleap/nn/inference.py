@@ -340,7 +340,7 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton,
 
         # Get teh predicted points for this predicted instance
         pts = {}
-        for node_name in skeleton.node_names:
+        for i, node_name in enumerate(skeleton.node_names):
             if match[i] >= 0:
                 match_idx = int(match[i])
                 pt = PredictedPoint(x=candidate[match_idx, 0], y=candidate[match_idx, 1],
