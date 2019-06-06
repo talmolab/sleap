@@ -316,7 +316,7 @@ class Instance:
         """
         return tuple(self._points.values())
 
-    def points_array(self, cached=False) -> np.ndarray:
+    def points_array(self, cached=False, invisible_as_nan=False) -> np.ndarray:
         """
         Return the instance's points in array form.
 
@@ -334,8 +334,8 @@ class Instance:
             pts = np.ndarray((len(self.skeleton.nodes), 2))
             for i, n in enumerate(self.skeleton.nodes):
                 p = self._points.get(n, Point())
-                pts[i, 0] = p.x
-                pts[i, 1] = p.y
+                pts[i, 0] = p.x if p.visible or not invisible_as_nan else np.nan
+                pts[i, 1] = p.y if p.visible or not invisible_as_nan else np.nan
 
             self._points_array_cache = pts
 
