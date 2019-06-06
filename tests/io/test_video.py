@@ -1,4 +1,6 @@
 import pytest
+import os
+
 import numpy as np
 
 from sleap.io.video import Video
@@ -76,6 +78,8 @@ def test_numpy_frames(small_robot_mp4_vid):
 @pytest.mark.parametrize("format", ['png', 'jpg', "h264/mkv"])
 def test_imgstore_video(small_robot_mp4_vid, tmpdir, format):
 
+    path = os.path.join(tmpdir, 'test_imgstore')
+
     # If format is video, test saving all the frames.
     if format == "h264/mkv":
        frame_indices = None
@@ -86,9 +90,9 @@ def test_imgstore_video(small_robot_mp4_vid, tmpdir, format):
     # video.
     if format == "png":
         # Check that the default format is "png"
-        imgstore_vid = small_robot_mp4_vid.to_imgstore('test_imgstore', frame_indices=frame_indices)
+        imgstore_vid = small_robot_mp4_vid.to_imgstore(path, frame_indices=frame_indices)
     else:
-        imgstore_vid = small_robot_mp4_vid.to_imgstore('test_imgstore', frame_indices=frame_indices, format=format)
+        imgstore_vid = small_robot_mp4_vid.to_imgstore(path, frame_indices=frame_indices, format=format)
 
     if frame_indices is None:
         assert small_robot_mp4_vid.num_frames == imgstore_vid.num_frames
