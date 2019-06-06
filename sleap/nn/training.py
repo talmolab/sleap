@@ -1,7 +1,7 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from time import time, sleep
 from datetime import datetime
+import os
 
 import tensorflow as tf
 import keras
@@ -17,6 +17,7 @@ from sleap.nn.architectures.common import conv
 from sleap.nn.architectures.hourglass import stacked_hourglass
 from sleap.nn.architectures.unet import unet, stacked_unet
 from sleap.nn.architectures.leap import leap_cnn
+from sleap.nn.monitor import LossViewer
 
 from multiprocessing import Process
 import zmq
@@ -43,7 +44,6 @@ class TrainingControllerZMQ(keras.callbacks.Callback):
 
     def on_batch_end(self, batch, logs=None):
         """ Called at the end of a training batch. """
-
         if self.socket.poll(self.timeout, zmq.POLLIN):
             msg = jsonpickle.decode(self.socket.recv_string())
             print(f"Received control message: {msg}")
@@ -335,56 +335,6 @@ def train(
     return model
 
 
-
-from PySide2 import QtCore, QtWidgets, QtGui, QtCharts
-class LossViewer(QtWidgets.QMainWindow):
-    def __init__(self, parent=None):
-        super(LossViewer, self).__init__(parent)
-
-        self.chart = QtCharts.QtCharts.QChart()
-
-        self.series = QtCharts.QtCharts.QScatterSeries()
-        pen = self.series.pen()
-        pen.setWidth(3)
-        # pen.setColor(r,g,b,alpha)
-        self.chart.addSeries(self.series)
-
-        self.chart.createDefaultAxes()
-        self.chart.axisX().setLabelFormat("%d")
-        self.chart.axisX().setTitleText("Batches")
-        self.chart.axisY().setTitleText("Loss")
-
-        self.chart.legend().hide()
-
-        self.chartView = QtCharts.QtCharts.QChartView(self.chart)
-        self.chartView.setRenderHint(QtGui.QPainter.Antialiasing);
-        self.setCentralWidget(self.chartView)
-
-        self.X = []
-        self.Y = []
-        self.t0 = None
-
-    def add_datapoint(self, x, y):
-        self.series.append(x, y)
-
-        self.X.append(x)
-        self.Y.append(y)
-
-        dx = 0.5
-        dy = np.ptp(self.Y) * 0.02
-        self.chart.axisX().setRange(min(self.X) - dx, max(self.X) + dx)
-        self.chart.axisY().setRange(min(self.Y) - dy, max(self.Y) + dy)
-
-    def set_start_time(self, t0):
-        self.t0 = t0
-
-    def update_runtime(self):
-        if self.t0 is not None:
-            dt = time() - t0
-            dt_min, dt_sec = divmod(dt, 60)
-            self.chart.setTitle(f"Runtime: {int(dt_min):02}:{int(dt_sec):02}")
-
-
 if __name__ == "__main__":
     
     from sleap.io.dataset import Labels
@@ -397,19 +347,16 @@ if __name__ == "__main__":
     print(f"Generated training data. [{time() - t0:.2f}s]")
 
     proc = Process(target=train, args=(imgs, confmaps), kwargs=dict(val_size=0.1, batch_norm=False, num_filters=16, batch_size=4, num_epochs=100, steps_per_epoch=100, arch="unet"))
-
     proc.start()
 
+    ctx = zmq.Context()
+
     app = QtWidgets.QApplication()
-    loss_viewer = LossViewer()
+    loss_viewer = LossViewer(zmq_context = ctx)
     loss_viewer.resize(600, 400)
     loss_viewer.show()
     app.setQuitOnLastWindowClosed(True)
     app.processEvents()
-
-    # sleep(15)
-
-    ctx = zmq.Context()
 
     # Controller
     ctrl = ctx.socket(zmq.PUB)

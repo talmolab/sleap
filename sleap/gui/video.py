@@ -1247,6 +1247,38 @@ class QtInstance(QGraphicsObject):
         """
         pass
 
+def video_demo(labels, standalone=False):
+    video = labels.videos[0]
+    if standalone: app = QApplication([])
+    window = QtVideoPlayer(video=video)
+
+
+    cmap = np.array([
+        [0,   114,   189],
+        [217,  83,    25],
+        [237, 177,    32],
+        [126,  47,   142],
+        [119, 172,    48],
+        [77,  190,   238],
+        [162,  20,    47],
+        ])
+
+    def plot_instances(vp, frame_idx):
+
+        labeled_frame = [label for label in labels.labels if label.video == video and label.frame_idx == frame_idx][0]
+
+        for i, instance in enumerate(labeled_frame.instances_to_show):
+            # Plot instance
+            vp.addInstance(instance=instance, color=cmap[i%len(cmap)])
+        # hide node labels
+        vp.showLabels(False)
+
+    window.changedPlot.connect(plot_instances)
+
+    window.show()
+    window.plot()
+
+    if standalone: app.exec_()
 
 if __name__ == "__main__":
 

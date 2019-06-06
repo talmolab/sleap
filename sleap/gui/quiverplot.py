@@ -210,7 +210,8 @@ class QuiverPlot(QGraphicsObject):
             strides=(height * _strides[0], width * _strides[1], *_strides),
             writeable=False
         )
-        return np.mean(np.swapaxes(tiles,0,1), axis=(2,3))
+        if False: tiles = np.swapaxes(tiles,0,1) # why do we need to swap axes sometimes?
+        return np.mean(tiles, axis=(2,3))
 
     def boundingRect(self) -> QRectF:
         """Method called by Qt in order to determine whether object is in visible frame."""
@@ -223,6 +224,28 @@ class QuiverPlot(QGraphicsObject):
         painter.drawLines(self.points)
         pass
 
+
+def demo_pafs(pafs, video, standalone=False):
+    from sleap.gui.video import QtVideoPlayer
+
+    if standalone: app = QApplication([])
+
+    win = QtVideoPlayer(video=video)
+    win.setWindowTitle("pafs")
+    win.show()
+
+    def plot_fields(parent, i):
+
+        frame_pafs = pafs[parent.frame_idx, ...]
+        # frame_pafs = rotate_pafs(frame_pafs, theta)
+
+        aff_fields_item = MultiQuiverPlot(frame_pafs, show=None, decimation=1)
+        win.view.scene.addItem(aff_fields_item)
+
+    win.changedPlot.connect(plot_fields)
+    win.plot()
+
+    if standalone: app.exec_()
 
 if __name__ == "__main__":
 

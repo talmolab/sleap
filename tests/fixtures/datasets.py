@@ -6,6 +6,7 @@ from sleap.io.dataset import Labels
 
 TEST_JSON_LABELS = "tests/data/json_format_v1/centered_pair.json"
 TEST_JSON_PREDICTIONS = "tests/data/json_format_v2/centered_pair_predictions.json"
+TEST_JSON_MIN_LABELS = "tests/data/json_format_v2/minimal_instance.json"
 TEST_MAT_LABELS = "tests/data/mat/labels.mat"
 
 @pytest.fixture
@@ -16,6 +17,10 @@ def centered_pair_labels():
 @pytest.fixture
 def centered_pair_predictions():
     return Labels.load_json(TEST_JSON_PREDICTIONS)
+
+@pytest.fixture
+def min_labels():
+    return Labels.load_json(TEST_JSON_MIN_LABELS)
 
 @pytest.fixture
 def mat_labels():
