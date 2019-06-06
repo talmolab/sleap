@@ -111,11 +111,17 @@ def generate_confidence_maps(labels:Labels, sigma=5.0, scale=1.0, output_size=No
     return confmaps
 
 def raster_pafs(arr, c, x0, y0, x1, y1, sigma=5):
+    # skip if any nan
+    if np.isnan(np.sum((x0, y0, x1, y1))): return
+
     delta_x, delta_y = x1 - x0, y1 - y0
 
     edge_len = (delta_x ** 2 + delta_y ** 2) ** .5
     edge_x = delta_x / edge_len
     edge_y = delta_y / edge_len
+
+    print("lens")
+    print(edge_len, edge_x, edge_y)
 
     perp_x0 = x0 + (edge_y * sigma)
     perp_y0 = y0 - (edge_x * sigma)
@@ -126,14 +132,20 @@ def raster_pafs(arr, c, x0, y0, x1, y1, sigma=5):
     xx = perp_x0, perp_x0 + delta_x, perp_x1 + delta_x, perp_x1
     yy = perp_y0, perp_y0 + delta_y, perp_y1 + delta_y, perp_y1
 
-    from skimage.draw import polygon
+    from skimage.draw import polygon, polygon_perimeter
 
     points_y, points_x = polygon(yy, xx, (arr.shape[0], arr.shape[1]))
+    perim_y, perim_x = polygon_perimeter(yy, xx, shape=(arr.shape[0], arr.shape[1]), clip=True)
 
-    for x, y in zip(points_x, points_y):
-        # print(x,y)
-        arr[y, x, c] += edge_x
-        arr[y, x, c + 1] += edge_y
+    # make sure we don't include points more than once
+    # otherwise we'll add the edge vector to itself at that point
+    all_points = set(zip(points_x, points_y)).union(set(zip(perim_x, perim_y)))
+
+    for x, y in all_points:
+        arr[y, x, c] = edge_x
+        arr[y, x, c + 1] = edge_y
+
+    print(f"ptp {np.ptp(arr)}")
 
 def get_labels_edge_points_list(labels):
     return [(frame_idx, [instance_edge_points(instance) for instance in labeled_frame.instances]) for
@@ -192,11 +204,11 @@ if __name__ == "__main__":
 
     data_path = "C:/Users/tdp/OneDrive/code/sandbox/leap_wt_gold_pilot/centered_pair.json"
     if not os.path.exists(data_path):
-        data_path = "tests/data/json_format_v2/centered_pair_predictions.json"
-#         data_path = "tests/data/json_format_v2/minimal_instance.json"
+        # data_path = "tests/data/json_format_v2/centered_pair_predictions.json"
+        data_path = "tests/data/json_format_v2/minimal_instance.json"
 
     labels = Labels.load_json(data_path)
-    labels.labeled_frames = labels.labeled_frames[123:323:10]
+    # labels.labeled_frames = labels.labeled_frames[123:323:10]
 
     imgs = generate_images(labels)
     print("--imgs--")
@@ -218,7 +230,7 @@ if __name__ == "__main__":
     print(confmaps.dtype)
     print(np.ptp(confmaps))
 
-    demo_confmaps(confmaps, vid)
+    # demo_confmaps(confmaps, vid)
 
     pafs = generate_pafs(labels)
     print("--pafs--")
