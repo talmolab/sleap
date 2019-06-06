@@ -66,73 +66,82 @@ def generate_confidence_maps(labels:Labels, sigma=5.0, scale=1.0, output_size=No
     return confmaps
 
 
-def generate_pafs(labels:Labels, sigma=5.0, scale=1.0, output_size=None):
+def raster_pafs(arr, c, x0, y0, x1, y1, sigma=5):
+    delta_x, delta_y = x1 - x0, y1 - y0
+
+    edge_len = (delta_x ** 2 + delta_y ** 2) ** .5
+    edge_x = delta_x / edge_len
+    edge_y = delta_y / edge_len
+
+    perp_x0 = x0 + (edge_y * sigma)
+    perp_y0 = y0 - (edge_x * sigma)
+    perp_x1 = x0 - (edge_y * sigma)
+    perp_y1 = y0 + (edge_x * sigma)
+
+    # perp 0 -> perp 0 + delta -> perp 1 + delta -> perp 1 -> perp 0
+    xx = perp_x0, perp_x0 + delta_x, perp_x1 + delta_x, perp_x1
+    yy = perp_y0, perp_y0 + delta_y, perp_y1 + delta_y, perp_y1
+
+    from skimage.draw import polygon
+
+    points_y, points_x = polygon(yy, xx, (arr.shape[0], arr.shape[1]))
+
+    for x, y in zip(points_x, points_y):
+        # print(x,y)
+        arr[y, x, c] += edge_x
+        arr[y, x, c + 1] += edge_y
+
+
+def get_labels_edge_points_list(labels):
+    return [(frame_idx, [instance_edge_points(instance) for instance in labeled_frame.instances]) for
+            frame_idx, labeled_frame in enumerate(labels)]
+
+
+def instance_edge_points(instance):
+    skeleton = instance.skeleton
+    points = [(edge_idx, (edge_points_tuples(instance, src_node, dst_node)))
+              for edge_idx, (src_node, dst_node)
+              in enumerate(skeleton.edges)
+              if points_are_present(instance, src_node, dst_node)]
+    return points
+
+
+def edge_points_tuples(instance, src_node, dst_node):
+    x0, y0 = instance[src_node].x, instance[src_node].y
+    x1, y1 = instance[dst_node].x, instance[dst_node].y
+    # (instance[src_node].x, instance[src_node].y), (instance[dst_node].x, instance[dst_node].y)
+    # return np.array((x0, y0)), np.array((x1, y1))
+    return (x0, y0), (x1, y1)
+
+
+def points_are_present(instance, src_node, dst_node):
+    if src_node in instance and dst_node in instance and instance[src_node].visible and instance[dst_node].visible:
+        return True
+    else:
+        return False
+
+
+def generate_pafs(labels: Labels, sigma=5.0, scale=1.0, output_size=None):
     # TODO: multi-skeleton support
     skeleton = labels.skeletons[0]
 
     vid = labels.videos[0]
-    full_size = (vid.height, vid.width)
     if output_size is None:
-        output_size = (vid.height // (1/scale), vid.width // (1/scale))
+        output_size = (vid.height // (1 / scale), vid.width // (1 / scale))
 
     # TODO: throw warning for truncation errors
-    full_size = tuple(map(int, full_size))
     output_size = tuple(map(int, output_size))
-
-    # Pre-allocate coordinate grid
-    xv = np.linspace(0, full_size[1] - 1, output_size[1], dtype="float32")
-    yv = np.linspace(0, full_size[0] - 1, output_size[0], dtype="float32")
-    XX, YY = np.meshgrid(xv, yv)
-    coord_grid = np.stack((XX, YY), axis=0)
 
     # Pre-allocate output array
     num_frames = len(labels)
-    channel_edge_idx = np.repeat(np.arange(len(skeleton.edges)), 2)
-    num_channels = len(channel_edge_idx)
+    num_channels = len(skeleton.edges) * 2
+
     pafs = np.zeros((num_frames, output_size[0], output_size[1], num_channels), dtype="float32")
 
-    for i, labeled_frame in enumerate(labels):
-        for instance in labeled_frame:
-            for e, (src_node, dst_node) in enumerate(skeleton.edges):
-                # Ignore edge if either node is not present or visible in the instance
-                if not (src_node in instance and dst_node in instance): continue
-                if not (instance[src_node].visible and instance[dst_node].visible): continue
-
-                # Pull out coordinates
-                src = np.array((instance[src_node].x, instance[src_node].y))
-                dst = np.array((instance[dst_node].x, instance[dst_node].y))
-
-                # Compute distance between points
-                edge_length = np.linalg.norm(dst - src)
-
-                # Skip if points are on the same coordinate
-                if edge_length == 0: continue
-
-                # Compute unit vectors (i.e., norm == magnitude == 1)
-                edge_vec = (dst - src) / edge_length # along the edge
-                edge_perp_vec = np.array((-edge_vec[1], edge_vec[0])) # orthogonal to edge
-
-                # Compute coordinate grid relative to the source point
-                rel_grid = coord_grid - src[:, None, None] # [X, Y] x height x width
-
-                # Compute signed distance along the edge at each grid point
-                edge_dist_grid = np.sum(edge_vec[:, None, None] * rel_grid, axis=0) # height x width
-
-                # Compute absolute distance perpendicular to the edge at each grid point
-                edge_perp_dist_grid = np.abs(np.sum(edge_perp_vec[:, None, None] * rel_grid, axis=0))
-
-                # Compute mask for edge PAF based on edge distances
-                paf_mask = np.logical_and.reduce((
-                    edge_dist_grid >= -sigma, # -sigma units before src along the edge
-                    edge_dist_grid <= (edge_length + sigma), # +sigma units after dst along the edge
-                    edge_perp_dist_grid <= sigma, # sigma units perpendicular from edge
-                    ), dtype="float32")
-
-                # Create PAF by placing the edge direction vector at each masked coordinate
-                paf = np.moveaxis(edge_vec[:, None, None], 0, 2) * paf_mask[:, :, None]
-
-                # Accumulate
-                pafs[i][:, :, channel_edge_idx == e] += paf
+    for frame_idx, frame_instance_edges in get_labels_edge_points_list(labels):
+        for inst_edges in frame_instance_edges:
+            for c, (src, dst) in inst_edges:
+                raster_pafs(pafs[frame_idx], c * 2, *src, *dst, sigma)
 
     # Clip PAFs to valid range (in-place)
     np.clip(pafs, -1.0, 1.0, out=pafs)
@@ -188,16 +197,7 @@ if __name__ == "__main__":
     print(pafs.dtype)
     print(np.ptp(pafs))
 
-    window_pafs = QtVideoPlayer(video=vid)
-    window_pafs.setWindowTitle("pafs")
-    window_pafs.show()
-
-    def plot_fields(parent, i):
-        aff_fields_item = MultiQuiverPlot(pafs[parent.frame_idx,...], show=None, decimation=1)
-        window_pafs.view.scene.addItem(aff_fields_item)
-
-    window_pafs.changedPlot.connect(plot_fields)
-    window_pafs.plot()
+    demo_pafs(pafs, video)
 
     app.exec_()
 
