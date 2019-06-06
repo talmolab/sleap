@@ -168,15 +168,11 @@ if __name__ == "__main__":
 
     from PySide2 import QtWidgets
     from sleap.io.video import Video
-    from sleap.gui.video import QtVideoPlayer
-    from sleap.gui.confmapsplot import ConfMapsPlot
-    from sleap.gui.quiverplot import MultiQuiverPlot
+    from sleap.gui.confmapsplot import demo_confmaps
+    from sleap.gui.quiverplot import demo_pafs
 
     app = QtWidgets.QApplication([])
     vid = Video.from_numpy(imgs * 255)
-    conf_window = QtVideoPlayer(video=vid)
-    conf_window.setWindowTitle("confmaps")
-    conf_window.show()
 
     confmaps = generate_confidence_maps(labels)
     print("--confmaps--")
@@ -184,12 +180,7 @@ if __name__ == "__main__":
     print(confmaps.dtype)
     print(np.ptp(confmaps))
 
-    def plot_confmaps(parent, item_idx):
-        frame_conf_map = ConfMapsPlot(confmaps[parent.frame_idx,...])
-        conf_window.view.scene.addItem(frame_conf_map)
-
-    conf_window.changedPlot.connect(plot_confmaps)
-    conf_window.plot()
+    demo_confmaps(confmaps, vid)
 
     pafs = generate_pafs(labels)
     print("--pafs--")
@@ -197,48 +188,6 @@ if __name__ == "__main__":
     print(pafs.dtype)
     print(np.ptp(pafs))
 
-    demo_pafs(pafs, video)
+    demo_pafs(pafs, vid)
 
     app.exec_()
-
-#     import matplotlib.pyplot as plt
-# 
-#     cmap = np.array([
-#         [0,   114,   189],
-#         [217,  83,    25],
-#         [237, 177,    32],
-#         [126,  47,   142],
-#         [119, 172,    48],
-#         [77,  190,   238],
-#         [162,  20,    47],
-#         ]).astype("float32") / 255
-# 
-#     idx = 0
-#     img = imgs[idx]
-#     confmap = confmaps[idx]
-#     paf = pafs[idx]
-# 
-#     plt.figure()
-#     plt.subplot(1,3,1)
-#     plt.imshow(img.squeeze(), cmap="gray")
-# 
-#     plt.subplot(1,3,2)
-#     plt.imshow(img.squeeze(), cmap="gray")
-#     for i in range(confmap.shape[-1]):
-#         col = cmap[i % len(cmap)]
-#         I = confmap[...,i][...,None] * col[None][None]
-#         I = np.concatenate((I, confmap[...,i][...,None]), axis=-1) # add alpha
-#         plt.imshow(I)
-# 
-#     # Warning: VERY SLOW to plot these vector fields in matplotlib
-#     # Reimplement in Qt with polyline or 3 lines?
-#     plt.subplot(1,3,3)
-#     plt.imshow(img.squeeze(), cmap="gray")
-#     for e in range(paf.shape[-1] // 2):
-#         col = cmap[e % len(cmap)]
-#         paf_x = paf[..., e * 2]
-#         paf_y = paf[..., (e * 2) + 1]
-#         plt.quiver(np.arange(paf.shape[1]), np.arange(paf.shape[0]), paf_x, paf_y, color=col,
-#             angles="xy", scale=1, scale_units="xy")
-# 
-#     plt.show()
