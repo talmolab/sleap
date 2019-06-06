@@ -282,10 +282,15 @@ class ImgStoreVideo:
 
     Args:
         file: The name of the file or directory to the imgstore.
-        format: The
+        index_by_original: ImgStores are great for storing a collection of frame
+        selected frames from an larger video. If the index_by_original is set to
+        True than the get_frame function will accept the original frame numbers of
+        from original video. If False, then it will accept the frame index from the
+        store directly.
     """
 
     file: str = attr.ib(default=None)
+    index_by_original: bool = attr.ib(default=True)
 
     def __attrs_post_init__(self):
 
@@ -327,19 +332,35 @@ class ImgStoreVideo:
     def filename(self):
         return self.file
 
-    def get_frame(self, idx) -> np.ndarray:
+    def get_frame(self, frame_number) -> np.ndarray:
         """
         Get a frame from the underlying ImgStore video data.
 
         Args:
-            idx: The index of the frame to get.
+            frame_num: The number of the frame to get. If index_by_original is set to True,
+            then this number should actually be a frame index withing the imgstore. That is,
+            if there are 4 frames in the imgstore, this number shoulde be from 0 to 3.
 
         Returns:
             The numpy.ndarray representing the video frame data.
         """
-        img, (frame_number, frame_timestamp) = self.__store.get_image(idx)
+        if self.index_by_original:
+            img, (frame_number, frame_timestamp) = self.__store.get_image(frame_number)
+        else:
+            img, (frame_number, frame_timestamp) = self.__store.get_image(frame_number=None,
+                                                                          frame_index=frame_number)
 
         return img
+
+        @property
+        def imgstore(self):
+            """
+            Get the underlying ImgStore object for this Video.
+
+            Returns:
+                The imgstore that is backing this video object.
+            """
+            return self.__store
 
 
 @attr.s(auto_attribs=True, cmp=False)
@@ -521,26 +542,34 @@ class Video:
     def to_numpy(cls, frame_data: np.array, file_name: str):
         np.save(file_name, frame_data, 'w')
 
-    def to_imgstore(self, path, frame_indices: List[int] = None, format: str = "png"):
+    def to_imgstore(self, path,
+                    frame_numbers: List[int] = None,
+                    format: str = "png",
+                    index_by_original: bool = True):
         """
         Read frames from an arbitrary video backend and store them in a loopbio imgstore.
         This should facilitate conversion of any video to a loopbio imgstore.
 
         Args:
             path: Filename or directory name to store imgstore.
-            frame_indices: A list of frame indices from the video to save. If None save
+            frame_numbers: A list of frame numbers from the video to save. If None save
             the entire video.
             format: By default it will create a DirectoryImgStore with lossless PNG format.
             Unless the frame_indices = None, in which case, it will default to h264/mkv
             format for video.
+            index_by_original: ImgStores are great for storing a collection of frame
+            selected frames from an larger video. If the index_by_original is set to
+            True than the get_frame function will accept the original frame numbers of
+            from original video. If False, then it will accept the frame index from the
+            store directly.
 
         Returns:
             A new Video object that references the imgstore.
         """
 
         # If the user has not provided a list of frames to store, store them all.
-        if frame_indices is None:
-            frame_indices = range(self.num_frames)
+        if frame_numbers is None:
+            frame_numbers = range(self.num_frames)
 
             # We probably don't want to store all the frames as the PNG default,
             # lets use h264 with mkv by default.
@@ -558,10 +587,10 @@ class Video:
                                         imgshape=self.get_frame(0).shape,
                                         chunksize=1000)
         import time
-        for frame_idx in frame_indices:
-            store.add_image(self.get_frame(frame_idx), frame_idx, time.time())
+        for frame_num in frame_numbers:
+            store.add_image(self.get_frame(frame_num), frame_num, time.time())
 
         store.close()
 
         # Return an ImgStoreVideo object referencing this new imgstore.
-        return self.__class__(backend=ImgStoreVideo(file=path))
+        return self.__class__(backend=ImgStoreVideo(file=path, index_by_original=index_by_original))

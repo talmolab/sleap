@@ -90,14 +90,23 @@ def test_imgstore_video(small_robot_mp4_vid, tmpdir, format):
     # video.
     if format == "png":
         # Check that the default format is "png"
-        imgstore_vid = small_robot_mp4_vid.to_imgstore(path, frame_indices=frame_indices)
+        imgstore_vid = small_robot_mp4_vid.to_imgstore(path, frame_numbers=frame_indices)
     else:
-        imgstore_vid = small_robot_mp4_vid.to_imgstore(path, frame_indices=frame_indices, format=format)
+        imgstore_vid = small_robot_mp4_vid.to_imgstore(path, frame_numbers=frame_indices, format=format)
 
     if frame_indices is None:
         assert small_robot_mp4_vid.num_frames == imgstore_vid.num_frames
+
+        # Make sure we can the first 10 frames, takes to long to read them all.
+        for i in range(10):
+            assert type(imgstore_vid.get_frame(i)) == np.ndarray
+
     else:
         assert(imgstore_vid.num_frames == len(frame_indices))
+
+        # Make sure we can read arbitrary frames by imgstore frame number
+        for i in frame_indices:
+            assert type(imgstore_vid.get_frame(i)) == np.ndarray
 
     assert(imgstore_vid.channels == 3)
     assert(imgstore_vid.height == 320)
@@ -106,3 +115,32 @@ def test_imgstore_video(small_robot_mp4_vid, tmpdir, format):
     # Check the image data is exactly the same when lossless is used.
     if format == "png":
         assert np.allclose(imgstore_vid.get_frame(0), small_robot_mp4_vid.get_frame(0), rtol=0.91)
+
+
+def test_imgstore_indexing(small_robot_mp4_vid, tmpdir):
+    """
+    Test different types of indexing (by frame number or index) supported
+    by only imgstore videos.
+    """
+    path = os.path.join(tmpdir, 'test_imgstore')
+
+    frame_indices = [20, 40, 15]
+
+    imgstore_vid = small_robot_mp4_vid.to_imgstore(path, frame_numbers=frame_indices, index_by_original=False)
+
+    # Index by frame index in imgstore
+    frames = imgstore_vid.get_frames([0, 1, 2])
+    assert frames.shape == (3, 320, 560, 3)
+
+    with pytest.raises(ValueError):
+        imgstore_vid.get_frames(frame_indices)
+
+    # Now re-create the imgstore with frame number indexing, (the default)
+    imgstore_vid = small_robot_mp4_vid.to_imgstore(path, frame_numbers=frame_indices)
+
+    # Index by frame index in imgstore
+    frames = imgstore_vid.get_frames(frame_indices)
+    assert frames.shape == (3, 320, 560, 3)
+
+    with pytest.raises(ValueError):
+        imgstore_vid.get_frames([0, 1, 2])

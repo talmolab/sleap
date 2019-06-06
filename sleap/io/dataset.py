@@ -394,7 +394,7 @@ class Labels(MutableSequence):
 
             # Now go through the frame indices in each labeled frame and patch them up to
             # these imgstore objects.
-
+            d['videos'] = cattr.unstructure(new_vids)
 
         return json.dumps(
             {'version': LABELS_JSON_FILE_VERSION, **d})
@@ -592,7 +592,7 @@ class Labels(MutableSequence):
             frame_idxs = [f.frame_idx for f in self.labeled_frames if v == f.video]
 
             frames_filename = f'{output_dir}/frame_data_{v_idx}'
-            vid = v.to_imgstore(path=frames_filename, frame_indices=frame_idxs, format='png')
+            vid = v.to_imgstore(path=frames_filename, frame_numbers=frame_idxs, format='png')
             imgstore_vids.append(vid)
 
         return imgstore_vids
