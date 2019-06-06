@@ -120,9 +120,6 @@ def raster_pafs(arr, c, x0, y0, x1, y1, sigma=5):
     edge_x = delta_x / edge_len
     edge_y = delta_y / edge_len
 
-    print("lens")
-    print(edge_len, edge_x, edge_y)
-
     perp_x0 = x0 + (edge_y * sigma)
     perp_y0 = y0 - (edge_x * sigma)
     perp_x1 = x0 - (edge_y * sigma)
@@ -144,8 +141,6 @@ def raster_pafs(arr, c, x0, y0, x1, y1, sigma=5):
     for x, y in all_points:
         arr[y, x, c] = edge_x
         arr[y, x, c + 1] = edge_y
-
-    print(f"ptp {np.ptp(arr)}")
 
 def get_labels_edge_points_list(labels):
     return [(frame_idx, [instance_edge_points(instance) for instance in labeled_frame.instances]) for
