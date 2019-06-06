@@ -290,8 +290,8 @@ class LabeledFrameTableModel(QtCore.QAbstractTableModel):
             idx = index.row()
             prop = self._props[index.column()]
 
-            if len(self.labeled_frame.instances) > (idx - 1):
-                instance = self.labeled_frame.instances[idx]
+            if len(self.labeled_frame.instances_to_show) > (idx - 1):
+                instance = self.labeled_frame.instances_to_show[idx]
 
                 if role == Qt.DisplayRole:
                     if prop == "points":
@@ -307,7 +307,7 @@ class LabeledFrameTableModel(QtCore.QAbstractTableModel):
         return None
 
     def rowCount(self, parent):
-        return len(self.labeled_frame.instances) if self.labeled_frame is not None else 0
+        return len(self.labeled_frame.instances_to_show) if self.labeled_frame is not None else 0
 
     def columnCount(self, parent):
         return len(LabeledFrameTableModel._props)
@@ -325,7 +325,7 @@ class LabeledFrameTableModel(QtCore.QAbstractTableModel):
         if role == Qt.EditRole:
             idx = index.row()
             prop = self._props[index.column()]
-            instance = self.labeled_frame.instances[idx]
+            instance = self.labeled_frame.instances_to_show[idx]
             if prop == "track":
                 if len(value) > 0:
                     instance.track.name = value
@@ -340,7 +340,7 @@ class LabeledFrameTableModel(QtCore.QAbstractTableModel):
         f = Qt.ItemIsEnabled | Qt.ItemIsSelectable
         if index.isValid():
             idx = index.row()
-            instance = self.labeled_frame.instances[idx]
+            instance = self.labeled_frame.instances_to_show[idx]
             prop = self._props[index.column()]
             if prop == "track" and instance.track is not None:
                 f |= Qt.ItemIsEditable
@@ -402,6 +402,75 @@ class SkeletonNodeModel(QtCore.QStringListModel):
 
     def columnCount(self, parent):
         return 1
+
+    def flags(self, index: QtCore.QModelIndex):
+        return Qt.ItemIsEnabled | Qt.ItemIsSelectable
+
+
+class SuggestionsTable(QTableView):
+    """Table view widget backed by a custom data model for displaying
+    lists of Video instances. """
+    def __init__(self, labels):
+        super(SuggestionsTable, self).__init__()
+        self.setModel(SuggestionsTableModel(labels))
+        self.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.setSelectionMode(QAbstractItemView.SingleSelection)
+
+class SuggestionsTableModel(QtCore.QAbstractTableModel):
+    _props = ["video", "frame", "labeled",]
+
+    def __init__(self, labels):
+        super(SuggestionsTableModel, self).__init__()
+        self.labels = labels
+
+    @property
+    def labels(self):
+        return self._labels
+
+    @labels.setter
+    def labels(self, val):
+        self.beginResetModel()
+
+        self._labels = val
+        self._suggestions_list = self.labels.get_suggestions()
+
+        self.endResetModel()
+
+    def data(self, index: QtCore.QModelIndex, role=Qt.DisplayRole):
+        if role == Qt.DisplayRole and index.isValid():
+            idx = index.row()
+            prop = self._props[index.column()]
+
+            if idx < self.rowCount():
+                video = self._suggestions_list[idx][0]
+                frame_idx = self._suggestions_list[idx][1]
+
+                if prop == "video":
+                    return os.path.basename(video.filename) # just show the name, not full path
+                elif prop == "frame":
+                    return frame_idx + 1 # start at frame 1 rather than 0
+                elif prop == "labeled":
+                    # show how many labeled instances are in this frame
+                    val = self._labels.instance_count(video, frame_idx)
+                    val = str(val) if val > 0 else ""
+                    return val
+
+        return None
+
+    def rowCount(self, *args):
+        return len(self._suggestions_list)
+
+    def columnCount(self, *args):
+        return len(self._props)
+
+    def headerData(self, section, orientation: QtCore.Qt.Orientation, role=Qt.DisplayRole):
+        if role == Qt.DisplayRole:
+            if orientation == QtCore.Qt.Horizontal:
+                return self._props[section]
+            elif orientation == QtCore.Qt.Vertical:
+                return section
+
+        return None
 
     def flags(self, index: QtCore.QModelIndex):
         return Qt.ItemIsEnabled | Qt.ItemIsSelectable

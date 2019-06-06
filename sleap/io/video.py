@@ -1,14 +1,16 @@
 """ Video reading and writing interfaces for different formats. """
 
 import os
+import shutil
 
 import h5py as h5
 import cv2
+import imgstore
 import numpy as np
 import attr
 import cattr
 
-from typing import Iterable, Union
+from typing import Iterable, Union, List
 
 
 @attr.s(auto_attribs=True, cmp=False)
@@ -272,6 +274,75 @@ class NumpyVideo:
 
 
 @attr.s(auto_attribs=True, cmp=False)
+class ImgStoreVideo:
+    """
+    Video data stored as an ImgStore dataset. See: https://github.com/loopbio/imgstore
+    This class is just a lightweight wrapper for reading such datasets as videos sources
+    for sLEAP.
+
+    Args:
+        file: The name of the file or directory to the imgstore.
+        format: The
+    """
+
+    file: str = attr.ib(default=None)
+
+    def __attrs_post_init__(self):
+
+        # If the filename does not contain metadata.yaml, append it to the file
+        # assuming that this is a directory that contains the imgstore.
+        if 'metadata.yaml' not in self.file:
+            self.file = os.path.join(self.file, 'metadata.yaml')
+
+        # Open the imgstore
+        self.__store = imgstore.new_for_filename(self.file)
+
+        # Read a frame so we can compute shape an such
+        self.__img, (frame_number, frame_timestamp) = self.__store.get_next_image()
+
+    # The properties and methods below complete our contract with the
+    # higher level Video interface.
+
+    @property
+    def frames(self):
+        return self.__store.frame_count
+
+    @property
+    def channels(self):
+        return self.__img.shape[2]
+
+    @property
+    def width(self):
+        return self.__img.shape[1]
+
+    @property
+    def height(self):
+        return self.__img.shape[0]
+
+    @property
+    def dtype(self):
+        return self.__img.dtype
+
+    @property
+    def filename(self):
+        return self.file
+
+    def get_frame(self, idx) -> np.ndarray:
+        """
+        Get a frame from the underlying ImgStore video data.
+
+        Args:
+            idx: The index of the frame to get.
+
+        Returns:
+            The numpy.ndarray representing the video frame data.
+        """
+        img, (frame_number, frame_timestamp) = self.__store.get_image(idx)
+
+        return img
+
+
+@attr.s(auto_attribs=True, cmp=False)
 class Video:
     """
     The top-level interface to any Video data used by sLEAP is represented by
@@ -425,7 +496,12 @@ class Video:
         Create an instance of a video object from a filename, auto-detecting the backend.
 
         Args:
-            file: The path to the video file
+            file: The path to the video file. Currently supported types are:
+
+            * Media Videos - AVI, MP4, etc. handled by OpenCV directly
+            * HDF5 Datasets - .h5 files
+            * Numpy Arrays - npy files
+            * imgstore datasets - produced by loopbio's Motif recording system. See: https://github.com/loopbio/imgstore.
 
         Returns:
             A Video object with the detected backend
@@ -436,9 +512,56 @@ class Video:
             return cls(backend=NumpyVideo(file=file, *args, **kwargs))
         elif file.lower().endswith(("mp4", "avi")):
             return cls(backend=MediaVideo(filename=file, *args, **kwargs))
+        elif os.path.isdir(file) or "metadata.yaml" in file:
+            return cls(backend=ImgStoreVideo(file=file, *args, **kwargs))
         else:
             raise ValueError("Could not detect backend for specified filename.")
 
     @classmethod
     def to_numpy(cls, frame_data: np.array, file_name: str):
         np.save(file_name, frame_data, 'w')
+
+    def to_imgstore(self, path, frame_indices: List[int] = None, format: str = "png"):
+        """
+        Read frames from an arbitrary video backend and store them in a loopbio imgstore.
+        This should facilitate conversion of any video to a loopbio imgstore.
+
+        Args:
+            path: Filename or directory name to store imgstore.
+            frame_indices: A list of frame indices from the video to save. If None save
+            the entire video.
+            format: By default it will create a DirectoryImgStore with lossless PNG format.
+            Unless the frame_indices = None, in which case, it will default to h264/mkv
+            format for video.
+
+        Returns:
+            A new Video object that references the imgstore.
+        """
+
+        # If the user has not provided a list of frames to store, store them all.
+        if frame_indices is None:
+            frame_indices = range(self.num_frames)
+
+            # We probably don't want to store all the frames as the PNG default,
+            # lets use h264 with mkv by default.
+            format = "h264/mkv"
+
+        # Delete the imgstore if it already exists.
+        if os.path.exists(path):
+            if os.path.isfile(path):
+                os.remove(path)
+            if os.path.isdir(path):
+                shutil.rmtree(path, ignore_errors=True)
+
+        store = imgstore.new_for_format(format,
+                                        mode='w', basedir=path,
+                                        imgshape=self.get_frame(0).shape,
+                                        chunksize=1000)
+        import time
+        for frame_idx in frame_indices:
+            store.add_image(self.get_frame(frame_idx), frame_idx, time.time())
+
+        store.close()
+
+        # Return an ImgStoreVideo object referencing this new imgstore.
+        return self.__class__(backend=ImgStoreVideo(file=path))
