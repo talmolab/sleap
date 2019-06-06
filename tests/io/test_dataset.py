@@ -185,6 +185,14 @@ def test_load_labels_mat(mat_labels):
     assert len(mat_labels) == 43
 
 
+def test_save_labels_with_frame_data(multi_skel_vid_labels, tmpdir):
+    """
+    Test saving and loading a labels dataset with frame data included
+    as JSON.
+    """
+    filename = os.path.join(tmpdir, 'test.json')
+    Labels.save_json(multi_skel_vid_labels, filename=filename, save_frame_data=True)
+
 def test_save_labels_hdf5(multi_skel_vid_labels):
     multi_skel_vid_labels.save_hdf5(filename='test.h5', save_frame_data=False)
     Labels.save_json(labels=multi_skel_vid_labels, filename='test.json')

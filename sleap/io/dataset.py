@@ -12,7 +12,9 @@ import os
 import attr
 import cattr
 import json
-import gzip
+import copy
+import shutil
+import tempfile
 import numpy as np
 import scipy.io as sio
 import h5py as h5
@@ -362,9 +364,10 @@ class Labels(MutableSequence):
 
         # Serialize the skeletons, videos, and labels
         dicts = {
+            'version': LABELS_JSON_FILE_VERSION,
             'skeletons': skeleton_cattr.unstructure(self.skeletons),
             'nodes': cattr.unstructure(self.nodes),
-            'videos': cattr.unstructure(self.videos),
+            'videos': Video.cattr().unstructure(self.videos),
             'labels': label_cattr.unstructure(self.labeled_frames),
             'tracks': cattr.unstructure(self.tracks),
             'suggestions': label_cattr.unstructure(self.suggestions)
@@ -372,7 +375,7 @@ class Labels(MutableSequence):
 
         return dicts
 
-    def to_json(self, save_frame_data: bool = True):
+    def to_json(self):
         """
         Serialize all labels in the underling list of LabeledFrame(s) to a
         JSON structured string.
@@ -381,27 +384,12 @@ class Labels(MutableSequence):
             The JSON representaiton of the string.
         """
 
-        # Unstructure the data into dicts.
-        d = self.to_dict()
-
-        # If we are saving frame data along with the datasets. We will replace videos with
-        # new video objects that represent video data from just the labeled frames.
-        if save_frame_data:
-
-            # Create a set of new Video objects with imgstore backends for just the
-            # labeled frames. We will then replace each video with this new video
-            new_vids = self._save_frame_data_imgstore()
-
-            # Now go through the frame indices in each labeled frame and patch them up to
-            # these imgstore objects.
-            d['videos'] = cattr.unstructure(new_vids)
-
-        return json.dumps(
-            {'version': LABELS_JSON_FILE_VERSION, **d})
+        # Unstructure the data into dicts and dump to JSON.
+        return json.dumps(self.to_dict())
 
     @staticmethod
     def save_json(labels: 'Labels', filename: str,
-                  compress: bool = True,
+                  compress: bool = False,
                   save_frame_data: bool = False):
         """
         Save a Labels instance to a JSON format.
@@ -409,16 +397,54 @@ class Labels(MutableSequence):
         Args:
             labels: The labels dataset to save.
             filename: The filename to save the data to.
-            compress: Should the data be GZIP compressed or not.
-            save_frame_data: Whether to save the image data for each frame as well.
+            compress: Should the data be zip compressed or not? If True, the JSON will be
+            compressed using Python's shutil.make_archive command into a PKZIP zip file. If
+            compress is True then filename will have a .zip appended to it.
+            save_frame_data: Whether to save the image data for each frame as well. For each
+            video in the dataset, all frames that have labels will be stored as an imgstore
+            dataset. If save_frame_data is True then compress will be forced to True since
+            the archive must contain both the JSON data and image data stored in ImgStores.
 
         Returns:
             None
         """
-        json_str = labels.to_json(save_frame_data=save_frame_data)
 
-        with open(filename, 'w') as file:
-            file.write(json_str)
+        # Lets make a temporary directory to store the image frame data or pre-compressed json
+        # in case we need it.
+        with tempfile.TemporaryDirectory() as tmp_dir:
+
+            # If we are saving frame data along with the datasets. We will replace videos with
+            # new video object that represent video data from just the labeled frames.
+            if save_frame_data:
+
+                # Create a set of new Video objects with imgstore backends. One for each
+                # of the videos. We will only include the labeled frames though. We will
+                # then replace each video with this new video
+                new_videos = labels.save_frame_data_imgstore(output_dir=tmp_dir)
+
+                # Convert to a dict, not JSON yet, because we need to patch up the videos
+                d = labels.to_dict()
+                d['videos'] = Video.cattr().unstructure(new_videos)
+
+                # We can't call Labels.to_json, so we need to do this here. Not as clean as I
+                # would like.
+                json_str = json.dumps(d)
+            else:
+                json_str = labels.to_json()
+
+            if compress or save_frame_data:
+
+                # Write the json to the tmp directory, we will zip it up with the frame data.
+                with open(os.path.join(tmp_dir, filename), 'w') as file:
+                    file.write(json_str)
+
+                # Create the archive
+                shutil.make_archive(base_name=filename, root_dir=tmp_dir, format='zip')
+
+            # If the user doesn't want to compress, then just write the json to the filename
+            else:
+                with open(filename, 'w') as file:
+                    file.write(json_str)
 
     @classmethod
     def from_json(cls, data: Union[str, dict]):
@@ -469,15 +495,21 @@ class Labels(MutableSequence):
                                             structure_instances_list)
         labels = label_cattr.structure(dicts['labels'], List[LabeledFrame])
 
-#         print("LABELS"); print(labels)
         return cls(labeled_frames=labels, videos=videos, skeletons=skeletons, nodes=nodes, suggestions=suggestions)
 
     @classmethod
     def load_json(cls, filename: str):
+
+        # Check what if the file iz compressed or not, this will be denoted by
+        # the filename ending in .zip.
+        if filename.endswith('.zip'):
+            pass
+            # Uncompress the data into a directory
+    
         with open(filename, 'r') as file:
 
             # FIXME: Peek into the json to see if there is version string.
-            # I do this to tell apart old JSON data from leap_dev vs the
+            # We do this to tell apart old JSON data from leap_dev vs the
             # newer format for sLEAP.
             json_str = file.read()
             dicts = json.loads(json_str)
@@ -558,7 +590,7 @@ class Labels(MutableSequence):
                 #     frames_group = f.create_group('frames', track_order=True)
                 # else:
                 #     frames_group = f.require_group('frames')
-                self._save_frame_data_imgstore()
+                self.save_frame_data_imgstore()
 
                 #
                 # dset = f.create_dataset(f"/frames/{v_idx}",
@@ -572,10 +604,11 @@ class Labels(MutableSequence):
             # Save the instance level data
             Instance.save_hdf5(file=f, instances=self.all_instances)
 
-    def _save_frame_data_imgstore(self, output_dir: str = './', format: str = 'png'):
+    def save_frame_data_imgstore(self, output_dir: str = './', format: str = 'png'):
         """
         Write all labeled frames from all videos to a collection of imgstore datasets.
-        This only writes frames that have been labeled.
+        This only writes frames that have been labeled. Videos without any labeled frames
+        will be included as empty imgstores.
 
         Args:
             output_dir:
@@ -589,10 +622,10 @@ class Labels(MutableSequence):
         # For each label
         imgstore_vids = []
         for v_idx, v in enumerate(self.videos):
-            frame_idxs = [f.frame_idx for f in self.labeled_frames if v == f.video]
+            frame_nums = [f.frame_idx for f in self.labeled_frames if v == f.video]
 
-            frames_filename = f'{output_dir}/frame_data_{v_idx}'
-            vid = v.to_imgstore(path=frames_filename, frame_numbers=frame_idxs, format='png')
+            frames_filename = os.path.join(output_dir, f'frame_data_vid{v_idx}')
+            vid = v.to_imgstore(path=frames_filename, frame_numbers=frame_nums, format='png')
             imgstore_vids.append(vid)
 
         return imgstore_vids

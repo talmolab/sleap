@@ -586,6 +586,11 @@ class Video:
                                         mode='w', basedir=path,
                                         imgshape=self.get_frame(0).shape,
                                         chunksize=1000)
+
+        # Write the JSON for the original video object to the metadata
+        # of the imgstore for posterity
+        store.add_extra_data(sourc_sleap_video_obj=Video.cattr().unstructure(self))
+
         import time
         for frame_num in frame_numbers:
             store.add_image(self.get_frame(frame_num), frame_num, time.time())
@@ -594,3 +599,14 @@ class Video:
 
         # Return an ImgStoreVideo object referencing this new imgstore.
         return self.__class__(backend=ImgStoreVideo(file=path, index_by_original=index_by_original))
+
+    @staticmethod
+    def cattr():
+        """
+        Return a cattr converter for serialiazing\deseriializing Video objects.
+
+        Returns:
+            A cattr converter.
+        """
+        return cattr.Converter()
+
