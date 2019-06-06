@@ -29,6 +29,57 @@ def generate_images(labels:Labels, scale=1.0, output_size=None):
 
     return imgs
 
+def get_conf_ball(full_size, output_size, sigma):
+    # Pre-allocate coordinate grid
+    xv = np.linspace(0, full_size[1] - 1, output_size[1], dtype="float32")
+    yv = np.linspace(0, full_size[0] - 1, output_size[0], dtype="float32")
+    XX, YY = np.meshgrid(xv, yv)
+
+    x, y = full_size[1]//2, full_size[0]//2
+    ball_full = np.exp(-((YY - y) ** 2 + (XX - x) ** 2) / (2 * sigma ** 2))
+    window_size = int(sigma*4)
+    ball_window = ball_full[y-window_size:y+window_size, x-window_size:x+window_size]
+
+    return ball_window
+
+def raster_ball(arr, ball, c, x, y):
+    x, y = int(x), int(y)
+    ball_h, ball_w = ball.shape
+    out_h, out_w, _ = arr.shape
+
+    ball_slice_y = slice(0, ball_h)
+    ball_slice_x = slice(0, ball_w)
+
+    arr_slice_y = slice(y-ball_h//2, y+ball_h//2)
+    arr_slice_x = slice(x-ball_w//2, x+ball_w//2)
+
+    # crop ball if it would be out of array bounds
+    # i.e., it's close to edge
+    if arr_slice_y.start < 0:
+        cut = -arr_slice_y.start
+        arr_slice_y = slice(0, arr_slice_y.stop)
+        ball_slice_y = slice(cut, ball_h)
+
+    if arr_slice_x.start < 0:
+        cut = -arr_slice_x.start
+        arr_slice_x = slice(0, arr_slice_x.stop)
+        ball_slice_x = slice(cut, ball_w)
+
+    if arr_slice_y.stop > out_h:
+        cut = arr_slice_y.stop - out_h
+        arr_slice_y = slice(arr_slice_y.start, out_h)
+        ball_slice_y = slice(cut, ball_h)
+
+    if arr_slice_x.stop > out_w:
+        cut = arr_slice_x.stop - out_w
+        arr_slice_x = slice(arr_slice_x.start, out_w)
+        ball_slice_x = slice(cut, ball_w)
+
+    # impose ball on array
+    arr[arr_slice_y, arr_slice_x, c] = np.maximum(
+        arr[arr_slice_y, arr_slice_x, c],
+        ball[ball_slice_y, ball_slice_x]
+        )
 
 def generate_confidence_maps(labels:Labels, sigma=5.0, scale=1.0, output_size=None):
 
@@ -44,27 +95,20 @@ def generate_confidence_maps(labels:Labels, sigma=5.0, scale=1.0, output_size=No
     full_size = tuple(map(int, full_size))
     output_size = tuple(map(int, output_size))
 
-    # Pre-allocate coordinate grid
-    xv = np.linspace(0, full_size[1] - 1, output_size[1], dtype="float32")
-    yv = np.linspace(0, full_size[0] - 1, output_size[0], dtype="float32")
-    XX, YY = np.meshgrid(xv, yv)
+    ball = get_conf_ball(full_size, output_size, sigma)
 
-    # TODO: speed up through broadcasting?
     num_frames = len(labels)
     num_channels = len(skeleton.nodes)
     confmaps = np.zeros((num_frames, output_size[0], output_size[1], num_channels), dtype="float32")
-    for i, labeled_frame in enumerate(labels):
+    for frame_idx, labeled_frame in enumerate(labels):
         for instance in labeled_frame.instances:
             for node in skeleton.nodes:
                 if instance[node].visible and not math.isnan(instance[node].y) and not math.isnan(instance[node].y):
-                    j = skeleton.node_to_index(node.name)
-                    confmaps[i, :, :, j] = np.maximum(
-                        confmaps[i, :, :, j],
-                        np.exp(-((YY - instance[node].y) ** 2 + (XX - instance[node].x) ** 2) / (2 * sigma ** 2))
-                        )
+                    raster_ball(arr=confmaps[frame_idx], ball=ball,
+                        c=skeleton.node_to_index(node.name),
+                        x=instance[node].x, y=instance[node].y)
 
     return confmaps
-
 
 def raster_pafs(arr, c, x0, y0, x1, y1, sigma=5):
     delta_x, delta_y = x1 - x0, y1 - y0
@@ -91,11 +135,9 @@ def raster_pafs(arr, c, x0, y0, x1, y1, sigma=5):
         arr[y, x, c] += edge_x
         arr[y, x, c + 1] += edge_y
 
-
 def get_labels_edge_points_list(labels):
     return [(frame_idx, [instance_edge_points(instance) for instance in labeled_frame.instances]) for
             frame_idx, labeled_frame in enumerate(labels)]
-
 
 def instance_edge_points(instance):
     skeleton = instance.skeleton
@@ -105,7 +147,6 @@ def instance_edge_points(instance):
               if points_are_present(instance, src_node, dst_node)]
     return points
 
-
 def edge_points_tuples(instance, src_node, dst_node):
     x0, y0 = instance[src_node].x, instance[src_node].y
     x1, y1 = instance[dst_node].x, instance[dst_node].y
@@ -113,13 +154,11 @@ def edge_points_tuples(instance, src_node, dst_node):
     # return np.array((x0, y0)), np.array((x1, y1))
     return (x0, y0), (x1, y1)
 
-
 def points_are_present(instance, src_node, dst_node):
     if src_node in instance and dst_node in instance and instance[src_node].visible and instance[dst_node].visible:
         return True
     else:
         return False
-
 
 def generate_pafs(labels: Labels, sigma=5.0, scale=1.0, output_size=None):
     # TODO: multi-skeleton support
@@ -148,17 +187,16 @@ def generate_pafs(labels: Labels, sigma=5.0, scale=1.0, output_size=None):
 
     return pafs
 
-
-
-
 if __name__ == "__main__":
     import os
 
     data_path = "C:/Users/tdp/OneDrive/code/sandbox/leap_wt_gold_pilot/centered_pair.json"
     if not os.path.exists(data_path):
-        data_path = "tests/data/json_format_v2/minimal_instance.json"
+        data_path = "tests/data/json_format_v2/centered_pair_predictions.json"
+#         data_path = "tests/data/json_format_v2/minimal_instance.json"
 
     labels = Labels.load_json(data_path)
+    labels.labeled_frames = labels.labeled_frames[123:323:10]
 
     imgs = generate_images(labels)
     print("--imgs--")
@@ -168,15 +206,11 @@ if __name__ == "__main__":
 
     from PySide2 import QtWidgets
     from sleap.io.video import Video
-    from sleap.gui.video import QtVideoPlayer
-    from sleap.gui.confmapsplot import ConfMapsPlot
-    from sleap.gui.quiverplot import MultiQuiverPlot
+    from sleap.gui.confmapsplot import demo_confmaps
+    from sleap.gui.quiverplot import demo_pafs
 
     app = QtWidgets.QApplication([])
     vid = Video.from_numpy(imgs * 255)
-    conf_window = QtVideoPlayer(video=vid)
-    conf_window.setWindowTitle("confmaps")
-    conf_window.show()
 
     confmaps = generate_confidence_maps(labels)
     print("--confmaps--")
@@ -184,12 +218,7 @@ if __name__ == "__main__":
     print(confmaps.dtype)
     print(np.ptp(confmaps))
 
-    def plot_confmaps(parent, item_idx):
-        frame_conf_map = ConfMapsPlot(confmaps[parent.frame_idx,...])
-        conf_window.view.scene.addItem(frame_conf_map)
-
-    conf_window.changedPlot.connect(plot_confmaps)
-    conf_window.plot()
+    demo_confmaps(confmaps, vid)
 
     pafs = generate_pafs(labels)
     print("--pafs--")
@@ -197,48 +226,6 @@ if __name__ == "__main__":
     print(pafs.dtype)
     print(np.ptp(pafs))
 
-    demo_pafs(pafs, video)
+    demo_pafs(pafs, vid)
 
     app.exec_()
-
-#     import matplotlib.pyplot as plt
-# 
-#     cmap = np.array([
-#         [0,   114,   189],
-#         [217,  83,    25],
-#         [237, 177,    32],
-#         [126,  47,   142],
-#         [119, 172,    48],
-#         [77,  190,   238],
-#         [162,  20,    47],
-#         ]).astype("float32") / 255
-# 
-#     idx = 0
-#     img = imgs[idx]
-#     confmap = confmaps[idx]
-#     paf = pafs[idx]
-# 
-#     plt.figure()
-#     plt.subplot(1,3,1)
-#     plt.imshow(img.squeeze(), cmap="gray")
-# 
-#     plt.subplot(1,3,2)
-#     plt.imshow(img.squeeze(), cmap="gray")
-#     for i in range(confmap.shape[-1]):
-#         col = cmap[i % len(cmap)]
-#         I = confmap[...,i][...,None] * col[None][None]
-#         I = np.concatenate((I, confmap[...,i][...,None]), axis=-1) # add alpha
-#         plt.imshow(I)
-# 
-#     # Warning: VERY SLOW to plot these vector fields in matplotlib
-#     # Reimplement in Qt with polyline or 3 lines?
-#     plt.subplot(1,3,3)
-#     plt.imshow(img.squeeze(), cmap="gray")
-#     for e in range(paf.shape[-1] // 2):
-#         col = cmap[e % len(cmap)]
-#         paf_x = paf[..., e * 2]
-#         paf_y = paf[..., (e * 2) + 1]
-#         plt.quiver(np.arange(paf.shape[1]), np.arange(paf.shape[0]), paf_x, paf_y, color=col,
-#             angles="xy", scale=1, scale_units="xy")
-# 
-#     plt.show()
