@@ -225,6 +225,28 @@ class QuiverPlot(QGraphicsObject):
         pass
 
 
+def demo_pafs(pafs, video, standalone=False):
+    from sleap.gui.video import QtVideoPlayer
+
+    if standalone: app = QApplication([])
+
+    win = QtVideoPlayer(video=video)
+    win.setWindowTitle("pafs")
+    win.show()
+
+    def plot_fields(parent, i):
+
+        frame_pafs = pafs[parent.frame_idx, ...]
+        # frame_pafs = rotate_pafs(frame_pafs, theta)
+
+        aff_fields_item = MultiQuiverPlot(frame_pafs, show=None, decimation=1)
+        win.view.scene.addItem(aff_fields_item)
+
+    win.changedPlot.connect(plot_fields)
+    win.plot()
+
+    if standalone: app.exec_()
+
 if __name__ == "__main__":
 
     from video import *
