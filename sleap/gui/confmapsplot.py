@@ -145,7 +145,7 @@ class ConfMapPlot(QGraphicsPixmapItem):
         frame = self.confmap
 
         # Colorize single-channel overlap
-        if np.ptp(frame) < 1.:
+        if np.ptp(frame) <= 1.:
             frame_a = (frame * 255).astype(np.uint8)
             frame_r = (frame * self.color_map[0]).astype(np.uint8)
             frame_g = (frame * self.color_map[1]).astype(np.uint8)
