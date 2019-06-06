@@ -111,6 +111,9 @@ def generate_confidence_maps(labels:Labels, sigma=5.0, scale=1.0, output_size=No
     return confmaps
 
 def raster_pafs(arr, c, x0, y0, x1, y1, sigma=5):
+    # skip if any nan
+    if np.isnan(np.sum((x0, y0, x1, y1))): return
+
     delta_x, delta_y = x1 - x0, y1 - y0
 
     edge_len = (delta_x ** 2 + delta_y ** 2) ** .5
@@ -126,12 +129,14 @@ def raster_pafs(arr, c, x0, y0, x1, y1, sigma=5):
     xx = perp_x0, perp_x0 + delta_x, perp_x1 + delta_x, perp_x1
     yy = perp_y0, perp_y0 + delta_y, perp_y1 + delta_y, perp_y1
 
-    from skimage.draw import polygon
+    from skimage.draw import polygon, polygon_perimeter
 
     points_y, points_x = polygon(yy, xx, (arr.shape[0], arr.shape[1]))
+    perim_y, perim_x = polygon_perimeter(yy, xx, shape=(arr.shape[0], arr.shape[1]), clip=True)
+    points_y = np.concatenate((points_y, perim_y))
+    points_x = np.concatenate((points_x, perim_x))
 
     for x, y in zip(points_x, points_y):
-        # print(x,y)
         arr[y, x, c] += edge_x
         arr[y, x, c + 1] += edge_y
 
