@@ -164,12 +164,16 @@ def raster_ball(arr, ball, c, x, y):
     if arr_slice_y.stop > out_h:
         cut = arr_slice_y.stop - out_h
         arr_slice_y = slice(arr_slice_y.start, out_h)
-        ball_slice_y = slice(cut, ball_h)
+        ball_slice_y = slice(0, ball_h-cut)
 
     if arr_slice_x.stop > out_w:
         cut = arr_slice_x.stop - out_w
         arr_slice_x = slice(arr_slice_x.start, out_w)
-        ball_slice_x = slice(cut, ball_w)
+        ball_slice_x = slice(0, ball_w-cut)
+
+    if ball_slice_x.stop <= ball_slice_x.start \
+            or ball_slice_y.stop <= ball_slice_y.start:
+        return
 
     # impose ball on array
     arr[arr_slice_y, arr_slice_x, c] = np.maximum(
@@ -211,9 +215,8 @@ def raster_pafs(arr, c, x0, y0, x1, y1, sigma=5):
     yy = perp_y0, perp_y0 + delta_y, perp_y1 + delta_y, perp_y1
 
     from skimage.draw import polygon, polygon_perimeter
-
     points_y, points_x = polygon(yy, xx, (arr.shape[0], arr.shape[1]))
-    perim_y, perim_x = polygon_perimeter(yy, xx, shape=(arr.shape[0], arr.shape[1]), clip=True)
+    perim_y, perim_x = polygon_perimeter(yy, xx, shape=(arr.shape[0], arr.shape[1]))
 
     # make sure we don't include points more than once
     # otherwise we'll add the edge vector to itself at that point
