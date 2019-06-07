@@ -178,31 +178,16 @@ def raster_ball(arr, ball, c, x, y):
         )
 
 def generate_confidence_maps(labels:Labels, sigma=5.0, scale=1.0, output_size=None):
+    """Wrapper for generate_confmaps_from_points which takes labels instead of points."""
 
     # TODO: multi-skeleton support
     skeleton = labels.skeletons[0]
 
     vid = labels.videos[0]
-    full_size = (vid.height, vid.width)
-    if output_size is None:
-        output_size = (vid.height // (1/scale), vid.width // (1/scale))
+    shape = (vid.height, vid.width)
 
-    # TODO: throw warning for truncation errors
-    full_size = tuple(map(int, full_size))
-    output_size = tuple(map(int, output_size))
-
-    ball = get_conf_ball(full_size, output_size, sigma)
-
-    num_frames = len(labels)
-    num_channels = len(skeleton.nodes)
-    confmaps = np.zeros((num_frames, output_size[0], output_size[1], num_channels), dtype="float32")
-    for frame_idx, labeled_frame in enumerate(labels):
-        for instance in labeled_frame.instances:
-            for node in skeleton.nodes:
-                if instance[node].visible and not math.isnan(instance[node].y) and not math.isnan(instance[node].y):
-                    raster_ball(arr=confmaps[frame_idx], ball=ball,
-                        c=skeleton.node_to_index(node.name),
-                        x=instance[node].x, y=instance[node].y)
+    points = generate_points(labels)
+    confmaps = generate_confmaps_from_points(points, skeleton, shape, sigma=5.0, scale=1.0, output_size=None)
 
     return confmaps
 
@@ -264,29 +249,16 @@ def points_are_present(instance, src_node, dst_node):
         return False
 
 def generate_pafs(labels: Labels, sigma=5.0, scale=1.0, output_size=None):
+    """Wrapper for generate_pafs_from_points which takes labels instead of points."""
+
     # TODO: multi-skeleton support
     skeleton = labels.skeletons[0]
 
     vid = labels.videos[0]
-    if output_size is None:
-        output_size = (vid.height // (1 / scale), vid.width // (1 / scale))
+    shape = (vid.height, vid.width)
 
-    # TODO: throw warning for truncation errors
-    output_size = tuple(map(int, output_size))
-
-    # Pre-allocate output array
-    num_frames = len(labels)
-    num_channels = len(skeleton.edges) * 2
-
-    pafs = np.zeros((num_frames, output_size[0], output_size[1], num_channels), dtype="float32")
-
-    for frame_idx, frame_instance_edges in get_labels_edge_points_list(labels):
-        for inst_edges in frame_instance_edges:
-            for c, (src, dst) in inst_edges:
-                raster_pafs(pafs[frame_idx], c * 2, *src, *dst, sigma)
-
-    # Clip PAFs to valid range (in-place)
-    np.clip(pafs, -1.0, 1.0, out=pafs)
+    points = generate_points(labels)
+    pafs = generate_pafs_from_points(points, skeleton, shape, sigma=5.0, scale=1.0, output_size=None)
 
     return pafs
 
