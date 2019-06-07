@@ -1,4 +1,4 @@
-"""Module for creating a form from a yaml filename.
+"""Module for creating a form from a yaml file.
 
 Example:
 >>> widget = YamlFormWidget(yaml_file="example.yaml")
@@ -15,7 +15,7 @@ from PySide2 import QtWidgets, QtCore
 
 class YamlFormWidget(QtWidgets.QGroupBox):
     """
-    Custom QWidget which creates form based on yaml filename.
+    Custom QWidget which creates form based on yaml file.
 
     Args:
         yaml_file: filename
@@ -167,7 +167,7 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
             else:
                 field = QtWidgets.QLineEdit()
                 field.setText(item.get("default", ""))
-                if item["type"].split("_")[0] == "filename":
+                if item["type"].split("_")[0] == "file":
                     field.setDisabled(True)
 
             # Add field (and label if appropriate) to form layout
@@ -177,8 +177,8 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
             else:
                 self.addRow(item["label"] + ":", field)
 
-            # file_[open|dir]: show button to select filename/directory
-            if item["type"].split("_")[0] == "filename":
+            # file_[open|dir]: show button to select file/directory
+            if item["type"].split("_")[0] == "file":
                 file_button = QtWidgets.QPushButton("Select "+item["label"])
 
                 if item["type"].split("_")[-1] == "open":

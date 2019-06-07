@@ -20,7 +20,7 @@ class HDF5Video:
     the sLEAP system with this class.
 
     Args:
-        filename: The name of the HDF5 filename where the dataset with video data is stored.
+        filename: The name of the HDF5 file where the dataset with video data is stored.
         dataset: The name of the HDF5 dataset where the video data is stored.
         file_h5: The h5.File object that the underlying dataset is stored.
         dataset_h5: The h5.Dataset object that the underlying data is stored.
@@ -47,7 +47,7 @@ class HDF5Video:
             try:
                 self.__file_h5 = h5.File(self.filename, 'r')
             except OSError as ex:
-                raise FileNotFoundError(f"Could not find HDF5 filename {self.filename}") from ex
+                raise FileNotFoundError(f"Could not find HDF5 file {self.filename}") from ex
         else:
             self.__file_h5 = None
 
@@ -128,7 +128,7 @@ class MediaVideo:
     OpenCV's VideoCapture class.
 
     Args:
-        filename: The name of the filename (.mp4, .avi, etc)
+        filename: The name of the file (.mp4, .avi, etc)
         grayscale: Whether the video is grayscale or not. "auto" means detect
         based on first frame.
     """
@@ -148,7 +148,7 @@ class MediaVideo:
         if not os.path.isfile(self.filename):
             raise FileNotFoundError(f"Could not find filename video filename named {self.filename}")
 
-        # Try and open the filename either locally in current directory or with full path
+        # Try and open the file either locally in current directory or with full path
         self.__reader = cv2.VideoCapture(self.filename)
 
         # Lets grab a test frame to help us figure things out about the video
@@ -213,7 +213,7 @@ class NumpyVideo:
     Video data stored as Numpy array.
 
     Args:
-        filename: Either a filename to load or a numpy array of the data.
+        filename: Either a file to load or a numpy array of the data.
 
         * numpy data shape: (frames, width, height, channels)
     """
@@ -273,7 +273,7 @@ class ImgStoreVideo:
     for sLEAP.
 
     Args:
-        filename: The name of the filename or directory to the imgstore.
+        filename: The name of the file or directory to the imgstore.
         index_by_original: ImgStores are great for storing a collection of frame
         selected frames from an larger video. If the index_by_original is set to
         True than the get_frame function will accept the original frame numbers of
@@ -464,13 +464,13 @@ class Video:
                   input_format: str = "channels_last",
                   convert_range: bool = True):
         """
-        Create an instance of a video object from an HDF5 filename and dataset. This
+        Create an instance of a video object from an HDF5 file and dataset. This
         is a helper method that invokes the HDF5Video backend.
 
         Args:
             dataset: The name of the dataset or and h5.Dataset object. If filename is
             h5.File, dataset must be a str of the dataset name.
-            filename: The name of the HDF5 filename or and open h5.File object.
+            filename: The name of the HDF5 file or and open h5.File object.
             input_format: Whether the data is oriented with "channels_first" or "channels_last"
             convert_range: Whether we should convert data to [0, 255]-range
 
@@ -492,7 +492,7 @@ class Video:
         Create an instance of a video object from a numpy array.
 
         Args:
-            filename: The numpy array or the name of the filename
+            filename: The numpy array or the name of the file
 
         Returns:
             A Video object with a NumpyVideo backend
@@ -504,10 +504,10 @@ class Video:
     @classmethod
     def from_media(cls, filename: str, *args, **kwargs):
         """
-        Create an instance of a video object from a typical media filename (e.g. .mp4, .avi).
+        Create an instance of a video object from a typical media file (e.g. .mp4, .avi).
 
         Args:
-            filename: The name of the filename
+            filename: The name of the file
 
         Returns:
             A Video object with a MediaVideo backend
@@ -661,7 +661,7 @@ class Video:
         if os.path.exists(path):
             return path
 
-        # Strip the directory and lets see if the filename is in the current working
+        # Strip the directory and lets see if the file is in the current working
         # directory.
         elif os.path.exists(os.path.basename(path)):
             return os.path.basename(path)
@@ -676,5 +676,5 @@ class Video:
             if os.path.exists(img_store_dir):
                 return img_store_dir
 
-        raise FileNotFoundError(f"Cannot find a video filename f{path}")
+        raise FileNotFoundError(f"Cannot find a video file: f{path}")
 

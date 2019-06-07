@@ -491,7 +491,7 @@ class MainWindow(QMainWindow):
         self.loadVideo(self.labels.videos[idx.row()], idx.row())
 
     def addVideo(self, filename=None):
-        # Browse for filename
+        # Browse for file
         video = None
         if isinstance(filename, str):
             video = Video.from_filename(filename)

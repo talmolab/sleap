@@ -410,7 +410,7 @@ class Instance:
                   instances: Union['Instance', List['Instance']],
                   skip_nan: bool = True):
         """
-        Write the instance point level data to an HDF5 filename and group. This
+        Write the instance point level data to an HDF5 file and group. This
         function writes the data to an HDF5 group not a dataset. Each
         column of the data is a dataset. The datasets within the group
         will be all the same length (the total number of points across all
@@ -427,7 +427,7 @@ class Instance:
             * y - The vertical pixel position of this node for this instance.
 
         Args:
-            file: The HDF5 filename to save the instance data to.
+            file: The HDF5 file to save the instance data to.
             instances: A single instance or list of instances.
             skip_nan: Whether to drop points that have NaN values for x or y.
 
@@ -451,7 +451,7 @@ class Instance:
         # Get all the unique skeleton objects in this list of instances
         skeletons = {i.skeleton for i in instances}
 
-        # First, lets save the skeletons to the filename
+        # First, lets save the skeletons to the file
         Skeleton.save_all_hdf5(file=file, skeletons=list(skeletons))
 
         # Second, lets get the instance data as a pandas data frame.
@@ -488,7 +488,7 @@ class Instance:
         Load instance data from an HDF5 dataset.
 
         Args:
-            file: The name of the HDF5 filename or the open h5.File object.
+            file: The name of the HDF5 file or the open h5.File object.
 
         Returns:
             A list of Instance objects.
@@ -503,7 +503,7 @@ class Instance:
     @classmethod
     def _load_hdf5(self, file: h5.File):
 
-        # First, get all the skeletons in the HDF5 filename
+        # First, get all the skeletons in the HDF5 file
         skeletons = Skeleton.load_all_hdf5(file=file, return_dict=True)
 
         if 'points' not in file:

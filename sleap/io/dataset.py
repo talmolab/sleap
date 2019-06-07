@@ -87,6 +87,9 @@ class Labels(MutableSequence):
         # Lets sort the tracks by spawned on and then name
         self.tracks.sort(key=lambda t:(t.spawned_on, t.name))
 
+        # Create a variable to store a temporary storage directory. When we unzip
+        self.__temp_dir = None
+
     # Below are convenience methods for working with Labels as list.
     # Maybe we should just inherit from list? Maybe this class shouldn't
     # exists since it is just a list really with some class methods. I
@@ -401,7 +404,7 @@ class Labels(MutableSequence):
             labels: The labels dataset to save.
             filename: The filename to save the data to.
             compress: Should the data be zip compressed or not? If True, the JSON will be
-            compressed using Python's shutil.make_archive command into a PKZIP zip filename. If
+            compressed using Python's shutil.make_archive command into a PKZIP zip file. If
             compress is True then filename will have a .zip appended to it.
             save_frame_data: Whether to save the image data for each frame as well. For each
             video in the dataset, all frames that have labels will be stored as an imgstore
@@ -503,10 +506,10 @@ class Labels(MutableSequence):
     @classmethod
     def load_json(cls, filename: str):
 
-        # Check if the filename is a zipfile for not.
+        # Check if the file is a zipfile for not.
         if zipfile.is_zipfile(filename):
 
-            # Make a tmpdir, located in the directory that the filename exists, to unzip
+            # Make a tmpdir, located in the directory that the file exists, to unzip
             # its contents.
             tmp_dir = tempfile.mkdtemp(dir=os.path.dirname(filename))
 
@@ -519,12 +522,12 @@ class Labels(MutableSequence):
                 # Uncompress the data into the directory
                 shutil.unpack_archive(filename, extract_dir=tmp_dir)
 
-                # We can now open the JSON filename, save the zip filename and
-                # replace filename with the first JSON filename we find in the archive.
+                # We can now open the JSON file, save the zip file and
+                # replace file with the first JSON file we find in the archive.
                 json_files = [os.path.join(tmp_dir, file) for file in os.listdir(tmp_dir) if file.endswith(".json")]
 
                 if len(json_files) == 0:
-                    raise ValueError(f"No JSON filename found inside {filename}. Are you sure this is a valid sLEAP dataset.")
+                    raise ValueError(f"No JSON file found inside {filename}. Are you sure this is a valid sLEAP dataset.")
 
                 filename = json_files[0]
 
@@ -555,7 +558,7 @@ class Labels(MutableSequence):
                 except FileNotFoundError:
 
                     # FIXME: We are going to the labels JSON that has references to
-                    # video files. Lets change directory to the dirname of the json filename
+                    # video files. Lets change directory to the dirname of the json file
                     # so that relative paths will be from this directory. Maybe
                     # it is better to feed the dataset dirname all the way down to
                     # the Video object. This seems like less coupling between classes
@@ -579,10 +582,10 @@ class Labels(MutableSequence):
 
     def save_hdf5(self, filename: str, save_frame_data: bool = True):
         """
-        Serialize the labels dataset to an HDF5 filename.
+        Serialize the labels dataset to an HDF5 file.
 
         Args:
-            filename: The filename to serialize the dataset to.
+            filename: The file to serialize the dataset to.
             save_frame_data: Whether to save the image frame data for any
             labeled frame as well. This is useful for uploading the HDF5 for
             model training when video files are to large to move. This will only
@@ -596,9 +599,9 @@ class Labels(MutableSequence):
         # JSON serialization.
         d = self.to_dict()
 
-        # Delete the filename if it exists, we want to start from scratch since
-        # h5py truncates the filename which seems to not actually delete data
-        # from the filename.
+        # Delete the file if it exists, we want to start from scratch since
+        # h5py truncates the file which seems to not actually delete data
+        # from the file.
         if os.path.exists(filename):
             os.unlink(filename)
 
@@ -678,7 +681,7 @@ class Labels(MutableSequence):
 
         box_path = Labels._unwrap_mat_scalar(mat_contents["boxPath"])
 
-        # If the video filename isn't found, try in the same dir as the mat filename
+        # If the video file isn't found, try in the same dir as the mat file
         if not os.path.exists(box_path):
             file_dir = os.path.dirname(filename)
             box_path_name = box_path.split("\\")[-1] # assume windows path
@@ -735,7 +738,7 @@ def load_labels_json_old(data_path: str, parsed_json: dict = None,
     Labels object.
 
     Args:
-        data_path: The path to the JSON filename.
+        data_path: The path to the JSON file.
         parsed_json: The parsed json if already loaded. Save some time if already parsed.
         adjust_matlab_indexing: Do we need to adjust indexing from MATLAB.
         fix_rel_paths: Fix paths to videos to absolute paths.

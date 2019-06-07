@@ -5,12 +5,12 @@ Usage:
 
 >>> import_list = ImportVideos().go()
 
-This will show the user a filename-selection dialog, and then a second dialog
-to select the import parameters for each filename.
+This will show the user a file-selection dialog, and then a second dialog
+to select the import parameters for each file.
 
-It returns a list with data about each filename selected by the user.
-In particular, we'll have the name of the filename and all of the parameters
-relevant for that specific type of filename. It also includes a reference
+It returns a list with data about each file selected by the user.
+In particular, we'll have the name of the file and all of the parameters
+relevant for that specific type of file. It also includes a reference
 to the relevant method of :class:`Video`.
 
 For each `item` in `import_list`, we can load the video by calling this
@@ -39,13 +39,13 @@ class ImportVideos:
     def go(self):
         """Runs the import UI.
         
-        1. Show filename selection dialog.
-        2. Show import parameter dialog with widget for each filename.
+        1. Show file selection dialog.
+        2. Show import parameter dialog with widget for each file.
         
         Args:
             None.
         Returns:
-            List with dict of the parameters for each filename to import.
+            List with dict of the parameters for each file to import.
         """
         dialog = QFileDialog()
         #dialog.setOption(QFileDialog.Option.DontUseNativeDialogs, True)
@@ -135,7 +135,7 @@ class ImportParamDialog(QDialog):
                     self.import_widgets.append(import_item_widget)
                     scroll_layout.addWidget(import_item_widget)
                 else:
-                    raise Exception("No match found for filename type.")
+                    raise Exception("No match found for file type.")
         scroll_items_widget.setLayout(scroll_layout)
         scroll_widget.setWidget(scroll_items_widget)
         outer_layout.addWidget(scroll_widget)
@@ -162,7 +162,7 @@ class ImportParamDialog(QDialog):
             import_result (optional): If specified, we'll insert data into this.
 
         Returns:
-            List of dicts with data for each (enabled) imported filename.
+            List of dicts with data for each (enabled) imported file.
         """
         # we don't want to set default to [] because that persists
         if import_result is None:
@@ -184,7 +184,7 @@ class ImportItemWidget(QFrame):
     """Widget for selecting parameters with preview when importing video.
 
     Args:
-        file_path (str): Full path to selected video filename.
+        file_path (str): Full path to selected video file.
         import_type (dict): Data about user-selectable import parameters.
     """
     
@@ -224,7 +224,7 @@ class ImportItemWidget(QFrame):
     def is_enabled(self):
         """Am I enabled?
 
-        Our UI provides a way to enable/disable this item (filename).
+        Our UI provides a way to enable/disable this item (file).
         We only want to import enabled items.
 
         Returns:
@@ -279,7 +279,7 @@ class ImportParamWidget(QWidget):
     """Widget for allowing user to select video parameters.
 
     Args:
-        file_path: filename path/name
+        file_path: file path/name
         import_type: data about the parameters for this type of video
 
     Note:
@@ -351,7 +351,7 @@ class ImportParamWidget(QWidget):
 
         Note:
             It's easiest if the return dict matches the arguments we need
-            for the Video object, so we'll add the filename name to the dict
+            for the Video object, so we'll add the file name to the dict
             even though it's not a user-selectable param.
         """
         param_list = self.import_type["params"]
@@ -371,13 +371,13 @@ class ImportParamWidget(QWidget):
         return param_values
     
     def _get_h5_dataset_options(self) -> list:
-        """Method to get a list of all datasets in hdf5 filename.
+        """Method to get a list of all datasets in hdf5 file.
 
         Args:
             None.
 
         Returns:
-            List of datasets in the hdf5 filename for our import item.
+            List of datasets in the hdf5 file for our import item.
 
         Note:
             This is used to populate the "function_menu"-type param.
@@ -390,7 +390,7 @@ class ImportParamWidget(QWidget):
         return options
     
     def _find_h5_datasets(self, data_path, data_object) -> list:
-        """Recursively find datasets in hdf5 filename."""
+        """Recursively find datasets in hdf5 file."""
         options = []
         for key in data_object.keys():
             if isinstance(data_object[key], h5py._hl.dataset.Dataset):
