@@ -91,7 +91,7 @@ def DenseNet(blocks,
             layer at the top of the network.
         weights: one of `None` (random initialization),
               'imagenet' (pre-training on ImageNet),
-              or the path to the weights file to be loaded.
+              or the path to the weights filename to be loaded.
         input_tensor: optional Keras tensor
             (i.e. output of `layers.Input()`)
             to use as image input for the model.

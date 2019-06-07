@@ -449,7 +449,7 @@ class Predictor:
 
     def run(self, input_video: Union[str, Video], output_path: str):
         """
-        Run the entire inference pipeline on an input video or file object.
+        Run the entire inference pipeline on an input video or filename object.
 
         Args:
             input_video: Either a video object or video filename.
@@ -591,7 +591,7 @@ def load_predicted_labels_json_old(
     Labels object. This loads the prediced instances
 
     Args:
-        data_path: The path to the JSON file.
+        data_path: The path to the JSON filename.
         parsed_json: The parsed json if already loaded. Save some time if already parsed.
         adjust_matlab_indexing: Do we need to adjust indexing from MATLAB.
         fix_rel_paths: Fix paths to videos to absolute paths.
@@ -640,7 +640,7 @@ def load_predicted_labels_json_old(
         if videos.at[i, "format"] == "media":
             vid = Video.from_media(videos.at[i, "filepath"])
         else:
-            vid = Video.from_hdf5(file=videos.at[i, "filepath"], dataset=videos.at[i, "dataset"])
+            vid = Video.from_hdf5(filename=videos.at[i, "filepath"], dataset=videos.at[i, "dataset"])
 
         video_objects[videos.at[i, "id"]] = vid
 
@@ -693,10 +693,10 @@ def load_predicted_labels_json_old(
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("data_path", help="Path to video file")
+    parser.add_argument("data_path", help="Path to video filename")
     parser.add_argument("confmap_model_path", help="Path to saved confmap model")
     parser.add_argument("paf_model_path", help="Path to saved PAF model")
-    parser.add_argument("skeleton_path", help="Path to skeleton MAT file")
+    parser.add_argument("skeleton_path", help="Path to skeleton MAT filename")
     args = parser.parse_args()
 
     data_path = args.data_path

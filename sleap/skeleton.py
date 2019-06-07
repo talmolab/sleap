@@ -638,9 +638,9 @@ class Skeleton:
         return json_str
 
     def save_json(self, filename: str, node_to_idx: Dict[Node, int] = None):
-        """Save the skeleton as JSON file.
+        """Save the skeleton as JSON filename.
 
-           Output the complete skeleton to a file in JSON format.
+           Output the complete skeleton to a filename in JSON format.
 
            Args:
                filename: The filename to save the JSON to.
@@ -680,16 +680,16 @@ class Skeleton:
 
     @classmethod
     def load_json(cls, filename: str, idx_to_node: Dict[int, Node] = None):
-        """Load a skeleton from a JSON file.
+        """Load a skeleton from a JSON filename.
 
-        This method will load the Skeleton from JSON file saved with; :meth:`~Skeleton.save_json`
+        This method will load the Skeleton from JSON filename saved with; :meth:`~Skeleton.save_json`
 
         Args:
-            filename: The file that contains the JSON specifying the skeleton.
+            filename: The filename that contains the JSON specifying the skeleton.
             idx_to_node (optional): Map for converting int node in json back to corresponding `Node`.
 
         Returns:
-            The Skeleton object stored in the JSON file.
+            The Skeleton object stored in the JSON filename.
 
         """
 
@@ -701,14 +701,14 @@ class Skeleton:
     @classmethod
     def load_hdf5(cls, file: Union[str, h5.File], name: str):
         """
-        Load a specific skeleton (by name) from the HDF5 file.
+        Load a specific skeleton (by name) from the HDF5 filename.
 
         Args:
-            file: The file name or open h5.File
+            file: The filename name or open h5.File
             name: The name of the skeleton.
 
         Returns:
-            The skeleton intance stored in the HDF5 file.
+            The skeleton intance stored in the HDF5 filename.
         """
         if type(file) is str:
             with h5.File(file) as _file:
@@ -722,16 +722,16 @@ class Skeleton:
     def load_all_hdf5(cls, file: Union[str, h5.File],
                       return_dict: bool = False) -> Union[List['Skeleton'], Dict[str, 'Skeleton']]:
         """
-        Load all skeletons found in the HDF5 file.
+        Load all skeletons found in the HDF5 filename.
 
         Args:
-            file: The file name or open h5.File
+            file: The filename name or open h5.File
             return_dict: True if the the return value should be a dict where the
             keys are skeleton names and values the corresponding skeleton. False
             if the return should just be a list of the skeletons.
 
         Returns:
-            The skeleton intances stored in the HDF5 file. Either in List or Dict form.
+            The skeleton intances stored in the HDF5 filename. Either in List or Dict form.
         """
         if type(file) is str:
             with h5.File(file) as _file:
@@ -763,11 +763,11 @@ class Skeleton:
     @classmethod
     def save_all_hdf5(self, file: Union[str, h5.File], skeletons: List['Skeleton']):
         """
-        Convenience method to save a list of skeletons to HDF5 file. Skeletons are saved
-        as attributes of a /skeleton group in the file.
+        Convenience method to save a list of skeletons to HDF5 filename. Skeletons are saved
+        as attributes of a /skeleton group in the filename.
 
         Args:
-            file: The file name or the open h5.File object.
+            file: The filename name or the open h5.File object.
             skeletons: The list of skeletons to save.
 
         Returns:
@@ -807,11 +807,11 @@ class Skeleton:
     @classmethod
     def load_mat(cls, filename: str):
         """
-        Load the skeleton from a Matlab MAT file. This is to support backwards
+        Load the skeleton from a Matlab MAT filename. This is to support backwards
         compatibility with old LEAP MATLAB code and datasets.
 
         Args:
-            filename: The file name of the skeleton
+            filename: The filename name of the skeleton
 
         Returns:
             An instance of the skeleton.

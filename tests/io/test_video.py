@@ -38,7 +38,7 @@ def test_hdf5_get_item(hdf5_vid):
 
 def test_hd5f_file_not_found():
     with pytest.raises(FileNotFoundError):
-        Video.from_hdf5("non-existent-file.h5", 'dataset_name')
+        Video.from_hdf5("non-existent-filename.h5", 'dataset_name')
 
 def test_mp4_get_shape(small_robot_mp4_vid):
     assert(small_robot_mp4_vid.shape == (166, 320, 560, 3))
@@ -67,7 +67,7 @@ def test_mp4_get_item(small_robot_mp4_vid):
 
 def test_mp4_file_not_found():
     with pytest.raises(FileNotFoundError):
-        Video.from_media("non-existent-file.mp4")
+        Video.from_media("non-existent-filename.mp4")
 
 def test_numpy_frames(small_robot_mp4_vid):
     clip_frames = small_robot_mp4_vid.get_frames((3,7,9))
