@@ -262,7 +262,25 @@ def generate_pafs(labels: Labels, sigma=5.0, scale=1.0, output_size=None):
 
     return pafs
 
-if __name__ == "__main__":
+def demo_datagen_time():
+    data_path = "tests/data/json_format_v2/centered_pair_predictions.json"
+
+    global labels
+    labels = Labels.load_json(data_path)
+    labels.labeled_frames = labels.labeled_frames[123:423:10]
+    count = len(labels)
+    timing_reps = 1
+
+    import timeit
+    t = timeit.timeit("generate_confidence_maps(labels)", number=timing_reps, globals=globals())
+    t /= timing_reps
+    print(f"confmaps time: {t} = {t/count} s/frame for {count} frames")
+
+    t = timeit.timeit("generate_pafs(labels)", number=timing_reps, globals=globals())
+    t /= timing_reps
+    print(f"pafs time: {t} = {t/count} s/frame for {count} frames")
+
+def demo_datagen():
     import os
 
     data_path = "C:/Users/tdp/OneDrive/code/sandbox/leap_wt_gold_pilot/centered_pair.json"
@@ -271,7 +289,7 @@ if __name__ == "__main__":
         data_path = "tests/data/json_format_v2/minimal_instance.json"
 
     labels = Labels.load_json(data_path)
-    # labels.labeled_frames = labels.labeled_frames[123:323:10]
+    # labels.labeled_frames = labels.labeled_frames[123:423:10]
 
     imgs = generate_images(labels)
     print("--imgs--")
@@ -304,3 +322,6 @@ if __name__ == "__main__":
     demo_pafs(pafs, vid)
 
     app.exec_()
+
+if __name__ == "__main__":
+    demo_datagen()
