@@ -563,7 +563,7 @@ class Video:
             frame_numbers: A list of frame numbers from the video to save. If None save
             the entire video.
             format: By default it will create a DirectoryImgStore with lossless PNG format.
-            Unless the frame_indices = None, in which case, it will default to h264/mkv
+            Unless the frame_indices = None, in which case, it will default to avc1/mp4
             format for video.
             index_by_original: ImgStores are great for storing a collection of frame
             selected frames from an larger video. If the index_by_original is set to
@@ -581,7 +581,7 @@ class Video:
 
             # We probably don't want to store all the frames as the PNG default,
             # lets use h264 with mkv by default.
-            format = "h264/mkv"
+            format = "avc1/mp4"
 
         # Delete the imgstore if it already exists.
         if os.path.exists(path):
