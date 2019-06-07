@@ -29,6 +29,102 @@ def generate_images(labels:Labels, scale=1.0, output_size=None):
 
     return imgs
 
+def generate_points(labels):
+    """Generates point data for instances in frames in labels.
+
+    Output is in the format expected by
+    * generate_confmaps_from_points()
+    * generate_pafs_from_points()
+    * augmentation.Augmenter()
+
+    Args:
+        labels: the `Labels` object for which we want instance points
+
+    Returns:
+        a list (each frame) of lists (each instance) of ndarrays (of points)
+            i.e., frames -> instances -> point_array
+    """
+    return [[inst.points_array(invisible_as_nan=True) for inst in lf.instances] for lf in labels]
+
+def generate_confmaps_from_points(frames_inst_points, skeleton, shape, sigma=5.0, scale=1.0, output_size=None) -> np.ndarray:
+    """
+    Generates confmaps for set of frames.
+    This is used to generate confmaps on the fly during training,
+    possibly after augmentation has moved the instance points.
+
+    Args:
+        frames_inst_points: a list (each frame) of a list (each inst) of point arrays
+        skeleton: skeleton from which to get list of nodes
+        shape: shape of frame image, i.e. (h, w)
+
+    Returns:
+        confmaps as ndarray with shape (frames, h, w, nodes)
+    """
+    full_size = shape
+    if output_size is None:
+        output_size = (shape[0] // (1/scale), shape[1] // (1/scale))
+
+    # TODO: throw warning for truncation errors
+    full_size = tuple(map(int, full_size))
+    output_size = tuple(map(int, output_size))
+
+    ball = get_conf_ball(full_size, output_size, sigma)
+
+    num_frames = len(frames_inst_points)
+    num_channels = len(skeleton.nodes)
+    confmaps = np.zeros((num_frames, output_size[0], output_size[1], num_channels), dtype="float32")
+
+    for frame_idx, points_arrays in enumerate(frames_inst_points):
+        for inst_points in points_arrays:
+            for node_idx in range(len(skeleton.nodes)):
+                if not np.isnan(np.sum(inst_points[node_idx])):
+                    x = inst_points[node_idx][0]
+                    y = inst_points[node_idx][1]
+                    raster_ball(arr=confmaps[frame_idx], ball=ball, c=node_idx, x=x, y=y)
+
+    return confmaps
+
+def generate_pafs_from_points(frames_inst_points, skeleton, shape, sigma=5.0, scale=1.0, output_size=None) -> np.ndarray:
+    """
+    Generates pafs for set of frames.
+    This is used to generate pafs on the fly during training,
+    possibly after augmentation has moved the instance points.
+
+    Args:
+        frames_inst_points: a list (each frame) of a list (each inst) of point arrays
+        skeleton: skeleton from which to get list of nodes
+        shape: shape of frame image, i.e. (h, w)
+
+    Returns:
+        pafs as ndarray with shape (frames, h, w, nodes)
+    """
+    full_size = shape
+    if output_size is None:
+        output_size = (shape[0] // (1/scale), shape[1] // (1/scale))
+
+    # TODO: throw warning for truncation errors
+    full_size = tuple(map(int, full_size))
+    output_size = tuple(map(int, output_size))
+
+    ball = get_conf_ball(full_size, output_size, sigma)
+
+    num_frames = len(frames_inst_points)
+    num_channels = len(skeleton.edges) * 2
+
+    pafs = np.zeros((num_frames, output_size[0], output_size[1], num_channels), dtype="float32")
+    for frame_idx, points_arrays in enumerate(frames_inst_points):
+        for inst_points in points_arrays:
+            for c, (src_node, dst_node) in enumerate(skeleton.edges):
+                src_idx = skeleton.node_to_index(src_node.name)
+                dst_idx = skeleton.node_to_index(dst_node.name)
+                x0 = inst_points[src_idx][0]
+                y0 = inst_points[src_idx][1]
+                x1 = inst_points[dst_idx][0]
+                y1 = inst_points[dst_idx][1]
+                raster_pafs(pafs[frame_idx], c * 2, x0, y0, x1, y1, sigma)
+
+    return pafs
+
 def get_conf_ball(full_size, output_size, sigma):
     # Pre-allocate coordinate grid
     xv = np.linspace(0, full_size[1] - 1, output_size[1], dtype="float32")
@@ -225,7 +321,7 @@ if __name__ == "__main__":
     print(confmaps.dtype)
     print(np.ptp(confmaps))
 
-    # demo_confmaps(confmaps, vid)
+    demo_confmaps(confmaps, vid)
 
     pafs = generate_pafs(labels)
     print("--pafs--")
