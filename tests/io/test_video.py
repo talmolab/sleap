@@ -75,13 +75,13 @@ def test_numpy_frames(small_robot_mp4_vid):
 
     assert np.all(np.equal(np_vid.get_frame(1), small_robot_mp4_vid.get_frame(7)))
 
-@pytest.mark.parametrize("format", ['png', 'jpg', "avc1/mp4"])
+@pytest.mark.parametrize("format", ['png', 'jpg', "mjpeg/avi"])
 def test_imgstore_video(small_robot_mp4_vid, tmpdir, format):
 
     path = os.path.join(tmpdir, 'test_imgstore')
 
     # If format is video, test saving all the frames.
-    if format == "avc1/mp4":
+    if format == "mjpeg/avi":
        frame_indices = None
     else:
         frame_indices = [0, 1, 5]
