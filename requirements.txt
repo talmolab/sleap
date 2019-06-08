@@ -11,4 +11,6 @@ psutil
 PySide2
 pyzmq
 pyyaml
+imgaug
+scikit-image
 imgstore
