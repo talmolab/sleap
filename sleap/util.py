@@ -29,29 +29,6 @@ def attr_to_dtype(cls):
     return np.dtype(dtype_list)
 
 
-def try_open_file(open: Callable, *args, **kwargs) -> object:
-    """
-    A quick little utility method to try to open a file with the
-    full path, if that doesn't work, try with the basename, if
-    that doesn't work, return None
-
-    Args:
-        open: A callable to invoke to open the file
-        *args: The arguments to pass to the open callable
-        **kwargs: The keyword arguments to pass to the open callable
-
-    Returns:
-        The return value of the callable open function or None if no
-        success.
-    """
-    try:
-        return open(*args, **kwargs)
-    except FileNotFoundError:
-        try:
-            return open(*args, **kwargs)
-        except FileNotFoundError:
-            return None
-
 def usable_cpu_count() -> int:
     """Get number of CPUs usable by the current process.
 
@@ -77,7 +54,7 @@ def save_dict_to_hdf5(h5file: h5.File, path: str, dic: dict):
     must be iterable.
 
     Args:
-        h5file: The HDF5 file object to save the data to. Assume it is open.
+        h5file: The HDF5 filename object to save the data to. Assume it is open.
         path: The path to group save the dict under.
         dic: The dict to save.
 

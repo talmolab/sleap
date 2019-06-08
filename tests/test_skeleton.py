@@ -10,7 +10,6 @@ def test_add_dupe_node(skeleton):
     """
     Test if adding a node with the same name to skeleton throws an exception.
     """
-    print(skeleton.nodes)
     with pytest.raises(ValueError):
         skeleton.add_node("head")
 
@@ -160,7 +159,7 @@ def test_json(skeleton, tmpdir):
     """
     JSON_TEST_FILENAME = os.path.join(tmpdir, 'skeleton.json')
 
-    # Save it to a JSON file
+    # Save it to a JSON filename
     skeleton.save_json(JSON_TEST_FILENAME)
 
     # Load the JSON object back in
@@ -176,7 +175,7 @@ def test_hdf5(skeleton, stickman, tmpdir):
     if os.path.isfile(filename):
         os.remove(filename)
 
-    # Save both skeletons to the HDF5 file
+    # Save both skeletons to the HDF5 filename
     skeleton.save_hdf5(filename)
     stickman.save_hdf5(filename)
 

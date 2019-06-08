@@ -689,7 +689,7 @@ class Skeleton:
             idx_to_node (optional): Map for converting int node in json back to corresponding `Node`.
 
         Returns:
-            The Skeleton object stored in the JSON file.
+            The Skeleton object stored in the JSON filename.
 
         """
 
@@ -708,7 +708,7 @@ class Skeleton:
             name: The name of the skeleton.
 
         Returns:
-            The skeleton intance stored in the HDF5 file.
+            The skeleton instance stored in the HDF5 file.
         """
         if type(file) is str:
             with h5.File(file) as _file:
@@ -731,7 +731,7 @@ class Skeleton:
             if the return should just be a list of the skeletons.
 
         Returns:
-            The skeleton intances stored in the HDF5 file. Either in List or Dict form.
+            The skeleton instances stored in the HDF5 file. Either in List or Dict form.
         """
         if type(file) is str:
             with h5.File(file) as _file:
@@ -767,7 +767,7 @@ class Skeleton:
         as attributes of a /skeleton group in the file.
 
         Args:
-            file: The file name or the open h5.File object.
+            file: The filename or the open h5.File object.
             skeletons: The list of skeletons to save.
 
         Returns:
@@ -811,7 +811,7 @@ class Skeleton:
         compatibility with old LEAP MATLAB code and datasets.
 
         Args:
-            filename: The file name of the skeleton
+            filename: The name of the skeleton file
 
         Returns:
             An instance of the skeleton.

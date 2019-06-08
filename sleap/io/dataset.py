@@ -9,11 +9,18 @@ storage format.
 """
 
 import os
+import zipfile
+import atexit
+import glob
+
 import attr
 import cattr
 import json
+import shutil
+import tempfile
 import numpy as np
 import scipy.io as sio
+import h5py as h5
 
 from collections import MutableSequence
 from typing import List, Union, Dict
@@ -24,6 +31,7 @@ from sleap.skeleton import Skeleton, Node
 from sleap.instance import Instance, Point, LabeledFrame, \
     Track, PredictedPoint, PredictedInstance
 from sleap.io.video import Video
+from sleap.util import save_dict_to_hdf5
 
 """
 The version number to put in the Labels JSON format.
@@ -78,6 +86,9 @@ class Labels(MutableSequence):
 
         # Lets sort the tracks by spawned on and then name
         self.tracks.sort(key=lambda t:(t.spawned_on, t.name))
+
+        # Create a variable to store a temporary storage directory. When we unzip
+        self.__temp_dir = None
 
     # Below are convenience methods for working with Labels as list.
     # Maybe we should just inherit from list? Maybe this class shouldn't
@@ -322,15 +333,22 @@ class Labels(MutableSequence):
         """Sets the suggested frames."""
         self.suggestions = suggestions
 
-    def to_json(self):
+    def to_dict(self):
         """
-        Serialize all labels in the underling list of LabeledFrame(s) to a
-        JSON structured string.
+        Serialize all labels in the underling list of LabeledFrames to a
+        dict structure. This function returns a nested dict structure
+        composed entirely of primitive python types. It is used to create
+        JSON and HDF5 serialized datasets.
 
         Returns:
-            The JSON representaiton of the string.
+            A dict containing the followings top level keys:
+            * version - The version of the dict/json serialization format.
+            * skeletons - The skeletons associated with these underlying instances.
+            * nodes - The nodes that the skeletons represent.
+            * videos - The videos that that the instances occur on.
+            * labels - The labeled frames
+            * tracks - The tracks associated with each instance.
         """
-
         # FIXME: Update list of nodes
         # We shouldn't have to do this here, but for some reason we're missing nodes
         # which are in the skeleton but don't have points (in the first instance?).
@@ -346,7 +364,7 @@ class Labels(MutableSequence):
         label_cattr.register_unstructure_hook(Node, lambda x: self.nodes.index(x))
         label_cattr.register_unstructure_hook(Track, lambda x: self.tracks.index(x))
 
-        idx_to_node = {i:self.nodes[i] for i in range(len(self.nodes))}
+        idx_to_node = {i: self.nodes[i] for i in range(len(self.nodes))}
 
         skeleton_cattr = Skeleton.make_cattr(idx_to_node)
 
@@ -355,20 +373,84 @@ class Labels(MutableSequence):
             'version': LABELS_JSON_FILE_VERSION,
             'skeletons': skeleton_cattr.unstructure(self.skeletons),
             'nodes': cattr.unstructure(self.nodes),
-            'videos': cattr.unstructure(self.videos),
+            'videos': Video.cattr().unstructure(self.videos),
             'labels': label_cattr.unstructure(self.labeled_frames),
             'tracks': cattr.unstructure(self.tracks),
             'suggestions': label_cattr.unstructure(self.suggestions)
          }
 
-        return json.dumps(dicts)
+        return dicts
+
+    def to_json(self):
+        """
+        Serialize all labels in the underling list of LabeledFrame(s) to a
+        JSON structured string.
+
+        Returns:
+            The JSON representaiton of the string.
+        """
+
+        # Unstructure the data into dicts and dump to JSON.
+        return json.dumps(self.to_dict())
 
     @staticmethod
-    def save_json(labels: 'Labels', filename: str):
-        json_str = labels.to_json()
+    def save_json(labels: 'Labels', filename: str,
+                  compress: bool = False,
+                  save_frame_data: bool = False):
+        """
+        Save a Labels instance to a JSON format.
 
-        with open(filename, 'w') as file:
-            file.write(json_str)
+        Args:
+            labels: The labels dataset to save.
+            filename: The filename to save the data to.
+            compress: Should the data be zip compressed or not? If True, the JSON will be
+            compressed using Python's shutil.make_archive command into a PKZIP zip file. If
+            compress is True then filename will have a .zip appended to it.
+            save_frame_data: Whether to save the image data for each frame as well. For each
+            video in the dataset, all frames that have labels will be stored as an imgstore
+            dataset. If save_frame_data is True then compress will be forced to True since
+            the archive must contain both the JSON data and image data stored in ImgStores.
+
+        Returns:
+            None
+        """
+
+        # Lets make a temporary directory to store the image frame data or pre-compressed json
+        # in case we need it.
+        with tempfile.TemporaryDirectory() as tmp_dir:
+
+            # If we are saving frame data along with the datasets. We will replace videos with
+            # new video object that represent video data from just the labeled frames.
+            if save_frame_data:
+
+                # Create a set of new Video objects with imgstore backends. One for each
+                # of the videos. We will only include the labeled frames though. We will
+                # then replace each video with this new video
+                new_videos = labels.save_frame_data_imgstore(output_dir=tmp_dir)
+
+                # Convert to a dict, not JSON yet, because we need to patch up the videos
+                d = labels.to_dict()
+                d['videos'] = Video.cattr().unstructure(new_videos)
+
+                # We can't call Labels.to_json, so we need to do this here. Not as clean as I
+                # would like.
+                json_str = json.dumps(d)
+            else:
+                json_str = labels.to_json()
+
+            if compress or save_frame_data:
+
+                # Write the json to the tmp directory, we will zip it up with the frame data.
+                with open(os.path.join(tmp_dir, os.path.basename(filename)), 'w') as file:
+                    file.write(json_str)
+
+                # Create the archive
+                shutil.make_archive(base_name=filename, root_dir=tmp_dir, format='zip')
+
+            # If the user doesn't want to compress, then just write the json to the filename
+            else:
+                with open(filename, 'w') as file:
+                    file.write(json_str)
 
     @classmethod
     def from_json(cls, data: Union[str, dict]):
@@ -385,7 +467,7 @@ class Labels(MutableSequence):
 
         idx_to_node = {i:nodes[i] for i in range(len(nodes))}
         skeletons = Skeleton.make_cattr(idx_to_node).structure(dicts['skeletons'], List[Skeleton])
-        videos = Skeleton.make_cattr(idx_to_node).structure(dicts['videos'], List[Video])
+        videos = Video.cattr().structure(dicts['videos'], List[Video])
         tracks = cattr.structure(dicts['tracks'], List[Track])
 
         if "suggestions" in dicts:
@@ -419,15 +501,46 @@ class Labels(MutableSequence):
                                             structure_instances_list)
         labels = label_cattr.structure(dicts['labels'], List[LabeledFrame])
 
-#         print("LABELS"); print(labels)
         return cls(labeled_frames=labels, videos=videos, skeletons=skeletons, nodes=nodes, suggestions=suggestions)
 
     @classmethod
     def load_json(cls, filename: str):
+
+        # Check if the file is a zipfile for not.
+        if zipfile.is_zipfile(filename):
+
+            # Make a tmpdir, located in the directory that the file exists, to unzip
+            # its contents.
+            tmp_dir = tempfile.mkdtemp(dir=os.path.dirname(filename))
+
+            try:
+
+                # Register a cleanup routine that deletes the tmpdir on program exit
+                # if something goes wrong. The True is for ignore_errors
+                atexit.register(shutil.rmtree, tmp_dir, True)
+
+                # Uncompress the data into the directory
+                shutil.unpack_archive(filename, extract_dir=tmp_dir)
+
+                # We can now open the JSON file, save the zip file and
+                # replace file with the first JSON file we find in the archive.
+                json_files = [os.path.join(tmp_dir, file) for file in os.listdir(tmp_dir) if file.endswith(".json")]
+
+                if len(json_files) == 0:
+                    raise ValueError(f"No JSON file found inside {filename}. Are you sure this is a valid sLEAP dataset.")
+
+                filename = json_files[0]
+
+            except Exception as ex:
+                # If we had problems, delete the temp directory and reraise the exception.
+                shutil.rmtree(tmp_dir, ignore_errors=True)
+                raise
+
+        # Open and parse the JSON in filename
         with open(filename, 'r') as file:
 
             # FIXME: Peek into the json to see if there is version string.
-            # I do this to tell apart old JSON data from leap_dev vs the
+            # We do this to tell apart old JSON data from leap_dev vs the
             # newer format for sLEAP.
             json_str = file.read()
             dicts = json.loads(json_str)
@@ -438,7 +551,7 @@ class Labels(MutableSequence):
                 # Cache the working directory.
                 cwd = os.getcwd()
 
-                # Try to load the labels file.
+                # Try to load the labels filename.
                 try:
                     labels = Labels.from_json(dicts)
 
@@ -446,7 +559,7 @@ class Labels(MutableSequence):
 
                     # FIXME: We are going to the labels JSON that has references to
                     # video files. Lets change directory to the dirname of the json file
-                    # so that relative paths will be from this director. Maybe
+                    # so that relative paths will be from this directory. Maybe
                     # it is better to feed the dataset dirname all the way down to
                     # the Video object. This seems like less coupling between classes
                     # though.
@@ -458,7 +571,7 @@ class Labels(MutableSequence):
 
                 except Exception as ex:
                     # Ok, we give up, where the hell are these videos!
-                    raise ex # Re-raise.
+                    raise # Re-raise.
                 finally:
                     os.chdir(cwd)  # Make sure to change back if we have problems.
 
@@ -466,6 +579,88 @@ class Labels(MutableSequence):
 
             else:
                 return load_labels_json_old(data_path=filename, parsed_json=dicts)
+
+    def save_hdf5(self, filename: str, save_frame_data: bool = True):
+        """
+        Serialize the labels dataset to an HDF5 file.
+
+        Args:
+            filename: The file to serialize the dataset to.
+            save_frame_data: Whether to save the image frame data for any
+            labeled frame as well. This is useful for uploading the HDF5 for
+            model training when video files are to large to move. This will only
+            save video frames that have some labeled instances.
+
+        Returns:
+            None
+        """
+
+        # Unstructure this labels dataset to a bunch of dicts, same as we do for
+        # JSON serialization.
+        d = self.to_dict()
+
+        # Delete the file if it exists, we want to start from scratch since
+        # h5py truncates the file which seems to not actually delete data
+        # from the file.
+        if os.path.exists(filename):
+            os.unlink(filename)
+
+        with h5.File(filename, 'w') as f:
+
+            # Save the skeletons
+            #Skeleton.save_all_hdf5(filename=f, skeletons=self.skeletons)
+
+            # Save the frame data for the videos. For each video, we will
+            # save a dataset that contains only the frame data that has been
+            # labelled.
+            if save_frame_data:
+
+                #
+                # # All videos data will be put in the videos group
+                # if 'frames' not in f:
+                #     frames_group = f.create_group('frames', track_order=True)
+                # else:
+                #     frames_group = f.require_group('frames')
+                self.save_frame_data_imgstore()
+
+                #
+                # dset = f.create_dataset(f"/frames/{v_idx}",
+                #                         data=v.get_frames(frame_idxs),
+                #                         compression="gzip")
+                #
+                # # Write the dataset to JSON string, then store it in a string
+                # # attribute
+                # dset.attrs[f"video_json"] = np.string_(json.dumps(d['videos'][v_idx]))
+
+            # Save the instance level data
+            Instance.save_hdf5(file=f, instances=self.all_instances)
+
+    def save_frame_data_imgstore(self, output_dir: str = './', format: str = 'png'):
+        """
+        Write all labeled frames from all videos to a collection of imgstore datasets.
+        This only writes frames that have been labeled. Videos without any labeled frames
+        will be included as empty imgstores.
+
+        Args:
+            output_dir:
+            format: The image format to use for the data. png for lossless, jpg for lossy.
+            Other imgstore formats will probably work as well but have not been tested.
+
+        Returns:
+            A list of ImgStoreVideo objects that represent the stored frames.
+        """
+
+        # For each label
+        imgstore_vids = []
+        for v_idx, v in enumerate(self.videos):
+            frame_nums = [f.frame_idx for f in self.labeled_frames if v == f.video]
+
+            frames_filename = os.path.join(output_dir, f'frame_data_vid{v_idx}')
+            vid = v.to_imgstore(path=frames_filename, frame_numbers=frame_nums, format='png')
+            imgstore_vids.append(vid)
+
+        return imgstore_vids
+
 
     @staticmethod
     def _unwrap_mat_scalar(a):
@@ -493,7 +688,7 @@ class Labels(MutableSequence):
             box_path = os.path.join(file_dir, box_path_name)
 
         if os.path.exists(box_path):
-            vid = Video.from_hdf5(dataset="box", file=box_path, input_format="channels_first")
+            vid = Video.from_hdf5(dataset="box", filename=box_path, input_format="channels_first")
         else:
             vid = None
 
@@ -599,7 +794,7 @@ def load_labels_json_old(data_path: str, parsed_json: dict = None,
         if videos.at[i, "format"] == "media":
             vid = Video.from_media(videos.at[i, "filepath"])
         else:
-            vid = Video.from_hdf5(file=videos.at[i, "filepath"], dataset=videos.at[i, "dataset"])
+            vid = Video.from_hdf5(filename=videos.at[i, "filepath"], dataset=videos.at[i, "dataset"])
 
         video_objects[videos.at[i, "id"]] = vid
 

@@ -449,7 +449,6 @@ class Instance:
     def _save_hdf5(cls, file: h5.File, instances: List['Instance'], skip_nan: bool = True):
 
         # Get all the unique skeleton objects in this list of instances
-        # This is a set comprehension, slick python, but unreadable
         skeletons = {i.skeleton for i in instances}
 
         # First, lets save the skeletons to the file
