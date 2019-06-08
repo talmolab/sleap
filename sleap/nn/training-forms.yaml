@@ -10,6 +10,12 @@ data_gen:
   default: 1
 
 training:
+- name: output_type
+  label: Training For
+  type: list
+  options: confmaps
+  default: confmaps
+
 - name: val_size
   label: Value Size
   type: double
