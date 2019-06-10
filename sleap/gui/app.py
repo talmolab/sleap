@@ -29,6 +29,7 @@ from sleap.gui.dataviews import VideosTable, SkeletonNodesTable, SkeletonEdgesTa
 	LabeledFrameTable, SkeletonNodeModel, SuggestionsTable
 from sleap.gui.importvideos import ImportVideos
 from sleap.gui.formbuilder import YamlFormWidget
+from sleap.gui.suggestions import VideoFrameSuggestions
 
 OPEN_IN_NEW = True
 
@@ -114,7 +115,7 @@ class MainWindow(QMainWindow):
     @filename.setter
     def filename(self, x):
         self._filename = x
-        self.setWindowTitle(x)
+        if x is not None: self.setWindowTitle(x)
 
     def initialize_gui(self):
 
@@ -158,8 +159,11 @@ class MainWindow(QMainWindow):
         self._menu_actions["clear selection"] = labelMenu.addAction("Clear Selection", self.player.view.clearSelection, QKeySequence(Qt.Key.Key_Escape))
         labelMenu.addSeparator()
         self._menu_actions["goto next"] = labelMenu.addAction("Next Labeled Frame", self.nextLabeledFrame)
-        self._menu_actions["goto suggestion"] = labelMenu.addAction("Next Suggestion", self.nextSuggestedFrame, QKeySequence.FindNext)
         self._menu_actions["goto prev"] = labelMenu.addAction("Previous Labeled Frame", self.previousLabeledFrame)
+
+        self._menu_actions["goto next suggestion"] = labelMenu.addAction("Next Suggestion", self.nextSuggestedFrame, QKeySequence.FindNext)
+        self._menu_actions["goto prev suggestion"] = labelMenu.addAction("Previous Suggestion", lambda:self.nextSuggestedFrame(-1), QKeySequence.FindPrevious)
+
         labelMenu.addSeparator()
         self._menu_actions["show labels"] = labelMenu.addAction("Show Node Names", self.toggleLabels, Qt.ALT + Qt.Key_Tab)
         self._menu_actions["show edges"] = labelMenu.addAction("Show Edges", self.toggleEdges, Qt.ALT + Qt.SHIFT + Qt.Key_Tab)
@@ -380,6 +384,8 @@ class MainWindow(QMainWindow):
         has_selected_instance = (self.player.view.getSelection() is not None)
         has_unsaved_changes = self.changestack_has_changes()
         has_multiple_videos = (self.labels is not None and len(self.labels.videos) > 1)
+        has_labeled_frames = (len(self.labels.find(self.video)) > 0)
+        has_suggestions = (len(self.labels.suggestions) > 0)
         has_multiple_instances = (self.labeled_frame is not None and len(self.labeled_frame.instances) > 1)
         # todo: exclude predicted instances from count
 
@@ -396,6 +402,12 @@ class MainWindow(QMainWindow):
 
         self._menu_actions["next video"].setEnabled(has_multiple_videos)
         self._menu_actions["prev video"].setEnabled(has_multiple_videos)
+
+        self._menu_actions["goto next"].setEnabled(has_labeled_frames)
+        self._menu_actions["goto prev"].setEnabled(has_labeled_frames)
+
+        self._menu_actions["goto next suggestion"].setEnabled(has_suggestions)
+        self._menu_actions["goto prev suggestion"].setEnabled(has_suggestions)
 
         # Update buttons
         # TODO
@@ -442,15 +454,19 @@ class MainWindow(QMainWindow):
 
         if len(filename) == 0: return
 
-        self.filename = filename
-
         has_loaded = False
-        if filename.endswith(".json"):
+        if type(filename) == Labels:
+            self.labels = filename
+            filename = None
+            has_loaded = True
+        elif filename.endswith(".json"):
             self.labels = Labels.load_json(filename)
             has_loaded = True
         elif filename.endswith(".mat"):
             self.labels = Labels.load_mat(filename)
             has_loaded = True
+
+        self.filename = filename
 
         if has_loaded:
             self.changestack_clear()
@@ -690,14 +706,10 @@ class MainWindow(QMainWindow):
             self.player.seekbar.setMarks(all_marks)
 
     def generateSuggestions(self, params):
-        if params["method"] == "strides":
-            suggestions_per_video = params["strides_per_video"]
-            new_suggestions = dict()
-            for video in self.labels.videos:
-                new_suggestions[video] = list(range(0, video.frames, video.frames//suggestions_per_video))
-                new_suggestions[video] = new_suggestions[video][:suggestions_per_video]
-            self.labels.set_suggestions(new_suggestions)
-
+        new_suggestions = dict()
+        for video in self.labels.videos:
+            new_suggestions[video] = VideoFrameSuggestions.suggest(video, params)
+        self.labels.set_suggestions(new_suggestions)
         self.update_data_views()
         self.updateSeekbarMarks()
 
@@ -747,13 +759,14 @@ class MainWindow(QMainWindow):
                         # Otherwise use the last instance added to previous frame.
                         copy_instance = prev_instances[-1]
                         from_prev_frame = True
-
         new_instance = Instance(skeleton=self.skeleton)
         for node in self.skeleton.nodes:
             if copy_instance is not None and node in copy_instance.nodes:
                 new_instance[node] = copy.copy(copy_instance[node])
             else:
-                new_instance[node] = Point(x=np.random.rand() * self.video.width * 0.5, y=np.random.rand() * self.video.height * 0.5, visible=True)
+                # mark the node as not "visible" if we're copying from a predicted instance without this node
+                is_visible = copy_instance is None or not hasattr(copy_instance, "score")#type(copy_instance) != PredictedInstance
+                new_instance[node] = Point(x=np.random.rand() * self.video.width * 0.5, y=np.random.rand() * self.video.height * 0.5, visible=is_visible)
         # If we're copying a predicted instance or from another frame, copy the track
         if hasattr(copy_instance, "score") or from_prev_frame:
             new_instance.track = copy_instance.track
@@ -1026,9 +1039,22 @@ class MainWindow(QMainWindow):
     def extractClip(self):
         start, end = self.player.seekbar.getSelection()
         if start < end:
-            clip_frames = self.video.get_frames(range(start, end))
-            clip_video = Video.from_numpy(clip_frames)
-            clip_window = QtVideoPlayer(video=clip_video)
+            clip_labeled_frames = [copy.copy(lf) for lf in self.labels.labeled_frames if lf.frame_idx in range(start, end)]
+            clip_video_frames = self.video.get_frames(range(start, end))
+            clip_video = Video.from_numpy(clip_video_frames)
+
+            # adjust video and frame_idx for clip labeled frames
+            for lf in clip_labeled_frames:
+                lf.video = clip_video
+                lf.frame_idx -= start
+
+            # create new labels object with clip
+            clip_labels = Labels(clip_labeled_frames)
+
+            # clip_window = QtVideoPlayer(video=clip_video)
+            clip_window = MainWindow()
+            clip_window.showMaximized()
+            clip_window.importData(clip_labels)
             clip_window.show()
 
     def previousLabeledFrameIndex(self):

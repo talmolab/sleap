@@ -448,7 +448,7 @@ class SuggestionsTableModel(QtCore.QAbstractTableModel):
                 if prop == "video":
                     return os.path.basename(video.filename) # just show the name, not full path
                 elif prop == "frame":
-                    return frame_idx + 1 # start at frame 1 rather than 0
+                    return int(frame_idx) + 1 # start at frame 1 rather than 0
                 elif prop == "labeled":
                     # show how many labeled instances are in this frame
                     val = self._labels.instance_count(video, frame_idx)
