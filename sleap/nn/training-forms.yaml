@@ -1,0 +1,58 @@
+data_gen:
+- name: labels_file
+  label: Labels File
+  type: file_open
+  default: #tests/data/json_format_v1/centered_pair.json
+
+- name: scale
+  label: Scale
+  type: int
+  default: 1
+
+training:
+- name: output_type
+  label: Training For
+  type: list
+  options: confmaps
+  default: confmaps
+
+- name: val_size
+  label: Value Size
+  type: double
+  default: 0.1
+
+- name: batch_norm
+  label: Batch Norm
+  type: bool
+  default: False
+
+- name: num_filters
+  label: Filters
+  type: int
+  default: 16
+
+- name: batch_size
+  label: Batch Size
+  type: int
+  default: 4
+
+- name: num_epochs
+  label: Epochs
+  type: int
+  default: 100
+
+- name: steps_per_epoch
+  label: Steps per Epoch
+  type: int
+  default: 100
+
+- name: arch
+  label: Architecture
+  type: list
+  default: unet
+  options: hourglass,leap_cnn,unet,stacked_unet
+
+- name: save_dir
+  label: Output Directory
+  type: file_dir
+  default: 

@@ -226,7 +226,7 @@ class Instance:
         Returns:
             bool: True if the point with the node name specified has a point in this instance.
         """
-        return self._node_to_index(node) in self._points
+        return node in self._points
 
     def __setitem__(self, node, value):
 
@@ -316,7 +316,7 @@ class Instance:
         """
         return tuple(self._points.values())
 
-    def points_array(self, cached=False) -> np.ndarray:
+    def points_array(self, cached=False, invisible_as_nan=False) -> np.ndarray:
         """
         Return the instance's points in array form.
 
@@ -334,8 +334,8 @@ class Instance:
             pts = np.ndarray((len(self.skeleton.nodes), 2))
             for i, n in enumerate(self.skeleton.nodes):
                 p = self._points.get(n, Point())
-                pts[i, 0] = p.x
-                pts[i, 1] = p.y
+                pts[i, 0] = p.x if p.visible or not invisible_as_nan else np.nan
+                pts[i, 1] = p.y if p.visible or not invisible_as_nan else np.nan
 
             self._points_array_cache = pts
 
@@ -449,7 +449,6 @@ class Instance:
     def _save_hdf5(cls, file: h5.File, instances: List['Instance'], skip_nan: bool = True):
 
         # Get all the unique skeleton objects in this list of instances
-        # This is a set comprehension, slick python, but unreadable
         skeletons = {i.skeleton for i in instances}
 
         # First, lets save the skeletons to the file
@@ -706,3 +705,14 @@ class LabeledFrame:
 
         self._instances = instances
 
+    @property
+    def instances_to_show(self):
+        """
+        Return a list of instances associated with this frame, but excluding any
+        predicted instances for which there's a regular instance on the same track.
+        """
+        user_tracks = [inst.track for inst in self._instances
+            if type(inst) == Instance and inst.track is not None]
+        distinct_track_instances = [inst for inst in self._instances
+            if type(inst) == Instance or inst.track not in user_tracks]
+        return distinct_track_instances

@@ -1,7 +1,7 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from time import time, sleep
 from datetime import datetime
+import os
 
 import tensorflow as tf
 import keras
@@ -17,6 +17,9 @@ from sleap.nn.architectures.common import conv
 from sleap.nn.architectures.hourglass import stacked_hourglass
 from sleap.nn.architectures.unet import unet, stacked_unet
 from sleap.nn.architectures.leap import leap_cnn
+from sleap.nn.monitor import LossViewer
+
+from sleap.nn.datagen import generate_confmaps_from_points, generate_pafs_from_points
 
 from multiprocessing import Process
 import zmq
@@ -43,7 +46,6 @@ class TrainingControllerZMQ(keras.callbacks.Callback):
 
     def on_batch_end(self, batch, logs=None):
         """ Called at the end of a training batch. """
-
         if self.socket.poll(self.timeout, zmq.POLLIN):
             msg = jsonpickle.decode(self.socket.recv_string())
             print(f"Received control message: {msg}")
@@ -137,7 +139,7 @@ class ProgressReporterZMQ(keras.callbacks.Callback):
 
 def train(
     # Data
-    imgs, outputs, output_type="confmaps", val_size=0.1,
+    imgs, outputs, skeleton=None, output_type="confmaps", val_size=0.1,
     # Architecture
     arch="unet", num_stacks=1, depth=3, convs_per_depth=2, num_filters=64, batch_norm=True, upsampling="bilinear", intermediate_inputs=True, intermediate_outputs=True,
     # Optimizer
@@ -174,9 +176,16 @@ def train(
     num_train, img_height, img_width, img_channels = imgs_train.shape
     num_val = len(imgs_val)
     num_total = num_train + num_val
-    outputs_channels = outputs_train.shape[-1]
-    print(f"Training set: {imgs_train.shape} -> {outputs_train.shape}")
-    print(f"Validation set: {imgs_val.shape} -> {outputs_val.shape}")
+
+    if type(outputs_train) == np.ndarray:
+        outputs_channels = outputs_train.shape[-1]
+    elif output_type.lower() == "confmaps":
+        outputs_channels = len(skeleton.nodes)
+    elif output_type.lower() == "pafs":
+        outputs_channels = len(skeleton.edges) * 2
+
+    print(f"Training set: {imgs_train.shape} -> {outputs_channels} channels")
+    print(f"Validation set: {imgs_val.shape} -> {outputs_channels} channels")
 
     # Build model architecture
     # TODO: separate architecture builder
@@ -251,8 +260,22 @@ def train(
 
         # TODO: save serialized training info
 
+    img_shape = (imgs_train.shape[1], imgs_train.shape[2])
+    if output_type.lower() == "confmaps":
+        def datagen_function(points):
+            return generate_confmaps_from_points(points, skeleton, img_shape)
+    elif output_type.lower() == "confmaps":
+        def datagen_function(points):
+            return generate_pafs_from_points(points, skeleton, img_shape)
+    else:
+        datagen_function = None
+
+    if datagen_function is not None:
+        outputs_val = datagen_function(outputs_val)
+
     # Initialize data generator with augmentation
-    train_datagen = Augmenter(imgs_train, outputs_train, output_names=model.output_names,
+    train_datagen = Augmenter(imgs_train, Points=outputs_train,
+        datagen=datagen_function, output_names=model.output_names,
         batch_size=batch_size, shuffle=shuffle_initially,
         rotation=augment_rotation, scale=(augment_scale_min, augment_scale_max))
 
@@ -335,81 +358,32 @@ def train(
     return model
 
 
-
-from PySide2 import QtCore, QtWidgets, QtGui, QtCharts
-class LossViewer(QtWidgets.QMainWindow):
-    def __init__(self, parent=None):
-        super(LossViewer, self).__init__(parent)
-
-        self.chart = QtCharts.QtCharts.QChart()
-
-        self.series = QtCharts.QtCharts.QScatterSeries()
-        pen = self.series.pen()
-        pen.setWidth(3)
-        # pen.setColor(r,g,b,alpha)
-        self.chart.addSeries(self.series)
-
-        self.chart.createDefaultAxes()
-        self.chart.axisX().setLabelFormat("%d")
-        self.chart.axisX().setTitleText("Batches")
-        self.chart.axisY().setTitleText("Loss")
-
-        self.chart.legend().hide()
-
-        self.chartView = QtCharts.QtCharts.QChartView(self.chart)
-        self.chartView.setRenderHint(QtGui.QPainter.Antialiasing);
-        self.setCentralWidget(self.chartView)
-
-        self.X = []
-        self.Y = []
-        self.t0 = None
-
-    def add_datapoint(self, x, y):
-        self.series.append(x, y)
-
-        self.X.append(x)
-        self.Y.append(y)
-
-        dx = 0.5
-        dy = np.ptp(self.Y) * 0.02
-        self.chart.axisX().setRange(min(self.X) - dx, max(self.X) + dx)
-        self.chart.axisY().setRange(min(self.Y) - dy, max(self.Y) + dy)
-
-    def set_start_time(self, t0):
-        self.t0 = t0
-
-    def update_runtime(self):
-        if self.t0 is not None:
-            dt = time() - t0
-            dt_min, dt_sec = divmod(dt, 60)
-            self.chart.setTitle(f"Runtime: {int(dt_min):02}:{int(dt_sec):02}")
-
-
 if __name__ == "__main__":
     
+    from PySide2 import QtWidgets
+
     from sleap.io.dataset import Labels
     labels = Labels.load_json("tests/data/json_format_v1/centered_pair.json")
 
-    from sleap.nn.datagen import generate_images, generate_confidence_maps
+    from sleap.nn.datagen import generate_images, generate_points
     t0 = time()
     imgs = generate_images(labels)
-    confmaps = generate_confidence_maps(labels, sigma=5)
+    points = generate_points(labels)
+    skeleton = labels.skeletons[0]
+
     print(f"Generated training data. [{time() - t0:.2f}s]")
 
-    proc = Process(target=train, args=(imgs, confmaps), kwargs=dict(val_size=0.1, batch_norm=False, num_filters=16, batch_size=4, num_epochs=100, steps_per_epoch=100, arch="unet"))
-
+    proc = Process(target=train, args=(imgs, points), kwargs=dict(output_type="confmaps", skeleton=skeleton, val_size=0.1, batch_norm=False, num_filters=16, batch_size=4, num_epochs=100, steps_per_epoch=100, arch="unet"))
     proc.start()
 
+    ctx = zmq.Context()
+
     app = QtWidgets.QApplication()
-    loss_viewer = LossViewer()
+    loss_viewer = LossViewer(zmq_context = ctx)
     loss_viewer.resize(600, 400)
     loss_viewer.show()
     app.setQuitOnLastWindowClosed(True)
     app.processEvents()
-
-    # sleep(15)
-
-    ctx = zmq.Context()
 
     # Controller
     ctrl = ctx.socket(zmq.PUB)

@@ -340,7 +340,7 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton,
 
         # Get teh predicted points for this predicted instance
         pts = {}
-        for node_name in skeleton.node_names:
+        for i, node_name in enumerate(skeleton.node_names):
             if match[i] >= 0:
                 match_idx = int(match[i])
                 pt = PredictedPoint(x=candidate[match_idx, 0], y=candidate[match_idx, 1],
@@ -640,7 +640,7 @@ def load_predicted_labels_json_old(
         if videos.at[i, "format"] == "media":
             vid = Video.from_media(videos.at[i, "filepath"])
         else:
-            vid = Video.from_hdf5(file=videos.at[i, "filepath"], dataset=videos.at[i, "dataset"])
+            vid = Video.from_hdf5(filename=videos.at[i, "filepath"], dataset=videos.at[i, "dataset"])
 
         video_objects[videos.at[i, "id"]] = vid
 

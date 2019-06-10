@@ -1,14 +1,16 @@
 """ Video reading and writing interfaces for different formats. """
 
 import os
+import shutil
 
 import h5py as h5
 import cv2
+import imgstore
 import numpy as np
 import attr
 import cattr
 
-from typing import Iterable, Union
+from typing import Iterable, Union, List
 
 
 @attr.s(auto_attribs=True, cmp=False)
@@ -18,7 +20,7 @@ class HDF5Video:
     the sLEAP system with this class.
 
     Args:
-        file: The name of the HDF5 file where the dataset with video data is stored.
+        filename: The name of the HDF5 file where the dataset with video data is stored.
         dataset: The name of the HDF5 dataset where the video data is stored.
         file_h5: The h5.File object that the underlying dataset is stored.
         dataset_h5: The h5.Dataset object that the underlying data is stored.
@@ -30,7 +32,7 @@ class HDF5Video:
         convert_range: Whether we should convert data to [0, 255]-range
     """
 
-    file: str = attr.ib(default=None)
+    filename: str = attr.ib(default=None)
     dataset: str = attr.ib(default=None)
     input_format: str = attr.ib(default="channels_last")
     convert_range: bool = attr.ib(default=True)
@@ -38,14 +40,14 @@ class HDF5Video:
     def __attrs_post_init__(self):
 
         # Handle cases where the user feeds in h5.File objects instead of filename
-        if isinstance(self.file, h5.File):
-            self.__file_h5 = self.file
-            self.file = self.__file_h5.filename
-        elif type(self.file) is str:
+        if isinstance(self.filename, h5.File):
+            self.__file_h5 = self.filename
+            self.filename = self.__file_h5.filename
+        elif type(self.filename) is str:
             try:
-                self.__file_h5 = h5.File(self.file, 'r')
+                self.__file_h5 = h5.File(self.filename, 'r')
             except OSError as ex:
-                raise FileNotFoundError(f"Could not find HDF5 file {self.file}") from ex
+                raise FileNotFoundError(f"Could not find HDF5 file {self.filename}") from ex
         else:
             self.__file_h5 = None
 
@@ -97,10 +99,6 @@ class HDF5Video:
     def dtype(self):
         return self.__dataset_h5.dtype
 
-    @property
-    def filename(self):
-        return self.file
-
     def get_frame(self, idx):# -> np.ndarray:
         """
         Get a frame from the underlying HDF5 video data.
@@ -148,7 +146,7 @@ class MediaVideo:
     def __attrs_post_init__(self):
 
         if not os.path.isfile(self.filename):
-            raise FileNotFoundError(f"Could not find file video file named {self.filename}")
+            raise FileNotFoundError(f"Could not find filename video filename named {self.filename}")
 
         # Try and open the file either locally in current directory or with full path
         self.__reader = cv2.VideoCapture(self.filename)
@@ -215,11 +213,11 @@ class NumpyVideo:
     Video data stored as Numpy array.
 
     Args:
-        file: Either a filename to load or a numpy array of the data.
+        filename: Either a file to load or a numpy array of the data.
 
         * numpy data shape: (frames, width, height, channels)
     """
-    file: attr.ib()
+    filename: attr.ib()
 
     def __attrs_post_init__(self):
 
@@ -229,23 +227,19 @@ class NumpyVideo:
         self.__channel_idx = 3
 
         # Handle cases where the user feeds in np.array instead of filename
-        if isinstance(self.file, np.ndarray):
-            self.__data = self.file
-            self.file = "Raw Video Data"
-        elif type(self.file) is str:
+        if isinstance(self.filename, np.ndarray):
+            self.__data = self.filename
+            self.filename = "Raw Video Data"
+        elif type(self.filename) is str:
             try:
-                self.__data = np.load(self.file)
+                self.__data = np.load(self.filename)
             except OSError as ex:
-                raise FileNotFoundError(f"Could not find file {self.file}") from ex
+                raise FileNotFoundError(f"Could not find filename {self.filename}") from ex
         else:
             self.__data = None
 
     # The properties and methods below complete our contract with the
     # higher level Video interface.
-
-    @property
-    def filename(self):
-        return self.file
 
     @property
     def frames(self):
@@ -272,6 +266,102 @@ class NumpyVideo:
 
 
 @attr.s(auto_attribs=True, cmp=False)
+class ImgStoreVideo:
+    """
+    Video data stored as an ImgStore dataset. See: https://github.com/loopbio/imgstore
+    This class is just a lightweight wrapper for reading such datasets as videos sources
+    for sLEAP.
+
+    Args:
+        filename: The name of the file or directory to the imgstore.
+        index_by_original: ImgStores are great for storing a collection of frame
+        selected frames from an larger video. If the index_by_original is set to
+        True than the get_frame function will accept the original frame numbers of
+        from original video. If False, then it will accept the frame index from the
+        store directly.
+    """
+
+    filename: str = attr.ib(default=None)
+    index_by_original: bool = attr.ib(default=True)
+
+    def __attrs_post_init__(self):
+
+        # If the filename does not contain metadata.yaml, append it to the filename
+        # assuming that this is a directory that contains the imgstore.
+        if 'metadata.yaml' not in self.filename:
+            self.filename = os.path.join(self.filename, 'metadata.yaml')
+
+        # Make relative path into absolute, ImgStores don't work properly it seems
+        # without full paths if we change working directories. Video.fixup_path will
+        # fix this later when loading these datasets.
+        self.filename = os.path.abspath(self.filename)
+
+        # Open the imgstore
+        self.__store = imgstore.new_for_filename(self.filename)
+
+        # Read a frame so we can compute shape an such
+        self.__img, (frame_number, frame_timestamp) = self.__store.get_next_image()
+
+    # The properties and methods below complete our contract with the
+    # higher level Video interface.
+
+    @property
+    def frames(self):
+        return self.__store.frame_count
+
+    @property
+    def channels(self):
+        return self.__img.shape[2]
+
+    @property
+    def width(self):
+        return self.__img.shape[1]
+
+    @property
+    def height(self):
+        return self.__img.shape[0]
+
+    @property
+    def dtype(self):
+        return self.__img.dtype
+
+    def get_frame(self, frame_number) -> np.ndarray:
+        """
+        Get a frame from the underlying ImgStore video data.
+
+        Args:
+            frame_num: The number of the frame to get. If index_by_original is set to True,
+            then this number should actually be a frame index withing the imgstore. That is,
+            if there are 4 frames in the imgstore, this number shoulde be from 0 to 3.
+
+        Returns:
+            The numpy.ndarray representing the video frame data.
+        """
+        if self.index_by_original:
+            img, (frame_number, frame_timestamp) = self.__store.get_image(frame_number)
+        else:
+            img, (frame_number, frame_timestamp) = self.__store.get_image(frame_number=None,
+                                                                          frame_index=frame_number)
+
+        # If the frame has one channel, add a singleton channel as it seems other
+        # video implementations do this.
+        if img.ndim == 2:
+            img = img[:, :, None]
+
+        return img
+
+        @property
+        def imgstore(self):
+            """
+            Get the underlying ImgStore object for this Video.
+
+            Returns:
+                The imgstore that is backing this video object.
+            """
+            return self.__store
+
+
+@attr.s(auto_attribs=True, cmp=False)
 class Video:
     """
     The top-level interface to any Video data used by sLEAP is represented by
@@ -283,8 +373,12 @@ class Video:
     backend, this class should be instantiated from its various class methods
     for different formats. For example:
 
-    >>> video = Video.from_hdf5(file='test.h5', dataset='box')
-    >>> video = Video.from_media(file='test.mp4')
+    >>> video = Video.from_hdf5(filename='test.h5', dataset='box')
+    >>> video = Video.from_media(filename='test.mp4')
+
+    Or we can use auto-detection based on filename:
+
+    >>> video = Video.from_filename(filename='test.mp4')
 
     Args:
         backend: A backend is and object that implements the following basic
@@ -304,7 +398,7 @@ class Video:
 
     """
 
-    backend: Union[HDF5Video, NumpyVideo, MediaVideo] = attr.ib()
+    backend: Union[HDF5Video, NumpyVideo, MediaVideo, ImgStoreVideo] = attr.ib()
 
     # Delegate to the backend
     def __getattr__(self, item):
@@ -366,7 +460,7 @@ class Video:
 
     @classmethod
     def from_hdf5(cls, dataset: Union[str, h5.Dataset],
-                  file: Union[str, h5.File] = None,
+                  filename: Union[str, h5.File] = None,
                   input_format: str = "channels_last",
                   convert_range: bool = True):
         """
@@ -374,17 +468,18 @@ class Video:
         is a helper method that invokes the HDF5Video backend.
 
         Args:
-            dataset: The name of the dataset or and h5.Dataset object. If file is
+            dataset: The name of the dataset or and h5.Dataset object. If filename is
             h5.File, dataset must be a str of the dataset name.
-            file: The name of the HDF5 file or and open h5.File object.
+            filename: The name of the HDF5 file or and open h5.File object.
             input_format: Whether the data is oriented with "channels_first" or "channels_last"
             convert_range: Whether we should convert data to [0, 255]-range
 
         Returns:
             A Video object with HDF5Video backend.
         """
+        filename = Video.fixup_path(filename)
         backend = HDF5Video(
-                    file=file,
+                    filename=filename,
                     dataset=dataset,
                     input_format=input_format,
                     convert_range=convert_range
@@ -392,53 +487,194 @@ class Video:
         return cls(backend=backend)
 
     @classmethod
-    def from_numpy(cls, file, *args, **kwargs):
+    def from_numpy(cls, filename, *args, **kwargs):
         """
         Create an instance of a video object from a numpy array.
 
         Args:
-            file: The numpy array or the name of the file
+            filename: The numpy array or the name of the file
 
         Returns:
             A Video object with a NumpyVideo backend
         """
-        backend = NumpyVideo(file=file, *args, **kwargs)
+        filename = Video.fixup_path(filename)
+        backend = NumpyVideo(filename=filename, *args, **kwargs)
         return cls(backend=backend)
 
     @classmethod
-    def from_media(cls, file: str, *args, **kwargs):
+    def from_media(cls, filename: str, *args, **kwargs):
         """
         Create an instance of a video object from a typical media file (e.g. .mp4, .avi).
 
         Args:
-            file: The name of the file
+            filename: The name of the file
 
         Returns:
             A Video object with a MediaVideo backend
         """
-        backend = MediaVideo(filename=file, *args, **kwargs)
+        filename = Video.fixup_path(filename)
+        backend = MediaVideo(filename=filename, *args, **kwargs)
         return cls(backend=backend)
 
     @classmethod
-    def from_filename(cls, file: str, *args, **kwargs):
+    def from_filename(cls, filename: str, *args, **kwargs):
         """
         Create an instance of a video object from a filename, auto-detecting the backend.
 
         Args:
-            file: The path to the video file
+            filename: The path to the video filename. Currently supported types are:
+
+            * Media Videos - AVI, MP4, etc. handled by OpenCV directly
+            * HDF5 Datasets - .h5 files
+            * Numpy Arrays - npy files
+            * imgstore datasets - produced by loopbio's Motif recording system. See: https://github.com/loopbio/imgstore.
 
         Returns:
             A Video object with the detected backend
         """
-        if file.lower().endswith(("h5", "hdf5")):
-            return cls(backend=HDF5Video(file=file, *args, **kwargs))
-        elif file.endswith(("npy")):
-            return cls(backend=NumpyVideo(file=file, *args, **kwargs))
-        elif file.lower().endswith(("mp4", "avi")):
-            return cls(backend=MediaVideo(filename=file, *args, **kwargs))
+
+        filename = Video.fixup_path(filename)
+
+        if filename.lower().endswith(("h5", "hdf5")):
+            return cls(backend=HDF5Video(filename=filename, *args, **kwargs))
+        elif filename.endswith(("npy")):
+            return cls(backend=NumpyVideo(filename=filename, *args, **kwargs))
+        elif filename.lower().endswith(("mp4", "avi")):
+            return cls(backend=MediaVideo(filename=filename, *args, **kwargs))
+        elif os.path.isdir(filename) or "metadata.yaml" in filename:
+            return cls(backend=ImgStoreVideo(filename=filename, *args, **kwargs))
         else:
             raise ValueError("Could not detect backend for specified filename.")
 
     @classmethod
     def to_numpy(cls, frame_data: np.array, file_name: str):
         np.save(file_name, frame_data, 'w')
+
+    def to_imgstore(self, path,
+                    frame_numbers: List[int] = None,
+                    format: str = "png",
+                    index_by_original: bool = True):
+        """
+        Read frames from an arbitrary video backend and store them in a loopbio imgstore.
+        This should facilitate conversion of any video to a loopbio imgstore.
+
+        Args:
+            path: Filename or directory name to store imgstore.
+            frame_numbers: A list of frame numbers from the video to save. If None save
+            the entire video.
+            format: By default it will create a DirectoryImgStore with lossless PNG format.
+            Unless the frame_indices = None, in which case, it will default to 'mjpeg/avi'
+            format for video.
+            index_by_original: ImgStores are great for storing a collection of frame
+            selected frames from an larger video. If the index_by_original is set to
+            True than the get_frame function will accept the original frame numbers of
+            from original video. If False, then it will accept the frame index from the
+            store directly.
+
+        Returns:
+            A new Video object that references the imgstore.
+        """
+
+        # If the user has not provided a list of frames to store, store them all.
+        if frame_numbers is None:
+            frame_numbers = range(self.num_frames)
+
+            # We probably don't want to store all the frames as the PNG default,
+            # lets use MJPEG by default.
+            format = "mjpeg/avi"
+
+        # Delete the imgstore if it already exists.
+        if os.path.exists(path):
+            if os.path.isfile(path):
+                os.remove(path)
+            if os.path.isdir(path):
+                shutil.rmtree(path, ignore_errors=True)
+
+        store = imgstore.new_for_format(format,
+                                        mode='w', basedir=path,
+                                        imgshape=self.get_frame(0).shape,
+                                        chunksize=1000)
+
+        # Write the JSON for the original video object to the metadata
+        # of the imgstore for posterity
+        store.add_extra_data(sourc_sleap_video_obj=Video.cattr().unstructure(self))
+
+        import time
+        for frame_num in frame_numbers:
+            store.add_image(self.get_frame(frame_num), frame_num, time.time())
+
+        store.close()
+
+        # Return an ImgStoreVideo object referencing this new imgstore.
+        return self.__class__(backend=ImgStoreVideo(filename=path, index_by_original=index_by_original))
+
+    @staticmethod
+    def cattr():
+        """
+        Return a cattr converter for serialiazing\deseriializing Video objects.
+
+        Returns:
+            A cattr converter.
+        """
+
+        # When we are structuring video backends, try to fixup the video file paths
+        # in case they are coming from a different computer or the file has been moved.
+        def fixup_video(x, cl):
+            if 'filename' in x:
+                x['filename'] = Video.fixup_path(x['filename'])
+            if 'file' in x:
+                x['file'] = Video.fixup_path(x['file'])
+
+            return cl(**x)
+
+        vid_cattr = cattr.Converter()
+
+        # Check the type hint for backend and register the video path
+        # fixup hook for each type in the Union.
+        for t in attr.fields(Video).backend.type.__args__:
+            vid_cattr.register_structure_hook(t, fixup_video)
+
+        return vid_cattr
+
+    @staticmethod
+    def fixup_path(path) -> str:
+        """
+        Given a path to a video try to find it. This is attempt to make the paths
+        serialized for different video objects portabls across multiple computers.
+        The default behaviour is to store whatever path is stored on the backend
+        object. If this is an absolute path it is almost certainly wrong when
+        transfered when the object is created on another computer. We try to
+        find the video by looking in the current working directory as well.
+
+        Args:
+            path: The path the video asset.
+
+        Returns:
+            The fixed up path
+        """
+
+        # If path is not a string then just return it and assume the backend
+        # knows what to do with it.
+        if type(path) is not str:
+            return path
+
+        if os.path.exists(path):
+            return path
+
+        # Strip the directory and lets see if the file is in the current working
+        # directory.
+        elif os.path.exists(os.path.basename(path)):
+            return os.path.basename(path)
+
+        # Special case: this is an ImgStore path! We cant use
+        # basename because it will strip the directory name off
+        elif path.endswith('metadata.yaml'):
+
+            # Get the parent dir of the YAML file.
+            img_store_dir = os.path.basename(os.path.split(path)[0])
+
+            if os.path.exists(img_store_dir):
+                return img_store_dir
+
+        raise FileNotFoundError(f"Cannot find a video file: f{path}")
+

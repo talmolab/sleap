@@ -297,18 +297,36 @@ class VideoSlider(QGraphicsView):
         """
         self._marks.add(new_mark)
 
+        width = 0
+        filled = True
         if type(new_mark) == tuple:
-            track = new_mark[0]
-            v_offset = 3 + (self._track_height * track)
-            height = 1
-            color = QColor(*self.color_maps[track%len(self.color_maps)])
+            if type(new_mark[0]) == int:
+                # colored track if mark has format: (track_number, frame_idx)
+                track = new_mark[0]
+                v_offset = 3 + (self._track_height * track)
+                height = 1
+                color = QColor(*self.color_maps[track%len(self.color_maps)])
+            else:
+                # rect (open/filled) if format: ("o", frame_idx) or ("f", frame_idx)
+                mark_type = new_mark[0]
+                v_offset = 3
+                height = self.slider.rect().height()-6
+                width = 2
+                color = QColor("blue")
+                if mark_type == "o":
+                    filled = False
         else:
+            # line if mark has format: frame_idx
             v_offset = 3
             height = self.slider.rect().height()-6
             color = QColor("black")
 
-        line = self.scene.addRect(0, v_offset, 0, height,
-                                  QPen(color), QBrush(color))
+        pen = QPen(color, .5)
+        pen.setCosmetic(True)
+        brush = QBrush(color) if filled else QBrush()
+
+        line = self.scene.addRect(-width//2, v_offset, width, height,
+                                  pen, brush)
         self._mark_items[new_mark] = line
         if update: self.updatePos()
 
@@ -320,14 +338,18 @@ class VideoSlider(QGraphicsView):
             if type(mark) == tuple:
                 in_track = True
                 v = mark[1]
+                if type(mark[0]) == int:
+                    width = self._toPos(1)
+                else:
+                    width = 2
             else:
                 in_track = False
                 v = mark
+                width = 0
             x = self._toPos(v, center=True)
             self._mark_items[mark].setPos(x, 0)
 
             rect = self._mark_items[mark].rect()
-            width = 0 if not in_track else self._toPos(1)
             rect.setWidth(width)
 
             self._mark_items[mark].setRect(rect)
@@ -438,12 +460,12 @@ if __name__ == "__main__":
     app = QApplication([])
 
     window = VideoSlider(
-                min=0, max=500, val=15,
+                min=0, max=20, val=15,
                 marks=(10,15)#((0,10),(0,15),(1,10),(1,11),(2,12)), tracks=3
                 )
     window.setTracks(5)
-    mark_positions = ((0,10),(0,15),(1,10),(1,11),(2,12),(3,12),(3,13),(3,14),(4,15),(4,16),(4,21))
-#     mark_positions = [(0,i) for i in range(200)]
+#     mark_positions = ((0,10),(0,15),(1,10),(1,11),(2,12),(3,12),(3,13),(3,14),(4,15),(4,16),(4,21))
+    mark_positions = [("o",i) for i in range(3,15,4)] + [("f",18)]
     window.setMarks(mark_positions)
     window.valueChanged.connect(lambda x: print(x))
     window.show()
