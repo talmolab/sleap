@@ -356,7 +356,7 @@ class ImportParamWidget(QWidget):
         """
         param_list = self.import_type["params"]
         param_values = {}
-        param_values["file"] = self.file_path
+        param_values["filename"] = self.file_path
         for param_item in param_list:
             name = param_item["name"]
             type = param_item["type"]

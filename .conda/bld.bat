@@ -13,12 +13,15 @@ rem # this out myself, ughhh.
 set PIP_NO_INDEX=False
 set PIP_NO_DEPENDENCIES=False
 set PIP_IGNORE_INSTALLED=False
-pip install cattrs==1.0.0rc opencv-python PySide2==5.12.0 imgaug qimage2ndarray==1.8
+pip install cattrs==1.0.0rc opencv-python PySide2==5.12.0 imgaug qimage2ndarray==1.8 imgstore
 
 rem # Use and update environment.yml call to install pip dependencies. This is slick.
 rem # While environment.yml contains the non pip dependencies, the only thing left
 rem # uninstalled should be the pip stuff because that is left out of meta.yml
 rem conda env update -f=environment.yml
+
+rem # Install requires setuptools-scm
+pip install setuptools-scm
 
 rem # Install sleap itself.
 rem # NOTE: This is the recommended way to install packages

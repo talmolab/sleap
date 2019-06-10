@@ -5,8 +5,12 @@ networkx
 tensorflow
 keras
 h5py
-opencv-python
+opencv-python==3.4.2.17
 pandas
 psutil
 PySide2
 pyzmq
+pyyaml
+imgaug
+scikit-image
+imgstore

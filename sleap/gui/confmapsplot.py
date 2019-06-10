@@ -145,10 +145,16 @@ class ConfMapPlot(QGraphicsPixmapItem):
         frame = self.confmap
 
         # Colorize single-channel overlap
-        frame_a = (frame * 255).astype(np.uint8)
-        frame_r = (frame * self.color_map[0]).astype(np.uint8)
-        frame_g = (frame * self.color_map[1]).astype(np.uint8)
-        frame_b = (frame * self.color_map[2]).astype(np.uint8)
+        if np.ptp(frame) <= 1.:
+            frame_a = (frame * 255).astype(np.uint8)
+            frame_r = (frame * self.color_map[0]).astype(np.uint8)
+            frame_g = (frame * self.color_map[1]).astype(np.uint8)
+            frame_b = (frame * self.color_map[2]).astype(np.uint8)
+        else:
+            frame_a = (frame).astype(np.uint8)
+            frame_r = (frame * (self.color_map[0]/255.)).astype(np.uint8)
+            frame_g = (frame * (self.color_map[1]/255.)).astype(np.uint8)
+            frame_b = (frame * (self.color_map[2]/255.)).astype(np.uint8)
 
         frame_composite = np.dstack((frame_r, frame_g, frame_b, frame_a))
 
@@ -157,34 +163,60 @@ class ConfMapPlot(QGraphicsPixmapItem):
 
         return image
 
+def demo_confmaps(confmaps, video, standalone=False):
+    from PySide2 import QtWidgets
+    from sleap.gui.video import QtVideoPlayer
+
+    if standalone: app = QtWidgets.QApplication([])
+
+    win = QtVideoPlayer(video=video)
+    win.setWindowTitle("confmaps")
+    win.show()
+
+    def plot_confmaps(parent, item_idx):
+        frame_conf_map = ConfMapsPlot(confmaps[parent.frame_idx,...])
+        win.view.scene.addItem(frame_conf_map)
+
+    win.changedPlot.connect(plot_confmaps)
+    win.plot()
+
+    if standalone: app.exec_()
+
+    return win
+
 if __name__ == "__main__":
 
     from video import QtVideoPlayer
 
-    #data_path = "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"
-    data_path = "training.scale=1.00,sigma=5.h5"
+    data_path = "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"
+
     vid = HDF5Video(data_path, "/box", input_format="channels_first")
     conf_data = HDF5Video(data_path, "/confmaps", input_format="channels_first")
 
-    app = QApplication([])
-    window = QtVideoPlayer(video=vid)
+    confmaps_ = [conf_data.get_frame(i) for i in range(conf_data.frames)]
+    confmaps = np.stack(confmaps_)
 
-    channel_box = MultiCheckWidget(
-        count=conf_data.get_frame(0).shape[-1],
-        title="Confidence Map Channel",
-        default=True
-        )
-    channel_box.selectionChanged.connect(window.plot)
-    window.layout.addWidget(channel_box)
+    demo_confmaps(confmaps=confmaps, video=vid, standalone=True)
 
-    def plot_confmaps(parent, item_idx):
-        selected = channel_box.getSelected()
-        conf_maps = ConfMapsPlot(conf_data.get_frame(parent.frame_idx), selected)
-        window.view.scene.addItem(conf_maps)
-
-    window.changedPlot.connect(plot_confmaps)
-
-    window.show()
-    window.plot()
-
-    app.exec_()
+#     app = QApplication([])
+#     window = QtVideoPlayer(video=vid)
+# 
+#     channel_box = MultiCheckWidget(
+#         count=conf_data.get_frame(0).shape[-1],
+#         title="Confidence Map Channel",
+#         default=True
+#         )
+#     channel_box.selectionChanged.connect(window.plot)
+#     window.layout.addWidget(channel_box)
+# 
+#     def plot_confmaps(parent, item_idx):
+#         selected = channel_box.getSelected()
+#         conf_maps = ConfMapsPlot(conf_data.get_frame(parent.frame_idx), selected)
+#         window.view.scene.addItem(conf_maps)
+# 
+#     window.changedPlot.connect(plot_confmaps)
+# 
+#     window.show()
+#     window.plot()
+# 
+#     app.exec_()
