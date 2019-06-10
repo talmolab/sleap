@@ -19,6 +19,8 @@ from sleap.nn.architectures.unet import unet, stacked_unet
 from sleap.nn.architectures.leap import leap_cnn
 from sleap.nn.monitor import LossViewer
 
+from sleap.nn.datagen import generate_confmaps_from_points, generate_pafs_from_points
+
 from multiprocessing import Process
 import zmq
 import jsonpickle
@@ -137,7 +139,7 @@ class ProgressReporterZMQ(keras.callbacks.Callback):
 
 def train(
     # Data
-    imgs, outputs, output_type="confmaps", val_size=0.1,
+    imgs, outputs, skeleton=None, output_type="confmaps", val_size=0.1,
     # Architecture
     arch="unet", num_stacks=1, depth=3, convs_per_depth=2, num_filters=64, batch_norm=True, upsampling="bilinear", intermediate_inputs=True, intermediate_outputs=True,
     # Optimizer
@@ -174,9 +176,16 @@ def train(
     num_train, img_height, img_width, img_channels = imgs_train.shape
     num_val = len(imgs_val)
     num_total = num_train + num_val
-    outputs_channels = outputs_train.shape[-1]
-    print(f"Training set: {imgs_train.shape} -> {outputs_train.shape}")
-    print(f"Validation set: {imgs_val.shape} -> {outputs_val.shape}")
+
+    if type(outputs_train) == np.ndarray:
+        outputs_channels = outputs_train.shape[-1]
+    elif output_type.lower() == "confmaps":
+        outputs_channels = len(skeleton.nodes)
+    elif output_type.lower() == "pafs":
+        outputs_channels = len(skeleton.edges) * 2
+
+    print(f"Training set: {imgs_train.shape} -> {outputs_channels} channels")
+    print(f"Validation set: {imgs_val.shape} -> {outputs_channels} channels")
 
     # Build model architecture
     # TODO: separate architecture builder
@@ -251,8 +260,22 @@ def train(
 
         # TODO: save serialized training info
 
+    img_shape = (imgs_train.shape[1], imgs_train.shape[2])
+    if output_type.lower() == "confmaps":
+        def datagen_function(points):
+            return generate_confmaps_from_points(points, skeleton, img_shape)
+    elif output_type.lower() == "confmaps":
+        def datagen_function(points):
+            return generate_pafs_from_points(points, skeleton, img_shape)
+    else:
+        datagen_function = None
+
+    if datagen_function is not None:
+        outputs_val = datagen_function(outputs_val)
+
     # Initialize data generator with augmentation
-    train_datagen = Augmenter(imgs_train, outputs_train, output_names=model.output_names,
+    train_datagen = Augmenter(imgs_train, Points=outputs_train,
+        datagen=datagen_function, output_names=model.output_names,
         batch_size=batch_size, shuffle=shuffle_initially,
         rotation=augment_rotation, scale=(augment_scale_min, augment_scale_max))
 
@@ -337,16 +360,20 @@ def train(
 
 if __name__ == "__main__":
     
+    from PySide2 import QtWidgets
+
     from sleap.io.dataset import Labels
     labels = Labels.load_json("tests/data/json_format_v1/centered_pair.json")
 
-    from sleap.nn.datagen import generate_images, generate_confidence_maps
+    from sleap.nn.datagen import generate_images, generate_points
     t0 = time()
     imgs = generate_images(labels)
-    confmaps = generate_confidence_maps(labels, sigma=5)
+    points = generate_points(labels)
+    skeleton = labels.skeletons[0]
+
     print(f"Generated training data. [{time() - t0:.2f}s]")
 
-    proc = Process(target=train, args=(imgs, confmaps), kwargs=dict(val_size=0.1, batch_norm=False, num_filters=16, batch_size=4, num_epochs=100, steps_per_epoch=100, arch="unet"))
+    proc = Process(target=train, args=(imgs, points), kwargs=dict(output_type="confmaps", skeleton=skeleton, val_size=0.1, batch_norm=False, num_filters=16, batch_size=4, num_epochs=100, steps_per_epoch=100, arch="unet"))
     proc.start()
 
     ctx = zmq.Context()

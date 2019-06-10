@@ -109,7 +109,7 @@ class TrainingDialog(QtWidgets.QMainWindow):
                 # Start training process
                 from sleap.nn.training import train
                 mp.Process(target=train,
-                    args=(self.training_data["imgs"], self.training_data["confmaps"]),
+                    args=(self.training_data["imgs"], self.training_data["points"], self.training_data["skeleton"]),
                     kwargs=training_params
                     ).start()
             else:
@@ -144,19 +144,13 @@ class TrainingDialog(QtWidgets.QMainWindow):
         from sleap.gui.quiverplot import MultiQuiverPlot
         print("in preview")
         imgs = self.training_data["imgs"]
-        confmaps = self.training_data["confmaps"]
+        # confmaps = self.training_data["confmaps"]
         print(imgs.shape)
-        print(confmaps.shape)
-        vid = Video.from_numpy(imgs * 255)
-        conf_window = QtVideoPlayer(video=vid)
-        conf_window.show()
 
-        def plot_confmaps(parent, item_idx):
-            frame_conf_map = ConfMapsPlot(confmaps[parent.frame_idx,...])
-            conf_window.view.scene.addItem(frame_conf_map)
-
-        conf_window.changedPlot.connect(plot_confmaps)
-        conf_window.plot()
+        # print(confmaps.shape)
+        # vid = Video.from_numpy(imgs * 255)
+        # demo_confmaps(vid, self.training_data["confmaps"], standalone=True)
+        
 
     def check_messages(self, *args):
          if self.training_data["update"].is_set():
@@ -194,24 +188,28 @@ def run_data_gen(labels_file, results):
     results["times"]["end_io"] = time()
 
     # TESTING: just use a few frames
-    labels.labeled_frames = labels.labeled_frames[0:2]
+    # labels.labeled_frames = labels.labeled_frames[0:2]
 
-    from sleap.nn.datagen import generate_images, generate_confidence_maps
+    from sleap.nn.datagen import generate_images, generate_points
+
+    # TODO: support multiple skeletons
+    skeleton = labels.skeletons[0]
 
     results["times"]["start_imgs"] = time()
     imgs = generate_images(labels)
     results["times"]["end_imgs"] = time()
 
-    results["times"]["start_conf"] = time()
-    confmaps = generate_confidence_maps(labels, sigma=5)
-    results["times"]["end_conf"] = time()
+    results["times"]["start_points"] = time()
+    points = generate_points(labels)
+    # confmaps = generate_confidence_maps(labels, sigma=5)
+    results["times"]["end_points"] = time()
 
     results["times"]["end_time"] = time()
 
     results["times"]["total"] = results["times"]["end_time"] - results["times"]["start_time"]
     results["times"]["io"] = results["times"]["end_io"] - results["times"]["start_io"]
     results["times"]["imgs"] = results["times"]["end_imgs"] - results["times"]["start_imgs"]
-    results["times"]["conf"] = results["times"]["end_conf"] - results["times"]["start_conf"]
+    results["times"]["points"] = results["times"]["end_points"] - results["times"]["start_points"]
 
 #     imgs_ctypes = np.ctypeslib.as_ctypes(imgs)
 #     imgs_raw = sharedctypes.RawArray(imgs_ctypes._type_, imgs_ctypes)
@@ -219,7 +217,8 @@ def run_data_gen(labels_file, results):
 #     confmaps_raw = sharedctypes.RawArray(confmaps_ctypes._type_, confmaps_ctypes)
 
     results["imgs"] = imgs#_raw
-    results["confmaps"] = confmaps#_raw
+    results["points"] = points#_raw
+    results["skeleton"] = skeleton
 
     results["ready"] = True
     results["update"].set()

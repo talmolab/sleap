@@ -13,6 +13,7 @@ from PySide2.QtWidgets import QFileDialog, QMessageBox
 import os
 import sys
 import copy
+import yaml
 
 from pathlib import PurePath
 
@@ -119,6 +120,16 @@ class MainWindow(QMainWindow):
 
     def initialize_gui(self):
 
+        shortcut_yaml = "sleap/gui/shortcuts.yaml"
+        with open(shortcut_yaml, 'r') as f:
+            shortcuts = yaml.load(f, Loader=yaml.SafeLoader)
+
+        for action in shortcuts:
+            key_string = shortcuts.get(action, None)
+            key_string = "" if key_string is None else key_string
+            if "." in key_string:
+                shortcuts[action] = eval(key_string)
+
         ####### Video player #######
         self.player = QtVideoPlayer()
         self.player.changedPlot.connect(self.newFrame)
@@ -131,43 +142,43 @@ class MainWindow(QMainWindow):
 
         ####### Menus #######
         fileMenu = self.menuBar().addMenu("File")
-        self._menu_actions["new"] = fileMenu.addAction("&New Project", self.newProject, QKeySequence.New)
-        self._menu_actions["open"] = fileMenu.addAction("&Open Project...", self.openProject, QKeySequence.Open)
-        self._menu_actions["save"] = fileMenu.addAction("&Save", self.saveProject, QKeySequence.Save)
-        self._menu_actions["save as"] = fileMenu.addAction("Save As...", self.saveProjectAs, QKeySequence.SaveAs)
+        self._menu_actions["new"] = fileMenu.addAction("&New Project", self.newProject, shortcuts["new"])
+        self._menu_actions["open"] = fileMenu.addAction("&Open Project...", self.openProject, shortcuts["open"])
+        self._menu_actions["save"] = fileMenu.addAction("&Save", self.saveProject, shortcuts["save"])
+        self._menu_actions["save as"] = fileMenu.addAction("Save As...", self.saveProjectAs, shortcuts["save as"])
         fileMenu.addSeparator()
-        self._menu_actions["close"] = fileMenu.addAction("&Quit", self.close)
+        self._menu_actions["close"] = fileMenu.addAction("Quit", self.close, shortcuts["close"])
 
         videoMenu = self.menuBar().addMenu("Video")
         # videoMenu.addAction("Check video encoding").triggered.connect(self.checkVideoEncoding)
         # videoMenu.addAction("Reencode for seeking").triggered.connect(self.reencodeForSeeking)
         # videoMenu.addSeparator()
-        self._menu_actions["add videos"] = videoMenu.addAction("Add Videos...", self.addVideo, Qt.CTRL + Qt.Key_A)
-        self._menu_actions["next video"] = videoMenu.addAction("Next Video", self.nextVideo, QKeySequence.Forward)
-        self._menu_actions["prev video"] = videoMenu.addAction("Previous Video", self.previousVideo, QKeySequence.Back)
+        self._menu_actions["add videos"] = videoMenu.addAction("Add Videos...", self.addVideo, shortcuts["add videos"])
+        self._menu_actions["next video"] = videoMenu.addAction("Next Video", self.nextVideo, shortcuts["next video"])
+        self._menu_actions["prev video"] = videoMenu.addAction("Previous Video", self.previousVideo, shortcuts["prev video"])
         videoMenu.addSeparator()
-        self._menu_actions["mark frame"] = videoMenu.addAction("Mark Frame", self.markFrame, Qt.CTRL + Qt.Key_M)
-        self._menu_actions["goto marked"] = videoMenu.addAction("Go to Marked Frame", self.goMarkedFrame, Qt.CTRL + Qt.SHIFT + Qt.Key_M)
-        self._menu_actions["extract clip"] = videoMenu.addAction("Extract Clip...", self.extractClip, Qt.CTRL + Qt.Key_E)
+        self._menu_actions["mark frame"] = videoMenu.addAction("Mark Frame", self.markFrame, shortcuts["mark frame"])
+        self._menu_actions["goto marked"] = videoMenu.addAction("Go to Marked Frame", self.goMarkedFrame, shortcuts["goto marked"])
+        self._menu_actions["extract clip"] = videoMenu.addAction("Extract Clip...", self.extractClip, shortcuts["extract clip"])
 
         labelMenu = self.menuBar().addMenu("Labels")
-        self._menu_actions["add instance"] = labelMenu.addAction("Add Instance", self.newInstance, Qt.CTRL + Qt.Key_I)
-        self._menu_actions["delete instance"] = labelMenu.addAction("Delete Instance", self.deleteSelectedInstance, Qt.CTRL + Qt.Key_Backspace)
+        self._menu_actions["add instance"] = labelMenu.addAction("Add Instance", self.newInstance, shortcuts["add instance"])
+        self._menu_actions["delete instance"] = labelMenu.addAction("Delete Instance", self.deleteSelectedInstance, shortcuts["delete instance"])
         self.track_menu = labelMenu.addMenu("Set Instance Track")
-        self._menu_actions["transpose"] = labelMenu.addAction("Transpose Instance Tracks", self.transposeInstance, Qt.CTRL + Qt.Key_T)
-        self._menu_actions["select next"] = labelMenu.addAction("Select Next Instance", self.player.view.nextSelection, QKeySequence(Qt.Key.Key_QuoteLeft))
-        self._menu_actions["clear selection"] = labelMenu.addAction("Clear Selection", self.player.view.clearSelection, QKeySequence(Qt.Key.Key_Escape))
+        self._menu_actions["transpose"] = labelMenu.addAction("Transpose Instance Tracks", self.transposeInstance, shortcuts["transpose"])
+        self._menu_actions["select next"] = labelMenu.addAction("Select Next Instance", self.player.view.nextSelection, shortcuts["select next"])
+        self._menu_actions["clear selection"] = labelMenu.addAction("Clear Selection", self.player.view.clearSelection, shortcuts["clear selection"])
         labelMenu.addSeparator()
-        self._menu_actions["goto next"] = labelMenu.addAction("Next Labeled Frame", self.nextLabeledFrame)
-        self._menu_actions["goto prev"] = labelMenu.addAction("Previous Labeled Frame", self.previousLabeledFrame)
+        self._menu_actions["goto next"] = labelMenu.addAction("Next Labeled Frame", self.nextLabeledFrame, shortcuts["goto next"])
+        self._menu_actions["goto prev"] = labelMenu.addAction("Previous Labeled Frame", self.previousLabeledFrame, shortcuts["goto prev"])
 
-        self._menu_actions["goto next suggestion"] = labelMenu.addAction("Next Suggestion", self.nextSuggestedFrame, QKeySequence.FindNext)
-        self._menu_actions["goto prev suggestion"] = labelMenu.addAction("Previous Suggestion", lambda:self.nextSuggestedFrame(-1), QKeySequence.FindPrevious)
+        self._menu_actions["goto next suggestion"] = labelMenu.addAction("Next Suggestion", self.nextSuggestedFrame, shortcuts["goto next suggestion"])
+        self._menu_actions["goto prev suggestion"] = labelMenu.addAction("Previous Suggestion", lambda:self.nextSuggestedFrame(-1), shortcuts["goto prev suggestion"])
 
         labelMenu.addSeparator()
-        self._menu_actions["show labels"] = labelMenu.addAction("Show Node Names", self.toggleLabels, Qt.ALT + Qt.Key_Tab)
-        self._menu_actions["show edges"] = labelMenu.addAction("Show Edges", self.toggleEdges, Qt.ALT + Qt.SHIFT + Qt.Key_Tab)
-        self._menu_actions["show trails"] = labelMenu.addAction("Show Trails", self.toggleTrails)
+        self._menu_actions["show labels"] = labelMenu.addAction("Show Node Names", self.toggleLabels, shortcuts["show labels"])
+        self._menu_actions["show edges"] = labelMenu.addAction("Show Edges", self.toggleEdges, shortcuts["show edges"])
+        self._menu_actions["show trails"] = labelMenu.addAction("Show Trails", self.toggleTrails, shortcuts["show trails"])
 
         self.trailLengthMenu = labelMenu.addMenu("Trail Length")
         for length_option in (4, 10, 20):
@@ -175,9 +186,9 @@ class MainWindow(QMainWindow):
                             lambda x=length_option: self.setTrailLength(x))
             menu_item.setCheckable(True)
 
-        self._menu_actions["color predicted"] = labelMenu.addAction("Color Predicted Instances", self.toggleColorPredicted)
+        self._menu_actions["color predicted"] = labelMenu.addAction("Color Predicted Instances", self.toggleColorPredicted, shortcuts["color predicted"])
         labelMenu.addSeparator()
-        self._menu_actions["fit"] = labelMenu.addAction("Fit Instances to View", self.toggleAutoZoom, Qt.CTRL + Qt.Key_Equal)
+        self._menu_actions["fit"] = labelMenu.addAction("Fit Instances to View", self.toggleAutoZoom, shortcuts["fit"])
 
         self._menu_actions["show labels"].setCheckable(True); self._menu_actions["show labels"].setChecked(self._show_labels)
         self._menu_actions["show edges"].setCheckable(True); self._menu_actions["show edges"].setChecked(self._show_edges)
@@ -464,6 +475,10 @@ class MainWindow(QMainWindow):
             has_loaded = True
         elif filename.endswith(".mat"):
             self.labels = Labels.load_mat(filename)
+            has_loaded = True
+        elif filename.endswith(".csv"):
+            # for now, the only csv we support is the DeepLabCut format
+            self.labels = Labels.load_deeplabcut_csv(filename)
             has_loaded = True
 
         self.filename = filename
@@ -940,7 +955,7 @@ class MainWindow(QMainWindow):
         window.showMaximized()
 
     def openProject(self, first_open=False):
-        filters = ["JSON labels (*.json)", "HDF5 dataset (*.h5 *.hdf5)", "Matlab dataset (*.mat)"]
+        filters = ["JSON labels (*.json)", "HDF5 dataset (*.h5 *.hdf5)", "Matlab dataset (*.mat)", "DeepLabCut csv (*.csv)"]
         filename, selected_filter = QFileDialog.getOpenFileName(self, dir=None, caption="Import labeled data...", filter=";;".join(filters))
 
         if len(filename) == 0: return
