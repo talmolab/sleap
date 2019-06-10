@@ -161,7 +161,7 @@ is to provide a common interface for defining the parts of the animal, their
 connection to each other, and needed meta-data.</p>
 <dl class="class">
 <dt id="sleap.skeleton.EdgeType">
-<em class="property">class </em><code class="descclassname">sleap.skeleton.</code><code class="descname">EdgeType</code><a class="reference internal" href="_modules/sleap/skeleton.html#EdgeType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.EdgeType" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.skeleton.</code><code class="sig-name descname">EdgeType</code><a class="reference internal" href="_modules/sleap/skeleton.html#EdgeType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.EdgeType" title="Permalink to this definition">¶</a></dt>
 <dd><p>The skeleton graph can store different types of edges to represent
 different things. All edges must specify one or more of the following types.</p>
 <blockquote>
@@ -175,20 +175,20 @@ different things. All edges must specify one or more of the following types.</p>
 
 <dl class="class">
 <dt id="sleap.skeleton.Node">
-<em class="property">class </em><code class="descclassname">sleap.skeleton.</code><code class="descname">Node</code><span class="sig-paren">(</span><em>name: str</em>, <em>weight: float = 1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Node" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.skeleton.</code><code class="sig-name descname">Node</code><span class="sig-paren">(</span><em class="sig-param">name: str</em>, <em class="sig-param">weight: float = 1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Node" title="Permalink to this definition">¶</a></dt>
 <dd><p>The class <a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a> represents a potential skeleton node.
 (But note that nodes can exist without being part of a skeleton.)</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="sleap.skeleton.Skeleton">
-<em class="property">class </em><code class="descclassname">sleap.skeleton.</code><code class="descname">Skeleton</code><span class="sig-paren">(</span><em>name: str = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.skeleton.</code><code class="sig-name descname">Skeleton</code><span class="sig-paren">(</span><em class="sig-param">name: str = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton" title="Permalink to this definition">¶</a></dt>
 <dd><p>The main object for representing animal skeletons in LEAP.</p>
 <p>The skeleton represents the constituent parts of the animal whose pose
 is being estimated.</p>
 <dl class="method">
 <dt id="sleap.skeleton.Skeleton.add_edge">
-<code class="descname">add_edge</code><span class="sig-paren">(</span><em>source: str</em>, <em>destination: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.add_edge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.add_edge" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">add_edge</code><span class="sig-paren">(</span><em class="sig-param">source: str</em>, <em class="sig-param">destination: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.add_edge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.add_edge" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add an edge between two nodes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -205,7 +205,7 @@ is being estimated.</p>
 
 <dl class="method">
 <dt id="sleap.skeleton.Skeleton.add_node">
-<code class="descname">add_node</code><span class="sig-paren">(</span><em>name: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.add_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.add_node" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">add_node</code><span class="sig-paren">(</span><em class="sig-param">name: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.add_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.add_node" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a node representing an animal part to the skeleton.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -219,7 +219,7 @@ is being estimated.</p>
 
 <dl class="method">
 <dt id="sleap.skeleton.Skeleton.add_nodes">
-<code class="descname">add_nodes</code><span class="sig-paren">(</span><em>name_list: list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.add_nodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.add_nodes" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">add_nodes</code><span class="sig-paren">(</span><em class="sig-param">name_list: list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.add_nodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.add_nodes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a list of nodes representing animal parts to the skeleton.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -233,7 +233,7 @@ is being estimated.</p>
 
 <dl class="method">
 <dt id="sleap.skeleton.Skeleton.add_symmetry">
-<code class="descname">add_symmetry</code><span class="sig-paren">(</span><em>node1: str</em>, <em>node2: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.add_symmetry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.add_symmetry" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">add_symmetry</code><span class="sig-paren">(</span><em class="sig-param">node1: str</em>, <em class="sig-param">node2: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.add_symmetry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.add_symmetry" title="Permalink to this definition">¶</a></dt>
 <dd><p>Specify that two parts (nodes) in the skeleton are symmetrical.</p>
 <p>Certain parts of an animal body can be related as symmetrical parts in a pair. For example,
 the left and right hands of a person.</p>
@@ -252,7 +252,7 @@ the left and right hands of a person.</p>
 
 <dl class="method">
 <dt id="sleap.skeleton.Skeleton.delete_edge">
-<code class="descname">delete_edge</code><span class="sig-paren">(</span><em>source: str</em>, <em>destination: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.delete_edge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.delete_edge" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">delete_edge</code><span class="sig-paren">(</span><em class="sig-param">source: str</em>, <em class="sig-param">destination: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.delete_edge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.delete_edge" title="Permalink to this definition">¶</a></dt>
 <dd><p>Delete an edge between two nodes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -269,7 +269,7 @@ the left and right hands of a person.</p>
 
 <dl class="method">
 <dt id="sleap.skeleton.Skeleton.delete_node">
-<code class="descname">delete_node</code><span class="sig-paren">(</span><em>name: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.delete_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.delete_node" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">delete_node</code><span class="sig-paren">(</span><em class="sig-param">name: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.delete_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.delete_node" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove a node from the skeleton.</p>
 <p>The method removes a node from the skeleton and any edge that is connected to it.</p>
 <dl class="field-list simple">
@@ -284,7 +284,7 @@ the left and right hands of a person.</p>
 
 <dl class="method">
 <dt id="sleap.skeleton.Skeleton.delete_symmetry">
-<code class="descname">delete_symmetry</code><span class="sig-paren">(</span><em>node1: str</em>, <em>node2: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.delete_symmetry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.delete_symmetry" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">delete_symmetry</code><span class="sig-paren">(</span><em class="sig-param">node1: str</em>, <em class="sig-param">node2: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.delete_symmetry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.delete_symmetry" title="Permalink to this definition">¶</a></dt>
 <dd><p>Deletes a previously established symmetry relationship between two nodes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -299,9 +299,9 @@ the left and right hands of a person.</p>
 </dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="sleap.skeleton.Skeleton.edge_names">
-<code class="descname">edge_names</code><a class="headerlink" href="#sleap.skeleton.Skeleton.edge_names" title="Permalink to this definition">¶</a></dt>
+<em class="property">property </em><code class="sig-name descname">edge_names</code><a class="headerlink" href="#sleap.skeleton.Skeleton.edge_names" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a list of edge name tuples.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -310,9 +310,9 @@ the left and right hands of a person.</p>
 </dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="sleap.skeleton.Skeleton.edges">
-<code class="descname">edges</code><a class="headerlink" href="#sleap.skeleton.Skeleton.edges" title="Permalink to this definition">¶</a></dt>
+<em class="property">property </em><code class="sig-name descname">edges</code><a class="headerlink" href="#sleap.skeleton.Skeleton.edges" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a list of edge tuples.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -321,9 +321,9 @@ the left and right hands of a person.</p>
 </dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="sleap.skeleton.Skeleton.edges_full">
-<code class="descname">edges_full</code><a class="headerlink" href="#sleap.skeleton.Skeleton.edges_full" title="Permalink to this definition">¶</a></dt>
+<em class="property">property </em><code class="sig-name descname">edges_full</code><a class="headerlink" href="#sleap.skeleton.Skeleton.edges_full" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a list of edge tuples with keys and attributes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -334,7 +334,7 @@ the left and right hands of a person.</p>
 
 <dl class="method">
 <dt id="sleap.skeleton.Skeleton.find_node">
-<code class="descname">find_node</code><span class="sig-paren">(</span><em>name: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.find_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.find_node" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">find_node</code><span class="sig-paren">(</span><em class="sig-param">name: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.find_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.find_node" title="Permalink to this definition">¶</a></dt>
 <dd><p>Find node in skeleton by name of node.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -346,9 +346,9 @@ the left and right hands of a person.</p>
 </dl>
 </dd></dl>
 
-<dl class="classmethod">
+<dl class="method">
 <dt id="sleap.skeleton.Skeleton.from_json">
-<em class="property">classmethod </em><code class="descname">from_json</code><span class="sig-paren">(</span><em>json_str: str</em>, <em>idx_to_node: Dict[int</em>, <em>sleap.skeleton.Node] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.from_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.from_json" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">from_json</code><span class="sig-paren">(</span><em class="sig-param">json_str: str</em>, <em class="sig-param">idx_to_node: Dict[int</em>, <em class="sig-param">sleap.skeleton.Node] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.from_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.from_json" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parse a JSON string containing the Skeleton object and create an instance from it.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -365,7 +365,7 @@ the left and right hands of a person.</p>
 
 <dl class="method">
 <dt id="sleap.skeleton.Skeleton.get_symmetry">
-<code class="descname">get_symmetry</code><span class="sig-paren">(</span><em>node: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.get_symmetry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.get_symmetry" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_symmetry</code><span class="sig-paren">(</span><em class="sig-param">node: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.get_symmetry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.get_symmetry" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the node symmetric with the specified node.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -379,7 +379,7 @@ the left and right hands of a person.</p>
 
 <dl class="method">
 <dt id="sleap.skeleton.Skeleton.get_symmetry_name">
-<code class="descname">get_symmetry_name</code><span class="sig-paren">(</span><em>node: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.get_symmetry_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.get_symmetry_name" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_symmetry_name</code><span class="sig-paren">(</span><em class="sig-param">node: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.get_symmetry_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.get_symmetry_name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the name of the node symmetric with the specified node.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -393,7 +393,7 @@ the left and right hands of a person.</p>
 
 <dl class="method">
 <dt id="sleap.skeleton.Skeleton.has_edge">
-<code class="descname">has_edge</code><span class="sig-paren">(</span><em>source_name: str</em>, <em>dest_name: str</em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.has_edge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.has_edge" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">has_edge</code><span class="sig-paren">(</span><em class="sig-param">source_name: str</em>, <em class="sig-param">dest_name: str</em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.has_edge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.has_edge" title="Permalink to this definition">¶</a></dt>
 <dd><p>Check whether the skeleton has an edge.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -410,7 +410,7 @@ the left and right hands of a person.</p>
 
 <dl class="method">
 <dt id="sleap.skeleton.Skeleton.has_node">
-<code class="descname">has_node</code><span class="sig-paren">(</span><em>name: str</em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.has_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.has_node" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">has_node</code><span class="sig-paren">(</span><em class="sig-param">name: str</em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.has_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.has_node" title="Permalink to this definition">¶</a></dt>
 <dd><p>Check whether the skeleton has a node.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -424,7 +424,7 @@ the left and right hands of a person.</p>
 
 <dl class="method">
 <dt id="sleap.skeleton.Skeleton.has_nodes">
-<code class="descname">has_nodes</code><span class="sig-paren">(</span><em>names: Iterable[str]</em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.has_nodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.has_nodes" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">has_nodes</code><span class="sig-paren">(</span><em class="sig-param">names: Iterable[str]</em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.has_nodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.has_nodes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Check whether the skeleton has a list of nodes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -436,9 +436,9 @@ the left and right hands of a person.</p>
 </dl>
 </dd></dl>
 
-<dl class="classmethod">
+<dl class="method">
 <dt id="sleap.skeleton.Skeleton.load_all_hdf5">
-<em class="property">classmethod </em><code class="descname">load_all_hdf5</code><span class="sig-paren">(</span><em>file: Union[str, h5py._hl.files.File], return_dict: bool = False</em><span class="sig-paren">)</span> &#x2192; Union[List[sleap.skeleton.Skeleton], Dict[str, sleap.skeleton.Skeleton]]<a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.load_all_hdf5"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.load_all_hdf5" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">load_all_hdf5</code><span class="sig-paren">(</span><em class="sig-param">file: Union[str, h5py._hl.files.File], return_dict: bool = False</em><span class="sig-paren">)</span> &#x2192; Union[List[sleap.skeleton.Skeleton], Dict[str, sleap.skeleton.Skeleton]]<a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.load_all_hdf5"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.load_all_hdf5" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load all skeletons found in the HDF5 file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -450,14 +450,14 @@ the left and right hands of a person.</p>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The skeleton intances stored in the HDF5 file. Either in List or Dict form.</p>
+<dd class="field-even"><p>The skeleton instances stored in the HDF5 file. Either in List or Dict form.</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="classmethod">
+<dl class="method">
 <dt id="sleap.skeleton.Skeleton.load_hdf5">
-<em class="property">classmethod </em><code class="descname">load_hdf5</code><span class="sig-paren">(</span><em>file: Union[str, h5py._hl.files.File], name: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.load_hdf5"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.load_hdf5" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">load_hdf5</code><span class="sig-paren">(</span><em class="sig-param">file: Union[str, h5py._hl.files.File], name: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.load_hdf5"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.load_hdf5" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load a specific skeleton (by name) from the HDF5 file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -467,14 +467,14 @@ the left and right hands of a person.</p>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The skeleton intance stored in the HDF5 file.</p>
+<dd class="field-even"><p>The skeleton instance stored in the HDF5 file.</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="classmethod">
+<dl class="method">
 <dt id="sleap.skeleton.Skeleton.load_json">
-<em class="property">classmethod </em><code class="descname">load_json</code><span class="sig-paren">(</span><em>filename: str</em>, <em>idx_to_node: Dict[int</em>, <em>sleap.skeleton.Node] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.load_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.load_json" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">load_json</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em>, <em class="sig-param">idx_to_node: Dict[int</em>, <em class="sig-param">sleap.skeleton.Node] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.load_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.load_json" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load a skeleton from a JSON file.</p>
 <p>This method will load the Skeleton from JSON file saved with; <a class="reference internal" href="#sleap.skeleton.Skeleton.save_json" title="sleap.skeleton.Skeleton.save_json"><code class="xref py py-meth docutils literal notranslate"><span class="pre">save_json()</span></code></a></p>
 <dl class="field-list simple">
@@ -485,19 +485,19 @@ the left and right hands of a person.</p>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The Skeleton object stored in the JSON file.</p>
+<dd class="field-even"><p>The Skeleton object stored in the JSON filename.</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="classmethod">
+<dl class="method">
 <dt id="sleap.skeleton.Skeleton.load_mat">
-<em class="property">classmethod </em><code class="descname">load_mat</code><span class="sig-paren">(</span><em>filename: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.load_mat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.load_mat" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">load_mat</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.load_mat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.load_mat" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load the skeleton from a Matlab MAT file. This is to support backwards
 compatibility with old LEAP MATLAB code and datasets.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>filename</strong> – The file name of the skeleton</p>
+<dd class="field-odd"><p><strong>filename</strong> – The name of the skeleton file</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>An instance of the skeleton.</p>
@@ -507,7 +507,7 @@ compatibility with old LEAP MATLAB code and datasets.</p>
 
 <dl class="method">
 <dt id="sleap.skeleton.Skeleton.matches">
-<code class="descname">matches</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.matches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.matches" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">matches</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.matches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.matches" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compare this <cite>Skeleton</cite> to another, modulo the particular <cite>Node</cite> objects in each graph.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -519,9 +519,9 @@ compatibility with old LEAP MATLAB code and datasets.</p>
 </dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="sleap.skeleton.Skeleton.name">
-<code class="descname">name</code><a class="headerlink" href="#sleap.skeleton.Skeleton.name" title="Permalink to this definition">¶</a></dt>
+<em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#sleap.skeleton.Skeleton.name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the name of the skeleton.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -530,9 +530,9 @@ compatibility with old LEAP MATLAB code and datasets.</p>
 </dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="sleap.skeleton.Skeleton.node_names">
-<code class="descname">node_names</code><a class="headerlink" href="#sleap.skeleton.Skeleton.node_names" title="Permalink to this definition">¶</a></dt>
+<em class="property">property </em><code class="sig-name descname">node_names</code><a class="headerlink" href="#sleap.skeleton.Skeleton.node_names" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a list of node names.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -543,7 +543,7 @@ compatibility with old LEAP MATLAB code and datasets.</p>
 
 <dl class="method">
 <dt id="sleap.skeleton.Skeleton.node_to_index">
-<code class="descname">node_to_index</code><span class="sig-paren">(</span><em>node_name: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.node_to_index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.node_to_index" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">node_to_index</code><span class="sig-paren">(</span><em class="sig-param">node_name: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.node_to_index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.node_to_index" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the index of the node with name node_name.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -555,9 +555,9 @@ compatibility with old LEAP MATLAB code and datasets.</p>
 </dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="sleap.skeleton.Skeleton.nodes">
-<code class="descname">nodes</code><a class="headerlink" href="#sleap.skeleton.Skeleton.nodes" title="Permalink to this definition">¶</a></dt>
+<em class="property">property </em><code class="sig-name descname">nodes</code><a class="headerlink" href="#sleap.skeleton.Skeleton.nodes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a list of :class:<a href="#id1"><span class="problematic" id="id2">`</span></a>Node`s.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -568,7 +568,7 @@ compatibility with old LEAP MATLAB code and datasets.</p>
 
 <dl class="method">
 <dt id="sleap.skeleton.Skeleton.relabel_node">
-<code class="descname">relabel_node</code><span class="sig-paren">(</span><em>old_name: str</em>, <em>new_name: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.relabel_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.relabel_node" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">relabel_node</code><span class="sig-paren">(</span><em class="sig-param">old_name: str</em>, <em class="sig-param">new_name: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.relabel_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.relabel_node" title="Permalink to this definition">¶</a></dt>
 <dd><p>Relabel a single node to a new name.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -585,7 +585,7 @@ compatibility with old LEAP MATLAB code and datasets.</p>
 
 <dl class="method">
 <dt id="sleap.skeleton.Skeleton.relabel_nodes">
-<code class="descname">relabel_nodes</code><span class="sig-paren">(</span><em>mapping: dict</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.relabel_nodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.relabel_nodes" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">relabel_nodes</code><span class="sig-paren">(</span><em class="sig-param">mapping: dict</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.relabel_nodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.relabel_nodes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Relabel the nodes of the skeleton.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -597,9 +597,9 @@ compatibility with old LEAP MATLAB code and datasets.</p>
 </dl>
 </dd></dl>
 
-<dl class="classmethod">
+<dl class="method">
 <dt id="sleap.skeleton.Skeleton.rename_skeleton">
-<em class="property">classmethod </em><code class="descname">rename_skeleton</code><span class="sig-paren">(</span><em>skeleton: sleap.skeleton.Skeleton</em>, <em>name: str</em><span class="sig-paren">)</span> &#x2192; sleap.skeleton.Skeleton<a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.rename_skeleton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.rename_skeleton" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">rename_skeleton</code><span class="sig-paren">(</span><em class="sig-param">skeleton: sleap.skeleton.Skeleton</em>, <em class="sig-param">name: str</em><span class="sig-paren">)</span> &#x2192; sleap.skeleton.Skeleton<a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.rename_skeleton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.rename_skeleton" title="Permalink to this definition">¶</a></dt>
 <dd><p>A skeleton object cannot change its name. This property is immutable because it is
 used to hash skeletons. If you want to rename a Skeleton you must use this classmethod.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">new_skeleton</span> <span class="o">=</span> <span class="n">Skeleton</span><span class="o">.</span><span class="n">rename_skeleton</span><span class="p">(</span><span class="n">skeleton</span><span class="o">=</span><span class="n">old_skeleton</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;New Name&quot;</span><span class="p">)</span>
@@ -618,15 +618,15 @@ used to hash skeletons. If you want to rename a Skeleton you must use this class
 </dl>
 </dd></dl>
 
-<dl class="classmethod">
+<dl class="method">
 <dt id="sleap.skeleton.Skeleton.save_all_hdf5">
-<em class="property">classmethod </em><code class="descname">save_all_hdf5</code><span class="sig-paren">(</span><em>file: Union[str, h5py._hl.files.File], skeletons: List[Skeleton]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.save_all_hdf5"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.save_all_hdf5" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">save_all_hdf5</code><span class="sig-paren">(</span><em class="sig-param">file: Union[str, h5py._hl.files.File], skeletons: List[Skeleton]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.save_all_hdf5"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.save_all_hdf5" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convenience method to save a list of skeletons to HDF5 file. Skeletons are saved
 as attributes of a /skeleton group in the file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>file</strong> – The file name or the open h5.File object.</p></li>
+<li><p><strong>file</strong> – The filename or the open h5.File object.</p></li>
 <li><p><strong>skeletons</strong> – The list of skeletons to save.</p></li>
 </ul>
 </dd>
@@ -638,7 +638,7 @@ as attributes of a /skeleton group in the file.</p>
 
 <dl class="method">
 <dt id="sleap.skeleton.Skeleton.save_json">
-<code class="descname">save_json</code><span class="sig-paren">(</span><em>filename: str</em>, <em>node_to_idx: Dict[sleap.skeleton.Node</em>, <em>int] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.save_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.save_json" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">save_json</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em>, <em class="sig-param">node_to_idx: Dict[sleap.skeleton.Node</em>, <em class="sig-param">int] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.save_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.save_json" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save the skeleton as JSON file.</p>
 <p>Output the complete skeleton to a file in JSON format.</p>
 <dl class="field-list simple">
@@ -651,9 +651,9 @@ as attributes of a /skeleton group in the file.</p>
 </dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="sleap.skeleton.Skeleton.symmetries">
-<code class="descname">symmetries</code><a class="headerlink" href="#sleap.skeleton.Skeleton.symmetries" title="Permalink to this definition">¶</a></dt>
+<em class="property">property </em><code class="sig-name descname">symmetries</code><a class="headerlink" href="#sleap.skeleton.Skeleton.symmetries" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a list of all symmetries without duplicates.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -662,9 +662,9 @@ as attributes of a /skeleton group in the file.</p>
 </dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="sleap.skeleton.Skeleton.symmetries_full">
-<code class="descname">symmetries_full</code><a class="headerlink" href="#sleap.skeleton.Skeleton.symmetries_full" title="Permalink to this definition">¶</a></dt>
+<em class="property">property </em><code class="sig-name descname">symmetries_full</code><a class="headerlink" href="#sleap.skeleton.Skeleton.symmetries_full" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a list of all symmetries with keys and attributes.</p>
 <p>Note: The returned list will contain duplicates (node1, node2) and (node2, node1).</p>
 <dl class="field-list simple">
@@ -676,7 +676,7 @@ as attributes of a /skeleton group in the file.</p>
 
 <dl class="method">
 <dt id="sleap.skeleton.Skeleton.to_json">
-<code class="descname">to_json</code><span class="sig-paren">(</span><em>node_to_idx: Dict[sleap.skeleton.Node</em>, <em>int] = None</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.to_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.to_json" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">to_json</code><span class="sig-paren">(</span><em class="sig-param">node_to_idx: Dict[sleap.skeleton.Node</em>, <em class="sig-param">int] = None</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.to_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.to_json" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert the skeleton to a JSON representation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>

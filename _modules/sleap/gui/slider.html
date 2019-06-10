@@ -449,18 +449,36 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_marks</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">new_mark</span><span class="p">)</span>
 
+        <span class="n">width</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">filled</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">new_mark</span><span class="p">)</span> <span class="o">==</span> <span class="nb">tuple</span><span class="p">:</span>
-            <span class="n">track</span> <span class="o">=</span> <span class="n">new_mark</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">v_offset</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_track_height</span> <span class="o">*</span> <span class="n">track</span><span class="p">)</span>
-            <span class="n">height</span> <span class="o">=</span> <span class="mi">1</span>
-            <span class="n">color</span> <span class="o">=</span> <span class="n">QColor</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">color_maps</span><span class="p">[</span><span class="n">track</span><span class="o">%</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">color_maps</span><span class="p">)])</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">new_mark</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="nb">int</span><span class="p">:</span>
+                <span class="c1"># colored track if mark has format: (track_number, frame_idx)</span>
+                <span class="n">track</span> <span class="o">=</span> <span class="n">new_mark</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">v_offset</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_track_height</span> <span class="o">*</span> <span class="n">track</span><span class="p">)</span>
+                <span class="n">height</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="n">color</span> <span class="o">=</span> <span class="n">QColor</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">color_maps</span><span class="p">[</span><span class="n">track</span><span class="o">%</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">color_maps</span><span class="p">)])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># rect (open/filled) if format: (&quot;o&quot;, frame_idx) or (&quot;f&quot;, frame_idx)</span>
+                <span class="n">mark_type</span> <span class="o">=</span> <span class="n">new_mark</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">v_offset</span> <span class="o">=</span> <span class="mi">3</span>
+                <span class="n">height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">slider</span><span class="o">.</span><span class="n">rect</span><span class="p">()</span><span class="o">.</span><span class="n">height</span><span class="p">()</span><span class="o">-</span><span class="mi">6</span>
+                <span class="n">width</span> <span class="o">=</span> <span class="mi">2</span>
+                <span class="n">color</span> <span class="o">=</span> <span class="n">QColor</span><span class="p">(</span><span class="s2">&quot;blue&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">mark_type</span> <span class="o">==</span> <span class="s2">&quot;o&quot;</span><span class="p">:</span>
+                    <span class="n">filled</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># line if mark has format: frame_idx</span>
             <span class="n">v_offset</span> <span class="o">=</span> <span class="mi">3</span>
             <span class="n">height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">slider</span><span class="o">.</span><span class="n">rect</span><span class="p">()</span><span class="o">.</span><span class="n">height</span><span class="p">()</span><span class="o">-</span><span class="mi">6</span>
             <span class="n">color</span> <span class="o">=</span> <span class="n">QColor</span><span class="p">(</span><span class="s2">&quot;black&quot;</span><span class="p">)</span>
 
-        <span class="n">line</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">addRect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">v_offset</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span>
-                                  <span class="n">QPen</span><span class="p">(</span><span class="n">color</span><span class="p">),</span> <span class="n">QBrush</span><span class="p">(</span><span class="n">color</span><span class="p">))</span>
+        <span class="n">pen</span> <span class="o">=</span> <span class="n">QPen</span><span class="p">(</span><span class="n">color</span><span class="p">,</span> <span class="o">.</span><span class="mi">5</span><span class="p">)</span>
+        <span class="n">pen</span><span class="o">.</span><span class="n">setCosmetic</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">brush</span> <span class="o">=</span> <span class="n">QBrush</span><span class="p">(</span><span class="n">color</span><span class="p">)</span> <span class="k">if</span> <span class="n">filled</span> <span class="k">else</span> <span class="n">QBrush</span><span class="p">()</span>
+
+        <span class="n">line</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">addRect</span><span class="p">(</span><span class="o">-</span><span class="n">width</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="n">v_offset</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span>
+                                  <span class="n">pen</span><span class="p">,</span> <span class="n">brush</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_mark_items</span><span class="p">[</span><span class="n">new_mark</span><span class="p">]</span> <span class="o">=</span> <span class="n">line</span>
         <span class="k">if</span> <span class="n">update</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">updatePos</span><span class="p">()</span></div>
 
@@ -472,14 +490,18 @@
             <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">mark</span><span class="p">)</span> <span class="o">==</span> <span class="nb">tuple</span><span class="p">:</span>
                 <span class="n">in_track</span> <span class="o">=</span> <span class="kc">True</span>
                 <span class="n">v</span> <span class="o">=</span> <span class="n">mark</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">mark</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="nb">int</span><span class="p">:</span>
+                    <span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_toPos</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">width</span> <span class="o">=</span> <span class="mi">2</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">in_track</span> <span class="o">=</span> <span class="kc">False</span>
                 <span class="n">v</span> <span class="o">=</span> <span class="n">mark</span>
+                <span class="n">width</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_toPos</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_mark_items</span><span class="p">[</span><span class="n">mark</span><span class="p">]</span><span class="o">.</span><span class="n">setPos</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 
             <span class="n">rect</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mark_items</span><span class="p">[</span><span class="n">mark</span><span class="p">]</span><span class="o">.</span><span class="n">rect</span><span class="p">()</span>
-            <span class="n">width</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">in_track</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_toPos</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
             <span class="n">rect</span><span class="o">.</span><span class="n">setWidth</span><span class="p">(</span><span class="n">width</span><span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">_mark_items</span><span class="p">[</span><span class="n">mark</span><span class="p">]</span><span class="o">.</span><span class="n">setRect</span><span class="p">(</span><span class="n">rect</span><span class="p">)</span></div>
@@ -590,12 +612,12 @@
     <span class="n">app</span> <span class="o">=</span> <span class="n">QApplication</span><span class="p">([])</span>
 
     <span class="n">window</span> <span class="o">=</span> <span class="n">VideoSlider</span><span class="p">(</span>
-                <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+                <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
                 <span class="n">marks</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">15</span><span class="p">)</span><span class="c1">#((0,10),(0,15),(1,10),(1,11),(2,12)), tracks=3</span>
                 <span class="p">)</span>
     <span class="n">window</span><span class="o">.</span><span class="n">setTracks</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
-    <span class="n">mark_positions</span> <span class="o">=</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">10</span><span class="p">),(</span><span class="mi">0</span><span class="p">,</span><span class="mi">15</span><span class="p">),(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">),(</span><span class="mi">1</span><span class="p">,</span><span class="mi">11</span><span class="p">),(</span><span class="mi">2</span><span class="p">,</span><span class="mi">12</span><span class="p">),(</span><span class="mi">3</span><span class="p">,</span><span class="mi">12</span><span class="p">),(</span><span class="mi">3</span><span class="p">,</span><span class="mi">13</span><span class="p">),(</span><span class="mi">3</span><span class="p">,</span><span class="mi">14</span><span class="p">),(</span><span class="mi">4</span><span class="p">,</span><span class="mi">15</span><span class="p">),(</span><span class="mi">4</span><span class="p">,</span><span class="mi">16</span><span class="p">),(</span><span class="mi">4</span><span class="p">,</span><span class="mi">21</span><span class="p">))</span>
-<span class="c1">#     mark_positions = [(0,i) for i in range(200)]</span>
+<span class="c1">#     mark_positions = ((0,10),(0,15),(1,10),(1,11),(2,12),(3,12),(3,13),(3,14),(4,15),(4,16),(4,21))</span>
+    <span class="n">mark_positions</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;o&quot;</span><span class="p">,</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">15</span><span class="p">,</span><span class="mi">4</span><span class="p">)]</span> <span class="o">+</span> <span class="p">[(</span><span class="s2">&quot;f&quot;</span><span class="p">,</span><span class="mi">18</span><span class="p">)]</span>
     <span class="n">window</span><span class="o">.</span><span class="n">setMarks</span><span class="p">(</span><span class="n">mark_positions</span><span class="p">)</span>
     <span class="n">window</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
     <span class="n">window</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>

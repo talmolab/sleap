@@ -163,7 +163,7 @@ is a high level API to these data structures that abstracts away their underlyin
 storage format.</p>
 <dl class="class">
 <dt id="sleap.io.dataset.Labels">
-<em class="property">class </em><code class="descclassname">sleap.io.dataset.</code><code class="descname">Labels</code><span class="sig-paren">(</span><em>labeled_frames: List[sleap.instance.LabeledFrame] = NOTHING</em>, <em>videos: List[sleap.io.video.Video] = NOTHING</em>, <em>skeletons: List[sleap.skeleton.Skeleton] = NOTHING</em>, <em>nodes: List[sleap.skeleton.Node] = NOTHING</em>, <em>tracks: List[sleap.instance.Track] = NOTHING</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.io.dataset.</code><code class="sig-name descname">Labels</code><span class="sig-paren">(</span><em class="sig-param">labeled_frames: List[sleap.instance.LabeledFrame] = NOTHING</em>, <em class="sig-param">videos: List[sleap.io.video.Video] = NOTHING</em>, <em class="sig-param">skeletons: List[sleap.skeleton.Skeleton] = NOTHING</em>, <em class="sig-param">nodes: List[sleap.skeleton.Node] = NOTHING</em>, <em class="sig-param">tracks: List[sleap.instance.Track] = NOTHING</em>, <em class="sig-param">suggestions: Dict[sleap.io.video.Video</em>, <em class="sig-param">list] = NOTHING</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels" title="Permalink to this definition">¶</a></dt>
 <dd><p>The LEAP <a class="reference internal" href="#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><code class="xref py py-class docutils literal notranslate"><span class="pre">Labels</span></code></a> class represents an API for accessing labeled video
 frames and other associated metadata. This class is front-end for all
 interactions with loading, writing, and modifying these labels. The actual
@@ -177,13 +177,14 @@ interface.</p>
 <li><p><strong>is</strong><strong>, </strong><strong>every LabeledFrame's video will be in videos but a Video</strong> (<em>That</em>) – </p></li>
 <li><p><strong>from videos might not have any LabeledFrame.</strong> (<em>object</em>) – </p></li>
 <li><p><strong>skeletons</strong> – A list of skeletons that these labels may or may not reference.</p></li>
-<li><p><strong>tracks</strong> – A list of tracks that isntances can belong to.</p></li>
+<li><p><strong>tracks</strong> – A list of tracks that instances can belong to.</p></li>
+<li><p><strong>suggestions</strong> – A dict with a list for each video of suggested frames to label.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="method">
 <dt id="sleap.io.dataset.Labels.add_video">
-<code class="descname">add_video</code><span class="sig-paren">(</span><em>video: sleap.io.video.Video</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.add_video"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.add_video" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">add_video</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.add_video"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.add_video" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a video to the labels if it is not already in it.</p>
 <p>Video instances are added automatically when adding labeled frames,
 but this function allows for adding videos to the labels before any
@@ -197,13 +198,13 @@ labeled frames are added.</p>
 
 <dl class="method">
 <dt id="sleap.io.dataset.Labels.append">
-<code class="descname">append</code><span class="sig-paren">(</span><em>value: sleap.instance.LabeledFrame</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.append"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.append" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">append</code><span class="sig-paren">(</span><em class="sig-param">value: sleap.instance.LabeledFrame</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.append"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.append" title="Permalink to this definition">¶</a></dt>
 <dd><p>S.append(value) – append value to the end of the sequence</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="sleap.io.dataset.Labels.find">
-<code class="descname">find</code><span class="sig-paren">(</span><em>video: sleap.io.video.Video</em>, <em>frame_idx: int = None</em><span class="sig-paren">)</span> &#x2192; List[sleap.instance.LabeledFrame]<a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.find"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.find" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">find</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em>, <em class="sig-param">frame_idx: int = None</em><span class="sig-paren">)</span> &#x2192; List[sleap.instance.LabeledFrame]<a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.find"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.find" title="Permalink to this definition">¶</a></dt>
 <dd><p>Search for labeled frames given video and/or frame index.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -220,7 +221,7 @@ labeled frames are added.</p>
 
 <dl class="method">
 <dt id="sleap.io.dataset.Labels.find_first">
-<code class="descname">find_first</code><span class="sig-paren">(</span><em>video: sleap.io.video.Video</em>, <em>frame_idx: int = None</em><span class="sig-paren">)</span> &#x2192; sleap.instance.LabeledFrame<a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.find_first"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.find_first" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">find_first</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em>, <em class="sig-param">frame_idx: int = None</em><span class="sig-paren">)</span> &#x2192; sleap.instance.LabeledFrame<a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.find_first"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.find_first" title="Permalink to this definition">¶</a></dt>
 <dd><p>Find the first occurrence of a labeled frame for the given video and/or frame index.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -237,7 +238,7 @@ labeled frames are added.</p>
 
 <dl class="method">
 <dt id="sleap.io.dataset.Labels.find_last">
-<code class="descname">find_last</code><span class="sig-paren">(</span><em>video: sleap.io.video.Video</em>, <em>frame_idx: int = None</em><span class="sig-paren">)</span> &#x2192; sleap.instance.LabeledFrame<a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.find_last"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.find_last" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">find_last</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em>, <em class="sig-param">frame_idx: int = None</em><span class="sig-paren">)</span> &#x2192; sleap.instance.LabeledFrame<a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.find_last"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.find_last" title="Permalink to this definition">¶</a></dt>
 <dd><p>Find the last occurrence of a labeled frame for the given video and/or frame index.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -256,8 +257,27 @@ labeled frames are added.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="sleap.io.dataset.Labels.get_next_suggestion">
+<code class="sig-name descname">get_next_suggestion</code><span class="sig-paren">(</span><em class="sig-param">video</em>, <em class="sig-param">frame_idx</em>, <em class="sig-param">seek_direction=1</em><span class="sig-paren">)</span> &#x2192; list<a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.get_next_suggestion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.get_next_suggestion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a (video, frame_idx) tuple.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.dataset.Labels.get_suggestions">
+<code class="sig-name descname">get_suggestions</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; list<a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.get_suggestions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.get_suggestions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return all suggestions as a list of (video, frame) tuples.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.dataset.Labels.get_video_suggestions">
+<code class="sig-name descname">get_video_suggestions</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em><span class="sig-paren">)</span> &#x2192; list<a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.get_video_suggestions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.get_video_suggestions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the list of suggested frames for the specified video
+or suggestions for all videos (if no video specified).</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.io.dataset.Labels.index">
-<code class="descname">index</code><span class="sig-paren">(</span><em>value</em><span class="optional">[</span>, <em>start</em><span class="optional">[</span>, <em>stop</em><span class="optional">]</span><span class="optional">]</span><span class="sig-paren">)</span> &#x2192; integer -- return first index of value.<a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.index" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">index</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="optional">[</span>, <em class="sig-param">start</em><span class="optional">[</span>, <em class="sig-param">stop</em><span class="optional">]</span><span class="optional">]</span><span class="sig-paren">)</span> &#x2192; integer -- return first index of value.<a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.index" title="Permalink to this definition">¶</a></dt>
 <dd><p>Raises ValueError if the value is not present.</p>
 <p>Supporting start and stop arguments is optional, but
 recommended.</p>
@@ -265,13 +285,13 @@ recommended.</p>
 
 <dl class="method">
 <dt id="sleap.io.dataset.Labels.insert">
-<code class="descname">insert</code><span class="sig-paren">(</span><em>index</em>, <em>value: sleap.instance.LabeledFrame</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.insert"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.insert" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">insert</code><span class="sig-paren">(</span><em class="sig-param">index</em>, <em class="sig-param">value: sleap.instance.LabeledFrame</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.insert"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.insert" title="Permalink to this definition">¶</a></dt>
 <dd><p>S.insert(index, value) – insert value before index</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="sleap.io.dataset.Labels.instances">
-<code class="descname">instances</code><span class="sig-paren">(</span><em>video: sleap.io.video.Video = None</em>, <em>skeleton: sleap.skeleton.Skeleton = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.instances"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.instances" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">instances</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video = None</em>, <em class="sig-param">skeleton: sleap.skeleton.Skeleton = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.instances"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.instances" title="Permalink to this definition">¶</a></dt>
 <dd><p>Iterate through all instances in the labels, optionally with filters.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -286,22 +306,22 @@ recommended.</p>
 </dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="sleap.io.dataset.Labels.labels">
-<code class="descname">labels</code><a class="headerlink" href="#sleap.io.dataset.Labels.labels" title="Permalink to this definition">¶</a></dt>
+<em class="property">property </em><code class="sig-name descname">labels</code><a class="headerlink" href="#sleap.io.dataset.Labels.labels" title="Permalink to this definition">¶</a></dt>
 <dd><p>Alias for labeled_frames</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="sleap.io.dataset.Labels.remove">
-<code class="descname">remove</code><span class="sig-paren">(</span><em>value: sleap.instance.LabeledFrame</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.remove"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.remove" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">remove</code><span class="sig-paren">(</span><em class="sig-param">value: sleap.instance.LabeledFrame</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.remove"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.remove" title="Permalink to this definition">¶</a></dt>
 <dd><p>S.remove(value) – remove first occurrence of value.
 Raise ValueError if the value is not present.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="sleap.io.dataset.Labels.remove_video">
-<code class="descname">remove_video</code><span class="sig-paren">(</span><em>video: sleap.io.video.Video</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.remove_video"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.remove_video" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">remove_video</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.remove_video"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.remove_video" title="Permalink to this definition">¶</a></dt>
 <dd><p>Removes a video from the labels and ALL associated labeled frames.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -311,8 +331,103 @@ Raise ValueError if the value is not present.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="sleap.io.dataset.Labels.save_frame_data_imgstore">
+<code class="sig-name descname">save_frame_data_imgstore</code><span class="sig-paren">(</span><em class="sig-param">output_dir: str = './'</em>, <em class="sig-param">format: str = 'png'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.save_frame_data_imgstore"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.save_frame_data_imgstore" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write all labeled frames from all videos to a collection of imgstore datasets.
+This only writes frames that have been labeled. Videos without any labeled frames
+will be included as empty imgstores.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output_dir</strong> – </p></li>
+<li><p><strong>format</strong> – The image format to use for the data. png for lossless, jpg for lossy.</p></li>
+<li><p><strong>imgstore formats will probably work as well but have not been tested.</strong> (<em>Other</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A list of ImgStoreVideo objects that represent the stored frames.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.dataset.Labels.save_hdf5">
+<code class="sig-name descname">save_hdf5</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em>, <em class="sig-param">save_frame_data: bool = True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.save_hdf5"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.save_hdf5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Serialize the labels dataset to an HDF5 file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> – The file to serialize the dataset to.</p></li>
+<li><p><strong>save_frame_data</strong> – Whether to save the image frame data for any</p></li>
+<li><p><strong>frame as well. This is useful for uploading the HDF5 for</strong> (<em>labeled</em>) – </p></li>
+<li><p><strong>training when video files are to large to move. This will only</strong> (<em>model</em>) – </p></li>
+<li><p><strong>video frames that have some labeled instances.</strong> (<em>save</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.dataset.Labels.save_json">
+<em class="property">static </em><code class="sig-name descname">save_json</code><span class="sig-paren">(</span><em class="sig-param">labels: sleap.io.dataset.Labels</em>, <em class="sig-param">filename: str</em>, <em class="sig-param">compress: bool = False</em>, <em class="sig-param">save_frame_data: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.save_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.save_json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save a Labels instance to a JSON format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>labels</strong> – The labels dataset to save.</p></li>
+<li><p><strong>filename</strong> – The filename to save the data to.</p></li>
+<li><p><strong>compress</strong> – Should the data be zip compressed or not? If True, the JSON will be</p></li>
+<li><p><strong>using Python's shutil.make_archive command into a PKZIP zip file. If</strong> (<em>compressed</em>) – </p></li>
+<li><p><strong>is True then filename will have a .zip appended to it.</strong> (<em>compress</em>) – </p></li>
+<li><p><strong>save_frame_data</strong> – Whether to save the image data for each frame as well. For each</p></li>
+<li><p><strong>in the dataset</strong><strong>, </strong><strong>all frames that have labels will be stored as an imgstore</strong> (<em>video</em>) – </p></li>
+<li><p><strong>If save_frame_data is True then compress will be forced to True since</strong> (<em>dataset.</em>) – </p></li>
+<li><p><strong>archive must contain both the JSON data and image data stored in ImgStores.</strong> (<em>the</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.dataset.Labels.set_suggestions">
+<code class="sig-name descname">set_suggestions</code><span class="sig-paren">(</span><em class="sig-param">suggestions: Dict[sleap.io.video.Video, list]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.set_suggestions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.set_suggestions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the suggested frames.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.dataset.Labels.to_dict">
+<code class="sig-name descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.to_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Serialize all labels in the underling list of LabeledFrames to a
+dict structure. This function returns a nested dict structure
+composed entirely of primitive python types. It is used to create
+JSON and HDF5 serialized datasets.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p>version - The version of the dict/json serialization format.</p></li>
+<li><p>skeletons - The skeletons associated with these underlying instances.</p></li>
+<li><p>nodes - The nodes that the skeletons represent.</p></li>
+<li><p>videos - The videos that that the instances occur on.</p></li>
+<li><p>labels - The labeled frames</p></li>
+<li><p>tracks - The tracks associated with each instance.</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>A dict containing the followings top level keys</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.io.dataset.Labels.to_json">
-<code class="descname">to_json</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.to_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.to_json" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">to_json</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.to_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.to_json" title="Permalink to this definition">¶</a></dt>
 <dd><p>Serialize all labels in the underling list of LabeledFrame(s) to a
 JSON structured string.</p>
 <dl class="field-list simple">
@@ -326,7 +441,7 @@ JSON structured string.</p>
 
 <dl class="function">
 <dt id="sleap.io.dataset.load_labels_json_old">
-<code class="descclassname">sleap.io.dataset.</code><code class="descname">load_labels_json_old</code><span class="sig-paren">(</span><em>data_path: str</em>, <em>parsed_json: dict = None</em>, <em>adjust_matlab_indexing: bool = True</em>, <em>fix_rel_paths: bool = True</em><span class="sig-paren">)</span> &#x2192; sleap.io.dataset.Labels<a class="reference internal" href="_modules/sleap/io/dataset.html#load_labels_json_old"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.load_labels_json_old" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">sleap.io.dataset.</code><code class="sig-name descname">load_labels_json_old</code><span class="sig-paren">(</span><em class="sig-param">data_path: str</em>, <em class="sig-param">parsed_json: dict = None</em>, <em class="sig-param">adjust_matlab_indexing: bool = True</em>, <em class="sig-param">fix_rel_paths: bool = True</em><span class="sig-paren">)</span> &#x2192; sleap.io.dataset.Labels<a class="reference internal" href="_modules/sleap/io/dataset.html#load_labels_json_old"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.load_labels_json_old" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simple utitlity code to load data from Talmo’s old JSON format into newer
 Labels object.</p>
 <dl class="field-list simple">

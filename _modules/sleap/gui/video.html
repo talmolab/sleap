@@ -661,6 +661,16 @@
             <span class="k">if</span> <span class="n">instance</span><span class="o">.</span><span class="n">selected</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">idx</span></div>
 
+<div class="viewcode-block" id="GraphicsView.getSelectionInstance"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.GraphicsView.getSelectionInstance">[docs]</a>    <span class="k">def</span> <span class="nf">getSelectionInstance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns the currently selected instance.</span>
+<span class="sd">        If no instance selected, returns None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">instances</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_instances</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">instances</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">instance</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">instances</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">instance</span><span class="o">.</span><span class="n">selected</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">instance</span><span class="o">.</span><span class="n">instance</span></div>
+
 <div class="viewcode-block" id="GraphicsView.resizeEvent"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.GraphicsView.resizeEvent">[docs]</a>    <span class="k">def</span> <span class="nf">resizeEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Maintain current zoom on resize.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1389,6 +1399,38 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div></div>
 
+<span class="k">def</span> <span class="nf">video_demo</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">standalone</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">video</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">videos</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">standalone</span><span class="p">:</span> <span class="n">app</span> <span class="o">=</span> <span class="n">QApplication</span><span class="p">([])</span>
+    <span class="n">window</span> <span class="o">=</span> <span class="n">QtVideoPlayer</span><span class="p">(</span><span class="n">video</span><span class="o">=</span><span class="n">video</span><span class="p">)</span>
+
+
+    <span class="n">cmap</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+        <span class="p">[</span><span class="mi">0</span><span class="p">,</span>   <span class="mi">114</span><span class="p">,</span>   <span class="mi">189</span><span class="p">],</span>
+        <span class="p">[</span><span class="mi">217</span><span class="p">,</span>  <span class="mi">83</span><span class="p">,</span>    <span class="mi">25</span><span class="p">],</span>
+        <span class="p">[</span><span class="mi">237</span><span class="p">,</span> <span class="mi">177</span><span class="p">,</span>    <span class="mi">32</span><span class="p">],</span>
+        <span class="p">[</span><span class="mi">126</span><span class="p">,</span>  <span class="mi">47</span><span class="p">,</span>   <span class="mi">142</span><span class="p">],</span>
+        <span class="p">[</span><span class="mi">119</span><span class="p">,</span> <span class="mi">172</span><span class="p">,</span>    <span class="mi">48</span><span class="p">],</span>
+        <span class="p">[</span><span class="mi">77</span><span class="p">,</span>  <span class="mi">190</span><span class="p">,</span>   <span class="mi">238</span><span class="p">],</span>
+        <span class="p">[</span><span class="mi">162</span><span class="p">,</span>  <span class="mi">20</span><span class="p">,</span>    <span class="mi">47</span><span class="p">],</span>
+        <span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">plot_instances</span><span class="p">(</span><span class="n">vp</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">):</span>
+
+        <span class="n">labeled_frame</span> <span class="o">=</span> <span class="p">[</span><span class="n">label</span> <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span><span class="o">.</span><span class="n">labels</span> <span class="k">if</span> <span class="n">label</span><span class="o">.</span><span class="n">video</span> <span class="o">==</span> <span class="n">video</span> <span class="ow">and</span> <span class="n">label</span><span class="o">.</span><span class="n">frame_idx</span> <span class="o">==</span> <span class="n">frame_idx</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">instance</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">labeled_frame</span><span class="o">.</span><span class="n">instances_to_show</span><span class="p">):</span>
+            <span class="c1"># Plot instance</span>
+            <span class="n">vp</span><span class="o">.</span><span class="n">addInstance</span><span class="p">(</span><span class="n">instance</span><span class="o">=</span><span class="n">instance</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">cmap</span><span class="p">[</span><span class="n">i</span><span class="o">%</span><span class="nb">len</span><span class="p">(</span><span class="n">cmap</span><span class="p">)])</span>
+        <span class="c1"># hide node labels</span>
+        <span class="n">vp</span><span class="o">.</span><span class="n">showLabels</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="n">window</span><span class="o">.</span><span class="n">changedPlot</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">plot_instances</span><span class="p">)</span>
+
+    <span class="n">window</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">window</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">standalone</span><span class="p">:</span> <span class="n">app</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
 

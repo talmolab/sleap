@@ -362,7 +362,8 @@
             <span class="n">strides</span><span class="o">=</span><span class="p">(</span><span class="n">height</span> <span class="o">*</span> <span class="n">_strides</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">width</span> <span class="o">*</span> <span class="n">_strides</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">*</span><span class="n">_strides</span><span class="p">),</span>
             <span class="n">writeable</span><span class="o">=</span><span class="kc">False</span>
         <span class="p">)</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="n">tiles</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+        <span class="k">if</span> <span class="kc">False</span><span class="p">:</span> <span class="n">tiles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="n">tiles</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span> <span class="c1"># why do we need to swap axes sometimes?</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tiles</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
 
 <div class="viewcode-block" id="QuiverPlot.boundingRect"><a class="viewcode-back" href="../../../gui.html#sleap.gui.quiverplot.QuiverPlot.boundingRect">[docs]</a>    <span class="k">def</span> <span class="nf">boundingRect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QRectF</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Method called by Qt in order to determine whether object is in visible frame.&quot;&quot;&quot;</span>
@@ -375,6 +376,28 @@
         <span class="n">painter</span><span class="o">.</span><span class="n">drawLines</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">)</span>
         <span class="k">pass</span></div></div>
 
+
+<span class="k">def</span> <span class="nf">demo_pafs</span><span class="p">(</span><span class="n">pafs</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">decimation</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">standalone</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">sleap.gui.video</span> <span class="k">import</span> <span class="n">QtVideoPlayer</span>
+
+    <span class="k">if</span> <span class="n">standalone</span><span class="p">:</span> <span class="n">app</span> <span class="o">=</span> <span class="n">QApplication</span><span class="p">([])</span>
+
+    <span class="n">win</span> <span class="o">=</span> <span class="n">QtVideoPlayer</span><span class="p">(</span><span class="n">video</span><span class="o">=</span><span class="n">video</span><span class="p">)</span>
+    <span class="n">win</span><span class="o">.</span><span class="n">setWindowTitle</span><span class="p">(</span><span class="s2">&quot;pafs&quot;</span><span class="p">)</span>
+    <span class="n">win</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">plot_fields</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+
+        <span class="n">frame_pafs</span> <span class="o">=</span> <span class="n">pafs</span><span class="p">[</span><span class="n">parent</span><span class="o">.</span><span class="n">frame_idx</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+        <span class="c1"># frame_pafs = rotate_pafs(frame_pafs, theta)</span>
+
+        <span class="n">aff_fields_item</span> <span class="o">=</span> <span class="n">MultiQuiverPlot</span><span class="p">(</span><span class="n">frame_pafs</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">decimation</span><span class="o">=</span><span class="n">decimation</span><span class="p">)</span>
+        <span class="n">win</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">aff_fields_item</span><span class="p">)</span>
+
+    <span class="n">win</span><span class="o">.</span><span class="n">changedPlot</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">plot_fields</span><span class="p">)</span>
+    <span class="n">win</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">standalone</span><span class="p">:</span> <span class="n">app</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
 

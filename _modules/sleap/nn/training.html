@@ -151,9 +151,9 @@
             
   <h1>Source code for sleap.nn.training</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">from</span> <span class="nn">time</span> <span class="k">import</span> <span class="n">time</span><span class="p">,</span> <span class="n">sleep</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
+<span class="kn">import</span> <span class="nn">os</span>
 
 <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
 <span class="kn">import</span> <span class="nn">keras</span>
@@ -169,6 +169,9 @@
 <span class="kn">from</span> <span class="nn">sleap.nn.architectures.hourglass</span> <span class="k">import</span> <span class="n">stacked_hourglass</span>
 <span class="kn">from</span> <span class="nn">sleap.nn.architectures.unet</span> <span class="k">import</span> <span class="n">unet</span><span class="p">,</span> <span class="n">stacked_unet</span>
 <span class="kn">from</span> <span class="nn">sleap.nn.architectures.leap</span> <span class="k">import</span> <span class="n">leap_cnn</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.monitor</span> <span class="k">import</span> <span class="n">LossViewer</span>
+
+<span class="kn">from</span> <span class="nn">sleap.nn.datagen</span> <span class="k">import</span> <span class="n">generate_confmaps_from_points</span><span class="p">,</span> <span class="n">generate_pafs_from_points</span>
 
 <span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="k">import</span> <span class="n">Process</span>
 <span class="kn">import</span> <span class="nn">zmq</span>
@@ -195,7 +198,6 @@
 
 <div class="viewcode-block" id="TrainingControllerZMQ.on_batch_end"><a class="viewcode-back" href="../../../training.html#sleap.nn.training.TrainingControllerZMQ.on_batch_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_batch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Called at the end of a training batch. &quot;&quot;&quot;</span>
-
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">poll</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">timeout</span><span class="p">,</span> <span class="n">zmq</span><span class="o">.</span><span class="n">POLLIN</span><span class="p">):</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="n">jsonpickle</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">recv_string</span><span class="p">())</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Received control message: </span><span class="si">{msg}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -289,7 +291,7 @@
 
 <span class="k">def</span> <span class="nf">train</span><span class="p">(</span>
     <span class="c1"># Data</span>
-    <span class="n">imgs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">output_type</span><span class="o">=</span><span class="s2">&quot;confmaps&quot;</span><span class="p">,</span> <span class="n">val_size</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+    <span class="n">imgs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">skeleton</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">output_type</span><span class="o">=</span><span class="s2">&quot;confmaps&quot;</span><span class="p">,</span> <span class="n">val_size</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
     <span class="c1"># Architecture</span>
     <span class="n">arch</span><span class="o">=</span><span class="s2">&quot;unet&quot;</span><span class="p">,</span> <span class="n">num_stacks</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">convs_per_depth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">num_filters</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">batch_norm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">upsampling</span><span class="o">=</span><span class="s2">&quot;bilinear&quot;</span><span class="p">,</span> <span class="n">intermediate_inputs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">intermediate_outputs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="c1"># Optimizer</span>
@@ -326,9 +328,16 @@
     <span class="n">num_train</span><span class="p">,</span> <span class="n">img_height</span><span class="p">,</span> <span class="n">img_width</span><span class="p">,</span> <span class="n">img_channels</span> <span class="o">=</span> <span class="n">imgs_train</span><span class="o">.</span><span class="n">shape</span>
     <span class="n">num_val</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">imgs_val</span><span class="p">)</span>
     <span class="n">num_total</span> <span class="o">=</span> <span class="n">num_train</span> <span class="o">+</span> <span class="n">num_val</span>
-    <span class="n">outputs_channels</span> <span class="o">=</span> <span class="n">outputs_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Training set: </span><span class="si">{imgs_train.shape}</span><span class="s2"> -&gt; </span><span class="si">{outputs_train.shape}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Validation set: </span><span class="si">{imgs_val.shape}</span><span class="s2"> -&gt; </span><span class="si">{outputs_val.shape}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">outputs_train</span><span class="p">)</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">outputs_channels</span> <span class="o">=</span> <span class="n">outputs_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">output_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;confmaps&quot;</span><span class="p">:</span>
+        <span class="n">outputs_channels</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">skeleton</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">output_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;pafs&quot;</span><span class="p">:</span>
+        <span class="n">outputs_channels</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">skeleton</span><span class="o">.</span><span class="n">edges</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Training set: </span><span class="si">{imgs_train.shape}</span><span class="s2"> -&gt; </span><span class="si">{outputs_channels}</span><span class="s2"> channels&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Validation set: </span><span class="si">{imgs_val.shape}</span><span class="s2"> -&gt; </span><span class="si">{outputs_channels}</span><span class="s2"> channels&quot;</span><span class="p">)</span>
 
     <span class="c1"># Build model architecture</span>
     <span class="c1"># TODO: separate architecture builder</span>
@@ -403,8 +412,22 @@
 
         <span class="c1"># TODO: save serialized training info</span>
 
+    <span class="n">img_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">imgs_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">imgs_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">output_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;confmaps&quot;</span><span class="p">:</span>
+        <span class="k">def</span> <span class="nf">datagen_function</span><span class="p">(</span><span class="n">points</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">generate_confmaps_from_points</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">skeleton</span><span class="p">,</span> <span class="n">img_shape</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">output_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;confmaps&quot;</span><span class="p">:</span>
+        <span class="k">def</span> <span class="nf">datagen_function</span><span class="p">(</span><span class="n">points</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">generate_pafs_from_points</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">skeleton</span><span class="p">,</span> <span class="n">img_shape</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">datagen_function</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">datagen_function</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">outputs_val</span> <span class="o">=</span> <span class="n">datagen_function</span><span class="p">(</span><span class="n">outputs_val</span><span class="p">)</span>
+
     <span class="c1"># Initialize data generator with augmentation</span>
-    <span class="n">train_datagen</span> <span class="o">=</span> <span class="n">Augmenter</span><span class="p">(</span><span class="n">imgs_train</span><span class="p">,</span> <span class="n">outputs_train</span><span class="p">,</span> <span class="n">output_names</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">output_names</span><span class="p">,</span>
+    <span class="n">train_datagen</span> <span class="o">=</span> <span class="n">Augmenter</span><span class="p">(</span><span class="n">imgs_train</span><span class="p">,</span> <span class="n">Points</span><span class="o">=</span><span class="n">outputs_train</span><span class="p">,</span>
+        <span class="n">datagen</span><span class="o">=</span><span class="n">datagen_function</span><span class="p">,</span> <span class="n">output_names</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">output_names</span><span class="p">,</span>
         <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="n">shuffle_initially</span><span class="p">,</span>
         <span class="n">rotation</span><span class="o">=</span><span class="n">augment_rotation</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="p">(</span><span class="n">augment_scale_min</span><span class="p">,</span> <span class="n">augment_scale_max</span><span class="p">))</span>
 
@@ -487,81 +510,32 @@
     <span class="k">return</span> <span class="n">model</span>
 
 
-
-<span class="kn">from</span> <span class="nn">PySide2</span> <span class="k">import</span> <span class="n">QtCore</span><span class="p">,</span> <span class="n">QtWidgets</span><span class="p">,</span> <span class="n">QtGui</span><span class="p">,</span> <span class="n">QtCharts</span>
-<span class="k">class</span> <span class="nc">LossViewer</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QMainWindow</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">LossViewer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">chart</span> <span class="o">=</span> <span class="n">QtCharts</span><span class="o">.</span><span class="n">QtCharts</span><span class="o">.</span><span class="n">QChart</span><span class="p">()</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">series</span> <span class="o">=</span> <span class="n">QtCharts</span><span class="o">.</span><span class="n">QtCharts</span><span class="o">.</span><span class="n">QScatterSeries</span><span class="p">()</span>
-        <span class="n">pen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">series</span><span class="o">.</span><span class="n">pen</span><span class="p">()</span>
-        <span class="n">pen</span><span class="o">.</span><span class="n">setWidth</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-        <span class="c1"># pen.setColor(r,g,b,alpha)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">chart</span><span class="o">.</span><span class="n">addSeries</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">series</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">chart</span><span class="o">.</span><span class="n">createDefaultAxes</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">chart</span><span class="o">.</span><span class="n">axisX</span><span class="p">()</span><span class="o">.</span><span class="n">setLabelFormat</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">chart</span><span class="o">.</span><span class="n">axisX</span><span class="p">()</span><span class="o">.</span><span class="n">setTitleText</span><span class="p">(</span><span class="s2">&quot;Batches&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">chart</span><span class="o">.</span><span class="n">axisY</span><span class="p">()</span><span class="o">.</span><span class="n">setTitleText</span><span class="p">(</span><span class="s2">&quot;Loss&quot;</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">chart</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">chartView</span> <span class="o">=</span> <span class="n">QtCharts</span><span class="o">.</span><span class="n">QtCharts</span><span class="o">.</span><span class="n">QChartView</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chart</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">chartView</span><span class="o">.</span><span class="n">setRenderHint</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QPainter</span><span class="o">.</span><span class="n">Antialiasing</span><span class="p">);</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">setCentralWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chartView</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">Y</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">t0</span> <span class="o">=</span> <span class="kc">None</span>
-
-    <span class="k">def</span> <span class="nf">add_datapoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">series</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
-
-        <span class="n">dx</span> <span class="o">=</span> <span class="mf">0.5</span>
-        <span class="n">dy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ptp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.02</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">chart</span><span class="o">.</span><span class="n">axisX</span><span class="p">()</span><span class="o">.</span><span class="n">setRange</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">)</span> <span class="o">-</span> <span class="n">dx</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">)</span> <span class="o">+</span> <span class="n">dx</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">chart</span><span class="o">.</span><span class="n">axisY</span><span class="p">()</span><span class="o">.</span><span class="n">setRange</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">)</span> <span class="o">-</span> <span class="n">dy</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">)</span> <span class="o">+</span> <span class="n">dy</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">set_start_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t0</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">t0</span> <span class="o">=</span> <span class="n">t0</span>
-
-    <span class="k">def</span> <span class="nf">update_runtime</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">t0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">dt</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span>
-            <span class="n">dt_min</span><span class="p">,</span> <span class="n">dt_sec</span> <span class="o">=</span> <span class="nb">divmod</span><span class="p">(</span><span class="n">dt</span><span class="p">,</span> <span class="mi">60</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">chart</span><span class="o">.</span><span class="n">setTitle</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Runtime: {int(dt_min):02}:{int(dt_sec):02}&quot;</span><span class="p">)</span>
-
-
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
     
+    <span class="kn">from</span> <span class="nn">PySide2</span> <span class="k">import</span> <span class="n">QtWidgets</span>
+
     <span class="kn">from</span> <span class="nn">sleap.io.dataset</span> <span class="k">import</span> <span class="n">Labels</span>
     <span class="n">labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">load_json</span><span class="p">(</span><span class="s2">&quot;tests/data/json_format_v1/centered_pair.json&quot;</span><span class="p">)</span>
 
-    <span class="kn">from</span> <span class="nn">sleap.nn.datagen</span> <span class="k">import</span> <span class="n">generate_images</span><span class="p">,</span> <span class="n">generate_confidence_maps</span>
+    <span class="kn">from</span> <span class="nn">sleap.nn.datagen</span> <span class="k">import</span> <span class="n">generate_images</span><span class="p">,</span> <span class="n">generate_points</span>
     <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
     <span class="n">imgs</span> <span class="o">=</span> <span class="n">generate_images</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
-    <span class="n">confmaps</span> <span class="o">=</span> <span class="n">generate_confidence_maps</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+    <span class="n">points</span> <span class="o">=</span> <span class="n">generate_points</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+    <span class="n">skeleton</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
     <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Generated training data. [{time() - t0:.2f}s]&quot;</span><span class="p">)</span>
 
-    <span class="n">proc</span> <span class="o">=</span> <span class="n">Process</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">train</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">imgs</span><span class="p">,</span> <span class="n">confmaps</span><span class="p">),</span> <span class="n">kwargs</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">val_size</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">batch_norm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">num_filters</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">num_epochs</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">steps_per_epoch</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">arch</span><span class="o">=</span><span class="s2">&quot;unet&quot;</span><span class="p">))</span>
-
+    <span class="n">proc</span> <span class="o">=</span> <span class="n">Process</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">train</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">imgs</span><span class="p">,</span> <span class="n">points</span><span class="p">),</span> <span class="n">kwargs</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">output_type</span><span class="o">=</span><span class="s2">&quot;confmaps&quot;</span><span class="p">,</span> <span class="n">skeleton</span><span class="o">=</span><span class="n">skeleton</span><span class="p">,</span> <span class="n">val_size</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">batch_norm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">num_filters</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">num_epochs</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">steps_per_epoch</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">arch</span><span class="o">=</span><span class="s2">&quot;unet&quot;</span><span class="p">))</span>
     <span class="n">proc</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
 
+    <span class="n">ctx</span> <span class="o">=</span> <span class="n">zmq</span><span class="o">.</span><span class="n">Context</span><span class="p">()</span>
+
     <span class="n">app</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QApplication</span><span class="p">()</span>
-    <span class="n">loss_viewer</span> <span class="o">=</span> <span class="n">LossViewer</span><span class="p">()</span>
+    <span class="n">loss_viewer</span> <span class="o">=</span> <span class="n">LossViewer</span><span class="p">(</span><span class="n">zmq_context</span> <span class="o">=</span> <span class="n">ctx</span><span class="p">)</span>
     <span class="n">loss_viewer</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="mi">600</span><span class="p">,</span> <span class="mi">400</span><span class="p">)</span>
     <span class="n">loss_viewer</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
     <span class="n">app</span><span class="o">.</span><span class="n">setQuitOnLastWindowClosed</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">app</span><span class="o">.</span><span class="n">processEvents</span><span class="p">()</span>
-
-    <span class="c1"># sleep(15)</span>
-
-    <span class="n">ctx</span> <span class="o">=</span> <span class="n">zmq</span><span class="o">.</span><span class="n">Context</span><span class="p">()</span>
 
     <span class="c1"># Controller</span>
     <span class="n">ctrl</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">PUB</span><span class="p">)</span>

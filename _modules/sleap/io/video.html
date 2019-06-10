@@ -153,14 +153,16 @@
 <span></span><span class="sd">&quot;&quot;&quot; Video reading and writing interfaces for different formats. &quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
 
 <span class="kn">import</span> <span class="nn">h5py</span> <span class="k">as</span> <span class="nn">h5</span>
 <span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">import</span> <span class="nn">imgstore</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">attr</span>
 <span class="kn">import</span> <span class="nn">cattr</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span>
 
 
 <div class="viewcode-block" id="HDF5Video"><a class="viewcode-back" href="../../../video.html#sleap.io.video.HDF5Video">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="nb">cmp</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -170,7 +172,7 @@
 <span class="sd">    the sLEAP system with this class.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        file: The name of the HDF5 file where the dataset with video data is stored.</span>
+<span class="sd">        filename: The name of the HDF5 file where the dataset with video data is stored.</span>
 <span class="sd">        dataset: The name of the HDF5 dataset where the video data is stored.</span>
 <span class="sd">        file_h5: The h5.File object that the underlying dataset is stored.</span>
 <span class="sd">        dataset_h5: The h5.Dataset object that the underlying data is stored.</span>
@@ -182,7 +184,7 @@
 <span class="sd">        convert_range: Whether we should convert data to [0, 255]-range</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">dataset</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">input_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;channels_last&quot;</span><span class="p">)</span>
     <span class="n">convert_range</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -190,14 +192,14 @@
     <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
         <span class="c1"># Handle cases where the user feeds in h5.File objects instead of filename</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file</span><span class="p">,</span> <span class="n">h5</span><span class="o">.</span><span class="n">File</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">__file_h5</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__file_h5</span><span class="o">.</span><span class="n">filename</span>
-        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="n">h5</span><span class="o">.</span><span class="n">File</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__file_h5</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__file_h5</span><span class="o">.</span><span class="n">filename</span>
+        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">__file_h5</span> <span class="o">=</span> <span class="n">h5</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__file_h5</span> <span class="o">=</span> <span class="n">h5</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Could not find HDF5 file </span><span class="si">{self.file}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">ex</span>
+                <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Could not find HDF5 file </span><span class="si">{self.filename}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">ex</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__file_h5</span> <span class="o">=</span> <span class="kc">None</span>
 
@@ -249,10 +251,6 @@
     <span class="k">def</span> <span class="nf">dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dataset_h5</span><span class="o">.</span><span class="n">dtype</span>
 
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">filename</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">file</span>
-
 <div class="viewcode-block" id="HDF5Video.get_frame"><a class="viewcode-back" href="../../../video.html#sleap.io.video.HDF5Video.get_frame">[docs]</a>    <span class="k">def</span> <span class="nf">get_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span><span class="c1"># -&gt; np.ndarray:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a frame from the underlying HDF5 video data.</span>
@@ -300,7 +298,7 @@
     <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Could not find file video file named </span><span class="si">{self.filename}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Could not find filename video filename named </span><span class="si">{self.filename}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="c1"># Try and open the file either locally in current directory or with full path</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__reader</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">VideoCapture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
@@ -367,11 +365,11 @@
 <span class="sd">    Video data stored as Numpy array.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        file: Either a filename to load or a numpy array of the data.</span>
+<span class="sd">        filename: Either a file to load or a numpy array of the data.</span>
 
 <span class="sd">        * numpy data shape: (frames, width, height, channels)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">file</span><span class="p">:</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>
+    <span class="n">filename</span><span class="p">:</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
@@ -381,23 +379,19 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">__channel_idx</span> <span class="o">=</span> <span class="mi">3</span>
 
         <span class="c1"># Handle cases where the user feeds in np.array instead of filename</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">__data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">file</span> <span class="o">=</span> <span class="s2">&quot;Raw Video Data&quot;</span>
-        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;Raw Video Data&quot;</span>
+        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">__data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Could not find file </span><span class="si">{self.file}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">ex</span>
+                <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Could not find filename </span><span class="si">{self.filename}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">ex</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__data</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="c1"># The properties and methods below complete our contract with the</span>
     <span class="c1"># higher level Video interface.</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">filename</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">file</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">frames</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -423,6 +417,102 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__data</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span></div>
 
 
+<div class="viewcode-block" id="ImgStoreVideo"><a class="viewcode-back" href="../../../video.html#sleap.io.video.ImgStoreVideo">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="nb">cmp</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">ImgStoreVideo</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Video data stored as an ImgStore dataset. See: https://github.com/loopbio/imgstore</span>
+<span class="sd">    This class is just a lightweight wrapper for reading such datasets as videos sources</span>
+<span class="sd">    for sLEAP.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        filename: The name of the file or directory to the imgstore.</span>
+<span class="sd">        index_by_original: ImgStores are great for storing a collection of frame</span>
+<span class="sd">        selected frames from an larger video. If the index_by_original is set to</span>
+<span class="sd">        True than the get_frame function will accept the original frame numbers of</span>
+<span class="sd">        from original video. If False, then it will accept the frame index from the</span>
+<span class="sd">        store directly.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">index_by_original</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="c1"># If the filename does not contain metadata.yaml, append it to the filename</span>
+        <span class="c1"># assuming that this is a directory that contains the imgstore.</span>
+        <span class="k">if</span> <span class="s1">&#39;metadata.yaml&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;metadata.yaml&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Make relative path into absolute, ImgStores don&#39;t work properly it seems</span>
+        <span class="c1"># without full paths if we change working directories. Video.fixup_path will</span>
+        <span class="c1"># fix this later when loading these datasets.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+
+        <span class="c1"># Open the imgstore</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__store</span> <span class="o">=</span> <span class="n">imgstore</span><span class="o">.</span><span class="n">new_for_filename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+
+        <span class="c1"># Read a frame so we can compute shape an such</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__img</span><span class="p">,</span> <span class="p">(</span><span class="n">frame_number</span><span class="p">,</span> <span class="n">frame_timestamp</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__store</span><span class="o">.</span><span class="n">get_next_image</span><span class="p">()</span>
+
+    <span class="c1"># The properties and methods below complete our contract with the</span>
+    <span class="c1"># higher level Video interface.</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">frames</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__store</span><span class="o">.</span><span class="n">frame_count</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">channels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">width</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">height</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__img</span><span class="o">.</span><span class="n">dtype</span>
+
+<div class="viewcode-block" id="ImgStoreVideo.get_frame"><a class="viewcode-back" href="../../../video.html#sleap.io.video.ImgStoreVideo.get_frame">[docs]</a>    <span class="k">def</span> <span class="nf">get_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame_number</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a frame from the underlying ImgStore video data.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            frame_num: The number of the frame to get. If index_by_original is set to True,</span>
+<span class="sd">            then this number should actually be a frame index withing the imgstore. That is,</span>
+<span class="sd">            if there are 4 frames in the imgstore, this number shoulde be from 0 to 3.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The numpy.ndarray representing the video frame data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_by_original</span><span class="p">:</span>
+            <span class="n">img</span><span class="p">,</span> <span class="p">(</span><span class="n">frame_number</span><span class="p">,</span> <span class="n">frame_timestamp</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__store</span><span class="o">.</span><span class="n">get_image</span><span class="p">(</span><span class="n">frame_number</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">img</span><span class="p">,</span> <span class="p">(</span><span class="n">frame_number</span><span class="p">,</span> <span class="n">frame_timestamp</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__store</span><span class="o">.</span><span class="n">get_image</span><span class="p">(</span><span class="n">frame_number</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                                                          <span class="n">frame_index</span><span class="o">=</span><span class="n">frame_number</span><span class="p">)</span>
+
+        <span class="c1"># If the frame has one channel, add a singleton channel as it seems other</span>
+        <span class="c1"># video implementations do this.</span>
+        <span class="k">if</span> <span class="n">img</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">img</span><span class="p">[:,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">img</span>
+
+        <span class="nd">@property</span>
+        <span class="k">def</span> <span class="nf">imgstore</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Get the underlying ImgStore object for this Video.</span>
+
+<span class="sd">            Returns:</span>
+<span class="sd">                The imgstore that is backing this video object.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__store</span></div></div>
+
+
 <div class="viewcode-block" id="Video"><a class="viewcode-back" href="../../../video.html#sleap.io.video.Video">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="nb">cmp</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">Video</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -435,8 +525,12 @@
 <span class="sd">    backend, this class should be instantiated from its various class methods</span>
 <span class="sd">    for different formats. For example:</span>
 
-<span class="sd">    &gt;&gt;&gt; video = Video.from_hdf5(file=&#39;test.h5&#39;, dataset=&#39;box&#39;)</span>
-<span class="sd">    &gt;&gt;&gt; video = Video.from_media(file=&#39;test.mp4&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; video = Video.from_hdf5(filename=&#39;test.h5&#39;, dataset=&#39;box&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; video = Video.from_media(filename=&#39;test.mp4&#39;)</span>
+
+<span class="sd">    Or we can use auto-detection based on filename:</span>
+
+<span class="sd">    &gt;&gt;&gt; video = Video.from_filename(filename=&#39;test.mp4&#39;)</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        backend: A backend is and object that implements the following basic</span>
@@ -456,7 +550,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">backend</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">HDF5Video</span><span class="p">,</span> <span class="n">NumpyVideo</span><span class="p">,</span> <span class="n">MediaVideo</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>
+    <span class="n">backend</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">HDF5Video</span><span class="p">,</span> <span class="n">NumpyVideo</span><span class="p">,</span> <span class="n">MediaVideo</span><span class="p">,</span> <span class="n">ImgStoreVideo</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>
 
     <span class="c1"># Delegate to the backend</span>
     <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
@@ -518,7 +612,7 @@
 
 <div class="viewcode-block" id="Video.from_hdf5"><a class="viewcode-back" href="../../../video.html#sleap.io.video.Video.from_hdf5">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_hdf5</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">h5</span><span class="o">.</span><span class="n">Dataset</span><span class="p">],</span>
-                  <span class="n">file</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">h5</span><span class="o">.</span><span class="n">File</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                  <span class="n">filename</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">h5</span><span class="o">.</span><span class="n">File</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                   <span class="n">input_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;channels_last&quot;</span><span class="p">,</span>
                   <span class="n">convert_range</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -526,17 +620,18 @@
 <span class="sd">        is a helper method that invokes the HDF5Video backend.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            dataset: The name of the dataset or and h5.Dataset object. If file is</span>
+<span class="sd">            dataset: The name of the dataset or and h5.Dataset object. If filename is</span>
 <span class="sd">            h5.File, dataset must be a str of the dataset name.</span>
-<span class="sd">            file: The name of the HDF5 file or and open h5.File object.</span>
+<span class="sd">            filename: The name of the HDF5 file or and open h5.File object.</span>
 <span class="sd">            input_format: Whether the data is oriented with &quot;channels_first&quot; or &quot;channels_last&quot;</span>
 <span class="sd">            convert_range: Whether we should convert data to [0, 255]-range</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            A Video object with HDF5Video backend.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">fixup_path</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
         <span class="n">backend</span> <span class="o">=</span> <span class="n">HDF5Video</span><span class="p">(</span>
-                    <span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">,</span>
+                    <span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span>
                     <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
                     <span class="n">input_format</span><span class="o">=</span><span class="n">input_format</span><span class="p">,</span>
                     <span class="n">convert_range</span><span class="o">=</span><span class="n">convert_range</span>
@@ -544,56 +639,197 @@
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Video.from_numpy"><a class="viewcode-back" href="../../../video.html#sleap.io.video.Video.from_numpy">[docs]</a>    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_numpy</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">from_numpy</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create an instance of a video object from a numpy array.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            file: The numpy array or the name of the file</span>
+<span class="sd">            filename: The numpy array or the name of the file</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            A Video object with a NumpyVideo backend</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">backend</span> <span class="o">=</span> <span class="n">NumpyVideo</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">fixup_path</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="n">backend</span> <span class="o">=</span> <span class="n">NumpyVideo</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Video.from_media"><a class="viewcode-back" href="../../../video.html#sleap.io.video.Video.from_media">[docs]</a>    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_media</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">from_media</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create an instance of a video object from a typical media file (e.g. .mp4, .avi).</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            file: The name of the file</span>
+<span class="sd">            filename: The name of the file</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            A Video object with a MediaVideo backend</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">backend</span> <span class="o">=</span> <span class="n">MediaVideo</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">file</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">fixup_path</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="n">backend</span> <span class="o">=</span> <span class="n">MediaVideo</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Video.from_filename"><a class="viewcode-back" href="../../../video.html#sleap.io.video.Video.from_filename">[docs]</a>    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_filename</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">from_filename</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create an instance of a video object from a filename, auto-detecting the backend.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            file: The path to the video file</span>
+<span class="sd">            filename: The path to the video filename. Currently supported types are:</span>
+
+<span class="sd">            * Media Videos - AVI, MP4, etc. handled by OpenCV directly</span>
+<span class="sd">            * HDF5 Datasets - .h5 files</span>
+<span class="sd">            * Numpy Arrays - npy files</span>
+<span class="sd">            * imgstore datasets - produced by loopbio&#39;s Motif recording system. See: https://github.com/loopbio/imgstore.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            A Video object with the detected backend</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">&quot;h5&quot;</span><span class="p">,</span> <span class="s2">&quot;hdf5&quot;</span><span class="p">)):</span>
-            <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">HDF5Video</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
-        <span class="k">elif</span> <span class="n">file</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">&quot;npy&quot;</span><span class="p">)):</span>
-            <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">NumpyVideo</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
-        <span class="k">elif</span> <span class="n">file</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">&quot;mp4&quot;</span><span class="p">,</span> <span class="s2">&quot;avi&quot;</span><span class="p">)):</span>
-            <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">MediaVideo</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">file</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">fixup_path</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">&quot;h5&quot;</span><span class="p">,</span> <span class="s2">&quot;hdf5&quot;</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">HDF5Video</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">&quot;npy&quot;</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">NumpyVideo</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">filename</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">&quot;mp4&quot;</span><span class="p">,</span> <span class="s2">&quot;avi&quot;</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">MediaVideo</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;metadata.yaml&quot;</span> <span class="ow">in</span> <span class="n">filename</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">ImgStoreVideo</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Could not detect backend for specified filename.&quot;</span><span class="p">)</span></div>
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">to_numpy</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">frame_data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">file_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">frame_data</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span></div>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">frame_data</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Video.to_imgstore"><a class="viewcode-back" href="../../../video.html#sleap.io.video.Video.to_imgstore">[docs]</a>    <span class="k">def</span> <span class="nf">to_imgstore</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span>
+                    <span class="n">frame_numbers</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="nb">format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;png&quot;</span><span class="p">,</span>
+                    <span class="n">index_by_original</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Read frames from an arbitrary video backend and store them in a loopbio imgstore.</span>
+<span class="sd">        This should facilitate conversion of any video to a loopbio imgstore.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            path: Filename or directory name to store imgstore.</span>
+<span class="sd">            frame_numbers: A list of frame numbers from the video to save. If None save</span>
+<span class="sd">            the entire video.</span>
+<span class="sd">            format: By default it will create a DirectoryImgStore with lossless PNG format.</span>
+<span class="sd">            Unless the frame_indices = None, in which case, it will default to &#39;mjpeg/avi&#39;</span>
+<span class="sd">            format for video.</span>
+<span class="sd">            index_by_original: ImgStores are great for storing a collection of frame</span>
+<span class="sd">            selected frames from an larger video. If the index_by_original is set to</span>
+<span class="sd">            True than the get_frame function will accept the original frame numbers of</span>
+<span class="sd">            from original video. If False, then it will accept the frame index from the</span>
+<span class="sd">            store directly.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A new Video object that references the imgstore.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># If the user has not provided a list of frames to store, store them all.</span>
+        <span class="k">if</span> <span class="n">frame_numbers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">frame_numbers</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_frames</span><span class="p">)</span>
+
+            <span class="c1"># We probably don&#39;t want to store all the frames as the PNG default,</span>
+            <span class="c1"># lets use MJPEG by default.</span>
+            <span class="nb">format</span> <span class="o">=</span> <span class="s2">&quot;mjpeg/avi&quot;</span>
+
+        <span class="c1"># Delete the imgstore if it already exists.</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+                <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">store</span> <span class="o">=</span> <span class="n">imgstore</span><span class="o">.</span><span class="n">new_for_format</span><span class="p">(</span><span class="nb">format</span><span class="p">,</span>
+                                        <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">basedir</span><span class="o">=</span><span class="n">path</span><span class="p">,</span>
+                                        <span class="n">imgshape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_frame</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                                        <span class="n">chunksize</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+
+        <span class="c1"># Write the JSON for the original video object to the metadata</span>
+        <span class="c1"># of the imgstore for posterity</span>
+        <span class="n">store</span><span class="o">.</span><span class="n">add_extra_data</span><span class="p">(</span><span class="n">sourc_sleap_video_obj</span><span class="o">=</span><span class="n">Video</span><span class="o">.</span><span class="n">cattr</span><span class="p">()</span><span class="o">.</span><span class="n">unstructure</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+
+        <span class="kn">import</span> <span class="nn">time</span>
+        <span class="k">for</span> <span class="n">frame_num</span> <span class="ow">in</span> <span class="n">frame_numbers</span><span class="p">:</span>
+            <span class="n">store</span><span class="o">.</span><span class="n">add_image</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_frame</span><span class="p">(</span><span class="n">frame_num</span><span class="p">),</span> <span class="n">frame_num</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span>
+
+        <span class="n">store</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="c1"># Return an ImgStoreVideo object referencing this new imgstore.</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">ImgStoreVideo</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="n">index_by_original</span><span class="o">=</span><span class="n">index_by_original</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Video.cattr"><a class="viewcode-back" href="../../../video.html#sleap.io.video.Video.cattr">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">cattr</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a cattr converter for serialiazing\deseriializing Video objects.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A cattr converter.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># When we are structuring video backends, try to fixup the video file paths</span>
+        <span class="c1"># in case they are coming from a different computer or the file has been moved.</span>
+        <span class="k">def</span> <span class="nf">fixup_video</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">cl</span><span class="p">):</span>
+            <span class="k">if</span> <span class="s1">&#39;filename&#39;</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
+                <span class="n">x</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">fixup_path</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="s1">&#39;file&#39;</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
+                <span class="n">x</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">fixup_path</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">])</span>
+
+            <span class="k">return</span> <span class="n">cl</span><span class="p">(</span><span class="o">**</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="n">vid_cattr</span> <span class="o">=</span> <span class="n">cattr</span><span class="o">.</span><span class="n">Converter</span><span class="p">()</span>
+
+        <span class="c1"># Check the type hint for backend and register the video path</span>
+        <span class="c1"># fixup hook for each type in the Union.</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">attr</span><span class="o">.</span><span class="n">fields</span><span class="p">(</span><span class="n">Video</span><span class="p">)</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">__args__</span><span class="p">:</span>
+            <span class="n">vid_cattr</span><span class="o">.</span><span class="n">register_structure_hook</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">fixup_video</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">vid_cattr</span></div>
+
+<div class="viewcode-block" id="Video.fixup_path"><a class="viewcode-back" href="../../../video.html#sleap.io.video.Video.fixup_path">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">fixup_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Given a path to a video try to find it. This is attempt to make the paths</span>
+<span class="sd">        serialized for different video objects portabls across multiple computers.</span>
+<span class="sd">        The default behaviour is to store whatever path is stored on the backend</span>
+<span class="sd">        object. If this is an absolute path it is almost certainly wrong when</span>
+<span class="sd">        transfered when the object is created on another computer. We try to</span>
+<span class="sd">        find the video by looking in the current working directory as well.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            path: The path the video asset.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The fixed up path</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># If path is not a string then just return it and assume the backend</span>
+        <span class="c1"># knows what to do with it.</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">str</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">path</span>
+
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">path</span>
+
+        <span class="c1"># Strip the directory and lets see if the file is in the current working</span>
+        <span class="c1"># directory.</span>
+        <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">path</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+        <span class="c1"># Special case: this is an ImgStore path! We cant use</span>
+        <span class="c1"># basename because it will strip the directory name off</span>
+        <span class="k">elif</span> <span class="n">path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;metadata.yaml&#39;</span><span class="p">):</span>
+
+            <span class="c1"># Get the parent dir of the YAML file.</span>
+            <span class="n">img_store_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">path</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">img_store_dir</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">img_store_dir</span>
+
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Cannot find a video file: f</span><span class="si">{path}</span><span class="s2">&quot;</span><span class="p">)</span></div></div>
+
 </pre></div>
 
            </div>

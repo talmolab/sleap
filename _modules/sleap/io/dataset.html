@@ -161,14 +161,21 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">zipfile</span>
+<span class="kn">import</span> <span class="nn">atexit</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+
 <span class="kn">import</span> <span class="nn">attr</span>
 <span class="kn">import</span> <span class="nn">cattr</span>
 <span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">scipy.io</span> <span class="k">as</span> <span class="nn">sio</span>
+<span class="kn">import</span> <span class="nn">h5py</span> <span class="k">as</span> <span class="nn">h5</span>
 
 <span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">MutableSequence</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Dict</span>
 
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 
@@ -176,6 +183,7 @@
 <span class="kn">from</span> <span class="nn">sleap.instance</span> <span class="k">import</span> <span class="n">Instance</span><span class="p">,</span> <span class="n">Point</span><span class="p">,</span> <span class="n">LabeledFrame</span><span class="p">,</span> \
     <span class="n">Track</span><span class="p">,</span> <span class="n">PredictedPoint</span><span class="p">,</span> <span class="n">PredictedInstance</span>
 <span class="kn">from</span> <span class="nn">sleap.io.video</span> <span class="k">import</span> <span class="n">Video</span>
+<span class="kn">from</span> <span class="nn">sleap.util</span> <span class="k">import</span> <span class="n">save_dict_to_hdf5</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">The version number to put in the Labels JSON format.</span>
@@ -197,7 +205,8 @@
 <span class="sd">        That is, every LabeledFrame&#39;s video will be in videos but a Video</span>
 <span class="sd">        object from videos might not have any LabeledFrame.</span>
 <span class="sd">        skeletons: A list of skeletons that these labels may or may not reference.</span>
-<span class="sd">        tracks: A list of tracks that isntances can belong to.</span>
+<span class="sd">        tracks: A list of tracks that instances can belong to.</span>
+<span class="sd">        suggestions: A dict with a list for each video of suggested frames to label.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">labeled_frames</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">LabeledFrame</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">Factory</span><span class="p">(</span><span class="nb">list</span><span class="p">))</span>
@@ -205,6 +214,7 @@
     <span class="n">skeletons</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Skeleton</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">Factory</span><span class="p">(</span><span class="nb">list</span><span class="p">))</span>
     <span class="n">nodes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Node</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">Factory</span><span class="p">(</span><span class="nb">list</span><span class="p">))</span>
     <span class="n">tracks</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Track</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">Factory</span><span class="p">(</span><span class="nb">list</span><span class="p">))</span>
+    <span class="n">suggestions</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Video</span><span class="p">,</span> <span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">Factory</span><span class="p">(</span><span class="nb">dict</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
@@ -228,6 +238,9 @@
 
         <span class="c1"># Lets sort the tracks by spawned on and then name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tracks</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:(</span><span class="n">t</span><span class="o">.</span><span class="n">spawned_on</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+
+        <span class="c1"># Create a variable to store a temporary storage directory. When we unzip</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__temp_dir</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="c1"># Below are convenience methods for working with Labels as list.</span>
     <span class="c1"># Maybe we should just inherit from list? Maybe this class shouldn&#39;t</span>
@@ -330,6 +343,13 @@
                 <span class="k">if</span> <span class="n">label</span><span class="o">.</span><span class="n">video</span> <span class="o">==</span> <span class="n">video</span> <span class="ow">and</span> <span class="p">(</span><span class="n">frame_idx</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="p">(</span><span class="n">label</span><span class="o">.</span><span class="n">frame_idx</span> <span class="o">==</span> <span class="n">frame_idx</span><span class="p">)):</span>
                     <span class="k">return</span> <span class="n">label</span></div>
 
+    <span class="k">def</span> <span class="nf">instance_count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">labeled_frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_first</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">labeled_frame</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">([</span><span class="n">inst</span> <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">labeled_frame</span><span class="o">.</span><span class="n">instances</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">inst</span><span class="p">)</span><span class="o">==</span><span class="n">Instance</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">count</span>
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">all_instances</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instances</span><span class="p">())</span>
@@ -424,16 +444,63 @@
         <span class="c1"># Delete video</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">videos</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">video</span><span class="p">)</span></div>
 
-
-<div class="viewcode-block" id="Labels.to_json"><a class="viewcode-back" href="../../../dataset.html#sleap.io.dataset.Labels.to_json">[docs]</a>    <span class="k">def</span> <span class="nf">to_json</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Labels.get_video_suggestions"><a class="viewcode-back" href="../../../dataset.html#sleap.io.dataset.Labels.get_video_suggestions">[docs]</a>    <span class="k">def</span> <span class="nf">get_video_suggestions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span><span class="n">Video</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Serialize all labels in the underling list of LabeledFrame(s) to a</span>
-<span class="sd">        JSON structured string.</span>
+<span class="sd">        Returns the list of suggested frames for the specified video</span>
+<span class="sd">        or suggestions for all videos (if no video specified).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">suggestions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="nb">list</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="Labels.get_suggestions"><a class="viewcode-back" href="../../../dataset.html#sleap.io.dataset.Labels.get_suggestions">[docs]</a>    <span class="k">def</span> <span class="nf">get_suggestions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return all suggestions as a list of (video, frame) tuples.&quot;&quot;&quot;</span>
+        <span class="n">suggestion_list</span> <span class="o">=</span> <span class="p">[(</span><span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">video</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">videos</span>
+            <span class="k">for</span> <span class="n">frame_idx</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_video_suggestions</span><span class="p">(</span><span class="n">video</span><span class="p">)</span>
+            <span class="p">]</span>
+        <span class="k">return</span> <span class="n">suggestion_list</span></div>
+
+<div class="viewcode-block" id="Labels.get_next_suggestion"><a class="viewcode-back" href="../../../dataset.html#sleap.io.dataset.Labels.get_next_suggestion">[docs]</a>    <span class="k">def</span> <span class="nf">get_next_suggestion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">,</span> <span class="n">seek_direction</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns a (video, frame_idx) tuple.&quot;&quot;&quot;</span>
+        <span class="c1"># make sure we have valid seek_direction</span>
+        <span class="k">if</span> <span class="n">seek_direction</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span> <span class="k">return</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="c1"># make sure the video belongs to this Labels object</span>
+        <span class="k">if</span> <span class="n">video</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">videos</span><span class="p">:</span> <span class="k">return</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="c1"># look for next (or previous) suggestion in current video</span>
+        <span class="k">if</span> <span class="n">seek_direction</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">frame_suggestion</span> <span class="o">=</span> <span class="nb">min</span><span class="p">((</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_video_suggestions</span><span class="p">(</span><span class="n">video</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="n">frame_idx</span><span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">frame_suggestion</span> <span class="o">=</span> <span class="nb">max</span><span class="p">((</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_video_suggestions</span><span class="p">(</span><span class="n">video</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">frame_idx</span><span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">frame_suggestion</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="k">return</span> <span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">frame_suggestion</span><span class="p">)</span>
+        <span class="c1"># if we didn&#39;t find suggestion in current video,</span>
+        <span class="c1"># then we want earliest frame in next video with suggestions</span>
+        <span class="n">next_video_idx</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">videos</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">video</span><span class="p">)</span> <span class="o">+</span> <span class="n">seek_direction</span><span class="p">)</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">videos</span><span class="p">)</span>
+        <span class="n">video</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">videos</span><span class="p">[</span><span class="n">next_video_idx</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">seek_direction</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">frame_suggestion</span> <span class="o">=</span> <span class="nb">min</span><span class="p">((</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_video_suggestions</span><span class="p">(</span><span class="n">video</span><span class="p">)),</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">frame_suggestion</span> <span class="o">=</span> <span class="nb">max</span><span class="p">((</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_video_suggestions</span><span class="p">(</span><span class="n">video</span><span class="p">)),</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">frame_suggestion</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Labels.set_suggestions"><a class="viewcode-back" href="../../../dataset.html#sleap.io.dataset.Labels.set_suggestions">[docs]</a>    <span class="k">def</span> <span class="nf">set_suggestions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">suggestions</span><span class="p">:</span><span class="n">Dict</span><span class="p">[</span><span class="n">Video</span><span class="p">,</span> <span class="nb">list</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;Sets the suggested frames.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">suggestions</span> <span class="o">=</span> <span class="n">suggestions</span></div>
+
+<div class="viewcode-block" id="Labels.to_dict"><a class="viewcode-back" href="../../../dataset.html#sleap.io.dataset.Labels.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Serialize all labels in the underling list of LabeledFrames to a</span>
+<span class="sd">        dict structure. This function returns a nested dict structure</span>
+<span class="sd">        composed entirely of primitive python types. It is used to create</span>
+<span class="sd">        JSON and HDF5 serialized datasets.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            The JSON representaiton of the string.</span>
+<span class="sd">            A dict containing the followings top level keys:</span>
+<span class="sd">            * version - The version of the dict/json serialization format.</span>
+<span class="sd">            * skeletons - The skeletons associated with these underlying instances.</span>
+<span class="sd">            * nodes - The nodes that the skeletons represent.</span>
+<span class="sd">            * videos - The videos that that the instances occur on.</span>
+<span class="sd">            * labels - The labeled frames</span>
+<span class="sd">            * tracks - The tracks associated with each instance.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="c1"># FIXME: Update list of nodes</span>
         <span class="c1"># We shouldn&#39;t have to do this here, but for some reason we&#39;re missing nodes</span>
         <span class="c1"># which are in the skeleton but don&#39;t have points (in the first instance?).</span>
@@ -449,7 +516,7 @@
         <span class="n">label_cattr</span><span class="o">.</span><span class="n">register_unstructure_hook</span><span class="p">(</span><span class="n">Node</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
         <span class="n">label_cattr</span><span class="o">.</span><span class="n">register_unstructure_hook</span><span class="p">(</span><span class="n">Track</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tracks</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
 
-        <span class="n">idx_to_node</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">))}</span>
+        <span class="n">idx_to_node</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">))}</span>
 
         <span class="n">skeleton_cattr</span> <span class="o">=</span> <span class="n">Skeleton</span><span class="o">.</span><span class="n">make_cattr</span><span class="p">(</span><span class="n">idx_to_node</span><span class="p">)</span>
 
@@ -458,19 +525,84 @@
             <span class="s1">&#39;version&#39;</span><span class="p">:</span> <span class="n">LABELS_JSON_FILE_VERSION</span><span class="p">,</span>
             <span class="s1">&#39;skeletons&#39;</span><span class="p">:</span> <span class="n">skeleton_cattr</span><span class="o">.</span><span class="n">unstructure</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">skeletons</span><span class="p">),</span>
             <span class="s1">&#39;nodes&#39;</span><span class="p">:</span> <span class="n">cattr</span><span class="o">.</span><span class="n">unstructure</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">),</span>
-            <span class="s1">&#39;videos&#39;</span><span class="p">:</span> <span class="n">cattr</span><span class="o">.</span><span class="n">unstructure</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">videos</span><span class="p">),</span>
+            <span class="s1">&#39;videos&#39;</span><span class="p">:</span> <span class="n">Video</span><span class="o">.</span><span class="n">cattr</span><span class="p">()</span><span class="o">.</span><span class="n">unstructure</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">videos</span><span class="p">),</span>
             <span class="s1">&#39;labels&#39;</span><span class="p">:</span> <span class="n">label_cattr</span><span class="o">.</span><span class="n">unstructure</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labeled_frames</span><span class="p">),</span>
-            <span class="s1">&#39;tracks&#39;</span><span class="p">:</span> <span class="n">cattr</span><span class="o">.</span><span class="n">unstructure</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tracks</span><span class="p">)</span>
+            <span class="s1">&#39;tracks&#39;</span><span class="p">:</span> <span class="n">cattr</span><span class="o">.</span><span class="n">unstructure</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tracks</span><span class="p">),</span>
+            <span class="s1">&#39;suggestions&#39;</span><span class="p">:</span> <span class="n">label_cattr</span><span class="o">.</span><span class="n">unstructure</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">suggestions</span><span class="p">)</span>
          <span class="p">}</span>
 
-        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">dicts</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">dicts</span></div>
 
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">save_json</span><span class="p">(</span><span class="n">labels</span><span class="p">:</span> <span class="s1">&#39;Labels&#39;</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="n">json_str</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">to_json</span><span class="p">()</span>
+<div class="viewcode-block" id="Labels.to_json"><a class="viewcode-back" href="../../../dataset.html#sleap.io.dataset.Labels.to_json">[docs]</a>    <span class="k">def</span> <span class="nf">to_json</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Serialize all labels in the underling list of LabeledFrame(s) to a</span>
+<span class="sd">        JSON structured string.</span>
 
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">json_str</span><span class="p">)</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            The JSON representaiton of the string.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Unstructure the data into dicts and dump to JSON.</span>
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">to_dict</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="Labels.save_json"><a class="viewcode-back" href="../../../dataset.html#sleap.io.dataset.Labels.save_json">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">save_json</span><span class="p">(</span><span class="n">labels</span><span class="p">:</span> <span class="s1">&#39;Labels&#39;</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                  <span class="n">compress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                  <span class="n">save_frame_data</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save a Labels instance to a JSON format.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            labels: The labels dataset to save.</span>
+<span class="sd">            filename: The filename to save the data to.</span>
+<span class="sd">            compress: Should the data be zip compressed or not? If True, the JSON will be</span>
+<span class="sd">            compressed using Python&#39;s shutil.make_archive command into a PKZIP zip file. If</span>
+<span class="sd">            compress is True then filename will have a .zip appended to it.</span>
+<span class="sd">            save_frame_data: Whether to save the image data for each frame as well. For each</span>
+<span class="sd">            video in the dataset, all frames that have labels will be stored as an imgstore</span>
+<span class="sd">            dataset. If save_frame_data is True then compress will be forced to True since</span>
+<span class="sd">            the archive must contain both the JSON data and image data stored in ImgStores.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Lets make a temporary directory to store the image frame data or pre-compressed json</span>
+        <span class="c1"># in case we need it.</span>
+        <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmp_dir</span><span class="p">:</span>
+
+            <span class="c1"># If we are saving frame data along with the datasets. We will replace videos with</span>
+            <span class="c1"># new video object that represent video data from just the labeled frames.</span>
+            <span class="k">if</span> <span class="n">save_frame_data</span><span class="p">:</span>
+
+                <span class="c1"># Create a set of new Video objects with imgstore backends. One for each</span>
+                <span class="c1"># of the videos. We will only include the labeled frames though. We will</span>
+                <span class="c1"># then replace each video with this new video</span>
+                <span class="n">new_videos</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">save_frame_data_imgstore</span><span class="p">(</span><span class="n">output_dir</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">)</span>
+
+                <span class="c1"># Convert to a dict, not JSON yet, because we need to patch up the videos</span>
+                <span class="n">d</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+                <span class="n">d</span><span class="p">[</span><span class="s1">&#39;videos&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">cattr</span><span class="p">()</span><span class="o">.</span><span class="n">unstructure</span><span class="p">(</span><span class="n">new_videos</span><span class="p">)</span>
+
+                <span class="c1"># We can&#39;t call Labels.to_json, so we need to do this here. Not as clean as I</span>
+                <span class="c1"># would like.</span>
+                <span class="n">json_str</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">json_str</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">to_json</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">compress</span> <span class="ow">or</span> <span class="n">save_frame_data</span><span class="p">:</span>
+
+                <span class="c1"># Write the json to the tmp directory, we will zip it up with the frame data.</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">filename</span><span class="p">)),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+                    <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">json_str</span><span class="p">)</span>
+
+                <span class="c1"># Create the archive</span>
+                <span class="n">shutil</span><span class="o">.</span><span class="n">make_archive</span><span class="p">(</span><span class="n">base_name</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="n">root_dir</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;zip&#39;</span><span class="p">)</span>
+
+            <span class="c1"># If the user doesn&#39;t want to compress, then just write the json to the filename</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+                    <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">json_str</span><span class="p">)</span></div>
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_json</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]):</span>
@@ -487,8 +619,15 @@
 
         <span class="n">idx_to_node</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span><span class="n">nodes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nodes</span><span class="p">))}</span>
         <span class="n">skeletons</span> <span class="o">=</span> <span class="n">Skeleton</span><span class="o">.</span><span class="n">make_cattr</span><span class="p">(</span><span class="n">idx_to_node</span><span class="p">)</span><span class="o">.</span><span class="n">structure</span><span class="p">(</span><span class="n">dicts</span><span class="p">[</span><span class="s1">&#39;skeletons&#39;</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Skeleton</span><span class="p">])</span>
-        <span class="n">videos</span> <span class="o">=</span> <span class="n">Skeleton</span><span class="o">.</span><span class="n">make_cattr</span><span class="p">(</span><span class="n">idx_to_node</span><span class="p">)</span><span class="o">.</span><span class="n">structure</span><span class="p">(</span><span class="n">dicts</span><span class="p">[</span><span class="s1">&#39;videos&#39;</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Video</span><span class="p">])</span>
+        <span class="n">videos</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">cattr</span><span class="p">()</span><span class="o">.</span><span class="n">structure</span><span class="p">(</span><span class="n">dicts</span><span class="p">[</span><span class="s1">&#39;videos&#39;</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Video</span><span class="p">])</span>
         <span class="n">tracks</span> <span class="o">=</span> <span class="n">cattr</span><span class="o">.</span><span class="n">structure</span><span class="p">(</span><span class="n">dicts</span><span class="p">[</span><span class="s1">&#39;tracks&#39;</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Track</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="s2">&quot;suggestions&quot;</span> <span class="ow">in</span> <span class="n">dicts</span><span class="p">:</span>
+            <span class="n">suggestions_cattr</span> <span class="o">=</span> <span class="n">cattr</span><span class="o">.</span><span class="n">Converter</span><span class="p">()</span>
+            <span class="n">suggestions_cattr</span><span class="o">.</span><span class="n">register_structure_hook</span><span class="p">(</span><span class="n">Video</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span><span class="nb">type</span><span class="p">:</span> <span class="n">videos</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)])</span>
+            <span class="n">suggestions</span> <span class="o">=</span> <span class="n">suggestions_cattr</span><span class="o">.</span><span class="n">structure</span><span class="p">(</span><span class="n">dicts</span><span class="p">[</span><span class="s1">&#39;suggestions&#39;</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Video</span><span class="p">,</span> <span class="n">List</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">suggestions</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
 
         <span class="n">label_cattr</span> <span class="o">=</span> <span class="n">cattr</span><span class="o">.</span><span class="n">Converter</span><span class="p">()</span>
         <span class="n">label_cattr</span><span class="o">.</span><span class="n">register_structure_hook</span><span class="p">(</span><span class="n">Skeleton</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span><span class="nb">type</span><span class="p">:</span> <span class="n">skeletons</span><span class="p">[</span><span class="n">x</span><span class="p">])</span>
@@ -514,15 +653,46 @@
                                             <span class="n">structure_instances_list</span><span class="p">)</span>
         <span class="n">labels</span> <span class="o">=</span> <span class="n">label_cattr</span><span class="o">.</span><span class="n">structure</span><span class="p">(</span><span class="n">dicts</span><span class="p">[</span><span class="s1">&#39;labels&#39;</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">LabeledFrame</span><span class="p">])</span>
 
-<span class="c1">#         print(&quot;LABELS&quot;); print(labels)</span>
-        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">labeled_frames</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">videos</span><span class="o">=</span><span class="n">videos</span><span class="p">,</span> <span class="n">skeletons</span><span class="o">=</span><span class="n">skeletons</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="n">nodes</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">labeled_frames</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">videos</span><span class="o">=</span><span class="n">videos</span><span class="p">,</span> <span class="n">skeletons</span><span class="o">=</span><span class="n">skeletons</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="n">nodes</span><span class="p">,</span> <span class="n">suggestions</span><span class="o">=</span><span class="n">suggestions</span><span class="p">)</span>
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">load_json</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+
+        <span class="c1"># Check if the file is a zipfile for not.</span>
+        <span class="k">if</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">is_zipfile</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+
+            <span class="c1"># Make a tmpdir, located in the directory that the file exists, to unzip</span>
+            <span class="c1"># its contents.</span>
+            <span class="n">tmp_dir</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">(</span><span class="nb">dir</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+
+            <span class="k">try</span><span class="p">:</span>
+
+                <span class="c1"># Register a cleanup routine that deletes the tmpdir on program exit</span>
+                <span class="c1"># if something goes wrong. The True is for ignore_errors</span>
+                <span class="n">atexit</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">,</span> <span class="n">tmp_dir</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+
+                <span class="c1"># Uncompress the data into the directory</span>
+                <span class="n">shutil</span><span class="o">.</span><span class="n">unpack_archive</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">extract_dir</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">)</span>
+
+                <span class="c1"># We can now open the JSON file, save the zip file and</span>
+                <span class="c1"># replace file with the first JSON file we find in the archive.</span>
+                <span class="n">json_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span> <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">)</span> <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.json&quot;</span><span class="p">)]</span>
+
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">json_files</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;No JSON file found inside </span><span class="si">{filename}</span><span class="s2">. Are you sure this is a valid sLEAP dataset.&quot;</span><span class="p">)</span>
+
+                <span class="n">filename</span> <span class="o">=</span> <span class="n">json_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+                <span class="c1"># If we had problems, delete the temp directory and reraise the exception.</span>
+                <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="k">raise</span>
+
+        <span class="c1"># Open and parse the JSON in filename</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
 
             <span class="c1"># FIXME: Peek into the json to see if there is version string.</span>
-            <span class="c1"># I do this to tell apart old JSON data from leap_dev vs the</span>
+            <span class="c1"># We do this to tell apart old JSON data from leap_dev vs the</span>
             <span class="c1"># newer format for sLEAP.</span>
             <span class="n">json_str</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
             <span class="n">dicts</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">json_str</span><span class="p">)</span>
@@ -533,7 +703,7 @@
                 <span class="c1"># Cache the working directory.</span>
                 <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
 
-                <span class="c1"># Try to load the labels file.</span>
+                <span class="c1"># Try to load the labels filename.</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="n">labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">from_json</span><span class="p">(</span><span class="n">dicts</span><span class="p">)</span>
 
@@ -541,7 +711,7 @@
 
                     <span class="c1"># FIXME: We are going to the labels JSON that has references to</span>
                     <span class="c1"># video files. Lets change directory to the dirname of the json file</span>
-                    <span class="c1"># so that relative paths will be from this director. Maybe</span>
+                    <span class="c1"># so that relative paths will be from this directory. Maybe</span>
                     <span class="c1"># it is better to feed the dataset dirname all the way down to</span>
                     <span class="c1"># the Video object. This seems like less coupling between classes</span>
                     <span class="c1"># though.</span>
@@ -553,7 +723,7 @@
 
                 <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
                     <span class="c1"># Ok, we give up, where the hell are these videos!</span>
-                    <span class="k">raise</span> <span class="n">ex</span> <span class="c1"># Re-raise.</span>
+                    <span class="k">raise</span> <span class="c1"># Re-raise.</span>
                 <span class="k">finally</span><span class="p">:</span>
                     <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">cwd</span><span class="p">)</span>  <span class="c1"># Make sure to change back if we have problems.</span>
 
@@ -561,6 +731,88 @@
 
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">load_labels_json_old</span><span class="p">(</span><span class="n">data_path</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="n">parsed_json</span><span class="o">=</span><span class="n">dicts</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Labels.save_hdf5"><a class="viewcode-back" href="../../../dataset.html#sleap.io.dataset.Labels.save_hdf5">[docs]</a>    <span class="k">def</span> <span class="nf">save_hdf5</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">save_frame_data</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Serialize the labels dataset to an HDF5 file.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            filename: The file to serialize the dataset to.</span>
+<span class="sd">            save_frame_data: Whether to save the image frame data for any</span>
+<span class="sd">            labeled frame as well. This is useful for uploading the HDF5 for</span>
+<span class="sd">            model training when video files are to large to move. This will only</span>
+<span class="sd">            save video frames that have some labeled instances.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Unstructure this labels dataset to a bunch of dicts, same as we do for</span>
+        <span class="c1"># JSON serialization.</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+
+        <span class="c1"># Delete the file if it exists, we want to start from scratch since</span>
+        <span class="c1"># h5py truncates the file which seems to not actually delete data</span>
+        <span class="c1"># from the file.</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">h5</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+
+            <span class="c1"># Save the skeletons</span>
+            <span class="c1">#Skeleton.save_all_hdf5(filename=f, skeletons=self.skeletons)</span>
+
+            <span class="c1"># Save the frame data for the videos. For each video, we will</span>
+            <span class="c1"># save a dataset that contains only the frame data that has been</span>
+            <span class="c1"># labelled.</span>
+            <span class="k">if</span> <span class="n">save_frame_data</span><span class="p">:</span>
+
+                <span class="c1">#</span>
+                <span class="c1"># # All videos data will be put in the videos group</span>
+                <span class="c1"># if &#39;frames&#39; not in f:</span>
+                <span class="c1">#     frames_group = f.create_group(&#39;frames&#39;, track_order=True)</span>
+                <span class="c1"># else:</span>
+                <span class="c1">#     frames_group = f.require_group(&#39;frames&#39;)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">save_frame_data_imgstore</span><span class="p">()</span>
+
+                <span class="c1">#</span>
+                <span class="c1"># dset = f.create_dataset(f&quot;/frames/{v_idx}&quot;,</span>
+                <span class="c1">#                         data=v.get_frames(frame_idxs),</span>
+                <span class="c1">#                         compression=&quot;gzip&quot;)</span>
+                <span class="c1">#</span>
+                <span class="c1"># # Write the dataset to JSON string, then store it in a string</span>
+                <span class="c1"># # attribute</span>
+                <span class="c1"># dset.attrs[f&quot;video_json&quot;] = np.string_(json.dumps(d[&#39;videos&#39;][v_idx]))</span>
+
+            <span class="c1"># Save the instance level data</span>
+            <span class="n">Instance</span><span class="o">.</span><span class="n">save_hdf5</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">f</span><span class="p">,</span> <span class="n">instances</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">all_instances</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Labels.save_frame_data_imgstore"><a class="viewcode-back" href="../../../dataset.html#sleap.io.dataset.Labels.save_frame_data_imgstore">[docs]</a>    <span class="k">def</span> <span class="nf">save_frame_data_imgstore</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;./&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;png&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write all labeled frames from all videos to a collection of imgstore datasets.</span>
+<span class="sd">        This only writes frames that have been labeled. Videos without any labeled frames</span>
+<span class="sd">        will be included as empty imgstores.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            output_dir:</span>
+<span class="sd">            format: The image format to use for the data. png for lossless, jpg for lossy.</span>
+<span class="sd">            Other imgstore formats will probably work as well but have not been tested.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A list of ImgStoreVideo objects that represent the stored frames.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># For each label</span>
+        <span class="n">imgstore_vids</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">v_idx</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">videos</span><span class="p">):</span>
+            <span class="n">frame_nums</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">frame_idx</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labeled_frames</span> <span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="n">f</span><span class="o">.</span><span class="n">video</span><span class="p">]</span>
+
+            <span class="n">frames_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="n">f</span><span class="s1">&#39;frame_data_vid</span><span class="si">{v_idx}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">vid</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">to_imgstore</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">frames_filename</span><span class="p">,</span> <span class="n">frame_numbers</span><span class="o">=</span><span class="n">frame_nums</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;png&#39;</span><span class="p">)</span>
+            <span class="n">imgstore_vids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vid</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">imgstore_vids</span></div>
+
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_unwrap_mat_scalar</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
@@ -588,9 +840,11 @@
             <span class="n">box_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">file_dir</span><span class="p">,</span> <span class="n">box_path_name</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">box_path</span><span class="p">):</span>
-            <span class="n">vid</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">from_hdf5</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;box&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">box_path</span><span class="p">,</span> <span class="n">input_format</span><span class="o">=</span><span class="s2">&quot;channels_first&quot;</span><span class="p">)</span>
+            <span class="n">vid</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">from_hdf5</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;box&quot;</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">box_path</span><span class="p">,</span> <span class="n">input_format</span><span class="o">=</span><span class="s2">&quot;channels_first&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">vid</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># TODO: prompt user to locate video</span>
 
         <span class="n">nodes_</span> <span class="o">=</span> <span class="n">mat_contents</span><span class="p">[</span><span class="s2">&quot;skeleton&quot;</span><span class="p">][</span><span class="s2">&quot;nodes&quot;</span><span class="p">]</span>
         <span class="n">edges_</span> <span class="o">=</span> <span class="n">mat_contents</span><span class="p">[</span><span class="s2">&quot;skeleton&quot;</span><span class="p">][</span><span class="s2">&quot;edges&quot;</span><span class="p">]</span>
@@ -692,7 +946,7 @@
         <span class="k">if</span> <span class="n">videos</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="s2">&quot;format&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;media&quot;</span><span class="p">:</span>
             <span class="n">vid</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">from_media</span><span class="p">(</span><span class="n">videos</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="s2">&quot;filepath&quot;</span><span class="p">])</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">vid</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">from_hdf5</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">videos</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="s2">&quot;filepath&quot;</span><span class="p">],</span> <span class="n">dataset</span><span class="o">=</span><span class="n">videos</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="s2">&quot;dataset&quot;</span><span class="p">])</span>
+            <span class="n">vid</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">from_hdf5</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">videos</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="s2">&quot;filepath&quot;</span><span class="p">],</span> <span class="n">dataset</span><span class="o">=</span><span class="n">videos</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="s2">&quot;dataset&quot;</span><span class="p">])</span>
 
         <span class="n">video_objects</span><span class="p">[</span><span class="n">videos</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="s2">&quot;id&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">vid</span>
 
