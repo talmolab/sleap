@@ -547,6 +547,38 @@ class Video:
             raise ValueError("Could not detect backend for specified filename.")
 
     @classmethod
+    def imgstore_from_filenames(cls, filenames: list, output_filename: str, *args, **kwargs):
+        """Create an imagestore from a list of image files.
+
+        Args:
+            filenames: List of filenames for the image files.
+            output_filename: Filename for the imagestore to create.
+
+        Returns:
+            A `Video` object for the new imagestore.
+        """
+
+        # get the image size from the first file
+        first_img = cv2.imread(filenames[0], flags=cv2.IMREAD_COLOR)
+        img_shape = first_img.shape
+
+        # create the imagestore
+        store = imgstore.new_for_format('png',
+                    mode='w', basedir=output_filename,
+                    imgshape=img_shape)
+
+        # read each frame and write it to the imagestore
+        # unfortunately imgstore doesn't let us just add the file
+        for i, img_filename in enumerate(filenames):
+            img = cv2.imread(img_filename, flags=cv2.IMREAD_COLOR)
+            store.add_image(img, i, i)
+
+        store.close()
+
+        # Return an ImgStoreVideo object referencing this new imgstore.
+        return cls(backend=ImgStoreVideo(filename=output_filename))
+
+    @classmethod
     def to_numpy(cls, frame_data: np.array, file_name: str):
         np.save(file_name, frame_data, 'w')
 
