@@ -14,3 +14,4 @@ pyyaml
 imgaug
 scikit-image
 imgstore
+qimage2ndarray==1.8
