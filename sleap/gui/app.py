@@ -476,6 +476,10 @@ class MainWindow(QMainWindow):
         elif filename.endswith(".mat"):
             self.labels = Labels.load_mat(filename)
             has_loaded = True
+        elif filename.endswith(".csv"):
+            # for now, the only csv we support is the DeepLabCut format
+            self.labels = Labels.load_deeplabcut_csv(filename)
+            has_loaded = True
 
         self.filename = filename
 
@@ -951,7 +955,7 @@ class MainWindow(QMainWindow):
         window.showMaximized()
 
     def openProject(self, first_open=False):
-        filters = ["JSON labels (*.json)", "HDF5 dataset (*.h5 *.hdf5)", "Matlab dataset (*.mat)"]
+        filters = ["JSON labels (*.json)", "HDF5 dataset (*.h5 *.hdf5)", "Matlab dataset (*.mat)", "DeepLabCut csv (*.csv)"]
         filename, selected_filter = QFileDialog.getOpenFileName(self, dir=None, caption="Import labeled data...", filter=";;".join(filters))
 
         if len(filename) == 0: return
