@@ -13,6 +13,7 @@ from PySide2.QtWidgets import QFileDialog, QMessageBox
 import os
 import sys
 import copy
+import yaml
 
 from pathlib import PurePath
 
@@ -29,6 +30,7 @@ from sleap.gui.dataviews import VideosTable, SkeletonNodesTable, SkeletonEdgesTa
 	LabeledFrameTable, SkeletonNodeModel, SuggestionsTable
 from sleap.gui.importvideos import ImportVideos
 from sleap.gui.formbuilder import YamlFormWidget
+from sleap.gui.suggestions import VideoFrameSuggestions
 
 OPEN_IN_NEW = True
 
@@ -114,9 +116,19 @@ class MainWindow(QMainWindow):
     @filename.setter
     def filename(self, x):
         self._filename = x
-        self.setWindowTitle(x)
+        if x is not None: self.setWindowTitle(x)
 
     def initialize_gui(self):
+
+        shortcut_yaml = "sleap/gui/shortcuts.yaml"
+        with open(shortcut_yaml, 'r') as f:
+            shortcuts = yaml.load(f, Loader=yaml.SafeLoader)
+
+        for action in shortcuts:
+            key_string = shortcuts.get(action, None)
+            key_string = "" if key_string is None else key_string
+            if "." in key_string:
+                shortcuts[action] = eval(key_string)
 
         ####### Video player #######
         self.player = QtVideoPlayer()
@@ -130,40 +142,43 @@ class MainWindow(QMainWindow):
 
         ####### Menus #######
         fileMenu = self.menuBar().addMenu("File")
-        self._menu_actions["new"] = fileMenu.addAction("&New Project", self.newProject, QKeySequence.New)
-        self._menu_actions["open"] = fileMenu.addAction("&Open Project...", self.openProject, QKeySequence.Open)
-        self._menu_actions["save"] = fileMenu.addAction("&Save", self.saveProject, QKeySequence.Save)
-        self._menu_actions["save as"] = fileMenu.addAction("Save As...", self.saveProjectAs, QKeySequence.SaveAs)
+        self._menu_actions["new"] = fileMenu.addAction("&New Project", self.newProject, shortcuts["new"])
+        self._menu_actions["open"] = fileMenu.addAction("&Open Project...", self.openProject, shortcuts["open"])
+        self._menu_actions["save"] = fileMenu.addAction("&Save", self.saveProject, shortcuts["save"])
+        self._menu_actions["save as"] = fileMenu.addAction("Save As...", self.saveProjectAs, shortcuts["save as"])
         fileMenu.addSeparator()
-        self._menu_actions["close"] = fileMenu.addAction("&Quit", self.close)
+        self._menu_actions["close"] = fileMenu.addAction("Quit", self.close, shortcuts["close"])
 
         videoMenu = self.menuBar().addMenu("Video")
         # videoMenu.addAction("Check video encoding").triggered.connect(self.checkVideoEncoding)
         # videoMenu.addAction("Reencode for seeking").triggered.connect(self.reencodeForSeeking)
         # videoMenu.addSeparator()
-        self._menu_actions["add videos"] = videoMenu.addAction("Add Videos...", self.addVideo, Qt.CTRL + Qt.Key_A)
-        self._menu_actions["next video"] = videoMenu.addAction("Next Video", self.nextVideo, QKeySequence.Forward)
-        self._menu_actions["prev video"] = videoMenu.addAction("Previous Video", self.previousVideo, QKeySequence.Back)
+        self._menu_actions["add videos"] = videoMenu.addAction("Add Videos...", self.addVideo, shortcuts["add videos"])
+        self._menu_actions["next video"] = videoMenu.addAction("Next Video", self.nextVideo, shortcuts["next video"])
+        self._menu_actions["prev video"] = videoMenu.addAction("Previous Video", self.previousVideo, shortcuts["prev video"])
         videoMenu.addSeparator()
-        self._menu_actions["mark frame"] = videoMenu.addAction("Mark Frame", self.markFrame, Qt.CTRL + Qt.Key_M)
-        self._menu_actions["goto marked"] = videoMenu.addAction("Go to Marked Frame", self.goMarkedFrame, Qt.CTRL + Qt.SHIFT + Qt.Key_M)
-        self._menu_actions["extract clip"] = videoMenu.addAction("Extract Clip...", self.extractClip, Qt.CTRL + Qt.Key_E)
+        self._menu_actions["mark frame"] = videoMenu.addAction("Mark Frame", self.markFrame, shortcuts["mark frame"])
+        self._menu_actions["goto marked"] = videoMenu.addAction("Go to Marked Frame", self.goMarkedFrame, shortcuts["goto marked"])
+        self._menu_actions["extract clip"] = videoMenu.addAction("Extract Clip...", self.extractClip, shortcuts["extract clip"])
 
         labelMenu = self.menuBar().addMenu("Labels")
-        self._menu_actions["add instance"] = labelMenu.addAction("Add Instance", self.newInstance, Qt.CTRL + Qt.Key_I)
-        self._menu_actions["delete instance"] = labelMenu.addAction("Delete Instance", self.deleteSelectedInstance, Qt.CTRL + Qt.Key_Backspace)
+        self._menu_actions["add instance"] = labelMenu.addAction("Add Instance", self.newInstance, shortcuts["add instance"])
+        self._menu_actions["delete instance"] = labelMenu.addAction("Delete Instance", self.deleteSelectedInstance, shortcuts["delete instance"])
         self.track_menu = labelMenu.addMenu("Set Instance Track")
-        self._menu_actions["transpose"] = labelMenu.addAction("Transpose Instance Tracks", self.transposeInstance, Qt.CTRL + Qt.Key_T)
-        self._menu_actions["select next"] = labelMenu.addAction("Select Next Instance", self.player.view.nextSelection, QKeySequence(Qt.Key.Key_QuoteLeft))
-        self._menu_actions["clear selection"] = labelMenu.addAction("Clear Selection", self.player.view.clearSelection, QKeySequence(Qt.Key.Key_Escape))
+        self._menu_actions["transpose"] = labelMenu.addAction("Transpose Instance Tracks", self.transposeInstance, shortcuts["transpose"])
+        self._menu_actions["select next"] = labelMenu.addAction("Select Next Instance", self.player.view.nextSelection, shortcuts["select next"])
+        self._menu_actions["clear selection"] = labelMenu.addAction("Clear Selection", self.player.view.clearSelection, shortcuts["clear selection"])
         labelMenu.addSeparator()
-        self._menu_actions["goto next"] = labelMenu.addAction("Next Labeled Frame", self.nextLabeledFrame)
-        self._menu_actions["goto suggestion"] = labelMenu.addAction("Next Suggestion", self.nextSuggestedFrame, QKeySequence.FindNext)
-        self._menu_actions["goto prev"] = labelMenu.addAction("Previous Labeled Frame", self.previousLabeledFrame)
+        self._menu_actions["goto next"] = labelMenu.addAction("Next Labeled Frame", self.nextLabeledFrame, shortcuts["goto next"])
+        self._menu_actions["goto prev"] = labelMenu.addAction("Previous Labeled Frame", self.previousLabeledFrame, shortcuts["goto prev"])
+
+        self._menu_actions["goto next suggestion"] = labelMenu.addAction("Next Suggestion", self.nextSuggestedFrame, shortcuts["goto next suggestion"])
+        self._menu_actions["goto prev suggestion"] = labelMenu.addAction("Previous Suggestion", lambda:self.nextSuggestedFrame(-1), shortcuts["goto prev suggestion"])
+
         labelMenu.addSeparator()
-        self._menu_actions["show labels"] = labelMenu.addAction("Show Node Names", self.toggleLabels, Qt.ALT + Qt.Key_Tab)
-        self._menu_actions["show edges"] = labelMenu.addAction("Show Edges", self.toggleEdges, Qt.ALT + Qt.SHIFT + Qt.Key_Tab)
-        self._menu_actions["show trails"] = labelMenu.addAction("Show Trails", self.toggleTrails)
+        self._menu_actions["show labels"] = labelMenu.addAction("Show Node Names", self.toggleLabels, shortcuts["show labels"])
+        self._menu_actions["show edges"] = labelMenu.addAction("Show Edges", self.toggleEdges, shortcuts["show edges"])
+        self._menu_actions["show trails"] = labelMenu.addAction("Show Trails", self.toggleTrails, shortcuts["show trails"])
 
         self.trailLengthMenu = labelMenu.addMenu("Trail Length")
         for length_option in (4, 10, 20):
@@ -171,9 +186,9 @@ class MainWindow(QMainWindow):
                             lambda x=length_option: self.setTrailLength(x))
             menu_item.setCheckable(True)
 
-        self._menu_actions["color predicted"] = labelMenu.addAction("Color Predicted Instances", self.toggleColorPredicted)
+        self._menu_actions["color predicted"] = labelMenu.addAction("Color Predicted Instances", self.toggleColorPredicted, shortcuts["color predicted"])
         labelMenu.addSeparator()
-        self._menu_actions["fit"] = labelMenu.addAction("Fit Instances to View", self.toggleAutoZoom, Qt.CTRL + Qt.Key_Equal)
+        self._menu_actions["fit"] = labelMenu.addAction("Fit Instances to View", self.toggleAutoZoom, shortcuts["fit"])
 
         self._menu_actions["show labels"].setCheckable(True); self._menu_actions["show labels"].setChecked(self._show_labels)
         self._menu_actions["show edges"].setCheckable(True); self._menu_actions["show edges"].setChecked(self._show_edges)
@@ -380,6 +395,8 @@ class MainWindow(QMainWindow):
         has_selected_instance = (self.player.view.getSelection() is not None)
         has_unsaved_changes = self.changestack_has_changes()
         has_multiple_videos = (self.labels is not None and len(self.labels.videos) > 1)
+        has_labeled_frames = (len(self.labels.find(self.video)) > 0)
+        has_suggestions = (len(self.labels.suggestions) > 0)
         has_multiple_instances = (self.labeled_frame is not None and len(self.labeled_frame.instances) > 1)
         # todo: exclude predicted instances from count
 
@@ -396,6 +413,12 @@ class MainWindow(QMainWindow):
 
         self._menu_actions["next video"].setEnabled(has_multiple_videos)
         self._menu_actions["prev video"].setEnabled(has_multiple_videos)
+
+        self._menu_actions["goto next"].setEnabled(has_labeled_frames)
+        self._menu_actions["goto prev"].setEnabled(has_labeled_frames)
+
+        self._menu_actions["goto next suggestion"].setEnabled(has_suggestions)
+        self._menu_actions["goto prev suggestion"].setEnabled(has_suggestions)
 
         # Update buttons
         # TODO
@@ -442,10 +465,12 @@ class MainWindow(QMainWindow):
 
         if len(filename) == 0: return
 
-        self.filename = filename
-
         has_loaded = False
-        if filename.endswith(".json"):
+        if type(filename) == Labels:
+            self.labels = filename
+            filename = None
+            has_loaded = True
+        elif filename.endswith(".json"):
             self.labels = Labels.load_json(filename)
             has_loaded = True
         elif filename.endswith(".mat"):
@@ -455,6 +480,8 @@ class MainWindow(QMainWindow):
             # for now, the only csv we support is the DeepLabCut format
             self.labels = Labels.load_deeplabcut_csv(filename)
             has_loaded = True
+
+        self.filename = filename
 
         if has_loaded:
             self.changestack_clear()
@@ -694,14 +721,10 @@ class MainWindow(QMainWindow):
             self.player.seekbar.setMarks(all_marks)
 
     def generateSuggestions(self, params):
-        if params["method"] == "strides":
-            suggestions_per_video = params["strides_per_video"]
-            new_suggestions = dict()
-            for video in self.labels.videos:
-                new_suggestions[video] = list(range(0, video.frames, video.frames//suggestions_per_video))
-                new_suggestions[video] = new_suggestions[video][:suggestions_per_video]
-            self.labels.set_suggestions(new_suggestions)
-
+        new_suggestions = dict()
+        for video in self.labels.videos:
+            new_suggestions[video] = VideoFrameSuggestions.suggest(video, params)
+        self.labels.set_suggestions(new_suggestions)
         self.update_data_views()
         self.updateSeekbarMarks()
 
@@ -751,13 +774,14 @@ class MainWindow(QMainWindow):
                         # Otherwise use the last instance added to previous frame.
                         copy_instance = prev_instances[-1]
                         from_prev_frame = True
-
         new_instance = Instance(skeleton=self.skeleton)
         for node in self.skeleton.nodes:
             if copy_instance is not None and node in copy_instance.nodes:
                 new_instance[node] = copy.copy(copy_instance[node])
             else:
-                new_instance[node] = Point(x=np.random.rand() * self.video.width * 0.5, y=np.random.rand() * self.video.height * 0.5, visible=True)
+                # mark the node as not "visible" if we're copying from a predicted instance without this node
+                is_visible = copy_instance is None or not hasattr(copy_instance, "score")#type(copy_instance) != PredictedInstance
+                new_instance[node] = Point(x=np.random.rand() * self.video.width * 0.5, y=np.random.rand() * self.video.height * 0.5, visible=is_visible)
         # If we're copying a predicted instance or from another frame, copy the track
         if hasattr(copy_instance, "score") or from_prev_frame:
             new_instance.track = copy_instance.track
@@ -1030,9 +1054,22 @@ class MainWindow(QMainWindow):
     def extractClip(self):
         start, end = self.player.seekbar.getSelection()
         if start < end:
-            clip_frames = self.video.get_frames(range(start, end))
-            clip_video = Video.from_numpy(clip_frames)
-            clip_window = QtVideoPlayer(video=clip_video)
+            clip_labeled_frames = [copy.copy(lf) for lf in self.labels.labeled_frames if lf.frame_idx in range(start, end)]
+            clip_video_frames = self.video.get_frames(range(start, end))
+            clip_video = Video.from_numpy(clip_video_frames)
+
+            # adjust video and frame_idx for clip labeled frames
+            for lf in clip_labeled_frames:
+                lf.video = clip_video
+                lf.frame_idx -= start
+
+            # create new labels object with clip
+            clip_labels = Labels(clip_labeled_frames)
+
+            # clip_window = QtVideoPlayer(video=clip_video)
+            clip_window = MainWindow()
+            clip_window.showMaximized()
+            clip_window.importData(clip_labels)
             clip_window.show()
 
     def previousLabeledFrameIndex(self):
