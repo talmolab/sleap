@@ -22,6 +22,7 @@ class YamlFormWidget(QtWidgets.QGroupBox):
     """
 
     mainAction = QtCore.Signal(dict)
+    valueChanged = QtCore.Signal()
 
     def __init__(self, yaml_file, *args, **kwargs):
         super(YamlFormWidget, self).__init__(*args, **kwargs)
@@ -35,6 +36,8 @@ class YamlFormWidget(QtWidgets.QGroupBox):
         for item in items_to_create["main"]:
             if item["type"] == "button" and item.get("default", "") == "main action":
                 self.buttons[item["name"]].clicked.connect(self.trigger_main_action)
+
+        self.form_layout.valueChanged.connect(self.valueChanged)
 
     @property
     def buttons(self):
