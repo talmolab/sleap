@@ -4,6 +4,11 @@ main:
   type: file_open
   default: #tests/data/json_format_v1/centered_pair.json
 
+- name: _inst_crop
+  label: Crop images to instances
+  type: bool
+  default: False
+
 - name: output_type
   label: Training For
   type: list

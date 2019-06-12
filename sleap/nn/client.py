@@ -37,7 +37,7 @@ class TrainingDialog(QtWidgets.QMainWindow):
         self.setCentralWidget(self.form_widget)
 
         # Default values for testing
-        
+
         default_data = dict(
             num_filters = 32,
             augment_rotation = 0,
@@ -88,6 +88,7 @@ class TrainingDialog(QtWidgets.QMainWindow):
 
         self.form_widget.set_form_data(default_data)
         # self.form_widget.set_form_data(unet_data)
+        # self.form_widget.set_form_data(leap_cnn_data)
 
         self.update_ui()
 
@@ -112,7 +113,7 @@ class TrainingDialog(QtWidgets.QMainWindow):
             # confmaps/pafs are generated live during training
 
             from sleap.io.dataset import Labels
-            from sleap.nn.datagen import generate_images, generate_points
+            from sleap.nn.datagen import generate_images, generate_points, instance_crops
 
             labels = Labels.load_json(training_params["_labels_file"])
 
@@ -121,9 +122,15 @@ class TrainingDialog(QtWidgets.QMainWindow):
             imgs = generate_images(labels)
             points = generate_points(labels)
 
-            # Make any adjustments to params we'll pass to training
+            # crop to instances if option set
+            if training_params["_inst_crop"]:
+                img_shape = (imgs.shape[1], imgs.shape[2])
+                imgs, points = instance_crops(imgs, points, img_shape)
+                print(f"cropping images to {imgs.shape}")
 
-            del training_params["_labels_file"]
+            # Make any adjustments to params we'll pass to training
+            for key in [key for key in training_params.keys() if key[0] == "_"]:
+                del training_params[key]
             if training_params.get("save_dir", "") == "":
                 training_params["save_dir"] = None
 
