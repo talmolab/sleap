@@ -804,14 +804,7 @@ def load_predicted_labels_json_old(
 
     return Labels(labels)
 
-def test_visual_inference():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("data_path", help="Path to video file")
-    parser.add_argument("confmap_model_path", help="Path to saved confmap model")
-    parser.add_argument("paf_model_path", help="Path to saved PAF model")
-    parser.add_argument("skeleton_path", help="Path to skeleton file")
-    args = parser.parse_args()
-
+def test_visual_inference(args):
     data_path = args.data_path
     confmap_model_path = args.confmap_model_path
     paf_model_path = args.paf_model_path
@@ -845,18 +838,7 @@ def test_visual_inference():
     demo_pafs(pafs, vid)
     app.exec_()
 
-def main_cli():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("data_path", help="Path to video file")
-    parser.add_argument("confmap_model_path", help="Path to saved confmap model")
-    parser.add_argument("paf_model_path", help="Path to saved PAF model")
-    parser.add_argument("skeleton_path", help="Path to skeleton file")
-    parser.add_argument('--resize-input', dest='resize_input', action='store_const',
-                    const=True, default=False,
-                    help='resize the input layer to image size (default False)')
-
-    args = parser.parse_args()
-
+def main(args):
     data_path = args.data_path
     confmap_model_path = args.confmap_model_path
     paf_model_path = args.paf_model_path
@@ -885,4 +867,22 @@ def main_cli():
 
 
 if __name__ == "__main__":
-    main_cli()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("data_path", help="Path to video file")
+    parser.add_argument("confmap_model_path", help="Path to saved confmap model")
+    parser.add_argument("paf_model_path", help="Path to saved PAF model")
+    parser.add_argument("skeleton_path", help="Path to skeleton file")
+    parser.add_argument('--resize-input', dest='resize_input', action='store_const',
+                    const=True, default=False,
+                    help='resize the input layer to image size (default False)')
+    parser.add_argument('--test-viz', dest='test_viz', action='store_const',
+                    const=True, default=False,
+                    help='just visualize predicted confmaps/pafs (default False)')
+
+    args = parser.parse_args()
+
+    if args.test_viz:
+        test_visual_inference(args)
+    else:
+        main(args)
