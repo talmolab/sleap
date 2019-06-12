@@ -255,6 +255,8 @@ class VideoFrameSuggestions:
             all_selected = list(itertools.chain.from_iterable(selected_by_cluster))
             all_selected.sort()
 
+        all_selected = [int(x) for x in all_selected]
+
         return all_selected
 
 

@@ -146,7 +146,7 @@ class QuiverPlot(QGraphicsObject):
 
             self._add_arrows()
 
-    def _add_arrows(self):
+    def _add_arrows(self, min_length=0.01):
         points = []
         if self.field_x is not None and self.field_y is not None:
             
@@ -165,6 +165,7 @@ class QuiverPlot(QGraphicsObject):
             x2 = delta_x*self.decimation + loc_x
             y2 = delta_y*self.decimation + loc_y
             line_length = (delta_x**2 + delta_y**2)**.5
+
             arrow_head_size = line_length / 4
 
             u_dx = np.divide(delta_x, line_length, out=np.zeros_like(delta_x), where=line_length!=0)
@@ -182,7 +183,7 @@ class QuiverPlot(QGraphicsObject):
             for y, x in y_x_pairs:
                 x1, y1 = loc_x[y,x], loc_y[y,x]
 
-                if line_length[y,x] > 0:
+                if line_length[y,x] > min_length:
                     points.append((x1, y1))
                     points.append((x2[y,x],y2[y,x]))
                     points.append((p1_x[y,x],p1_y[y,x]))
@@ -235,12 +236,10 @@ def demo_pafs(pafs, video, decimation=1, standalone=False):
     win.show()
 
     def plot_fields(parent, i):
-
-        frame_pafs = pafs[parent.frame_idx, ...]
-        # frame_pafs = rotate_pafs(frame_pafs, theta)
-
-        aff_fields_item = MultiQuiverPlot(frame_pafs, show=None, decimation=decimation)
-        win.view.scene.addItem(aff_fields_item)
+        if parent.frame_idx < pafs.shape[0]:
+            frame_pafs = pafs[parent.frame_idx, ...]
+            aff_fields_item = MultiQuiverPlot(frame_pafs, show=None, decimation=decimation)
+            win.view.scene.addItem(aff_fields_item)
 
     win.changedPlot.connect(plot_fields)
     win.plot()

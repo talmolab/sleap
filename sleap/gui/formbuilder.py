@@ -22,6 +22,7 @@ class YamlFormWidget(QtWidgets.QGroupBox):
     """
 
     mainAction = QtCore.Signal(dict)
+    valueChanged = QtCore.Signal()
 
     def __init__(self, yaml_file, *args, **kwargs):
         super(YamlFormWidget, self).__init__(*args, **kwargs)
@@ -36,10 +37,16 @@ class YamlFormWidget(QtWidgets.QGroupBox):
             if item["type"] == "button" and item.get("default", "") == "main action":
                 self.buttons[item["name"]].clicked.connect(self.trigger_main_action)
 
+        self.form_layout.valueChanged.connect(self.valueChanged)
+
     @property
     def buttons(self):
         """Returns a list of buttons in form (so we can connect to handlers)."""
         return self.form_layout.buttons
+
+    def set_form_data(self, data):
+        """Set data for form from dict."""
+        self.form_layout.set_form_data(data)
 
     def get_form_data(self):
         """Returns dict of form data."""
@@ -82,6 +89,37 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
             data.update(stack)
         return data
 
+    def set_form_data(self, data: dict):
+        """Set specified user-editable data.
+
+        Args:
+            data (dict): key should match field name
+        """
+        widgets = { self.itemAt(i).widget().objectName():self.itemAt(i).widget() for i in range(self.count()) }
+        for name, val in data.items():
+            # print(f"Attempting to set {name} to {val}")
+            if name in widgets:
+                self.set_widget_value(widgets[name], val)
+            else:
+                print(f"no {name} widget found")
+
+    @staticmethod
+    def set_widget_value(widget, val):
+        """Set value for specific widget."""
+        # if widget.property("field_data_type") == "sci":
+        #     val = str(val)
+
+        if hasattr(widget, "isChecked"):
+            widget.setChecked(val)
+        elif hasattr(widget, "value"):
+            widget.setValue(val)
+        elif hasattr(widget, "currentText"):
+            widget.setCurrentText(val)
+        elif hasattr(widget, "text"):
+            widget.setText(str(val))
+        else:
+            print(f"don't know how to set value for {widget}")
+
     @staticmethod
     def get_widget_value(widget):
         """Get value of form field (using whichever method appropriate for widget).
@@ -104,6 +142,8 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
         else:
             print(widget)
             val = None
+        if widget.property("field_data_type") == "sci":
+            val = float(val)
         return val
 
     def build_form(self, items_to_create):
@@ -166,12 +206,13 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
             # If we don't recognize the type, just show a text box
             else:
                 field = QtWidgets.QLineEdit()
-                field.setText(item.get("default", ""))
+                field.setText(str(item.get("default", "")))
                 if item["type"].split("_")[0] == "file":
                     field.setDisabled(True)
 
             # Add field (and label if appropriate) to form layout
             field.setObjectName(item["name"])
+            field.setProperty("field_data_type", item["type"])
             if item["type"] in ("button", "stacked"):
                 self.addRow(field)
             else:
