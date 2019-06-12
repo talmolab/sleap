@@ -32,8 +32,10 @@ class LossViewer(QtWidgets.QMainWindow):
         self.Y = []
         self.t0 = None
         self.epoch = 0
+        self.is_running = False
         
         # Progress monitoring
+        self.ctx_given = (zmq_context is not None)
         self.ctx = zmq.Context() if zmq_context is None else zmq_context
         self.sub = self.ctx.socket(zmq.SUB)
         self.sub.subscribe("")
@@ -52,20 +54,32 @@ class LossViewer(QtWidgets.QMainWindow):
 
     def set_start_time(self, t0):
         self.t0 = t0
+        self.is_running = True
+
+    def set_end(self):
+        self.is_running = False
+        # close the zmq socket
+        self.sub.close()
+        self.sub = None
+        # if we started out own zmq context, terminate it
+        if not self.ctx_given:
+            self.ctx.term()
 
     def update_runtime(self):
-        if self.t0 is not None:
+        if self.t0 is not None and self.is_running:
             dt = time() - self.t0
             dt_min, dt_sec = divmod(dt, 60)
             self.chart.setTitle(f"Runtime: {int(dt_min):02}:{int(dt_sec):02}")
 
     def check_messages(self, timeout=10):
-        if self.sub.poll(timeout, zmq.POLLIN):
+        if self.sub and self.sub.poll(timeout, zmq.POLLIN):
             msg = jsonpickle.decode(self.sub.recv_string())
 
             print(msg)
             if msg["event"] == "train_begin":
                 self.set_start_time(time())
+            if msg["event"] == "train_end":
+                self.set_end()
             elif msg["event"] == "epoch_begin":
                 self.epoch = msg["epoch"]
             elif msg["event"] == "batch_end":
