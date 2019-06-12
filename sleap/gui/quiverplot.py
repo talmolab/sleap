@@ -236,12 +236,10 @@ def demo_pafs(pafs, video, decimation=1, standalone=False):
     win.show()
 
     def plot_fields(parent, i):
-
-        frame_pafs = pafs[parent.frame_idx, ...]
-        # frame_pafs = rotate_pafs(frame_pafs, theta)
-
-        aff_fields_item = MultiQuiverPlot(frame_pafs, show=None, decimation=decimation)
-        win.view.scene.addItem(aff_fields_item)
+        if parent.frame_idx < pafs.shape[0]:
+            frame_pafs = pafs[parent.frame_idx, ...]
+            aff_fields_item = MultiQuiverPlot(frame_pafs, show=None, decimation=decimation)
+            win.view.scene.addItem(aff_fields_item)
 
     win.changedPlot.connect(plot_fields)
     win.plot()
