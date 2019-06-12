@@ -33,6 +33,7 @@ class TrainingDialog(QtWidgets.QMainWindow):
         self.form_widget = YamlFormWidget(yaml_file="sleap/nn/training-forms.yaml", title="Training Parameters")
         self.form_widget.mainAction.connect(self.run_training)
         self.form_widget.valueChanged.connect(self.update_ui)
+        self.form_widget.buttons["_use_defaults"].clicked.connect(self._use_defaults)
 
         self.setCentralWidget(self.form_widget)
 
@@ -59,36 +60,7 @@ class TrainingDialog(QtWidgets.QMainWindow):
             depth = 3,
             )
 
-        unet_data = dict(
-            arch='unet',
-            num_filters=32,
-            num_epochs=100,
-            steps_per_epoch=200,
-            batch_size=4,
-            shuffle_every_epoch=True,
-            augment_rotation=180,
-            reduce_lr_patience=5,
-            reduce_lr_factor=0.5,
-            reduce_lr_cooldown=3,
-            reduce_lr_min_delta=1e-6,
-            )
-
-        leap_cnn_data = dict(
-            num_filters=64,
-            num_epochs=75,
-            reduce_lr_patience=8,
-            reduce_lr_factor=0.5,
-            reduce_lr_cooldown=3,
-            reduce_lr_min_delta=1e-6,
-            batch_size=4,
-            shuffle_every_epoch=True,
-            augment_rotation=180,
-            arch="leap_cnn",
-            )
-
         self.form_widget.set_form_data(default_data)
-        # self.form_widget.set_form_data(unet_data)
-        # self.form_widget.set_form_data(leap_cnn_data)
 
         self.update_ui()
 
@@ -103,6 +75,41 @@ class TrainingDialog(QtWidgets.QMainWindow):
 
         training_button_text = "Stop Training" if self.is_training else "Start Training"
         run_button.setText(training_button_text)
+
+    def _use_defaults(self):
+        defaults = dict()
+
+        defaults["confmaps"] = dict(
+            arch='unet',
+            num_filters=32,
+            num_epochs=100,
+            steps_per_epoch=200,
+            batch_size=4,
+            shuffle_every_epoch=True,
+            augment_rotation=180,
+            reduce_lr_patience=5,
+            reduce_lr_factor=0.5,
+            reduce_lr_cooldown=3,
+            reduce_lr_min_delta=1e-6,
+            )
+
+        defaults["pafs"] = dict(
+            num_filters=64,
+            num_epochs=75,
+            reduce_lr_patience=8,
+            reduce_lr_factor=0.5,
+            reduce_lr_cooldown=3,
+            reduce_lr_min_delta=1e-6,
+            batch_size=4,
+            shuffle_every_epoch=True,
+            augment_rotation=180,
+            arch="leap_cnn",
+            )
+
+        output_type = self.form_widget.get_form_data()["output_type"]
+        if output_type in defaults:
+            self.form_widget.set_form_data(defaults[output_type])
+            self.update_ui()
 
     def run_training(self, *args):
         if not self.is_training:
