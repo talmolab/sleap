@@ -503,7 +503,7 @@ class Labels(MutableSequence):
         label_cattr.register_structure_hook(Union[Point, PredictedPoint], structure_points)
 
         def structure_instances_list(x, type):
-            if 'score' in x[0].keys():
+            if len(x) and 'score' in x[0].keys():
                 return label_cattr.structure(x, List[PredictedInstance])
             else:
                 return label_cattr.structure(x, List[Instance])
