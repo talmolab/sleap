@@ -8,8 +8,7 @@ import yaml
 
 from PySide2 import QtCore, QtWidgets
 
-from sleap.gui.slider import VideoSlider
-from sleap.gui.formbuilder import FormBuilderLayout
+from sleap.gui.formbuilder import YamlFormWidget
 from sleap.nn.monitor import LossViewer
 
 class TrainingDialog(QtWidgets.QMainWindow):
@@ -25,96 +24,116 @@ class TrainingDialog(QtWidgets.QMainWindow):
             self.zmq_ctrl.bind("tcp://*:9000")
 
         # Data
-
         self.labels_file = "tests/data/json_format_v1/centered_pair.json"
         self.default_scale = 1
         self.is_training = False
         self.training_data = dict(ready=False, times=None, update=threading.Event())
 
-        # UI Widgets
+        # UI
+        self.form_widget = YamlFormWidget(yaml_file="sleap/nn/training-forms.yaml", title="Training Parameters")
+        self.form_widget.mainAction.connect(self.run_training)
+        self.form_widget.valueChanged.connect(self.update_ui)
 
-        with open("sleap/nn/training-forms.yaml", 'r') as forms_yaml:
-            items_to_create = yaml.load(forms_yaml, Loader=yaml.SafeLoader)
+        self.setCentralWidget(self.form_widget)
 
-        # Data Gen form
-        data_gen_form = FormBuilderLayout(items_to_create["data_gen"])
-        data_gen_form.valueChanged.connect(self.refresh)
+        # Default values for testing
+        
+        default_data = dict(
+            num_filters = 32,
+            augment_rotation = 0,
+            val_size = 0.1,
+            num_epochs = 20,
+            batch_size = 16,
+            steps_per_epoch = 100,
+            val_batches_per_epoch = 10,
+            shuffle_every_epoch = False,
+            learning_rate = 1e-4,
+            reduce_lr_factor = 0.1,
+            reduce_lr_patience = 2,
+            reduce_lr_cooldown = 0,
+            reduce_lr_min_delta = 1e-5,
+            reduce_lr_min_lr = 1e-10,
+            upsampling_layers = True,
+            save_every_epoch = False,
+            amsgrad = True,
+            depth = 3,
+            )
 
-        self.data_gen_button = QtWidgets.QPushButton("Generate Data")
-        self.data_gen_button.clicked.connect(self.generateData)
-        self.data_gen_button.clicked.connect(self.refresh)
-        self.debug_button = QtWidgets.QPushButton("Debug")
-        self.debug_button.clicked.connect(self.debug)
-        data_gen_form.addRow(self.data_gen_button)
-        data_gen_form.addRow(self.debug_button)
+        unet_data = dict(
+            arch='unet',
+            num_filters=32,
+            num_epochs=100,
+            steps_per_epoch=200,
+            batch_size=4,
+            shuffle_every_epoch=True,
+            augment_rotation=180,
+            reduce_lr_patience=5,
+            reduce_lr_factor=0.5,
+            reduce_lr_cooldown=3,
+            reduce_lr_min_delta=1e-6,
+            )
 
-        # Training form
-        training_form = FormBuilderLayout(items_to_create["training"])
+        leap_cnn_data = dict(
+            num_filters=64,
+            num_epochs=75,
+            reduce_lr_patience=8,
+            reduce_lr_factor=0.5,
+            reduce_lr_cooldown=3,
+            reduce_lr_min_delta=1e-6,
+            batch_size=4,
+            shuffle_every_epoch=True,
+            augment_rotation=180,
+            arch="leap_cnn",
+            )
 
-        self.training_button = QtWidgets.QPushButton("Start Training")
-        self.training_button.clicked.connect(self.runTraining)
-        training_form.addRow(self.training_button)
+        self.form_widget.set_form_data(default_data)
+        # self.form_widget.set_form_data(unet_data)
 
-        # UI Group Widgets
+        self.update_ui()
 
-        self.gen_group = QtWidgets.QGroupBox("Data Generation")
-        self.gen_group.setLayout(data_gen_form)
-
-        self.training_group = QtWidgets.QGroupBox("Training")
-        self.training_group.setLayout(training_form)
-
-        # UI Layout
-
-        self.layout = QtWidgets.QVBoxLayout()
-        self.layout.addWidget(self.gen_group)
-        self.layout.addWidget(self.training_group)
-
-#         self.setLayout(self.layout)
-        self.main_widget = QtWidgets.QWidget()
-        self.main_widget.setLayout(self.layout)
-        self.setCentralWidget(self.main_widget)
-
-        self.refresh()
-
-    def refresh(self, *args):
-        print("refresh called")
-
-        self.labels_file = self.gen_group.layout().get_form_data()["labels_file"]
+    def update_ui(self, *args):
+        current_form_data = self.form_widget.get_form_data()
+        self.labels_file = current_form_data["_labels_file"]
 
         has_labels = self.labels_file != ""
-        has_data = self.training_data["ready"]
-        print(f"has_data: {has_data}")
 
-        self.data_gen_button.setEnabled(has_labels)
+        run_button = self.form_widget.buttons["run_button"]
+        run_button.setEnabled(has_labels)
 
         training_button_text = "Stop Training" if self.is_training else "Start Training"
-#         training_button_text = str(has_data)
-        self.training_button.setText(training_button_text)
-        self.training_button.setEnabled(has_data)
+        run_button.setText(training_button_text)
 
-    def generateData(self, *args):
-#         run_data_gen(self.labels_file, self.training_data)
-        threading.Thread(target=run_data_gen, args=(self.labels_file, self.training_data)).start()
-#         cmd = dict(command="data_gen", labels_file=self.labels_file)
-#         self.zmq_ctrl.send_string(jsonpickle.encode(cmd))
-
-    def runTraining(self, *args):
+    def run_training(self, *args):
         if not self.is_training:
-            if True:
-                # Get data from form fields
-                training_params = self.training_group.layout().get_form_data()
-                # Adjust raw data from form fields
-                if training_params.get("save_dir", "") == "":
-                    training_params["save_dir"] = None
-                # Start training process
-                from sleap.nn.training import train
-                mp.Process(target=train,
-                    args=(self.training_data["imgs"], self.training_data["points"], self.training_data["skeleton"]),
-                    kwargs=training_params
-                    ).start()
-            else:
-                print("SET TO NOT RUN TRAINING")
-                print(self.training_group.layout().get_form_data())
+            # Get data from form fields
+            training_params = self.form_widget.get_form_data()
+
+            # Datagen for images and points
+            # confmaps/pafs are generated live during training
+
+            from sleap.io.dataset import Labels
+            from sleap.nn.datagen import generate_images, generate_points
+
+            labels = Labels.load_json(training_params["_labels_file"])
+
+            # TODO: support multiple skeletons
+            skeleton = labels.skeletons[0]
+            imgs = generate_images(labels)
+            points = generate_points(labels)
+
+            # Make any adjustments to params we'll pass to training
+
+            del training_params["_labels_file"]
+            if training_params.get("save_dir", "") == "":
+                training_params["save_dir"] = None
+
+            # Start training
+
+            from sleap.nn.training import train
+            mp.Process(target=train,
+                args=(imgs, points, skeleton),
+                kwargs=training_params
+                ).start()
 
             # TODO: open training monitor(s)
             loss_viewer = LossViewer(zmq_context=self.zmq_context, parent=self)
@@ -132,102 +151,10 @@ class TrainingDialog(QtWidgets.QMainWindow):
                 self.zmq_ctrl.send_string(jsonpickle.encode(dict(command="stop",)))
             self.is_training = False
 
-        self.refresh()
-
-#         self.zmq_ctrl.send_string(jsonpickle.encode(dict(command="train",)))
-#         print("sent train command")
-
-    def preview(self):
-        from sleap.io.video import Video
-        from sleap.gui.video import QtVideoPlayer
-        from sleap.gui.confmapsplot import ConfMapsPlot
-        from sleap.gui.quiverplot import MultiQuiverPlot
-        print("in preview")
-        imgs = self.training_data["imgs"]
-        # confmaps = self.training_data["confmaps"]
-        print(imgs.shape)
-
-        # print(confmaps.shape)
-        # vid = Video.from_numpy(imgs * 255)
-        # demo_confmaps(vid, self.training_data["confmaps"], standalone=True)
-        
+        self.update_ui()
 
     def check_messages(self, *args):
-         if self.training_data["update"].is_set():
-            self.training_data["update"].clear()
-#             training_window.training_data["imgs"] = np.ctypeslib.as_array(training_window.training_data["imgs_raw"])
-#             training_window.training_data["confmaps"] = np.ctypeslib.as_array(training_window.training_data["confmaps_raw"])
-            self.preview()
-            self.refresh()
-
-    def debug(self, *args):
-        # print(self.gen_group.layout().get_form_data())
-        # print(self.training_group.layout().get_form_data())
-        self.zmq_ctrl.send_string(jsonpickle.encode(dict(command="test command",)))
-        # self.preview()
-
-def run_data_gen(labels_file, results):
-#     local_data = threading.local()
-#     local_data.results = dict()
-#     results = dict()
-
-#     ctx = zmq.Context()
-#     pub = ctx.socket(zmq.PUB)
-#     pub.bind("tcp://*:9001")
-#     pub.send_string(jsonpickle.encode(dict(event="starting data_gen",)))
-#     pub.send(umsgpack.packb(dict(event="starting data_gen")))
-
-    from time import time, sleep
-    results["ready"] = False
-    results["times"] = dict()
-    results["times"]["start_time"] = time()
-
-    results["times"]["start_io"] = time()
-    from sleap.io.dataset import Labels
-    labels = Labels.load_json(labels_file)
-    results["times"]["end_io"] = time()
-
-    # TESTING: just use a few frames
-    # labels.labeled_frames = labels.labeled_frames[0:2]
-
-    from sleap.nn.datagen import generate_images, generate_points
-
-    # TODO: support multiple skeletons
-    skeleton = labels.skeletons[0]
-
-    results["times"]["start_imgs"] = time()
-    imgs = generate_images(labels)
-    results["times"]["end_imgs"] = time()
-
-    results["times"]["start_points"] = time()
-    points = generate_points(labels)
-    # confmaps = generate_confidence_maps(labels, sigma=5)
-    results["times"]["end_points"] = time()
-
-    results["times"]["end_time"] = time()
-
-    results["times"]["total"] = results["times"]["end_time"] - results["times"]["start_time"]
-    results["times"]["io"] = results["times"]["end_io"] - results["times"]["start_io"]
-    results["times"]["imgs"] = results["times"]["end_imgs"] - results["times"]["start_imgs"]
-    results["times"]["points"] = results["times"]["end_points"] - results["times"]["start_points"]
-
-#     imgs_ctypes = np.ctypeslib.as_ctypes(imgs)
-#     imgs_raw = sharedctypes.RawArray(imgs_ctypes._type_, imgs_ctypes)
-#     confmaps_ctypes = np.ctypeslib.as_ctypes(confmaps)
-#     confmaps_raw = sharedctypes.RawArray(confmaps_ctypes._type_, confmaps_ctypes)
-
-    results["imgs"] = imgs#_raw
-    results["points"] = points#_raw
-    results["skeleton"] = skeleton
-
-    results["ready"] = True
-    results["update"].set()
-
-#     pub.send_string(jsonpickle.encode(dict(event="data_gen done",results=results)))
-#     pub.send(umsgpack.packb(dict(event="data_gen done",results=results)))
-#     pub.close()
-
-    print("done with data_gen")
+        pass
 
 
 if __name__ == "__main__":
@@ -245,8 +172,8 @@ if __name__ == "__main__":
     training_window = TrainingDialog(zmq_context=ctx, server=server_address)
     training_window.show()
 
-    timer = QtCore.QTimer()
-    timer.timeout.connect(training_window.check_messages)
-    timer.start(0)
+    # timer = QtCore.QTimer()
+    # timer.timeout.connect(training_window.check_messages)
+    # timer.start(0)
 
     app.exec_()

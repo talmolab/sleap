@@ -1,23 +1,17 @@
-data_gen:
-- name: labels_file
+main:
+- name: _labels_file
   label: Labels File
   type: file_open
   default: #tests/data/json_format_v1/centered_pair.json
 
-- name: scale
-  label: Scale
-  type: int
-  default: 1
-
-training:
 - name: output_type
   label: Training For
   type: list
-  options: confmaps
+  options: confmaps,pafs
   default: confmaps
 
 - name: val_size
-  label: Value Size
+  label: Validation Size
   type: double
   default: 0.1
 
@@ -42,9 +36,19 @@ training:
   default: 100
 
 - name: steps_per_epoch
-  label: Steps per Epoch
+  label: Steps (batches) per Epoch
   type: int
   default: 100
+
+- name: shuffle_every_epoch
+  label: Shuffle Every Epoch
+  type: bool
+  default: True
+
+- name: augment_rotation
+  label: Augmentation rotation
+  type: int
+  default: 180
 
 - name: arch
   label: Architecture
@@ -52,7 +56,72 @@ training:
   default: unet
   options: hourglass,leap_cnn,unet,stacked_unet
 
+- name: num_stacks
+  label: num_stacks
+  type: int
+  default: 1
+
+- name: depth
+  label: depth
+  type: int
+  default: 3
+
+- name: convs_per_depth
+  label: convs_per_depth
+  type: int
+  default: 2
+
+- name: learning_rate
+  label: learning_rate
+  type: sci
+  default: 1e-3
+
+- name: amsgrad
+  label: amsgrad
+  type: bool
+  default: True
+
+- name: reduce_lr_min_delta
+  label: reduce_lr_min_delta
+  type: sci
+  default: 1e-6
+
+- name: reduce_lr_factor
+  label: reduce_lr_factor
+  type: sci
+  default: 0.5
+
+- name: reduce_lr_patience
+  label: reduce_lr_patience
+  type: int
+  default: 5
+
+- name: reduce_lr_cooldown
+  label: reduce_lr_cooldown
+  type: int
+  default: 3
+
+- name: reduce_lr_min_lr
+  label: reduce_lr_min_lr
+  type: sci
+  default: 1e-8
+
+- name: early_stopping_min_delta
+  label: early_stopping_min_delta
+  type: sci
+  default: 1e-8
+
+- name: early_stopping_patience
+  label: early_stopping_patience
+  type: sci
+  default: 3
+
 - name: save_dir
   label: Output Directory
   type: file_dir
   default: 
+
+- name: run_button
+  label: Start Training
+  type: button
+  default: main action
