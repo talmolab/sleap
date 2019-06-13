@@ -472,6 +472,8 @@ class Labels(MutableSequence):
         else:
             dicts = data
 
+        dicts['tracks'] = dicts.get('tracks', []) # don't break if json doesn't include tracks
+
         # First, deserialize the skeletons, videos, and nodes lists.
         # The labels reference these so we will need them while deserializing.
         nodes = cattr.structure(dicts['nodes'], List[Node])
