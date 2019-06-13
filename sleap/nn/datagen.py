@@ -202,6 +202,10 @@ def raster_pafs(arr, c, x0, y0, x1, y1, sigma=5):
     delta_x, delta_y = x1 - x0, y1 - y0
 
     edge_len = (delta_x ** 2 + delta_y ** 2) ** .5
+
+    # skip if no distance between nodes
+    if edge_len == 0.0: return
+
     edge_x = delta_x / edge_len
     edge_y = delta_y / edge_len
 
