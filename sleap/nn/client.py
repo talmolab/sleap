@@ -138,8 +138,12 @@ class TrainingDialog(QtWidgets.QMainWindow):
             # Make any adjustments to params we'll pass to training
             for key in [key for key in training_params.keys() if key[0] == "_"]:
                 del training_params[key]
+
             if training_params.get("save_dir", "") == "":
                 training_params["save_dir"] = None
+
+            if training_params.get("tensorboard_dir", "") == "":
+                training_params["tensorboard_dir"] = None
 
             # Start training
 

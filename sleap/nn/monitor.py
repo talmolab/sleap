@@ -11,11 +11,25 @@ class LossViewer(QtWidgets.QMainWindow):
 
         self.chart = QtCharts.QtCharts.QChart()
 
-        self.series = QtCharts.QtCharts.QScatterSeries()
-        pen = self.series.pen()
-        pen.setWidth(3)
-        # pen.setColor(r,g,b,alpha)
-        self.chart.addSeries(self.series)
+        self.series = dict()
+        self.color = dict()
+
+        self.series["batch"] = QtCharts.QtCharts.QScatterSeries()
+        self.series["epoch_loss"] = QtCharts.QtCharts.QLineSeries()
+        self.series["val_loss"] = QtCharts.QtCharts.QLineSeries()
+
+
+        self.color["batch"] = QtGui.QColor("blue")
+        self.color["epoch_loss"] = QtGui.QColor("green")
+        self.color["val_loss"] = QtGui.QColor("red")
+
+        for s in self.series:
+            self.series[s].pen().setColor(self.color[s])
+        self.series["batch"].setMarkerSize(8.)
+
+        self.chart.addSeries(self.series["batch"])
+        self.chart.addSeries(self.series["epoch_loss"])
+        self.chart.addSeries(self.series["val_loss"])
 
         self.chart.createDefaultAxes()
         self.chart.axisX().setLabelFormat("%d")
@@ -32,6 +46,8 @@ class LossViewer(QtWidgets.QMainWindow):
         self.Y = []
         self.t0 = None
         self.epoch = 0
+        self.epoch_size = 1
+        self.last_batch_number = 0
         self.is_running = False
         
         # Progress monitoring
@@ -41,8 +57,8 @@ class LossViewer(QtWidgets.QMainWindow):
         self.sub.subscribe("")
         self.sub.connect("tcp://127.0.0.1:9001")
 
-    def add_datapoint(self, x, y):
-        self.series.append(x, y)
+    def add_datapoint(self, x, y, which="batch"):
+        self.series[which].append(x, y)
 
         self.X.append(x)
         self.Y.append(y)
@@ -82,7 +98,12 @@ class LossViewer(QtWidgets.QMainWindow):
                 self.set_end()
             elif msg["event"] == "epoch_begin":
                 self.epoch = msg["epoch"]
+            elif msg["event"] == "epoch_end":
+                self.epoch_size = max(self.epoch_size, self.last_batch_number + 1)
+                self.add_datapoint((self.epoch+1)*self.epoch_size, msg["logs"]["loss"], "epoch_loss")
+                self.add_datapoint((self.epoch+1)*self.epoch_size, msg["logs"]["val_loss"], "val_loss")
             elif msg["event"] == "batch_end":
-                self.add_datapoint((self.epoch * 100) + msg["logs"]["batch"], msg["logs"]["loss"])
+                self.last_batch_number = msg["logs"]["batch"]
+                self.add_datapoint((self.epoch * self.epoch_size) + msg["logs"]["batch"], msg["logs"]["loss"])
 
         self.update_runtime()

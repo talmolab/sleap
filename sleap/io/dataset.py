@@ -472,6 +472,8 @@ class Labels(MutableSequence):
         else:
             dicts = data
 
+        dicts['tracks'] = dicts.get('tracks', []) # don't break if json doesn't include tracks
+
         # First, deserialize the skeletons, videos, and nodes lists.
         # The labels reference these so we will need them while deserializing.
         nodes = cattr.structure(dicts['nodes'], List[Node])
@@ -515,7 +517,7 @@ class Labels(MutableSequence):
         return cls(labeled_frames=labels, videos=videos, skeletons=skeletons, nodes=nodes, suggestions=suggestions)
 
     @classmethod
-    def load_json(cls, filename: str):
+    def load_json(cls, filename: str, video_callback=None):
 
         # Check if the file is a zipfile for not.
         if zipfile.is_zipfile(filename):
@@ -561,6 +563,10 @@ class Labels(MutableSequence):
 
                 # Cache the working directory.
                 cwd = os.getcwd()
+
+                # Use the callback if given to handle missing videos
+                if callable(video_callback):
+                    video_callback(dicts["videos"])
 
                 # Try to load the labels filename.
                 try:
