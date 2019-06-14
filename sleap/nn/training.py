@@ -217,7 +217,7 @@ def train(
         # Stacked hourglass modules
         x_outs = stacked_hourglass(x, outputs_channels, num_hourglass_blocks=num_stacks, num_filters=num_filters, depth=depth, batch_norm=batch_norm, interp=upsampling)
     elif arch == "leap" or arch == "leap_cnn":
-        x_outs = leap_cnn(x, outputs_channels, down_blocks=depth, up_blocks=depth, upsampling_layers=True, num_filters=num_filters, interp=upsampling)
+        x_outs = leap_cnn(img_input, outputs_channels, down_blocks=depth, up_blocks=depth, upsampling_layers=True, num_filters=num_filters, interp=upsampling)
 
     # Create training model
     model = keras.Model(inputs=img_input, outputs=x_outs)
@@ -264,7 +264,7 @@ def train(
     if output_type.lower() == "confmaps":
         def datagen_function(points):
             return generate_confmaps_from_points(points, skeleton, img_shape)
-    elif output_type.lower() == "confmaps":
+    elif output_type.lower() == "pafs":
         def datagen_function(points):
             return generate_pafs_from_points(points, skeleton, img_shape)
     else:

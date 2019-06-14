@@ -202,6 +202,10 @@ def raster_pafs(arr, c, x0, y0, x1, y1, sigma=5):
     delta_x, delta_y = x1 - x0, y1 - y0
 
     edge_len = (delta_x ** 2 + delta_y ** 2) ** .5
+
+    # skip if no distance between nodes
+    if edge_len == 0.0: return
+
     edge_x = delta_x / edge_len
     edge_y = delta_y / edge_len
 
@@ -265,6 +269,88 @@ def generate_pafs(labels: Labels, sigma=5.0, scale=1.0, output_size=None):
 
     return pafs
 
+def point_array_bounding_box(point_array: np.ndarray) -> tuple:
+    """Returns (x0, y0, x1, y1) for box that bounds point_array."""
+    x0 = np.nanmin(point_array[:, 0])
+    y0 = np.nanmin(point_array[:, 1])
+    x1 = np.nanmax(point_array[:, 0])
+    y1 = np.nanmax(point_array[:, 1])
+    return x0, y0, x1, y1
+
+def pad_rect_to(x0: int, y0: int, x1: int, y1: int, pad_to: tuple, within: tuple):
+    """Grow (x0, y0, x1, y1) so it's as large as pad_to but stays inside within.
+
+    Args:
+        x0: point for starting rect
+        y0: point for starting rect
+        x1: point for starting rect
+        y1: point for starting rect
+        pad_to: (h, w) for size of rect that we want to return.
+        within: (h, w) that we want rect to stay inside.
+
+    Returns:
+        (x0, y0, x1, y1) for rect such that
+        * (y1-y2), (x1 - x0) = pad_to
+        * 0 <= (y1-y0) <= within h
+        * 0 <= (x1-x0) <= within w
+    """
+    pad_to_y, pad_to_x = pad_to
+    x_margin = pad_to_x - (x1-x0)
+    y_margin = pad_to_y - (y1-y0)
+
+    # initial values
+    x0 -= x_margin//2
+    x1 += x_margin-x_margin//2
+    y0 -= y_margin//2
+    y1 += y_margin-y_margin//2
+
+    # adjust to stay inside within
+    within_y, within_x = within
+    if x0 < 0:
+        x0 = 0
+        x1 = pad_to_x
+    if x1 > within_x:
+        x1 = within_x-1
+        x0 = within_x-pad_to_x-1
+    if y0 < 0:
+        y0 = 0
+        y1 = pad_to_y
+    if y1 > within_y:
+        y1 = within_y-1
+        y0 = within_y-pad_to_y-1
+
+    return x0, y0, x1, y1
+
+def instance_crops(imgs, points, img_shape):
+    # List of bounding box for every instance
+    bbs = [point_array_bounding_box(point_array) for frame in points for point_array in frame]
+    bbs = [(int(x0), int(y0), int(x1), int(y1)) for (x0, y0, x1, y1) in bbs]
+
+    # Find least power of 2 that's large enough to bound all the instances
+    max_height = max((y1 - y0 for (x0, y0, x1, y1) in bbs))
+    max_width = max((x1 - x0 for (x0, y0, x1, y1) in bbs))
+    max_dim = max(max_height, max_width)
+    # TODO: add extra margin?
+    box_side = min((2**i for i in range(4, 9) if 2**i > max_dim), default=0) # 16 to 256
+
+    # TODO: make sure we have valid box_size
+
+    # Grow all bounding boxes to the same size
+    box_shape = (box_side, box_side)
+    bbs = list(map(lambda bb: pad_rect_to(*bb, box_shape, img_shape), bbs))
+
+    # Crop images and translate points
+    # build list to map bb to its img frame idx
+    img_idxs = [i for i, frame in enumerate(points) for _ in frame]
+    # crop images
+    imgs = [imgs[img_idxs[i], bb[1]:bb[3], bb[0]:bb[2]] for i, bb in enumerate(bbs)] # imgs[frame_idx, y0:y1, x0:x1]
+    imgs = np.stack(imgs, axis=0)
+    # translate points
+    points = [point_array for frame in points for point_array in frame]
+    points = [[point_array - np.asarray([bbs[i][0], bbs[i][1]])] for i, point_array in enumerate(points)]
+
+    return imgs, points
+
 def demo_datagen_time():
     data_path = "tests/data/json_format_v2/centered_pair_predictions.json"
 
@@ -300,6 +386,11 @@ def demo_datagen():
     print(imgs.dtype)
     print(np.ptp(imgs))
 
+    points = generate_points(labels)
+
+    img_shape = (imgs.shape[1], imgs.shape[2])
+    imgs, points = instance_crops(imgs, points, img_shape)
+
     from PySide2 import QtWidgets
     from sleap.io.video import Video
     from sleap.gui.confmapsplot import demo_confmaps
@@ -308,7 +399,10 @@ def demo_datagen():
     app = QtWidgets.QApplication([])
     vid = Video.from_numpy(imgs * 255)
 
-    confmaps = generate_confidence_maps(labels)
+    skeleton = labels.skeletons[0]
+    img_shape = (imgs.shape[1], imgs.shape[2])
+
+    confmaps = generate_confmaps_from_points(points, skeleton, img_shape, sigma=5.0, scale=1.0, output_size=None)
     print("--confmaps--")
     print(confmaps.shape)
     print(confmaps.dtype)
@@ -316,7 +410,7 @@ def demo_datagen():
 
     demo_confmaps(confmaps, vid)
 
-    pafs = generate_pafs(labels)
+    pafs = generate_pafs_from_points(points, skeleton, img_shape, sigma=5.0, scale=1.0, output_size=None)
     print("--pafs--")
     print(pafs.shape)
     print(pafs.dtype)

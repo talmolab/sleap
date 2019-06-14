@@ -4,13 +4,64 @@ main:
   label: Method
   type: stacked
   default: strides
-  options: strides
+  options: strides,pca,hog,brisk
 
   strides:
   - name: strides_per_video
     label: Suggestions per video
     type: int
     default: 10
+  pca:
+  - name: clusters
+    label: Number of clusters
+    type: int
+    default: 5
+  - name: per_cluster
+    label: Samples per cluster
+    type: int
+    default: 5
+  - name: sample_step
+    label: Frame sampling step size
+    type: int
+    default: 5
+  - name: pca_components
+    label: Number of PCA components
+    type: int
+    default: 50
+  hog:
+  - name: clusters
+    label: Number of clusters
+    type: int
+    default: 5
+  - name: per_cluster
+    label: Samples per cluster
+    type: int
+    default: 5
+  - name: sample_step
+    label: Frame sampling step size
+    type: int
+    default: 5
+  - name: pca_components
+    label: Number of PCA components
+    type: int
+    default: 50
+  brisk:
+  - name: clusters
+    label: Number of clusters
+    type: int
+    default: 5
+  - name: per_cluster
+    label: Samples per cluster
+    type: int
+    default: 5
+  - name: sample_step
+    label: Frame sampling step size
+    type: int
+    default: 5
+  - name: pca_components
+    label: Number of PCA components
+    type: int
+    default: 50
 
 
 - name: generate_button

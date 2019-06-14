@@ -313,20 +313,31 @@ class Labels(MutableSequence):
         if seek_direction not in (-1, 1): return (None, None)
         # make sure the video belongs to this Labels object
         if video not in self.videos: return (None, None)
-        # look for next (or previous) suggestion in current video
-        if seek_direction == 1:
-            frame_suggestion = min((i for i in self.get_video_suggestions(video) if i > frame_idx), default=None)
+
+        all_suggestions = self.get_suggestions()
+
+        # If we're currently on a suggestion, then follow order of list
+        if (video, frame_idx) in all_suggestions:
+            suggestion_idx = all_suggestions.index((video, frame_idx))
+            new_idx = (suggestion_idx+seek_direction)%len(all_suggestions)
+            video, frame_suggestion = all_suggestions[new_idx]
+
+        # Otherwise, find the prev/next suggestion sorted by frame order
         else:
-            frame_suggestion = max((i for i in self.get_video_suggestions(video) if i < frame_idx), default=None)
-        if frame_suggestion is not None: return (video, frame_suggestion)
-        # if we didn't find suggestion in current video,
-        # then we want earliest frame in next video with suggestions
-        next_video_idx = (self.videos.index(video) + seek_direction) % len(self.videos)
-        video = self.videos[next_video_idx]
-        if seek_direction == 1:
-            frame_suggestion = min((i for i in self.get_video_suggestions(video)), default=None)
-        else:
-            frame_suggestion = max((i for i in self.get_video_suggestions(video)), default=None)
+            # look for next (or previous) suggestion in current video
+            if seek_direction == 1:
+                frame_suggestion = min((i for i in self.get_video_suggestions(video) if i > frame_idx), default=None)
+            else:
+                frame_suggestion = max((i for i in self.get_video_suggestions(video) if i < frame_idx), default=None)
+            if frame_suggestion is not None: return (video, frame_suggestion)
+            # if we didn't find suggestion in current video,
+            # then we want earliest frame in next video with suggestions
+            next_video_idx = (self.videos.index(video) + seek_direction) % len(self.videos)
+            video = self.videos[next_video_idx]
+            if seek_direction == 1:
+                frame_suggestion = min((i for i in self.get_video_suggestions(video)), default=None)
+            else:
+                frame_suggestion = max((i for i in self.get_video_suggestions(video)), default=None)
         return (video, frame_suggestion)
 
     def set_suggestions(self, suggestions:Dict[Video, list]):
@@ -461,6 +472,8 @@ class Labels(MutableSequence):
         else:
             dicts = data
 
+        dicts['tracks'] = dicts.get('tracks', []) # don't break if json doesn't include tracks
+
         # First, deserialize the skeletons, videos, and nodes lists.
         # The labels reference these so we will need them while deserializing.
         nodes = cattr.structure(dicts['nodes'], List[Node])
@@ -492,7 +505,7 @@ class Labels(MutableSequence):
         label_cattr.register_structure_hook(Union[Point, PredictedPoint], structure_points)
 
         def structure_instances_list(x, type):
-            if 'score' in x[0].keys():
+            if len(x) and 'score' in x[0].keys():
                 return label_cattr.structure(x, List[PredictedInstance])
             else:
                 return label_cattr.structure(x, List[Instance])
@@ -504,7 +517,7 @@ class Labels(MutableSequence):
         return cls(labeled_frames=labels, videos=videos, skeletons=skeletons, nodes=nodes, suggestions=suggestions)
 
     @classmethod
-    def load_json(cls, filename: str):
+    def load_json(cls, filename: str, video_callback=None):
 
         # Check if the file is a zipfile for not.
         if zipfile.is_zipfile(filename):
@@ -550,6 +563,10 @@ class Labels(MutableSequence):
 
                 # Cache the working directory.
                 cwd = os.getcwd()
+
+                # Use the callback if given to handle missing videos
+                if callable(video_callback):
+                    video_callback(dicts["videos"])
 
                 # Try to load the labels filename.
                 try:
@@ -728,6 +745,85 @@ class Labels(MutableSequence):
         labels = cls(labeled_frames=labeled_frames, videos=[vid], skeletons=[sk])
 
         return labels
+
+    @classmethod
+    def load_deeplabcut_csv(cls, filename):
+
+        # At the moment we don't need anything from the config file,
+        # but the code to read it is here in case we do in the future.
+
+        # # Try to find the config file by walking up file path starting at csv file looking for config.csv
+        # last_dir = None
+        # file_dir = os.path.dirname(filename)
+        # config_filename = ""
+
+        # while file_dir != last_dir:
+        #     last_dir = file_dir
+        #     file_dir = os.path.dirname(file_dir)
+        #     config_filename = os.path.join(file_dir, 'config.yaml')
+        #     if os.path.exists(config_filename):
+        #         break
+
+        # # If we couldn't find a config file, give up
+        # if not os.path.exists(config_filename): return
+
+        # with open(config_filename, 'r') as f:
+        #     config = yaml.load(f, Loader=yaml.SafeLoader)
+
+        # x1 = config['x1']
+        # y1 = config['y1']
+        # x2 = config['x2']
+        # y2 = config['y2']
+
+        data = pd.read_csv(filename, header=[1,2])
+
+        # Create the skeleton from the list of nodes in the csv file
+        # Note that DeepLabCut doesn't have edges, so these will have to be added by user later
+        node_names = [n[0] for n in list(data)[1::2]]
+
+        skeleton = Skeleton()
+        skeleton.add_nodes(node_names)
+
+        # Create an imagestore `Video` object from frame images.
+        # This may not be ideal for large projects, since we're reading in
+        # each image and then writing it out in a new directory.
+
+        img_files = data.ix[:,0] # get list of all images
+
+        # the image filenames in the csv may not match where the user has them
+        # so we'll change the directory to match where the user has the csv
+        def fix_img_path(img_dir, img_filename):
+            img_filename = os.path.basename(img_filename)
+            img_filename = os.path.join(img_dir, img_filename)
+            return img_filename
+
+        img_dir = os.path.dirname(filename)
+        img_files = list(map(lambda f: fix_img_path(img_dir, f), img_files))
+
+        # we'll put the new imgstore in the same directory as the current csv
+        imgstore_name = os.path.join(os.path.dirname(filename), "sleap_video")
+
+        # create the imgstore (or open if it already exists)
+        if os.path.exists(imgstore_name):
+            video = Video.from_filename(imgstore_name)
+        else:
+            video = Video.imgstore_from_filenames(img_files, imgstore_name)
+
+        labels = []
+
+        for i in range(len(data)):
+            # get points for each node
+            instance_points = dict()
+            for node in node_names:
+                x, y = data[(node, 'x')][i], data[(node, 'y')][i]
+                instance_points[node] = Point(x, y)
+            # create instance with points (we can assume there's only one instance per frame)
+            instance = Instance(skeleton=skeleton, points=instance_points)
+            # create labeledframe and add it to list
+            label = LabeledFrame(video=video, frame_idx=i, instances=[instance])
+            labels.append(label)
+
+        return cls(labels)
 
 
 def load_labels_json_old(data_path: str, parsed_json: dict = None,
