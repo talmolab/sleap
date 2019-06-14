@@ -30,7 +30,7 @@ class TrainingDialog(QtWidgets.QMainWindow):
         self.training_data = dict(ready=False, times=None, update=threading.Event())
 
         # UI
-        self.form_widget = YamlFormWidget(yaml_file="sleap/nn/training-forms.yaml", title="Training Parameters")
+        self.form_widget = YamlFormWidget(yaml_file="./sleap/nn/training-forms.yaml", title="Training Parameters")
         self.form_widget.mainAction.connect(self.run_training)
         self.form_widget.valueChanged.connect(self.update_ui)
         self.form_widget.buttons["_use_defaults"].clicked.connect(self._use_defaults)

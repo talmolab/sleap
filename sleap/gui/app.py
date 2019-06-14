@@ -120,7 +120,7 @@ class MainWindow(QMainWindow):
 
     def initialize_gui(self):
 
-        shortcut_yaml = "sleap/gui/shortcuts.yaml"
+        shortcut_yaml = "./sleap/gui/shortcuts.yaml"
         with open(shortcut_yaml, 'r') as f:
             shortcuts = yaml.load(f, Loader=yaml.SafeLoader)
 
@@ -317,7 +317,7 @@ class MainWindow(QMainWindow):
         hbw = QWidget(); hbw.setLayout(hb)
         suggestions_layout.addWidget(hbw)
 
-        form_wid = YamlFormWidget(yaml_file="sleap/gui/suggestions.yaml", title="Generate Suggestions")
+        form_wid = YamlFormWidget(yaml_file="./sleap/gui/suggestions.yaml", title="Generate Suggestions")
         form_wid.mainAction.connect(self.generateSuggestions)
         suggestions_layout.addWidget(form_wid)
 

@@ -1,0 +1,3 @@
+include sleap/gui/shortcuts.yaml
+include sleap/gui/suggestions.yaml
+include sleap/nn/training-forms.yaml
