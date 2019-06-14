@@ -600,7 +600,7 @@
                 <span class="k">if</span> <span class="n">prop</span> <span class="o">==</span> <span class="s2">&quot;video&quot;</span><span class="p">:</span>
                     <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span> <span class="c1"># just show the name, not full path</span>
                 <span class="k">elif</span> <span class="n">prop</span> <span class="o">==</span> <span class="s2">&quot;frame&quot;</span><span class="p">:</span>
-                    <span class="k">return</span> <span class="n">frame_idx</span> <span class="o">+</span> <span class="mi">1</span> <span class="c1"># start at frame 1 rather than 0</span>
+                    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">frame_idx</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> <span class="c1"># start at frame 1 rather than 0</span>
                 <span class="k">elif</span> <span class="n">prop</span> <span class="o">==</span> <span class="s2">&quot;labeled&quot;</span><span class="p">:</span>
                     <span class="c1"># show how many labeled instances are in this frame</span>
                     <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="o">.</span><span class="n">instance_count</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">)</span>

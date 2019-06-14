@@ -197,6 +197,23 @@ inference, non-maximum suppression peak finding, paf part matching, to tracking.
 </dl>
 </dd></dl>
 
+<dl class="method">
+<dt id="sleap.nn.inference.Predictor.run_visual">
+<code class="sig-name descname">run_visual</code><span class="sig-paren">(</span><em class="sig-param">input_video: Union[str, sleap.io.video.Video], max_frames: int = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/inference.html#Predictor.run_visual"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.Predictor.run_visual" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run the confmap/paf prediction on an input video or file object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>input_video</strong> – Either a video object or video filename.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>numpy arrays</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>confmaps, pafs</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="function">
@@ -218,7 +235,7 @@ inference, non-maximum suppression peak finding, paf part matching, to tracking.
 
 <dl class="function">
 <dt id="sleap.nn.inference.get_inference_model">
-<code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">get_inference_model</code><span class="sig-paren">(</span><em class="sig-param">confmap_model_path: str</em>, <em class="sig-param">paf_model_path: str</em><span class="sig-paren">)</span> &#x2192; keras.engine.training.Model<a class="reference internal" href="_modules/sleap/nn/inference.html#get_inference_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.get_inference_model" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">get_inference_model</code><span class="sig-paren">(</span><em class="sig-param">confmap_model_path: str</em>, <em class="sig-param">paf_model_path: str</em>, <em class="sig-param">new_input_size: None</em><span class="sig-paren">)</span> &#x2192; keras.engine.training.Model<a class="reference internal" href="_modules/sleap/nn/inference.html#get_inference_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.get_inference_model" title="Permalink to this definition">¶</a></dt>
 <dd><p>Loads and merges confmap and PAF models into one.</p>
 </dd></dl>
 

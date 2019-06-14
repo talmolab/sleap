@@ -433,6 +433,23 @@ is a helper method that invokes the HDF5Video backend.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="sleap.io.video.Video.imgstore_from_filenames">
+<em class="property">classmethod </em><code class="sig-name descname">imgstore_from_filenames</code><span class="sig-paren">(</span><em class="sig-param">filenames: list</em>, <em class="sig-param">output_filename: str</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/video.html#Video.imgstore_from_filenames"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.Video.imgstore_from_filenames" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an imagestore from a list of image files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filenames</strong> – List of filenames for the image files.</p></li>
+<li><p><strong>output_filename</strong> – Filename for the imagestore to create.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A <cite>Video</cite> object for the new imagestore.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.io.video.Video.num_frames">
 <em class="property">property </em><code class="sig-name descname">num_frames</code><a class="headerlink" href="#sleap.io.video.Video.num_frames" title="Permalink to this definition">¶</a></dt>
 <dd><p>The number of frames in the video. Just an alias for frames property.</p>

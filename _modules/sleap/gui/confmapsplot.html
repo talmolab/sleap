@@ -326,8 +326,9 @@
     <span class="n">win</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">plot_confmaps</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">item_idx</span><span class="p">):</span>
-        <span class="n">frame_conf_map</span> <span class="o">=</span> <span class="n">ConfMapsPlot</span><span class="p">(</span><span class="n">confmaps</span><span class="p">[</span><span class="n">parent</span><span class="o">.</span><span class="n">frame_idx</span><span class="p">,</span><span class="o">...</span><span class="p">])</span>
-        <span class="n">win</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">frame_conf_map</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">parent</span><span class="o">.</span><span class="n">frame_idx</span> <span class="o">&lt;</span> <span class="n">confmaps</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">frame_conf_map</span> <span class="o">=</span> <span class="n">ConfMapsPlot</span><span class="p">(</span><span class="n">confmaps</span><span class="p">[</span><span class="n">parent</span><span class="o">.</span><span class="n">frame_idx</span><span class="p">,</span><span class="o">...</span><span class="p">])</span>
+            <span class="n">win</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">frame_conf_map</span><span class="p">)</span>
 
     <span class="n">win</span><span class="o">.</span><span class="n">changedPlot</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">plot_confmaps</span><span class="p">)</span>
     <span class="n">win</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>

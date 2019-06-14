@@ -269,6 +269,10 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">instances</span>
 
     <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">selectable_instances</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">selectable_instances</span>
+
+    <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">predicted_instances</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">predicted_instances</span>
 
@@ -351,7 +355,7 @@
 <span class="sd">        Args:</span>
 <span class="sd">            show: Show if True, hide otherwise.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">instances</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">selectable_instances</span><span class="p">:</span>
             <span class="n">inst</span><span class="o">.</span><span class="n">showLabels</span><span class="p">(</span><span class="n">show</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="QtVideoPlayer.showEdges"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.QtVideoPlayer.showEdges">[docs]</a>    <span class="k">def</span> <span class="nf">showEdges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">show</span><span class="p">):</span>
@@ -360,19 +364,19 @@
 <span class="sd">        Args:</span>
 <span class="sd">            show: Show if True, hide otherwise.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">instances</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">selectable_instances</span><span class="p">:</span>
             <span class="n">inst</span><span class="o">.</span><span class="n">showEdges</span><span class="p">(</span><span class="n">show</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="QtVideoPlayer.toggleLabels"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.QtVideoPlayer.toggleLabels">[docs]</a>    <span class="k">def</span> <span class="nf">toggleLabels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Toggle current show/hide state of node labels for all instances.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">instances</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">selectable_instances</span><span class="p">:</span>
             <span class="n">inst</span><span class="o">.</span><span class="n">toggleLabels</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="QtVideoPlayer.toggleEdges"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.QtVideoPlayer.toggleEdges">[docs]</a>    <span class="k">def</span> <span class="nf">toggleEdges</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Toggle current show/hide state of edges for all instances.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">instances</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">selectable_instances</span><span class="p">:</span>
             <span class="n">inst</span><span class="o">.</span><span class="n">toggleEdges</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="QtVideoPlayer.zoomToFit"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.QtVideoPlayer.zoomToFit">[docs]</a>    <span class="k">def</span> <span class="nf">zoomToFit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -592,6 +596,11 @@
                 <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="o">==</span> <span class="n">QtInstance</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">item</span><span class="o">.</span><span class="n">predicted</span><span class="p">]</span>
 
     <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">selectable_instances</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">items</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">SortOrder</span><span class="o">.</span><span class="n">AscendingOrder</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="o">==</span> <span class="n">QtInstance</span> <span class="ow">and</span> <span class="n">item</span><span class="o">.</span><span class="n">selectable</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">predicted_instances</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns a list of predicted instances.</span>
@@ -622,7 +631,7 @@
 <div class="viewcode-block" id="GraphicsView.nextSelection"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.GraphicsView.nextSelection">[docs]</a>    <span class="k">def</span> <span class="nf">nextSelection</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Select next instance (or first, if none currently selected).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">instances</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">instances</span>
+        <span class="n">instances</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">selectable_instances</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">instances</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="k">return</span>
         <span class="n">select_inst</span> <span class="o">=</span> <span class="n">instances</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># default to selecting first instance</span>
         <span class="n">select_idx</span> <span class="o">=</span> <span class="mi">0</span>
@@ -643,7 +652,7 @@
 <span class="sd">        Args:</span>
 <span class="sd">            select_idx: index of skeleton to select</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">instances</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">instances</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">from_all</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_instances</span>
+        <span class="n">instances</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">selectable_instances</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">from_all</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_instances</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">clearSelection</span><span class="p">(</span><span class="n">signal</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">select_idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">instances</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">instance</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">instances</span><span class="p">):</span>
@@ -707,10 +716,10 @@
                 <span class="c1"># When just a tap, see if there&#39;s an item underneath to select</span>
                 <span class="n">clicked</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">items</span><span class="p">(</span><span class="n">scenePos</span><span class="p">,</span> <span class="n">Qt</span><span class="o">.</span><span class="n">IntersectsItemBoundingRect</span><span class="p">)</span>
                 <span class="n">clicked_instances</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">clicked</span>
-                                     <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="o">==</span> <span class="n">QtInstance</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">item</span><span class="o">.</span><span class="n">predicted</span><span class="p">]</span>
+                                     <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="o">==</span> <span class="n">QtInstance</span> <span class="ow">and</span> <span class="n">item</span><span class="o">.</span><span class="n">selectable</span><span class="p">]</span>
                 <span class="c1"># We only handle single instance selection so pick at most one from list</span>
                 <span class="n">clicked_instance</span> <span class="o">=</span> <span class="n">clicked_instances</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">clicked_instances</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
-                <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">instance</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instances</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">instance</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selectable_instances</span><span class="p">):</span>
                     <span class="n">instance</span><span class="o">.</span><span class="n">selected</span> <span class="o">=</span> <span class="p">(</span><span class="n">instance</span> <span class="o">==</span> <span class="n">clicked_instance</span><span class="p">)</span>
                     <span class="c1"># If we want to allow selection of multiple instances, do this:</span>
                     <span class="c1"># instance.selected = (instance in clicked)</span>
@@ -897,6 +906,8 @@
         <span class="sd">&quot;&quot;&quot; Update visual display of the label and its node.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
+        <span class="n">complete_color</span> <span class="o">=</span> <span class="n">QColor</span><span class="p">(</span><span class="mi">80</span><span class="p">,</span> <span class="mi">194</span><span class="p">,</span> <span class="mi">159</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">complete</span> <span class="k">else</span> <span class="n">QColor</span><span class="p">(</span><span class="mi">232</span><span class="p">,</span> <span class="mi">45</span><span class="p">,</span> <span class="mi">32</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">predicted</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_base_font</span><span class="o">.</span><span class="n">setBold</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_font</span><span class="p">)</span>
@@ -904,18 +915,18 @@
         <span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">visible</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_base_font</span><span class="o">.</span><span class="n">setBold</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_font</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">setDefaultTextColor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">pen</span><span class="p">()</span><span class="o">.</span><span class="n">color</span><span class="p">())</span>
+            <span class="c1"># self.setDefaultTextColor(self.node.pen().color())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setDefaultTextColor</span><span class="p">(</span><span class="n">complete_color</span><span class="p">)</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">complete</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_base_font</span><span class="o">.</span><span class="n">setBold</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_font</span><span class="p">)</span>
-            <span class="n">complete_color</span> <span class="o">=</span> <span class="n">QColor</span><span class="p">(</span><span class="mi">80</span><span class="p">,</span> <span class="mi">194</span><span class="p">,</span> <span class="mi">159</span><span class="p">)</span> <span class="c1"># greenish</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">setDefaultTextColor</span><span class="p">(</span><span class="n">complete_color</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setDefaultTextColor</span><span class="p">(</span><span class="n">complete_color</span><span class="p">)</span> <span class="c1"># greenish</span>
             <span class="c1"># FIXME: Adjust style of node here as well?</span>
             <span class="c1"># self.node.setBrush(complete_color)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_base_font</span><span class="o">.</span><span class="n">setBold</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_font</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">setDefaultTextColor</span><span class="p">(</span><span class="n">QColor</span><span class="p">(</span><span class="mi">232</span><span class="p">,</span> <span class="mi">45</span><span class="p">,</span> <span class="mi">32</span><span class="p">))</span> <span class="c1"># redish</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setDefaultTextColor</span><span class="p">(</span><span class="n">complete_color</span><span class="p">)</span> <span class="c1"># redish</span></div>
 
 <div class="viewcode-block" id="QtNodeLabel.boundingRect"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.QtNodeLabel.boundingRect">[docs]</a>    <span class="k">def</span> <span class="nf">boundingRect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Method required by Qt.</span>
@@ -1212,6 +1223,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">instance</span> <span class="o">=</span> <span class="n">instance</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">predicted</span> <span class="o">=</span> <span class="n">predicted</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">color_predicted</span> <span class="o">=</span> <span class="n">color_predicted</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">selectable</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">predicted</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">color_predicted</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="n">color</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">markerRadius</span> <span class="o">=</span> <span class="n">markerRadius</span>
 
