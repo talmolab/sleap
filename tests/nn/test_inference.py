@@ -56,9 +56,9 @@ def test_save_load_json(centered_pair_predictions, tmpdir):
 def test_peaks():
 
     # load from scratch so we won't change centered_pair_predictions
-    true_labels = Labels.load_json('tests/data/json_format_v2/centered_pair_predictions.json')
+    true_labels = Labels.load_json('tests/data/json_format_v1/centered_pair.json')
     # only use a few frames
-    true_labels.labeled_frames = true_labels.labeled_frames[423:433:2]
+    true_labels.labeled_frames = true_labels.labeled_frames[13:23:2]
     skeleton = true_labels.skeletons[0]
 
     # data gen

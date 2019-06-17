@@ -130,10 +130,10 @@ main:
   type: file_dir
   default: 
 
-# - name: tensorboard_dir
-#   label: Tensorboard Directory
-#   type: file_dir
-#   default: 
+- name: tensorboard_dir
+  label: Tensorboard Directory
+  type: file_dir
+  default: 
 
 - name: run_button
   label: Start Training
