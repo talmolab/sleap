@@ -101,6 +101,10 @@ class Labels(MutableSequence):
         """ Alias for labeled_frames """
         return self.labeled_frames
 
+    @property
+    def user_labeled_frames(self):
+        return [lf for lf in self.labeled_frames if lf.has_user_instances]
+
     def __len__(self):
         return len(self.labeled_frames)
 
@@ -201,6 +205,10 @@ class Labels(MutableSequence):
     @property
     def all_instances(self):
         return list(self.instances())
+
+    @property
+    def user_instances(self):
+        return [inst for inst in self.all_instances if type(inst) == Instance]
 
     def instances(self, video: Video = None, skeleton: Skeleton = None):
         """ Iterate through all instances in the labels, optionally with filters.

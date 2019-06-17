@@ -16,7 +16,7 @@ def generate_images(labels:Labels, scale=1.0, output_size=None):
     output_size = tuple(map(int, output_size))
 
     imgs = []
-    for labeled_frame in labels:
+    for labeled_frame in labels.user_labeled_frames:
         img = labeled_frame.video[labeled_frame.frame_idx]
         # TODO: resizing
         imgs.append(img)
@@ -44,7 +44,7 @@ def generate_points(labels):
         a list (each frame) of lists (each instance) of ndarrays (of points)
             i.e., frames -> instances -> point_array
     """
-    return [[inst.points_array(invisible_as_nan=True) for inst in lf.instances] for lf in labels]
+    return [[inst.points_array(invisible_as_nan=True) for inst in lf.user_instances] for lf in labels.user_labeled_frames]
 
 def generate_confmaps_from_points(frames_inst_points, skeleton, shape, sigma=5.0, scale=1.0, output_size=None) -> np.ndarray:
     """
