@@ -14,7 +14,7 @@ import os
 import sys
 import copy
 import yaml
-
+from pkg_resources import Requirement, resource_filename
 from pathlib import PurePath
 
 import numpy as np
@@ -27,7 +27,7 @@ from sleap.io.dataset import Labels
 from sleap.gui.video import QtVideoPlayer
 from sleap.gui.tracks import TrackTrailManager
 from sleap.gui.dataviews import VideosTable, SkeletonNodesTable, SkeletonEdgesTable, \
-	LabeledFrameTable, SkeletonNodeModel, SuggestionsTable
+    LabeledFrameTable, SkeletonNodeModel, SuggestionsTable
 from sleap.gui.importvideos import ImportVideos
 from sleap.gui.formbuilder import YamlFormWidget
 from sleap.gui.suggestions import VideoFrameSuggestions
@@ -120,7 +120,8 @@ class MainWindow(QMainWindow):
 
     def initialize_gui(self):
 
-        shortcut_yaml = "./sleap/gui/shortcuts.yaml"
+        shortcut_yaml = resource_filename(Requirement.parse("sleap"),"sleap/gui/shortcuts.yaml")
+        # shortcut_yaml = "./sleap/gui/shortcuts.yaml"
         with open(shortcut_yaml, 'r') as f:
             shortcuts = yaml.load(f, Loader=yaml.SafeLoader)
 
@@ -317,7 +318,8 @@ class MainWindow(QMainWindow):
         hbw = QWidget(); hbw.setLayout(hb)
         suggestions_layout.addWidget(hbw)
 
-        form_wid = YamlFormWidget(yaml_file="./sleap/gui/suggestions.yaml", title="Generate Suggestions")
+        suggestions_yaml = resource_filename(Requirement.parse("sleap"),"sleap/gui/suggestions.yaml")
+        form_wid = YamlFormWidget(yaml_file=suggestions_yaml, title="Generate Suggestions")
         form_wid.mainAction.connect(self.generateSuggestions)
         suggestions_layout.addWidget(form_wid)
 

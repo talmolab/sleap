@@ -5,6 +5,7 @@ import threading
 import zmq
 import jsonpickle
 import yaml
+from pkg_resources import Requirement, resource_filename
 
 from PySide2 import QtCore, QtWidgets
 
@@ -30,7 +31,8 @@ class TrainingDialog(QtWidgets.QMainWindow):
         self.training_data = dict(ready=False, times=None, update=threading.Event())
 
         # UI
-        self.form_widget = YamlFormWidget(yaml_file="./sleap/nn/training-forms.yaml", title="Training Parameters")
+        yaml_filename = resource_filename(Requirement.parse("sleap"),"sleap/nn/training-forms.yaml")
+        self.form_widget = YamlFormWidget(yaml_file=yaml_filename, title="Training Parameters")
         self.form_widget.mainAction.connect(self.run_training)
         self.form_widget.valueChanged.connect(self.update_ui)
         self.form_widget.buttons["_use_defaults"].clicked.connect(self._use_defaults)
