@@ -1,46 +1,51 @@
 import numpy as np
 import tensorflow as tf
+import attr
+import cattr
 import keras
 import imgaug
 
-class Augmenter(keras.utils.Sequence):
-    def __init__(self, X, Y=None, Points=None, datagen=None, output_names=None, batch_size=32, shuffle=True, rotation=(-180, 180), scale=None):
-        self.X = X
-        self.Y = Y
-        self.Points = Points
-        self.datagen = datagen
-        self.output_names = output_names
-        self.num_outputs = 1 if output_names is None else len(output_names)
-        self.batch_size = batch_size
-        self.num_samples = len(X)
-        self.rotation = rotation
-        self.scale = scale
+from typing import Union, List, Tuple, Callable
 
-        # Setup batching
-        all_idx = np.arange(self.num_samples)
-        self.batches = np.array_split(all_idx, np.ceil(self.num_samples / self.batch_size))
-        
-        # Initial shuffling
-        if shuffle:
-            self.shuffle()
+
+@attr.s(auto_attribs=True)
+class Augmenter(keras.utils.Sequence):
+    """
+    The Augmentor class is a keras.utils.Sequence that generates batches of
+    augmented training data for both confidence maps and part affinity fields (PAFs).
+    It utilizes imgaug transformations of keypoints (the skeleton nodes of an instance)
+    and generates the confidence maps and PAFs on the fly from the augmented keypoints.
+    """
+
+    _X: Union[None, np.ndarray] = None
+    Y: Union[None, np.ndarray] = None
+    Points: Union[None, List[np.ndarray]] = None
+    datagen: Union[None, Callable] = None
+    output_names: Union[None, List[str]] = None
+    batch_size: int = 32
+    shuffle: bool = True
+    rotation: Tuple[float, float] = (-180.0, 180.0)
+    scale: Union[float, None] = None
+
+    def __attrs_post_init__(self):
 
         # Setup affine augmentation
         # TODO: translation?
         self.aug_stack = []
         if self.rotation is not None:
-            self.rotation = rotation if isinstance(rotation, tuple) else (-rotation, rotation)
+            self.rotation = self.rotation if isinstance(self.rotation, tuple) else (-self.rotation, self.rotation)
             if self.scale is not None and self.scale[0] != self.scale[1]:
                 self.scale = (min(self.scale), max(self.scale))
                 self.aug_stack.append(imgaug.augmenters.Affine(rotate=self.rotation, scale=self.scale))
             else:
                 self.aug_stack.append(imgaug.augmenters.Affine(rotate=self.rotation))
-        
+
         # TODO: Flips?
         # imgaug.augmenters.Fliplr(0.5)
 
         # Create augmenter
         self.aug = imgaug.augmenters.Sequential(self.aug_stack)
-        
+
     def shuffle(self, batches_only=False):
         """ Index-based shuffling """
 
@@ -115,6 +120,30 @@ class Augmenter(keras.utils.Sequence):
             Y = {output_name: Y for output_name in self.output_names}
 
         return (X, Y)
+
+    @staticmethod
+    def make_cattr(X=None, Y=None, Points=None):
+        aug_cattr = cattr.Converter()
+
+        # When we serialize the augmentor, exlude data fields, we just want to
+        # parameters.
+        aug_cattr.register_unstructure_hook(
+            Augmenter,
+            lambda x:
+            attr.asdict(x,
+                        filter=attr.filters.exclude(
+                            attr.fields(Augmenter).X,
+                            attr.fields(Augmenter).Y,
+                            attr.fields(Augmenter).Points)))
+
+        # We the user needs to unstructure, what images, outputs, and Points should
+        # they use. We didn't serialize these, just the parameters.
+        if X is not None:
+            aug_cattr.register_structure_hook(Augmenter,
+                                              lambda x: Augmenter(X=X,Y=Y,Points=Points, **x))
+
+        return aug_cattr
+
 
 def demo_augmentation():
     from sleap.io.dataset import Labels
