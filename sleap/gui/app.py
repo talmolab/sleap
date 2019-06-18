@@ -756,7 +756,7 @@ class MainWindow(QMainWindow):
         # Otherwise, mark which frames have any instances.
         else:
             # list of frame_idx for simple markers for labeled frames
-            labeled_marks = [frame.frame_idx for frame in self.labels.find(self.video)]
+            labeled_marks = [lf.frame_idx for lf in self.labels.find(self.video) if len(lf.instances)]
             # "f" for suggestions with instances and "o" for those without
             # "f" means "filled", "o" means "open"
             def mark_type(frame):
