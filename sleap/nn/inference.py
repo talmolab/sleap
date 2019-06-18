@@ -444,7 +444,7 @@ class Predictor:
 
     model: keras.Model = attr.ib()
     skeleton: Skeleton = attr.ib()
-    inference_batch_size: int = 4
+    inference_batch_size: int = 2
     read_chunk_size: int = 256
     save_frequency: int = 1 # chunks
     nms_min_thresh = 0.3
@@ -453,6 +453,7 @@ class Predictor:
     min_score_midpts: float = 0.05
     min_score_integral: float = 0.6
     add_last_edge: bool = True
+    with_tracking: bool = False
     flow_window: int = 15
     save_shifted_instances: bool = True
 
@@ -485,7 +486,6 @@ class Predictor:
         frames = frames or list(range(vid.num_frames))
 
         num_frames = len(frames)
-        is_full_video = (num_frames == vid.num_frames)
         vid_h = vid.shape[1]
         vid_w = vid.shape[2]
         scale = h / vid_h
@@ -566,7 +566,7 @@ class Predictor:
             logger.info("  Matched peaks via PAFs [%.1fs]" % (time() - t0))
 
             # Track
-            if is_full_video:
+            if self.with_tracking:
                 t0 = time()
                 tracker.process(mov, predicted_frames_chunk)
                 logger.info("  Tracked IDs via flow shift [%.1fs]" % (time() - t0))
@@ -871,7 +871,7 @@ def main(args):
     model = get_inference_model(confmap_model_path, paf_model_path, img_shape)
 
     # Create a predictor to do the work.
-    predictor = Predictor(model=model, skeleton=skeleton)
+    predictor = Predictor(model=model, skeleton=skeleton, with_tracking=args.with_tracking)
 
     # Run the inference pipeline
     return predictor.run(input_video=data_path, output_path=save_path, frames=frames)
@@ -903,6 +903,9 @@ if __name__ == "__main__":
                     const=True, default=False,
                     help='resize the input layer to image size (default False)')
     parser.add_argument('--test-viz', dest='test_viz', action='store_const',
+                    const=True, default=False,
+                    help='just visualize predicted confmaps/pafs (default False)')
+    parser.add_argument('--with-tracking', dest='with_tracking', action='store_const',
                     const=True, default=False,
                     help='just visualize predicted confmaps/pafs (default False)')
     parser.add_argument('--frames', type=frame_list, default="", help='list of frames to predict (default is entire video)')
