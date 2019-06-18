@@ -102,12 +102,6 @@ class Skeleton:
         Returns:
             True if match, False otherwise.
         """
-        # Use a copy of the other skeleton, since we're going to make changes to it
-        other = copy.deepcopy(other)
-        # Replace nodes in other._graph with corresponding nodes in self._graph
-        # Currently we match by name only. Probably we should check all attributes for match.
-        other_nodes_to_self = {other_node: self.find_node(other_node.name) for other_node in other.nodes}
-        other._graph = nx.relabel_nodes(G=other._graph, mapping=other_nodes_to_self)
         return self == other
 
     @property
@@ -852,12 +846,11 @@ class Skeleton:
         if not is_isomorphic:
             return False
 
-        # Now check that the nodes have the same labels
-        for node in self._graph.nodes:
-            if node not in other._graph:
+        # Now check that the nodes have the same labels and order. They can have
+        # different weights I guess?!
+        for node1, node2 in zip(self._graph.nodes, other._graph.nodes):
+            if node1.name != node2.name:
                 return False
-
-        # FIXME: Skeletons still might not be exactly equal, isomorph with labels swapped.
 
         # Check if the two graphs are equal
         return True
