@@ -196,6 +196,11 @@
         <span class="c1"># Callback initialization</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
+    <span class="k">def</span> <span class="nf">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Closing the training controller socket/context.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">term</span><span class="p">()</span>
+
 <div class="viewcode-block" id="TrainingControllerZMQ.on_batch_end"><a class="viewcode-back" href="../../../training.html#sleap.nn.training.TrainingControllerZMQ.on_batch_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_batch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Called at the end of a training batch. &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">poll</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">timeout</span><span class="p">,</span> <span class="n">zmq</span><span class="o">.</span><span class="n">POLLIN</span><span class="p">):</span>
@@ -235,6 +240,11 @@
 
         <span class="c1"># Callback initialization</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Closing the reporter controller/context.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">term</span><span class="p">()</span>
 
 <div class="viewcode-block" id="ProgressReporterZMQ.on_train_begin"><a class="viewcode-back" href="../../../training.html#sleap.nn.training.ProgressReporterZMQ.on_train_begin">[docs]</a>    <span class="k">def</span> <span class="nf">on_train_begin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Called at the beginning of training.</span>

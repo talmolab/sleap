@@ -157,7 +157,7 @@
 <span id="inference"></span><h1>Inference<a class="headerlink" href="#module-sleap.nn.inference" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="sleap.nn.inference.Predictor">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">Predictor</code><span class="sig-paren">(</span><em class="sig-param">model: keras.engine.training.Model</em>, <em class="sig-param">skeleton: sleap.skeleton.Skeleton</em>, <em class="sig-param">inference_batch_size: int = 4</em>, <em class="sig-param">read_chunk_size: int = 256</em>, <em class="sig-param">save_frequency: int = 1</em>, <em class="sig-param">min_score_to_node_ratio: float = 0.2</em>, <em class="sig-param">min_score_midpts: float = 0.05</em>, <em class="sig-param">min_score_integral: float = 0.6</em>, <em class="sig-param">add_last_edge: bool = True</em>, <em class="sig-param">flow_window: int = 15</em>, <em class="sig-param">save_shifted_instances: bool = True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/inference.html#Predictor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.Predictor" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">Predictor</code><span class="sig-paren">(</span><em class="sig-param">model: keras.engine.training.Model</em>, <em class="sig-param">skeleton: sleap.skeleton.Skeleton</em>, <em class="sig-param">inference_batch_size: int = 2</em>, <em class="sig-param">read_chunk_size: int = 256</em>, <em class="sig-param">save_frequency: int = 1</em>, <em class="sig-param">min_score_to_node_ratio: float = 0.2</em>, <em class="sig-param">min_score_midpts: float = 0.05</em>, <em class="sig-param">min_score_integral: float = 0.6</em>, <em class="sig-param">add_last_edge: bool = True</em>, <em class="sig-param">with_tracking: bool = False</em>, <em class="sig-param">flow_window: int = 15</em>, <em class="sig-param">save_shifted_instances: bool = True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/inference.html#Predictor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.Predictor" title="Permalink to this definition">¶</a></dt>
 <dd><p>The Predictor class takes a trained sLEAP model and runs
 the complete inference pipeline from confidence map/part affinity field
 inference, non-maximum suppression peak finding, paf part matching, to tracking.</p>
@@ -182,13 +182,14 @@ inference, non-maximum suppression peak finding, paf part matching, to tracking.
 </dl>
 <dl class="method">
 <dt id="sleap.nn.inference.Predictor.run">
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">input_video: Union[str, sleap.io.video.Video], output_path: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/inference.html#Predictor.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.Predictor.run" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">input_video: Union[str, sleap.io.video.Video], output_path: Optional[str] = None, frames: Optional[List[int]] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/inference.html#Predictor.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.Predictor.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run the entire inference pipeline on an input video or file object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>input_video</strong> – Either a video object or video filename.</p></li>
 <li><p><strong>output_path</strong> – The output path to save the results.</p></li>
+<li><p><strong>frames</strong> (<em>optional</em>) – List of frames to predict. If None, run entire video.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
