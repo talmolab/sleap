@@ -118,7 +118,30 @@ class Skeleton:
         return self._graph.edge_subgraph(edges)
 
     @staticmethod
+    def find_unique_nodes(skeletons: List['Skeleton']):
+        """
+        Given list of skeletons, return a list of unique node objects across all skeletons.
+
+        Args:
+            skeletons: The list of skeletons.
+
+        Returns:
+            A list of unique node objects.
+        """
+        return list({node for skeleton in skeletons for node in skeleton.nodes})
+
+    @staticmethod
     def make_cattr(idx_to_node: Dict[int, Node] = None):
+        """
+        Create a cattr.Converter() that registers structure and unstructure hooks for
+        Skeleton objects that handle serialization of skeletons objects.
+
+        Args:
+            idx_to_node: A dict that maps node index to Node objects.
+
+        Returns:
+            A cattr.Converter() instance ready for skeleton serialization and deserialization.
+        """
         node_to_idx = {node:idx for idx,node in idx_to_node.items()} if idx_to_node is not None else None
 
         _cattr = cattr.Converter()
