@@ -249,7 +249,7 @@ class StackBuilderWidget(QtWidgets.QWidget):
 
         multi_layout = QtWidgets.QFormLayout()
         self.combo_box = QtWidgets.QComboBox()
-        self.stacked_widget = QtWidgets.QStackedWidget()
+        self.stacked_widget = ResizingStackedWidget()
 
         self.combo_box.activated.connect(lambda x: self.stacked_widget.setCurrentIndex(x))
 
@@ -287,3 +287,14 @@ class StackBuilderWidget(QtWidgets.QWidget):
 
     def get_data(self):
         return self.page_layouts[self.value()].get_form_data()
+
+
+class ResizingStackedWidget(QtWidgets.QStackedWidget):
+    def __init__(self, *args, **kwargs):
+        super(ResizingStackedWidget, self).__init__(*args, **kwargs)
+
+    def sizeHint(self):
+        return self.currentWidget().sizeHint()
+
+    def minimumSizeHint(self):
+        return self.currentWidget().minimumSizeHint()
