@@ -59,6 +59,16 @@ main:
   type: int
   default: 180
 
+- name: augment_scale_min
+  label: Augmentation scale (min)
+  type: double
+  default: 1.0
+
+- name: augment_scale_max
+  label: Augmentation scale (max)
+  type: double
+  default: 1.0
+
 - name: arch
   label: Architecture
   type: list

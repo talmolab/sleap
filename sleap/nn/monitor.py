@@ -57,6 +57,10 @@ class LossViewer(QtWidgets.QMainWindow):
         self.sub.subscribe("")
         self.sub.connect("tcp://127.0.0.1:9001")
 
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.check_messages)
+        self.timer.start(0)
+
     def add_datapoint(self, x, y, which="batch"):
         self.series[which].append(x, y)
 
@@ -74,6 +78,7 @@ class LossViewer(QtWidgets.QMainWindow):
 
     def set_end(self):
         self.is_running = False
+        self.timer.stop()
         # close the zmq socket
         self.sub.close()
         self.sub = None

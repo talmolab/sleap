@@ -331,7 +331,7 @@ def instance_crops(imgs, points, img_shape):
     max_width = max((x1 - x0 for (x0, y0, x1, y1) in bbs))
     max_dim = max(max_height, max_width)
     # TODO: add extra margin?
-    box_side = min((2**i for i in range(4, 9) if 2**i > max_dim), default=0) # 16 to 256
+    box_side = min((2**i for i in range(4, 10) if 2**i > max_dim), default=512) # 16 to 512
 
     # TODO: make sure we have valid box_size
 
