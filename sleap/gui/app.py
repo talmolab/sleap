@@ -61,6 +61,7 @@ class MainWindow(QMainWindow):
         self.mark_idx = None
         self.filename = None
         self._menu_actions = dict()
+        self._buttons = dict()
 
         self._trail_manager = None
 
@@ -227,10 +228,12 @@ class MainWindow(QMainWindow):
         hb = QHBoxLayout()
         btn = QPushButton("Show video")
         btn.clicked.connect(self.activateSelectedVideo); hb.addWidget(btn)
+        self._buttons["show video"] = btn
         btn = QPushButton("Add videos")
         btn.clicked.connect(self.addVideo); hb.addWidget(btn)
         btn = QPushButton("Remove video")
         btn.clicked.connect(self.removeVideo); hb.addWidget(btn)
+        self._buttons["remove video"] = btn
         hbw = QWidget(); hbw.setLayout(hb)
         videos_layout.addWidget(hbw)
 
@@ -248,6 +251,7 @@ class MainWindow(QMainWindow):
         btn.clicked.connect(self.newNode); hb.addWidget(btn)
         btn = QPushButton("Delete node")
         btn.clicked.connect(self.deleteNode); hb.addWidget(btn)
+        self._buttons["delete node"] = btn
         hbw = QWidget(); hbw.setLayout(hb)
         vb.addWidget(hbw)
         gb.setLayout(vb)
@@ -261,13 +265,16 @@ class MainWindow(QMainWindow):
         self.skeletonEdgesSrc = QComboBox(); self.skeletonEdgesSrc.setEditable(False); self.skeletonEdgesSrc.currentIndexChanged.connect(self.selectSkeletonEdgeSrc)
         self.skeletonEdgesSrc.setModel(SkeletonNodeModel(self.skeleton))
         hb.addWidget(self.skeletonEdgesSrc)
+        hb.addWidget(QLabel("to"))
         self.skeletonEdgesDst = QComboBox(); self.skeletonEdgesDst.setEditable(False)
         hb.addWidget(self.skeletonEdgesDst)
         self.skeletonEdgesDst.setModel(SkeletonNodeModel(self.skeleton, lambda: self.skeletonEdgesSrc.currentText()))
         btn = QPushButton("Add edge")
         btn.clicked.connect(self.newEdge); hb.addWidget(btn)
+        self._buttons["add edge"] = btn
         btn = QPushButton("Delete edge")
         btn.clicked.connect(self.deleteEdge); hb.addWidget(btn)
+        self._buttons["delete edge"] = btn
         hbw = QWidget(); hbw.setLayout(hb)
         vb.addWidget(hbw)
         gb.setLayout(vb)
@@ -294,10 +301,18 @@ class MainWindow(QMainWindow):
         btn.clicked.connect(lambda x: self.newInstance()); hb.addWidget(btn)
         btn = QPushButton("Delete instance")
         btn.clicked.connect(self.deleteInstance); hb.addWidget(btn)
+        self._buttons["delete instance"] = btn
         hbw = QWidget(); hbw.setLayout(hb)
         instances_layout.addWidget(hbw)
 
-        self.instancesTable.selectionChangedSignal.connect(lambda row: self.player.view.selectInstance(row, from_all=True))
+        def update_instance_table_selection():
+            cur_video_instance = self.player.view.getSelection()
+            if cur_video_instance is None: cur_video_instance = -1
+            table_index = self.instancesTable.model().createIndex(cur_video_instance, 0)
+            self.instancesTable.setCurrentIndex(table_index)
+
+        self.instancesTable.selectionChangedSignal.connect(lambda row: self.player.view.selectInstance(row, from_all=True, signal=False))
+        self.player.view.updatedSelection.connect(update_instance_table_selection)
 
         # update track UI when change to track name
         self.instancesTable.model().dataChanged.connect(self.updateTrackMenu)
@@ -401,6 +416,8 @@ class MainWindow(QMainWindow):
         has_suggestions = (len(self.labels.suggestions) > 0)
         has_multiple_instances = (self.labeled_frame is not None and len(self.labeled_frame.instances) > 1)
         # todo: exclude predicted instances from count
+        has_nodes_selected = (self.skeletonEdgesSrc.currentIndex() > -1 and
+                             self.skeletonEdgesDst.currentIndex() > -1)
 
         # Update menus
 
@@ -423,7 +440,12 @@ class MainWindow(QMainWindow):
         self._menu_actions["goto prev suggestion"].setEnabled(has_suggestions)
 
         # Update buttons
-        # TODO
+        self._buttons["add edge"].setEnabled(has_nodes_selected)
+        self._buttons["delete edge"].setEnabled(self.skeletonEdgesTable.currentIndex().isValid())
+        self._buttons["delete node"].setEnabled(self.skeletonNodesTable.currentIndex().isValid())
+        self._buttons["show video"].setEnabled(self.videosTable.currentIndex().isValid())
+        self._buttons["remove video"].setEnabled(self.videosTable.currentIndex().isValid())
+        self._buttons["delete instance"].setEnabled(self.instancesTable.currentIndex().isValid())
 
     def update_data_views(self):
         self.videosTable.model().videos = self.labels.videos
