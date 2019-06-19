@@ -96,7 +96,7 @@ if __name__ == "__main__":
                 break
             elif msg["command"] == "data_gen":
                 #data_gen(msg["labels_file"], training_data)
-                threading.Thread(target=run_data_gen, args=(msg["labels_file"], training_data)).start()
+                threading.Thread(target=run_data_gen, args=(msg["labels_filename"], training_data)).start()
             elif msg["command"] == "train":
                 run_training()
 
