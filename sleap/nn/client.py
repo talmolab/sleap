@@ -141,10 +141,10 @@ class TrainingDialog(QtWidgets.QMainWindow):
             for key in [key for key in training_params.keys() if key[0] == "_"]:
                 del training_params[key]
 
-            if training_params.get("save_dir", "") == "":
+            if training_params.get("save_dir", "") in ("", "None"):
                 training_params["save_dir"] = None
 
-            if training_params.get("tensorboard_dir", "") == "":
+            if training_params.get("tensorboard_dir", "") in ("", "None"):
                 training_params["tensorboard_dir"] = None
 
             # Start training
@@ -159,9 +159,6 @@ class TrainingDialog(QtWidgets.QMainWindow):
             loss_viewer = LossViewer(zmq_context=self.zmq_context, parent=self)
             loss_viewer.resize(600, 400)
             loss_viewer.show()
-            timer = QtCore.QTimer()
-            timer.timeout.connect(loss_viewer.check_messages)
-            timer.start(0)
 
             self.is_training = True
         else:

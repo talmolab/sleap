@@ -1,6 +1,7 @@
 import numpy as np
 import itertools
 
+from skimage.transform import rescale
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
 
@@ -9,6 +10,9 @@ import cv2
 from sleap.io.video import Video
 
 class VideoFrameSuggestions:
+
+    rescale=True
+    rescale_below=512
 
     @classmethod
     def suggest(cls, video:Video, params:dict) -> list:
@@ -89,25 +93,33 @@ class VideoFrameSuggestions:
     def frame_feature_stack(video:Video, sample_step:int = 5) -> tuple:
         sample_count = video.frames//sample_step
 
+        if self.rescale:
+            largest_dim = max(video.height, video.width)
+            factor = 1
+            while largest_dim/factor > self.rescale_below:
+                factor += 1
+
         frame_idx_map = [None] * sample_count
-        flat_stack = np.zeros((sample_count, video.height*video.width*video.channels))
+        flat_stack = np.zeros((sample_count, video.heigh/factort*video.width/factor*video.channels))
 
         for i in range(sample_count):
             frame_idx = i * sample_step
-            flat_stack[i] = video[frame_idx].flatten()
+            flat_stack[i] = rescale(video[frame_idx], factor).flatten()
             frame_idx_map[i] = frame_idx
-
+        print(flat_stack.shape)
         return (flat_stack, frame_idx_map)
 
-    @staticmethod
-    def brisk_feature_stack(video:Video, sample_step:int = 5) -> tuple:
+    @classmethod
+    def brisk_feature_stack(cls, video:Video, sample_step:int = 5) -> tuple:
         brisk = cv2.BRISK_create()
+
+        factor = cls.get_scale_factor(video)
 
         feature_stack = None
         frame_idx_map = []
         for frame_idx in range(0, video.frames, sample_step):
             img = video[frame_idx][0]
-
+            img = cls.resize(img, factor)
             kps, descs = brisk.detectAndCompute(img, None)
 
             # img2 = cv2.drawKeypoints(img, kps, None, color=(0,255,0), flags=0)
@@ -120,12 +132,14 @@ class VideoFrameSuggestions:
 
         return (feature_stack, frame_idx_map)
 
-    @staticmethod
-    def hog_feature_stack(video:Video, sample_step:int = 5) -> tuple:
+    @classmethod
+    def hog_feature_stack(cls, video:Video, sample_step:int = 5) -> tuple:
         sample_count = video.frames//sample_step
 
         hog = cv2.HOGDescriptor()
-        first_hog = hog.compute(video[0][0])
+        
+        factor = cls.get_scale_factor(video)
+        first_hog = hog.compute(cls.resize(video[0][0], factor))
         hog_size = first_hog.shape[0]
 
         frame_idx_map = [None] * sample_count
@@ -133,7 +147,9 @@ class VideoFrameSuggestions:
 
         for i in range(sample_count):
             frame_idx = i * sample_step
-            flat_stack[i] = hog.compute(video[frame_idx][0]).transpose()[0]
+            img = video[frame_idx][0]
+            img = cls.resize(img, factor)
+            flat_stack[i] = hog.compute(img).transpose()[0]
             frame_idx_map[i] = frame_idx
 
         return (flat_stack, frame_idx_map)
@@ -259,17 +275,35 @@ class VideoFrameSuggestions:
 
         return all_selected
 
+    # Utility functions
+
+    @classmethod
+    def get_scale_factor(cls, video) -> int:
+        factor = 1
+        if cls.rescale:
+            largest_dim = max(video.height, video.width)
+            factor = 1
+            while largest_dim/factor > cls.rescale_below:
+                factor += 1
+        return factor
+
+    @classmethod
+    def resize(cls, img, factor) -> np.ndarray:
+        h, w, _ = img.shape
+        if factor != 1:
+            return cv2.resize(img, (h//factor, w//factor))
+        else:
+            return img
 
 if __name__ == "__main__":
     # load some images
     filename = "tests/data/videos/centered_pair_small.mp4"
+    filename = "files/190605_1509_frame23000_24000.sf.mp4"
     video = Video.from_filename(filename)
-
-    print(np.ptp(video[13][0]))
 
     debug=False
 
-    x = VideoFrameSuggestions.brisk(video=video, sample_step=5,
+    x = VideoFrameSuggestions.hog(video=video, sample_step=20,
                 clusters=5, per_cluster=5,
                 return_clusters=debug)
     print(x)
