@@ -1,6 +1,63 @@
+import attr
+
 from sleap.nn.architectures.common import residual_block, expand_to_n, conv, conv1, conv3
 from keras.layers import Conv2D, BatchNormalization, Add, MaxPool2D, UpSampling2D, Concatenate, Conv2DTranspose
 
+
+@attr.s(auto_attribs=True)
+class StackedHourglass:
+    """Stacked hourglass block.
+
+   This function builds and connects multiple hourglass blocks. See `hourglass` for
+   more specifics on the implementation.
+
+   Individual hourglasses can be customized by providing an iterable of hyperparameters
+   for each of the arguments of the function (except `num_output_channels`). If scalars
+   are provided, all hourglasses will share the same hyperparameters.
+
+   Args:
+       x_in: Input 4-D tf.Tensor or instantiated layer. If the number of channels
+           are not the same as `num_filters`, an additional residual block is
+           applied to this input.
+       num_output_channels: The number of output channels of the block. These
+           are the final output tensors on which intermediate supervision may be
+           applied.
+       num_filters: The number feature channels of the block. These features are
+           used throughout the hourglass and will be passed on to the next block
+           and need not match the `num_output_channels`. Must be divisible by 2.
+       depth: The number of pooling steps applied to the input. The input must
+           be a tensor with `2^depth` height and width to allow for symmetric
+           pooling and upsampling with skip connections.
+       batch_norm: Apply batch normalization after each convolution
+       intermediate_inputs: Re-introduce the input tensor `x_in` after each hourglass
+           by concatenating with intermediate outputs
+       upsampling_layers: Use upsampling instead of transposed convolutions.
+       interp: Method to use for interpolation when upsampling smaller features.
+
+    """
+    num_hourglass_blocks: int = 3
+    num_filters: int = 32
+    depth: int = 3
+    batch_norm: bool = True
+    intermediate_inputs: bool = True
+    upsampling_layers: bool = True
+    interp: str = "bilinear"
+
+
+    def output(self, x_in, num_output_channels):
+        """
+        Generate a tensorflow graph for the backbone and return the output tensor.
+
+        Args:
+            x_in: Input 4-D tf.Tensor or instantiated layer. Must have height and width
+            that are divisible by `2^down_blocks.
+            num_output_channels: The number of output channels of the block. These
+            are the final output tensors on which intermediate supervision may be
+            applied.
+        Returns:
+            x_out: tf.Tensor of the output of the block of with `num_output_channels` channels.
+        """
+        return stacked_hourglass(x_in, num_output_channels, **attr.asdict(self))
 
 
 def hourglass_block(x_in, num_output_channels, num_filters, depth=3, batch_norm=True, upsampling_layers=True, interp="bilinear"):
@@ -86,8 +143,8 @@ def hourglass_block(x_in, num_output_channels, num_filters, depth=3, batch_norm=
     return x, x_out
 
 
-
-def stacked_hourglass(x_in, num_output_channels, num_hourglass_blocks=3, num_filters=32, depth=3, batch_norm=True, intermediate_inputs=True, upsampling_layers=True, interp="bilinear"):
+def stacked_hourglass(x_in, num_output_channels, num_hourglass_blocks=3, num_filters=32, depth=3, batch_norm=True,
+                      intermediate_inputs=True, upsampling_layers=True, interp="bilinear"):
     """Stacked hourglass block.
 
     This function builds and connects multiple hourglass blocks. See `hourglass` for
@@ -120,7 +177,14 @@ def stacked_hourglass(x_in, num_output_channels, num_hourglass_blocks=3, num_fil
         x_outs: List of tf.Tensors of the output of the block of the same width and height
             as the input with `num_output_channels` channels.
     """
-    
+
+    # Initial downsampling
+    x = conv(num_filters, kernel_size=(7, 7))(x_in)
+
+    # Batchnorm after the intial down sampling
+    if batch_norm:
+        x = BatchNormalization()(x)
+
     # Expand block-specific parameters if scalars provided
     num_filters = expand_to_n(num_filters, num_hourglass_blocks)
     depth = expand_to_n(depth, num_hourglass_blocks)
