@@ -16,7 +16,7 @@ def generate_images(labels:Labels, scale=1.0, output_size=None):
     output_size = tuple(map(int, output_size))
 
     imgs = []
-    for labeled_frame in labels:
+    for labeled_frame in labels.user_labeled_frames:
         img = labeled_frame.video[labeled_frame.frame_idx]
         # TODO: resizing
         imgs.append(img)
@@ -44,7 +44,7 @@ def generate_points(labels):
         a list (each frame) of lists (each instance) of ndarrays (of points)
             i.e., frames -> instances -> point_array
     """
-    return [[inst.points_array(invisible_as_nan=True) for inst in lf.instances] for lf in labels]
+    return [[inst.points_array(invisible_as_nan=True) for inst in lf.user_instances] for lf in labels.user_labeled_frames]
 
 def generate_confmaps_from_points(frames_inst_points, skeleton, shape, sigma=5.0, scale=1.0, output_size=None) -> np.ndarray:
     """
@@ -202,6 +202,10 @@ def raster_pafs(arr, c, x0, y0, x1, y1, sigma=5):
     delta_x, delta_y = x1 - x0, y1 - y0
 
     edge_len = (delta_x ** 2 + delta_y ** 2) ** .5
+
+    # skip if no distance between nodes
+    if edge_len == 0.0: return
+
     edge_x = delta_x / edge_len
     edge_y = delta_y / edge_len
 
@@ -327,7 +331,7 @@ def instance_crops(imgs, points, img_shape):
     max_width = max((x1 - x0 for (x0, y0, x1, y1) in bbs))
     max_dim = max(max_height, max_width)
     # TODO: add extra margin?
-    box_side = min((2**i for i in range(4, 9) if 2**i > max_dim), default=0) # 16 to 256
+    box_side = min((2**i for i in range(4, 10) if 2**i > max_dim), default=512) # 16 to 512
 
     # TODO: make sure we have valid box_size
 

@@ -101,6 +101,10 @@ class Labels(MutableSequence):
         """ Alias for labeled_frames """
         return self.labeled_frames
 
+    @property
+    def user_labeled_frames(self):
+        return [lf for lf in self.labeled_frames if lf.has_user_instances]
+
     def __len__(self):
         return len(self.labeled_frames)
 
@@ -201,6 +205,10 @@ class Labels(MutableSequence):
     @property
     def all_instances(self):
         return list(self.instances())
+
+    @property
+    def user_instances(self):
+        return [inst for inst in self.all_instances if type(inst) == Instance]
 
     def instances(self, video: Video = None, skeleton: Skeleton = None):
         """ Iterate through all instances in the labels, optionally with filters.
@@ -472,6 +480,8 @@ class Labels(MutableSequence):
         else:
             dicts = data
 
+        dicts['tracks'] = dicts.get('tracks', []) # don't break if json doesn't include tracks
+
         # First, deserialize the skeletons, videos, and nodes lists.
         # The labels reference these so we will need them while deserializing.
         nodes = cattr.structure(dicts['nodes'], List[Node])
@@ -515,7 +525,7 @@ class Labels(MutableSequence):
         return cls(labeled_frames=labels, videos=videos, skeletons=skeletons, nodes=nodes, suggestions=suggestions)
 
     @classmethod
-    def load_json(cls, filename: str):
+    def load_json(cls, filename: str, video_callback=None):
 
         # Check if the file is a zipfile for not.
         if zipfile.is_zipfile(filename):
@@ -561,6 +571,10 @@ class Labels(MutableSequence):
 
                 # Cache the working directory.
                 cwd = os.getcwd()
+
+                # Use the callback if given to handle missing videos
+                if callable(video_callback):
+                    video_callback(dicts["videos"])
 
                 # Try to load the labels filename.
                 try:

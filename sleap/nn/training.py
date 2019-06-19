@@ -496,6 +496,11 @@ class TrainingControllerZMQ(keras.callbacks.Callback):
         # Callback initialization
         super().__init__()
 
+    def __del__(self):
+        print(f"Closing the training controller socket/context.")
+        self.socket.close()
+        self.context.term()
+
     def on_batch_end(self, batch, logs=None):
         """ Called at the end of a training batch. """
         if self.socket.poll(self.timeout, zmq.POLLIN):
@@ -535,6 +540,11 @@ class ProgressReporterZMQ(keras.callbacks.Callback):
 
         # Callback initialization
         super().__init__()
+
+    def __del__(self):
+        print(f"Closing the reporter controller/context.")
+        self.socket.close()
+        self.context.term()
 
     def on_train_begin(self, logs=None):
         """Called at the beginning of training.

@@ -706,6 +706,14 @@ class LabeledFrame:
         self._instances = instances
 
     @property
+    def user_instances(self):
+        return [inst for inst in self._instances if type(inst) == Instance]
+
+    @property
+    def has_user_instances(self):
+        return (len(self.user_instances) > 0)
+
+    @property
     def instances_to_show(self):
         """
         Return a list of instances associated with this frame, but excluding any

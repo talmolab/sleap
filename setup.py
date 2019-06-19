@@ -34,6 +34,7 @@ setup(
     keywords='deep learning, pose estimation, tracking, neuroscience',
     license='BSD3',
     packages=find_packages(exclude=['tensorflow']),
+    include_package_data=True,
     entry_points = {
         'console_scripts': [
             'sleap-label=sleap.gui.app:main',
