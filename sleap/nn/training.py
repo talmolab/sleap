@@ -290,13 +290,14 @@ class Trainer:
             # Create run folder
             os.makedirs(save_path, exist_ok=True)
 
-            # Create and serialize training info
-            TrainingJob.save_json(train_run, f"{save_path}.json")
-
         # Setup a list of necessary callbacks to invoke while training.
-        callbacks = self._setup_callbacks(save_path, train_datagen,
-                         tensorboard_dir, control_zmq_port,
-                         progress_report_zmq_port)
+        callbacks = self._setup_callbacks(
+            train_run, save_path, train_datagen,
+            tensorboard_dir, control_zmq_port,
+            progress_report_zmq_port)
+
+        if save_dir is not None:
+            TrainingJob.save_json(train_run, f"{save_path}.json")
 
         # Train!
         history = keras_model.fit_generator(
@@ -340,7 +341,8 @@ class Trainer:
 
         return proc
 
-    def _setup_callbacks(self, save_path, train_datagen,
+    def _setup_callbacks(self, train_run: 'TrainingJob',
+                         save_path, train_datagen,
                          tensorboard_dir, control_zmq_port,
                          progress_report_zmq_port):
         """
@@ -356,13 +358,17 @@ class Trainer:
         # Callbacks: Intermediate saving
         if save_path is not None:
             if self.save_every_epoch:
+                full_path = os.path.join(save_path, "newest_model.h5")
+                train_run.newest_model_filename = os.path.relpath(full_path, train_run.save_dir)
                 callbacks.append(
-                    ModelCheckpoint(filepath=os.path.join(save_path, "newest_model.h5"),
+                    ModelCheckpoint(filepath=full_path,
                                     monitor="val_loss", save_best_only=False,
                                     save_weights_only=False, period=1))
             if self.save_best_val:
+                full_path = os.path.join(save_path, "best_model.h5")
+                train_run.best_model_filename = os.path.relpath(full_path, train_run.save_dir)
                 callbacks.append(
-                    ModelCheckpoint(filepath=os.path.join(save_path, "best_model.h5"),
+                    ModelCheckpoint(filepath=full_path,
                                     monitor="val_loss", save_best_only=True,
                                     save_weights_only=False, period=1))
 
@@ -423,12 +429,19 @@ class TrainingJob:
         labels_filename: The name of the labels file using to run this training job.
         run_name: The run_name value passed to Trainer.train for this training run.
         save_dir: The save_dir value passed to Trainer.train for this training run.
+        best_model_filename: The relative path (from save_dir) to the Keras model file
+        that had best validation loss. Set to None when Trainer.save_best_val is False.
+        newest_model_filename: The relative path (from save_dir) to the Keras model file
+        from the state of the model after the last epoch run. Set to None when
+        Trainer.save_every_epoch is False.
     """
     model: Model
     trainer: Trainer
     labels_filename: Union[str, None] = None
     run_name: Union[str, None] = None
     save_dir: Union[str, None] = None
+    best_model_filename: Union[str, None] = None
+    newest_model_filename: Union[str, None] = None
 
     @staticmethod
     def save_json(training_job: 'TrainingJob', filename: str):
@@ -608,7 +621,9 @@ def main():
 
     # Setup a Trainer object to train the model above
     trainer = Trainer(val_size=0.1, batch_size=4,
-                      num_epochs=1, steps_per_epoch=5)
+                      num_epochs=1, steps_per_epoch=5,
+                      save_best_val=True,
+                      save_every_epoch=True)
 
     # Run training asynchronously
     process = trainer.train_async(model=model,
@@ -665,6 +680,9 @@ def main():
 
     # Now lets load the training job we just ran
     train_job = TrainingJob.load_json('test_train/training_run_1.json')
+
+    assert os.path.exists(os.path.join(train_job.save_dir, train_job.newest_model_filename))
+    assert os.path.exists(os.path.join(train_job.save_dir, train_job.best_model_filename))
 
     import sys
     sys.exit(0)

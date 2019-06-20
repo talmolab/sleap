@@ -457,7 +457,9 @@ class Predictor:
     flow_window: int = 15
     save_shifted_instances: bool = True
 
-    def run(self, input_video: Union[str, Video], output_path: Optional[str]=None, frames: Optional[List[int]]=None):
+    def predict(self, input_video: Union[str, Video],
+                output_path: Optional[str] = None,
+                frames: Optional[List[int]] = None):
         """
         Run the entire inference pipeline on an input video or file object.
 
@@ -874,7 +876,7 @@ def main(args):
     predictor = Predictor(model=model, skeleton=skeleton, with_tracking=args.with_tracking)
 
     # Run the inference pipeline
-    return predictor.run(input_video=data_path, output_path=save_path, frames=frames)
+    return predictor.predict(input_video=data_path, output_path=save_path, frames=frames)
 
 def predicted_frames(vid: Video, confmap_model_path: str, paf_model_path: str, skeleton: Skeleton, frames: Optional[List[int]]=None):
     # Predict on full-sized video (adjust model input layer instead)
@@ -887,7 +889,7 @@ def predicted_frames(vid: Video, confmap_model_path: str, paf_model_path: str, s
     predictor = Predictor(model=model, skeleton=skeleton)
 
     # Run the inference pipeline
-    return predictor.run(input_video=vid, frames=frames)
+    return predictor.predict(input_video=vid, frames=frames)
 
 if __name__ == "__main__":
 
