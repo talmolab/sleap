@@ -24,7 +24,7 @@ def test_skeleton_nodes(qtbot, centered_pair_predictions):
 
     table = VideosTable(centered_pair_predictions.videos)
     table.selectRow(0)
-    assert table.model().data(table.currentIndex()) == "centered_pair_low_quality.mp4"
+    assert table.model().data(table.currentIndex()).find("centered_pair_low_quality.mp4") > -1
 
     table = LabeledFrameTable(centered_pair_predictions.labels[13], centered_pair_predictions)
     table.selectRow(1)

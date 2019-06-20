@@ -13,4 +13,6 @@ pyzmq
 pyyaml
 imgaug
 scikit-image
+scikit-learn
 imgstore
+qimage2ndarray==1.8

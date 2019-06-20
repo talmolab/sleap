@@ -13,7 +13,7 @@ import keras
 import attr
 
 from time import time
-from typing import List, Union
+from typing import List, Union, Optional
 
 from scipy.ndimage import maximum_filter, gaussian_filter
 from keras.utils import multi_gpu_model
@@ -444,7 +444,7 @@ class Predictor:
 
     model: keras.Model = attr.ib()
     skeleton: Skeleton = attr.ib()
-    inference_batch_size: int = 4
+    inference_batch_size: int = 2
     read_chunk_size: int = 256
     save_frequency: int = 1 # chunks
     nms_min_thresh = 0.3
@@ -453,16 +453,20 @@ class Predictor:
     min_score_midpts: float = 0.05
     min_score_integral: float = 0.6
     add_last_edge: bool = True
+    with_tracking: bool = False
     flow_window: int = 15
     save_shifted_instances: bool = True
 
-    def run(self, input_video: Union[str, Video], output_path: str):
+    def predict(self, input_video: Union[str, Video],
+                output_path: Optional[str] = None,
+                frames: Optional[List[int]] = None):
         """
         Run the entire inference pipeline on an input video or file object.
 
         Args:
             input_video: Either a video object or video filename.
             output_path: The output path to save the results.
+            frames (optional): List of frames to predict. If None, run entire video.
 
         Returns:
             None
@@ -481,7 +485,9 @@ class Predictor:
         except AttributeError:
             vid = Video.from_filename(input_video)
 
-        num_frames = vid.num_frames
+        frames = frames or list(range(vid.num_frames))
+
+        num_frames = len(frames)
         vid_h = vid.shape[1]
         vid_w = vid.shape[2]
         scale = h / vid_h
@@ -516,10 +522,10 @@ class Predictor:
             # Read the next chunk of frames
             frame_start = self.read_chunk_size * chunk
             frame_end = frame_start + self.read_chunk_size
-            if frame_end > vid.num_frames:
-                frame_end = vid.num_frames
-            frames_idx = np.arange(frame_start, frame_end)
-            mov = vid[frame_start:frame_end]
+            if frame_end > num_frames:
+                frame_end = num_frames
+            frames_idx = frames[frame_start:frame_end]
+            mov = vid[frames_idx]
 
             # Preprocess the frames
             if model_channels == 1:
@@ -562,9 +568,10 @@ class Predictor:
             logger.info("  Matched peaks via PAFs [%.1fs]" % (time() - t0))
 
             # Track
-            t0 = time()
-            tracker.process(mov, predicted_frames_chunk)
-            logger.info("  Tracked IDs via flow shift [%.1fs]" % (time() - t0))
+            if self.with_tracking:
+                t0 = time()
+                tracker.process(mov, predicted_frames_chunk)
+                logger.info("  Tracked IDs via flow shift [%.1fs]" % (time() - t0))
 
             # Save
             predicted_frames.extend(predicted_frames_chunk)
@@ -578,9 +585,10 @@ class Predictor:
                 # FIXME: We are re-writing the whole output each time, this is dumb.
                 #  We should save in chunks then combine at the end.
                 labels = Labels(labeled_frames=predicted_frames)
-                Labels.save_json(labels, filename=output_path)
+                if output_path is not None:
+                    Labels.save_json(labels, filename=output_path)
 
-                logger.info("  Saved to: %s [%.1fs]" % (output_path, time() - t0))
+                    logger.info("  Saved to: %s [%.1fs]" % (output_path, time() - t0))
 
             elapsed = time() - t0_chunk
             total_elapsed = time() - t0_start
@@ -592,6 +600,9 @@ class Predictor:
 
 
         logger.info("Total: %.1f min" % (total_elapsed / 60))
+
+        if output_path is None:
+            return predicted_frames
 
     def run_visual(self, input_video: Union[str, Video], max_frames: int=None):
         """
@@ -844,6 +855,7 @@ def main(args):
     paf_model_path = args.paf_model_path
     save_path = data_path + ".predictions.json"
     skeleton_path = args.skeleton_path
+    frames = args.frames
 
     if args.resize_input:
         # Load video
@@ -852,21 +864,37 @@ def main(args):
     else:
         img_shape = None
 
+    # Load the skeleton(s)
+    skeleton = Skeleton.load_json(skeleton_path)
+
+    logger.info(f"Skeleton (name={skeleton.name}, {len(skeleton.nodes)} nodes):")
+
     # Load the model
     model = get_inference_model(confmap_model_path, paf_model_path, img_shape)
 
-    # Load the skeleton(s)
-    skeleton = Skeleton.load_json(skeleton_path)
-    logger.info(f"Skeleton (name={skeleton.name}, {len(skeleton.nodes)} nodes):")
+    # Create a predictor to do the work.
+    predictor = Predictor(model=model, skeleton=skeleton, with_tracking=args.with_tracking)
+
+    # Run the inference pipeline
+    return predictor.predict(input_video=data_path, output_path=save_path, frames=frames)
+
+def predicted_frames(vid: Video, confmap_model_path: str, paf_model_path: str, skeleton: Skeleton, frames: Optional[List[int]]=None):
+    # Predict on full-sized video (adjust model input layer instead)
+    img_shape = (vid.height, vid.width, vid.channels)
+
+    # Load the model
+    model = get_inference_model(confmap_model_path, paf_model_path, img_shape)
 
     # Create a predictor to do the work.
     predictor = Predictor(model=model, skeleton=skeleton)
 
     # Run the inference pipeline
-    predictor.run(input_video=data_path, output_path=save_path)
-
+    return predictor.predict(input_video=vid, frames=frames)
 
 if __name__ == "__main__":
+
+    def frame_list(frame_str):
+        return [int(x) for x in frame_str.split(",")] if len(frame_str) else None
 
     parser = argparse.ArgumentParser()
     parser.add_argument("data_path", help="Path to video file")
@@ -879,6 +907,10 @@ if __name__ == "__main__":
     parser.add_argument('--test-viz', dest='test_viz', action='store_const',
                     const=True, default=False,
                     help='just visualize predicted confmaps/pafs (default False)')
+    parser.add_argument('--with-tracking', dest='with_tracking', action='store_const',
+                    const=True, default=False,
+                    help='just visualize predicted confmaps/pafs (default False)')
+    parser.add_argument('--frames', type=frame_list, default="", help='list of frames to predict (default is entire video)')
 
     args = parser.parse_args()
 
