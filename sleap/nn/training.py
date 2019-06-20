@@ -98,6 +98,9 @@ class Trainer:
         keras callback EarlyStopping(min_delta, monitor='val_loss')
         early_stopping_patience: Number of epochs with no improvement after which training will be stopped.
         Parameter passed to keras callback EarlyStopping(patience, monitor='val_loss')
+
+        scale: Scale factor for downsampling (2 means we downsample by factor of 2)
+        instance_crop: Whether to crop images around each instance (and adjust points)
     """
 
     val_size: float = 0.1
@@ -121,6 +124,8 @@ class Trainer:
     reduce_lr_min_lr: float = 1e-8
     early_stopping_min_delta: float = 1e-8
     early_stopping_patience: float = 3
+    scale: int = 1
+    instance_crop: bool = False
 
     def train(self,
               model: Model,
@@ -130,7 +135,7 @@ class Trainer:
               tensorboard_dir: Union[str, None] = None,
               control_zmq_port: int = 9000,
               progress_report_zmq_port: int = 9001,
-              multiprocessing_workers: int = 0) -> keras.Model:
+              multiprocessing_workers: int = 0) -> str:
         """
         Train a given model using labels and the Trainer's current hyper-parameter settings.
         This method executes synchronously, thus it blocks until training is finished.
@@ -172,8 +177,12 @@ class Trainer:
         model.skeletons = labels.skeletons
 
         # Generate images and points (outputs) datasets from the labels
-        imgs = generate_images(labels)
-        points = generate_points(labels)
+        imgs = generate_images(labels, scale=self.scale)
+        points = generate_points(labels, scale=self.scale)
+
+        # Crop images to instances (if desired)
+        if self.instance_crop:
+            imgs, points = instance_crops(imgs, points)
 
         # Split data into train/validation
         imgs_train, imgs_val, outputs_train, outputs_val = \
@@ -545,7 +554,7 @@ class TrainingControllerZMQ(keras.callbacks.Callback):
                 self.set_lr(msg["lr"])
 
     def set_lr(self, lr):
-        """ Adjust the model learning rate. 
+        """ Adjust the model learning rate.
 
         This is the based off of the implementation used in the native learning rate scheduling callbacks.
         """
