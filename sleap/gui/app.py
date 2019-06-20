@@ -815,6 +815,10 @@ class MainWindow(QMainWindow):
             from sleap.nn.active import run_active_learning_pipeline
             new_lfs = run_active_learning_pipeline(self.filename, self.labels)
             self.labels.labeled_frames.extend(new_lfs)
+            # update display/ui
+            self.plotFrame()
+            self.updateSeekbarMarks()
+
 
     def newInstance(self, copy_instance=None):
         if self.labeled_frame is None:
