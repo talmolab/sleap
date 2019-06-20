@@ -17,6 +17,7 @@ def make_default_training_jobs():
 
     defaults = dict()
     defaults["shared"] = dict(
+            instance_crop = True,
             val_size = 0.1,
             augment_rotation=180,
             batch_size=4,
@@ -58,15 +59,19 @@ def make_default_training_jobs():
 
     return training_jobs
 
-def run_active_learning_pipeline(labels):
+def run_active_learning_pipeline(labels_filename, labels=None):
     # Imports here so we don't load TensorFlow before necessary
+    import os
+    from sleap.io.dataset import Labels
     from sleap.nn.training import TrainingJob
     from sleap.nn.model import ModelOutputType
     from sleap.nn.inference import Predictor
 
+    labels = labels or Labels.load_json(labels_filename)
+
     # If the video frames are large, determine factor to downsample for active learning
     scale = 1
-    rescale_under = 512
+    rescale_under = 1024
     h, w = labels.videos[0].height, labels.videos[0].width
     largest_dim = max(h, w)
     while largest_dim/scale > rescale_under:
@@ -79,42 +84,50 @@ def run_active_learning_pipeline(labels):
 
     # Set the parameters specific to this run
     for job in training_jobs.values():
-        job.labels = labels
-        job.scale = scale
+        job.labels_filename = labels_filename
+        job.trainer.scale = scale
 
     # Run the TrainingJobs
 
-    for type, job in training_jobs.items():
-        training_jobs[type] = job.trainer.train(job.model, labels)
+    save_dir = os.path.dirname(labels_filename)
+
+    for model_type, job in training_jobs.items():
+        run_name = f"models_{model_type}"
+        # training_jobs[model_type] = os.path.join(save_dir, run_name+".json")
+        training_jobs[model_type] = job.trainer.train(job.model, labels, save_dir=save_dir, run_name=run_name)
+
+    for model_type, job in training_jobs.items():
+        # load job from json
+        training_jobs[model_type] = TrainingJob.load_json(training_jobs[model_type])
 
     # Create Predictor from the results of training
-
-    predictor = Predictor.from_training_jobs(training_jobs)
+    predictor = Predictor.from_training_jobs(training_jobs, labels)
 
     # Run the Predictor for suggested frames
     # We want to predict for suggested frames that don't already have user instances
 
     new_labeled_frames = []
-    user_labeled_frames = labels.user_labeled_frames()
-    frames_to_predict = labels.get_suggestions()
+    user_labeled_frames = labels.user_labeled_frames
 
-    for video, frames in frames_to_predict:
-        # remove frames that already have user instances
-        video_user_labeled_frame_idxs = [lf.frame_idx for lf in user_labeled_frames
-                                            if lf.video == video]
-        frame = list(set(frames) - set(video_user_labeled_frame_idxs))
-        # get predictions for desired frames in this video
-        video_lfs = predictor.predict(input_video=video, frames=frames)
-        new_labeled_frames.extend(video_lfs)
+    for video in labels.videos:
+        frames = labels.get_video_suggestions(video)
+        if len(frames):
+            # remove frames that already have user instances
+            video_user_labeled_frame_idxs = [lf.frame_idx for lf in user_labeled_frames
+                                                if lf.video == video]
+            print(f"frames:{frames}, video_user_labeled_frame_idxs:{video_user_labeled_frame_idxs}")
+            frames = list(set(frames) - set(video_user_labeled_frame_idxs))
+            # get predictions for desired frames in this video
+            video_lfs = predictor.predict(input_video=video, frames=frames)
+            new_labeled_frames.extend(video_lfs)
 
     return new_labeled_frames
 
 if __name__ == "__main__":
-    from sleap.io.dataset import Labels
     import sys
     
 #     labels_filename = "/Volumes/fileset-mmurthy/nat/shruthi/labels-mac.json"
     labels_filename = sys.argv[1]
-    labels = Labels.load_json(labels_filename)
 
-    labeled_frames = run_active_learning_pipeline(labels)
+    labeled_frames = run_active_learning_pipeline(labels_filename)
+    print(labeled_frames)
