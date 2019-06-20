@@ -11,7 +11,9 @@ import zmq
 import jsonpickle
 import keras
 
-from multiprocessing import Process
+from multiprocessing import Process, Pool
+from multiprocessing.pool import AsyncResult
+
 from typing import Union, List, Dict, Tuple
 from time import time, sleep
 from datetime import datetime
@@ -152,7 +154,8 @@ class Trainer:
             be passed to fit_generator().
 
         Returns:
-            The trained keras.Model object.
+            If save_dir is not None, the file path of the JSON TrainingJob object. If save_dir
+            is None, then the returns None.
         """
 
         labels_file_name = None
@@ -290,13 +293,13 @@ class Trainer:
             # Create run folder
             os.makedirs(save_path, exist_ok=True)
 
-            # Create and serialize training info
-            TrainingJob.save_json(train_run, f"{save_path}.json")
-
         # Setup a list of necessary callbacks to invoke while training.
-        callbacks = self._setup_callbacks(save_path, train_datagen,
-                         tensorboard_dir, control_zmq_port,
-                         progress_report_zmq_port)
+        callbacks = self._setup_callbacks(
+            train_run, save_path, train_datagen,
+            tensorboard_dir, control_zmq_port,
+            progress_report_zmq_port)
+
+        final_model_path = os.path.join(save_path, "final_model.h5")
 
         # Train!
         history = keras_model.fit_generator(
@@ -312,18 +315,20 @@ class Trainer:
 
         # Save once done training
         if save_path is not None:
-            final_model_path = os.path.join(save_path, "final_model.h5")
             keras_model.save(filepath=final_model_path, overwrite=True, include_optimizer=True)
             logger.info(f"Saved final model: {final_model_path}")
 
             # TODO: save training history
 
-        # Add the keras model to the training job
-        #train_run.keras_model = keras_model
+        if save_dir is not None:
+            train_run.final_model_filename = os.path.relpath(final_model_path, save_dir)
+            TrainingJob.save_json(train_run, f"{save_path}.json")
 
-        return train_run
+            return f"{save_path}.json"
+        else:
+            return None
 
-    def train_async(self, *args, **kwargs) -> Process:
+    def train_async(self, *args, **kwargs) -> Tuple[Pool, AsyncResult]:
         """
         Train a given model using labels and the Trainer's current hyper-parameter settings.
         This method executes asynchronously, that is, it launches training in a another
@@ -333,14 +338,22 @@ class Trainer:
             See Trainer.train().
 
         Returns:
-            The multiprocessing.Process that is running training, start() has been called.
+            A tuple containing the multiprocessing.Process that is running training, start() has been called.
+            And the AysncResult object that will contain the result when the job finishes.
         """
-        proc = Process(target=self.train, args=args, kwargs=kwargs)
-        proc.start()
 
-        return proc
+        # Use an pool because we want to use apply_async so we can get the return value of
+        # train when things are done.
+        pool = Pool(processes=1)
+        result = pool.apply_async(self.train, args=args, kwds=kwargs)
 
-    def _setup_callbacks(self, save_path, train_datagen,
+        # Tell the pool to accept no new tasks
+        pool.close()
+
+        return pool, result
+
+    def _setup_callbacks(self, train_run: 'TrainingJob',
+                         save_path, train_datagen,
                          tensorboard_dir, control_zmq_port,
                          progress_report_zmq_port):
         """
@@ -356,13 +369,17 @@ class Trainer:
         # Callbacks: Intermediate saving
         if save_path is not None:
             if self.save_every_epoch:
+                full_path = os.path.join(save_path, "newest_model.h5")
+                train_run.newest_model_filename = os.path.relpath(full_path, train_run.save_dir)
                 callbacks.append(
-                    ModelCheckpoint(filepath=os.path.join(save_path, "newest_model.h5"),
+                    ModelCheckpoint(filepath=full_path,
                                     monitor="val_loss", save_best_only=False,
                                     save_weights_only=False, period=1))
             if self.save_best_val:
+                full_path = os.path.join(save_path, "best_model.h5")
+                train_run.best_model_filename = os.path.relpath(full_path, train_run.save_dir)
                 callbacks.append(
-                    ModelCheckpoint(filepath=os.path.join(save_path, "best_model.h5"),
+                    ModelCheckpoint(filepath=full_path,
                                     monitor="val_loss", save_best_only=True,
                                     save_weights_only=False, period=1))
 
@@ -423,12 +440,24 @@ class TrainingJob:
         labels_filename: The name of the labels file using to run this training job.
         run_name: The run_name value passed to Trainer.train for this training run.
         save_dir: The save_dir value passed to Trainer.train for this training run.
+        best_model_filename: The relative path (from save_dir) to the Keras model file
+        that had best validation loss. Set to None when Trainer.save_best_val is False
+        or if save_dir is None.
+        newest_model_filename: The relative path (from save_dir) to the Keras model file
+        from the state of the model after the last epoch run. Set to None when
+        Trainer.save_every_epoch is False or save_dir is None.
+        final_model_filename: The relative path (from save_dir) to the Keras model file
+        from the final state of training. Set to None if save_dir is None. This model
+        file is not created until training is finished.
     """
     model: Model
     trainer: Trainer
     labels_filename: Union[str, None] = None
     run_name: Union[str, None] = None
     save_dir: Union[str, None] = None
+    best_model_filename: Union[str, None] = None
+    newest_model_filename: Union[str, None] = None
+    final_model_filename: Union[str, None] = None
 
     @staticmethod
     def save_json(training_job: 'TrainingJob', filename: str):
@@ -475,7 +504,6 @@ class TrainingJob:
             run = my_cattr.structure(dicts, cls)
 
         return run
-
 
 
 class TrainingControllerZMQ(keras.callbacks.Callback):
@@ -608,10 +636,12 @@ def main():
 
     # Setup a Trainer object to train the model above
     trainer = Trainer(val_size=0.1, batch_size=4,
-                      num_epochs=1, steps_per_epoch=5)
+                      num_epochs=1, steps_per_epoch=5,
+                      save_best_val=True,
+                      save_every_epoch=True)
 
     # Run training asynchronously
-    process = trainer.train_async(model=model,
+    pool, result = trainer.train_async(model=model,
                                   labels="tests/data/json_format_v1/centered_pair.json",
                                   save_dir='test_train/',
                                   run_name="training_run_1")
@@ -642,7 +672,7 @@ def main():
     t0 = time()
 
     epoch = 0
-    while process.is_alive():
+    while True:
         msg = poll()
         if msg is not None:
             logger.info(msg)
@@ -658,13 +688,20 @@ def main():
         loss_viewer.update_runtime()
         app.processEvents()
 
+    print("Get")
+    train_job_path = result.get()
+
     # Stop training
     ctrl.send_string(jsonpickle.encode(dict(command="stop")))
 
     app.closeAllWindows()
 
     # Now lets load the training job we just ran
-    train_job = TrainingJob.load_json('test_train/training_run_1.json')
+    train_job = TrainingJob.load_json(train_job_path)
+
+    assert os.path.exists(os.path.join(train_job.save_dir, train_job.newest_model_filename))
+    assert os.path.exists(os.path.join(train_job.save_dir, train_job.best_model_filename))
+    assert os.path.exists(os.path.join(train_job.save_dir, train_job.final_model_filename))
 
     import sys
     sys.exit(0)
