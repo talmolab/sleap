@@ -21,9 +21,12 @@ def generate_images(labels:Labels, scale: int=1) -> np.ndarray:
     for labeled_frame in labels.user_labeled_frames:
         img = labeled_frame.video[labeled_frame.frame_idx][0]
         # rescale by factor
-        h, w, _ = img.shape
+        h, w, c = img.shape
         if scale != 1.0:
             img = cv2.resize(img, (h//scale, w//scale))
+            # add back singleton channel
+            if c == 1:
+                img = img[..., None]
         imgs.append(img)
 
     imgs = np.stack(imgs, axis=0)
@@ -76,7 +79,7 @@ def generate_confmaps_from_points(frames_inst_points, skeleton, shape, sigma=5.0
     full_size = tuple(map(int, full_size))
     output_size = tuple(map(int, output_size))
 
-    ball = get_conf_ball(full_size, output_size, sigma)
+    ball = get_conf_ball(full_size, output_size, sigma/scale)
 
     num_frames = len(frames_inst_points)
     num_channels = len(skeleton.nodes)
@@ -113,8 +116,6 @@ def generate_pafs_from_points(frames_inst_points, skeleton, shape, sigma=5.0, sc
     # TODO: throw warning for truncation errors
     full_size = tuple(map(int, full_size))
     output_size = tuple(map(int, output_size))
-
-    ball = get_conf_ball(full_size, output_size, sigma)
 
     num_frames = len(frames_inst_points)
     num_channels = len(skeleton.edges) * 2
@@ -343,7 +344,7 @@ def instance_crops(imgs, points, img_shape=None):
     Returns:
         imgs, points (matching format of input)
     """
-    img_shape = img_shape or (imgs[0].shape[1], imgs[0].shape[1])
+    img_shape = img_shape or (imgs.shape[1], imgs.shape[2])
 
     # List of bounding box for every instance
     bbs = [point_array_bounding_box(point_array) for frame in points for point_array in frame]
@@ -413,8 +414,7 @@ def demo_datagen():
 
     points = generate_points(labels, scale)
 
-    img_shape = (imgs.shape[1], imgs.shape[2])
-    imgs, points = instance_crops(imgs, points, img_shape)
+    imgs, points = instance_crops(imgs, points)
 
     from PySide2 import QtWidgets
     from sleap.io.video import Video
