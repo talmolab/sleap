@@ -154,7 +154,8 @@ class Trainer:
             be passed to fit_generator().
 
         Returns:
-            The trained keras.Model object.
+            If save_dir is not None, the file path of the JSON TrainingJob object. If save_dir
+            is None, then the returns None.
         """
 
         labels_file_name = None
