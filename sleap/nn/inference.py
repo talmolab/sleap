@@ -13,7 +13,7 @@ import keras
 import attr
 
 from time import time
-from typing import List, Union, Optional
+from typing import Dict, List, Union, Optional
 
 from scipy.ndimage import maximum_filter, gaussian_filter
 from keras.utils import multi_gpu_model
@@ -23,6 +23,8 @@ from sleap.io.dataset import Labels
 from sleap.io.video import Video
 from sleap.skeleton import Skeleton
 from sleap.util import usable_cpu_count
+from sleap.nn.model import ModelOutputType
+from sleap.nn.training import TrainingJob
 from sleap.nn.tracking import FlowShiftTracker, Track
 
 
@@ -459,7 +461,7 @@ class Predictor:
 
     def predict(self, input_video: Union[str, Video],
                 output_path: Optional[str] = None,
-                frames: Optional[List[int]] = None):
+                frames: Optional[List[int]] = None) -> List[LabeledFrame]:
         """
         Run the entire inference pipeline on an input video or file object.
 
@@ -469,7 +471,7 @@ class Predictor:
             frames (optional): List of frames to predict. If None, run entire video.
 
         Returns:
-            None
+            list of LabeledFrame objects
         """
 
         # Load model
@@ -601,8 +603,7 @@ class Predictor:
 
         logger.info("Total: %.1f min" % (total_elapsed / 60))
 
-        if output_path is None:
-            return predicted_frames
+        return predicted_frames
 
     def run_visual(self, input_video: Union[str, Video], max_frames: int=None):
         """
@@ -707,6 +708,43 @@ class Predictor:
         logger.info("Total: %.1f min" % (total_elapsed / 60))
 
         return confmaps, pafs
+
+    @classmethod
+    def from_training_jobs(cls,
+            training_jobs: Dict[ModelOutputType, TrainingJob],
+            labels: Optional[Labels]=None):
+        """
+        Construct a Predictor from some TrainingJobs.
+
+        Args:
+            training_jobs: Dict with a TrainingJob for each required ModelOutputType
+        Returns:
+            Predictor initialized with Keras model.
+        """
+
+        # Build the Keras Model
+        # This code makes assumptions about the types of TrainingJobs we've been given
+
+        confmap_job = training_jobs[ModelOutputType.CONFIDENCE_MAP]
+        pafs_job = training_jobs[ModelOutputType.PART_AFFINITY_FIELD]
+
+        confmap_model_path = os.path.join(confmap_job.save_dir, confmap_job.best_model_filename)
+        paf_model_path = os.path.join(pafs_job.save_dir, pafs_job.best_model_filename)
+
+        scale = confmap_job.trainer.scale
+        skeleton = confmap_job.skeletons[0]
+        labels = labels or confmap_job.labels
+
+        # FIXME: we're now assuming that all the videos are the same size
+        vid = labels.videos[0]
+        img_shape = (vid.height//scale, vid.width//scale, vid.channels)
+
+        # Load the model
+        keras_model = get_inference_model(confmap_model_path, paf_model_path, img_shape)
+
+        # Return the Predictor ready to use
+        return cls(model=keras_model, skeleton=skeleton)
+
 
 def load_predicted_labels_json_old(
         data_path: str, parsed_json: dict = None,
@@ -878,18 +916,6 @@ def main(args):
     # Run the inference pipeline
     return predictor.predict(input_video=data_path, output_path=save_path, frames=frames)
 
-def predicted_frames(vid: Video, confmap_model_path: str, paf_model_path: str, skeleton: Skeleton, frames: Optional[List[int]]=None):
-    # Predict on full-sized video (adjust model input layer instead)
-    img_shape = (vid.height, vid.width, vid.channels)
-
-    # Load the model
-    model = get_inference_model(confmap_model_path, paf_model_path, img_shape)
-
-    # Create a predictor to do the work.
-    predictor = Predictor(model=model, skeleton=skeleton)
-
-    # Run the inference pipeline
-    return predictor.predict(input_video=vid, frames=frames)
 
 if __name__ == "__main__":
 
