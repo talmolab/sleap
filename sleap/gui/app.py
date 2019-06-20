@@ -191,6 +191,8 @@ class MainWindow(QMainWindow):
         self._menu_actions["color predicted"] = labelMenu.addAction("Color Predicted Instances", self.toggleColorPredicted, shortcuts["color predicted"])
         labelMenu.addSeparator()
         self._menu_actions["fit"] = labelMenu.addAction("Fit Instances to View", self.toggleAutoZoom, shortcuts["fit"])
+        labelMenu.addSeparator()
+        self._menu_actions["active learning"] = labelMenu.addAction("Run Active Learning...", self.runActiveLearning)
 
         self._menu_actions["show labels"].setCheckable(True); self._menu_actions["show labels"].setChecked(self._show_labels)
         self._menu_actions["show edges"].setCheckable(True); self._menu_actions["show edges"].setChecked(self._show_edges)
@@ -799,6 +801,20 @@ class MainWindow(QMainWindow):
         self.update_data_views()
         self.updateSeekbarMarks()
 
+    def runActiveLearning(self):
+
+        msgBox = QMessageBox()
+        msgBox.setText("Do you want to run active learning on your project?")
+        msgBox.setInformativeText("This will use the data you've already labeled to predict for any suggested frames which are not yet labeled. It may take a while and should only be used if you have a GPU.")
+        msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        msgBox.setDefaultButton(QMessageBox.Ok)
+
+        ret_val = msgBox.exec_()
+
+        if ret_val == QMessageBox.Ok:
+            from sleap.nn.active import run_active_learning_pipeline
+            new_lfs = run_active_learning_pipeline(self.filename, self.labels)
+            self.labels.labeled_frames.extend(new_lfs)
 
     def newInstance(self, copy_instance=None):
         if self.labeled_frame is None:
