@@ -529,20 +529,19 @@ class Predictor:
             frames_idx = frames[frame_start:frame_end]
             mov = vid[frames_idx]
 
-            # Preprocess the frames
-            if model_channels == 1:
-                mov = mov[:, :, :, 0]
-
-            # Resize the frames to the model input size
-            for i in range(mov.shape[0]):
-                mov[i, :, :] = cv2.resize(mov[i, :, :], (w, h))
-
-            # Add back singleton dimension
-            if model_channels == 1:
-                mov = mov[..., None]
-            else:
-                # TODO: figure out when/if this is necessary for RGB videos
-                mov = mov[..., ::-1]
+            if (vid.height, vid.width) != (h, w):
+                # Resize the frames to the model input size
+                scaled_mov = np.zeros((mov.shape[0], h, w, mov.shape[3]))
+                for i in range(mov.shape[0]):
+                    img = cv2.resize(mov[i, :, :], (w, h))
+                     # add back singleton channel
+                    if model_channels == 1:
+                        img = img[..., None]
+                    else:
+                        # TODO: figure out when/if this is necessary for RGB videos
+                        img = img[..., ::-1]
+                    scaled_mov[i, ...] = img
+                mov = scaled_mov
 
             logger.info("  Read %d frames [%.1fs]" % (len(mov), time() - t0))
 
@@ -732,8 +731,8 @@ class Predictor:
         paf_model_path = os.path.join(pafs_job.save_dir, pafs_job.best_model_filename)
 
         scale = confmap_job.trainer.scale
-        skeleton = confmap_job.skeletons[0]
-        labels = labels or confmap_job.labels
+        labels = labels or Labels.load_json(confmap_job.labels_filename)
+        skeleton = labels.skeletons[0]
 
         # FIXME: we're now assuming that all the videos are the same size
         vid = labels.videos[0]
