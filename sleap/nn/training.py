@@ -308,8 +308,6 @@ class Trainer:
             tensorboard_dir, control_zmq_port,
             progress_report_zmq_port)
 
-        final_model_path = os.path.join(save_path, "final_model.h5")
-
         # Train!
         history = keras_model.fit_generator(
             train_datagen,
@@ -324,18 +322,18 @@ class Trainer:
 
         # Save once done training
         if save_path is not None:
+            final_model_path = os.path.join(save_path, "final_model.h5")
             keras_model.save(filepath=final_model_path, overwrite=True, include_optimizer=True)
             logger.info(f"Saved final model: {final_model_path}")
 
             # TODO: save training history
 
-        if save_dir is not None:
             train_run.final_model_filename = os.path.relpath(final_model_path, save_dir)
             TrainingJob.save_json(train_run, f"{save_path}.json")
 
             return f"{save_path}.json"
         else:
-            return None
+            return train_run
 
     def train_async(self, *args, **kwargs) -> Tuple[Pool, AsyncResult]:
         """
