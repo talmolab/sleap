@@ -119,6 +119,8 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
             widget.setText(str(val))
         else:
             print(f"don't know how to set value for {widget}")
+        # for macOS we need to call repaint (bug in Qt?)
+        widget.repaint()
 
     @staticmethod
     def get_widget_value(widget):
