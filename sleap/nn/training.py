@@ -508,7 +508,10 @@ class TrainingJob:
             # We have some skeletons to deal with, make sure to setup a Skeleton cattr.
             my_cattr = Skeleton.make_cattr()
 
-            run = my_cattr.structure(dicts, cls)
+            try:
+                run = my_cattr.structure(dicts, cls)
+            except:
+                raise ValueError(f"Failure deserializing {filename} to TrainingJob.")
 
         return run
 
