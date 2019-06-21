@@ -1,4 +1,4 @@
-from PySide2 import QtCore
+from PySide2 import QtCore, QtWidgets
 from PySide2.QtCore import Qt
 
 from PySide2.QtGui import QKeyEvent, QKeySequence
@@ -122,7 +122,6 @@ class MainWindow(QMainWindow):
     def initialize_gui(self):
 
         shortcut_yaml = resource_filename(Requirement.parse("sleap"),"sleap/gui/shortcuts.yaml")
-        # shortcut_yaml = "./sleap/gui/shortcuts.yaml"
         with open(shortcut_yaml, 'r') as f:
             shortcuts = yaml.load(f, Loader=yaml.SafeLoader)
 
@@ -802,23 +801,12 @@ class MainWindow(QMainWindow):
         self.updateSeekbarMarks()
 
     def runActiveLearning(self):
+        from sleap.nn.active import active_learning_gui
 
-        msgBox = QMessageBox()
-        msgBox.setText("Do you want to run active learning on your project?")
-        msgBox.setInformativeText("This will use the data you've already labeled to predict for any suggested frames which are not yet labeled. It may take a while and should only be used if you have a GPU.")
-        msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-        msgBox.setDefaultButton(QMessageBox.Ok)
-
-        ret_val = msgBox.exec_()
-
-        if ret_val == QMessageBox.Ok:
-            from sleap.nn.active import run_active_learning_pipeline
-            new_lfs = run_active_learning_pipeline(self.filename, self.labels)
-            self.labels.labeled_frames.extend(new_lfs)
-            # update display/ui
+        if active_learning_gui(self.filename, self.labels):
+            # we ran active learning so update display/ui
             self.plotFrame()
             self.updateSeekbarMarks()
-
 
     def newInstance(self, copy_instance=None):
         if self.labeled_frame is None:
