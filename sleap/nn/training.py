@@ -131,7 +131,7 @@ class Trainer:
 
     def train(self,
               model: Model,
-              labels: Union[str, Labels],
+              labels: Union[str, Labels, Dict],
               run_name: str = None,
               save_dir: Union[str, None] = None,
               tensorboard_dir: Union[str, None] = None,
@@ -169,6 +169,8 @@ class Trainer:
         if type(labels) is str:
             labels_file_name = labels
             labels = Labels.load_json(labels)
+        elif type(labels) is dict:
+            labels = Labels.from_json(labels)
 
 
         # FIXME: We need to handle multiple skeletons.
@@ -350,6 +352,10 @@ class Trainer:
             A tuple containing the multiprocessing.Process that is running training, start() has been called.
             And the AysncResult object that will contain the result when the job finishes.
         """
+
+        # We can't pickle a Labels object so convert it to dict (which train will convert back)
+        if "labels" in kwargs.keys() and type(kwargs["labels"]) is Labels:
+            kwargs["labels"] = kwargs["labels"].to_dict()
 
         # Use an pool because we want to use apply_async so we can get the return value of
         # train when things are done.
@@ -654,7 +660,7 @@ def main():
 
     # Run training asynchronously
     pool, result = trainer.train_async(model=model,
-                                  labels="tests/data/json_format_v1/centered_pair.json",
+                                  labels=Labels.load_json("tests/data/json_format_v1/centered_pair.json"),
                                   save_dir='test_train/',
                                   run_name="training_run_1")
 

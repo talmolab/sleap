@@ -104,9 +104,12 @@ def find_saved_jobs(job_dir):
 
 def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=None):
     # Imports here so we don't load TensorFlow before necessary
+    from sleap.nn.monitor import LossViewer
     from sleap.nn.training import TrainingJob
     from sleap.nn.model import ModelOutputType
     from sleap.nn.inference import Predictor
+
+    from PySide2 import QtWidgets
 
     labels = labels or Labels.load_json(labels_filename)
 
@@ -135,8 +138,27 @@ def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=Non
 
     for model_type, job in training_jobs.items():
         run_name = f"models_{model_type}"
+        # use line below if we want to load models already trained from previous run
         # training_jobs[model_type] = os.path.join(save_dir, run_name+".json")
-        training_jobs[model_type] = job.trainer.train(job.model, labels, save_dir=save_dir, run_name=run_name)
+
+        # open monitor window
+        win = LossViewer()
+        win.resize(600, 400)
+        win.show()
+
+        # run training
+        pool, result = job.trainer.train_async(model=job.model, labels=labels,
+                                save_dir=save_dir, run_name=run_name)
+
+        while not result.ready():
+            QtWidgets.QApplication.instance().processEvents()
+            result.wait(.1)
+
+        # get the result
+        training_jobs[model_type] = result.get()
+
+        # close monitor used for this trainer
+        win.close()
 
     for model_type, job in training_jobs.items():
         # load job from json
@@ -159,8 +181,17 @@ def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=Non
                                                 if lf.video == video]
             print(f"frames:{frames}, video_user_labeled_frame_idxs:{video_user_labeled_frame_idxs}")
             frames = list(set(frames) - set(video_user_labeled_frame_idxs))
-            # get predictions for desired frames in this video
+
+            # run predictions for desired frames in this video
             video_lfs = predictor.predict(input_video=video, frames=frames)
+            # FIXME: code below makes the last training job process run again
+            # pool, result = predictor.predict_async(input_video=video.filename, frames=frames)
+
+            # while not result.ready():
+            #     QtWidgets.QApplication.instance().processEvents()
+            #     result.wait(.1)
+
+            # video_lfs = result.get()
             new_labeled_frames.extend(video_lfs)
 
     return new_labeled_frames
@@ -227,30 +258,6 @@ def active_learning_gui(labels_filename: str, labels: Labels) -> bool:
             # last item is "select file..."
             add_job_file(model_type)
 
-    # function to run active learning using form data
-    
-    def go():
-        # Collect TrainingJobs and params from form        
-        form_data = form_wid.get_form_data()
-        training_jobs = dict()
-        for model_type, field in training_profile_widgets.items():
-            idx = field.currentIndex()
-            job_filename, job = job_options[model_type][idx]
-            training_jobs[model_type] = job
-            # update training job from params in form
-            trainer = job.trainer
-            for key, val in form_data.items():
-                print(f"{key} in {dir(trainer)}?")
-                # check if form field matches attribute of Trainer object
-                if key in dir(trainer):
-                    setattr(trainer, key, val)
-        
-        # Run active learning pipeline using the TrainingJobs
-        new_lfs = run_active_learning_pipeline(labels_filename, labels, training_jobs)
-        
-        # Update labels with results of active learning
-        labels.labeled_frames.extend(new_lfs)
-
     # form ui
 
     training_profile_widgets = {
@@ -276,10 +283,38 @@ def active_learning_gui(labels_filename: str, labels: Labels) -> bool:
     learning_dialog.setModal(True)
     learning_dialog.setLayout(layout)
     
+    # function to run active learning using form data
+    
+    def go():
+        # Collect TrainingJobs and params from form        
+        form_data = form_wid.get_form_data()
+        training_jobs = dict()
+        for model_type, field in training_profile_widgets.items():
+            idx = field.currentIndex()
+            job_filename, job = job_options[model_type][idx]
+            training_jobs[model_type] = job
+            # update training job from params in form
+            trainer = job.trainer
+            for key, val in form_data.items():
+                print(f"{key} in {dir(trainer)}?")
+                # check if form field matches attribute of Trainer object
+                if key in dir(trainer):
+                    setattr(trainer, key, val)
+        
+        # Close the dialog now that we have the data from it
+        learning_dialog.accept()
+
+        # Run active learning pipeline using the TrainingJobs
+        new_lfs = run_active_learning_pipeline(labels_filename, labels, training_jobs)
+        
+        # Update labels with results of active learning
+        labels.labeled_frames.extend(new_lfs)
+
+    # connect actions to buttons
     buttons.accepted.connect(go)
-    buttons.accepted.connect(learning_dialog.accept)
     buttons.rejected.connect(learning_dialog.reject)
     
+    # show the dialog
     ret_val = learning_dialog.exec_()
     
     return ret_val == QtWidgets.QDialog.Accepted
