@@ -308,6 +308,7 @@ class VideoSlider(QGraphicsView):
                 color = QColor(*self.color_maps[track%len(self.color_maps)])
             else:
                 # rect (open/filled) if format: ("o", frame_idx) or ("f", frame_idx)
+                # ("p", frame_idx) when only predicted instances on frame
                 mark_type = new_mark[0]
                 v_offset = 3
                 height = self.slider.rect().height()-6
@@ -315,6 +316,8 @@ class VideoSlider(QGraphicsView):
                 color = QColor("blue")
                 if mark_type == "o":
                     filled = False
+                if mark_type == "p":
+                    color = QColor("red")
         else:
             # line if mark has format: frame_idx
             v_offset = 3

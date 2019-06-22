@@ -44,6 +44,11 @@ class YamlFormWidget(QtWidgets.QGroupBox):
         """Returns a list of buttons in form (so we can connect to handlers)."""
         return self.form_layout.buttons
 
+    @property
+    def fields(self):
+        """Return a dict of {name: widget} fields in form."""
+        return self.form_layout.fields
+
     def set_form_data(self, data):
         """Set data for form from dict."""
         self.form_layout.set_form_data(data)
@@ -71,6 +76,7 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
         super(FormBuilderLayout, self).__init__(*args, **kwargs)
 
         self.buttons = dict()
+        self.fields = dict()
         self.build_form(items_to_create)
 
     def get_form_data(self) -> dict:
@@ -79,7 +85,7 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
         Returns:
             Dict with key:value for each user-editable widget in layout
         """
-        widgets = [self.itemAt(i).widget() for i in range(self.count())]
+        widgets = self.fields.values()
         data = {w.objectName(): self.get_widget_value(w)
                 for w in widgets
                 if len(w.objectName())
@@ -95,13 +101,14 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
         Args:
             data (dict): key should match field name
         """
-        widgets = { self.itemAt(i).widget().objectName():self.itemAt(i).widget() for i in range(self.count()) }
+        widgets = self.fields
         for name, val in data.items():
             # print(f"Attempting to set {name} to {val}")
             if name in widgets:
                 self.set_widget_value(widgets[name], val)
             else:
-                print(f"no {name} widget found")
+                pass
+#                 print(f"no {name} widget found")
 
     @staticmethod
     def set_widget_value(widget, val):
@@ -119,6 +126,8 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
             widget.setText(str(val))
         else:
             print(f"don't know how to set value for {widget}")
+        # for macOS we need to call repaint (bug in Qt?)
+        widget.repaint()
 
     @staticmethod
     def get_widget_value(widget):
@@ -186,13 +195,8 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
 
             # list: show drop-down menu
             elif item["type"] == "list":
-                field = QtWidgets.QComboBox()
-                for opt in item["options"].split(","):
-                    field.addItem(opt)
-                # set default
-                if item["default"] in item["options"].split(","):
-                    idx = item["options"].split(",").index(item["default"])
-                    field.setCurrentIndex(idx)
+                field = FieldComboWidget()
+                field.set_options(item["options"].split(","), item["default"])
 
             # button
             elif item["type"] == "button":
@@ -210,9 +214,12 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
                 if item["type"].split("_")[0] == "file":
                     field.setDisabled(True)
 
-            # Add field (and label if appropriate) to form layout
+            # Store name and type on widget
             field.setObjectName(item["name"])
             field.setProperty("field_data_type", item["type"])
+            # Store widget by name
+            self.fields[item["name"]] = field
+            # Add field (and label if appropriate) to form layout
             if item["type"] in ("button", "stacked"):
                 self.addRow(field)
             else:
@@ -249,7 +256,7 @@ class StackBuilderWidget(QtWidgets.QWidget):
 
         multi_layout = QtWidgets.QFormLayout()
         self.combo_box = QtWidgets.QComboBox()
-        self.stacked_widget = QtWidgets.QStackedWidget()
+        self.stacked_widget = ResizingStackedWidget()
 
         self.combo_box.activated.connect(lambda x: self.stacked_widget.setCurrentIndex(x))
 
@@ -287,3 +294,30 @@ class StackBuilderWidget(QtWidgets.QWidget):
 
     def get_data(self):
         return self.page_layouts[self.value()].get_form_data()
+
+
+class FieldComboWidget(QtWidgets.QComboBox):
+    def __init__(self, *args, **kwargs):
+        super(FieldComboWidget, self).__init__(*args, **kwargs)
+
+    def set_options(self, options_list, select_item=None):
+        self.clear()
+        for item in options_list:
+            if item == "---":
+                self.insertSeparator(self.count())
+            else:
+                self.addItem(item)
+        if select_item is not None and select_item in options_list:
+            idx = options_list.index(select_item)
+            self.setCurrentIndex(idx)
+
+
+class ResizingStackedWidget(QtWidgets.QStackedWidget):
+    def __init__(self, *args, **kwargs):
+        super(ResizingStackedWidget, self).__init__(*args, **kwargs)
+
+    def sizeHint(self):
+        return self.currentWidget().sizeHint()
+
+    def minimumSizeHint(self):
+        return self.currentWidget().minimumSizeHint()

@@ -1,4 +1,4 @@
-from PySide2 import QtCore
+from PySide2 import QtCore, QtWidgets
 from PySide2.QtCore import Qt
 
 from PySide2.QtGui import QKeyEvent, QKeySequence
@@ -61,6 +61,7 @@ class MainWindow(QMainWindow):
         self.mark_idx = None
         self.filename = None
         self._menu_actions = dict()
+        self._buttons = dict()
 
         self._trail_manager = None
 
@@ -121,7 +122,6 @@ class MainWindow(QMainWindow):
     def initialize_gui(self):
 
         shortcut_yaml = resource_filename(Requirement.parse("sleap"),"sleap/gui/shortcuts.yaml")
-        # shortcut_yaml = "./sleap/gui/shortcuts.yaml"
         with open(shortcut_yaml, 'r') as f:
             shortcuts = yaml.load(f, Loader=yaml.SafeLoader)
 
@@ -190,6 +190,8 @@ class MainWindow(QMainWindow):
         self._menu_actions["color predicted"] = labelMenu.addAction("Color Predicted Instances", self.toggleColorPredicted, shortcuts["color predicted"])
         labelMenu.addSeparator()
         self._menu_actions["fit"] = labelMenu.addAction("Fit Instances to View", self.toggleAutoZoom, shortcuts["fit"])
+        labelMenu.addSeparator()
+        self._menu_actions["active learning"] = labelMenu.addAction("Run Active Learning...", self.runActiveLearning)
 
         self._menu_actions["show labels"].setCheckable(True); self._menu_actions["show labels"].setChecked(self._show_labels)
         self._menu_actions["show edges"].setCheckable(True); self._menu_actions["show edges"].setChecked(self._show_edges)
@@ -227,10 +229,12 @@ class MainWindow(QMainWindow):
         hb = QHBoxLayout()
         btn = QPushButton("Show video")
         btn.clicked.connect(self.activateSelectedVideo); hb.addWidget(btn)
+        self._buttons["show video"] = btn
         btn = QPushButton("Add videos")
         btn.clicked.connect(self.addVideo); hb.addWidget(btn)
         btn = QPushButton("Remove video")
         btn.clicked.connect(self.removeVideo); hb.addWidget(btn)
+        self._buttons["remove video"] = btn
         hbw = QWidget(); hbw.setLayout(hb)
         videos_layout.addWidget(hbw)
 
@@ -248,6 +252,7 @@ class MainWindow(QMainWindow):
         btn.clicked.connect(self.newNode); hb.addWidget(btn)
         btn = QPushButton("Delete node")
         btn.clicked.connect(self.deleteNode); hb.addWidget(btn)
+        self._buttons["delete node"] = btn
         hbw = QWidget(); hbw.setLayout(hb)
         vb.addWidget(hbw)
         gb.setLayout(vb)
@@ -261,13 +266,16 @@ class MainWindow(QMainWindow):
         self.skeletonEdgesSrc = QComboBox(); self.skeletonEdgesSrc.setEditable(False); self.skeletonEdgesSrc.currentIndexChanged.connect(self.selectSkeletonEdgeSrc)
         self.skeletonEdgesSrc.setModel(SkeletonNodeModel(self.skeleton))
         hb.addWidget(self.skeletonEdgesSrc)
+        hb.addWidget(QLabel("to"))
         self.skeletonEdgesDst = QComboBox(); self.skeletonEdgesDst.setEditable(False)
         hb.addWidget(self.skeletonEdgesDst)
         self.skeletonEdgesDst.setModel(SkeletonNodeModel(self.skeleton, lambda: self.skeletonEdgesSrc.currentText()))
         btn = QPushButton("Add edge")
         btn.clicked.connect(self.newEdge); hb.addWidget(btn)
+        self._buttons["add edge"] = btn
         btn = QPushButton("Delete edge")
         btn.clicked.connect(self.deleteEdge); hb.addWidget(btn)
+        self._buttons["delete edge"] = btn
         hbw = QWidget(); hbw.setLayout(hb)
         vb.addWidget(hbw)
         gb.setLayout(vb)
@@ -294,10 +302,18 @@ class MainWindow(QMainWindow):
         btn.clicked.connect(lambda x: self.newInstance()); hb.addWidget(btn)
         btn = QPushButton("Delete instance")
         btn.clicked.connect(self.deleteInstance); hb.addWidget(btn)
+        self._buttons["delete instance"] = btn
         hbw = QWidget(); hbw.setLayout(hb)
         instances_layout.addWidget(hbw)
 
-        self.instancesTable.selectionChangedSignal.connect(lambda row: self.player.view.selectInstance(row, from_all=True))
+        def update_instance_table_selection():
+            cur_video_instance = self.player.view.getSelection()
+            if cur_video_instance is None: cur_video_instance = -1
+            table_index = self.instancesTable.model().createIndex(cur_video_instance, 0)
+            self.instancesTable.setCurrentIndex(table_index)
+
+        self.instancesTable.selectionChangedSignal.connect(lambda row: self.player.view.selectInstance(row, from_all=True, signal=False))
+        self.player.view.updatedSelection.connect(update_instance_table_selection)
 
         # update track UI when change to track name
         self.instancesTable.model().dataChanged.connect(self.updateTrackMenu)
@@ -401,6 +417,8 @@ class MainWindow(QMainWindow):
         has_suggestions = (len(self.labels.suggestions) > 0)
         has_multiple_instances = (self.labeled_frame is not None and len(self.labeled_frame.instances) > 1)
         # todo: exclude predicted instances from count
+        has_nodes_selected = (self.skeletonEdgesSrc.currentIndex() > -1 and
+                             self.skeletonEdgesDst.currentIndex() > -1)
 
         # Update menus
 
@@ -423,7 +441,12 @@ class MainWindow(QMainWindow):
         self._menu_actions["goto prev suggestion"].setEnabled(has_suggestions)
 
         # Update buttons
-        # TODO
+        self._buttons["add edge"].setEnabled(has_nodes_selected)
+        self._buttons["delete edge"].setEnabled(self.skeletonEdgesTable.currentIndex().isValid())
+        self._buttons["delete node"].setEnabled(self.skeletonNodesTable.currentIndex().isValid())
+        self._buttons["show video"].setEnabled(self.videosTable.currentIndex().isValid())
+        self._buttons["remove video"].setEnabled(self.videosTable.currentIndex().isValid())
+        self._buttons["delete instance"].setEnabled(self.instancesTable.currentIndex().isValid())
 
     def update_data_views(self):
         self.videosTable.model().videos = self.labels.videos
@@ -757,10 +780,17 @@ class MainWindow(QMainWindow):
         else:
             # list of frame_idx for simple markers for labeled frames
             labeled_marks = [lf.frame_idx for lf in self.labels.find(self.video) if len(lf.instances)]
+            user_labeled = [lf.frame_idx for lf in self.labels.find(self.video) if len(lf.user_instances)]
             # "f" for suggestions with instances and "o" for those without
             # "f" means "filled", "o" means "open"
+            # "p" for suggestions with only predicted instances
             def mark_type(frame):
-                return "f" if frame in labeled_marks else "o"
+                if frame in user_labeled:
+                    return "f"
+                elif frame in labeled_marks:
+                    return "p"
+                else:
+                    return "o"
             # list of (type, frame) tuples for suggestions
             suggestion_marks = [(mark_type(frame_idx), frame_idx)
                 for frame_idx in self.labels.get_video_suggestions(self.video)]
@@ -777,6 +807,14 @@ class MainWindow(QMainWindow):
         self.update_data_views()
         self.updateSeekbarMarks()
 
+    def runActiveLearning(self):
+        from sleap.nn.active import active_learning_gui
+
+        if active_learning_gui(self.filename, self.labels):
+            # we ran active learning so update display/ui
+            self.plotFrame()
+            self.updateSeekbarMarks()
+            self.changestack_push("new predictions")
 
     def newInstance(self, copy_instance=None):
         if self.labeled_frame is None:
