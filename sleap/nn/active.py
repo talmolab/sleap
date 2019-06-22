@@ -179,7 +179,7 @@ def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=Non
     # show message while running inference
     win = QtWidgets.QProgressDialog()
     win.setLabelText("    Running inference on selected frames...    ")
-    win.open()
+    win.show()
     QtWidgets.QApplication.instance().processEvents()
 
     for video in labels.videos:
