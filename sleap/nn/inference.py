@@ -366,7 +366,7 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, scale,
     return matched_instances_t
 
 def match_peaks_paf(peaks, peak_vals, pafs, skeleton,
-                    video, frame_indices, scale,
+                    video, frame_indices, scale=1,
                     min_score_to_node_ratio=0.4, min_score_midpts=0.05,
                     min_score_integral=0.8, add_last_edge=False):
     """ Computes PAF-based peak matching via greedy assignment and other such dragons """
@@ -384,7 +384,7 @@ def match_peaks_paf(peaks, peak_vals, pafs, skeleton,
     return predicted_frames
 
 def match_peaks_paf_par(peaks, peak_vals, pafs, skeleton,
-                        video, frame_indices, scale,
+                        video, frame_indices, scale=1,
                         min_score_to_node_ratio=0.4,
                         min_score_midpts=0.05,
                         min_score_integral=0.8,
