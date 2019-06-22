@@ -814,6 +814,7 @@ class MainWindow(QMainWindow):
             # we ran active learning so update display/ui
             self.plotFrame()
             self.updateSeekbarMarks()
+            self.changestack_push("new predictions")
 
     def newInstance(self, copy_instance=None):
         if self.labeled_frame is None:
