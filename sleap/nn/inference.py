@@ -196,7 +196,7 @@ def improfile(I, p0, p1, max_points=None):
     vals = np.stack([I[yi,xi] for xi, yi in zip(x,y)])
     return vals
 
-def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton,
+def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, scale,
                       min_score_to_node_ratio=0.4,
                       min_score_midpts=0.05,
                       min_score_integral=0.8,
@@ -283,6 +283,7 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton,
     # Greedy matching of each edge candidate set
     subset = -1 * np.ones((0, len(skeleton.nodes)+2)) # ids, overall score, number of parts
     candidate = np.array([y for x in peaks_t for y in x]) # flattened set of all points
+    candidate = candidate / scale # rescale points to original image
     candidate_scores = np.array([y for x in peak_vals_t for y in x]) # flattened set of all peak scores
     for k, edge in enumerate(skeleton.edge_names):
         # No matches for this edge
@@ -365,7 +366,7 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton,
     return matched_instances_t
 
 def match_peaks_paf(peaks, peak_vals, pafs, skeleton,
-                    video, frame_indices,
+                    video, frame_indices, scale,
                     min_score_to_node_ratio=0.4, min_score_midpts=0.05,
                     min_score_integral=0.8, add_last_edge=False):
     """ Computes PAF-based peak matching via greedy assignment and other such dragons """
@@ -373,17 +374,17 @@ def match_peaks_paf(peaks, peak_vals, pafs, skeleton,
     # Process each frame
     predicted_frames = []
     for peaks_t, peak_vals_t, pafs_t, frame_idx in zip(peaks, peak_vals, pafs, frame_indices):
-        instances = match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton,
+        instances = match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, scale,
                                    min_score_to_node_ratio=min_score_to_node_ratio,
                                    min_score_midpts=min_score_midpts,
                                    min_score_integral=min_score_integral,
-                                   add_last_edge=add_last_edge)
+                                   add_last_edge=add_last_edge,)
         predicted_frames.append(LabeledFrame(video=video, frame_idx=frame_idx, instances=instances))
 
     return predicted_frames
 
 def match_peaks_paf_par(peaks, peak_vals, pafs, skeleton,
-                        video, frame_indices,
+                        video, frame_indices, scale,
                         min_score_to_node_ratio=0.4,
                         min_score_midpts=0.05,
                         min_score_integral=0.8,
@@ -397,7 +398,8 @@ def match_peaks_paf_par(peaks, peak_vals, pafs, skeleton,
     futures = []
     for peaks_t, peak_vals_t, pafs_t, frame_idx in zip(peaks, peak_vals, pafs, frame_indices):
         future = pool.apply_async(match_peaks_frame, [peaks_t, peak_vals_t, pafs_t, skeleton],
-                                  dict(min_score_to_node_ratio=min_score_to_node_ratio,
+                                  dict(scale=scale,
+                                       min_score_to_node_ratio=min_score_to_node_ratio,
                                        min_score_midpts=min_score_midpts,
                                        min_score_integral=min_score_integral,
                                        add_last_edge=add_last_edge))
@@ -561,7 +563,7 @@ class Predictor:
             # Match peaks via PAFs
             t0 = time()
             predicted_frames_chunk = match_peaks_paf_par(peaks, peak_vals, pafs, self.skeleton,
-                                            video=vid, frame_indices=frames_idx,
+                                            scale=scale, video=vid, frame_indices=frames_idx,
                                             min_score_to_node_ratio=self.min_score_to_node_ratio,
                                             min_score_midpts=self.min_score_midpts,
                                             min_score_integral=self.min_score_integral,
