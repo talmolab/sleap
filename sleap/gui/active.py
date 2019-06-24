@@ -5,6 +5,10 @@ from pkg_resources import Requirement, resource_filename
 
 from sleap.io.dataset import Labels
 from sleap.gui.training_editor import TrainingEditor
+from sleap.gui.formbuilder import YamlFormWidget
+from sleap.nn.model import ModelOutputType
+from sleap.nn.training import TrainingJob
+
 
 from PySide2 import QtWidgets
 
@@ -15,10 +19,6 @@ class ActiveLearningDialog(QtWidgets.QDialog):
 
         self.labels_filename = labels_filename
         self.labels = labels
-
-        from sleap.gui.formbuilder import YamlFormWidget
-        from sleap.nn.model import ModelOutputType
-        from sleap.nn.training import TrainingJob
 
         learning_yaml = resource_filename(Requirement.parse("sleap"),"sleap/config/active.yaml")
         self.form_widget = YamlFormWidget(yaml_file=learning_yaml, title="Active Learning Settings")
