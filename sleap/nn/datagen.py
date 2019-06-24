@@ -4,24 +4,32 @@ import numpy as np
 import math
 from sleap.io.dataset import Labels
 
-def generate_images(labels:Labels, scale=1.0, output_size=None):
+def generate_images(labels:Labels, scale: int=1) -> np.ndarray:
+    """
+    Generate a ndarray of the image data for any labeled frames
 
-    vid = labels.videos[0]
-    full_size = (vid.height, vid.width)
-    if output_size is None:
-        output_size = (vid.height // (1/scale), vid.width // (1/scale))
+    Args:
+        labels: the `Labels` object for which we want images
+        scale: the factor to use when rescaling
 
-    # TODO: throw warning for truncation errors
-    full_size = tuple(map(int, full_size))
-    output_size = tuple(map(int, output_size))
+    Returns:
+        ndarray with shape (images, height, width, channels)
+    """
+    import cv2
 
     imgs = []
     for labeled_frame in labels.user_labeled_frames:
-        img = labeled_frame.video[labeled_frame.frame_idx]
-        # TODO: resizing
+        img = labeled_frame.video[labeled_frame.frame_idx][0]
+        # rescale by factor
+        h, w, c = img.shape
+        if scale != 1.0:
+            img = cv2.resize(img, (h//scale, w//scale))
+            # add back singleton channel
+            if c == 1:
+                img = img[..., None]
         imgs.append(img)
 
-    imgs = np.concatenate(imgs, axis=0)
+    imgs = np.stack(imgs, axis=0)
 
     # TODO: more options for normalization
     if imgs.dtype == "uint8":
@@ -29,7 +37,7 @@ def generate_images(labels:Labels, scale=1.0, output_size=None):
 
     return imgs
 
-def generate_points(labels):
+def generate_points(labels, scale: int=1) -> list:
     """Generates point data for instances in frames in labels.
 
     Output is in the format expected by
@@ -39,14 +47,17 @@ def generate_points(labels):
 
     Args:
         labels: the `Labels` object for which we want instance points
+        scale: the factor to use when rescaling
 
     Returns:
         a list (each frame) of lists (each instance) of ndarrays (of points)
             i.e., frames -> instances -> point_array
     """
-    return [[inst.points_array(invisible_as_nan=True) for inst in lf.user_instances] for lf in labels.user_labeled_frames]
+    return [[inst.points_array(invisible_as_nan=True)/scale
+                for inst in lf.user_instances]
+                for lf in labels.user_labeled_frames]
 
-def generate_confmaps_from_points(frames_inst_points, skeleton, shape, sigma=5.0, scale=1.0, output_size=None) -> np.ndarray:
+def generate_confmaps_from_points(frames_inst_points, skeleton, shape, sigma=5.0, scale=1, output_size=None) -> np.ndarray:
     """
     Generates confmaps for set of frames.
     This is used to generate confmaps on the fly during training,
@@ -68,7 +79,7 @@ def generate_confmaps_from_points(frames_inst_points, skeleton, shape, sigma=5.0
     full_size = tuple(map(int, full_size))
     output_size = tuple(map(int, output_size))
 
-    ball = get_conf_ball(full_size, output_size, sigma)
+    ball = get_conf_ball(full_size, output_size, sigma/scale)
 
     num_frames = len(frames_inst_points)
     num_channels = len(skeleton.nodes)
@@ -84,7 +95,7 @@ def generate_confmaps_from_points(frames_inst_points, skeleton, shape, sigma=5.0
 
     return confmaps
 
-def generate_pafs_from_points(frames_inst_points, skeleton, shape, sigma=5.0, scale=1.0, output_size=None) -> np.ndarray:
+def generate_pafs_from_points(frames_inst_points, skeleton, shape, sigma=5.0, scale=1, output_size=None) -> np.ndarray:
     """
     Generates pafs for set of frames.
     This is used to generate pafs on the fly during training,
@@ -105,8 +116,6 @@ def generate_pafs_from_points(frames_inst_points, skeleton, shape, sigma=5.0, sc
     # TODO: throw warning for truncation errors
     full_size = tuple(map(int, full_size))
     output_size = tuple(map(int, output_size))
-
-    ball = get_conf_ball(full_size, output_size, sigma)
 
     num_frames = len(frames_inst_points)
     num_channels = len(skeleton.edges) * 2
@@ -181,7 +190,7 @@ def raster_ball(arr, ball, c, x, y):
         ball[ball_slice_y, ball_slice_x]
         )
 
-def generate_confidence_maps(labels:Labels, sigma=5.0, scale=1.0, output_size=None):
+def generate_confidence_maps(labels:Labels, sigma=5.0, scale=1):
     """Wrapper for generate_confmaps_from_points which takes labels instead of points."""
 
     # TODO: multi-skeleton support
@@ -190,8 +199,8 @@ def generate_confidence_maps(labels:Labels, sigma=5.0, scale=1.0, output_size=No
     vid = labels.videos[0]
     shape = (vid.height, vid.width)
 
-    points = generate_points(labels)
-    confmaps = generate_confmaps_from_points(points, skeleton, shape, sigma=5.0, scale=1.0, output_size=None)
+    points = generate_points(labels, scale=scale)
+    confmaps = generate_confmaps_from_points(points, skeleton, shape, sigma=sigma)
 
     return confmaps
 
@@ -255,7 +264,7 @@ def points_are_present(instance, src_node, dst_node):
     else:
         return False
 
-def generate_pafs(labels: Labels, sigma=5.0, scale=1.0, output_size=None):
+def generate_pafs(labels: Labels, sigma=5.0, scale=1):
     """Wrapper for generate_pafs_from_points which takes labels instead of points."""
 
     # TODO: multi-skeleton support
@@ -264,8 +273,8 @@ def generate_pafs(labels: Labels, sigma=5.0, scale=1.0, output_size=None):
     vid = labels.videos[0]
     shape = (vid.height, vid.width)
 
-    points = generate_points(labels)
-    pafs = generate_pafs_from_points(points, skeleton, shape, sigma=5.0, scale=1.0, output_size=None)
+    points = generate_points(labels, scale=scale)
+    pafs = generate_pafs_from_points(points, skeleton, shape, sigma=sigma)
 
     return pafs
 
@@ -321,7 +330,22 @@ def pad_rect_to(x0: int, y0: int, x1: int, y1: int, pad_to: tuple, within: tuple
 
     return x0, y0, x1, y1
 
-def instance_crops(imgs, points, img_shape):
+def instance_crops(imgs, points, img_shape=None):
+    """
+    Take imgs, points and return imgs, points cropped around instances.
+
+    Note that if there are multiple instances in a image, this will result in more
+    (but smaller) instances than we started with.
+
+    Args:
+        imgs: output from generate_images()
+        points: output from generate_points()
+        img_shape: FIXME: can we get rid of this?
+    Returns:
+        imgs, points (matching format of input)
+    """
+    img_shape = img_shape or (imgs.shape[1], imgs.shape[2])
+
     # List of bounding box for every instance
     bbs = [point_array_bounding_box(point_array) for frame in points for point_array in frame]
     bbs = [(int(x0), int(y0), int(x1), int(y1)) for (x0, y0, x1, y1) in bbs]
@@ -374,22 +398,23 @@ def demo_datagen():
 
     data_path = "C:/Users/tdp/OneDrive/code/sandbox/leap_wt_gold_pilot/centered_pair.json"
     if not os.path.exists(data_path):
-        # data_path = "tests/data/json_format_v2/centered_pair_predictions.json"
-        data_path = "tests/data/json_format_v2/minimal_instance.json"
+        data_path = "tests/data/json_format_v1/centered_pair.json"
+        # data_path = "tests/data/json_format_v2/minimal_instance.json"
 
     labels = Labels.load_json(data_path)
     # labels.labeled_frames = labels.labeled_frames[123:423:10]
 
-    imgs = generate_images(labels)
+    scale = 1
+
+    imgs = generate_images(labels, scale)
     print("--imgs--")
     print(imgs.shape)
     print(imgs.dtype)
     print(np.ptp(imgs))
 
-    points = generate_points(labels)
+    points = generate_points(labels, scale)
 
-    img_shape = (imgs.shape[1], imgs.shape[2])
-    imgs, points = instance_crops(imgs, points, img_shape)
+    imgs, points = instance_crops(imgs, points)
 
     from PySide2 import QtWidgets
     from sleap.io.video import Video
@@ -402,7 +427,7 @@ def demo_datagen():
     skeleton = labels.skeletons[0]
     img_shape = (imgs.shape[1], imgs.shape[2])
 
-    confmaps = generate_confmaps_from_points(points, skeleton, img_shape, sigma=5.0, scale=1.0, output_size=None)
+    confmaps = generate_confmaps_from_points(points, skeleton, img_shape, sigma=5.0/scale)
     print("--confmaps--")
     print(confmaps.shape)
     print(confmaps.dtype)
@@ -410,7 +435,7 @@ def demo_datagen():
 
     demo_confmaps(confmaps, vid)
 
-    pafs = generate_pafs_from_points(points, skeleton, img_shape, sigma=5.0, scale=1.0, output_size=None)
+    pafs = generate_pafs_from_points(points, skeleton, img_shape, sigma=5.0/scale)
     print("--pafs--")
     print(pafs.shape)
     print(pafs.dtype)

@@ -1,3 +1,2 @@
-include sleap/gui/shortcuts.yaml
-include sleap/gui/suggestions.yaml
-include sleap/nn/training-forms.yaml
+include config/*.yaml
+include training_profiles/*.json

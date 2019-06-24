@@ -493,7 +493,7 @@ class GraphicsView(QGraphicsView):
         # signal that the selection has changed (so we can update visual display)
         self.updatedSelection.emit()
 
-    def selectInstance(self, select_idx, from_all=False):
+    def selectInstance(self, select_idx, from_all=False, signal=True):
         """
         Select a particular skeleton instance.
 
@@ -506,7 +506,7 @@ class GraphicsView(QGraphicsView):
             for idx, instance in enumerate(instances):
                 instance.selected = (select_idx == idx)
         # signal that the selection has changed (so we can update visual display)
-        self.updatedSelection.emit()
+        if signal: self.updatedSelection.emit()
 
     def getSelection(self):
         """ Returns the index of the currently selected instance.

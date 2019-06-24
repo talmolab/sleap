@@ -43,6 +43,10 @@ def _check_labels_match(expected_labels, other_labels):
         # Compare the instances
         assert all(i1.matches(i2) for (i1, i2) in zip(expected_label.instances, label.instances))
 
+        # This test takes to long, break after 20 or so.
+        if frame_idx > 20:
+            break
+
 
 
 def test_labels_json(tmpdir, multi_skel_vid_labels):

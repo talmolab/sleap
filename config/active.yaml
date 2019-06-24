@@ -1,0 +1,36 @@
+main:
+
+- name: conf_job
+  label: Node (confmap) Training Profile
+  type: list
+  default: a
+  options: a,b,c
+
+- name: _view_conf
+  label: View Selected Node Profile...
+  type: button
+
+- name: paf_job
+  label: Edge (paf) Training Profile
+  type: list
+  default: a
+  options: a,b,c
+
+- name: _view_paf
+  label: View Selected Edge Profile...
+  type: button
+
+- name: instance_crop
+  label: Crop images to instances
+  type: bool
+  default: False
+
+- name: scale
+  label: Image rescaling factor
+  type: int
+  default: 1
+
+- name: sigma
+  label: Sigma (for confmaps and pafs)
+  type: double
+  default: 5.0

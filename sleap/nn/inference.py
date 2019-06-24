@@ -13,7 +13,7 @@ import keras
 import attr
 
 from time import time
-from typing import List, Union, Optional
+from typing import Dict, List, Union, Optional
 
 from scipy.ndimage import maximum_filter, gaussian_filter
 from keras.utils import multi_gpu_model
@@ -23,6 +23,8 @@ from sleap.io.dataset import Labels
 from sleap.io.video import Video
 from sleap.skeleton import Skeleton
 from sleap.util import usable_cpu_count
+from sleap.nn.model import ModelOutputType
+from sleap.nn.training import TrainingJob
 from sleap.nn.tracking import FlowShiftTracker, Track
 
 
@@ -194,7 +196,7 @@ def improfile(I, p0, p1, max_points=None):
     vals = np.stack([I[yi,xi] for xi, yi in zip(x,y)])
     return vals
 
-def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton,
+def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, scale,
                       min_score_to_node_ratio=0.4,
                       min_score_midpts=0.05,
                       min_score_integral=0.8,
@@ -281,6 +283,7 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton,
     # Greedy matching of each edge candidate set
     subset = -1 * np.ones((0, len(skeleton.nodes)+2)) # ids, overall score, number of parts
     candidate = np.array([y for x in peaks_t for y in x]) # flattened set of all points
+    candidate = candidate / scale # rescale points to original image
     candidate_scores = np.array([y for x in peak_vals_t for y in x]) # flattened set of all peak scores
     for k, edge in enumerate(skeleton.edge_names):
         # No matches for this edge
@@ -363,7 +366,7 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton,
     return matched_instances_t
 
 def match_peaks_paf(peaks, peak_vals, pafs, skeleton,
-                    video, frame_indices,
+                    video, frame_indices, scale=1,
                     min_score_to_node_ratio=0.4, min_score_midpts=0.05,
                     min_score_integral=0.8, add_last_edge=False):
     """ Computes PAF-based peak matching via greedy assignment and other such dragons """
@@ -371,17 +374,17 @@ def match_peaks_paf(peaks, peak_vals, pafs, skeleton,
     # Process each frame
     predicted_frames = []
     for peaks_t, peak_vals_t, pafs_t, frame_idx in zip(peaks, peak_vals, pafs, frame_indices):
-        instances = match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton,
+        instances = match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, scale,
                                    min_score_to_node_ratio=min_score_to_node_ratio,
                                    min_score_midpts=min_score_midpts,
                                    min_score_integral=min_score_integral,
-                                   add_last_edge=add_last_edge)
+                                   add_last_edge=add_last_edge,)
         predicted_frames.append(LabeledFrame(video=video, frame_idx=frame_idx, instances=instances))
 
     return predicted_frames
 
 def match_peaks_paf_par(peaks, peak_vals, pafs, skeleton,
-                        video, frame_indices,
+                        video, frame_indices, scale=1,
                         min_score_to_node_ratio=0.4,
                         min_score_midpts=0.05,
                         min_score_integral=0.8,
@@ -395,7 +398,8 @@ def match_peaks_paf_par(peaks, peak_vals, pafs, skeleton,
     futures = []
     for peaks_t, peak_vals_t, pafs_t, frame_idx in zip(peaks, peak_vals, pafs, frame_indices):
         future = pool.apply_async(match_peaks_frame, [peaks_t, peak_vals_t, pafs_t, skeleton],
-                                  dict(min_score_to_node_ratio=min_score_to_node_ratio,
+                                  dict(scale=scale,
+                                       min_score_to_node_ratio=min_score_to_node_ratio,
                                        min_score_midpts=min_score_midpts,
                                        min_score_integral=min_score_integral,
                                        add_last_edge=add_last_edge))
@@ -457,7 +461,9 @@ class Predictor:
     flow_window: int = 15
     save_shifted_instances: bool = True
 
-    def run(self, input_video: Union[str, Video], output_path: Optional[str]=None, frames: Optional[List[int]]=None):
+    def predict(self, input_video: Union[str, Video],
+                output_path: Optional[str] = None,
+                frames: Optional[List[int]] = None) -> List[LabeledFrame]:
         """
         Run the entire inference pipeline on an input video or file object.
 
@@ -467,7 +473,7 @@ class Predictor:
             frames (optional): List of frames to predict. If None, run entire video.
 
         Returns:
-            None
+            list of LabeledFrame objects
         """
 
         # Load model
@@ -525,20 +531,19 @@ class Predictor:
             frames_idx = frames[frame_start:frame_end]
             mov = vid[frames_idx]
 
-            # Preprocess the frames
-            if model_channels == 1:
-                mov = mov[:, :, :, 0]
-
-            # Resize the frames to the model input size
-            for i in range(mov.shape[0]):
-                mov[i, :, :] = cv2.resize(mov[i, :, :], (w, h))
-
-            # Add back singleton dimension
-            if model_channels == 1:
-                mov = mov[..., None]
-            else:
-                # TODO: figure out when/if this is necessary for RGB videos
-                mov = mov[..., ::-1]
+            if (vid.height, vid.width) != (h, w):
+                # Resize the frames to the model input size
+                scaled_mov = np.zeros((mov.shape[0], h, w, mov.shape[3]))
+                for i in range(mov.shape[0]):
+                    img = cv2.resize(mov[i, :, :], (w, h))
+                     # add back singleton channel
+                    if model_channels == 1:
+                        img = img[..., None]
+                    else:
+                        # TODO: figure out when/if this is necessary for RGB videos
+                        img = img[..., ::-1]
+                    scaled_mov[i, ...] = img
+                mov = scaled_mov
 
             logger.info("  Read %d frames [%.1fs]" % (len(mov), time() - t0))
 
@@ -558,7 +563,7 @@ class Predictor:
             # Match peaks via PAFs
             t0 = time()
             predicted_frames_chunk = match_peaks_paf_par(peaks, peak_vals, pafs, self.skeleton,
-                                            video=vid, frame_indices=frames_idx,
+                                            scale=scale, video=vid, frame_indices=frames_idx,
                                             min_score_to_node_ratio=self.min_score_to_node_ratio,
                                             min_score_midpts=self.min_score_midpts,
                                             min_score_integral=self.min_score_integral,
@@ -599,8 +604,7 @@ class Predictor:
 
         logger.info("Total: %.1f min" % (total_elapsed / 60))
 
-        if output_path is None:
-            return predicted_frames
+        return predicted_frames
 
     def run_visual(self, input_video: Union[str, Video], max_frames: int=None):
         """
@@ -705,6 +709,43 @@ class Predictor:
         logger.info("Total: %.1f min" % (total_elapsed / 60))
 
         return confmaps, pafs
+
+    @classmethod
+    def from_training_jobs(cls,
+            training_jobs: Dict[ModelOutputType, TrainingJob],
+            labels: Optional[Labels]=None):
+        """
+        Construct a Predictor from some TrainingJobs.
+
+        Args:
+            training_jobs: Dict with a TrainingJob for each required ModelOutputType
+        Returns:
+            Predictor initialized with Keras model.
+        """
+
+        # Build the Keras Model
+        # This code makes assumptions about the types of TrainingJobs we've been given
+
+        confmap_job = training_jobs[ModelOutputType.CONFIDENCE_MAP]
+        pafs_job = training_jobs[ModelOutputType.PART_AFFINITY_FIELD]
+
+        confmap_model_path = os.path.join(confmap_job.save_dir, confmap_job.best_model_filename)
+        paf_model_path = os.path.join(pafs_job.save_dir, pafs_job.best_model_filename)
+
+        scale = confmap_job.trainer.scale
+        labels = labels or Labels.load_json(confmap_job.labels_filename)
+        skeleton = labels.skeletons[0]
+
+        # FIXME: we're now assuming that all the videos are the same size
+        vid = labels.videos[0]
+        img_shape = (vid.height//scale, vid.width//scale, vid.channels)
+
+        # Load the model
+        keras_model = get_inference_model(confmap_model_path, paf_model_path, img_shape)
+
+        # Return the Predictor ready to use
+        return cls(model=keras_model, skeleton=skeleton)
+
 
 def load_predicted_labels_json_old(
         data_path: str, parsed_json: dict = None,
@@ -874,20 +915,8 @@ def main(args):
     predictor = Predictor(model=model, skeleton=skeleton, with_tracking=args.with_tracking)
 
     # Run the inference pipeline
-    return predictor.run(input_video=data_path, output_path=save_path, frames=frames)
+    return predictor.predict(input_video=data_path, output_path=save_path, frames=frames)
 
-def predicted_frames(vid: Video, confmap_model_path: str, paf_model_path: str, skeleton: Skeleton, frames: Optional[List[int]]=None):
-    # Predict on full-sized video (adjust model input layer instead)
-    img_shape = (vid.height, vid.width, vid.channels)
-
-    # Load the model
-    model = get_inference_model(confmap_model_path, paf_model_path, img_shape)
-
-    # Create a predictor to do the work.
-    predictor = Predictor(model=model, skeleton=skeleton)
-
-    # Run the inference pipeline
-    return predictor.run(input_video=vid, frames=frames)
 
 if __name__ == "__main__":
 
