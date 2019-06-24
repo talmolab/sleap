@@ -15,7 +15,7 @@ class TrainingEditor(QtWidgets.QDialog):
     def __init__(self, profile_filename: Optional[str]=None, *args, **kwargs):
         super(TrainingEditor, self).__init__()
 
-        form_yaml = resource_filename(Requirement.parse("sleap"),"config/training_editor.yaml")
+        form_yaml = resource_filename(Requirement.parse("sleap"),"sleap/config/training_editor.yaml")
 
         self.form_widgets = dict()
         self.form_widgets["model"] = YamlFormWidget(form_yaml, "model", "Network Architecture")
