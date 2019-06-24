@@ -20,11 +20,11 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         from sleap.nn.model import ModelOutputType
         from sleap.nn.training import TrainingJob
 
-        learning_yaml = resource_filename(Requirement.parse("sleap"),"config/active.yaml")
+        learning_yaml = resource_filename(Requirement.parse("sleap"),"sleap/config/active.yaml")
         self.form_widget = YamlFormWidget(yaml_file=learning_yaml, title="Active Learning Settings")
 
         # load list of job profiles from directory
-        self.job_options = find_saved_jobs(resource_filename(Requirement.parse("sleap"),"training_profiles"))
+        self.job_options = find_saved_jobs(resource_filename(Requirement.parse("sleap"),"sleap/training_profiles"))
 
         # form ui
 
