@@ -1,2 +1,2 @@
-include config/*.yaml
-include training_profiles/*.json
+include sleap/config/*.yaml
+include sleap/training_profiles/*.json

@@ -25,6 +25,11 @@ main:
   type: bool
   default: False
 
+- name: batch_size
+  label: Batch Size
+  type: int
+  default: 2
+
 - name: scale
   label: Image rescaling factor
   type: int

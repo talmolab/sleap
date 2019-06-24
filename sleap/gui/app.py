@@ -121,7 +121,7 @@ class MainWindow(QMainWindow):
 
     def initialize_gui(self):
 
-        shortcut_yaml = resource_filename(Requirement.parse("sleap"),"config/shortcuts.yaml")
+        shortcut_yaml = resource_filename(Requirement.parse("sleap"),"sleap/config/shortcuts.yaml")
         with open(shortcut_yaml, 'r') as f:
             shortcuts = yaml.load(f, Loader=yaml.SafeLoader)
 
@@ -301,7 +301,7 @@ class MainWindow(QMainWindow):
         btn = QPushButton("New instance")
         btn.clicked.connect(lambda x: self.newInstance()); hb.addWidget(btn)
         btn = QPushButton("Delete instance")
-        btn.clicked.connect(self.deleteInstance); hb.addWidget(btn)
+        btn.clicked.connect(self.deleteSelectedInstance); hb.addWidget(btn)
         self._buttons["delete instance"] = btn
         hbw = QWidget(); hbw.setLayout(hb)
         instances_layout.addWidget(hbw)
@@ -334,7 +334,7 @@ class MainWindow(QMainWindow):
         hbw = QWidget(); hbw.setLayout(hb)
         suggestions_layout.addWidget(hbw)
 
-        suggestions_yaml = resource_filename(Requirement.parse("sleap"),"config/suggestions.yaml")
+        suggestions_yaml = resource_filename(Requirement.parse("sleap"),"sleap/config/suggestions.yaml")
         form_wid = YamlFormWidget(yaml_file=suggestions_yaml, title="Generate Suggestions")
         form_wid.mainAction.connect(self.generateSuggestions)
         suggestions_layout.addWidget(form_wid)
@@ -893,16 +893,6 @@ class MainWindow(QMainWindow):
         if selected_inst is None: return
 
         self.labeled_frame.instances.remove(selected_inst)
-        self.changestack_push("delete instance")
-
-        self.plotFrame()
-        self.updateSeekbarMarks()
-
-    def deleteInstance(self):
-        idx = self.instancesTable.currentIndex()
-        if not idx.isValid(): return
-
-        del self.labeled_frame.instances_to_show[idx.row()]
         self.changestack_push("delete instance")
 
         self.plotFrame()

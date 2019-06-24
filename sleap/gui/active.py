@@ -5,6 +5,10 @@ from pkg_resources import Requirement, resource_filename
 
 from sleap.io.dataset import Labels
 from sleap.gui.training_editor import TrainingEditor
+from sleap.gui.formbuilder import YamlFormWidget
+from sleap.nn.model import ModelOutputType
+from sleap.nn.training import TrainingJob
+
 
 from PySide2 import QtWidgets
 
@@ -16,15 +20,11 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         self.labels_filename = labels_filename
         self.labels = labels
 
-        from sleap.gui.formbuilder import YamlFormWidget
-        from sleap.nn.model import ModelOutputType
-        from sleap.nn.training import TrainingJob
-
-        learning_yaml = resource_filename(Requirement.parse("sleap"),"config/active.yaml")
+        learning_yaml = resource_filename(Requirement.parse("sleap"),"sleap/config/active.yaml")
         self.form_widget = YamlFormWidget(yaml_file=learning_yaml, title="Active Learning Settings")
 
         # load list of job profiles from directory
-        self.job_options = find_saved_jobs(resource_filename(Requirement.parse("sleap"),"training_profiles"))
+        self.job_options = find_saved_jobs(resource_filename(Requirement.parse("sleap"),"sleap/training_profiles"))
 
         # form ui
 
@@ -262,10 +262,10 @@ def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=Non
 
     # Run the TrainingJobs
 
-    save_dir = os.path.dirname(labels_filename)
+    save_dir = os.path.join(os.path.dirname(labels_filename), "models")
 
     for model_type, job in training_jobs.items():
-        run_name = f"models_{model_type}"
+        # run_name = f"models_{model_type}"
         # use line below if we want to load models already trained from previous run
         # training_jobs[model_type] = os.path.join(save_dir, run_name+".json")
 
@@ -277,7 +277,7 @@ def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=Non
         if not skip_learning:
             # run training
             pool, result = job.trainer.train_async(model=job.model, labels=labels,
-                                    save_dir=save_dir, run_name=run_name)
+                                    save_dir=save_dir)
 
             while not result.ready():
                 QtWidgets.QApplication.instance().processEvents()
