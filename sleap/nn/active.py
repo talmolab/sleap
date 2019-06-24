@@ -4,6 +4,7 @@ import cattr
 from pkg_resources import Requirement, resource_filename
 
 from sleap.io.dataset import Labels
+from sleap.gui.training_editor import TrainingEditor
 
 def make_default_training_jobs():
     from sleap.nn.model import Model, ModelOutputType
@@ -296,7 +297,6 @@ def active_learning_gui(labels_filename: str, labels: Labels) -> bool:
     layout.addWidget(buttons)
 
     learning_dialog = QtWidgets.QDialog()
-    learning_dialog.setModal(True)
     learning_dialog.setLayout(layout)
 
     # function to run active learning using form data
@@ -325,11 +325,20 @@ def active_learning_gui(labels_filename: str, labels: Labels) -> bool:
         # Update labels with results of active learning
         labels.labeled_frames.extend(new_lfs)
 
+    # open profile editor in new dialog window
+    def view_profile(filename, windows=[]):
+        win = TrainingEditor(filename, parent=learning_dialog)
+        windows.append(win)
+        win.exec_()
+
     # connect actions to buttons
+    form_wid.buttons["_view_conf"].clicked.connect(lambda: view_profile(form_wid["conf_job"]))
+    form_wid.buttons["_view_paf"].clicked.connect(lambda: view_profile(form_wid["paf_job"]))
     buttons.accepted.connect(go)
     buttons.rejected.connect(learning_dialog.reject)
 
     # show the dialog
+#     learning_dialog.show()
     ret_val = learning_dialog.exec_()
 
     return ret_val == QtWidgets.QDialog.Accepted
