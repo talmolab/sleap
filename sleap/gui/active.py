@@ -262,10 +262,10 @@ def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=Non
 
     # Run the TrainingJobs
 
-    save_dir = os.path.dirname(labels_filename)
+    save_dir = os.path.join(os.path.dirname(labels_filename), "models")
 
     for model_type, job in training_jobs.items():
-        run_name = f"models_{model_type}"
+        # run_name = f"models_{model_type}"
         # use line below if we want to load models already trained from previous run
         # training_jobs[model_type] = os.path.join(save_dir, run_name+".json")
 
@@ -277,7 +277,7 @@ def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=Non
         if not skip_learning:
             # run training
             pool, result = job.trainer.train_async(model=job.model, labels=labels,
-                                    save_dir=save_dir, run_name=run_name)
+                                    save_dir=save_dir)
 
             while not result.ready():
                 QtWidgets.QApplication.instance().processEvents()

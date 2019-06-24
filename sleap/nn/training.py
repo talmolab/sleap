@@ -295,7 +295,7 @@ class Trainer:
                            f"{model.name}.n={num_total}"
 
             # Build save path
-            save_path = os.path.join(save_dir, run_name)
+            save_path = os.path.join(save_dir, train_run.run_name)
             logger.info(f"Save path: {save_path}")
 
             # Check if it already exists
