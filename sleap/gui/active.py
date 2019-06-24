@@ -220,7 +220,7 @@ def active_learning_gui(labels_filename: str, labels: Labels) -> bool:
     from sleap.nn.model import ModelOutputType
     from sleap.nn.training import TrainingJob
 
-    learning_yaml = resource_filename(Requirement.parse("sleap"),"sleap/nn/active.yaml")
+    learning_yaml = resource_filename(Requirement.parse("sleap"),"config/active.yaml")
     form_wid = YamlFormWidget(yaml_file=learning_yaml, title="Active Learning Settings")
 
     # load list of job profiles from directory

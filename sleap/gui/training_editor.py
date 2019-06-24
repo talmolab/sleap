@@ -15,7 +15,7 @@ class TrainingEditor(QtWidgets.QDialog):
     def __init__(self, profile_filename: Optional[str]=None, *args, **kwargs):
         super(TrainingEditor, self).__init__()
 
-        form_yaml = resource_filename(Requirement.parse("sleap"),"sleap/gui/training_editor.yaml")
+        form_yaml = resource_filename(Requirement.parse("sleap"),"config/training_editor.yaml")
 
         self.form_widgets = dict()
         self.form_widgets["model"] = YamlFormWidget(form_yaml, "model", "Network Architecture")
@@ -136,8 +136,11 @@ class TrainingEditor(QtWidgets.QDialog):
         # self.close()
 
 if __name__ == "__main__":
-    profile_filename = "test_train/training_run_1.json"
-    profile_filename = "training_profiles/default_confmaps.json"
+    import sys
+
+    profile_filename = None if len(sys.argv) <= 1 else sys.argv[1]
+
+    # profile_filename = "training_profiles/default_confmaps.json"
 
     app = QtWidgets.QApplication([])
     win = TrainingEditor(profile_filename)
