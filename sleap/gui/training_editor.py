@@ -71,6 +71,7 @@ class TrainingEditor(QtWidgets.QDialog):
 
         job_dict = cattr.unstructure(self.training_job)
 
+        job_dict["model"]["arch"] = job_dict["model"]["backbone_name"]
         job_dict["model"]["output_type"] = str(self.training_job.model.output_type)
 
         self.form_widgets["model"].set_form_data(job_dict["model"])
