@@ -6,11 +6,19 @@ main:
   default: a
   options: a,b,c
 
+- name: _view_conf
+  label: View Selected Node Profile...
+  type: button
+
 - name: paf_job
   label: Edge (paf) Training Profile
   type: list
   default: a
   options: a,b,c
+
+- name: _view_paf
+  label: View Selected Edge Profile...
+  type: button
 
 - name: instance_crop
   label: Crop images to instances

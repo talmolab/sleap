@@ -19,25 +19,31 @@ class YamlFormWidget(QtWidgets.QGroupBox):
 
     Args:
         yaml_file: filename
+        which_form (optional): key to form in yaml file, default "main"
     """
 
     mainAction = QtCore.Signal(dict)
     valueChanged = QtCore.Signal()
 
-    def __init__(self, yaml_file, *args, **kwargs):
+    def __init__(self, yaml_file, which_form: str="main", *args, **kwargs):
         super(YamlFormWidget, self).__init__(*args, **kwargs)
 
         with open(yaml_file, 'r') as form_yaml:
             items_to_create = yaml.load(form_yaml, Loader=yaml.SafeLoader)
 
-        self.form_layout = FormBuilderLayout(items_to_create["main"])
+        self.which_form = which_form
+        self.form_layout = FormBuilderLayout(items_to_create[self.which_form])
         self.setLayout(self.form_layout)
 
-        for item in items_to_create["main"]:
+        for item in items_to_create[self.which_form]:
             if item["type"] == "button" and item.get("default", "") == "main action":
                 self.buttons[item["name"]].clicked.connect(self.trigger_main_action)
 
         self.form_layout.valueChanged.connect(self.valueChanged)
+
+    def __getitem__(self, key):
+        """Return value for specified form field."""
+        return FormBuilderLayout.get_widget_value(self.fields[key])
 
     @property
     def buttons(self):
@@ -121,7 +127,7 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
         elif hasattr(widget, "value"):
             widget.setValue(val)
         elif hasattr(widget, "currentText"):
-            widget.setCurrentText(val)
+            widget.setCurrentText(str(val))
         elif hasattr(widget, "text"):
             widget.setText(str(val))
         else:
@@ -153,6 +159,8 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
             val = None
         if widget.property("field_data_type") == "sci":
             val = float(val)
+        elif widget.property("field_data_type").startswith("file_"):
+            val = None if val == "None" else val
         return val
 
     def build_form(self, items_to_create):
@@ -183,9 +191,12 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
             # int: show spinbox (number w/ up/down controls)
             elif item["type"] == "int":
                 field = QtWidgets.QSpinBox()
-                # temp fix to ensure default within range
-                if item["default"] > 99:
-                    field.setRange(0, item["default"]*10)
+                if "range" in item.keys():
+                    min, max = list(map(int, item["range"].split(",")))
+                    field.setRange(min, max)
+                elif item["default"] > 100:
+                    min, max = 0, item["default"] * 10
+                    field.setRange(min, max)
                 field.setValue(item["default"])
 
             # bool: show checkbox
@@ -202,6 +213,13 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
             elif item["type"] == "button":
                 field = QtWidgets.QPushButton(item["label"])
                 self.buttons[item["name"]] = field
+
+            # string
+            elif item["type"] == "string":
+                field = QtWidgets.QLineEdit()
+                val = item.get("default", "")
+                val = "" if val is None else val
+                field.setText(str(val))
 
             # stacked: show menu and form panel corresponding to menu selection
             elif item["type"] == "stacked":
@@ -220,35 +238,40 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
             # Store widget by name
             self.fields[item["name"]] = field
             # Add field (and label if appropriate) to form layout
-            if item["type"] in ("button", "stacked"):
+            if item["type"] in ("stacked"):
                 self.addRow(field)
+            elif item["type"] in ("button"):
+                self.addRow("", field)
             else:
                 self.addRow(item["label"] + ":", field)
 
             # file_[open|dir]: show button to select file/directory
             if item["type"].split("_")[0] == "file":
-                file_button = QtWidgets.QPushButton("Select "+item["label"])
+                self.addRow("", self._make_file_button(item, field))
 
-                if item["type"].split("_")[-1] == "open":
-                    # Define function for button to trigger
-                    def select_file(*args, x=field):
-                        filter = item.get("filter", "Any File (*.*)")
-                        filename, _ = QtWidgets.QFileDialog.getOpenFileName(None, directory=None, caption="Open File", filter=filter)
-                        if len(filename): x.setText(filename)
-                        self.valueChanged.emit()
+    def _make_file_button(self, item, field):
+        file_button = QtWidgets.QPushButton("Select "+item["label"])
 
-                elif item["type"].split("_")[-1] == "dir":
-                    # Define function for button to trigger
-                    def select_file(*args, x=field):
-                        filename = QtWidgets.QFileDialog.getExistingDirectory(None, directory=None, caption="Open File")
-                        if len(filename): x.setText(filename)
-                        self.valueChanged.emit()
+        if item["type"].split("_")[-1] == "open":
+            # Define function for button to trigger
+            def select_file(*args, x=field):
+                filter = item.get("filter", "Any File (*.*)")
+                filename, _ = QtWidgets.QFileDialog.getOpenFileName(None, directory=None, caption="Open File", filter=filter)
+                if len(filename): x.setText(filename)
+                self.valueChanged.emit()
 
-                else:
-                    select_file = lambda: print(f"no action set for type {item['type']}")
+        elif item["type"].split("_")[-1] == "dir":
+            # Define function for button to trigger
+            def select_file(*args, x=field):
+                filename = QtWidgets.QFileDialog.getExistingDirectory(None, directory=None, caption="Open File")
+                if len(filename): x.setText(filename)
+                self.valueChanged.emit()
 
-                file_button.clicked.connect(select_file)
-                self.addRow("", file_button)
+        else:
+            select_file = lambda: print(f"no action set for type {item['type']}")
+
+        file_button.clicked.connect(select_file)
+        return file_button
 
 class StackBuilderWidget(QtWidgets.QWidget):
     def __init__(self, stack_data, *args, **kwargs):
