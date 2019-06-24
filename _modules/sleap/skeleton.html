@@ -254,12 +254,6 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            True if match, False otherwise.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># Use a copy of the other skeleton, since we&#39;re going to make changes to it</span>
-        <span class="n">other</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
-        <span class="c1"># Replace nodes in other._graph with corresponding nodes in self._graph</span>
-        <span class="c1"># Currently we match by name only. Probably we should check all attributes for match.</span>
-        <span class="n">other_nodes_to_self</span> <span class="o">=</span> <span class="p">{</span><span class="n">other_node</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">other_node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">other_node</span> <span class="ow">in</span> <span class="n">other</span><span class="o">.</span><span class="n">nodes</span><span class="p">}</span>
-        <span class="n">other</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">relabel_nodes</span><span class="p">(</span><span class="n">G</span><span class="o">=</span><span class="n">other</span><span class="o">.</span><span class="n">_graph</span><span class="p">,</span> <span class="n">mapping</span><span class="o">=</span><span class="n">other_nodes_to_self</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">other</span></div>
 
     <span class="nd">@property</span>
@@ -275,14 +269,37 @@
         <span class="n">edges</span> <span class="o">=</span> <span class="p">[(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">edge_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="s2">&quot;type&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">edge_type</span> <span class="o">==</span> <span class="n">EdgeType</span><span class="o">.</span><span class="n">SYMMETRY</span><span class="p">]</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">edge_subgraph</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
 
-    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Skeleton.find_unique_nodes"><a class="viewcode-back" href="../../skeleton.html#sleap.skeleton.Skeleton.find_unique_nodes">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">find_unique_nodes</span><span class="p">(</span><span class="n">skeletons</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="s1">&#39;Skeleton&#39;</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Given list of skeletons, return a list of unique node objects across all skeletons.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            skeletons: The list of skeletons.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A list of unique node objects.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">({</span><span class="n">node</span> <span class="k">for</span> <span class="n">skeleton</span> <span class="ow">in</span> <span class="n">skeletons</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">skeleton</span><span class="o">.</span><span class="n">nodes</span><span class="p">})</span></div>
+
+<div class="viewcode-block" id="Skeleton.make_cattr"><a class="viewcode-back" href="../../skeleton.html#sleap.skeleton.Skeleton.make_cattr">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">make_cattr</span><span class="p">(</span><span class="n">idx_to_node</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Node</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a cattr.Converter() that registers structure and unstructure hooks for</span>
+<span class="sd">        Skeleton objects that handle serialization of skeletons objects.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            idx_to_node: A dict that maps node index to Node objects.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A cattr.Converter() instance ready for skeleton serialization and deserialization.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">node_to_idx</span> <span class="o">=</span> <span class="p">{</span><span class="n">node</span><span class="p">:</span><span class="n">idx</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span><span class="n">node</span> <span class="ow">in</span> <span class="n">idx_to_node</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span> <span class="k">if</span> <span class="n">idx_to_node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
 
         <span class="n">_cattr</span> <span class="o">=</span> <span class="n">cattr</span><span class="o">.</span><span class="n">Converter</span><span class="p">()</span>
         <span class="n">_cattr</span><span class="o">.</span><span class="n">register_unstructure_hook</span><span class="p">(</span><span class="n">Skeleton</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">Skeleton</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">node_to_idx</span><span class="p">))</span>
         <span class="n">_cattr</span><span class="o">.</span><span class="n">register_structure_hook</span><span class="p">(</span><span class="n">Skeleton</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span><span class="nb">type</span><span class="p">:</span> <span class="n">Skeleton</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">idx_to_node</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">_cattr</span>
+        <span class="k">return</span> <span class="n">_cattr</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1004,12 +1021,11 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">is_isomorphic</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span>
 
-        <span class="c1"># Now check that the nodes have the same labels</span>
-        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">other</span><span class="o">.</span><span class="n">_graph</span><span class="p">:</span>
+        <span class="c1"># Now check that the nodes have the same labels and order. They can have</span>
+        <span class="c1"># different weights I guess?!</span>
+        <span class="k">for</span> <span class="n">node1</span><span class="p">,</span> <span class="n">node2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">node1</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="n">node2</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">False</span>
-
-        <span class="c1"># FIXME: Skeletons still might not be exactly equal, isomorph with labels swapped.</span>
 
         <span class="c1"># Check if the two graphs are equal</span>
         <span class="k">return</span> <span class="kc">True</span>

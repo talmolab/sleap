@@ -342,6 +342,8 @@
 </li>
       <li><a href="skeleton.html#sleap.skeleton.Skeleton.find_node">find_node() (sleap.skeleton.Skeleton method)</a>
 </li>
+      <li><a href="skeleton.html#sleap.skeleton.Skeleton.find_unique_nodes">find_unique_nodes() (sleap.skeleton.Skeleton static method)</a>
+</li>
       <li><a href="video.html#sleap.io.video.Video.fixup_path">fixup_path() (sleap.io.video.Video static method)</a>
 </li>
       <li><a href="instance.html#sleap.instance.Instance.frame_idx">frame_idx() (sleap.instance.Instance property)</a>
@@ -361,6 +363,8 @@
       <li><a href="video.html#sleap.io.video.Video.from_numpy">from_numpy() (sleap.io.video.Video class method)</a>
 </li>
       <li><a href="instance.html#sleap.instance.PredictedPoint.from_point">from_point() (sleap.instance.PredictedPoint class method)</a>
+</li>
+      <li><a href="inference.html#sleap.nn.inference.Predictor.from_training_jobs">from_training_jobs() (sleap.nn.inference.Predictor class method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -514,6 +518,8 @@
 </li>
       <li><a href="training.html#sleap.nn.architectures.leap.leap_cnn">leap_cnn() (in module sleap.nn.architectures.leap)</a>
 </li>
+      <li><a href="training.html#sleap.nn.architectures.leap.LeapCNN">LeapCNN (class in sleap.nn.architectures.leap)</a>
+</li>
       <li><a href="skeleton.html#sleap.skeleton.Skeleton.load_all_hdf5">load_all_hdf5() (sleap.skeleton.Skeleton class method)</a>
 </li>
       <li><a href="instance.html#sleap.instance.Instance.load_hdf5">load_hdf5() (sleap.instance.Instance class method)</a>
@@ -524,8 +530,12 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="skeleton.html#sleap.skeleton.Skeleton.load_json">load_json() (sleap.skeleton.Skeleton class method)</a>
+      <li><a href="training.html#sleap.nn.training.TrainingJob.load_json">load_json() (sleap.nn.training.TrainingJob class method)</a>
+
+      <ul>
+        <li><a href="skeleton.html#sleap.skeleton.Skeleton.load_json">(sleap.skeleton.Skeleton class method)</a>
 </li>
+      </ul></li>
       <li><a href="dataset.html#sleap.io.dataset.load_labels_json_old">load_labels_json_old() (in module sleap.io.dataset)</a>
 </li>
       <li><a href="skeleton.html#sleap.skeleton.Skeleton.load_mat">load_mat() (sleap.skeleton.Skeleton class method)</a>
@@ -544,6 +554,8 @@
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="skeleton.html#sleap.skeleton.Skeleton.make_cattr">make_cattr() (sleap.skeleton.Skeleton static method)</a>
+</li>
       <li><a href="gui.html#sleap.gui.importvideos.ImportParamWidget.make_layout">make_layout() (sleap.gui.importvideos.ImportParamWidget method)</a>
 </li>
       <li><a href="inference.html#sleap.nn.inference.match_peaks_frame">match_peaks_frame() (in module sleap.nn.inference)</a>
@@ -650,16 +662,26 @@
       </ul></li>
       <li><a href="training.html#sleap.nn.training.ProgressReporterZMQ.on_epoch_begin">on_epoch_begin() (sleap.nn.training.ProgressReporterZMQ method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="training.html#sleap.nn.training.ProgressReporterZMQ.on_epoch_end">on_epoch_end() (sleap.nn.training.ProgressReporterZMQ method)</a>
 </li>
       <li><a href="training.html#sleap.nn.training.ProgressReporterZMQ.on_train_begin">on_train_begin() (sleap.nn.training.ProgressReporterZMQ method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="training.html#sleap.nn.training.ProgressReporterZMQ.on_train_end">on_train_end() (sleap.nn.training.ProgressReporterZMQ method)</a>
 </li>
       <li><a href="gui.html#sleap.gui.video.QtVideoPlayer.onSequenceSelect">onSequenceSelect() (sleap.gui.video.QtVideoPlayer method)</a>
 </li>
+      <li><a href="training.html#sleap.nn.architectures.hourglass.StackedHourglass.output">output() (sleap.nn.architectures.hourglass.StackedHourglass method)</a>
+
+      <ul>
+        <li><a href="training.html#sleap.nn.architectures.leap.LeapCNN.output">(sleap.nn.architectures.leap.LeapCNN method)</a>
+</li>
+        <li><a href="training.html#sleap.nn.architectures.unet.StackedUNet.output">(sleap.nn.architectures.unet.StackedUNet method)</a>
+</li>
+        <li><a href="training.html#sleap.nn.architectures.unet.UNet.output">(sleap.nn.architectures.unet.UNet method)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -703,6 +725,8 @@
       <li><a href="instance.html#sleap.instance.Instance.points">points() (sleap.instance.Instance method)</a>
 </li>
       <li><a href="instance.html#sleap.instance.Instance.points_array">points_array() (sleap.instance.Instance method)</a>
+</li>
+      <li><a href="inference.html#sleap.nn.inference.Predictor.predict">predict() (sleap.nn.inference.Predictor method)</a>
 </li>
       <li><a href="gui.html#sleap.gui.video.GraphicsView.predicted_instances">predicted_instances() (sleap.gui.video.GraphicsView property)</a>
 </li>
@@ -752,10 +776,10 @@
 </li>
       <li><a href="dataset.html#sleap.io.dataset.Labels.remove_video">remove_video() (sleap.io.dataset.Labels method)</a>
 </li>
-      <li><a href="skeleton.html#sleap.skeleton.Skeleton.rename_skeleton">rename_skeleton() (sleap.skeleton.Skeleton class method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="skeleton.html#sleap.skeleton.Skeleton.rename_skeleton">rename_skeleton() (sleap.skeleton.Skeleton class method)</a>
+</li>
       <li><a href="gui.html#sleap.gui.video.QtVideoPlayer.reset">reset() (sleap.gui.video.QtVideoPlayer method)</a>
 </li>
       <li><a href="training.html#sleap.nn.architectures.common.residual_block">residual_block() (in module sleap.nn.architectures.common)</a>
@@ -766,8 +790,6 @@
         <li><a href="gui.html#sleap.gui.video.GraphicsView.resizeEvent">(sleap.gui.video.GraphicsView method)</a>
 </li>
       </ul></li>
-      <li><a href="inference.html#sleap.nn.inference.Predictor.run">run() (sleap.nn.inference.Predictor method)</a>
-</li>
       <li><a href="inference.html#sleap.nn.inference.Predictor.run_visual">run_visual() (sleap.nn.inference.Predictor method)</a>
 </li>
   </ul></td>
@@ -789,6 +811,8 @@
       <li><a href="dataset.html#sleap.io.dataset.Labels.save_json">save_json() (sleap.io.dataset.Labels static method)</a>
 
       <ul>
+        <li><a href="training.html#sleap.nn.training.TrainingJob.save_json">(sleap.nn.training.TrainingJob static method)</a>
+</li>
         <li><a href="skeleton.html#sleap.skeleton.Skeleton.save_json">(sleap.skeleton.Skeleton method)</a>
 </li>
       </ul></li>
@@ -834,10 +858,10 @@
 </li>
       <li><a href="gui.html#sleap.gui.dataviews.SkeletonNodesTable">SkeletonNodesTable (class in sleap.gui.dataviews)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="gui.html#module-sleap.gui.app">sleap.gui.app (module)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="gui.html#module-sleap.gui.confmapsplot">sleap.gui.confmapsplot (module)</a>
 </li>
       <li><a href="gui.html#module-sleap.gui.dataviews">sleap.gui.dataviews (module)</a>
@@ -880,6 +904,10 @@
 </li>
       <li><a href="training.html#sleap.nn.architectures.unet.stacked_unet">stacked_unet() (in module sleap.nn.architectures.unet)</a>
 </li>
+      <li><a href="training.html#sleap.nn.architectures.hourglass.StackedHourglass">StackedHourglass (class in sleap.nn.architectures.hourglass)</a>
+</li>
+      <li><a href="training.html#sleap.nn.architectures.unet.StackedUNet">StackedUNet (class in sleap.nn.architectures.unet)</a>
+</li>
       <li><a href="gui.html#sleap.gui.slider.VideoSlider.startSelection">startSelection() (sleap.gui.slider.VideoSlider method)</a>
 </li>
       <li><a href="gui.html#sleap.gui.dataviews.SuggestionsTable">SuggestionsTable (class in sleap.gui.dataviews)</a>
@@ -912,17 +940,25 @@
         <li><a href="gui.html#sleap.gui.video.QtVideoPlayer.toggleEdges">(sleap.gui.video.QtVideoPlayer method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="gui.html#sleap.gui.video.QtInstance.toggleLabels">toggleLabels() (sleap.gui.video.QtInstance method)</a>
 
       <ul>
         <li><a href="gui.html#sleap.gui.video.QtVideoPlayer.toggleLabels">(sleap.gui.video.QtVideoPlayer method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="instance.html#sleap.instance.Track">Track (class in sleap.instance)</a>
 </li>
+      <li><a href="training.html#sleap.nn.training.Trainer.train">train() (sleap.nn.training.Trainer method)</a>
+</li>
+      <li><a href="training.html#sleap.nn.training.Trainer.train_async">train_async() (sleap.nn.training.Trainer method)</a>
+</li>
+      <li><a href="training.html#sleap.nn.training.Trainer">Trainer (class in sleap.nn.training)</a>
+</li>
       <li><a href="training.html#sleap.nn.training.TrainingControllerZMQ">TrainingControllerZMQ (class in sleap.nn.training)</a>
+</li>
+      <li><a href="training.html#sleap.nn.training.TrainingJob">TrainingJob (class in sleap.nn.training)</a>
 </li>
       <li><a href="training.html#sleap.nn.architectures.densenet.transition_block">transition_block() (in module sleap.nn.architectures.densenet)</a>
 </li>
@@ -932,16 +968,18 @@
 <h2 id="U">U</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="training.html#sleap.nn.architectures.unet.UNet">UNet (class in sleap.nn.architectures.unet)</a>
+</li>
       <li><a href="training.html#sleap.nn.architectures.unet.unet">unet() (in module sleap.nn.architectures.unet)</a>
 </li>
       <li><a href="gui.html#sleap.gui.importvideos.ImportItemWidget.update_video">update_video() (sleap.gui.importvideos.ImportItemWidget method)</a>
 </li>
       <li><a href="gui.html#sleap.gui.video.QtInstance.updateBox">updateBox() (sleap.gui.video.QtInstance method)</a>
 </li>
-      <li><a href="gui.html#sleap.gui.video.QtEdge.updateEdge">updateEdge() (sleap.gui.video.QtEdge method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="gui.html#sleap.gui.video.QtEdge.updateEdge">updateEdge() (sleap.gui.video.QtEdge method)</a>
+</li>
       <li><a href="gui.html#sleap.gui.video.QtNode.updatePoint">updatePoint() (sleap.gui.video.QtNode method)</a>
 </li>
       <li><a href="gui.html#sleap.gui.video.QtInstance.updatePoints">updatePoints() (sleap.gui.video.QtInstance method)</a>

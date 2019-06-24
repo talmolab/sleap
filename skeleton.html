@@ -347,6 +347,20 @@ the left and right hands of a person.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="sleap.skeleton.Skeleton.find_unique_nodes">
+<em class="property">static </em><code class="sig-name descname">find_unique_nodes</code><span class="sig-paren">(</span><em class="sig-param">skeletons: List[Skeleton]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.find_unique_nodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.find_unique_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given list of skeletons, return a list of unique node objects across all skeletons.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>skeletons</strong> – The list of skeletons.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A list of unique node objects.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.skeleton.Skeleton.from_json">
 <em class="property">classmethod </em><code class="sig-name descname">from_json</code><span class="sig-paren">(</span><em class="sig-param">json_str: str</em>, <em class="sig-param">idx_to_node: Dict[int</em>, <em class="sig-param">sleap.skeleton.Node] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.from_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.from_json" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parse a JSON string containing the Skeleton object and create an instance from it.</p>
@@ -501,6 +515,21 @@ compatibility with old LEAP MATLAB code and datasets.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>An instance of the skeleton.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.skeleton.Skeleton.make_cattr">
+<em class="property">static </em><code class="sig-name descname">make_cattr</code><span class="sig-paren">(</span><em class="sig-param">idx_to_node: Dict[int</em>, <em class="sig-param">sleap.skeleton.Node] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.make_cattr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.make_cattr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a cattr.Converter() that registers structure and unstructure hooks for
+Skeleton objects that handle serialization of skeletons objects.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>idx_to_node</strong> – A dict that maps node index to Node objects.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A cattr.Converter() instance ready for skeleton serialization and deserialization.</p>
 </dd>
 </dl>
 </dd></dl>

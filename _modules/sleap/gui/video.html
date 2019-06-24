@@ -645,7 +645,7 @@
         <span class="c1"># signal that the selection has changed (so we can update visual display)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">updatedSelection</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="GraphicsView.selectInstance"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.GraphicsView.selectInstance">[docs]</a>    <span class="k">def</span> <span class="nf">selectInstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">select_idx</span><span class="p">,</span> <span class="n">from_all</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="GraphicsView.selectInstance"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.GraphicsView.selectInstance">[docs]</a>    <span class="k">def</span> <span class="nf">selectInstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">select_idx</span><span class="p">,</span> <span class="n">from_all</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">signal</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Select a particular skeleton instance.</span>
 
@@ -658,7 +658,7 @@
             <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">instance</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">instances</span><span class="p">):</span>
                 <span class="n">instance</span><span class="o">.</span><span class="n">selected</span> <span class="o">=</span> <span class="p">(</span><span class="n">select_idx</span> <span class="o">==</span> <span class="n">idx</span><span class="p">)</span>
         <span class="c1"># signal that the selection has changed (so we can update visual display)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">updatedSelection</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span></div>
+        <span class="k">if</span> <span class="n">signal</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">updatedSelection</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="GraphicsView.getSelection"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.GraphicsView.getSelection">[docs]</a>    <span class="k">def</span> <span class="nf">getSelection</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Returns the index of the currently selected instance.</span>

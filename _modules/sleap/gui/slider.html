@@ -460,6 +460,7 @@
                 <span class="n">color</span> <span class="o">=</span> <span class="n">QColor</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">color_maps</span><span class="p">[</span><span class="n">track</span><span class="o">%</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">color_maps</span><span class="p">)])</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="c1"># rect (open/filled) if format: (&quot;o&quot;, frame_idx) or (&quot;f&quot;, frame_idx)</span>
+                <span class="c1"># (&quot;p&quot;, frame_idx) when only predicted instances on frame</span>
                 <span class="n">mark_type</span> <span class="o">=</span> <span class="n">new_mark</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
                 <span class="n">v_offset</span> <span class="o">=</span> <span class="mi">3</span>
                 <span class="n">height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">slider</span><span class="o">.</span><span class="n">rect</span><span class="p">()</span><span class="o">.</span><span class="n">height</span><span class="p">()</span><span class="o">-</span><span class="mi">6</span>
@@ -467,6 +468,8 @@
                 <span class="n">color</span> <span class="o">=</span> <span class="n">QColor</span><span class="p">(</span><span class="s2">&quot;blue&quot;</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">mark_type</span> <span class="o">==</span> <span class="s2">&quot;o&quot;</span><span class="p">:</span>
                     <span class="n">filled</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">if</span> <span class="n">mark_type</span> <span class="o">==</span> <span class="s2">&quot;p&quot;</span><span class="p">:</span>
+                    <span class="n">color</span> <span class="o">=</span> <span class="n">QColor</span><span class="p">(</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># line if mark has format: frame_idx</span>
             <span class="n">v_offset</span> <span class="o">=</span> <span class="mi">3</span>

@@ -165,7 +165,7 @@
 <span class="kn">import</span> <span class="nn">attr</span>
 
 <span class="kn">from</span> <span class="nn">time</span> <span class="k">import</span> <span class="n">time</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Optional</span>
 
 <span class="kn">from</span> <span class="nn">scipy.ndimage</span> <span class="k">import</span> <span class="n">maximum_filter</span><span class="p">,</span> <span class="n">gaussian_filter</span>
 <span class="kn">from</span> <span class="nn">keras.utils</span> <span class="k">import</span> <span class="n">multi_gpu_model</span>
@@ -175,6 +175,8 @@
 <span class="kn">from</span> <span class="nn">sleap.io.video</span> <span class="k">import</span> <span class="n">Video</span>
 <span class="kn">from</span> <span class="nn">sleap.skeleton</span> <span class="k">import</span> <span class="n">Skeleton</span>
 <span class="kn">from</span> <span class="nn">sleap.util</span> <span class="k">import</span> <span class="n">usable_cpu_count</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.model</span> <span class="k">import</span> <span class="n">ModelOutputType</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.training</span> <span class="k">import</span> <span class="n">TrainingJob</span>
 <span class="kn">from</span> <span class="nn">sleap.nn.tracking</span> <span class="k">import</span> <span class="n">FlowShiftTracker</span><span class="p">,</span> <span class="n">Track</span>
 
 
@@ -346,7 +348,7 @@
     <span class="n">vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">I</span><span class="p">[</span><span class="n">yi</span><span class="p">,</span><span class="n">xi</span><span class="p">]</span> <span class="k">for</span> <span class="n">xi</span><span class="p">,</span> <span class="n">yi</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)])</span>
     <span class="k">return</span> <span class="n">vals</span></div>
 
-<div class="viewcode-block" id="match_peaks_frame"><a class="viewcode-back" href="../../../inference.html#sleap.nn.inference.match_peaks_frame">[docs]</a><span class="k">def</span> <span class="nf">match_peaks_frame</span><span class="p">(</span><span class="n">peaks_t</span><span class="p">,</span> <span class="n">peak_vals_t</span><span class="p">,</span> <span class="n">pafs_t</span><span class="p">,</span> <span class="n">skeleton</span><span class="p">,</span>
+<div class="viewcode-block" id="match_peaks_frame"><a class="viewcode-back" href="../../../inference.html#sleap.nn.inference.match_peaks_frame">[docs]</a><span class="k">def</span> <span class="nf">match_peaks_frame</span><span class="p">(</span><span class="n">peaks_t</span><span class="p">,</span> <span class="n">peak_vals_t</span><span class="p">,</span> <span class="n">pafs_t</span><span class="p">,</span> <span class="n">skeleton</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span>
                       <span class="n">min_score_to_node_ratio</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span>
                       <span class="n">min_score_midpts</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
                       <span class="n">min_score_integral</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
@@ -433,6 +435,7 @@
     <span class="c1"># Greedy matching of each edge candidate set</span>
     <span class="n">subset</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">skeleton</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span><span class="o">+</span><span class="mi">2</span><span class="p">))</span> <span class="c1"># ids, overall score, number of parts</span>
     <span class="n">candidate</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">y</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">peaks_t</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">x</span><span class="p">])</span> <span class="c1"># flattened set of all points</span>
+    <span class="n">candidate</span> <span class="o">=</span> <span class="n">candidate</span> <span class="o">/</span> <span class="n">scale</span> <span class="c1"># rescale points to original image</span>
     <span class="n">candidate_scores</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">y</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">peak_vals_t</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">x</span><span class="p">])</span> <span class="c1"># flattened set of all peak scores</span>
     <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">edge</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">skeleton</span><span class="o">.</span><span class="n">edge_names</span><span class="p">):</span>
         <span class="c1"># No matches for this edge</span>
@@ -515,7 +518,7 @@
     <span class="k">return</span> <span class="n">matched_instances_t</span></div>
 
 <div class="viewcode-block" id="match_peaks_paf"><a class="viewcode-back" href="../../../inference.html#sleap.nn.inference.match_peaks_paf">[docs]</a><span class="k">def</span> <span class="nf">match_peaks_paf</span><span class="p">(</span><span class="n">peaks</span><span class="p">,</span> <span class="n">peak_vals</span><span class="p">,</span> <span class="n">pafs</span><span class="p">,</span> <span class="n">skeleton</span><span class="p">,</span>
-                    <span class="n">video</span><span class="p">,</span> <span class="n">frame_indices</span><span class="p">,</span>
+                    <span class="n">video</span><span class="p">,</span> <span class="n">frame_indices</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                     <span class="n">min_score_to_node_ratio</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">min_score_midpts</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
                     <span class="n">min_score_integral</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">add_last_edge</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; Computes PAF-based peak matching via greedy assignment and other such dragons &quot;&quot;&quot;</span>
@@ -523,17 +526,17 @@
     <span class="c1"># Process each frame</span>
     <span class="n">predicted_frames</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">peaks_t</span><span class="p">,</span> <span class="n">peak_vals_t</span><span class="p">,</span> <span class="n">pafs_t</span><span class="p">,</span> <span class="n">frame_idx</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">peaks</span><span class="p">,</span> <span class="n">peak_vals</span><span class="p">,</span> <span class="n">pafs</span><span class="p">,</span> <span class="n">frame_indices</span><span class="p">):</span>
-        <span class="n">instances</span> <span class="o">=</span> <span class="n">match_peaks_frame</span><span class="p">(</span><span class="n">peaks_t</span><span class="p">,</span> <span class="n">peak_vals_t</span><span class="p">,</span> <span class="n">pafs_t</span><span class="p">,</span> <span class="n">skeleton</span><span class="p">,</span>
+        <span class="n">instances</span> <span class="o">=</span> <span class="n">match_peaks_frame</span><span class="p">(</span><span class="n">peaks_t</span><span class="p">,</span> <span class="n">peak_vals_t</span><span class="p">,</span> <span class="n">pafs_t</span><span class="p">,</span> <span class="n">skeleton</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span>
                                    <span class="n">min_score_to_node_ratio</span><span class="o">=</span><span class="n">min_score_to_node_ratio</span><span class="p">,</span>
                                    <span class="n">min_score_midpts</span><span class="o">=</span><span class="n">min_score_midpts</span><span class="p">,</span>
                                    <span class="n">min_score_integral</span><span class="o">=</span><span class="n">min_score_integral</span><span class="p">,</span>
-                                   <span class="n">add_last_edge</span><span class="o">=</span><span class="n">add_last_edge</span><span class="p">)</span>
+                                   <span class="n">add_last_edge</span><span class="o">=</span><span class="n">add_last_edge</span><span class="p">,)</span>
         <span class="n">predicted_frames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">LabeledFrame</span><span class="p">(</span><span class="n">video</span><span class="o">=</span><span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="o">=</span><span class="n">frame_idx</span><span class="p">,</span> <span class="n">instances</span><span class="o">=</span><span class="n">instances</span><span class="p">))</span>
 
     <span class="k">return</span> <span class="n">predicted_frames</span></div>
 
 <div class="viewcode-block" id="match_peaks_paf_par"><a class="viewcode-back" href="../../../inference.html#sleap.nn.inference.match_peaks_paf_par">[docs]</a><span class="k">def</span> <span class="nf">match_peaks_paf_par</span><span class="p">(</span><span class="n">peaks</span><span class="p">,</span> <span class="n">peak_vals</span><span class="p">,</span> <span class="n">pafs</span><span class="p">,</span> <span class="n">skeleton</span><span class="p">,</span>
-                        <span class="n">video</span><span class="p">,</span> <span class="n">frame_indices</span><span class="p">,</span>
+                        <span class="n">video</span><span class="p">,</span> <span class="n">frame_indices</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                         <span class="n">min_score_to_node_ratio</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span>
                         <span class="n">min_score_midpts</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
                         <span class="n">min_score_integral</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
@@ -547,7 +550,8 @@
     <span class="n">futures</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">peaks_t</span><span class="p">,</span> <span class="n">peak_vals_t</span><span class="p">,</span> <span class="n">pafs_t</span><span class="p">,</span> <span class="n">frame_idx</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">peaks</span><span class="p">,</span> <span class="n">peak_vals</span><span class="p">,</span> <span class="n">pafs</span><span class="p">,</span> <span class="n">frame_indices</span><span class="p">):</span>
         <span class="n">future</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">apply_async</span><span class="p">(</span><span class="n">match_peaks_frame</span><span class="p">,</span> <span class="p">[</span><span class="n">peaks_t</span><span class="p">,</span> <span class="n">peak_vals_t</span><span class="p">,</span> <span class="n">pafs_t</span><span class="p">,</span> <span class="n">skeleton</span><span class="p">],</span>
-                                  <span class="nb">dict</span><span class="p">(</span><span class="n">min_score_to_node_ratio</span><span class="o">=</span><span class="n">min_score_to_node_ratio</span><span class="p">,</span>
+                                  <span class="nb">dict</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span>
+                                       <span class="n">min_score_to_node_ratio</span><span class="o">=</span><span class="n">min_score_to_node_ratio</span><span class="p">,</span>
                                        <span class="n">min_score_midpts</span><span class="o">=</span><span class="n">min_score_midpts</span><span class="p">,</span>
                                        <span class="n">min_score_integral</span><span class="o">=</span><span class="n">min_score_integral</span><span class="p">,</span>
                                        <span class="n">add_last_edge</span><span class="o">=</span><span class="n">add_last_edge</span><span class="p">))</span>
@@ -609,7 +613,9 @@
     <span class="n">flow_window</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">15</span>
     <span class="n">save_shifted_instances</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
 
-<div class="viewcode-block" id="Predictor.run"><a class="viewcode-back" href="../../../inference.html#sleap.nn.inference.Predictor.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_video</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Video</span><span class="p">],</span> <span class="n">output_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">frames</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Predictor.predict"><a class="viewcode-back" href="../../../inference.html#sleap.nn.inference.Predictor.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_video</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Video</span><span class="p">],</span>
+                <span class="n">output_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="n">frames</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">LabeledFrame</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run the entire inference pipeline on an input video or file object.</span>
 
@@ -619,7 +625,7 @@
 <span class="sd">            frames (optional): List of frames to predict. If None, run entire video.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            None</span>
+<span class="sd">            list of LabeledFrame objects</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># Load model</span>
@@ -677,20 +683,19 @@
             <span class="n">frames_idx</span> <span class="o">=</span> <span class="n">frames</span><span class="p">[</span><span class="n">frame_start</span><span class="p">:</span><span class="n">frame_end</span><span class="p">]</span>
             <span class="n">mov</span> <span class="o">=</span> <span class="n">vid</span><span class="p">[</span><span class="n">frames_idx</span><span class="p">]</span>
 
-            <span class="c1"># Preprocess the frames</span>
-            <span class="k">if</span> <span class="n">model_channels</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="n">mov</span> <span class="o">=</span> <span class="n">mov</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span>
-
-            <span class="c1"># Resize the frames to the model input size</span>
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mov</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
-                <span class="n">mov</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">mov</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:],</span> <span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">))</span>
-
-            <span class="c1"># Add back singleton dimension</span>
-            <span class="k">if</span> <span class="n">model_channels</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="n">mov</span> <span class="o">=</span> <span class="n">mov</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="c1"># TODO: figure out when/if this is necessary for RGB videos</span>
-                <span class="n">mov</span> <span class="o">=</span> <span class="n">mov</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">vid</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">vid</span><span class="o">.</span><span class="n">width</span><span class="p">)</span> <span class="o">!=</span> <span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">):</span>
+                <span class="c1"># Resize the frames to the model input size</span>
+                <span class="n">scaled_mov</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">mov</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">mov</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]))</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mov</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                    <span class="n">img</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">mov</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:],</span> <span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">))</span>
+                     <span class="c1"># add back singleton channel</span>
+                    <span class="k">if</span> <span class="n">model_channels</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">img</span> <span class="o">=</span> <span class="n">img</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="c1"># TODO: figure out when/if this is necessary for RGB videos</span>
+                        <span class="n">img</span> <span class="o">=</span> <span class="n">img</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="n">scaled_mov</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">img</span>
+                <span class="n">mov</span> <span class="o">=</span> <span class="n">scaled_mov</span>
 
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;  Read </span><span class="si">%d</span><span class="s2"> frames [</span><span class="si">%.1f</span><span class="s2">s]&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mov</span><span class="p">),</span> <span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span><span class="p">))</span>
 
@@ -710,7 +715,7 @@
             <span class="c1"># Match peaks via PAFs</span>
             <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
             <span class="n">predicted_frames_chunk</span> <span class="o">=</span> <span class="n">match_peaks_paf_par</span><span class="p">(</span><span class="n">peaks</span><span class="p">,</span> <span class="n">peak_vals</span><span class="p">,</span> <span class="n">pafs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="p">,</span>
-                                            <span class="n">video</span><span class="o">=</span><span class="n">vid</span><span class="p">,</span> <span class="n">frame_indices</span><span class="o">=</span><span class="n">frames_idx</span><span class="p">,</span>
+                                            <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">video</span><span class="o">=</span><span class="n">vid</span><span class="p">,</span> <span class="n">frame_indices</span><span class="o">=</span><span class="n">frames_idx</span><span class="p">,</span>
                                             <span class="n">min_score_to_node_ratio</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_score_to_node_ratio</span><span class="p">,</span>
                                             <span class="n">min_score_midpts</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_score_midpts</span><span class="p">,</span>
                                             <span class="n">min_score_integral</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_score_integral</span><span class="p">,</span>
@@ -751,8 +756,7 @@
 
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Total: </span><span class="si">%.1f</span><span class="s2"> min&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">total_elapsed</span> <span class="o">/</span> <span class="mi">60</span><span class="p">))</span>
 
-        <span class="k">if</span> <span class="n">output_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">predicted_frames</span></div>
+        <span class="k">return</span> <span class="n">predicted_frames</span></div>
 
 <div class="viewcode-block" id="Predictor.run_visual"><a class="viewcode-back" href="../../../inference.html#sleap.nn.inference.Predictor.run_visual">[docs]</a>    <span class="k">def</span> <span class="nf">run_visual</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_video</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Video</span><span class="p">],</span> <span class="n">max_frames</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -856,7 +860,44 @@
 
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Total: </span><span class="si">%.1f</span><span class="s2"> min&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">total_elapsed</span> <span class="o">/</span> <span class="mi">60</span><span class="p">))</span>
 
-        <span class="k">return</span> <span class="n">confmaps</span><span class="p">,</span> <span class="n">pafs</span></div></div>
+        <span class="k">return</span> <span class="n">confmaps</span><span class="p">,</span> <span class="n">pafs</span></div>
+
+<div class="viewcode-block" id="Predictor.from_training_jobs"><a class="viewcode-back" href="../../../inference.html#sleap.nn.inference.Predictor.from_training_jobs">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_training_jobs</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span>
+            <span class="n">training_jobs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">ModelOutputType</span><span class="p">,</span> <span class="n">TrainingJob</span><span class="p">],</span>
+            <span class="n">labels</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Labels</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Construct a Predictor from some TrainingJobs.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            training_jobs: Dict with a TrainingJob for each required ModelOutputType</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            Predictor initialized with Keras model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Build the Keras Model</span>
+        <span class="c1"># This code makes assumptions about the types of TrainingJobs we&#39;ve been given</span>
+
+        <span class="n">confmap_job</span> <span class="o">=</span> <span class="n">training_jobs</span><span class="p">[</span><span class="n">ModelOutputType</span><span class="o">.</span><span class="n">CONFIDENCE_MAP</span><span class="p">]</span>
+        <span class="n">pafs_job</span> <span class="o">=</span> <span class="n">training_jobs</span><span class="p">[</span><span class="n">ModelOutputType</span><span class="o">.</span><span class="n">PART_AFFINITY_FIELD</span><span class="p">]</span>
+
+        <span class="n">confmap_model_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">confmap_job</span><span class="o">.</span><span class="n">save_dir</span><span class="p">,</span> <span class="n">confmap_job</span><span class="o">.</span><span class="n">best_model_filename</span><span class="p">)</span>
+        <span class="n">paf_model_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pafs_job</span><span class="o">.</span><span class="n">save_dir</span><span class="p">,</span> <span class="n">pafs_job</span><span class="o">.</span><span class="n">best_model_filename</span><span class="p">)</span>
+
+        <span class="n">scale</span> <span class="o">=</span> <span class="n">confmap_job</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">scale</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span> <span class="ow">or</span> <span class="n">Labels</span><span class="o">.</span><span class="n">load_json</span><span class="p">(</span><span class="n">confmap_job</span><span class="o">.</span><span class="n">labels_filename</span><span class="p">)</span>
+        <span class="n">skeleton</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># FIXME: we&#39;re now assuming that all the videos are the same size</span>
+        <span class="n">vid</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">videos</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">img_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">vid</span><span class="o">.</span><span class="n">height</span><span class="o">//</span><span class="n">scale</span><span class="p">,</span> <span class="n">vid</span><span class="o">.</span><span class="n">width</span><span class="o">//</span><span class="n">scale</span><span class="p">,</span> <span class="n">vid</span><span class="o">.</span><span class="n">channels</span><span class="p">)</span>
+
+        <span class="c1"># Load the model</span>
+        <span class="n">keras_model</span> <span class="o">=</span> <span class="n">get_inference_model</span><span class="p">(</span><span class="n">confmap_model_path</span><span class="p">,</span> <span class="n">paf_model_path</span><span class="p">,</span> <span class="n">img_shape</span><span class="p">)</span>
+
+        <span class="c1"># Return the Predictor ready to use</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">keras_model</span><span class="p">,</span> <span class="n">skeleton</span><span class="o">=</span><span class="n">skeleton</span><span class="p">)</span></div></div>
+
 
 <div class="viewcode-block" id="load_predicted_labels_json_old"><a class="viewcode-back" href="../../../inference.html#sleap.nn.inference.load_predicted_labels_json_old">[docs]</a><span class="k">def</span> <span class="nf">load_predicted_labels_json_old</span><span class="p">(</span>
         <span class="n">data_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">parsed_json</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1026,20 +1067,8 @@
     <span class="n">predictor</span> <span class="o">=</span> <span class="n">Predictor</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">skeleton</span><span class="o">=</span><span class="n">skeleton</span><span class="p">,</span> <span class="n">with_tracking</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">with_tracking</span><span class="p">)</span>
 
     <span class="c1"># Run the inference pipeline</span>
-    <span class="k">return</span> <span class="n">predictor</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">input_video</span><span class="o">=</span><span class="n">data_path</span><span class="p">,</span> <span class="n">output_path</span><span class="o">=</span><span class="n">save_path</span><span class="p">,</span> <span class="n">frames</span><span class="o">=</span><span class="n">frames</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">predictor</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">input_video</span><span class="o">=</span><span class="n">data_path</span><span class="p">,</span> <span class="n">output_path</span><span class="o">=</span><span class="n">save_path</span><span class="p">,</span> <span class="n">frames</span><span class="o">=</span><span class="n">frames</span><span class="p">)</span>
 
-<span class="k">def</span> <span class="nf">predicted_frames</span><span class="p">(</span><span class="n">vid</span><span class="p">:</span> <span class="n">Video</span><span class="p">,</span> <span class="n">confmap_model_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">paf_model_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">skeleton</span><span class="p">:</span> <span class="n">Skeleton</span><span class="p">,</span> <span class="n">frames</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="c1"># Predict on full-sized video (adjust model input layer instead)</span>
-    <span class="n">img_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">vid</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">vid</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">vid</span><span class="o">.</span><span class="n">channels</span><span class="p">)</span>
-
-    <span class="c1"># Load the model</span>
-    <span class="n">model</span> <span class="o">=</span> <span class="n">get_inference_model</span><span class="p">(</span><span class="n">confmap_model_path</span><span class="p">,</span> <span class="n">paf_model_path</span><span class="p">,</span> <span class="n">img_shape</span><span class="p">)</span>
-
-    <span class="c1"># Create a predictor to do the work.</span>
-    <span class="n">predictor</span> <span class="o">=</span> <span class="n">Predictor</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">skeleton</span><span class="o">=</span><span class="n">skeleton</span><span class="p">)</span>
-
-    <span class="c1"># Run the inference pipeline</span>
-    <span class="k">return</span> <span class="n">predictor</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">input_video</span><span class="o">=</span><span class="n">vid</span><span class="p">,</span> <span class="n">frames</span><span class="o">=</span><span class="n">frames</span><span class="p">)</span>
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
 

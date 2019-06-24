@@ -150,32 +150,530 @@
            <div itemprop="articleBody">
             
   <h1>Source code for sleap.nn.training</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">json</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">attr</span>
+<span class="kn">import</span> <span class="nn">cattr</span>
+<span class="kn">import</span> <span class="nn">zmq</span>
+<span class="kn">import</span> <span class="nn">jsonpickle</span>
+<span class="kn">import</span> <span class="nn">keras</span>
+
+<span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="k">import</span> <span class="n">Process</span><span class="p">,</span> <span class="n">Pool</span>
+<span class="kn">from</span> <span class="nn">multiprocessing.pool</span> <span class="k">import</span> <span class="n">AsyncResult</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Tuple</span>
 <span class="kn">from</span> <span class="nn">time</span> <span class="k">import</span> <span class="n">time</span><span class="p">,</span> <span class="n">sleep</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
-<span class="kn">import</span> <span class="nn">os</span>
 
-<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
-<span class="kn">import</span> <span class="nn">keras</span>
 <span class="kn">from</span> <span class="nn">keras</span> <span class="k">import</span> <span class="n">backend</span> <span class="k">as</span> <span class="n">K</span>
-
-<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="k">import</span> <span class="n">train_test_split</span>
-<span class="kn">from</span> <span class="nn">sleap.nn.augmentation</span> <span class="k">import</span> <span class="n">Augmenter</span>
-
 <span class="kn">from</span> <span class="nn">keras.layers</span> <span class="k">import</span> <span class="n">Input</span><span class="p">,</span> <span class="n">Conv2D</span><span class="p">,</span> <span class="n">BatchNormalization</span><span class="p">,</span> <span class="n">Add</span><span class="p">,</span> <span class="n">MaxPool2D</span><span class="p">,</span> <span class="n">UpSampling2D</span><span class="p">,</span> <span class="n">Concatenate</span>
 <span class="kn">from</span> <span class="nn">keras.callbacks</span> <span class="k">import</span> <span class="n">ReduceLROnPlateau</span><span class="p">,</span> <span class="n">EarlyStopping</span><span class="p">,</span> <span class="n">TensorBoard</span><span class="p">,</span> <span class="n">LambdaCallback</span><span class="p">,</span> <span class="n">ModelCheckpoint</span>
 
-<span class="kn">from</span> <span class="nn">sleap.nn.architectures.common</span> <span class="k">import</span> <span class="n">conv</span>
-<span class="kn">from</span> <span class="nn">sleap.nn.architectures.hourglass</span> <span class="k">import</span> <span class="n">stacked_hourglass</span>
-<span class="kn">from</span> <span class="nn">sleap.nn.architectures.unet</span> <span class="k">import</span> <span class="n">unet</span><span class="p">,</span> <span class="n">stacked_unet</span>
-<span class="kn">from</span> <span class="nn">sleap.nn.architectures.leap</span> <span class="k">import</span> <span class="n">leap_cnn</span>
+<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="k">import</span> <span class="n">train_test_split</span>
+
+<span class="kn">from</span> <span class="nn">sleap.skeleton</span> <span class="k">import</span> <span class="n">Skeleton</span>
+<span class="kn">from</span> <span class="nn">sleap.io.dataset</span> <span class="k">import</span> <span class="n">Labels</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.augmentation</span> <span class="k">import</span> <span class="n">Augmenter</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.model</span> <span class="k">import</span> <span class="n">Model</span><span class="p">,</span> <span class="n">ModelOutputType</span>
 <span class="kn">from</span> <span class="nn">sleap.nn.monitor</span> <span class="k">import</span> <span class="n">LossViewer</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.datagen</span> <span class="k">import</span> <span class="n">generate_confmaps_from_points</span><span class="p">,</span> <span class="n">generate_pafs_from_points</span><span class="p">,</span> <span class="n">generate_images</span><span class="p">,</span> <span class="n">generate_points</span><span class="p">,</span> <span class="n">instance_crops</span>
 
-<span class="kn">from</span> <span class="nn">sleap.nn.datagen</span> <span class="k">import</span> <span class="n">generate_confmaps_from_points</span><span class="p">,</span> <span class="n">generate_pafs_from_points</span>
 
-<span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="k">import</span> <span class="n">Process</span>
-<span class="kn">import</span> <span class="nn">zmq</span>
-<span class="kn">import</span> <span class="nn">jsonpickle</span>
+<div class="viewcode-block" id="Trainer"><a class="viewcode-back" href="../../../training.html#sleap.nn.training.Trainer">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">Trainer</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The Trainer class implements a training program on a SLEAP model.</span>
+<span class="sd">    Its main purpose is to capture training program hyperparameters</span>
+<span class="sd">    separate from model specific hyper parameters. The train function is</span>
+<span class="sd">    used to invoke training on a specific model and dataset.</span>
+
+<span class="sd">    Note: some of these values are passed directly to lower level Keras</span>
+<span class="sd">    APIs and thus their documentation has been lifted from https://keras.io.</span>
+<span class="sd">    This should be noted for these paramters, please consulte https://keras.io</span>
+<span class="sd">    for the most up to date documentation for these parameters.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        val_size: If float, should be between 0.0 and 1.0 and represent</span>
+<span class="sd">        the proportion of the dataset to include in the test split.</span>
+<span class="sd">        If int, represents the absolute number of test samples. If None,</span>
+<span class="sd">        the value is set to it will be set to 0.25.</span>
+<span class="sd">        optimizer: Either &quot;adam&quot; or &quot;rmsprop&quot;. This selects whether to use</span>
+<span class="sd">        keras.optimizers.Adam or keras.optimizers.RMSProp for the underlying</span>
+<span class="sd">        keras model optimizer.</span>
+<span class="sd">        learning_rate: The learning rate to pass to Adam or RMSProp.</span>
+<span class="sd">        amsgrad: If optimizer is &quot;adam&quot;, whether to apply</span>
+<span class="sd">        the AMSGrad variant of this algorithm from the paper</span>
+<span class="sd">        &quot;On the Convergence of Adam and Beyond&quot;. If optimizer is &quot;RMSProp&quot;,</span>
+<span class="sd">        unused.</span>
+
+<span class="sd">        batch_size: The batch size to use for training.</span>
+<span class="sd">        num_epochs: Number of epochs to train the model. An epoch is an</span>
+<span class="sd">        iteration over the entire data provided, as defined by steps_per_epoch.</span>
+<span class="sd">        steps_per_epoch: Total number of steps (batches of samples) to yield</span>
+<span class="sd">        from generator before declaring one epoch finished and starting the</span>
+<span class="sd">        next epoch. If set to None, do one loop through dataset per epoch.</span>
+<span class="sd">        shuffle_initially: Whether to shuffle training data before training begins.</span>
+<span class="sd">        shuffle_every_epoch: Whether to continually shuffle the data after each epoch.</span>
+
+<span class="sd">        augment_rotation: A float or two dimensional tuple expressing the range</span>
+<span class="sd">        of rotataion (in degrees) augmentations to perform. If rotation is a scalar,</span>
+<span class="sd">        it is transformed to (-rotation, +rotation)</span>
+<span class="sd">        augment_scale_min: The lower bound of random scaling factors to apply to the</span>
+<span class="sd">        images when augmenting. If augment_scale_min == augment_scale_max then scaling</span>
+<span class="sd">        augmentation will be skipped.</span>
+<span class="sd">        augment_scale_max: The upper bound of random scaling factors to apply to the</span>
+<span class="sd">        images when augmenting. If augment_scale_min == augment_scale_max then scaling</span>
+<span class="sd">        augmentation will be skipped.</span>
+
+<span class="sd">        save_dir: The directory to save trained Keras models.</span>
+<span class="sd">        save_every_epoch: Should a model be saved every epoch.</span>
+<span class="sd">        save_best_val: Should we save the model with the lowest validation loss.</span>
+
+<span class="sd">        reduce_lr_min_delta: Threshold for measuring the new optimum, to only focus on significant</span>
+<span class="sd">        changes. Parameter passed to keras callback ReduceLROnPlateau(min_delta, monitor=&#39;val_loss&#39;).</span>
+<span class="sd">        reduce_lr_factor: Factor by which the learning rate will be reduced. new_lr = lr * factor.</span>
+<span class="sd">        Parameter passed to keras callback ReduceLROnPlateau(factor, monitor=&#39;val_loss&#39;).</span>
+<span class="sd">        reduce_lr_patience: Number of epochs with no improvement after which learning rate will be reduced.</span>
+<span class="sd">        Parameter passed to keras callback ReduceLROnPlateau(patience, monitor=&#39;val_loss&#39;).</span>
+<span class="sd">        reduce_lr_cooldown: Number of epochs to wait before resuming normal operation after lr has</span>
+<span class="sd">        been reduced.Parameter passed to keras callback ReduceLROnPlateau(cooldown, monitor=&#39;val_loss&#39;).</span>
+<span class="sd">        reduce_lr_min_lr: Lower bound on the learning rate. Parameter passed to keras callback</span>
+<span class="sd">        ReduceLROnPlateau(min_lr, monitor=&#39;val_loss&#39;).</span>
+
+<span class="sd">        early_stopping_min_delta: Minimum change in the monitored quantity to qualify as an improvement,</span>
+<span class="sd">        i.e. an absolute change of less than min_delta, will count as no improvement. Parameter passed to</span>
+<span class="sd">        keras callback EarlyStopping(min_delta, monitor=&#39;val_loss&#39;)</span>
+<span class="sd">        early_stopping_patience: Number of epochs with no improvement after which training will be stopped.</span>
+<span class="sd">        Parameter passed to keras callback EarlyStopping(patience, monitor=&#39;val_loss&#39;)</span>
+
+<span class="sd">        scale: Scale factor for downsampling (2 means we downsample by factor of 2)</span>
+<span class="sd">        sigma: Size of confmaps/pafs generated by datagen functions</span>
+<span class="sd">        instance_crop: Whether to crop images around each instance (and adjust points)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">val_size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span>
+    <span class="n">optimizer</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;adam&quot;</span>
+    <span class="n">learning_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-3</span>
+    <span class="n">amsgrad</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">num_epochs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">steps_per_epoch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span>
+    <span class="n">shuffle_initially</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">shuffle_every_epoch</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">augment_rotation</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">180.0</span>
+    <span class="n">augment_scale_min</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">augment_scale_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">save_every_epoch</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">save_best_val</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">reduce_lr_min_delta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-6</span>
+    <span class="n">reduce_lr_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span>
+    <span class="n">reduce_lr_patience</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">reduce_lr_cooldown</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">reduce_lr_min_lr</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-8</span>
+    <span class="n">early_stopping_min_delta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-8</span>
+    <span class="n">early_stopping_patience</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">scale</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">sigma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">5.0</span>
+    <span class="n">instance_crop</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="Trainer.train"><a class="viewcode-back" href="../../../training.html#sleap.nn.training.Trainer.train">[docs]</a>    <span class="k">def</span> <span class="nf">train</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+              <span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span>
+              <span class="n">labels</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Labels</span><span class="p">,</span> <span class="n">Dict</span><span class="p">],</span>
+              <span class="n">run_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+              <span class="n">save_dir</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+              <span class="n">tensorboard_dir</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+              <span class="n">control_zmq_port</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">9000</span><span class="p">,</span>
+              <span class="n">progress_report_zmq_port</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">9001</span><span class="p">,</span>
+              <span class="n">multiprocessing_workers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Train a given model using labels and the Trainer&#39;s current hyper-parameter settings.</span>
+<span class="sd">        This method executes synchronously, thus it blocks until training is finished.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            model: The model to run training on.</span>
+<span class="sd">            labels: The SLEAP Labels dataset of labeled frames to run training on.</span>
+<span class="sd">            tensorboard_dir: An optional tensorboard directory.</span>
+<span class="sd">            run_name: A string name to use to prefix each model file name. If set to None,</span>
+<span class="sd">            the default value is:</span>
+<span class="sd">            f&quot;{timestamp}.{str(model.output_type).lower()}.{model.name}.n={num_total}&quot;.</span>
+<span class="sd">            Where num_total is the number of total training and validation images.</span>
+<span class="sd">            control_zmq_port: This training process can be controlled by a control server.</span>
+<span class="sd">            This is the port to connect to on the server at localhost. If None, no connection</span>
+<span class="sd">            is made.</span>
+<span class="sd">            progress_report_zmq_port: Progress indications can be generated to a server</span>
+<span class="sd">            listening on localhost using this port. If None, no connection is made.</span>
+<span class="sd">            multiprocessing_workers: Whether to user multiple worker processes to train the model.</span>
+<span class="sd">            If set &lt; 1, use_multiprocessing will be set to false on call to</span>
+<span class="sd">            keras.Model.fit_generator(). Otherwise, multiprocessing_workers will</span>
+<span class="sd">            be passed to fit_generator().</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            If save_dir is not None, the file path of the JSON TrainingJob object. If save_dir</span>
+<span class="sd">            is None, then the returns None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">labels_file_name</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+            <span class="n">labels_file_name</span> <span class="o">=</span> <span class="n">labels</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">load_json</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">from_json</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+
+
+        <span class="c1"># FIXME: We need to handle multiple skeletons.</span>
+        <span class="n">skeleton</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># Modify the model to add the skeletons, not sure if skeletons should be</span>
+        <span class="c1"># on the Model class or on TrainingJob instead. Oh well.</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">skeletons</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span>
+
+        <span class="c1"># Generate images and points (outputs) datasets from the labels</span>
+        <span class="n">imgs</span> <span class="o">=</span> <span class="n">generate_images</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="n">generate_points</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span>
+
+        <span class="c1"># Crop images to instances (if desired)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance_crop</span><span class="p">:</span>
+            <span class="n">imgs</span><span class="p">,</span> <span class="n">points</span> <span class="o">=</span> <span class="n">instance_crops</span><span class="p">(</span><span class="n">imgs</span><span class="p">,</span> <span class="n">points</span><span class="p">)</span>
+
+        <span class="c1"># Split data into train/validation</span>
+        <span class="n">imgs_train</span><span class="p">,</span> <span class="n">imgs_val</span><span class="p">,</span> <span class="n">outputs_train</span><span class="p">,</span> <span class="n">outputs_val</span> <span class="o">=</span> \
+            <span class="n">train_test_split</span><span class="p">(</span><span class="n">imgs</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">val_size</span><span class="p">)</span>
+
+        <span class="c1"># Free up the original datasets after test and train split.</span>
+        <span class="k">del</span> <span class="n">imgs</span><span class="p">,</span> <span class="n">points</span>
+
+        <span class="c1"># Infer shapes</span>
+        <span class="n">num_train</span><span class="p">,</span> <span class="n">img_height</span><span class="p">,</span> <span class="n">img_width</span><span class="p">,</span> <span class="n">img_channels</span> <span class="o">=</span> <span class="n">imgs_train</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">num_val</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">imgs_val</span><span class="p">)</span>
+        <span class="n">num_total</span> <span class="o">=</span> <span class="n">num_train</span> <span class="o">+</span> <span class="n">num_val</span>
+
+        <span class="c1"># Figure out how many output channels we will have.</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">outputs_train</span><span class="p">)</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+            <span class="n">num_outputs_channels</span> <span class="o">=</span> <span class="n">outputs_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">model</span><span class="o">.</span><span class="n">output_type</span> <span class="o">==</span> <span class="n">ModelOutputType</span><span class="o">.</span><span class="n">CONFIDENCE_MAP</span><span class="p">:</span>
+            <span class="n">num_outputs_channels</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">skeleton</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">model</span><span class="o">.</span><span class="n">output_type</span> <span class="o">==</span> <span class="n">ModelOutputType</span><span class="o">.</span><span class="n">PART_AFFINITY_FIELD</span><span class="p">:</span>
+            <span class="n">num_outputs_channels</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">skeleton</span><span class="o">.</span><span class="n">edges</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Training set: </span><span class="si">{imgs_train.shape}</span><span class="s2"> -&gt; </span><span class="si">{num_outputs_channels}</span><span class="s2"> channels&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Validation set: </span><span class="si">{imgs_val.shape}</span><span class="s2"> -&gt; </span><span class="si">{num_outputs_channels}</span><span class="s2"> channels&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Input layer</span>
+        <span class="n">img_input</span> <span class="o">=</span> <span class="n">Input</span><span class="p">((</span><span class="n">img_height</span><span class="p">,</span> <span class="n">img_width</span><span class="p">,</span> <span class="n">img_channels</span><span class="p">))</span>
+
+        <span class="c1"># Rectify image sizes not divisible by pooling factor</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">backbone</span><span class="p">,</span> <span class="s1">&#39;depth&#39;</span><span class="p">):</span>
+            <span class="n">depth</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">backbone</span><span class="o">.</span><span class="n">depth</span>
+
+            <span class="n">pool_factor</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="n">depth</span>
+            <span class="k">if</span> <span class="n">img_height</span> <span class="o">%</span> <span class="n">pool_factor</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">img_width</span> <span class="o">%</span> <span class="n">pool_factor</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="n">f</span><span class="s2">&quot;Image dimensions (</span><span class="si">{img_height}</span><span class="s2">, </span><span class="si">{img_width}</span><span class="s2">) are &quot;</span>
+                    <span class="n">f</span><span class="s2">&quot;not divisible by the pooling factor (</span><span class="si">{pool_factor}</span><span class="s2">).&quot;</span><span class="p">)</span>
+                <span class="c1"># gap_height = (np.ceil(img_height / pool_factor) * pool_factor) - img_height</span>
+                <span class="c1"># gap_width = (np.ceil(img_width / pool_factor) * pool_factor) - img_width</span>
+
+                <span class="c1"># TODO: combination of ZeroPadding2D and Cropping2D</span>
+                <span class="c1"># can&#39;t do non-symmetric padding, so pad first and then crop</span>
+                <span class="c1"># left/top so coordinates aren&#39;t messed up</span>
+                <span class="c1"># Solution: https://www.tensorflow.org/api_docs/python/tf/pad + Lambda layer + corresponding crop at the end?</span>
+
+        <span class="c1"># Instantiate the backbone, this builds the Tensorflow graph</span>
+        <span class="n">x_outs</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="n">input_tesnor</span><span class="o">=</span><span class="n">img_input</span><span class="p">,</span> <span class="n">num_output_channels</span><span class="o">=</span><span class="n">num_outputs_channels</span><span class="p">)</span>
+
+        <span class="c1"># Create training model by combining the input layer and backbone graph.</span>
+        <span class="n">keras_model</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">img_input</span><span class="p">,</span> <span class="n">outputs</span><span class="o">=</span><span class="n">x_outs</span><span class="p">)</span>
+
+        <span class="c1"># Specify the optimizer.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;adam&quot;</span><span class="p">:</span>
+            <span class="n">_optimizer</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">lr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">learning_rate</span><span class="p">,</span> <span class="n">amsgrad</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">amsgrad</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;rmsprop&quot;</span><span class="p">:</span>
+            <span class="n">_optimizer</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">RMSprop</span><span class="p">(</span><span class="n">lr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">learning_rate</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Unknown optimizer, value = </span><span class="si">{optimizer}</span><span class="s2">!&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Compile the Keras model</span>
+        <span class="n">keras_model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+            <span class="n">optimizer</span><span class="o">=</span><span class="n">_optimizer</span><span class="p">,</span>
+            <span class="n">loss</span><span class="o">=</span><span class="s2">&quot;mean_squared_error&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Params: </span><span class="si">{:,}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">keras_model</span><span class="o">.</span><span class="n">count_params</span><span class="p">()))</span>
+
+        <span class="c1"># Default to one loop through dataset per epoch</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps_per_epoch</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">steps_per_epoch</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">imgs_train</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">steps_per_epoch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps_per_epoch</span>
+
+        <span class="c1"># TODO: Add support for multiple skeletons</span>
+        <span class="c1"># Setup data generation</span>
+        <span class="n">img_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">imgs_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">imgs_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">output_type</span> <span class="o">==</span> <span class="n">ModelOutputType</span><span class="o">.</span><span class="n">CONFIDENCE_MAP</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">datagen_function</span><span class="p">(</span><span class="n">points</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">generate_confmaps_from_points</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">skeleton</span><span class="p">,</span> <span class="n">img_shape</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">model</span><span class="o">.</span><span class="n">output_type</span> <span class="o">==</span> <span class="n">ModelOutputType</span><span class="o">.</span><span class="n">PART_AFFINITY_FIELD</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">datagen_function</span><span class="p">(</span><span class="n">points</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">generate_pafs_from_points</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">skeleton</span><span class="p">,</span> <span class="n">img_shape</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">datagen_function</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">datagen_function</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">outputs_val</span> <span class="o">=</span> <span class="n">datagen_function</span><span class="p">(</span><span class="n">outputs_val</span><span class="p">)</span>
+
+        <span class="c1"># Initialize data generator with augmentation</span>
+        <span class="n">train_datagen</span> <span class="o">=</span> <span class="n">Augmenter</span><span class="p">(</span>
+            <span class="n">imgs_train</span><span class="p">,</span> <span class="n">points</span><span class="o">=</span><span class="n">outputs_train</span><span class="p">,</span>
+            <span class="n">datagen</span><span class="o">=</span><span class="n">datagen_function</span><span class="p">,</span> <span class="n">output_names</span><span class="o">=</span><span class="n">keras_model</span><span class="o">.</span><span class="n">output_names</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle_initially</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shuffle_initially</span><span class="p">,</span>
+            <span class="n">rotation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">augment_rotation</span><span class="p">,</span>
+            <span class="n">scale</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">augment_scale_min</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">augment_scale_max</span><span class="p">))</span>
+
+        <span class="n">train_run</span> <span class="o">=</span> <span class="n">TrainingJob</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">trainer</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+                                <span class="n">save_dir</span><span class="o">=</span><span class="n">save_dir</span><span class="p">,</span> <span class="n">run_name</span><span class="o">=</span><span class="n">run_name</span><span class="p">,</span>
+                                <span class="n">labels_filename</span><span class="o">=</span><span class="n">labels_file_name</span><span class="p">)</span>
+
+        <span class="c1"># Setup saving</span>
+        <span class="n">save_path</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">save_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Generate run name</span>
+            <span class="k">if</span> <span class="n">run_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%y%m</span><span class="si">%d</span><span class="s2">_%H%M%S&quot;</span><span class="p">)</span>
+                <span class="n">train_run</span><span class="o">.</span><span class="n">run_name</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;</span><span class="si">{timestamp}</span><span class="s2">.{str(model.output_type)}.&quot;</span> \
+                           <span class="n">f</span><span class="s2">&quot;</span><span class="si">{model.name}</span><span class="s2">.n=</span><span class="si">{num_total}</span><span class="s2">&quot;</span>
+
+            <span class="c1"># Build save path</span>
+            <span class="n">save_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save_dir</span><span class="p">,</span> <span class="n">run_name</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Save path: </span><span class="si">{save_path}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Check if it already exists</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">save_path</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Save path already exists. &quot;</span>
+                               <span class="n">f</span><span class="s2">&quot;Previous run data may be overwritten!&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Create run folder</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Setup a list of necessary callbacks to invoke while training.</span>
+        <span class="n">callbacks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_setup_callbacks</span><span class="p">(</span>
+            <span class="n">train_run</span><span class="p">,</span> <span class="n">save_path</span><span class="p">,</span> <span class="n">train_datagen</span><span class="p">,</span>
+            <span class="n">tensorboard_dir</span><span class="p">,</span> <span class="n">control_zmq_port</span><span class="p">,</span>
+            <span class="n">progress_report_zmq_port</span><span class="p">)</span>
+
+        <span class="c1"># Train!</span>
+        <span class="n">history</span> <span class="o">=</span> <span class="n">keras_model</span><span class="o">.</span><span class="n">fit_generator</span><span class="p">(</span>
+            <span class="n">train_datagen</span><span class="p">,</span>
+            <span class="n">steps_per_epoch</span><span class="o">=</span><span class="n">steps_per_epoch</span><span class="p">,</span>
+            <span class="n">epochs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_epochs</span><span class="p">,</span>
+            <span class="n">validation_data</span><span class="o">=</span><span class="p">(</span><span class="n">imgs_val</span><span class="p">,</span> <span class="p">{</span><span class="n">output_name</span><span class="p">:</span> <span class="n">outputs_val</span> <span class="k">for</span> <span class="n">output_name</span> <span class="ow">in</span> <span class="n">keras_model</span><span class="o">.</span><span class="n">output_names</span><span class="p">}),</span>
+            <span class="n">callbacks</span><span class="o">=</span><span class="n">callbacks</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">use_multiprocessing</span><span class="o">=</span><span class="n">multiprocessing_workers</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="n">workers</span><span class="o">=</span><span class="n">multiprocessing_workers</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Save once done training</span>
+        <span class="k">if</span> <span class="n">save_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">final_model_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="s2">&quot;final_model.h5&quot;</span><span class="p">)</span>
+            <span class="n">keras_model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">filepath</span><span class="o">=</span><span class="n">final_model_path</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">include_optimizer</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Saved final model: </span><span class="si">{final_model_path}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="c1"># TODO: save training history</span>
+
+            <span class="n">train_run</span><span class="o">.</span><span class="n">final_model_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">relpath</span><span class="p">(</span><span class="n">final_model_path</span><span class="p">,</span> <span class="n">save_dir</span><span class="p">)</span>
+            <span class="n">TrainingJob</span><span class="o">.</span><span class="n">save_json</span><span class="p">(</span><span class="n">train_run</span><span class="p">,</span> <span class="n">f</span><span class="s2">&quot;</span><span class="si">{save_path}</span><span class="s2">.json&quot;</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">f</span><span class="s2">&quot;</span><span class="si">{save_path}</span><span class="s2">.json&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">train_run</span></div>
+
+<div class="viewcode-block" id="Trainer.train_async"><a class="viewcode-back" href="../../../training.html#sleap.nn.training.Trainer.train_async">[docs]</a>    <span class="k">def</span> <span class="nf">train_async</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Pool</span><span class="p">,</span> <span class="n">AsyncResult</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Train a given model using labels and the Trainer&#39;s current hyper-parameter settings.</span>
+<span class="sd">        This method executes asynchronously, that is, it launches training in a another</span>
+<span class="sd">        process and returns immediately.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            See Trainer.train().</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A tuple containing the multiprocessing.Process that is running training, start() has been called.</span>
+<span class="sd">            And the AysncResult object that will contain the result when the job finishes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># We can&#39;t pickle a Labels object so convert it to dict (which train will convert back)</span>
+        <span class="k">if</span> <span class="s2">&quot;labels&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">])</span> <span class="ow">is</span> <span class="n">Labels</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+
+        <span class="c1"># Use an pool because we want to use apply_async so we can get the return value of</span>
+        <span class="c1"># train when things are done.</span>
+        <span class="n">pool</span> <span class="o">=</span> <span class="n">Pool</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">apply_async</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="n">args</span><span class="p">,</span> <span class="n">kwds</span><span class="o">=</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Tell the pool to accept no new tasks</span>
+        <span class="n">pool</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">pool</span><span class="p">,</span> <span class="n">result</span></div>
+
+    <span class="k">def</span> <span class="nf">_setup_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_run</span><span class="p">:</span> <span class="s1">&#39;TrainingJob&#39;</span><span class="p">,</span>
+                         <span class="n">save_path</span><span class="p">,</span> <span class="n">train_datagen</span><span class="p">,</span>
+                         <span class="n">tensorboard_dir</span><span class="p">,</span> <span class="n">control_zmq_port</span><span class="p">,</span>
+                         <span class="n">progress_report_zmq_port</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Setup callbacks for the call to Keras fit_generator.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The list of callbacks</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Setup callbacks</span>
+        <span class="n">callbacks</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Callbacks: Intermediate saving</span>
+        <span class="k">if</span> <span class="n">save_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_every_epoch</span><span class="p">:</span>
+                <span class="n">full_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="s2">&quot;newest_model.h5&quot;</span><span class="p">)</span>
+                <span class="n">train_run</span><span class="o">.</span><span class="n">newest_model_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">relpath</span><span class="p">(</span><span class="n">full_path</span><span class="p">,</span> <span class="n">train_run</span><span class="o">.</span><span class="n">save_dir</span><span class="p">)</span>
+                <span class="n">callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">ModelCheckpoint</span><span class="p">(</span><span class="n">filepath</span><span class="o">=</span><span class="n">full_path</span><span class="p">,</span>
+                                    <span class="n">monitor</span><span class="o">=</span><span class="s2">&quot;val_loss&quot;</span><span class="p">,</span> <span class="n">save_best_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                    <span class="n">save_weights_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_best_val</span><span class="p">:</span>
+                <span class="n">full_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="s2">&quot;best_model.h5&quot;</span><span class="p">)</span>
+                <span class="n">train_run</span><span class="o">.</span><span class="n">best_model_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">relpath</span><span class="p">(</span><span class="n">full_path</span><span class="p">,</span> <span class="n">train_run</span><span class="o">.</span><span class="n">save_dir</span><span class="p">)</span>
+                <span class="n">callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">ModelCheckpoint</span><span class="p">(</span><span class="n">filepath</span><span class="o">=</span><span class="n">full_path</span><span class="p">,</span>
+                                    <span class="n">monitor</span><span class="o">=</span><span class="s2">&quot;val_loss&quot;</span><span class="p">,</span> <span class="n">save_best_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                    <span class="n">save_weights_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+
+        <span class="c1"># Callbacks: Shuffle after every epoch</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shuffle_every_epoch</span><span class="p">:</span>
+            <span class="n">callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">LambdaCallback</span><span class="p">(</span><span class="n">on_epoch_end</span><span class="o">=</span><span class="k">lambda</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">logs</span><span class="p">:</span> <span class="n">train_datagen</span><span class="o">.</span><span class="n">shuffle</span><span class="p">()))</span>
+
+        <span class="c1"># Callbacks: LR reduction</span>
+        <span class="n">callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">ReduceLROnPlateau</span><span class="p">(</span><span class="n">min_delta</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reduce_lr_min_delta</span><span class="p">,</span>
+                              <span class="n">factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reduce_lr_factor</span><span class="p">,</span>
+                              <span class="n">patience</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reduce_lr_patience</span><span class="p">,</span>
+                              <span class="n">cooldown</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reduce_lr_cooldown</span><span class="p">,</span>
+                              <span class="n">min_lr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reduce_lr_min_lr</span><span class="p">,</span>
+                              <span class="n">monitor</span><span class="o">=</span><span class="s2">&quot;val_loss&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Callbacks: Early stopping</span>
+        <span class="n">callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">EarlyStopping</span><span class="p">(</span><span class="n">monitor</span><span class="o">=</span><span class="s2">&quot;val_loss&quot;</span><span class="p">,</span>
+                          <span class="n">min_delta</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">early_stopping_min_delta</span><span class="p">,</span>
+                          <span class="n">patience</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">early_stopping_patience</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+
+        <span class="c1"># Callbacks: Tensorboard</span>
+        <span class="k">if</span> <span class="n">tensorboard_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">TensorBoard</span><span class="p">(</span><span class="n">log_dir</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{tensorboard_dir}</span><span class="s2">/</span><span class="si">{model.name}</span><span class="s2">{time()}&quot;</span><span class="p">,</span>
+                            <span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">update_freq</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">histogram_freq</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                            <span class="n">write_graph</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">write_grads</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">write_images</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                            <span class="n">embeddings_freq</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">embeddings_layer_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                            <span class="n">embeddings_metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">embeddings_data</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
+
+        <span class="c1"># Callbacks: ZMQ control</span>
+        <span class="k">if</span> <span class="n">control_zmq_port</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">TrainingControllerZMQ</span><span class="p">(</span><span class="n">address</span><span class="o">=</span><span class="s2">&quot;tcp://127.0.0.1&quot;</span><span class="p">,</span>
+                                      <span class="n">port</span><span class="o">=</span><span class="n">control_zmq_port</span><span class="p">,</span>
+                                      <span class="n">topic</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">poll_timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">))</span>
+
+        <span class="c1"># Callbacks: ZMQ progress reporter</span>
+        <span class="k">if</span> <span class="n">progress_report_zmq_port</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">ProgressReporterZMQ</span><span class="p">(</span><span class="n">port</span><span class="o">=</span><span class="n">progress_report_zmq_port</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">callbacks</span></div>
+
+
+<div class="viewcode-block" id="TrainingJob"><a class="viewcode-back" href="../../../training.html#sleap.nn.training.TrainingJob">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">TrainingJob</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A simple class that groups a model with a trainer to represent a record of a</span>
+<span class="sd">    call to Trainer.train().</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model: The SLEAP Model that was trained.</span>
+<span class="sd">        trainer: The Trainer that was used to train the model.</span>
+<span class="sd">        labels_filename: The name of the labels file using to run this training job.</span>
+<span class="sd">        run_name: The run_name value passed to Trainer.train for this training run.</span>
+<span class="sd">        save_dir: The save_dir value passed to Trainer.train for this training run.</span>
+<span class="sd">        best_model_filename: The relative path (from save_dir) to the Keras model file</span>
+<span class="sd">        that had best validation loss. Set to None when Trainer.save_best_val is False</span>
+<span class="sd">        or if save_dir is None.</span>
+<span class="sd">        newest_model_filename: The relative path (from save_dir) to the Keras model file</span>
+<span class="sd">        from the state of the model after the last epoch run. Set to None when</span>
+<span class="sd">        Trainer.save_every_epoch is False or save_dir is None.</span>
+<span class="sd">        final_model_filename: The relative path (from save_dir) to the Keras model file</span>
+<span class="sd">        from the final state of training. Set to None if save_dir is None. This model</span>
+<span class="sd">        file is not created until training is finished.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">Model</span>
+    <span class="n">trainer</span><span class="p">:</span> <span class="n">Trainer</span>
+    <span class="n">labels_filename</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">run_name</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">save_dir</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">best_model_filename</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">newest_model_filename</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">final_model_filename</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="TrainingJob.save_json"><a class="viewcode-back" href="../../../training.html#sleap.nn.training.TrainingJob.save_json">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">save_json</span><span class="p">(</span><span class="n">training_job</span><span class="p">:</span> <span class="s1">&#39;TrainingJob&#39;</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save a training run to a JSON file.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            training_job: The TrainingJob instance to save.</span>
+<span class="sd">            filename: The filename to save the JSON to.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+
+            <span class="c1"># We have some skeletons to deal with, make sure to setup a Skeleton cattr.</span>
+            <span class="n">my_cattr</span> <span class="o">=</span> <span class="n">Skeleton</span><span class="o">.</span><span class="n">make_cattr</span><span class="p">()</span>
+            <span class="n">dicts</span> <span class="o">=</span> <span class="n">my_cattr</span><span class="o">.</span><span class="n">unstructure</span><span class="p">(</span><span class="n">training_job</span><span class="p">)</span>
+            <span class="n">json_str</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">dicts</span><span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">json_str</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TrainingJob.load_json"><a class="viewcode-back" href="../../../training.html#sleap.nn.training.TrainingJob.load_json">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">load_json</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load a training run from a JSON file.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            filename: The file to load the JSON from.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A TrainingJob instance constructed from JSON in filename.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Open and parse the JSON in filename</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">json_str</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="n">dicts</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">json_str</span><span class="p">)</span>
+
+            <span class="c1"># We have some skeletons to deal with, make sure to setup a Skeleton cattr.</span>
+            <span class="n">my_cattr</span> <span class="o">=</span> <span class="n">Skeleton</span><span class="o">.</span><span class="n">make_cattr</span><span class="p">()</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">run</span> <span class="o">=</span> <span class="n">my_cattr</span><span class="o">.</span><span class="n">structure</span><span class="p">(</span><span class="n">dicts</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Failure deserializing </span><span class="si">{filename}</span><span class="s2"> to TrainingJob.&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">run</span></div></div>
 
 
 <div class="viewcode-block" id="TrainingControllerZMQ"><a class="viewcode-back" href="../../../training.html#sleap.nn.training.TrainingControllerZMQ">[docs]</a><span class="k">class</span> <span class="nc">TrainingControllerZMQ</span><span class="p">(</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">Callback</span><span class="p">):</span>
@@ -189,7 +687,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">socket</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">SUB</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">topic</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">address</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Training controller subscribed to: </span><span class="si">{self.address}</span><span class="s2"> (topic: </span><span class="si">{self.topic}</span><span class="s2">)&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Training controller subscribed to: </span><span class="si">{self.address}</span><span class="s2"> (topic: </span><span class="si">{self.topic}</span><span class="s2">)&quot;</span><span class="p">)</span>
 
         <span class="c1"># TODO: catch/throw exception about failure to connect</span>
 
@@ -205,7 +703,7 @@
         <span class="sd">&quot;&quot;&quot; Called at the end of a training batch. &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">poll</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">timeout</span><span class="p">,</span> <span class="n">zmq</span><span class="o">.</span><span class="n">POLLIN</span><span class="p">):</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="n">jsonpickle</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">recv_string</span><span class="p">())</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Received control message: </span><span class="si">{msg}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Received control message: </span><span class="si">{msg}</span><span class="s2">&quot;</span><span class="p">)</span>
 
             <span class="c1"># Stop training</span>
             <span class="k">if</span> <span class="n">msg</span><span class="p">[</span><span class="s2">&quot;command&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;stop&quot;</span><span class="p">:</span>
@@ -217,7 +715,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">set_lr</span><span class="p">(</span><span class="n">msg</span><span class="p">[</span><span class="s2">&quot;lr&quot;</span><span class="p">])</span></div>
 
 <div class="viewcode-block" id="TrainingControllerZMQ.set_lr"><a class="viewcode-back" href="../../../training.html#sleap.nn.training.TrainingControllerZMQ.set_lr">[docs]</a>    <span class="k">def</span> <span class="nf">set_lr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lr</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Adjust the model learning rate. </span>
+        <span class="sd">&quot;&quot;&quot; Adjust the model learning rate.</span>
 
 <span class="sd">        This is the based off of the implementation used in the native learning rate scheduling callbacks.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -234,7 +732,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">context</span> <span class="o">=</span> <span class="n">zmq</span><span class="o">.</span><span class="n">Context</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">socket</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">PUB</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">address</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Progress reporter publishing on: </span><span class="si">{self.address}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Progress reporter publishing on: </span><span class="si">{self.address}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="c1"># TODO: catch/throw exception about failure to connect</span>
 
@@ -299,249 +797,29 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">send_string</span><span class="p">(</span><span class="n">jsonpickle</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">event</span><span class="o">=</span><span class="s2">&quot;train_end&quot;</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="n">logs</span><span class="p">)))</span></div></div>
 
 
-<span class="k">def</span> <span class="nf">train</span><span class="p">(</span>
-    <span class="c1"># Data</span>
-    <span class="n">imgs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">skeleton</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">output_type</span><span class="o">=</span><span class="s2">&quot;confmaps&quot;</span><span class="p">,</span> <span class="n">val_size</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
-    <span class="c1"># Architecture</span>
-    <span class="n">arch</span><span class="o">=</span><span class="s2">&quot;unet&quot;</span><span class="p">,</span> <span class="n">num_stacks</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">convs_per_depth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">num_filters</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">batch_norm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">upsampling</span><span class="o">=</span><span class="s2">&quot;bilinear&quot;</span><span class="p">,</span> <span class="n">intermediate_inputs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">intermediate_outputs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="c1"># Optimizer</span>
-    <span class="n">optimizer</span><span class="o">=</span><span class="s2">&quot;adam&quot;</span><span class="p">,</span> <span class="n">learning_rate</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">amsgrad</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="c1"># Augmentation</span>
-    <span class="n">augment_rotation</span><span class="o">=</span><span class="mi">180</span><span class="p">,</span> <span class="n">augment_scale_min</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">augment_scale_max</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-    <span class="c1"># Training loop</span>
-    <span class="n">batch_size</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">num_epochs</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">steps_per_epoch</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">shuffle_initially</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">multiprocessing_workers</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-    <span class="c1"># Saving</span>
-    <span class="n">save_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">run_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">save_viz</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="c1"># Callbacks: Intermediate saving</span>
-    <span class="n">save_every_epoch</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">save_best_val</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="c1"># Callbacks: Shuffle after every epoch</span>
-    <span class="n">shuffle_every_epoch</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="c1"># Callbacks: LR reduction</span>
-    <span class="n">reduce_lr_min_delta</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span> <span class="n">reduce_lr_factor</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">reduce_lr_patience</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">reduce_lr_cooldown</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">reduce_lr_min_lr</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">,</span>
-    <span class="c1"># Callbacks: Early stopping</span>
-    <span class="n">early_stopping_min_delta</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">,</span> <span class="n">early_stopping_patience</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
-    <span class="c1"># Callbacks: Tensorboard</span>
-    <span class="n">tensorboard_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="c1"># Callbacks: ZMQ control</span>
-    <span class="n">control_zmq_port</span><span class="o">=</span><span class="mi">9000</span><span class="p">,</span>
-    <span class="c1"># Callbacks: ZMQ progress reporter</span>
-    <span class="n">progress_report_zmq_port</span><span class="o">=</span><span class="mi">9001</span><span class="p">,</span>
-    <span class="c1"># Callbacks: ZMQ visualization preview</span>
-    <span class="n">viz_preview_zmq_port</span><span class="o">=</span><span class="mi">9002</span><span class="p">,</span>
-    <span class="p">):</span>
-
-    <span class="c1"># Split data into train/validation</span>
-    <span class="n">imgs_train</span><span class="p">,</span> <span class="n">imgs_val</span><span class="p">,</span> <span class="n">outputs_train</span><span class="p">,</span> <span class="n">outputs_val</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">imgs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="n">val_size</span><span class="p">)</span>
-    <span class="k">del</span> <span class="n">imgs</span><span class="p">,</span> <span class="n">outputs</span>
-
-    <span class="c1"># Infer shapes</span>
-    <span class="n">num_train</span><span class="p">,</span> <span class="n">img_height</span><span class="p">,</span> <span class="n">img_width</span><span class="p">,</span> <span class="n">img_channels</span> <span class="o">=</span> <span class="n">imgs_train</span><span class="o">.</span><span class="n">shape</span>
-    <span class="n">num_val</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">imgs_val</span><span class="p">)</span>
-    <span class="n">num_total</span> <span class="o">=</span> <span class="n">num_train</span> <span class="o">+</span> <span class="n">num_val</span>
-
-    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">outputs_train</span><span class="p">)</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-        <span class="n">outputs_channels</span> <span class="o">=</span> <span class="n">outputs_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-    <span class="k">elif</span> <span class="n">output_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;confmaps&quot;</span><span class="p">:</span>
-        <span class="n">outputs_channels</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">skeleton</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">output_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;pafs&quot;</span><span class="p">:</span>
-        <span class="n">outputs_channels</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">skeleton</span><span class="o">.</span><span class="n">edges</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span>
-
-    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Training set: </span><span class="si">{imgs_train.shape}</span><span class="s2"> -&gt; </span><span class="si">{outputs_channels}</span><span class="s2"> channels&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Validation set: </span><span class="si">{imgs_val.shape}</span><span class="s2"> -&gt; </span><span class="si">{outputs_channels}</span><span class="s2"> channels&quot;</span><span class="p">)</span>
-
-    <span class="c1"># Build model architecture</span>
-    <span class="c1"># TODO: separate architecture builder</span>
-
-    <span class="c1"># Input layer</span>
-    <span class="n">img_input</span> <span class="o">=</span> <span class="n">Input</span><span class="p">((</span><span class="n">img_height</span><span class="p">,</span> <span class="n">img_width</span><span class="p">,</span> <span class="n">img_channels</span><span class="p">))</span>
-
-    <span class="c1"># Rectify image sizes not divisible by pooling factor</span>
-    <span class="n">pool_factor</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="n">depth</span>
-    <span class="k">if</span> <span class="n">img_height</span> <span class="o">%</span> <span class="n">pool_factor</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">img_width</span> <span class="o">%</span> <span class="n">pool_factor</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Image dimensions (</span><span class="si">{img_height}</span><span class="s2">, </span><span class="si">{img_width}</span><span class="s2">) are not divisible by the pooling factor (</span><span class="si">{pool_factor}</span><span class="s2">).&quot;</span><span class="p">)</span>
-        <span class="c1"># gap_height = (np.ceil(img_height / pool_factor) * pool_factor) - img_height</span>
-        <span class="c1"># gap_width = (np.ceil(img_width / pool_factor) * pool_factor) - img_width</span>
-
-        <span class="c1"># TODO: combination of ZeroPadding2D and Cropping2D</span>
-        <span class="c1">#   - can&#39;t do non-symmetric padding, so pad first and then crop left/top so coordinates aren&#39;t messed up</span>
-        <span class="c1">#   - Solution: https://www.tensorflow.org/api_docs/python/tf/pad + Lambda layer + corresponding crop at the end?</span>
-
-    <span class="c1"># Backbone</span>
-    <span class="k">if</span> <span class="n">arch</span> <span class="o">==</span> <span class="s2">&quot;unet&quot;</span><span class="p">:</span>
-        <span class="n">x_outs</span> <span class="o">=</span> <span class="n">unet</span><span class="p">(</span><span class="n">img_input</span><span class="p">,</span> <span class="n">outputs_channels</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="n">depth</span><span class="p">,</span> <span class="n">convs_per_depth</span><span class="o">=</span><span class="n">convs_per_depth</span><span class="p">,</span> <span class="n">num_filters</span><span class="o">=</span><span class="n">num_filters</span><span class="p">,</span> <span class="n">interp</span><span class="o">=</span><span class="n">upsampling</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">arch</span> <span class="o">==</span> <span class="s2">&quot;stacked_unet&quot;</span><span class="p">:</span>
-        <span class="n">x_outs</span> <span class="o">=</span> <span class="n">stacked_unet</span><span class="p">(</span><span class="n">img_input</span><span class="p">,</span> <span class="n">outputs_channels</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="n">depth</span><span class="p">,</span> <span class="n">convs_per_depth</span><span class="o">=</span><span class="n">convs_per_depth</span><span class="p">,</span> <span class="n">num_filters</span><span class="o">=</span><span class="n">num_filters</span><span class="p">,</span> <span class="n">num_stacks</span><span class="o">=</span><span class="n">num_stacks</span><span class="p">,</span> <span class="n">interp</span><span class="o">=</span><span class="n">upsampling</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">arch</span> <span class="o">==</span> <span class="s2">&quot;hourglass&quot;</span><span class="p">:</span>
-        <span class="c1"># Initial downsampling</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">conv</span><span class="p">(</span><span class="n">num_filters</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">))(</span><span class="n">img_input</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">batch_norm</span><span class="p">:</span> <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">()(</span><span class="n">x</span><span class="p">)</span>
-
-        <span class="c1"># Stacked hourglass modules</span>
-        <span class="n">x_outs</span> <span class="o">=</span> <span class="n">stacked_hourglass</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">outputs_channels</span><span class="p">,</span> <span class="n">num_hourglass_blocks</span><span class="o">=</span><span class="n">num_stacks</span><span class="p">,</span> <span class="n">num_filters</span><span class="o">=</span><span class="n">num_filters</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="n">depth</span><span class="p">,</span> <span class="n">batch_norm</span><span class="o">=</span><span class="n">batch_norm</span><span class="p">,</span> <span class="n">interp</span><span class="o">=</span><span class="n">upsampling</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">arch</span> <span class="o">==</span> <span class="s2">&quot;leap&quot;</span> <span class="ow">or</span> <span class="n">arch</span> <span class="o">==</span> <span class="s2">&quot;leap_cnn&quot;</span><span class="p">:</span>
-        <span class="n">x_outs</span> <span class="o">=</span> <span class="n">leap_cnn</span><span class="p">(</span><span class="n">img_input</span><span class="p">,</span> <span class="n">outputs_channels</span><span class="p">,</span> <span class="n">down_blocks</span><span class="o">=</span><span class="n">depth</span><span class="p">,</span> <span class="n">up_blocks</span><span class="o">=</span><span class="n">depth</span><span class="p">,</span> <span class="n">upsampling_layers</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">num_filters</span><span class="o">=</span><span class="n">num_filters</span><span class="p">,</span> <span class="n">interp</span><span class="o">=</span><span class="n">upsampling</span><span class="p">)</span>
-
-    <span class="c1"># Create training model</span>
-    <span class="n">model</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">img_input</span><span class="p">,</span> <span class="n">outputs</span><span class="o">=</span><span class="n">x_outs</span><span class="p">)</span>
-
-    <span class="c1"># Create optimizer</span>
-    <span class="k">if</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;adam&quot;</span><span class="p">:</span>
-        <span class="n">_optimizer</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">lr</span><span class="o">=</span><span class="n">learning_rate</span><span class="p">,</span> <span class="n">amsgrad</span><span class="o">=</span><span class="n">amsgrad</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;rmsprop&quot;</span><span class="p">:</span>
-        <span class="n">_optimizer</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">RMSprop</span><span class="p">(</span><span class="n">lr</span><span class="o">=</span><span class="n">learning_rate</span><span class="p">)</span>
-
-    <span class="c1"># Compile</span>
-    <span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
-        <span class="n">optimizer</span><span class="o">=</span><span class="n">_optimizer</span><span class="p">,</span>
-        <span class="n">loss</span><span class="o">=</span><span class="s2">&quot;mean_squared_error&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Params: </span><span class="si">{:,}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">count_params</span><span class="p">()))</span>
-
-    <span class="c1"># Default to one loop through dataset per epoch</span>
-    <span class="k">if</span> <span class="n">steps_per_epoch</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">steps_per_epoch</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">imgs_train</span><span class="p">)</span> <span class="o">/</span> <span class="n">batch_size</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
-
-    <span class="c1"># Setup saving</span>
-    <span class="n">save_path</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="k">if</span> <span class="n">save_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># Generate run name</span>
-        <span class="k">if</span> <span class="n">run_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%y%m</span><span class="si">%d</span><span class="s2">_%H%M%S&quot;</span><span class="p">)</span>
-            <span class="n">run_name</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;</span><span class="si">{timestamp}</span><span class="s2">.</span><span class="si">{output_type}</span><span class="s2">.</span><span class="si">{arch}</span><span class="s2">.n=</span><span class="si">{num_total}</span><span class="s2">&quot;</span>
-
-        <span class="c1"># Build save path</span>
-        <span class="n">save_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save_dir</span><span class="p">,</span> <span class="n">run_name</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Save path: </span><span class="si">{save_path}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-        <span class="c1"># Check if it already exists</span>
-        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">save_path</span><span class="p">):</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Warning: Save path already exists. Previous run data may be overwritten.&quot;</span><span class="p">)</span>
-
-        <span class="c1"># Create run folder</span>
-        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-        <span class="c1"># TODO: save serialized training info</span>
-
-    <span class="n">img_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">imgs_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">imgs_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
-    <span class="k">if</span> <span class="n">output_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;confmaps&quot;</span><span class="p">:</span>
-        <span class="k">def</span> <span class="nf">datagen_function</span><span class="p">(</span><span class="n">points</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">generate_confmaps_from_points</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">skeleton</span><span class="p">,</span> <span class="n">img_shape</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">output_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;pafs&quot;</span><span class="p">:</span>
-        <span class="k">def</span> <span class="nf">datagen_function</span><span class="p">(</span><span class="n">points</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">generate_pafs_from_points</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">skeleton</span><span class="p">,</span> <span class="n">img_shape</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">datagen_function</span> <span class="o">=</span> <span class="kc">None</span>
-
-    <span class="k">if</span> <span class="n">datagen_function</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">outputs_val</span> <span class="o">=</span> <span class="n">datagen_function</span><span class="p">(</span><span class="n">outputs_val</span><span class="p">)</span>
-
-    <span class="c1"># Initialize data generator with augmentation</span>
-    <span class="n">train_datagen</span> <span class="o">=</span> <span class="n">Augmenter</span><span class="p">(</span><span class="n">imgs_train</span><span class="p">,</span> <span class="n">Points</span><span class="o">=</span><span class="n">outputs_train</span><span class="p">,</span>
-        <span class="n">datagen</span><span class="o">=</span><span class="n">datagen_function</span><span class="p">,</span> <span class="n">output_names</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">output_names</span><span class="p">,</span>
-        <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="n">shuffle_initially</span><span class="p">,</span>
-        <span class="n">rotation</span><span class="o">=</span><span class="n">augment_rotation</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="p">(</span><span class="n">augment_scale_min</span><span class="p">,</span> <span class="n">augment_scale_max</span><span class="p">))</span>
-
-    <span class="c1"># Setup callbacks</span>
-    <span class="n">callbacks</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="c1"># Callbacks: Intermediate saving</span>
-    <span class="k">if</span> <span class="n">save_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">save_every_epoch</span><span class="p">:</span>
-            <span class="n">callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="n">ModelCheckpoint</span><span class="p">(</span><span class="n">filepath</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="s2">&quot;newest_model.h5&quot;</span><span class="p">),</span> <span class="n">monitor</span><span class="o">=</span><span class="s2">&quot;val_loss&quot;</span><span class="p">,</span> <span class="n">save_best_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">save_weights_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-                <span class="p">)</span>
-        <span class="k">if</span> <span class="n">save_best_val</span><span class="p">:</span>
-            <span class="n">callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="n">ModelCheckpoint</span><span class="p">(</span><span class="n">filepath</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="s2">&quot;best_model.h5&quot;</span><span class="p">),</span> <span class="n">monitor</span><span class="o">=</span><span class="s2">&quot;val_loss&quot;</span><span class="p">,</span> <span class="n">save_best_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">save_weights_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-                <span class="p">)</span>
-
-    <span class="c1"># Callbacks: Shuffle after every epoch</span>
-    <span class="k">if</span> <span class="n">shuffle_every_epoch</span><span class="p">:</span>
-        <span class="n">callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="n">LambdaCallback</span><span class="p">(</span><span class="n">on_epoch_end</span><span class="o">=</span><span class="k">lambda</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">logs</span><span class="p">:</span> <span class="n">train_datagen</span><span class="o">.</span><span class="n">shuffle</span><span class="p">())</span>
-            <span class="p">)</span>
-
-    <span class="c1"># Callbacks: LR reduction</span>
-    <span class="n">callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-        <span class="n">ReduceLROnPlateau</span><span class="p">(</span><span class="n">min_delta</span><span class="o">=</span><span class="n">reduce_lr_min_delta</span><span class="p">,</span> <span class="n">factor</span><span class="o">=</span><span class="n">reduce_lr_factor</span><span class="p">,</span> <span class="n">patience</span><span class="o">=</span><span class="n">reduce_lr_patience</span><span class="p">,</span>
-            <span class="n">cooldown</span><span class="o">=</span><span class="n">reduce_lr_cooldown</span><span class="p">,</span> <span class="n">min_lr</span><span class="o">=</span><span class="n">reduce_lr_min_lr</span><span class="p">,</span> <span class="n">monitor</span><span class="o">=</span><span class="s2">&quot;val_loss&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">,)</span>
-        <span class="p">)</span>
-
-    <span class="c1"># Callbacks: Early stopping</span>
-    <span class="n">callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-        <span class="n">EarlyStopping</span><span class="p">(</span><span class="n">monitor</span><span class="o">=</span><span class="s2">&quot;val_loss&quot;</span><span class="p">,</span> <span class="n">min_delta</span><span class="o">=</span><span class="n">early_stopping_min_delta</span><span class="p">,</span> <span class="n">patience</span><span class="o">=</span><span class="n">early_stopping_patience</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-        <span class="p">)</span>
-
-    <span class="c1"># Callbacks: Tensorboard</span>
-    <span class="k">if</span> <span class="n">tensorboard_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="n">TensorBoard</span><span class="p">(</span><span class="n">log_dir</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{tensorboard_dir}</span><span class="s2">/</span><span class="si">{arch}</span><span class="s2">{time()}&quot;</span><span class="p">,</span>
-                <span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">update_freq</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">histogram_freq</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                <span class="n">write_graph</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">write_grads</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">write_images</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                <span class="n">embeddings_freq</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">embeddings_layer_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">embeddings_metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">embeddings_data</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-            <span class="p">)</span>
-
-    <span class="c1"># Callbacks: ZMQ control</span>
-    <span class="k">if</span> <span class="n">control_zmq_port</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="n">TrainingControllerZMQ</span><span class="p">(</span><span class="n">address</span><span class="o">=</span><span class="s2">&quot;tcp://127.0.0.1&quot;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="n">control_zmq_port</span><span class="p">,</span> <span class="n">topic</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">poll_timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-            <span class="p">)</span>
-
-    <span class="c1"># Callbacks: ZMQ progress reporter</span>
-    <span class="k">if</span> <span class="n">progress_report_zmq_port</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="n">ProgressReporterZMQ</span><span class="p">(</span><span class="n">port</span><span class="o">=</span><span class="n">progress_report_zmq_port</span><span class="p">)</span>
-            <span class="p">)</span>
-
-    <span class="c1"># Callbacks: ZMQ visualization preview</span>
-    <span class="c1"># viz_preview_zmq_port=9002,</span>
-
-    <span class="c1"># Train!</span>
-    <span class="n">history</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit_generator</span><span class="p">(</span>
-        <span class="n">train_datagen</span><span class="p">,</span>
-        <span class="n">steps_per_epoch</span><span class="o">=</span><span class="n">steps_per_epoch</span><span class="p">,</span>
-        <span class="n">epochs</span><span class="o">=</span><span class="n">num_epochs</span><span class="p">,</span>
-        <span class="n">validation_data</span><span class="o">=</span><span class="p">(</span><span class="n">imgs_val</span><span class="p">,</span> <span class="p">{</span><span class="n">output_name</span><span class="p">:</span> <span class="n">outputs_val</span> <span class="k">for</span> <span class="n">output_name</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">output_names</span><span class="p">}),</span>
-        <span class="n">callbacks</span><span class="o">=</span><span class="n">callbacks</span><span class="p">,</span>
-        <span class="n">verbose</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-        <span class="n">use_multiprocessing</span><span class="o">=</span><span class="n">multiprocessing_workers</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span>
-        <span class="n">workers</span><span class="o">=</span><span class="n">multiprocessing_workers</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="c1"># Save once done training</span>
-    <span class="k">if</span> <span class="n">save_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">final_model_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="s2">&quot;final_model.h5&quot;</span><span class="p">)</span>
-        <span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">filepath</span><span class="o">=</span><span class="n">final_model_path</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">include_optimizer</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Saved final model: </span><span class="si">{final_model_path}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-        <span class="c1"># TODO: save metadata (e.g., skeleton)</span>
-        <span class="c1"># TODO: save training history</span>
-
-    <span class="k">return</span> <span class="n">model</span>
-
-
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
-    
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
     <span class="kn">from</span> <span class="nn">PySide2</span> <span class="k">import</span> <span class="n">QtWidgets</span>
 
-    <span class="kn">from</span> <span class="nn">sleap.io.dataset</span> <span class="k">import</span> <span class="n">Labels</span>
-    <span class="n">labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">load_json</span><span class="p">(</span><span class="s2">&quot;tests/data/json_format_v1/centered_pair.json&quot;</span><span class="p">)</span>
+    <span class="kn">from</span> <span class="nn">sleap.nn.architectures.unet</span> <span class="k">import</span> <span class="n">UNet</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">output_type</span><span class="o">=</span><span class="n">ModelOutputType</span><span class="o">.</span><span class="n">CONFIDENCE_MAP</span><span class="p">,</span>
+                  <span class="n">backbone</span><span class="o">=</span><span class="n">UNet</span><span class="p">(</span><span class="n">num_filters</span><span class="o">=</span><span class="mi">16</span><span class="p">))</span>
 
-    <span class="kn">from</span> <span class="nn">sleap.nn.datagen</span> <span class="k">import</span> <span class="n">generate_images</span><span class="p">,</span> <span class="n">generate_points</span>
-    <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
-    <span class="n">imgs</span> <span class="o">=</span> <span class="n">generate_images</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
-    <span class="n">points</span> <span class="o">=</span> <span class="n">generate_points</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
-    <span class="n">skeleton</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="c1"># Setup a Trainer object to train the model above</span>
+    <span class="n">trainer</span> <span class="o">=</span> <span class="n">Trainer</span><span class="p">(</span><span class="n">val_size</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                      <span class="n">num_epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">steps_per_epoch</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+                      <span class="n">save_best_val</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                      <span class="n">save_every_epoch</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Generated training data. [{time() - t0:.2f}s]&quot;</span><span class="p">)</span>
-
-    <span class="n">proc</span> <span class="o">=</span> <span class="n">Process</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">train</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">imgs</span><span class="p">,</span> <span class="n">points</span><span class="p">),</span> <span class="n">kwargs</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">output_type</span><span class="o">=</span><span class="s2">&quot;confmaps&quot;</span><span class="p">,</span> <span class="n">skeleton</span><span class="o">=</span><span class="n">skeleton</span><span class="p">,</span> <span class="n">val_size</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">batch_norm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">num_filters</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">num_epochs</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">steps_per_epoch</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">arch</span><span class="o">=</span><span class="s2">&quot;unet&quot;</span><span class="p">))</span>
-    <span class="n">proc</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="c1"># Run training asynchronously</span>
+    <span class="n">pool</span><span class="p">,</span> <span class="n">result</span> <span class="o">=</span> <span class="n">trainer</span><span class="o">.</span><span class="n">train_async</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+                                  <span class="n">labels</span><span class="o">=</span><span class="n">Labels</span><span class="o">.</span><span class="n">load_json</span><span class="p">(</span><span class="s2">&quot;tests/data/json_format_v1/centered_pair.json&quot;</span><span class="p">),</span>
+                                  <span class="n">save_dir</span><span class="o">=</span><span class="s1">&#39;test_train/&#39;</span><span class="p">,</span>
+                                  <span class="n">run_name</span><span class="o">=</span><span class="s2">&quot;training_run_1&quot;</span><span class="p">)</span>
 
     <span class="n">ctx</span> <span class="o">=</span> <span class="n">zmq</span><span class="o">.</span><span class="n">Context</span><span class="p">()</span>
 
     <span class="n">app</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QApplication</span><span class="p">()</span>
-    <span class="n">loss_viewer</span> <span class="o">=</span> <span class="n">LossViewer</span><span class="p">(</span><span class="n">zmq_context</span> <span class="o">=</span> <span class="n">ctx</span><span class="p">)</span>
+    <span class="n">loss_viewer</span> <span class="o">=</span> <span class="n">LossViewer</span><span class="p">(</span><span class="n">zmq_context</span><span class="o">=</span><span class="n">ctx</span><span class="p">)</span>
     <span class="n">loss_viewer</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="mi">600</span><span class="p">,</span> <span class="mi">400</span><span class="p">)</span>
     <span class="n">loss_viewer</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
     <span class="n">app</span><span class="o">.</span><span class="n">setQuitOnLastWindowClosed</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
@@ -564,26 +842,44 @@
     <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
 
     <span class="n">epoch</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">while</span> <span class="p">(</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">30</span><span class="p">:</span>
-    <span class="c1"># while True:</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="n">poll</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">msg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">msg</span><span class="p">[</span><span class="s2">&quot;event&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;train_begin&quot;</span><span class="p">:</span>
                 <span class="n">loss_viewer</span><span class="o">.</span><span class="n">set_start_time</span><span class="p">(</span><span class="n">time</span><span class="p">())</span>
             <span class="k">elif</span> <span class="n">msg</span><span class="p">[</span><span class="s2">&quot;event&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;epoch_begin&quot;</span><span class="p">:</span>
                 <span class="n">epoch</span> <span class="o">=</span> <span class="n">msg</span><span class="p">[</span><span class="s2">&quot;epoch&quot;</span><span class="p">]</span>
             <span class="k">elif</span> <span class="n">msg</span><span class="p">[</span><span class="s2">&quot;event&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;batch_end&quot;</span><span class="p">:</span>
                 <span class="n">loss_viewer</span><span class="o">.</span><span class="n">add_datapoint</span><span class="p">((</span><span class="n">epoch</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span> <span class="o">+</span> <span class="n">msg</span><span class="p">[</span><span class="s2">&quot;logs&quot;</span><span class="p">][</span><span class="s2">&quot;batch&quot;</span><span class="p">],</span> <span class="n">msg</span><span class="p">[</span><span class="s2">&quot;logs&quot;</span><span class="p">][</span><span class="s2">&quot;loss&quot;</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="n">msg</span><span class="p">[</span><span class="s2">&quot;event&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;train_end&quot;</span><span class="p">:</span>
+                <span class="k">break</span>
 
         <span class="n">loss_viewer</span><span class="o">.</span><span class="n">update_runtime</span><span class="p">()</span>
         <span class="n">app</span><span class="o">.</span><span class="n">processEvents</span><span class="p">()</span>
 
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Get&quot;</span><span class="p">)</span>
+    <span class="n">train_job_path</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+
     <span class="c1"># Stop training</span>
     <span class="n">ctrl</span><span class="o">.</span><span class="n">send_string</span><span class="p">(</span><span class="n">jsonpickle</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">command</span><span class="o">=</span><span class="s2">&quot;stop&quot;</span><span class="p">)))</span>
 
-    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
-        <span class="n">app</span><span class="o">.</span><span class="n">processEvents</span><span class="p">()</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">closeAllWindows</span><span class="p">()</span>
+
+    <span class="c1"># Now lets load the training job we just ran</span>
+    <span class="n">train_job</span> <span class="o">=</span> <span class="n">TrainingJob</span><span class="o">.</span><span class="n">load_json</span><span class="p">(</span><span class="n">train_job_path</span><span class="p">)</span>
+
+    <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">train_job</span><span class="o">.</span><span class="n">save_dir</span><span class="p">,</span> <span class="n">train_job</span><span class="o">.</span><span class="n">newest_model_filename</span><span class="p">))</span>
+    <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">train_job</span><span class="o">.</span><span class="n">save_dir</span><span class="p">,</span> <span class="n">train_job</span><span class="o">.</span><span class="n">best_model_filename</span><span class="p">))</span>
+    <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">train_job</span><span class="o">.</span><span class="n">save_dir</span><span class="p">,</span> <span class="n">train_job</span><span class="o">.</span><span class="n">final_model_filename</span><span class="p">))</span>
+
+    <span class="kn">import</span> <span class="nn">sys</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+
 </pre></div>
 
            </div>

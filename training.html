@@ -237,6 +237,125 @@ Subclasses should override for any actions to run.
 </dd></dl>
 
 <dl class="class">
+<dt id="sleap.nn.training.Trainer">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.training.</code><code class="sig-name descname">Trainer</code><span class="sig-paren">(</span><em class="sig-param">val_size: float = 0.1</em>, <em class="sig-param">optimizer: str = 'adam'</em>, <em class="sig-param">learning_rate: float = 0.001</em>, <em class="sig-param">amsgrad: bool = True</em>, <em class="sig-param">batch_size: int = 4</em>, <em class="sig-param">num_epochs: int = 100</em>, <em class="sig-param">steps_per_epoch: int = 200</em>, <em class="sig-param">shuffle_initially: bool = True</em>, <em class="sig-param">shuffle_every_epoch: bool = True</em>, <em class="sig-param">augment_rotation: float = 180.0</em>, <em class="sig-param">augment_scale_min: float = 1.0</em>, <em class="sig-param">augment_scale_max: float = 1.0</em>, <em class="sig-param">save_every_epoch: bool = False</em>, <em class="sig-param">save_best_val: bool = True</em>, <em class="sig-param">reduce_lr_min_delta: float = 1e-06</em>, <em class="sig-param">reduce_lr_factor: float = 0.5</em>, <em class="sig-param">reduce_lr_patience: float = 5</em>, <em class="sig-param">reduce_lr_cooldown: float = 3</em>, <em class="sig-param">reduce_lr_min_lr: float = 1e-08</em>, <em class="sig-param">early_stopping_min_delta: float = 1e-08</em>, <em class="sig-param">early_stopping_patience: float = 3</em>, <em class="sig-param">scale: int = 1</em>, <em class="sig-param">sigma: float = 5.0</em>, <em class="sig-param">instance_crop: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/training.html#Trainer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.Trainer" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Trainer class implements a training program on a SLEAP model.
+Its main purpose is to capture training program hyperparameters
+separate from model specific hyper parameters. The train function is
+used to invoke training on a specific model and dataset.</p>
+<p>Note: some of these values are passed directly to lower level Keras
+APIs and thus their documentation has been lifted from <a class="reference external" href="https://keras.io">https://keras.io</a>.
+This should be noted for these paramters, please consulte <a class="reference external" href="https://keras.io">https://keras.io</a>
+for the most up to date documentation for these parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>val_size</strong> – If float, should be between 0.0 and 1.0 and represent</p></li>
+<li><p><strong>proportion of the dataset to include in the test split.</strong> (<em>the</em>) – </p></li>
+<li><p><strong>int</strong><strong>, </strong><strong>represents the absolute number of test samples. If None</strong><strong>,</strong> (<em>If</em>) – </p></li>
+<li><p><strong>value is set to it will be set to 0.25.</strong> (<em>the</em>) – </p></li>
+<li><p><strong>optimizer</strong> – Either “adam” or “rmsprop”. This selects whether to use</p></li>
+<li><p><strong>or keras.optimizers.RMSProp for the underlying</strong> (<em>keras.optimizers.Adam</em>) – </p></li>
+<li><p><strong>model optimizer.</strong> (<em>keras</em>) – </p></li>
+<li><p><strong>learning_rate</strong> – The learning rate to pass to Adam or RMSProp.</p></li>
+<li><p><strong>amsgrad</strong> – If optimizer is “adam”, whether to apply</p></li>
+<li><p><strong>AMSGrad variant of this algorithm from the paper</strong> (<em>the</em>) – </p></li>
+<li><p><strong>the Convergence of Adam and Beyond&quot;. If optimizer is &quot;RMSProp&quot;</strong><strong>,</strong> (<em>&quot;On</em>) – </p></li>
+<li><p><strong>unused.</strong> – </p></li>
+<li><p><strong>batch_size</strong> – The batch size to use for training.</p></li>
+<li><p><strong>num_epochs</strong> – Number of epochs to train the model. An epoch is an</p></li>
+<li><p><strong>over the entire data provided</strong><strong>, </strong><strong>as defined by steps_per_epoch.</strong> (<em>iteration</em>) – </p></li>
+<li><p><strong>steps_per_epoch</strong> – Total number of steps (batches of samples) to yield</p></li>
+<li><p><strong>generator before declaring one epoch finished and starting the</strong> (<em>from</em>) – </p></li>
+<li><p><strong>epoch. If set to None</strong><strong>, </strong><strong>do one loop through dataset per epoch.</strong> (<em>next</em>) – </p></li>
+<li><p><strong>shuffle_initially</strong> – Whether to shuffle training data before training begins.</p></li>
+<li><p><strong>shuffle_every_epoch</strong> – Whether to continually shuffle the data after each epoch.</p></li>
+<li><p><strong>augment_rotation</strong> – A float or two dimensional tuple expressing the range</p></li>
+<li><p><strong>rotataion</strong> (<em>of</em>) – </p></li>
+<li><p><strong>is transformed to</strong> (<em>it</em>) – </p></li>
+<li><p><strong>augment_scale_min</strong> – The lower bound of random scaling factors to apply to the</p></li>
+<li><p><strong>when augmenting. If augment_scale_min == augment_scale_max then scaling</strong> (<em>images</em>) – </p></li>
+<li><p><strong>will be skipped.</strong> (<em>augmentation</em>) – </p></li>
+<li><p><strong>augment_scale_max</strong> – The upper bound of random scaling factors to apply to the</p></li>
+<li><p><strong>when augmenting. If augment_scale_min == augment_scale_max then scaling</strong> – </p></li>
+<li><p><strong>will be skipped.</strong> – </p></li>
+<li><p><strong>save_dir</strong> – The directory to save trained Keras models.</p></li>
+<li><p><strong>save_every_epoch</strong> – Should a model be saved every epoch.</p></li>
+<li><p><strong>save_best_val</strong> – Should we save the model with the lowest validation loss.</p></li>
+<li><p><strong>reduce_lr_min_delta</strong> – Threshold for measuring the new optimum, to only focus on significant</p></li>
+<li><p><strong>Parameter passed to keras callback ReduceLROnPlateau</strong> (<em>patience</em><em>, </em><em>monitor='val_loss'</em>) – </p></li>
+<li><p><strong>reduce_lr_factor</strong> – Factor by which the learning rate will be reduced. new_lr = lr * factor.</p></li>
+<li><p><strong>passed to keras callback ReduceLROnPlateau</strong> (<em>Parameter</em>) – </p></li>
+<li><p><strong>reduce_lr_patience</strong> – Number of epochs with no improvement after which learning rate will be reduced.</p></li>
+<li><p><strong>passed to keras callback ReduceLROnPlateau</strong> – </p></li>
+<li><p><strong>reduce_lr_cooldown</strong> – Number of epochs to wait before resuming normal operation after lr has</p></li>
+<li><p><strong>reduced.Parameter passed to keras callback ReduceLROnPlateau</strong> (<em>been</em>) – </p></li>
+<li><p><strong>reduce_lr_min_lr</strong> – Lower bound on the learning rate. Parameter passed to keras callback</p></li>
+<li><p><strong>ReduceLROnPlateau</strong> (<em>min_lr</em><em>, </em><em>monitor='val_loss'</em>) – </p></li>
+<li><p><strong>early_stopping_min_delta</strong> – Minimum change in the monitored quantity to qualify as an improvement,</p></li>
+<li><p><strong>an absolute change of less than min_delta</strong><strong>, </strong><strong>will count as no improvement. Parameter passed to</strong> (<em>i.e.</em>) – </p></li>
+<li><p><strong>callback EarlyStopping</strong> (<em>keras</em>) – </p></li>
+<li><p><strong>early_stopping_patience</strong> – Number of epochs with no improvement after which training will be stopped.</p></li>
+<li><p><strong>passed to keras callback EarlyStopping</strong> (<em>Parameter</em>) – </p></li>
+<li><p><strong>scale</strong> – Scale factor for downsampling (2 means we downsample by factor of 2)</p></li>
+<li><p><strong>sigma</strong> – Size of confmaps/pafs generated by datagen functions</p></li>
+<li><p><strong>instance_crop</strong> – Whether to crop images around each instance (and adjust points)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="sleap.nn.training.Trainer.train">
+<code class="sig-name descname">train</code><span class="sig-paren">(</span><em class="sig-param">model: sleap.nn.model.Model, labels: Union[str, sleap.io.dataset.Labels, Dict], run_name: str = None, save_dir: Optional[str] = None, tensorboard_dir: Optional[str] = None, control_zmq_port: int = 9000, progress_report_zmq_port: int = 9001, multiprocessing_workers: int = 0</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/sleap/nn/training.html#Trainer.train"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.Trainer.train" title="Permalink to this definition">¶</a></dt>
+<dd><p>Train a given model using labels and the Trainer’s current hyper-parameter settings.
+This method executes synchronously, thus it blocks until training is finished.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> – The model to run training on.</p></li>
+<li><p><strong>labels</strong> – The SLEAP Labels dataset of labeled frames to run training on.</p></li>
+<li><p><strong>tensorboard_dir</strong> – An optional tensorboard directory.</p></li>
+<li><p><strong>run_name</strong> – A string name to use to prefix each model file name. If set to None,</p></li>
+<li><p><strong>default value is</strong> (<em>the</em>) – </p></li>
+<li><p><strong>f&quot;{timestamp}.{str</strong> (<em>model.output_type</em><em>)</em><em>lower</em><em>(</em>) – </p></li>
+<li><p><strong>num_total is the number of total training and validation images.</strong> (<em>Where</em>) – </p></li>
+<li><p><strong>control_zmq_port</strong> – This training process can be controlled by a control server.</p></li>
+<li><p><strong>is the port to connect to on the server at localhost. If None</strong><strong>, </strong><strong>no connection</strong> (<em>This</em>) – </p></li>
+<li><p><strong>made.</strong> (<em>is</em>) – </p></li>
+<li><p><strong>progress_report_zmq_port</strong> – Progress indications can be generated to a server</p></li>
+<li><p><strong>on localhost using this port. If None</strong><strong>, </strong><strong>no connection is made.</strong> (<em>listening</em>) – </p></li>
+<li><p><strong>multiprocessing_workers</strong> – Whether to user multiple worker processes to train the model.</p></li>
+<li><p><strong>set &lt; 1</strong><strong>, </strong><strong>use_multiprocessing will be set to false on call to</strong> (<em>If</em>) – </p></li>
+<li><p><strong>Otherwise</strong><strong>, </strong><strong>multiprocessing_workers will</strong> (<em>keras.Model.fit_generator</em><em>(</em><em>)</em><em></em>) – </p></li>
+<li><p><strong>passed to fit_generator</strong><strong>(</strong><strong>)</strong><strong></strong> (<em>be</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>If save_dir is not None, the file path of the JSON TrainingJob object. If save_dir
+is None, then the returns None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.training.Trainer.train_async">
+<code class="sig-name descname">train_async</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span> &#x2192; Tuple[multiprocessing.context.BaseContext.Pool, multiprocessing.pool.ApplyResult]<a class="reference internal" href="_modules/sleap/nn/training.html#Trainer.train_async"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.Trainer.train_async" title="Permalink to this definition">¶</a></dt>
+<dd><p>Train a given model using labels and the Trainer’s current hyper-parameter settings.
+This method executes asynchronously, that is, it launches training in a another
+process and returns immediately.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>Trainer.train</strong><strong>(</strong><strong>)</strong><strong></strong> (<em>See</em>) – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A tuple containing the multiprocessing.Process that is running training, start() has been called.
+And the AysncResult object that will contain the result when the job finishes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="sleap.nn.training.TrainingControllerZMQ">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.nn.training.</code><code class="sig-name descname">TrainingControllerZMQ</code><span class="sig-paren">(</span><em class="sig-param">address='tcp://127.0.0.1'</em>, <em class="sig-param">port=9000</em>, <em class="sig-param">topic=''</em>, <em class="sig-param">poll_timeout=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/training.html#TrainingControllerZMQ"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.TrainingControllerZMQ" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="method">
@@ -254,8 +373,123 @@ Subclasses should override for any actions to run.
 
 </dd></dl>
 
+<dl class="class">
+<dt id="sleap.nn.training.TrainingJob">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.training.</code><code class="sig-name descname">TrainingJob</code><span class="sig-paren">(</span><em class="sig-param">model: sleap.nn.model.Model</em>, <em class="sig-param">trainer: sleap.nn.training.Trainer</em>, <em class="sig-param">labels_filename: Optional[str] = None</em>, <em class="sig-param">run_name: Optional[str] = None</em>, <em class="sig-param">save_dir: Optional[str] = None</em>, <em class="sig-param">best_model_filename: Optional[str] = None</em>, <em class="sig-param">newest_model_filename: Optional[str] = None</em>, <em class="sig-param">final_model_filename: Optional[str] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/training.html#TrainingJob"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.TrainingJob" title="Permalink to this definition">¶</a></dt>
+<dd><p>A simple class that groups a model with a trainer to represent a record of a
+call to Trainer.train().</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> – The SLEAP Model that was trained.</p></li>
+<li><p><strong>trainer</strong> – The Trainer that was used to train the model.</p></li>
+<li><p><strong>labels_filename</strong> – The name of the labels file using to run this training job.</p></li>
+<li><p><strong>run_name</strong> – The run_name value passed to Trainer.train for this training run.</p></li>
+<li><p><strong>save_dir</strong> – The save_dir value passed to Trainer.train for this training run.</p></li>
+<li><p><strong>best_model_filename</strong> – The relative path (from save_dir) to the Keras model file</p></li>
+<li><p><strong>had best validation loss. Set to None when Trainer.save_best_val is False</strong> (<em>that</em>) – </p></li>
+<li><p><strong>if save_dir is None.</strong> (<em>or</em>) – </p></li>
+<li><p><strong>newest_model_filename</strong> – The relative path (from save_dir) to the Keras model file</p></li>
+<li><p><strong>the state of the model after the last epoch run. Set to None when</strong> (<em>from</em>) – </p></li>
+<li><p><strong>is False</strong><strong> or </strong><strong>save_dir is None.</strong> (<em>Trainer.save_every_epoch</em>) – </p></li>
+<li><p><strong>final_model_filename</strong> – The relative path (from save_dir) to the Keras model file</p></li>
+<li><p><strong>the final state of training. Set to None if save_dir is None. This model</strong> (<em>from</em>) – </p></li>
+<li><p><strong>is not created until training is finished.</strong> (<em>file</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="sleap.nn.training.TrainingJob.load_json">
+<em class="property">classmethod </em><code class="sig-name descname">load_json</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/training.html#TrainingJob.load_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.TrainingJob.load_json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a training run from a JSON file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>filename</strong> – The file to load the JSON from.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A TrainingJob instance constructed from JSON in filename.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.training.TrainingJob.save_json">
+<em class="property">static </em><code class="sig-name descname">save_json</code><span class="sig-paren">(</span><em class="sig-param">training_job: sleap.nn.training.TrainingJob</em>, <em class="sig-param">filename: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/training.html#TrainingJob.save_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.TrainingJob.save_json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save a training run to a JSON file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>training_job</strong> – The TrainingJob instance to save.</p></li>
+<li><p><strong>filename</strong> – The filename to save the JSON to.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 <div class="section" id="module-sleap.nn.architectures.hourglass">
 <span id="architectures"></span><h2>Architectures<a class="headerlink" href="#module-sleap.nn.architectures.hourglass" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sleap.nn.architectures.hourglass.StackedHourglass">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.architectures.hourglass.</code><code class="sig-name descname">StackedHourglass</code><span class="sig-paren">(</span><em class="sig-param">num_hourglass_blocks: int = 3</em>, <em class="sig-param">num_filters: int = 32</em>, <em class="sig-param">depth: int = 3</em>, <em class="sig-param">batch_norm: bool = True</em>, <em class="sig-param">intermediate_inputs: bool = True</em>, <em class="sig-param">upsampling_layers: bool = True</em>, <em class="sig-param">interp: str = 'bilinear'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/hourglass.html#StackedHourglass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.hourglass.StackedHourglass" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stacked hourglass block.</p>
+<p>This function builds and connects multiple hourglass blocks. See <cite>hourglass</cite> for
+more specifics on the implementation.</p>
+<p>Individual hourglasses can be customized by providing an iterable of hyperparameters
+for each of the arguments of the function (except <cite>num_output_channels</cite>). If scalars
+are provided, all hourglasses will share the same hyperparameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_in</strong> – Input 4-D tf.Tensor or instantiated layer. If the number of channels
+are not the same as <cite>num_filters</cite>, an additional residual block is
+applied to this input.</p></li>
+<li><p><strong>num_output_channels</strong> – The number of output channels of the block. These
+are the final output tensors on which intermediate supervision may be
+applied.</p></li>
+<li><p><strong>num_filters</strong> – The number feature channels of the block. These features are
+used throughout the hourglass and will be passed on to the next block
+and need not match the <cite>num_output_channels</cite>. Must be divisible by 2.</p></li>
+<li><p><strong>depth</strong> – The number of pooling steps applied to the input. The input must
+be a tensor with <cite>2^depth</cite> height and width to allow for symmetric
+pooling and upsampling with skip connections.</p></li>
+<li><p><strong>batch_norm</strong> – Apply batch normalization after each convolution</p></li>
+<li><p><strong>intermediate_inputs</strong> – Re-introduce the input tensor <cite>x_in</cite> after each hourglass
+by concatenating with intermediate outputs</p></li>
+<li><p><strong>upsampling_layers</strong> – Use upsampling instead of transposed convolutions.</p></li>
+<li><p><strong>interp</strong> – Method to use for interpolation when upsampling smaller features.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="sleap.nn.architectures.hourglass.StackedHourglass.output">
+<code class="sig-name descname">output</code><span class="sig-paren">(</span><em class="sig-param">x_in</em>, <em class="sig-param">num_output_channels</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/hourglass.html#StackedHourglass.output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.hourglass.StackedHourglass.output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a tensorflow graph for the backbone and return the output tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_in</strong> – Input 4-D tf.Tensor or instantiated layer. Must have height and width</p></li>
+<li><p><strong>are divisible by `2^down_blocks.</strong> (<em>that</em>) – </p></li>
+<li><p><strong>num_output_channels</strong> – The number of output channels of the block. These</p></li>
+<li><p><strong>the final output tensors on which intermediate supervision may be</strong> (<em>are</em>) – </p></li>
+<li><p><strong>applied.</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>tf.Tensor of the output of the block of with <cite>num_output_channels</cite> channels.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>x_out</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="function">
 <dt id="sleap.nn.architectures.hourglass.hourglass_block">
 <code class="sig-prename descclassname">sleap.nn.architectures.hourglass.</code><code class="sig-name descname">hourglass_block</code><span class="sig-paren">(</span><em class="sig-param">x_in</em>, <em class="sig-param">num_output_channels</em>, <em class="sig-param">num_filters</em>, <em class="sig-param">depth=3</em>, <em class="sig-param">batch_norm=True</em>, <em class="sig-param">upsampling_layers=True</em>, <em class="sig-param">interp='bilinear'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/hourglass.html#hourglass_block"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.hourglass.hourglass_block" title="Permalink to this definition">¶</a></dt>
@@ -473,7 +707,55 @@ name: string, block label.</p>
 </dl>
 </dd></dl>
 
-<span class="target" id="module-sleap.nn.architectures.leap"></span><dl class="function">
+<span class="target" id="module-sleap.nn.architectures.leap"></span><dl class="class">
+<dt id="sleap.nn.architectures.leap.LeapCNN">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.architectures.leap.</code><code class="sig-name descname">LeapCNN</code><span class="sig-paren">(</span><em class="sig-param">down_blocks: int = 3</em>, <em class="sig-param">up_blocks: int = 3</em>, <em class="sig-param">upsampling_layers: int = True</em>, <em class="sig-param">num_filters: int = 64</em>, <em class="sig-param">interp: str = 'bilinear'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/leap.html#LeapCNN"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.leap.LeapCNN" title="Permalink to this definition">¶</a></dt>
+<dd><p>LEAP CNN block.</p>
+<p>Implementation generalized from original paper (<a class="reference external" href="https://www.nature.com/articles/s41592-018-0234-5">Pereira et al., 2019</a>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_in</strong> – Input 4-D tf.Tensor or instantiated layer. Must have height and width
+that are divisible by <cite>2^down_blocks</cite>.</p></li>
+<li><p><strong>num_output_channels</strong> – The number of output channels of the block. These
+are the final output tensors on which intermediate supervision may be
+applied.</p></li>
+<li><p><strong>down_blocks</strong> – The number of pooling steps applied to the input. The input
+must be a tensor with <cite>2^down_blocks</cite> height and width.</p></li>
+<li><p><strong>up_blocks</strong> – The number of upsampling steps applied after downsampling.</p></li>
+<li><p><strong>upsampling_layers</strong> – If True, use upsampling instead of transposed convs.</p></li>
+<li><p><strong>num_filters</strong> – The base number feature channels of the block. The number of
+filters is doubled at each pooling step.</p></li>
+<li><p><strong>interp</strong> – Method to use for interpolation when upsampling smaller features.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="sleap.nn.architectures.leap.LeapCNN.output">
+<code class="sig-name descname">output</code><span class="sig-paren">(</span><em class="sig-param">x_in</em>, <em class="sig-param">num_output_channels</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/leap.html#LeapCNN.output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.leap.LeapCNN.output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a tensorflow graph for the backbone and return the output tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_in</strong> – Input 4-D tf.Tensor or instantiated layer. Must have height and width</p></li>
+<li><p><strong>are divisible by `2^down_blocks.</strong> (<em>that</em>) – </p></li>
+<li><p><strong>num_output_channels</strong> – The number of output channels of the block. These</p></li>
+<li><p><strong>the final output tensors on which intermediate supervision may be</strong> (<em>are</em>) – </p></li>
+<li><p><strong>applied.</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>tf.Tensor of the output of the block of with <cite>num_output_channels</cite> channels.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>x_out</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
 <dt id="sleap.nn.architectures.leap.leap_cnn">
 <code class="sig-prename descclassname">sleap.nn.architectures.leap.</code><code class="sig-name descname">leap_cnn</code><span class="sig-paren">(</span><em class="sig-param">x_in</em>, <em class="sig-param">num_output_channels</em>, <em class="sig-param">down_blocks=3</em>, <em class="sig-param">up_blocks=3</em>, <em class="sig-param">upsampling_layers=True</em>, <em class="sig-param">num_filters=64</em>, <em class="sig-param">interp='bilinear'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/leap.html#leap_cnn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.leap.leap_cnn" title="Permalink to this definition">¶</a></dt>
 <dd><p>LEAP CNN block.</p>
@@ -504,7 +786,112 @@ filters is doubled at each pooling step.</p></li>
 </dl>
 </dd></dl>
 
-<span class="target" id="module-sleap.nn.architectures.unet"></span><dl class="function">
+<span class="target" id="module-sleap.nn.architectures.unet"></span><dl class="class">
+<dt id="sleap.nn.architectures.unet.StackedUNet">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.architectures.unet.</code><code class="sig-name descname">StackedUNet</code><span class="sig-paren">(</span><em class="sig-param">num_stacks: int = 3</em>, <em class="sig-param">depth: int = 3</em>, <em class="sig-param">convs_per_depth: int = 2</em>, <em class="sig-param">num_filters: int = 16</em>, <em class="sig-param">kernel_size: int = 5</em>, <em class="sig-param">upsampling_layers: bool = True</em>, <em class="sig-param">intermediate_inputs: bool = True</em>, <em class="sig-param">interp: str = 'bilinear'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/unet.html#StackedUNet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.unet.StackedUNet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stacked U-net block.</p>
+<p>See <cite>unet</cite> for more specifics on the implementation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_in</strong> – Input 4-D tf.Tensor or instantiated layer. Must have height and width
+that are divisible by <cite>2^depth</cite>.</p></li>
+<li><p><strong>num_output_channels</strong> – The number of output channels of the block. These
+are the final output tensors on which intermediate supervision may be
+applied.</p></li>
+<li><p><strong>num_stacks</strong> – The number of blocks to stack on top of each other.</p></li>
+<li><p><strong>depth</strong> – The number of pooling steps applied to the input. The input must
+be a tensor with <cite>2^depth</cite> height and width to allow for symmetric
+pooling and upsampling with skip connections.</p></li>
+<li><p><strong>convs_per_depth</strong> – The number of convolutions applied before pooling or
+after upsampling.</p></li>
+<li><p><strong>num_filters</strong> – The base number feature channels of the block. The number of
+filters is doubled at each pooling step.</p></li>
+<li><p><strong>kernel_size</strong> – Size of the convolutional kernels for each filter.</p></li>
+<li><p><strong>intermediate_inputs</strong> – Re-introduce the input tensor <cite>x_in</cite> after each block
+by concatenating with intermediate outputs</p></li>
+<li><p><strong>upsampling_layers</strong> – Use upsampling instead of transposed convolutions.</p></li>
+<li><p><strong>interp</strong> – Method to use for interpolation when upsampling smaller features.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="sleap.nn.architectures.unet.StackedUNet.output">
+<code class="sig-name descname">output</code><span class="sig-paren">(</span><em class="sig-param">x_in</em>, <em class="sig-param">num_output_channels</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/unet.html#StackedUNet.output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.unet.StackedUNet.output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a tensorflow graph for the backbone and return the output tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_in</strong> – Input 4-D tf.Tensor or instantiated layer. Must have height and width</p></li>
+<li><p><strong>are divisible by `2^down_blocks.</strong> (<em>that</em>) – </p></li>
+<li><p><strong>num_output_channels</strong> – The number of output channels of the block. These</p></li>
+<li><p><strong>the final output tensors on which intermediate supervision may be</strong> (<em>are</em>) – </p></li>
+<li><p><strong>applied.</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>tf.Tensor of the output of the block of with <cite>num_output_channels</cite> channels.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>x_out</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sleap.nn.architectures.unet.UNet">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.architectures.unet.</code><code class="sig-name descname">UNet</code><span class="sig-paren">(</span><em class="sig-param">depth: int = 3</em>, <em class="sig-param">convs_per_depth: int = 2</em>, <em class="sig-param">num_filters: int = 16</em>, <em class="sig-param">kernel_size: int = 5</em>, <em class="sig-param">upsampling_layers: bool = True</em>, <em class="sig-param">interp: str = 'bilinear'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/unet.html#UNet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.unet.UNet" title="Permalink to this definition">¶</a></dt>
+<dd><p>U-net block.</p>
+<p>Implementation based off of <a class="reference external" href="https://github.com/CSBDeep/CSBDeep/blob/master/csbdeep/internals/nets.py">CARE</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_in</strong> – Input 4-D tf.Tensor or instantiated layer. Must have height and width
+that are divisible by <cite>2^depth</cite>.</p></li>
+<li><p><strong>num_output_channels</strong> – The number of output channels of the block. These
+are the final output tensors on which intermediate supervision may be
+applied.</p></li>
+<li><p><strong>depth</strong> – The number of pooling steps applied to the input. The input must
+be a tensor with <cite>2^depth</cite> height and width to allow for symmetric
+pooling and upsampling with skip connections.</p></li>
+<li><p><strong>convs_per_depth</strong> – The number of convolutions applied before pooling or
+after upsampling.</p></li>
+<li><p><strong>num_filters</strong> – The base number feature channels of the block. The number of
+filters is doubled at each pooling step.</p></li>
+<li><p><strong>kernel_size</strong> – Size of the convolutional kernels for each filter.</p></li>
+<li><p><strong>upsampling_layers</strong> – Use upsampling instead of transposed convolutions.</p></li>
+<li><p><strong>interp</strong> – Method to use for interpolation when upsampling smaller features.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="sleap.nn.architectures.unet.UNet.output">
+<code class="sig-name descname">output</code><span class="sig-paren">(</span><em class="sig-param">x_in</em>, <em class="sig-param">num_output_channels</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/unet.html#UNet.output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.unet.UNet.output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a tensorflow graph for the backbone and return the output tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_in</strong> – Input 4-D tf.Tensor or instantiated layer. Must have height and width</p></li>
+<li><p><strong>are divisible by `2^down_blocks.</strong> (<em>that</em>) – </p></li>
+<li><p><strong>num_output_channels</strong> – The number of output channels of the block. These</p></li>
+<li><p><strong>the final output tensors on which intermediate supervision may be</strong> (<em>are</em>) – </p></li>
+<li><p><strong>applied.</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>tf.Tensor of the output of the block of with <cite>num_output_channels</cite> channels.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>x_out</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
 <dt id="sleap.nn.architectures.unet.stacked_unet">
 <code class="sig-prename descclassname">sleap.nn.architectures.unet.</code><code class="sig-name descname">stacked_unet</code><span class="sig-paren">(</span><em class="sig-param">x_in</em>, <em class="sig-param">num_output_channels</em>, <em class="sig-param">num_stacks=3</em>, <em class="sig-param">depth=3</em>, <em class="sig-param">convs_per_depth=2</em>, <em class="sig-param">num_filters=16</em>, <em class="sig-param">kernel_size=5</em>, <em class="sig-param">upsampling_layers=True</em>, <em class="sig-param">intermediate_inputs=True</em>, <em class="sig-param">interp='bilinear'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/unet.html#stacked_unet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.unet.stacked_unet" title="Permalink to this definition">¶</a></dt>
 <dd><p>Stacked U-net block.</p>
