@@ -808,9 +808,11 @@ class MainWindow(QMainWindow):
         self.updateSeekbarMarks()
 
     def runActiveLearning(self):
-        from sleap.gui.active import active_learning_gui
+        from sleap.gui.active import ActiveLearningDialog
 
-        if active_learning_gui(self.filename, self.labels):
+        ret = ActiveLearningDialog(self.filename, self.labels).exec_()
+
+        if ret:
             # we ran active learning so update display/ui
             self.plotFrame()
             self.updateSeekbarMarks()
