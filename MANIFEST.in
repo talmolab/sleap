@@ -1,3 +1,6 @@
 include sleap/gui/shortcuts.yaml
 include sleap/gui/suggestions.yaml
+include sleap/gui/training_editor.yaml
 include sleap/nn/training-forms.yaml
+include sleap/nn/active.yaml
+include training_profiles/*.json
