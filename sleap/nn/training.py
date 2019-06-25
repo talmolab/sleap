@@ -125,7 +125,7 @@ class Trainer:
     reduce_lr_min_lr: float = 1e-8
     early_stopping_min_delta: float = 1e-8
     early_stopping_patience: float = 3
-    scale: int = 1
+    scale: float = 1.0
     sigma: float = 5.0
     instance_crop: bool = False
 
