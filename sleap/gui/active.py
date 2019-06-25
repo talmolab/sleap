@@ -297,6 +297,7 @@ def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=Non
             print(f"Using already trained model: {training_jobs[model_type]}")
 
         else:
+            win.reset()
             win.setWindowTitle(f"Training Model - {str(model_type)}")
 
             if not skip_learning:
