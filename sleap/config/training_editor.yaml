@@ -49,7 +49,7 @@ datagen:
 
 - name: scale
   label: Scale (rescale factor)
-  type: int
+  type: double
   default: 0
 
 - name: sigma
