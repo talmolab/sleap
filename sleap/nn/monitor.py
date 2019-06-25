@@ -131,7 +131,7 @@ class LossViewer(QtWidgets.QMainWindow):
         if self.sub and self.sub.poll(timeout, zmq.POLLIN):
             msg = jsonpickle.decode(self.sub.recv_string())
 
-            print(msg)
+            # print(msg)
             if msg["event"] == "train_begin":
                 self.set_start_time(time())
             if msg["event"] == "train_end":
