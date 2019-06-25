@@ -4,7 +4,8 @@ main:
   label: Method
   type: stacked
   default: strides
-  options: strides,pca,hog,brisk
+  options: strides,pca,brisk
+  #removing hog for now since it's not implemented correctly
 
   strides:
   - name: strides_per_video
