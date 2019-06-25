@@ -123,12 +123,14 @@ class VideoFrameSuggestions:
             kps, descs = brisk.detectAndCompute(img, None)
 
             # img2 = cv2.drawKeypoints(img, kps, None, color=(0,255,0), flags=0)
-
-            if feature_stack is None:
-                feature_stack = descs
-            else:
-                feature_stack = np.concatenate((feature_stack, descs))
-            frame_idx_map.extend([frame_idx] * descs.shape[0])
+            if descs is not None:
+                if feature_stack is None:
+                    feature_stack = descs
+                else:
+                    print(f"feature_stack:{feature_stack.shape}")
+                    print(f"descs:{descs.shape}")
+                    feature_stack = np.concatenate((feature_stack, descs))
+                frame_idx_map.extend([frame_idx] * descs.shape[0])
 
         return (feature_stack, frame_idx_map)
 
