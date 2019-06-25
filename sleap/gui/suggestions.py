@@ -106,7 +106,6 @@ class VideoFrameSuggestions:
             frame_idx = i * sample_step
             flat_stack[i] = rescale(video[frame_idx], factor).flatten()
             frame_idx_map[i] = frame_idx
-        print(flat_stack.shape)
         return (flat_stack, frame_idx_map)
 
     @classmethod
@@ -127,8 +126,6 @@ class VideoFrameSuggestions:
                 if feature_stack is None:
                     feature_stack = descs
                 else:
-                    print(f"feature_stack:{feature_stack.shape}")
-                    print(f"descs:{descs.shape}")
                     feature_stack = np.concatenate((feature_stack, descs))
                 frame_idx_map.extend([frame_idx] * descs.shape[0])
 
