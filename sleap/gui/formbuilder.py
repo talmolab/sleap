@@ -45,6 +45,10 @@ class YamlFormWidget(QtWidgets.QGroupBox):
         """Return value for specified form field."""
         return FormBuilderLayout.get_widget_value(self.fields[key])
 
+    def __setitem__(self, key, val):
+        """Set value for specified form field."""
+        FormBuilderLayout.set_widget_value(self.fields[key], val)
+
     @property
     def buttons(self):
         """Returns a list of buttons in form (so we can connect to handlers)."""
