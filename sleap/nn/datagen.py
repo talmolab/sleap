@@ -4,7 +4,7 @@ import numpy as np
 import math
 from sleap.io.dataset import Labels
 
-def generate_images(labels:Labels, scale: int=1) -> np.ndarray:
+def generate_images(labels:Labels, scale: float=1.0) -> np.ndarray:
     """
     Generate a ndarray of the image data for any labeled frames
 
@@ -23,7 +23,8 @@ def generate_images(labels:Labels, scale: int=1) -> np.ndarray:
         # rescale by factor
         h, w, c = img.shape
         if scale != 1.0:
-            img = cv2.resize(img, (h//scale, w//scale))
+            h_scaled, w_scaled = int(h//(1/scale)), int(w//(1/scale))
+            img = cv2.resize(img, (h_scaled, w_scaled))
             # add back singleton channel
             if c == 1:
                 img = img[..., None]
@@ -37,7 +38,7 @@ def generate_images(labels:Labels, scale: int=1) -> np.ndarray:
 
     return imgs
 
-def generate_points(labels, scale: int=1) -> list:
+def generate_points(labels, scale: float=1.0) -> list:
     """Generates point data for instances in frames in labels.
 
     Output is in the format expected by
@@ -53,11 +54,11 @@ def generate_points(labels, scale: int=1) -> list:
         a list (each frame) of lists (each instance) of ndarrays (of points)
             i.e., frames -> instances -> point_array
     """
-    return [[inst.points_array(invisible_as_nan=True)/scale
+    return [[inst.points_array(invisible_as_nan=True)*scale
                 for inst in lf.user_instances]
                 for lf in labels.user_labeled_frames]
 
-def generate_confmaps_from_points(frames_inst_points, skeleton, shape, sigma=5.0, scale=1, output_size=None) -> np.ndarray:
+def generate_confmaps_from_points(frames_inst_points, skeleton, shape, sigma=5.0, scale=1.0, output_size=None) -> np.ndarray:
     """
     Generates confmaps for set of frames.
     This is used to generate confmaps on the fly during training,
@@ -79,7 +80,7 @@ def generate_confmaps_from_points(frames_inst_points, skeleton, shape, sigma=5.0
     full_size = tuple(map(int, full_size))
     output_size = tuple(map(int, output_size))
 
-    ball = get_conf_ball(full_size, output_size, sigma/scale)
+    ball = get_conf_ball(full_size, output_size, sigma*scale)
 
     num_frames = len(frames_inst_points)
     num_channels = len(skeleton.nodes)
@@ -404,7 +405,7 @@ def demo_datagen():
     labels = Labels.load_json(data_path)
     # labels.labeled_frames = labels.labeled_frames[123:423:10]
 
-    scale = 1
+    scale = .5
 
     imgs = generate_images(labels, scale)
     print("--imgs--")
@@ -427,7 +428,7 @@ def demo_datagen():
     skeleton = labels.skeletons[0]
     img_shape = (imgs.shape[1], imgs.shape[2])
 
-    confmaps = generate_confmaps_from_points(points, skeleton, img_shape, sigma=5.0/scale)
+    confmaps = generate_confmaps_from_points(points, skeleton, img_shape, sigma=5.0*scale)
     print("--confmaps--")
     print(confmaps.shape)
     print(confmaps.dtype)
@@ -435,7 +436,7 @@ def demo_datagen():
 
     demo_confmaps(confmaps, vid)
 
-    pafs = generate_pafs_from_points(points, skeleton, img_shape, sigma=5.0/scale)
+    pafs = generate_pafs_from_points(points, skeleton, img_shape, sigma=5.0*scale)
     print("--pafs--")
     print(pafs.shape)
     print(pafs.dtype)

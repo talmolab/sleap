@@ -42,7 +42,7 @@ main:
 
 - name: scale
   label: Image rescaling factor
-  type: int
+  type: double
   default: 1
 
 - name: sigma
