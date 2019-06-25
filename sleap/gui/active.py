@@ -345,8 +345,10 @@ def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=Non
             frames = list(set(frames) - set(video_user_labeled_frame_idxs))
 
             if not skip_learning:
+                save_dir = os.path.join(os.path.dirname(labels_filename), "predict.json")
+
                 # run predictions for desired frames in this video
-                video_lfs = predictor.predict(input_video=video, frames=frames)
+                video_lfs = predictor.predict(input_video=video, frames=frames, output_path=save_dir)
                 # FIXME: code below makes the last training job process run again
                 # pool, result = predictor.predict_async(input_video=video.filename, frames=frames)
 

@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 
 import numpy as np
 import pandas as pd
+import h5py
 import cv2
 import keras
 import attr
@@ -554,6 +555,17 @@ class Predictor:
 
             logger.info(f"  confmaps: shape={confmaps.shape}, ptp={np.ptp(confmaps)}")
             logger.info(f"  pafs: shape={pafs.shape}, ptp={np.ptp(pafs)}")
+
+            # Save confmaps and pafs
+            if output_path is not None:
+                visual_data_path = os.path.join(os.path.dirname(output_path), "predict.h5")
+                with h5py.File(visual_data_path, "w") as f:
+                    ds = f.create_dataset("confmaps", data=confmaps,
+                                           compression="gzip", compression_opts=1)
+                    ds = f.create_dataset("pafs", data=pafs,
+                                            compression="gzip", compression_opts=1)
+                    ds = f.create_dataset("box", data=mov,
+                                            compression="gzip", compression_opts=1)
 
             # Find peaks
             t0 = time()

@@ -521,6 +521,11 @@ class TrainingJob:
             except:
                 raise ValueError(f"Failure deserializing {filename} to TrainingJob.")
 
+            # if we can't find save_dir for job, set it to path of json we're loading
+            if run.save_dir is not None:
+                if not os.path.exists(run.save_dir):
+                    run.save_dir = os.path.dirname(filename)
+
         return run
 
 
