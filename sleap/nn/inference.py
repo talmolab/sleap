@@ -738,7 +738,7 @@ class Predictor:
 
         # FIXME: we're now assuming that all the videos are the same size
         vid = labels.videos[0]
-        img_shape = (vid.height//scale, vid.width//scale, vid.channels)
+        img_shape = (int(vid.height//(1/scale)), int(vid.width//(1/scale)), vid.channels)
 
         # Load the model
         keras_model = get_inference_model(confmap_model_path, paf_model_path, img_shape)

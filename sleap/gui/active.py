@@ -24,7 +24,12 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         self.form_widget = YamlFormWidget(yaml_file=learning_yaml, title="Active Learning Settings")
 
         # load list of job profiles from directory
-        self.job_options = find_saved_jobs(resource_filename(Requirement.parse("sleap"),"sleap/training_profiles"))
+        profile_dir = resource_filename(Requirement.parse("sleap"), "sleap/training_profiles")
+        labels_dir = os.path.join(os.path.dirname(self.labels_filename), "models")
+        self.job_options = dict()
+        find_saved_jobs(profile_dir, self.job_options)
+        if os.path.exists(labels_dir):
+            find_saved_jobs(labels_dir, self.job_options)
 
         # form ui
 
@@ -69,6 +74,8 @@ class ActiveLearningDialog(QtWidgets.QDialog):
                 # check if form field matches attribute of Trainer object
                 if key in dir(trainer):
                     setattr(trainer, key, val)
+            if form_data.get(f"_use_trained_{str(model_type)}", False):
+                job.use_trained_model = True
 
         # Close the dialog now that we have the data from it
         self.accept()
@@ -128,6 +135,17 @@ class ActiveLearningDialog(QtWidgets.QDialog):
             name, job = jobs[idx]
             training_params = cattr.unstructure(job.trainer)
             self.form_widget.set_form_data(training_params)
+
+            # is the model already trained?
+            has_trained = False
+            final_model_filename = job.final_model_filename
+            if final_model_filename is not None:
+                if os.path.exists(os.path.join(job.save_dir, final_model_filename)):
+                    has_trained = True
+            field_name = f"_use_trained_{str(model_type)}"
+            # update "use trained" checkbox
+            self.form_widget.fields[field_name].setEnabled(has_trained)
+            self.form_widget[field_name] = has_trained
         else:
             # last item is "select file..."
             self.add_job_file(model_type)
@@ -194,11 +212,12 @@ def make_default_training_jobs():
 
     return training_jobs
 
-def find_saved_jobs(job_dir):
+def find_saved_jobs(job_dir, jobs=None):
     """Find all the TrainingJob json files in a given directory.
 
     Args:
         job_dir: the directory in which to look for json files
+        jobs (optional): append to jobs, rather than creating new dict
     Returns:
         dict of {ModelOutputType: list of (filename, TrainingJob) tuples}
     """
@@ -208,7 +227,7 @@ def find_saved_jobs(job_dir):
 
     json_files = [f for f in files if f.endswith(".json")]
 
-    jobs = dict()
+    jobs = dict() if jobs is None else jobs
     for f in json_files:
         full_filename = os.path.join(job_dir, f)
         try:
@@ -264,35 +283,42 @@ def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=Non
 
     save_dir = os.path.join(os.path.dirname(labels_filename), "models")
 
+    # open training monitor window
+    win = LossViewer()
+    win.resize(600, 400)
+    win.show()
+
     for model_type, job in training_jobs.items():
-        # run_name = f"models_{model_type}"
-        # use line below if we want to load models already trained from previous run
-        # training_jobs[model_type] = os.path.join(save_dir, run_name+".json")
+        if getattr(job, "use_trained_model", False):
+            print(job)
+            # set path to TrainingJob already trained from previous run
+            json_name = f"{job.run_name}.json"
+            training_jobs[model_type] = os.path.join(job.save_dir, json_name)
+            print(f"Using already trained model: {training_jobs[model_type]}")
 
-        # open monitor window
-        win = LossViewer()
-        win.resize(600, 400)
-        win.show()
+        else:
+            win.reset()
+            win.setWindowTitle(f"Training Model - {str(model_type)}")
 
-        if not skip_learning:
-            # run training
-            pool, result = job.trainer.train_async(model=job.model, labels=labels,
-                                    save_dir=save_dir)
+            if not skip_learning:
+                # run training
+                pool, result = job.trainer.train_async(model=job.model, labels=labels,
+                                        save_dir=save_dir)
 
-            while not result.ready():
-                QtWidgets.QApplication.instance().processEvents()
-                result.wait(.1)
+                while not result.ready():
+                    QtWidgets.QApplication.instance().processEvents()
+                    result.wait(.1)
 
-            # get the result
-            training_jobs[model_type] = result.get()
-
-        # close monitor used for this trainer
-        win.close()
+                # get the path to the resulting TrainingJob file
+                training_jobs[model_type] = result.get()
 
     if not skip_learning:
         for model_type, job in training_jobs.items():
             # load job from json
             training_jobs[model_type] = TrainingJob.load_json(training_jobs[model_type])
+
+    # close training monitor window
+    win.close()
 
     if not skip_learning:
         # Create Predictor from the results of training
@@ -345,6 +371,12 @@ if __name__ == "__main__":
 
 #     labels_filename = "/Volumes/fileset-mmurthy/nat/shruthi/labels-mac.json"
     labels_filename = sys.argv[1]
+    labels = Labels.load_json(labels_filename)
 
-    labeled_frames = run_active_learning_pipeline(labels_filename)
-    print(labeled_frames)
+    app = QtWidgets.QApplication()
+    win = ActiveLearningDialog(labels=labels,labels_filename=labels_filename)
+    win.show()
+    app.exec_()
+
+#     labeled_frames = run_active_learning_pipeline(labels_filename)
+#     print(labeled_frames)

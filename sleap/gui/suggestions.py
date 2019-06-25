@@ -106,7 +106,6 @@ class VideoFrameSuggestions:
             frame_idx = i * sample_step
             flat_stack[i] = rescale(video[frame_idx], factor).flatten()
             frame_idx_map[i] = frame_idx
-        print(flat_stack.shape)
         return (flat_stack, frame_idx_map)
 
     @classmethod
@@ -123,12 +122,12 @@ class VideoFrameSuggestions:
             kps, descs = brisk.detectAndCompute(img, None)
 
             # img2 = cv2.drawKeypoints(img, kps, None, color=(0,255,0), flags=0)
-
-            if feature_stack is None:
-                feature_stack = descs
-            else:
-                feature_stack = np.concatenate((feature_stack, descs))
-            frame_idx_map.extend([frame_idx] * descs.shape[0])
+            if descs is not None:
+                if feature_stack is None:
+                    feature_stack = descs
+                else:
+                    feature_stack = np.concatenate((feature_stack, descs))
+                frame_idx_map.extend([frame_idx] * descs.shape[0])
 
         return (feature_stack, frame_idx_map)
 

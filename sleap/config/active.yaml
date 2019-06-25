@@ -10,11 +10,21 @@ main:
   label: View Selected Node Profile...
   type: button
 
+- name: _use_trained_confmaps
+  label: Use trained confmap model
+  type: bool
+  default: False
+
 - name: paf_job
   label: Edge (paf) Training Profile
   type: list
   default: a
   options: a,b,c
+
+- name: _use_trained_pafs
+  label: Use trained paf model
+  type: bool
+  default: False
 
 - name: _view_paf
   label: View Selected Edge Profile...
@@ -32,7 +42,7 @@ main:
 
 - name: scale
   label: Image rescaling factor
-  type: int
+  type: double
   default: 1
 
 - name: sigma

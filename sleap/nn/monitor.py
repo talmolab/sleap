@@ -6,9 +6,28 @@ import jsonpickle
 from PySide2 import QtCore, QtWidgets, QtGui, QtCharts
 
 class LossViewer(QtWidgets.QMainWindow):
-    def __init__(self, zmq_context=None, parent=None):
+    def __init__(self, zmq_context=None, show_controller=True, parent=None):
         super(LossViewer, self).__init__(parent)
 
+        self.show_controller = show_controller
+
+        self.reset()
+        self.setup_zmq(zmq_context)
+
+    def __del__(self):
+        # close the zmq socket
+        self.sub.close()
+        self.sub = None
+        if self.zmq_ctrl is not None:
+            url = self.zmq_ctrl.LAST_ENDPOINT
+            self.zmq_ctrl.unbind(url)
+            self.zmq_ctrl.close()
+            self.zmq_ctrl = None
+        # if we started out own zmq context, terminate it
+        if not self.ctx_given:
+            self.ctx.term()
+
+    def reset(self):
         self.chart = QtCharts.QtCharts.QChart()
 
         self.series = dict()
@@ -39,8 +58,18 @@ class LossViewer(QtWidgets.QMainWindow):
         self.chart.legend().hide()
 
         self.chartView = QtCharts.QtCharts.QChartView(self.chart)
-        self.chartView.setRenderHint(QtGui.QPainter.Antialiasing);
-        self.setCentralWidget(self.chartView)
+        self.chartView.setRenderHint(QtGui.QPainter.Antialiasing)
+        layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(self.chartView)
+
+        if self.show_controller:
+            btn = QtWidgets.QPushButton("Stop Training")
+            btn.clicked.connect(self.stop)
+            layout.addWidget(btn)
+
+        wid = QtWidgets.QWidget()
+        wid.setLayout(layout)
+        self.setCentralWidget(wid)
 
         self.X = []
         self.Y = []
@@ -49,17 +78,29 @@ class LossViewer(QtWidgets.QMainWindow):
         self.epoch_size = 1
         self.last_batch_number = 0
         self.is_running = False
-        
+
+    def setup_zmq(self, zmq_context):
         # Progress monitoring
         self.ctx_given = (zmq_context is not None)
         self.ctx = zmq.Context() if zmq_context is None else zmq_context
         self.sub = self.ctx.socket(zmq.SUB)
         self.sub.subscribe("")
         self.sub.connect("tcp://127.0.0.1:9001")
-
+        # Controller
+        self.zmq_ctrl = None
+        if self.show_controller:
+            self.zmq_ctrl = self.ctx.socket(zmq.PUB)
+            self.zmq_ctrl.bind("tcp://127.0.0.1:9000")
+        # Set timer to poll for messages
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.check_messages)
         self.timer.start(0)
+
+    def stop(self):
+        if self.zmq_ctrl is not None:
+            # send command to stop training
+            print("Sending command to stop training")
+            self.zmq_ctrl.send_string(jsonpickle.encode(dict(command="stop",)))
 
     def add_datapoint(self, x, y, which="batch"):
         self.series[which].append(x, y)
@@ -79,12 +120,6 @@ class LossViewer(QtWidgets.QMainWindow):
     def set_end(self):
         self.is_running = False
         self.timer.stop()
-        # close the zmq socket
-        self.sub.close()
-        self.sub = None
-        # if we started out own zmq context, terminate it
-        if not self.ctx_given:
-            self.ctx.term()
 
     def update_runtime(self):
         if self.t0 is not None and self.is_running:
@@ -96,7 +131,7 @@ class LossViewer(QtWidgets.QMainWindow):
         if self.sub and self.sub.poll(timeout, zmq.POLLIN):
             msg = jsonpickle.decode(self.sub.recv_string())
 
-            print(msg)
+            # print(msg)
             if msg["event"] == "train_begin":
                 self.set_start_time(time())
             if msg["event"] == "train_end":
@@ -106,7 +141,8 @@ class LossViewer(QtWidgets.QMainWindow):
             elif msg["event"] == "epoch_end":
                 self.epoch_size = max(self.epoch_size, self.last_batch_number + 1)
                 self.add_datapoint((self.epoch+1)*self.epoch_size, msg["logs"]["loss"], "epoch_loss")
-                self.add_datapoint((self.epoch+1)*self.epoch_size, msg["logs"]["val_loss"], "val_loss")
+                if "val_loss" in msg["logs"].keys():
+                    self.add_datapoint((self.epoch+1)*self.epoch_size, msg["logs"]["val_loss"], "val_loss")
             elif msg["event"] == "batch_end":
                 self.last_batch_number = msg["logs"]["batch"]
                 self.add_datapoint((self.epoch * self.epoch_size) + msg["logs"]["batch"], msg["logs"]["loss"])
