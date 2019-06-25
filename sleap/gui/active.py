@@ -283,6 +283,11 @@ def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=Non
 
     save_dir = os.path.join(os.path.dirname(labels_filename), "models")
 
+    # open training monitor window
+    win = LossViewer()
+    win.resize(600, 400)
+    win.show()
+
     for model_type, job in training_jobs.items():
         if getattr(job, "use_trained_model", False):
             print(job)
@@ -291,10 +296,7 @@ def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=Non
             print("Using already trained model: {training_jobs[model_type]}")
 
         else:
-            # open monitor window
-            win = LossViewer()
-            win.resize(600, 400)
-            win.show()
+            win.setWindowTitle(f"Training Model - {str(model_type)}")
 
             if not skip_learning:
                 # run training
@@ -308,13 +310,13 @@ def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=Non
                 # get the path to the resulting TrainingJob file
                 training_jobs[model_type] = result.get()
 
-            # close monitor used for this trainer
-            win.close()
-
     if not skip_learning:
         for model_type, job in training_jobs.items():
             # load job from json
             training_jobs[model_type] = TrainingJob.load_json(training_jobs[model_type])
+
+    # close training monitor window
+    win.close()
 
     if not skip_learning:
         # Create Predictor from the results of training
