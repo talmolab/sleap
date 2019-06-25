@@ -292,8 +292,9 @@ def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=Non
         if getattr(job, "use_trained_model", False):
             print(job)
             # set path to TrainingJob already trained from previous run
-            training_jobs[model_type] = os.path.join(job.save_dir, job.final_model_filename)
-            print("Using already trained model: {training_jobs[model_type]}")
+            json_name = f"{job.run_name}.json"
+            training_jobs[model_type] = os.path.join(job.save_dir, json_name)
+            print(f"Using already trained model: {training_jobs[model_type]}")
 
         else:
             win.setWindowTitle(f"Training Model - {str(model_type)}")
