@@ -90,6 +90,11 @@ class MultiQuiverPlot(QGraphicsObject):
             [51, 113, 127]
             ]
         self.decimation = decimation
+        
+        # if data range is outside [-1, 1], assume it's [-255, 255] and scale
+        if np.ptp(self.frame) > 2:
+            self.frame = self.frame.astype(np.float64)/255
+            
         if show is None:
             self.show_list = range(self.frame.shape[2]//2)
         else:
@@ -225,6 +230,14 @@ class QuiverPlot(QGraphicsObject):
         painter.drawLines(self.points)
         pass
 
+def show_pafs_from_h5(filename, input_format="channels_last", standalone=False):
+    video = HDF5Video(data_path, "/box", input_format=input_format)
+    paf_data = HDF5Video(data_path, "/pafs", input_format=input_format, convert_range=False)
+
+    pafs_ = [paf_data.get_frame(i) for i in range(paf_data.frames)]
+    pafs = np.stack(pafs_)
+
+    demo_pafs(pafs, video, standalone=True)
 
 def demo_pafs(pafs, video, decimation=1, standalone=False):
     from sleap.gui.video import QtVideoPlayer
@@ -250,11 +263,21 @@ if __name__ == "__main__":
 
     from video import *
 
-    data_path = "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"
     #data_path = "training.scale=1.00,sigma=5.h5"
-    vid = HDF5Video(data_path, "/box", input_format="channels_first")
-    overlay_data = HDF5Video(data_path, "/pafs", input_format="channels_first")
 
+    data_path = "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"
+    input_format="channels_first"
+    
+    data_path = "/Volumes/fileset-mmurthy/nat/nyu-mouse/predict.h5"
+    input_format = "channels_last"
+
+    show_pafs_from_h5(data_path, input_format=input_format, standalone=True)
+
+def foo():
+
+    vid = HDF5Video(data_path, "/box", input_format=input_format)
+    overlay_data = HDF5Video(data_path, "/pafs", input_format=input_format, convert_range=False)
+    print(f"{overlay_data.frames}, {overlay_data.height}, {overlay_data.width}, {overlay_data.channels}")
     app = QApplication([])
     window = QtVideoPlayer(video=vid)
 
@@ -287,7 +310,8 @@ if __name__ == "__main__":
         # get decimation size from slider
         decimation = decimation_size_bar.value()
         # show affinity fields
-        aff_fields_item = MultiQuiverPlot(overlay_data.get_frame(parent.frame_idx), selected, decimation)
+        frame_data = overlay_data.get_frame(parent.frame_idx)
+        aff_fields_item = MultiQuiverPlot(frame_data, selected, decimation)
 
         window.view.scene.addItem(aff_fields_item)
 
