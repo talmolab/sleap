@@ -558,8 +558,13 @@ class Predictor:
 
             # Save confmaps and pafs
             if output_path is not None:
-                visual_data_path = os.path.join(os.path.dirname(output_path), "predict.h5")
-                with h5py.File(visual_data_path, "w") as f:
+                # output_path is full path to labels.json, so replace "json" with "h5"
+                viz_output_path = output_path
+                if viz_output_path.endswith(".json"):
+                    viz_output_path = viz_output_path[:-(len(".json"))]
+                viz_output_path += ".h5"
+                # write file
+                with h5py.File(viz_output_path, "w") as f:
                     ds = f.create_dataset("confmaps", data=confmaps,
                                            compression="gzip", compression_opts=1)
                     ds = f.create_dataset("pafs", data=pafs,
