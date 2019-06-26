@@ -101,7 +101,7 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         sigma = form_data["sigma"]
         instance_crop = form_data["instance_crop"]
         
-        
+        labels = self.labels
         imgs = generate_images(labels, scale)
         points = generate_points(labels, scale)
         
@@ -381,7 +381,7 @@ def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=Non
                 inference_output_path = os.path.join(save_dir, f"{timestamp}.inference.json")
 
                 # run predictions for desired frames in this video
-                video_lfs = predictor.predict(input_video=video, frames=frames, output_path=save_dir)
+                video_lfs = predictor.predict(input_video=video, frames=frames, output_path=inference_output_path)
                 # FIXME: code below makes the last training job process run again
                 # pool, result = predictor.predict_async(input_video=video.filename, frames=frames)
 
