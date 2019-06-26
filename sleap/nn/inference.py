@@ -501,6 +501,8 @@ class Predictor:
         logger.info("  Frames: %d" % num_frames)
         logger.info("  Frame shape: %d x %d" % (vid_h, vid_w))
         logger.info("  Scale: %f" % scale)
+        logger.info(f"  True Scale: {h/vid_h, w/vid_w}")
+        h_w_scale = np.array((h/vid_h, w/vid_w))
 
         # Initialize tracking
         tracker = FlowShiftTracker(window=self.flow_window, verbosity=0)
@@ -580,7 +582,7 @@ class Predictor:
             # Match peaks via PAFs
             t0 = time()
             predicted_frames_chunk = match_peaks_paf_par(peaks, peak_vals, pafs, self.skeleton,
-                                            scale=scale, video=vid, frame_indices=frames_idx,
+                                            scale=h_w_scale, video=vid, frame_indices=frames_idx,
                                             min_score_to_node_ratio=self.min_score_to_node_ratio,
                                             min_score_midpts=self.min_score_midpts,
                                             min_score_integral=self.min_score_integral,
