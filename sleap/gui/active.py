@@ -347,7 +347,7 @@ def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=Non
 
             if not skip_learning:
                 timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
-                inference_output_path = os.path.join(save_dir, f"{timestamp}.inference.json"
+                inference_output_path = os.path.join(save_dir, f"{timestamp}.inference.json")
 
                 # run predictions for desired frames in this video
                 video_lfs = predictor.predict(input_video=video, frames=frames, output_path=save_dir)
