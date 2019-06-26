@@ -58,6 +58,7 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         # connect actions to buttons
         self.form_widget.buttons["_view_conf"].clicked.connect(lambda: self.view_profile(self.form_widget["conf_job"]))
         self.form_widget.buttons["_view_paf"].clicked.connect(lambda: self.view_profile(self.form_widget["paf_job"]))
+        self.form_widget.buttons["_view_datagen"].clicked.connect(self.view_datagen)
         buttons.accepted.connect(self.run)
         buttons.rejected.connect(self.reject)
 
@@ -86,6 +87,36 @@ class ActiveLearningDialog(QtWidgets.QDialog):
 
         # Update labels with results of active learning
         self.labels.labeled_frames.extend(new_lfs)
+
+    def view_datagen(self):
+        from sleap.nn.datagen import generate_images, generate_points, instance_crops, \
+                                generate_confmaps_from_points, generate_pafs_from_points
+        from sleap.io.video import Video
+        from sleap.gui.confmapsplot import demo_confmaps
+        from sleap.gui.quiverplot import demo_pafs
+    
+        # settings for datagen
+        form_data = self.form_widget.get_form_data()
+        scale = form_data["scale"]
+        sigma = form_data["sigma"]
+        instance_crop = form_data["instance_crop"]
+        
+        
+        imgs = generate_images(labels, scale)
+        points = generate_points(labels, scale)
+        
+        if instance_crop:
+            imgs, points = instance_crops(imgs, points)
+
+        skeleton = labels.skeletons[0]
+        img_shape = (imgs.shape[1], imgs.shape[2])
+        vid = Video.from_numpy(imgs * 255)
+
+        confmaps = generate_confmaps_from_points(points, skeleton, img_shape, sigma=sigma)
+        demo_confmaps(confmaps, vid)
+        
+        pafs = generate_pafs_from_points(points, skeleton, img_shape, sigma=sigma)
+        demo_pafs(pafs, vid)
 
     # open profile editor in new dialog window
     def view_profile(self, filename, windows=[]):
