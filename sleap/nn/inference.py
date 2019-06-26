@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 
 import numpy as np
 import pandas as pd
+import h5py
 import cv2
 import keras
 import attr
@@ -555,6 +556,22 @@ class Predictor:
             logger.info(f"  confmaps: shape={confmaps.shape}, ptp={np.ptp(confmaps)}")
             logger.info(f"  pafs: shape={pafs.shape}, ptp={np.ptp(pafs)}")
 
+            # Save confmaps and pafs
+            if output_path is not None:
+                # output_path is full path to labels.json, so replace "json" with "h5"
+                viz_output_path = output_path
+                if viz_output_path.endswith(".json"):
+                    viz_output_path = viz_output_path[:-(len(".json"))]
+                viz_output_path += ".h5"
+                # write file
+                with h5py.File(viz_output_path, "w") as f:
+                    ds = f.create_dataset("confmaps", data=confmaps,
+                                           compression="gzip", compression_opts=1)
+                    ds = f.create_dataset("pafs", data=pafs,
+                                            compression="gzip", compression_opts=1)
+                    ds = f.create_dataset("box", data=mov,
+                                            compression="gzip", compression_opts=1)
+
             # Find peaks
             t0 = time()
             peaks, peak_vals = find_all_peaks(confmaps, min_thresh=self.nms_min_thresh, sigma=self.nms_sigma)
@@ -713,12 +730,15 @@ class Predictor:
     @classmethod
     def from_training_jobs(cls,
             training_jobs: Dict[ModelOutputType, TrainingJob],
-            labels: Optional[Labels]=None):
+            labels: Optional[Labels]=None,
+            resize_hack=True):
         """
         Construct a Predictor from some TrainingJobs.
 
         Args:
             training_jobs: Dict with a TrainingJob for each required ModelOutputType
+            labels (optional): the Labels object for which we'll be making predictions
+                if not specified, we'll load labels for which we trained the confmaps
         Returns:
             Predictor initialized with Keras model.
         """
@@ -739,6 +759,10 @@ class Predictor:
         # FIXME: we're now assuming that all the videos are the same size
         vid = labels.videos[0]
         img_shape = (int(vid.height//(1/scale)), int(vid.width//(1/scale)), vid.channels)
+
+        # FIXME: hack to make inference run when image size isn't right for input layer
+        if resize_hack:
+            img_shape = (img_shape[0]//8*8, img_shape[1]//8*8, img_shape[2])
 
         # Load the model
         keras_model = get_inference_model(confmap_model_path, paf_model_path, img_shape)

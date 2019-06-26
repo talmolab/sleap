@@ -163,6 +163,15 @@ class ConfMapPlot(QGraphicsPixmapItem):
 
         return image
 
+def show_confmaps_from_h5(filename, input_format="channels_last", standalone=False):
+    video = HDF5Video(filename, "/box", input_format=input_format)
+    conf_data = HDF5Video(filename, "/confmaps", input_format=input_format, convert_range=False)
+
+    confmaps_ = [np.clip(conf_data.get_frame(i),0,1) for i in range(conf_data.frames)]
+    confmaps = np.stack(confmaps_)
+
+    return demo_confmaps(confmaps=confmaps, video=video, standalone=standalone)
+
 def demo_confmaps(confmaps, video, standalone=False):
     from PySide2 import QtWidgets
     from sleap.gui.video import QtVideoPlayer
@@ -187,37 +196,8 @@ def demo_confmaps(confmaps, video, standalone=False):
 
 if __name__ == "__main__":
 
-    from video import QtVideoPlayer
+#     data_path = "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"
+#     show_confmaps_from_h5(data_path, input_format="channels_first", standalone=True)
 
-    data_path = "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"
-
-    vid = HDF5Video(data_path, "/box", input_format="channels_first")
-    conf_data = HDF5Video(data_path, "/confmaps", input_format="channels_first")
-
-    confmaps_ = [conf_data.get_frame(i) for i in range(conf_data.frames)]
-    confmaps = np.stack(confmaps_)
-
-    demo_confmaps(confmaps=confmaps, video=vid, standalone=True)
-
-#     app = QApplication([])
-#     window = QtVideoPlayer(video=vid)
-# 
-#     channel_box = MultiCheckWidget(
-#         count=conf_data.get_frame(0).shape[-1],
-#         title="Confidence Map Channel",
-#         default=True
-#         )
-#     channel_box.selectionChanged.connect(window.plot)
-#     window.layout.addWidget(channel_box)
-# 
-#     def plot_confmaps(parent, item_idx):
-#         selected = channel_box.getSelected()
-#         conf_maps = ConfMapsPlot(conf_data.get_frame(parent.frame_idx), selected)
-#         window.view.scene.addItem(conf_maps)
-# 
-#     window.changedPlot.connect(plot_confmaps)
-# 
-#     window.show()
-#     window.plot()
-# 
-#     app.exec_()
+    data_path = "/Users/tabris/code/sleap/files/nyu-mouse/predict.h5"
+    show_confmaps_from_h5(data_path, input_format="channels_last", standalone=True)

@@ -7,7 +7,7 @@ main:
   options: a,b,c
 
 - name: _view_conf
-  label: View Selected Node Profile...
+  label: View Node Profile...
   type: button
 
 - name: _use_trained_confmaps
@@ -27,7 +27,7 @@ main:
   default: False
 
 - name: _view_paf
-  label: View Selected Edge Profile...
+  label: View Edge Profile...
   type: button
 
 - name: instance_crop
@@ -49,3 +49,7 @@ main:
   label: Sigma (for confmaps and pafs)
   type: double
   default: 5.0
+
+- name: _view_datagen
+  label: View Training Image Inputs...
+  type: button

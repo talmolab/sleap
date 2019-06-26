@@ -4,7 +4,7 @@ import numpy as np
 import math
 from sleap.io.dataset import Labels
 
-def generate_images(labels:Labels, scale: float=1.0) -> np.ndarray:
+def generate_images(labels:Labels, scale: float=1.0, resize_hack=True) -> np.ndarray:
     """
     Generate a ndarray of the image data for any labeled frames
 
@@ -21,13 +21,22 @@ def generate_images(labels:Labels, scale: float=1.0) -> np.ndarray:
     for labeled_frame in labels.user_labeled_frames:
         img = labeled_frame.video[labeled_frame.frame_idx][0]
         # rescale by factor
-        h, w, c = img.shape
-        if scale != 1.0:
-            h_scaled, w_scaled = int(h//(1/scale)), int(w//(1/scale))
-            img = cv2.resize(img, (h_scaled, w_scaled))
-            # add back singleton channel
-            if c == 1:
-                img = img[..., None]
+        y, x, c = img.shape
+        if scale != 1.0 or resize_hack:
+            y_scaled, x_scaled = int(y//(1/scale)), int(x//(1/scale))
+
+            # FIXME: hack to resize image so dimensions are divisible by 8
+            if resize_hack:
+                y_scaled, x_scaled = y_scaled//8*8, x_scaled//8*8
+
+            if (x, y) != (x_scaled, y_scaled):
+                # resize image
+                # note that cv2 wants (x, y) rather than numpy-style (y, x)
+                img = cv2.resize(img, (x_scaled, y_scaled))
+
+                # add back singleton channel removed by cv2
+                if c == 1:
+                    img = img[..., None]
         imgs.append(img)
 
     imgs = np.stack(imgs, axis=0)
