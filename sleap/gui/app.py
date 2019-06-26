@@ -834,7 +834,10 @@ class MainWindow(QMainWindow):
 
     def visualizeOutputs(self):
         filters = ["HDF5 output (*.h5 *.hdf5)"]
-        filename, selected_filter = QFileDialog.getOpenFileName(self, dir=None, caption="Import model outputs...", filter=";;".join(filters))
+        models_dir = None
+        if self.filename is not None:
+            models_dir = os.path.join(os.path.dirname(self.filename), "models/")
+        filename, selected_filter = QFileDialog.getOpenFileName(self, dir=models_dir, caption="Import model outputs...", filter=";;".join(filters))
 
         if len(filename) == 0: return
     
@@ -842,8 +845,10 @@ class MainWindow(QMainWindow):
         from sleap.gui.confmapsplot import show_confmaps_from_h5
         from sleap.gui.quiverplot import show_pafs_from_h5
         
-        show_confmaps_from_h5(filename)
-        show_pafs_from_h5(filename)
+        conf_win = show_confmaps_from_h5(filename)
+        conf_win.move(200, 200)
+        paf_win = show_pafs_from_h5(filename)
+        paf_win.move(220+conf_win.rect().width(), 200)
 
     def importPredictions(self):
         filters = ["JSON labels (*.json)", "HDF5 dataset (*.h5 *.hdf5)", "Matlab dataset (*.mat)", "DeepLabCut csv (*.csv)"]
