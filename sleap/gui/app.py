@@ -190,14 +190,18 @@ class MainWindow(QMainWindow):
         self._menu_actions["color predicted"] = labelMenu.addAction("Color Predicted Instances", self.toggleColorPredicted, shortcuts["color predicted"])
         labelMenu.addSeparator()
         self._menu_actions["fit"] = labelMenu.addAction("Fit Instances to View", self.toggleAutoZoom, shortcuts["fit"])
-        labelMenu.addSeparator()
-        self._menu_actions["active learning"] = labelMenu.addAction("Run Active Learning...", self.runActiveLearning)
 
         self._menu_actions["show labels"].setCheckable(True); self._menu_actions["show labels"].setChecked(self._show_labels)
         self._menu_actions["show edges"].setCheckable(True); self._menu_actions["show edges"].setChecked(self._show_edges)
         self._menu_actions["show trails"].setCheckable(True); self._menu_actions["show trails"].setChecked(self._show_trails)
         self._menu_actions["color predicted"].setCheckable(True); self._menu_actions["color predicted"].setChecked(self._color_predicted)
         self._menu_actions["fit"].setCheckable(True)
+
+        predictionMenu = self.menuBar().addMenu("Predict")
+        self._menu_actions["active learning"] = predictionMenu.addAction("Run Active Learning...", self.runActiveLearning)
+        self._menu_actions["visualize models"] = predictionMenu.addAction("Visualize Model Outputs...", self.visualizeOutputs)
+        self._menu_actions["import predictions"] = predictionMenu.addAction("Import Predictions...", self.importPredictions)
+        self._menu_actions["import predictions"].setEnabled(False)
 
         viewMenu = self.menuBar().addMenu("View")
 
@@ -485,12 +489,11 @@ class MainWindow(QMainWindow):
         if self._auto_zoom:
             self.player.zoomToFit()
 
-    def importData(self, filename=None):
+    def importData(self, filename=None, do_load=True):
         show_msg = False
 
         if len(filename) == 0: return
 
-        # callback for finding missing videos
         def gui_video_callback(video_list, new_paths=[os.path.dirname(filename)]):
             from PySide2.QtWidgets import QFileDialog, QMessageBox
 
@@ -503,8 +506,14 @@ class MainWindow(QMainWindow):
                     # check if we can find video
                     if not os.path.exists(current_filename):
                         is_found = False
-                        current_basename = os.path.basename(current_filename)
 
+                        current_basename = os.path.basename(current_filename)
+                        # handle unix, windows, or mixed paths
+                        if current_basename.find("/") > -1:
+                            current_basename = current_basename.split("/")[-1]
+                        if current_basename.find("\\") > -1:
+                            current_basename = current_basename.split("\\")[-1]
+                        
                         # First see if we can find the file in another directory,
                         # and if not, prompt the user to find the file.
 
@@ -538,45 +547,50 @@ class MainWindow(QMainWindow):
                             new_paths.append(os.path.dirname(new_filename))
 
         has_loaded = False
+        labels = None
         if type(filename) == Labels:
-            self.labels = filename
+            labels = filename
             filename = None
             has_loaded = True
         elif filename.endswith(".json"):
-            self.labels = Labels.load_json(filename, video_callback=gui_video_callback)
+            labels = Labels.load_json(filename, video_callback=gui_video_callback)
             has_loaded = True
         elif filename.endswith(".mat"):
-            self.labels = Labels.load_mat(filename)
+            labels = Labels.load_mat(filename)
             has_loaded = True
         elif filename.endswith(".csv"):
             # for now, the only csv we support is the DeepLabCut format
-            self.labels = Labels.load_deeplabcut_csv(filename)
+            labels = Labels.load_deeplabcut_csv(filename)
             has_loaded = True
 
-        self.filename = filename
+        if do_load:
+            self.labels = labels
+            self.filename = filename
 
-        if has_loaded:
-            self.changestack_clear()
-            self._trail_manager = TrackTrailManager(self.labels, self.player.view.scene)
-            self.setTrailLength(self._trail_manager.trail_length)
+            if has_loaded:
+                self.changestack_clear()
+                self._trail_manager = TrackTrailManager(self.labels, self.player.view.scene)
+                self.setTrailLength(self._trail_manager.trail_length)
 
-            if show_msg:
-                msgBox = QMessageBox(text=f"Imported {len(self.labels)} labeled frames.")
-                msgBox.exec_()
+                if show_msg:
+                    msgBox = QMessageBox(text=f"Imported {len(self.labels)} labeled frames.")
+                    msgBox.exec_()
 
-            if len(self.labels.labels) > 0:
-                if len(self.labels.labels[0].instances) > 0:
-                    # TODO: add support for multiple skeletons
-                    self.skeleton = self.labels.labels[0].instances[0].skeleton
+                if len(self.labels.labels) > 0:
+                    if len(self.labels.labels[0].instances) > 0:
+                        # TODO: add support for multiple skeletons
+                        self.skeleton = self.labels.labels[0].instances[0].skeleton
 
-            # Update UI tables
-            self.update_data_views()
+                # Update UI tables
+                self.update_data_views()
 
-            # Load first video
-            self.loadVideo(self.labels.videos[0], 0)
+                # Load first video
+                self.loadVideo(self.labels.videos[0], 0)
 
-            # Update track menu options
-            self.updateTrackMenu()
+                # Update track menu options
+                self.updateTrackMenu()
+        else:
+            return labels
 
     def updateTrackMenu(self):
         self.track_menu.clear()
@@ -817,6 +831,43 @@ class MainWindow(QMainWindow):
             self.plotFrame()
             self.updateSeekbarMarks()
             self.changestack_push("new predictions")
+
+    def visualizeOutputs(self):
+        filters = ["HDF5 output (*.h5 *.hdf5)"]
+        filename, selected_filter = QFileDialog.getOpenFileName(self, dir=None, caption="Import model outputs...", filter=";;".join(filters))
+
+        if len(filename) == 0: return
+    
+        # show confmaps and pafs
+        from sleap.gui.confmapsplot import show_confmaps_from_h5
+        from sleap.gui.quiverplot import show_pafs_from_h5
+        
+        show_confmaps_from_h5(filename)
+        show_pafs_from_h5(filename)
+
+    def importPredictions(self):
+        filters = ["JSON labels (*.json)", "HDF5 dataset (*.h5 *.hdf5)", "Matlab dataset (*.mat)", "DeepLabCut csv (*.csv)"]
+        filename, selected_filter = QFileDialog.getOpenFileName(self, dir=None, caption="Import labeled data...", filter=";;".join(filters))
+
+        if len(filename) == 0: return
+        
+        # load predicted labels
+        predicted_labels = self.importData(filename, do_load=False)
+        
+        # add to current labels project
+        # TODO: the objects (videos and skeletons) won't match, so we need to fix this
+
+        # update video for predicted frame to match video object in labels project
+        for lf in predicted_labels.labeled_frames:
+            for video in self.labels.videos:
+                if lf.video.filename == video.filename:
+                    lf.video = video
+        self.labels.labeled_frames.extend(predicted_labels.labeled_frames)
+        print(f"total lf: {len(self.labels.labeled_frames)}")
+        # update display/ui
+        self.plotFrame()
+        self.updateSeekbarMarks()
+        self.changestack_push("new predictions")
 
     def newInstance(self, copy_instance=None):
         if self.labeled_frame is None:
