@@ -231,13 +231,13 @@ class QuiverPlot(QGraphicsObject):
         pass
 
 def show_pafs_from_h5(filename, input_format="channels_last", standalone=False):
-    video = HDF5Video(data_path, "/box", input_format=input_format)
-    paf_data = HDF5Video(data_path, "/pafs", input_format=input_format, convert_range=False)
+    video = HDF5Video(filename, "/box", input_format=input_format)
+    paf_data = HDF5Video(filename, "/pafs", input_format=input_format, convert_range=False)
 
     pafs_ = [paf_data.get_frame(i) for i in range(paf_data.frames)]
     pafs = np.stack(pafs_)
 
-    demo_pafs(pafs, video, standalone=True)
+    demo_pafs(pafs, video, standalone=standalone)
 
 def demo_pafs(pafs, video, decimation=1, standalone=False):
     from sleap.gui.video import QtVideoPlayer

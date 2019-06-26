@@ -164,10 +164,10 @@ class ConfMapPlot(QGraphicsPixmapItem):
         return image
 
 def show_confmaps_from_h5(filename, input_format="channels_last", standalone=False):
-    video = HDF5Video(data_path, "/box", input_format=input_format)
-    conf_data = HDF5Video(data_path, "/confmaps", input_format=input_format)
+    video = HDF5Video(filename, "/box", input_format=input_format)
+    conf_data = HDF5Video(filename, "/confmaps", input_format=input_format, convert_range=False)
 
-    confmaps_ = [conf_data.get_frame(i) for i in range(conf_data.frames)]
+    confmaps_ = [np.clip(conf_data.get_frame(i),0,1) for i in range(conf_data.frames)]
     confmaps = np.stack(confmaps_)
 
     return demo_confmaps(confmaps=confmaps, video=video, standalone=standalone)
@@ -199,5 +199,5 @@ if __name__ == "__main__":
 #     data_path = "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"
 #     show_confmaps_from_h5(data_path, input_format="channels_first", standalone=True)
 
-    data_path = "/Volumes/fileset-mmurthy/nat/bigrig/predict.h5"
+    data_path = "/Users/tabris/code/sleap/files/nyu-mouse/predict.h5"
     show_confmaps_from_h5(data_path, input_format="channels_last", standalone=True)
