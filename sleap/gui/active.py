@@ -28,9 +28,11 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         profile_dir = resource_filename(Requirement.parse("sleap"), "sleap/training_profiles")
         labels_dir = os.path.join(os.path.dirname(self.labels_filename), "models")
         self.job_options = dict()
-        find_saved_jobs(profile_dir, self.job_options)
+        # list any profiles from previous runs
         if os.path.exists(labels_dir):
             find_saved_jobs(labels_dir, self.job_options)
+        # list default profiles
+        find_saved_jobs(profile_dir, self.job_options)
 
         # form ui
 
@@ -56,8 +58,16 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         self.setLayout(layout)
 
         # connect actions to buttons
-        self.form_widget.buttons["_view_conf"].clicked.connect(lambda: self.view_profile(self.form_widget["conf_job"]))
-        self.form_widget.buttons["_view_paf"].clicked.connect(lambda: self.view_profile(self.form_widget["paf_job"]))
+
+        def edit_conf_profile():
+            self.view_profile(self.form_widget["conf_job"],
+                                model_type=ModelOutputType.CONFIDENCE_MAP)
+        def edit_paf_profile():
+            self.view_profile(self.form_widget["paf_job"],
+                                model_type=ModelOutputType.CONFIDENCE_MAP)
+
+        self.form_widget.buttons["_view_conf"].clicked.connect(edit_conf_profile)
+        self.form_widget.buttons["_view_paf"].clicked.connect(edit_paf_profile)
         self.form_widget.buttons["_view_datagen"].clicked.connect(self.view_datagen)
         buttons.accepted.connect(self.run)
         buttons.rejected.connect(self.reject)
@@ -94,17 +104,17 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         from sleap.io.video import Video
         from sleap.gui.confmapsplot import demo_confmaps
         from sleap.gui.quiverplot import demo_pafs
-    
+
         # settings for datagen
         form_data = self.form_widget.get_form_data()
         scale = form_data["scale"]
         sigma = form_data["sigma"]
         instance_crop = form_data["instance_crop"]
-        
+
         labels = self.labels
         imgs = generate_images(labels, scale)
         points = generate_points(labels, scale)
-        
+
         if instance_crop:
             imgs, points = instance_crops(imgs, points)
 
@@ -127,10 +137,14 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         self.reject()
 
     # open profile editor in new dialog window
-    def view_profile(self, filename, windows=[]):
-        win = TrainingEditor(filename, parent=self)
+    def view_profile(self, filename, model_type, windows=[]):
+        saved_files = []
+        win = TrainingEditor(filename, saved_files=saved_files, parent=self)
         windows.append(win)
         win.exec_()
+
+        for new_filename in saved_files:
+            self._add_job_file_to_list(new_filename, model_type)
 
     def option_list_from_jobs(self, model_type):
         jobs = self.job_options[model_type]
@@ -144,6 +158,14 @@ class ActiveLearningDialog(QtWidgets.QDialog):
                         None, dir=None,
                         caption="Select training profile...",
                         filter="TrainingJob JSON (*.json)")
+
+        self._add_job_file_to_list(filename, model_type)
+        field = self.training_profile_widgets[model_type]
+        # if we didn't successfully select a new file, then clear selection
+        if field.currentIndex() == field.count()-1: # subtract 1 for separator
+            field.setCurrentIndex(-1)
+
+    def _add_job_file_to_list(self, filename, model_type):
         if len(filename):
             try:
                 # try to load json as TrainingJob
@@ -157,16 +179,13 @@ class ActiveLearningDialog(QtWidgets.QDialog):
                 file_model_type = job.model.output_type
                 # make sure the users selected a file with the right model type
                 if model_type == file_model_type:
-                    self.job_options[model_type].append((filename, job))
+                    # insert at beginning of list
+                    self.job_options[model_type].insert(0, (filename, job))
                     # update ui list
                     field = self.training_profile_widgets[model_type]
                     field.set_options(self.option_list_from_jobs(model_type), filename)
                 else:
                     QtWidgets.QMessageBox(text=f"Profile selected is for training {str(file_model_type)} instead of {str(model_type)}.").exec_()
-        field = self.training_profile_widgets[model_type]
-        # if we didn't successfully select a new file, then clear selection
-        if field.currentIndex() == field.count()-1: # subtract 1 for separator
-            field.setCurrentIndex(-1)
 
     def select_job(self, model_type, idx):
         jobs = self.job_options[model_type]
@@ -265,11 +284,12 @@ def find_saved_jobs(job_dir, jobs=None):
 
     files = os.listdir(job_dir)
 
-    json_files = [f for f in files if f.endswith(".json")]
+    json_files = [os.path.join(job_dir, f) for f in files if f.endswith(".json")]
+    # sort newest to oldest
+    json_files.sort(key=lambda f: os.path.getmtime(f), reverse=True)
 
     jobs = dict() if jobs is None else jobs
-    for f in json_files:
-        full_filename = os.path.join(job_dir, f)
+    for full_filename in json_files:
         try:
             # try to load json as TrainingJob
             job = TrainingJob.load_json(full_filename)
