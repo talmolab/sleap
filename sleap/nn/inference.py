@@ -755,7 +755,7 @@ class Predictor:
         paf_model_path = os.path.join(pafs_job.save_dir, pafs_job.best_model_filename)
 
         scale = confmap_job.trainer.scale
-        labels = labels or Labels.load_json(confmap_job.labels_filename)
+        labels = labels if labels is not None else Labels.load_json(confmap_job.labels_filename)
         skeleton = labels.skeletons[0]
 
         # FIXME: we're now assuming that all the videos are the same size
