@@ -152,7 +152,8 @@ class LossViewer(QtWidgets.QMainWindow):
                     self.last_batch_number = msg["logs"]["batch"]
                     self.add_datapoint((self.epoch * self.epoch_size) + msg["logs"]["batch"], msg["logs"]["loss"])
             else:
-                # print the message that doesn't match our currently running job
-                print(f"{self.current_job_output_type} != {msg}")
+                pass
+                # debug print the message that doesn't match our currently running job
+                # print(f"{self.current_job_output_type} != {msg}")
 
         self.update_runtime()
