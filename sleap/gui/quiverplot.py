@@ -237,7 +237,7 @@ def show_pafs_from_h5(filename, input_format="channels_last", standalone=False):
     pafs_ = [paf_data.get_frame(i) for i in range(paf_data.frames)]
     pafs = np.stack(pafs_)
 
-    demo_pafs(pafs, video, standalone=standalone)
+    return demo_pafs(pafs, video, standalone=standalone)
 
 def demo_pafs(pafs, video, decimation=1, standalone=False):
     from sleap.gui.video import QtVideoPlayer
@@ -258,6 +258,8 @@ def demo_pafs(pafs, video, decimation=1, standalone=False):
     win.plot()
 
     if standalone: app.exec_()
+
+    return win
 
 if __name__ == "__main__":
 

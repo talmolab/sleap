@@ -310,7 +310,7 @@ class Trainer:
         callbacks = self._setup_callbacks(
             train_run, save_path, train_datagen,
             tensorboard_dir, control_zmq_port,
-            progress_report_zmq_port)
+            progress_report_zmq_port, output_type=str(model.output_type))
 
         # Train!
         history = keras_model.fit_generator(
@@ -370,7 +370,7 @@ class Trainer:
     def _setup_callbacks(self, train_run: 'TrainingJob',
                          save_path, train_datagen,
                          tensorboard_dir, control_zmq_port,
-                         progress_report_zmq_port):
+                         progress_report_zmq_port, output_type):
         """
         Setup callbacks for the call to Keras fit_generator.
 
@@ -438,7 +438,7 @@ class Trainer:
         # Callbacks: ZMQ progress reporter
         if progress_report_zmq_port is not None:
             callbacks.append(
-                ProgressReporterZMQ(port=progress_report_zmq_port))
+                ProgressReporterZMQ(port=progress_report_zmq_port, what=output_type))
 
         return callbacks
 
@@ -578,9 +578,9 @@ class TrainingControllerZMQ(keras.callbacks.Callback):
 
 
 class ProgressReporterZMQ(keras.callbacks.Callback):
-    def __init__(self, address="tcp://*", port=9001):
+    def __init__(self, address="tcp://*", port=9001, what=""):
         self.address = "%s:%d" % (address, port)
-
+        self.what = what
         # Initialize ZMQ
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.PUB)
@@ -605,17 +605,17 @@ class ProgressReporterZMQ(keras.callbacks.Callback):
                 but that may change in the future.
         """
         # self.logger.info("train_begin")
-        self.socket.send_string(jsonpickle.encode(dict(event="train_begin", logs=logs)))
+        self.socket.send_string(jsonpickle.encode(dict(what=self.what,event="train_begin", logs=logs)))
 
 
     def on_batch_begin(self, batch, logs=None):
         """A backwards compatibility alias for `on_train_batch_begin`."""
         # self.logger.info("batch_begin")
-        self.socket.send_string(jsonpickle.encode(dict(event="batch_begin", batch=batch, logs=logs)))
+        self.socket.send_string(jsonpickle.encode(dict(what=self.what,event="batch_begin", batch=batch, logs=logs)))
 
     def on_batch_end(self, batch, logs=None):
         """A backwards compatibility alias for `on_train_batch_end`."""
-        self.socket.send_string(jsonpickle.encode(dict(event="batch_end", batch=batch, logs=logs)))
+        self.socket.send_string(jsonpickle.encode(dict(what=self.what,event="batch_end", batch=batch, logs=logs)))
 
     def on_epoch_begin(self, epoch, logs=None):
         """Called at the start of an epoch.
@@ -626,7 +626,7 @@ class ProgressReporterZMQ(keras.callbacks.Callback):
             logs: dict, currently no data is passed to this argument for this method
                 but that may change in the future.
         """
-        self.socket.send_string(jsonpickle.encode(dict(event="epoch_begin", epoch=epoch, logs=logs)))
+        self.socket.send_string(jsonpickle.encode(dict(what=self.what,event="epoch_begin", epoch=epoch, logs=logs)))
 
     def on_epoch_end(self, epoch, logs=None):
         """Called at the end of an epoch.
@@ -638,7 +638,7 @@ class ProgressReporterZMQ(keras.callbacks.Callback):
                 validation epoch if validation is performed. Validation result keys
                 are prefixed with `val_`.
         """
-        self.socket.send_string(jsonpickle.encode(dict(event="epoch_end", epoch=epoch, logs=logs)))
+        self.socket.send_string(jsonpickle.encode(dict(what=self.what,event="epoch_end", epoch=epoch, logs=logs)))
 
     def on_train_end(self, logs=None):
         """Called at the end of training.
@@ -647,7 +647,7 @@ class ProgressReporterZMQ(keras.callbacks.Callback):
             logs: dict, currently no data is passed to this argument for this method
                 but that may change in the future.
         """
-        self.socket.send_string(jsonpickle.encode(dict(event="train_end", logs=logs)))
+        self.socket.send_string(jsonpickle.encode(dict(what=self.what,event="train_end", logs=logs)))
 
 
 def main():

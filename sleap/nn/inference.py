@@ -501,6 +501,8 @@ class Predictor:
         logger.info("  Frames: %d" % num_frames)
         logger.info("  Frame shape: %d x %d" % (vid_h, vid_w))
         logger.info("  Scale: %f" % scale)
+        logger.info(f"  True Scale: {h/vid_h, w/vid_w}")
+        h_w_scale = np.array((h/vid_h, w/vid_w))
 
         # Initialize tracking
         tracker = FlowShiftTracker(window=self.flow_window, verbosity=0)
@@ -580,7 +582,7 @@ class Predictor:
             # Match peaks via PAFs
             t0 = time()
             predicted_frames_chunk = match_peaks_paf_par(peaks, peak_vals, pafs, self.skeleton,
-                                            scale=scale, video=vid, frame_indices=frames_idx,
+                                            scale=h_w_scale, video=vid, frame_indices=frames_idx,
                                             min_score_to_node_ratio=self.min_score_to_node_ratio,
                                             min_score_midpts=self.min_score_midpts,
                                             min_score_integral=self.min_score_integral,
@@ -623,110 +625,6 @@ class Predictor:
 
         return predicted_frames
 
-    def run_visual(self, input_video: Union[str, Video], max_frames: int=None):
-        """
-        Run the confmap/paf prediction on an input video or file object.
-
-        Args:
-            input_video: Either a video object or video filename.
-
-        Returns:
-            confmaps, pafs: numpy arrays
-        """
-
-        # Load model
-        _, h, w, c = self.model.input_shape
-        model_channels = c
-        logger.info("Loaded models:")
-        logger.info("  Input shape: %d x %d x %d" % (h, w, c))
-
-        # Open the video if we need it.
-        try:
-            input_video.get_frame(0)
-            vid = input_video
-        except AttributeError:
-            vid = Video.from_filename(input_video)
-
-        num_frames = max_frames or vid.num_frames
-        vid_h = vid.shape[1]
-        vid_w = vid.shape[2]
-        scale = h / vid_h
-        logger.info("Opened video:")
-        logger.info("  Source: " + str(vid.backend))
-        logger.info("  Frames: %d" % num_frames)
-        logger.info("  Frame shape: %d x %d" % (vid_h, vid_w))
-        logger.info("  Scale: %f" % scale)
-
-        # Initialize tracking
-        # tracker = FlowShiftTracker(window=self.flow_window, verbosity=0)
-
-        # Initialize parallel pool
-        pool = multiprocessing.Pool(processes=usable_cpu_count())
-
-        # Fix the number of threads for OpenCV, not that we are using
-        # anything in OpenCV that is actually multi-threaded but maybe
-        # we will down the line.
-        cv2.setNumThreads(usable_cpu_count())
-
-        # Process chunk-by-chunk!
-        t0_start = time()
-        predicted_frames: List[LabeledFrame] = []
-        num_chunks = int(np.ceil(num_frames / self.read_chunk_size))
-
-        confmaps = None
-        pafs = None
-
-        for chunk in range(num_chunks):
-            logger.info("Processing chunk %d/%d:" % (chunk + 1, num_chunks))
-            t0_chunk = time()
-
-            # Read the next batch of images
-            t0 = time()
-
-            # Read the next chunk of frames
-            frame_start = self.read_chunk_size * chunk
-            frame_end = frame_start + self.read_chunk_size
-            if frame_end > num_frames:
-                frame_end = num_frames
-            frames_idx = np.arange(frame_start, frame_end)
-            mov = vid[frame_start:frame_end]
-
-            # Preprocess the frames
-            if model_channels == 1:
-                mov = mov[:, :, :, 0]
-
-            # Resize the frames to the model input size
-            for i in range(mov.shape[0]):
-                mov[i, :, :] = cv2.resize(mov[i, :, :], (w, h))
-
-            # Add back singleton dimension
-            if model_channels == 1:
-                mov = mov[..., None]
-            else:
-                # TODO: figure out when/if this is necessary for RGB videos
-                mov = mov[..., ::-1]
-
-            logger.info("  Read %d frames [%.1fs]" % (len(mov), time() - t0))
-
-            # Run inference
-            t0 = time()
-            batch_confmaps, batch_pafs = self.model.predict(mov.astype("float32") / 255, batch_size=self.inference_batch_size)
-            logger.info("  Inferred confmaps and PAFs [%.1fs]" % (time() - t0))
-
-            # Save
-            confmaps = batch_confmaps if confmaps is None else np.concatenate((confmaps, batch_confmaps), axis=0)
-            pafs = batch_pafs if pafs is None else np.concatenate((pafs, batch_pafs), axis=0)
-
-            elapsed = time() - t0_chunk
-            total_elapsed = time() - t0_start
-
-            sys.stdout.flush()
-
-
-        logger.info("Total: %.1f min" % (total_elapsed / 60))
-
-        return confmaps, pafs
-
     @classmethod
     def from_training_jobs(cls,
             training_jobs: Dict[ModelOutputType, TrainingJob],
@@ -753,7 +651,7 @@ class Predictor:
         paf_model_path = os.path.join(pafs_job.save_dir, pafs_job.best_model_filename)
 
         scale = confmap_job.trainer.scale
-        labels = labels or Labels.load_json(confmap_job.labels_filename)
+        labels = labels if labels is not None else Labels.load_json(confmap_job.labels_filename)
         skeleton = labels.skeletons[0]
 
         # FIXME: we're now assuming that all the videos are the same size
@@ -878,39 +776,6 @@ def load_predicted_labels_json_old(
 
     return Labels(labels)
 
-def test_visual_inference(args):
-    data_path = args.data_path
-    confmap_model_path = args.confmap_model_path
-    paf_model_path = args.paf_model_path
-    save_path = data_path + ".predictions.json"
-    skeleton_path = args.skeleton_path
-
-    # Load video
-    vid = Video.from_filename(data_path)
-    img_shape = (vid.height, vid.width, vid.channels)
-
-    # Load the model
-    model = get_inference_model(confmap_model_path, paf_model_path, img_shape)
-
-    # Load the skeleton(s)
-    skeleton = Skeleton.load_json(skeleton_path)
-    logger.info(f"Skeleton (name={skeleton.name}, {len(skeleton.nodes)} nodes):")
-
-    # Create a predictor to do the work.
-    predictor = Predictor(model=model, skeleton=skeleton)
-
-    # Run the inference pipeline
-    confmaps, pafs = predictor.run_visual(input_video=vid, max_frames=100)
-
-    print(f"confmaps shape: {confmaps.shape}, pafs shape: {pafs.shape}")
-
-    from PySide2 import QtWidgets
-    from sleap.gui.confmapsplot import demo_confmaps
-    from sleap.gui.quiverplot import demo_pafs
-    app = QtWidgets.QApplication([])
-    demo_confmaps(confmaps, vid)
-    demo_pafs(pafs, vid)
-    app.exec_()
 
 def main(args):
     data_path = args.data_path
@@ -955,9 +820,6 @@ if __name__ == "__main__":
     parser.add_argument('--resize-input', dest='resize_input', action='store_const',
                     const=True, default=False,
                     help='resize the input layer to image size (default False)')
-    parser.add_argument('--test-viz', dest='test_viz', action='store_const',
-                    const=True, default=False,
-                    help='just visualize predicted confmaps/pafs (default False)')
     parser.add_argument('--with-tracking', dest='with_tracking', action='store_const',
                     const=True, default=False,
                     help='just visualize predicted confmaps/pafs (default False)')
@@ -965,7 +827,4 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if args.test_viz:
-        test_visual_inference(args)
-    else:
-        main(args)
+    main(args)

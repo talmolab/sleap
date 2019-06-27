@@ -113,10 +113,18 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         vid = Video.from_numpy(imgs * 255)
 
         confmaps = generate_confmaps_from_points(points, skeleton, img_shape, sigma=sigma)
-        demo_confmaps(confmaps, vid)
-        
+        conf_win = demo_confmaps(confmaps, vid)
+        conf_win.activateWindow()
+        conf_win.move(200, 200)
+
         pafs = generate_pafs_from_points(points, skeleton, img_shape, sigma=sigma)
-        demo_pafs(pafs, vid)
+        paf_win = demo_pafs(pafs, vid)
+        paf_win.activateWindow()
+        paf_win.move(220+conf_win.rect().width(), 200)
+
+        # FIXME: close dialog so use can see other windows
+        # can we show these windows without closing dialog?
+        self.reject()
 
     # open profile editor in new dialog window
     def view_profile(self, filename, windows=[]):
