@@ -202,6 +202,7 @@ class MainWindow(QMainWindow):
         self._menu_actions["visualize models"] = predictionMenu.addAction("Visualize Model Outputs...", self.visualizeOutputs)
         self._menu_actions["import predictions"] = predictionMenu.addAction("Import Predictions...", self.importPredictions)
         self._menu_actions["import predictions"].setEnabled(False)
+#         self._menu_actions["debug"] = predictionMenu.addAction("Debug", self.debug, Qt.CTRL + Qt.Key_D)
 
         viewMenu = self.menuBar().addMenu("View")
 
@@ -413,6 +414,10 @@ class MainWindow(QMainWindow):
 #         gb.setLayout(fl)
 #         training_layout.addWidget(gb)
 
+    def debug(self):
+        pass
+#         print([lf for lf in self.labels if lf.frame_idx == 0])
+
     def update_gui_state(self):
         has_selected_instance = (self.player.view.getSelection() is not None)
         has_unsaved_changes = self.changestack_has_changes()
@@ -533,7 +538,7 @@ class MainWindow(QMainWindow):
                         # Since we couldn't find the file on our own, prompt the user.
 
                         if not has_shown_prompt:
-                            QMessageBox(text=f"We're unable to locate one or more video files for this project. Please locate {current_basename}.").exec_()
+                            QMessageBox(text=f"We're unable to locate one or more video files for this project. Please locate {current_filename}.").exec_()
                             has_shown_prompt = True
 
                         current_root, current_ext = os.path.splitext(current_basename)
@@ -564,6 +569,7 @@ class MainWindow(QMainWindow):
             has_loaded = True
 
         if do_load:
+            Instance.drop_all_nan_points(labels.all_instances)
             self.labels = labels
             self.filename = filename
 
@@ -920,13 +926,28 @@ class MainWindow(QMainWindow):
                         copy_instance = prev_instances[-1]
                         from_prev_frame = True
         new_instance = Instance(skeleton=self.skeleton)
+        # the rect that's currently visibile in the window view
+        in_view_rect = self.player.view.mapToScene(self.player.view.rect()).boundingRect()
+        # go through each node in skeleton
         for node in self.skeleton.nodes:
+            # if we're copying from a skeleton that has this node
             if copy_instance is not None and node in copy_instance.nodes:
-                new_instance[node] = copy.copy(copy_instance[node])
+                # just copy x, y, and visible
+                # we don't want to copy a PredictedPoint or score attribute
+                new_instance[node] = Point(
+                                        x=copy_instance[node].x,
+                                        y=copy_instance[node].y,
+                                        visible=copy_instance[node].visible)
             else:
+                # pick random points within currently zoomed view
+                x = in_view_rect.x() + (in_view_rect.width() * 0.1) \
+                    + (np.random.rand() * in_view_rect.width() * 0.8)
+                y = in_view_rect.y() + (in_view_rect.height() * 0.1) \
+                    + (np.random.rand() * in_view_rect.height() * 0.8)
                 # mark the node as not "visible" if we're copying from a predicted instance without this node
-                is_visible = copy_instance is None or not hasattr(copy_instance, "score")#type(copy_instance) != PredictedInstance
-                new_instance[node] = Point(x=np.random.rand() * self.video.width * 0.5, y=np.random.rand() * self.video.height * 0.5, visible=is_visible)
+                is_visible = copy_instance is None or not hasattr(copy_instance, "score")
+                # set point for node
+                new_instance[node] = Point(x=x, y=y, visible=is_visible)
         # If we're copying a predicted instance or from another frame, copy the track
         if hasattr(copy_instance, "score") or from_prev_frame:
             new_instance.track = copy_instance.track
