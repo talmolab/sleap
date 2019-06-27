@@ -139,6 +139,18 @@ class FlowShiftTracker:
         self.tracks = Tracks()
         self.last_img = None
 
+    def _fix_img(self, img: np.ndarray):
+        # Drop single channel dimension and convert to uint8 in [0, 255] range
+        curr_img = (np.squeeze(img)*255).astype(np.uint8)
+        np.clip(curr_img, 0, 255)
+
+        # If we still have 3 dimensions the image is color, need to convert
+        # to grayscale for optical flow.
+        if len(curr_img.shape) == 3:
+            curr_img = cv2.cvtColor(curr_img, cv2.COLOR_RGB2GRAY)
+
+        return curr_img
+
     def process(self,
                 imgs: np.ndarray,
                 labeled_frames: List[LabeledFrame]):
@@ -178,12 +190,7 @@ class FlowShiftTracker:
 
                 if self.verbosity > 0:
                     logger.info(f"[t = {t}] Created {len(self.tracks.tracks)} initial tracks")
-                self.last_img = np.squeeze(imgs[img_idx].copy())
-
-                # If we still have 3 dimensions the image is color, need to convert
-                # to grayscale for optical flow.
-                if len(self.last_img.shape) == 3:
-                    self.last_img = cv2.cvtColor(self.last_img, cv2.COLOR_RGB2GRAY)
+                self.last_img = self._fix_img(imgs[img_idx].copy())
 
                 continue
 
@@ -196,12 +203,7 @@ class FlowShiftTracker:
                            if isinstance(instance, ShiftedInstance)])
                 logger.info(f"[t = {t}] Using {len(instances_ref)} refs back to t = {tmp}")
 
-            curr_img = np.squeeze(imgs[img_idx].copy())
-
-            # If we still have 3 dimensions the image is color, need to convert
-            # to grayscale for optical flow.
-            if len(curr_img.shape) == 3:
-                curr_img = cv2.cvtColor(curr_img, cv2.COLOR_RGB2GRAY)
+            curr_img = self._fix_img(imgs[img_idx].copy())
 
             pts_fs, status, err = \
                 cv2.calcOpticalFlowPyrLK(self.last_img, curr_img,
