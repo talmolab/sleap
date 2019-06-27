@@ -74,6 +74,7 @@ class LossViewer(QtWidgets.QMainWindow):
         self.X = []
         self.Y = []
         self.t0 = None
+        self.current_job_output_type = ""
         self.epoch = 0
         self.epoch_size = 1
         self.last_batch_number = 0
@@ -134,17 +135,24 @@ class LossViewer(QtWidgets.QMainWindow):
             # print(msg)
             if msg["event"] == "train_begin":
                 self.set_start_time(time())
-            if msg["event"] == "train_end":
-                self.set_end()
-            elif msg["event"] == "epoch_begin":
-                self.epoch = msg["epoch"]
-            elif msg["event"] == "epoch_end":
-                self.epoch_size = max(self.epoch_size, self.last_batch_number + 1)
-                self.add_datapoint((self.epoch+1)*self.epoch_size, msg["logs"]["loss"], "epoch_loss")
-                if "val_loss" in msg["logs"].keys():
-                    self.add_datapoint((self.epoch+1)*self.epoch_size, msg["logs"]["val_loss"], "val_loss")
-            elif msg["event"] == "batch_end":
-                self.last_batch_number = msg["logs"]["batch"]
-                self.add_datapoint((self.epoch * self.epoch_size) + msg["logs"]["batch"], msg["logs"]["loss"])
+                self.current_job_output_type = msg["what"]
+
+            # make sure message matches current training job
+            if msg.get("what", "") == self.current_job_output_type:
+                if msg["event"] == "train_end":
+                    self.set_end()
+                elif msg["event"] == "epoch_begin":
+                    self.epoch = msg["epoch"]
+                elif msg["event"] == "epoch_end":
+                    self.epoch_size = max(self.epoch_size, self.last_batch_number + 1)
+                    self.add_datapoint((self.epoch+1)*self.epoch_size, msg["logs"]["loss"], "epoch_loss")
+                    if "val_loss" in msg["logs"].keys():
+                        self.add_datapoint((self.epoch+1)*self.epoch_size, msg["logs"]["val_loss"], "val_loss")
+                elif msg["event"] == "batch_end":
+                    self.last_batch_number = msg["logs"]["batch"]
+                    self.add_datapoint((self.epoch * self.epoch_size) + msg["logs"]["batch"], msg["logs"]["loss"])
+            else:
+                # print the message that doesn't match our currently running job
+                print(f"{self.current_job_output_type} != {msg}")
 
         self.update_runtime()
