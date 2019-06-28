@@ -55,7 +55,7 @@ class TrainingEditor(QtWidgets.QDialog):
         # set window title
         self.setWindowTitle(self.profile_filename)
         # load file
-        if self.profile_filename is not None:
+        if self.profile_filename:
             self._load_profile(self.profile_filename)
 
     @staticmethod
