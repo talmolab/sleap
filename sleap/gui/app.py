@@ -200,6 +200,8 @@ class MainWindow(QMainWindow):
         predictionMenu = self.menuBar().addMenu("Predict")
         self._menu_actions["active learning"] = predictionMenu.addAction("Run Active Learning...", self.runActiveLearning)
         self._menu_actions["visualize models"] = predictionMenu.addAction("Visualize Model Outputs...", self.visualizeOutputs)
+        predictionMenu.addSeparator()
+        self._menu_actions["remove predictions"] = predictionMenu.addAction("Delete Predictions...", self.deletePredictions)
         self._menu_actions["import predictions"] = predictionMenu.addAction("Import Predictions...", self.importPredictions)
         self._menu_actions["import predictions"].setEnabled(False)
         # self._menu_actions["debug"] = predictionMenu.addAction("Debug", self.debug, Qt.CTRL + Qt.Key_D)
@@ -517,7 +519,7 @@ class MainWindow(QMainWindow):
                             current_basename = current_basename.split("/")[-1]
                         if current_basename.find("\\") > -1:
                             current_basename = current_basename.split("\\")[-1]
-                        
+
                         # First see if we can find the file in another directory,
                         # and if not, prompt the user to find the file.
 
@@ -850,25 +852,45 @@ class MainWindow(QMainWindow):
         filename, selected_filter = QFileDialog.getOpenFileName(self, dir=models_dir, caption="Import model outputs...", filter=";;".join(filters))
 
         if len(filename) == 0: return
-    
+
         # show confmaps and pafs
         from sleap.gui.confmapsplot import show_confmaps_from_h5
         from sleap.gui.quiverplot import show_pafs_from_h5
-        
+
         conf_win = show_confmaps_from_h5(filename)
         conf_win.move(200, 200)
         paf_win = show_pafs_from_h5(filename)
         paf_win.move(220+conf_win.rect().width(), 200)
+
+    def deletePredictions(self):
+
+        predicted_instances = [(lf, inst) for lf in self.labels for inst in lf if type(inst) == PredictedInstance]
+
+        resp = QMessageBox.critical(self,
+                "Removing predicted instances",
+                f"There are {len(predicted_instances)} predicted instances. "
+                "Are you sure you want to delete these?",
+                QMessageBox.Yes, QMessageBox.No)
+
+        if resp == QMessageBox.No: return
+
+        for lf, inst in predicted_instances:
+            inst_idx = lf.index(inst)
+            del lf[inst_idx]
+
+        self.plotFrame()
+        self.updateSeekbarMarks()
+        self.changestack_push("removed predictions")
 
     def importPredictions(self):
         filters = ["JSON labels (*.json)", "HDF5 dataset (*.h5 *.hdf5)", "Matlab dataset (*.mat)", "DeepLabCut csv (*.csv)"]
         filename, selected_filter = QFileDialog.getOpenFileName(self, dir=None, caption="Import labeled data...", filter=";;".join(filters))
 
         if len(filename) == 0: return
-        
+
         # load predicted labels
         predicted_labels = self.importData(filename, do_load=False)
-        
+
         # add to current labels project
         # TODO: the objects (videos and skeletons) won't match, so we need to fix this
 
