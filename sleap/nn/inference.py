@@ -543,8 +543,11 @@ class Predictor:
                     if model_channels == 1:
                         img = img[..., None]
                     else:
-                        # TODO: figure out when/if this is necessary for RGB videos
-                        img = img[..., ::-1]
+                        # Although cv2 uses BGR order for channels, we shouldn't have to
+                        # swap order of color channels because a resize doesn't change it.
+                        # If we did have to convert BGR -> RGB, then we'd do this:
+                        # img = img[..., ::-1]
+                        pass
                     scaled_mov[i, ...] = img
                 mov = scaled_mov
 
