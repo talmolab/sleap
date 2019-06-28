@@ -27,7 +27,7 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         self.labels = labels
         self.only_predict = only_predict
         self.frames_to_predict = frames_to_predict
-        print(self.frames_to_predict)
+
         print(f"Number of frames to train on: {len(labels.user_labeled_frames)}")
 
         learning_yaml = resource_filename(Requirement.parse("sleap"),"sleap/config/active.yaml")
@@ -73,7 +73,7 @@ class ActiveLearningDialog(QtWidgets.QDialog):
                                 model_type=ModelOutputType.CONFIDENCE_MAP)
         def edit_paf_profile():
             self.view_profile(self.form_widget["paf_job"],
-                                model_type=ModelOutputType.CONFIDENCE_MAP)
+                                model_type=ModelOutputType.PART_AFFINITY_FIELD)
 
         self.form_widget.buttons["_view_conf"].clicked.connect(edit_conf_profile)
         self.form_widget.buttons["_view_paf"].clicked.connect(edit_paf_profile)
@@ -92,6 +92,9 @@ class ActiveLearningDialog(QtWidgets.QDialog):
             # update training job from params in form
             trainer = job.trainer
             for key, val in form_data.items():
+                # check if field name is [var]_[model_type] (eg sigma_confmaps)
+                if key.split("_")[-1] == str(model_type):
+                    key = "_".join(key.split("_")[:-1])
                 # check if form field matches attribute of Trainer object
                 if key in dir(trainer):
                     setattr(trainer, key, val)
@@ -117,7 +120,9 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         # settings for datagen
         form_data = self.form_widget.get_form_data()
         scale = form_data["scale"]
-        sigma = form_data["sigma"]
+        sigma = form_data.get("sigma", None)
+        sigma_confmaps = form_data.get("sigma_confmaps", sigma)
+        sigma_pafs = form_data.get("sigma_pafs", sigma)
         instance_crop = form_data["instance_crop"]
 
         labels = self.labels
@@ -131,12 +136,12 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         img_shape = (imgs.shape[1], imgs.shape[2])
         vid = Video.from_numpy(imgs * 255)
 
-        confmaps = generate_confmaps_from_points(points, skeleton, img_shape, sigma=sigma)
+        confmaps = generate_confmaps_from_points(points, skeleton, img_shape, sigma=sigma_confmaps)
         conf_win = demo_confmaps(confmaps, vid)
         conf_win.activateWindow()
         conf_win.move(200, 200)
 
-        pafs = generate_pafs_from_points(points, skeleton, img_shape, sigma=sigma)
+        pafs = generate_pafs_from_points(points, skeleton, img_shape, sigma=sigma_pafs)
         paf_win = demo_pafs(pafs, vid)
         paf_win.activateWindow()
         paf_win.move(220+conf_win.rect().width(), 200)
@@ -202,6 +207,8 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         if idx < len(jobs):
             name, job = jobs[idx]
             training_params = cattr.unstructure(job.trainer)
+            training_params_specific = {f"{key}_{str(model_type)}":val for key,val in training_params.items()}
+            training_params = {**training_params, **training_params_specific}
             self.form_widget.set_form_data(training_params)
 
             # is the model already trained?
@@ -359,7 +366,6 @@ def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=Non
 
     for model_type, job in training_jobs.items():
         if getattr(job, "use_trained_model", False):
-            print(job)
             # set path to TrainingJob already trained from previous run
             json_name = f"{job.run_name}.json"
             training_jobs[model_type] = os.path.join(job.save_dir, json_name)
