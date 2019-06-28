@@ -3,23 +3,32 @@ import cattr
 
 from datetime import datetime
 from pkg_resources import Requirement, resource_filename
+from typing import Dict, List, Optional
 
 from sleap.io.dataset import Labels
+from sleap.io.video import Video
 from sleap.gui.training_editor import TrainingEditor
 from sleap.gui.formbuilder import YamlFormWidget
 from sleap.nn.model import ModelOutputType
 from sleap.nn.training import TrainingJob
 
-
 from PySide2 import QtWidgets
 
 class ActiveLearningDialog(QtWidgets.QDialog):
 
-    def __init__(self, labels_filename: str, labels: Labels, *args, **kwargs):
+    def __init__(self,
+                labels_filename: str, labels: Labels,
+                only_predict: bool=False, frames_to_predict: Optional[Dict[Video, List[int]]]=None,
+                *args, **kwargs):
+
         super(ActiveLearningDialog, self).__init__(*args, **kwargs)
 
         self.labels_filename = labels_filename
         self.labels = labels
+        self.only_predict = only_predict
+        self.frames_to_predict = frames_to_predict
+        print(self.frames_to_predict)
+        print(f"Number of frames to train on: {len(labels.user_labeled_frames)}")
 
         learning_yaml = resource_filename(Requirement.parse("sleap"),"sleap/config/active.yaml")
         self.form_widget = YamlFormWidget(yaml_file=learning_yaml, title="Active Learning Settings")
@@ -93,7 +102,7 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         self.accept()
 
         # Run active learning pipeline using the TrainingJobs
-        new_lfs = run_active_learning_pipeline(self.labels_filename, self.labels, training_jobs)
+        new_lfs = run_active_learning_pipeline(self.labels_filename, self.labels, training_jobs, self.frames_to_predict)
 
         # Update labels with results of active learning
         self.labels.labeled_frames.extend(new_lfs)
@@ -309,7 +318,7 @@ def find_saved_jobs(job_dir, jobs=None):
 
     return jobs
 
-def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=None, skip_learning=False):
+def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=None, frames_to_predict=None, skip_learning=False):
     # Imports here so we don't load TensorFlow before necessary
     from sleap.nn.monitor import LossViewer
     from sleap.nn.training import TrainingJob
@@ -396,13 +405,20 @@ def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=Non
     win.show()
     QtWidgets.QApplication.instance().processEvents()
 
-    for video in labels.videos:
-        frames = labels.get_video_suggestions(video)
+    if frames_to_predict is None:
+        frames_to_predict = {video:labels.get_video_suggestions(video) for video in labels.videos}
+    else:
+        # FIXME: assume that if we're given frames, then it's a continuous clip
+        predictor.with_tracking = True
+
+    for video, frames in frames_to_predict.items():
         if len(frames):
-            # remove frames that already have user instances
-            video_user_labeled_frame_idxs = [lf.frame_idx for lf in user_labeled_frames
-                                                if lf.video == video]
-            frames = list(set(frames) - set(video_user_labeled_frame_idxs))
+
+            if not predictor.with_tracking:
+                # remove frames that already have user instances
+                video_user_labeled_frame_idxs = [lf.frame_idx for lf in user_labeled_frames
+                                                    if lf.video == video]
+                frames = list(set(frames) - set(video_user_labeled_frame_idxs))
 
             if not skip_learning:
                 timestamp = datetime.now().strftime("%y%m%d_%H%M%S")

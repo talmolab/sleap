@@ -202,7 +202,7 @@ class MainWindow(QMainWindow):
         self._menu_actions["visualize models"] = predictionMenu.addAction("Visualize Model Outputs...", self.visualizeOutputs)
         self._menu_actions["import predictions"] = predictionMenu.addAction("Import Predictions...", self.importPredictions)
         self._menu_actions["import predictions"].setEnabled(False)
-#         self._menu_actions["debug"] = predictionMenu.addAction("Debug", self.debug, Qt.CTRL + Qt.Key_D)
+        # self._menu_actions["debug"] = predictionMenu.addAction("Debug", self.debug, Qt.CTRL + Qt.Key_D)
 
         viewMenu = self.menuBar().addMenu("View")
 
@@ -415,8 +415,7 @@ class MainWindow(QMainWindow):
 #         training_layout.addWidget(gb)
 
     def debug(self):
-        pass
-#         print([lf for lf in self.labels if lf.frame_idx == 0])
+        print([lf for lf in self.labels if lf.frame_idx == 0])
 
     def update_gui_state(self):
         has_selected_instance = (self.player.view.getSelection() is not None)
@@ -830,7 +829,12 @@ class MainWindow(QMainWindow):
     def runActiveLearning(self):
         from sleap.gui.active import ActiveLearningDialog
 
-        ret = ActiveLearningDialog(self.filename, self.labels).exec_()
+        # predict for clip if select
+        # otherwise default is to predict on unlabeled suggested frames
+        start, end = self.player.seekbar.getSelection()
+        frames_to_predict = {self.video:list(range(start,end))} if start < end else None
+        print(start, end)
+        ret = ActiveLearningDialog(self.filename, self.labels, frames_to_predict=frames_to_predict).exec_()
 
         if ret:
             # we ran active learning so update display/ui
