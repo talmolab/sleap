@@ -29,7 +29,13 @@ class VideoFrameSuggestions:
         """
 
         # map from method param value to corresponding class method
-        method_functions = dict(strides=cls.strides, pca=cls.pca_cluster, hog=cls.hog, brisk=cls.brisk)
+        method_functions = dict(
+                                strides=cls.strides,
+                                random=cls.random,
+                                pca=cls.pca_cluster,
+                                hog=cls.hog,
+                                brisk=cls.brisk,
+                                )
 
         method = params["method"]
         if method_functions.get(method, None) is not None:
@@ -40,14 +46,22 @@ class VideoFrameSuggestions:
     # Functions corresponding to "method" param
 
     @classmethod
-    def strides(cls, video, strides_per_video=20, **kwargs):
-        suggestions = list(range(0, video.frames, video.frames//strides_per_video))
-        suggestions = suggestions[:strides_per_video]
+    def strides(cls, video, per_video=20, **kwargs):
+        suggestions = list(range(0, video.frames, video.frames//per_video))
+        suggestions = suggestions[:per_video]
         return suggestions
 
     @classmethod
-    def pca_cluster(cls, video, sample_step, **kwargs):
+    def random(cls, video, per_video=20, **kwargs):
+        import random
 
+        suggestions = random.sample(range(video.frames), per_video)
+        return suggestions
+
+    @classmethod
+    def pca_cluster(cls, video, initial_samples, **kwargs):
+
+        sample_step = video.frames//initial_samples
         feature_stack, frame_idx_map = cls.frame_feature_stack(video, sample_step)
 
         result = cls.feature_stack_to_suggestions(
@@ -89,22 +103,23 @@ class VideoFrameSuggestions:
     # Functions for building "feature stack", the (samples * features) matrix
     # These are specific to the suggestion method
 
-    @staticmethod
-    def frame_feature_stack(video:Video, sample_step:int = 5) -> tuple:
+    @classmethod
+    def frame_feature_stack(cls, video:Video, sample_step:int = 5) -> tuple:
         sample_count = video.frames//sample_step
 
-        if self.rescale:
-            largest_dim = max(video.height, video.width)
-            factor = 1
-            while largest_dim/factor > self.rescale_below:
-                factor += 1
+        factor = cls.get_scale_factor(video)
 
         frame_idx_map = [None] * sample_count
-        flat_stack = np.zeros((sample_count, video.heigh/factort*video.width/factor*video.channels))
+        flat_stack = np.zeros((sample_count, video.height//factor*video.width//factor*video.channels))
 
         for i in range(sample_count):
             frame_idx = i * sample_step
-            flat_stack[i] = rescale(video[frame_idx], factor).flatten()
+
+            img = video[frame_idx].squeeze()
+            multichannel = (video.channels > 1)
+            img = rescale(img, scale=.5, anti_aliasing=True, multichannel=multichannel)
+
+            flat_stack[i] = img.flatten()
             frame_idx_map[i] = frame_idx
         return (flat_stack, frame_idx_map)
 
@@ -136,7 +151,7 @@ class VideoFrameSuggestions:
         sample_count = video.frames//sample_step
 
         hog = cv2.HOGDescriptor()
-        
+
         factor = cls.get_scale_factor(video)
         first_hog = hog.compute(cls.resize(video[0][0], factor))
         hog_size = first_hog.shape[0]
