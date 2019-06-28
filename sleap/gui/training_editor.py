@@ -12,7 +12,7 @@ from sleap.gui.formbuilder import YamlFormWidget
 
 class TrainingEditor(QtWidgets.QDialog):
 
-    def __init__(self, profile_filename: Optional[str]=None, *args, **kwargs):
+    def __init__(self, profile_filename: Optional[str]=None, saved_files: list=[], *args, **kwargs):
         super(TrainingEditor, self).__init__()
 
         form_yaml = resource_filename(Requirement.parse("sleap"),"sleap/config/training_editor.yaml")
@@ -43,6 +43,7 @@ class TrainingEditor(QtWidgets.QDialog):
         self.setLayout(col_layout)
 
         self.profile_filename = profile_filename
+        self.saved_files = saved_files
 
     @property
     def profile_filename(self):
@@ -131,10 +132,12 @@ class TrainingEditor(QtWidgets.QDialog):
 
             # Write the file
             TrainingJob.save_json(training_job, save_filename)
+
+            self.saved_files.append(save_filename)
             # print(cattr.unstructure(training_job))
             self.profile_filename = save_filename
 
-        # self.close()
+        self.close()
 
 if __name__ == "__main__":
     import sys

@@ -4,11 +4,16 @@ main:
   label: Method
   type: stacked
   default: strides
-  options: strides,pca,brisk
+  options: strides,random,pca,brisk
   #removing hog for now since it's not implemented correctly
 
   strides:
-  - name: strides_per_video
+  - name: per_video
+    label: Suggestions per video
+    type: int
+    default: 10
+  random:
+  - name: per_video
     label: Suggestions per video
     type: int
     default: 10
@@ -21,10 +26,11 @@ main:
     label: Samples per cluster
     type: int
     default: 5
-  - name: sample_step
-    label: Frame sampling step size
+  - name: initial_samples
+    label: Samples before clustering
     type: int
-    default: 5
+    default: 200
+    range: 10,1000
   - name: pca_components
     label: Number of PCA components
     type: int
