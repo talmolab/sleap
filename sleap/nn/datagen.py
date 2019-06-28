@@ -373,15 +373,22 @@ def instance_crops(imgs, points, img_shape=None):
     box_shape = (box_side, box_side)
     bbs = list(map(lambda bb: pad_rect_to(*bb, box_shape, img_shape), bbs))
 
-    # Crop images and translate points
+    # Crop images
+
     # build list to map bb to its img frame idx
     img_idxs = [i for i, frame in enumerate(points) for _ in frame]
     # crop images
     imgs = [imgs[img_idxs[i], bb[1]:bb[3], bb[0]:bb[2]] for i, bb in enumerate(bbs)] # imgs[frame_idx, y0:y1, x0:x1]
     imgs = np.stack(imgs, axis=0)
-    # translate points
-    points = [point_array for frame in points for point_array in frame]
-    points = [[point_array - np.asarray([bbs[i][0], bbs[i][1]])] for i, point_array in enumerate(points)]
+
+    # Make point arrays for each image (instead of each frame as before)
+
+    # Note that we want all points from the frame, not just the points for the instance
+    # around which we're cropping (i.e., point_array in frame_points).
+    points = [frame_points for frame_points in points for point_array in frame_points]
+
+    # translate points to location w/in cropped image
+    points = [point_array - np.asarray([bbs[i][0], bbs[i][1]]) for i, point_array in enumerate(points)]
 
     return imgs, points
 
