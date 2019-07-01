@@ -106,9 +106,20 @@ class ActiveLearningDialog(QtWidgets.QDialog):
 
         # Run active learning pipeline using the TrainingJobs
         new_lfs = run_active_learning_pipeline(self.labels_filename, self.labels, training_jobs, self.frames_to_predict)
-
+        # remove labeledframes without any predicted instances
+        new_lfs = list(filter(lambda lf: len(lf.instances), new_lfs))
         # Update labels with results of active learning
+        new_tracks = {inst.track for lf in new_lfs for inst in lf.instances}
+        # FIXME? if there are more than 50 predicted tracks, assume this is wrong
+        if len(new_tracks) < 50:
+            self.labels.tracks = list(set(self.labels.tracks).union(new_tracks))
+        else:
+            for lf in new_lfs:
+                for inst in lf.instances:
+                    inst.track = None
         self.labels.labeled_frames.extend(new_lfs)
+
+        QtWidgets.QMessageBox(text=f"Active learning has finished. Instances were predicted on {len(new_lfs)} frames.").exec_()
 
     def view_datagen(self):
         from sleap.nn.datagen import generate_images, generate_points, instance_crops, \
@@ -372,8 +383,10 @@ def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=Non
             print(f"Using already trained model: {training_jobs[model_type]}")
 
         else:
-            win.reset()
+            print("Resetting monitor window.")
+            win.reset(what=str(model_type))
             win.setWindowTitle(f"Training Model - {str(model_type)}")
+            print(f"Start training {str(model_type)}...")
 
             if not skip_learning:
                 # run training
@@ -382,10 +395,18 @@ def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=Non
 
                 while not result.ready():
                     QtWidgets.QApplication.instance().processEvents()
-                    result.wait(.1)
+                    # win.check_messages()
+                    result.wait(.01)
 
-                # get the path to the resulting TrainingJob file
-                training_jobs[model_type] = result.get()
+                if result.successful():
+                    # get the path to the resulting TrainingJob file
+                    training_jobs[model_type] = result.get()
+                    print(f"Finished training {str(model_type)}.")
+                else:
+                    training_jobs[model_type] = None
+                    win.close()
+                    raise RuntimeError(f"Failure while training {str(model_type)}.")
+
 
     if not skip_learning:
         for model_type, job in training_jobs.items():
@@ -433,12 +454,16 @@ def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=Non
                 # run predictions for desired frames in this video
                 video_lfs = predictor.predict(input_video=video, frames=frames, output_path=inference_output_path)
                 # FIXME: code below makes the last training job process run again
-                # pool, result = predictor.predict_async(input_video=video.filename, frames=frames)
+                # pool, result = predictor.predict_async(input_video=video.filename, frames=frames, output_path=inference_output_path)
 
                 # while not result.ready():
                 #     QtWidgets.QApplication.instance().processEvents()
                 #     result.wait(.1)
-                # video_lfs = result.get()
+
+                # if result.successful():
+                #     video_lfs = result.get()
+                # else:
+                #     print("Error during inference.")
             else:
                 import time
                 time.sleep(1)
