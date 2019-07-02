@@ -23,7 +23,7 @@ import scipy.io as sio
 import h5py as h5
 
 from collections import MutableSequence
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Optional
 
 import pandas as pd
 
@@ -472,7 +472,7 @@ class Labels(MutableSequence):
                     file.write(json_str)
 
     @classmethod
-    def from_json(cls, data: Union[str, dict]):
+    def from_json(cls, data: Union[str, dict], match_to: Optional['Labels'] = None) -> 'Labels':
 
         # Parse the json string if needed.
         if data is str:
@@ -490,6 +490,25 @@ class Labels(MutableSequence):
         skeletons = Skeleton.make_cattr(idx_to_node).structure(dicts['skeletons'], List[Skeleton])
         videos = Video.cattr().structure(dicts['videos'], List[Video])
         tracks = cattr.structure(dicts['tracks'], List[Track])
+
+        # if we're given a Labels object to match, use its objects when they match
+        if match_to is not None:
+            for idx, sk in enumerate(skeletons):
+                for old_sk in match_to.skeletons:
+                    if sk.matches(old_sk):
+                        # use nodes from matched skeleton
+                        for (node, match_node) in zip(sk.nodes, old_sk.nodes):
+                            node_idx = nodes.index(node)
+                            nodes[node_idx] = match_node
+                        # use skeleton from match
+                        skeletons[idx] = old_sk
+                        break
+            for idx, vid in enumerate(videos):
+                for old_vid in match_to.videos:
+                    if vid.filename == old_vid.filename:
+                        # use video from match
+                        videos[idx] = old_vid
+                        break
 
         if "suggestions" in dicts:
             suggestions_cattr = cattr.Converter()
@@ -530,7 +549,9 @@ class Labels(MutableSequence):
         return cls(labeled_frames=labels, videos=videos, skeletons=skeletons, nodes=nodes, suggestions=suggestions)
 
     @classmethod
-    def load_json(cls, filename: str, video_callback=None):
+    def load_json(cls, filename: str,
+                  video_callback=None,
+                  match_to: Optional['Labels'] = None):
 
         # Check if the file is a zipfile for not.
         if zipfile.is_zipfile(filename):
@@ -583,7 +604,7 @@ class Labels(MutableSequence):
 
                 # Try to load the labels filename.
                 try:
-                    labels = Labels.from_json(dicts)
+                    labels = Labels.from_json(dicts, match_to=match_to)
 
                 except FileNotFoundError:
 
@@ -597,7 +618,7 @@ class Labels(MutableSequence):
                         os.chdir(os.path.dirname(filename))
 
                     # Try again
-                    labels = Labels.from_json(dicts)
+                    labels = Labels.from_json(dicts, match_to=match_to)
 
                 except Exception as ex:
                     # Ok, we give up, where the hell are these videos!
@@ -935,4 +956,3 @@ def load_labels_json_old(data_path: str, parsed_json: dict = None,
         labels.append(label)
 
     return Labels(labels)
-

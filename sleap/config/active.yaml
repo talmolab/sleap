@@ -45,8 +45,13 @@ main:
   type: double
   default: 1
 
-- name: sigma
-  label: Sigma (for confmaps and pafs)
+- name: sigma_confmaps
+  label: Sigma for confmaps
+  type: double
+  default: 5.0
+
+- name: sigma_pafs
+  label: Sigma for pafs
   type: double
   default: 5.0
 

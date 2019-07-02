@@ -2,6 +2,7 @@ import os
 import cattr
 
 from datetime import datetime
+import multiprocessing
 from pkg_resources import Requirement, resource_filename
 from typing import Dict, List, Optional
 
@@ -27,7 +28,7 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         self.labels = labels
         self.only_predict = only_predict
         self.frames_to_predict = frames_to_predict
-        print(self.frames_to_predict)
+
         print(f"Number of frames to train on: {len(labels.user_labeled_frames)}")
 
         learning_yaml = resource_filename(Requirement.parse("sleap"),"sleap/config/active.yaml")
@@ -73,7 +74,7 @@ class ActiveLearningDialog(QtWidgets.QDialog):
                                 model_type=ModelOutputType.CONFIDENCE_MAP)
         def edit_paf_profile():
             self.view_profile(self.form_widget["paf_job"],
-                                model_type=ModelOutputType.CONFIDENCE_MAP)
+                                model_type=ModelOutputType.PART_AFFINITY_FIELD)
 
         self.form_widget.buttons["_view_conf"].clicked.connect(edit_conf_profile)
         self.form_widget.buttons["_view_paf"].clicked.connect(edit_paf_profile)
@@ -92,6 +93,9 @@ class ActiveLearningDialog(QtWidgets.QDialog):
             # update training job from params in form
             trainer = job.trainer
             for key, val in form_data.items():
+                # check if field name is [var]_[model_type] (eg sigma_confmaps)
+                if key.split("_")[-1] == str(model_type):
+                    key = "_".join(key.split("_")[:-1])
                 # check if form field matches attribute of Trainer object
                 if key in dir(trainer):
                     setattr(trainer, key, val)
@@ -103,9 +107,21 @@ class ActiveLearningDialog(QtWidgets.QDialog):
 
         # Run active learning pipeline using the TrainingJobs
         new_lfs = run_active_learning_pipeline(self.labels_filename, self.labels, training_jobs, self.frames_to_predict)
-
+        # remove labeledframes without any predicted instances
+        new_lfs = list(filter(lambda lf: len(lf.instances), new_lfs))
         # Update labels with results of active learning
+
+        new_tracks = {inst.track for lf in new_lfs for inst in lf.instances if inst.track is not None}
+        if len(new_tracks) < 50:
+            self.labels.tracks = list(set(self.labels.tracks).union(new_tracks))
+        # if there are more than 50 predicted tracks, assume this is wrong (FIXME?)
+        elif len(new_tracks):
+            for lf in new_lfs:
+                for inst in lf.instances:
+                    inst.track = None
         self.labels.labeled_frames.extend(new_lfs)
+
+        QtWidgets.QMessageBox(text=f"Active learning has finished. Instances were predicted on {len(new_lfs)} frames.").exec_()
 
     def view_datagen(self):
         from sleap.nn.datagen import generate_images, generate_points, instance_crops, \
@@ -117,7 +133,9 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         # settings for datagen
         form_data = self.form_widget.get_form_data()
         scale = form_data["scale"]
-        sigma = form_data["sigma"]
+        sigma = form_data.get("sigma", None)
+        sigma_confmaps = form_data.get("sigma_confmaps", sigma)
+        sigma_pafs = form_data.get("sigma_pafs", sigma)
         instance_crop = form_data["instance_crop"]
 
         labels = self.labels
@@ -131,12 +149,12 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         img_shape = (imgs.shape[1], imgs.shape[2])
         vid = Video.from_numpy(imgs * 255)
 
-        confmaps = generate_confmaps_from_points(points, skeleton, img_shape, sigma=sigma)
+        confmaps = generate_confmaps_from_points(points, skeleton, img_shape, sigma=sigma_confmaps)
         conf_win = demo_confmaps(confmaps, vid)
         conf_win.activateWindow()
         conf_win.move(200, 200)
 
-        pafs = generate_pafs_from_points(points, skeleton, img_shape, sigma=sigma)
+        pafs = generate_pafs_from_points(points, skeleton, img_shape, sigma=sigma_pafs)
         paf_win = demo_pafs(pafs, vid)
         paf_win.activateWindow()
         paf_win.move(220+conf_win.rect().width(), 200)
@@ -202,6 +220,8 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         if idx < len(jobs):
             name, job = jobs[idx]
             training_params = cattr.unstructure(job.trainer)
+            training_params_specific = {f"{key}_{str(model_type)}":val for key,val in training_params.items()}
+            training_params = {**training_params, **training_params_specific}
             self.form_widget.set_form_data(training_params)
 
             # is the model already trained?
@@ -359,15 +379,16 @@ def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=Non
 
     for model_type, job in training_jobs.items():
         if getattr(job, "use_trained_model", False):
-            print(job)
             # set path to TrainingJob already trained from previous run
             json_name = f"{job.run_name}.json"
             training_jobs[model_type] = os.path.join(job.save_dir, json_name)
             print(f"Using already trained model: {training_jobs[model_type]}")
 
         else:
-            win.reset()
+            print("Resetting monitor window.")
+            win.reset(what=str(model_type))
             win.setWindowTitle(f"Training Model - {str(model_type)}")
+            print(f"Start training {str(model_type)}...")
 
             if not skip_learning:
                 # run training
@@ -376,10 +397,19 @@ def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=Non
 
                 while not result.ready():
                     QtWidgets.QApplication.instance().processEvents()
-                    result.wait(.1)
+                    # win.check_messages()
+                    result.wait(.01)
 
-                # get the path to the resulting TrainingJob file
-                training_jobs[model_type] = result.get()
+                if result.successful():
+                    # get the path to the resulting TrainingJob file
+                    training_jobs[model_type] = result.get()
+                    print(f"Finished training {str(model_type)}.")
+                else:
+                    training_jobs[model_type] = None
+                    win.close()
+                    QtWidgets.QMessageBox(text=f"An error occured while training {str(model_type)}. Your command line terminal may have more information about the error.").exec_()
+                    result.get()
+
 
     if not skip_learning:
         for model_type, job in training_jobs.items():
@@ -391,7 +421,7 @@ def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=Non
 
     if not skip_learning:
         # Create Predictor from the results of training
-        predictor = Predictor.from_training_jobs(training_jobs, labels)
+        predictor = Predictor(sleap_models=training_jobs)
 
     # Run the Predictor for suggested frames
     # We want to predict for suggested frames that don't already have user instances
@@ -425,14 +455,23 @@ def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=Non
                 inference_output_path = os.path.join(save_dir, f"{timestamp}.inference.json")
 
                 # run predictions for desired frames in this video
-                video_lfs = predictor.predict(input_video=video, frames=frames, output_path=inference_output_path)
-                # FIXME: code below makes the last training job process run again
-                # pool, result = predictor.predict_async(input_video=video.filename, frames=frames)
+                # video_lfs = predictor.predict(input_video=video, frames=frames, output_path=inference_output_path)
+                # video_lfs = predictor.predict_process(input_video=video, frames=frames, output_path=inference_output_path)
 
-                # while not result.ready():
-                #     QtWidgets.QApplication.instance().processEvents()
-                #     result.wait(.1)
-                # video_lfs = result.get()
+                pool, result = predictor.predict_async(input_video=video.filename, frames=frames, output_path=inference_output_path)
+
+                while not result.ready():
+                    QtWidgets.QApplication.instance().processEvents()
+                    result.wait(.01)
+
+                if result.successful():
+                    new_labels_json = result.get()
+                    new_labels = Labels.from_json(new_labels_json, match_to=labels)
+
+                    video_lfs = new_labels.labeled_frames
+                else:
+                    QtWidgets.QMessageBox(text=f"An error occured during inference. Your command line terminal may have more information about the error.").exec_()
+                    result.get()
             else:
                 import time
                 time.sleep(1)
