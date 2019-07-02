@@ -2,6 +2,7 @@ import os
 import cattr
 
 from datetime import datetime
+import multiprocessing
 from pkg_resources import Requirement, resource_filename
 from typing import Dict, List, Optional
 
@@ -109,11 +110,12 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         # remove labeledframes without any predicted instances
         new_lfs = list(filter(lambda lf: len(lf.instances), new_lfs))
         # Update labels with results of active learning
-        new_tracks = {inst.track for lf in new_lfs for inst in lf.instances}
-        # FIXME? if there are more than 50 predicted tracks, assume this is wrong
+
+        new_tracks = {inst.track for lf in new_lfs for inst in lf.instances if inst.track is not None}
         if len(new_tracks) < 50:
             self.labels.tracks = list(set(self.labels.tracks).union(new_tracks))
-        else:
+        # if there are more than 50 predicted tracks, assume this is wrong (FIXME?)
+        elif len(new_tracks):
             for lf in new_lfs:
                 for inst in lf.instances:
                     inst.track = None
@@ -405,7 +407,8 @@ def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=Non
                 else:
                     training_jobs[model_type] = None
                     win.close()
-                    raise RuntimeError(f"Failure while training {str(model_type)}.")
+                    QtWidgets.QMessageBox(text=f"An error occured while training {str(model_type)}. Your command line terminal may have more information about the error.").exec_()
+                    result.get()
 
 
     if not skip_learning:
@@ -418,7 +421,7 @@ def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=Non
 
     if not skip_learning:
         # Create Predictor from the results of training
-        predictor = Predictor.from_training_jobs(training_jobs, labels)
+        predictor = Predictor(sleap_models=training_jobs)
 
     # Run the Predictor for suggested frames
     # We want to predict for suggested frames that don't already have user instances
@@ -452,18 +455,23 @@ def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=Non
                 inference_output_path = os.path.join(save_dir, f"{timestamp}.inference.json")
 
                 # run predictions for desired frames in this video
-                video_lfs = predictor.predict(input_video=video, frames=frames, output_path=inference_output_path)
-                # FIXME: code below makes the last training job process run again
-                # pool, result = predictor.predict_async(input_video=video.filename, frames=frames, output_path=inference_output_path)
+                # video_lfs = predictor.predict(input_video=video, frames=frames, output_path=inference_output_path)
+                # video_lfs = predictor.predict_process(input_video=video, frames=frames, output_path=inference_output_path)
 
-                # while not result.ready():
-                #     QtWidgets.QApplication.instance().processEvents()
-                #     result.wait(.1)
+                pool, result = predictor.predict_async(input_video=video.filename, frames=frames, output_path=inference_output_path)
 
-                # if result.successful():
-                #     video_lfs = result.get()
-                # else:
-                #     print("Error during inference.")
+                while not result.ready():
+                    QtWidgets.QApplication.instance().processEvents()
+                    result.wait(.01)
+
+                if result.successful():
+                    new_labels_json = result.get()
+                    new_labels = Labels.from_json(new_labels_json, match_to=labels)
+
+                    video_lfs = new_labels.labeled_frames
+                else:
+                    QtWidgets.QMessageBox(text=f"An error occured during inference. Your command line terminal may have more information about the error.").exec_()
+                    result.get()
             else:
                 import time
                 time.sleep(1)
