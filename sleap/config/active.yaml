@@ -42,6 +42,11 @@ main:
   options: 0,64,128,256,512
   default: 0
 
+- name: negative_samples
+  label: Negative samples (if cropping)
+  type: int
+  default: 0
+
 - name: batch_size
   label: Batch Size
   type: int

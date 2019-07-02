@@ -2,6 +2,10 @@
 
 import numpy as np
 import math
+import random
+
+from operator import itemgetter
+
 from sleap.io.dataset import Labels
 
 def generate_images(labels:Labels, scale: float=1.0,
@@ -320,7 +324,8 @@ def pad_rect_to(x0: int, y0: int, x1: int, y1: int, pad_to: tuple, within: tuple
 
     return x0, y0, x1, y1
 
-def instance_crops(imgs: np.ndarray, points: list, min_crop_size: int=0) -> np.ndarray:
+def instance_crops(imgs: np.ndarray, points: list,
+                    min_crop_size: int=0, negative_samples: int=0) -> np.ndarray:
     """
     Take imgs, points and return imgs, points cropped around instances.
 
@@ -334,11 +339,15 @@ def instance_crops(imgs: np.ndarray, points: list, min_crop_size: int=0) -> np.n
     Returns:
         imgs, points (matching format of input)
     """
+    frame_count = imgs.shape[0]
     img_shape = imgs.shape[1], imgs.shape[2]
 
     # List of bounding box for every instance
     bbs = [point_array_bounding_box(point_array) for frame in points for point_array in frame]
     bbs = [(int(x0), int(y0), int(x1), int(y1)) for (x0, y0, x1, y1) in bbs]
+
+    # List to map bb to its img frame idx
+    img_idxs = [i for i, frame in enumerate(points) for _ in frame]
 
     # Find least power of 2 that's large enough to bound all the instances
     max_height = max((y1 - y0 for (x0, y0, x1, y1) in bbs))
@@ -354,11 +363,34 @@ def instance_crops(imgs: np.ndarray, points: list, min_crop_size: int=0) -> np.n
     box_shape = min(box_side, img_shape[0]), min(box_side, img_shape[1])
     bbs = list(map(lambda bb: pad_rect_to(*bb, box_shape, img_shape), bbs))
 
+    # Add bounding boxes for negative samples
+    neg_sample_list = []
+
+    # Collect negative samples (and some extras)
+    for _ in range(max(int(negative_samples*1.5), negative_samples+10)):
+        # find negative sample
+        # pick a random image
+        sample_img_idx = random.randrange(frame_count)
+        # pick a random box within image
+        x, y = random.randrange(img_shape[1] - box_side), random.randrange(img_shape[0] - box_side)
+        sample_bb = (x, y, x+box_side, y+box_side)
+
+        frame_bbs = [bbs[i] for i, frame in enumerate(img_idxs) if frame == sample_img_idx]
+        area_covered = sum(map(lambda bb: _overlap_area(sample_bb, bb), frame_bbs))/(box_side**2)
+
+        # append negative sample to lists
+        neg_sample_list.append((area_covered, sample_img_idx, sample_bb))
+
+    # Pick the best samples
+    neg_sample_list.sort(key=itemgetter(0))
+    _, neg_img_idxs, neg_bbs = zip(*neg_sample_list)
+
+    # Include the negative samples with the positive samples
+    img_idxs.extend(neg_img_idxs[:negative_samples])
+    bbs.extend(neg_bbs[:negative_samples])
+
     # Crop images
 
-    # build list to map bb to its img frame idx
-    img_idxs = [i for i, frame in enumerate(points) for _ in frame]
-    # crop images
     imgs = [imgs[img_idxs[i], bb[1]:bb[3], bb[0]:bb[2]] for i, bb in enumerate(bbs)] # imgs[frame_idx, y0:y1, x0:x1]
     imgs = np.stack(imgs, axis=0)
 
@@ -366,12 +398,24 @@ def instance_crops(imgs: np.ndarray, points: list, min_crop_size: int=0) -> np.n
 
     # Note that we want all points from the frame, not just the points for the instance
     # around which we're cropping (i.e., point_array in frame_points).
-    points = [frame_points for frame_points in points for point_array in frame_points]
+    points = list(map(lambda i: points[i], img_idxs))
 
     # translate points to location w/in cropped image
     points = [point_array - np.asarray([bbs[i][0], bbs[i][1]]) for i, point_array in enumerate(points)]
 
     return imgs, points
+
+def _overlap_area(box_a, box_b):
+    # determine the (x, y)-coordinates of the intersection rectangle
+    xA = max(box_a[0], box_b[0])
+    yA = max(box_a[1], box_b[1])
+    xB = min(box_a[2], box_b[2])
+    yB = min(box_a[3], box_b[3])
+
+    # compute the area of intersection rectangle
+    inter_area = max(0, xB - xA + 1) * max(0, yB - yA + 1)
+
+    return inter_area
 
 def demo_datagen_time():
     data_path = "tests/data/json_format_v2/centered_pair_predictions.json"
@@ -412,7 +456,7 @@ def demo_datagen():
 
     points = generate_points(labels, scale)
 
-    imgs, points = instance_crops(imgs, points)
+    imgs, points = instance_crops(imgs, points, min_crop_size=0, negative_samples=15)
 
     from PySide2 import QtWidgets
     from sleap.io.video import Video

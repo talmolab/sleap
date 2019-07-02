@@ -129,6 +129,7 @@ class Trainer:
     sigma: float = 5.0
     instance_crop: bool = False
     min_crop_size: int = 0
+    negative_samples: int = 0
 
     def train(self,
               model: Model,
