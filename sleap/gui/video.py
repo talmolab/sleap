@@ -789,6 +789,7 @@ class QtNodeLabel(QGraphicsTextItem):
     def mousePressEvent(self, event):
         """ Pass events along so that clicking label is like clicking node.
         """
+        self.setCursor(Qt.ArrowCursor)
         self.node.mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
@@ -799,6 +800,7 @@ class QtNodeLabel(QGraphicsTextItem):
     def mouseReleaseEvent(self, event):
         """ Pass events along so that clicking label is like clicking node.
         """
+        self.unsetCursor()
         self.node.mouseReleaseEvent(event)
 
     def wheelEvent(self, event):
@@ -910,6 +912,8 @@ class QtNode(QGraphicsEllipseItem):
         # Do nothing if node is from predicted instance
         if self.parentObject().predicted: return
 
+        self.setCursor(Qt.ArrowCursor)
+
         if event.button() == Qt.LeftButton:
             # Alt-click to drag instance
             if event.modifiers() == Qt.AltModifier:
@@ -949,6 +953,7 @@ class QtNode(QGraphicsEllipseItem):
         """ Custom event handler for mouse release.
         """
         #print(event)
+        self.unsetCursor()
         if self.dragParent:
             self.parentObject().mouseReleaseEvent(event)
             self.parentObject().setSelected(False)
