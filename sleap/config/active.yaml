@@ -35,6 +35,13 @@ main:
   type: bool
   default: False
 
+- name: min_crop_size
+  label: Minimum crop size
+  type: list
+  dtype: int
+  options: 0,64,128,256,512
+  default: 0
+
 - name: batch_size
   label: Batch Size
   type: int

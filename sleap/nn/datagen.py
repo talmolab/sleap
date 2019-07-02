@@ -4,7 +4,7 @@ import numpy as np
 import math
 from sleap.io.dataset import Labels
 
-def generate_images(labels:Labels, scale: float=1.0, resize_hack=True) -> np.ndarray:
+def generate_images(labels:Labels, scale: float=1.0, resize_hack=True, frame_limit=None) -> np.ndarray:
     """
     Generate a ndarray of the image data for any labeled frames
 
@@ -18,7 +18,7 @@ def generate_images(labels:Labels, scale: float=1.0, resize_hack=True) -> np.nda
     import cv2
 
     imgs = []
-    for labeled_frame in labels.user_labeled_frames:
+    for labeled_frame in labels.user_labeled_frames[:frame_limit]:
         img = labeled_frame.video[labeled_frame.frame_idx][0]
         # rescale by factor
         y, x, c = img.shape
@@ -47,7 +47,7 @@ def generate_images(labels:Labels, scale: float=1.0, resize_hack=True) -> np.nda
 
     return imgs
 
-def generate_points(labels, scale: float=1.0) -> list:
+def generate_points(labels, scale: float=1.0, frame_limit=None) -> list:
     """Generates point data for instances in frames in labels.
 
     Output is in the format expected by
@@ -65,7 +65,7 @@ def generate_points(labels, scale: float=1.0) -> list:
     """
     return [[inst.points_array(invisible_as_nan=True)*scale
                 for inst in lf.user_instances]
-                for lf in labels.user_labeled_frames]
+                for lf in labels.user_labeled_frames[:frame_limit]]
 
 def generate_confmaps_from_points(frames_inst_points, skeleton, shape, sigma=5.0, scale=1.0, output_size=None) -> np.ndarray:
     """
@@ -329,18 +329,18 @@ def pad_rect_to(x0: int, y0: int, x1: int, y1: int, pad_to: tuple, within: tuple
         x0 = 0
         x1 = pad_to_x
     if x1 > within_x:
-        x1 = within_x-1
-        x0 = within_x-pad_to_x-1
+        x1 = within_x
+        x0 = within_x-pad_to_x
     if y0 < 0:
         y0 = 0
         y1 = pad_to_y
     if y1 > within_y:
-        y1 = within_y-1
-        y0 = within_y-pad_to_y-1
+        y1 = within_y
+        y0 = within_y-pad_to_y
 
     return x0, y0, x1, y1
 
-def instance_crops(imgs, points, img_shape=None):
+def instance_crops(imgs, points, img_shape=None, min_crop_size=0):
     """
     Take imgs, points and return imgs, points cropped around instances.
 
@@ -364,13 +364,14 @@ def instance_crops(imgs, points, img_shape=None):
     max_height = max((y1 - y0 for (x0, y0, x1, y1) in bbs))
     max_width = max((x1 - x0 for (x0, y0, x1, y1) in bbs))
     max_dim = max(max_height, max_width)
+    max_dim = max(max_dim, min_crop_size)
     # TODO: add extra margin?
-    box_side = min((2**i for i in range(4, 10) if 2**i > max_dim), default=512) # 16 to 512
+    box_side = min((2**i for i in range(4, 10) if 2**i >= max_dim), default=512) # 16 to 512
 
     # TODO: make sure we have valid box_size
 
     # Grow all bounding boxes to the same size
-    box_shape = (box_side, box_side)
+    box_shape = min(box_side, img_shape[0]), min(box_side, img_shape[1])
     bbs = list(map(lambda bb: pad_rect_to(*bb, box_shape, img_shape), bbs))
 
     # Crop images

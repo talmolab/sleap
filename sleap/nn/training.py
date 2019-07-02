@@ -128,6 +128,7 @@ class Trainer:
     scale: float = 1.0
     sigma: float = 5.0
     instance_crop: bool = False
+    min_crop_size: int = 0
 
     def train(self,
               model: Model,
@@ -186,7 +187,7 @@ class Trainer:
 
         # Crop images to instances (if desired)
         if self.instance_crop:
-            imgs, points = instance_crops(imgs, points)
+            imgs, points = instance_crops(imgs, points, min_crop_size=self.min_crop_size)
 
         # Split data into train/validation
         imgs_train, imgs_val, outputs_train, outputs_val = \

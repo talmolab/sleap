@@ -137,13 +137,16 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         sigma_confmaps = form_data.get("sigma_confmaps", sigma)
         sigma_pafs = form_data.get("sigma_pafs", sigma)
         instance_crop = form_data["instance_crop"]
+        min_crop_size = form_data.get("min_crop_size", 0)
 
         labels = self.labels
-        imgs = generate_images(labels, scale)
-        points = generate_points(labels, scale)
+        imgs = generate_images(labels, scale, frame_limit=3)
+        points = generate_points(labels, scale, frame_limit=3)
 
+        print(imgs.shape)
         if instance_crop:
-            imgs, points = instance_crops(imgs, points)
+            imgs, points = instance_crops(imgs, points, min_crop_size=min_crop_size)
+        print(imgs.shape)
 
         skeleton = labels.skeletons[0]
         img_shape = (imgs.shape[1], imgs.shape[2])
