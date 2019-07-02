@@ -458,7 +458,7 @@ def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=Non
                 # video_lfs = predictor.predict(input_video=video, frames=frames, output_path=inference_output_path)
                 # video_lfs = predictor.predict_process(input_video=video, frames=frames, output_path=inference_output_path)
 
-                pool, result = predictor.predict_async(input_video=video.filename, frames=frames, output_path=inference_output_path)
+                pool, result = predictor.predict_async(input_video=video, frames=frames, output_path=inference_output_path)
 
                 while not result.ready():
                     QtWidgets.QApplication.instance().processEvents()

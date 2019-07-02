@@ -468,7 +468,7 @@ class Predictor:
     flow_window: int = 15
     save_shifted_instances: bool = True
 
-    def predict(self, input_video: Union[str, Video],
+    def predict(self, input_video: Union[dict, Video],
                 output_path: Optional[str] = None,
                 frames: Optional[List[int]] = None,
                 is_async: bool = False) -> List[LabeledFrame]:
@@ -476,7 +476,7 @@ class Predictor:
         Run the entire inference pipeline on an input video or file object.
 
         Args:
-            input_video: Either a video object or video filename.
+            input_video: Either a video object or an unstructured video object (dict).
             output_path (optional): The output path to save the results.
             frames (optional): List of frames to predict. If None, run entire video.
             is_async (optional): Whether running function from separate process.
@@ -493,7 +493,12 @@ class Predictor:
             input_video.get_frame(0)
             vid = input_video
         except AttributeError:
-            vid = Video.from_filename(input_video)
+            if isinstance(input_video, dict):
+                vid = Video.cattr().structure(input_video, Video)
+            elif isinstance(input_video, str):
+                vid = Video.from_filename(input_video)
+            else:
+                raise AttributeError(f"Unable to load input video: {input_video}")
         logger.info("loaded video")
         # Load model if necessary
         # We do this within predict so we don't have to pickle model if running in a thread
@@ -671,6 +676,9 @@ class Predictor:
             And the AysncResult object that will contain the result when the job finishes.
         """
         kwargs["is_async"] = True
+        if isinstance(kwargs["input_video"], Video):
+            # unstructure input_video since it won't pickle
+            kwargs["input_video"] = Video.cattr().unstructure(kwargs["input_video"])
 
         pool = Pool(processes=1)
         result = pool.apply_async(self.predict, args=args, kwds=kwargs)
