@@ -4,7 +4,8 @@ import numpy as np
 import math
 from sleap.io.dataset import Labels
 
-def generate_images(labels:Labels, scale: float=1.0, resize_hack=True, frame_limit=None) -> np.ndarray:
+def generate_images(labels:Labels, scale: float=1.0,
+                    resize_hack: bool=True, frame_limit: bool=None) -> np.ndarray:
     """
     Generate a ndarray of the image data for any labeled frames
 
@@ -47,7 +48,7 @@ def generate_images(labels:Labels, scale: float=1.0, resize_hack=True, frame_lim
 
     return imgs
 
-def generate_points(labels, scale: float=1.0, frame_limit=None) -> list:
+def generate_points(labels:Labels, scale: float=1.0, frame_limit: bool=None) -> list:
     """Generates point data for instances in frames in labels.
 
     Output is in the format expected by
@@ -67,7 +68,8 @@ def generate_points(labels, scale: float=1.0, frame_limit=None) -> list:
                 for inst in lf.user_instances]
                 for lf in labels.user_labeled_frames[:frame_limit]]
 
-def generate_confmaps_from_points(frames_inst_points, skeleton, shape, sigma=5.0, scale=1.0, output_size=None) -> np.ndarray:
+def generate_confmaps_from_points(frames_inst_points, skeleton, shape,
+                        sigma:float=5.0, scale:float=1.0, output_size=None) -> np.ndarray:
     """
     Generates confmaps for set of frames.
     This is used to generate confmaps on the fly during training,
@@ -89,11 +91,12 @@ def generate_confmaps_from_points(frames_inst_points, skeleton, shape, sigma=5.0
     full_size = tuple(map(int, full_size))
     output_size = tuple(map(int, output_size))
 
-    ball = get_conf_ball(full_size, output_size, sigma*scale)
+    ball = _get_conf_ball(full_size, output_size, sigma*scale)
 
     num_frames = len(frames_inst_points)
     num_channels = len(skeleton.nodes)
-    confmaps = np.zeros((num_frames, output_size[0], output_size[1], num_channels), dtype="float32")
+    confmaps = np.zeros((num_frames, output_size[0], output_size[1], num_channels),
+                        dtype="float32")
 
     for frame_idx, points_arrays in enumerate(frames_inst_points):
         for inst_points in points_arrays:
@@ -101,11 +104,12 @@ def generate_confmaps_from_points(frames_inst_points, skeleton, shape, sigma=5.0
                 if not np.isnan(np.sum(inst_points[node_idx])):
                     x = inst_points[node_idx][0]
                     y = inst_points[node_idx][1]
-                    raster_ball(arr=confmaps[frame_idx], ball=ball, c=node_idx, x=x, y=y)
+                    _raster_ball(arr=confmaps[frame_idx], ball=ball, c=node_idx, x=x, y=y)
 
     return confmaps
 
-def generate_pafs_from_points(frames_inst_points, skeleton, shape, sigma=5.0, scale=1, output_size=None) -> np.ndarray:
+def generate_pafs_from_points(frames_inst_points, skeleton, shape,
+                        sigma:float=5.0, scale:float=1.0, output_size=None) -> np.ndarray:
     """
     Generates pafs for set of frames.
     This is used to generate pafs on the fly during training,
@@ -130,7 +134,8 @@ def generate_pafs_from_points(frames_inst_points, skeleton, shape, sigma=5.0, sc
     num_frames = len(frames_inst_points)
     num_channels = len(skeleton.edges) * 2
 
-    pafs = np.zeros((num_frames, output_size[0], output_size[1], num_channels), dtype="float32")
+    pafs = np.zeros((num_frames, output_size[0], output_size[1], num_channels),
+                    dtype="float32")
     for frame_idx, points_arrays in enumerate(frames_inst_points):
         for inst_points in points_arrays:
             for c, (src_node, dst_node) in enumerate(skeleton.edges):
@@ -140,11 +145,11 @@ def generate_pafs_from_points(frames_inst_points, skeleton, shape, sigma=5.0, sc
                 y0 = inst_points[src_idx][1]
                 x1 = inst_points[dst_idx][0]
                 y1 = inst_points[dst_idx][1]
-                raster_pafs(pafs[frame_idx], c * 2, x0, y0, x1, y1, sigma)
+                _raster_pafs(pafs[frame_idx], c * 2, x0, y0, x1, y1, sigma)
 
     return pafs
 
-def get_conf_ball(full_size, output_size, sigma):
+def _get_conf_ball(full_size, output_size, sigma):
     # Pre-allocate coordinate grid
     xv = np.linspace(0, full_size[1] - 1, output_size[1], dtype="float32")
     yv = np.linspace(0, full_size[0] - 1, output_size[0], dtype="float32")
@@ -157,7 +162,7 @@ def get_conf_ball(full_size, output_size, sigma):
 
     return ball_window
 
-def raster_ball(arr, ball, c, x, y):
+def _raster_ball(arr, ball, c, x, y):
     x, y = int(x), int(y)
     ball_h, ball_w = ball.shape
     out_h, out_w, _ = arr.shape
@@ -214,7 +219,7 @@ def generate_confidence_maps(labels:Labels, sigma=5.0, scale=1):
 
     return confmaps
 
-def raster_pafs(arr, c, x0, y0, x1, y1, sigma=5):
+def _raster_pafs(arr, c, x0, y0, x1, y1, sigma):
     # skip if any nan
     if np.isnan(np.sum((x0, y0, x1, y1))): return
 
@@ -249,32 +254,7 @@ def raster_pafs(arr, c, x0, y0, x1, y1, sigma=5):
         arr[y, x, c] = edge_x
         arr[y, x, c + 1] = edge_y
 
-def get_labels_edge_points_list(labels):
-    return [(frame_idx, [instance_edge_points(instance) for instance in labeled_frame.instances]) for
-            frame_idx, labeled_frame in enumerate(labels)]
-
-def instance_edge_points(instance):
-    skeleton = instance.skeleton
-    points = [(edge_idx, (edge_points_tuples(instance, src_node, dst_node)))
-              for edge_idx, (src_node, dst_node)
-              in enumerate(skeleton.edges)
-              if points_are_present(instance, src_node, dst_node)]
-    return points
-
-def edge_points_tuples(instance, src_node, dst_node):
-    x0, y0 = instance[src_node].x, instance[src_node].y
-    x1, y1 = instance[dst_node].x, instance[dst_node].y
-    # (instance[src_node].x, instance[src_node].y), (instance[dst_node].x, instance[dst_node].y)
-    # return np.array((x0, y0)), np.array((x1, y1))
-    return (x0, y0), (x1, y1)
-
-def points_are_present(instance, src_node, dst_node):
-    if src_node in instance and dst_node in instance and instance[src_node].visible and instance[dst_node].visible:
-        return True
-    else:
-        return False
-
-def generate_pafs(labels: Labels, sigma=5.0, scale=1):
+def generate_pafs(labels: Labels, sigma:float=5.0, scale:float=1.0) -> np.ndarray:
     """Wrapper for generate_pafs_from_points which takes labels instead of points."""
 
     # TODO: multi-skeleton support
@@ -340,7 +320,7 @@ def pad_rect_to(x0: int, y0: int, x1: int, y1: int, pad_to: tuple, within: tuple
 
     return x0, y0, x1, y1
 
-def instance_crops(imgs, points, img_shape=None, min_crop_size=0):
+def instance_crops(imgs: np.ndarray, points: list, min_crop_size: int=0) -> np.ndarray:
     """
     Take imgs, points and return imgs, points cropped around instances.
 
@@ -350,11 +330,11 @@ def instance_crops(imgs, points, img_shape=None, min_crop_size=0):
     Args:
         imgs: output from generate_images()
         points: output from generate_points()
-        img_shape: FIXME: can we get rid of this?
+        min_crop_size: int, the minimum crop square size
     Returns:
         imgs, points (matching format of input)
     """
-    img_shape = img_shape or (imgs.shape[1], imgs.shape[2])
+    img_shape = imgs.shape[1], imgs.shape[2]
 
     # List of bounding box for every instance
     bbs = [point_array_bounding_box(point_array) for frame in points for point_array in frame]
