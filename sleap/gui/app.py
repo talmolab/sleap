@@ -203,7 +203,7 @@ class MainWindow(QMainWindow):
         predictionMenu.addSeparator()
         self._menu_actions["remove predictions"] = predictionMenu.addAction("Delete Predictions...", self.deletePredictions)
         self._menu_actions["import predictions"] = predictionMenu.addAction("Import Predictions...", self.importPredictions)
-        self._menu_actions["import predictions"].setEnabled(False)
+        # self._menu_actions["import predictions"].setEnabled(False)
         # self._menu_actions["debug"] = predictionMenu.addAction("Debug", self.debug, Qt.CTRL + Qt.Key_D)
 
         viewMenu = self.menuBar().addMenu("View")
@@ -835,7 +835,6 @@ class MainWindow(QMainWindow):
         # otherwise default is to predict on unlabeled suggested frames
         start, end = self.player.seekbar.getSelection()
         frames_to_predict = {self.video:list(range(start,end))} if start < end else None
-        print(start, end)
         ret = ActiveLearningDialog(self.filename, self.labels, frames_to_predict=frames_to_predict).exec_()
 
         if ret:
@@ -889,19 +888,10 @@ class MainWindow(QMainWindow):
 
         if len(filename) == 0: return
 
-        # load predicted labels
-        predicted_labels = self.importData(filename, do_load=False)
+        new_labels = Labels.load_json(filename, match_to=self.labels)
+        self.labels.labeled_frames.extend(new_labels.labeled_frames)
 
-        # add to current labels project
-        # TODO: the objects (videos and skeletons) won't match, so we need to fix this
-
-        # update video for predicted frame to match video object in labels project
-        for lf in predicted_labels.labeled_frames:
-            for video in self.labels.videos:
-                if lf.video.filename == video.filename:
-                    lf.video = video
-        self.labels.labeled_frames.extend(predicted_labels.labeled_frames)
-        print(f"total lf: {len(self.labels.labeled_frames)}")
+        print(f"new lf: {len(new_labels.labeled_frames)}")
         # update display/ui
         self.plotFrame()
         self.updateSeekbarMarks()
