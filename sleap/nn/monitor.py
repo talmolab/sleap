@@ -18,7 +18,6 @@ class LossViewer(QtWidgets.QMainWindow):
         self.setup_zmq(zmq_context)
 
     def __del__(self):
-        self.timer.stop()
         # close the zmq socket
         self.sub.unbind(self.sub.LAST_ENDPOINT)
         self.sub.close()
