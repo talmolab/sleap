@@ -41,6 +41,9 @@ class LossViewer(QtWidgets.QMainWindow):
         self.series["epoch_loss"] = QtCharts.QtCharts.QLineSeries()
         self.series["val_loss"] = QtCharts.QtCharts.QLineSeries()
 
+        self.series["batch"].setName("Batch Training Loss")
+        self.series["epoch_loss"].setName("Epoch Training Loss")
+        self.series["val_loss"].setName("Epoch Validation Loss")
 
         self.color["batch"] = QtGui.QColor("blue")
         self.color["epoch_loss"] = QtGui.QColor("green")
@@ -54,12 +57,27 @@ class LossViewer(QtWidgets.QMainWindow):
         self.chart.addSeries(self.series["epoch_loss"])
         self.chart.addSeries(self.series["val_loss"])
 
-        self.chart.createDefaultAxes()
-        self.chart.axisX().setLabelFormat("%d")
-        self.chart.axisX().setTitleText("Batches")
-        self.chart.axisY().setTitleText("Loss")
+        # self.chart.createDefaultAxes()
+        axisX = QtCharts.QtCharts.QValueAxis()
+        axisX.setLabelFormat("%d")
+        axisX.setTitleText("Batches")
+        self.chart.addAxis(axisX, QtCore.Qt.AlignBottom)
 
-        self.chart.legend().hide()
+        axisY = QtCharts.QtCharts.QLogValueAxis()
+        axisY.setLabelFormat("%f")
+        axisY.setLabelsVisible(True)
+        axisY.setMinorTickCount(1)
+        axisY.setTitleText("Loss")
+        axisY.setBase(2)
+        self.chart.addAxis(axisY, QtCore.Qt.AlignLeft)
+
+        for series in self.chart.series():
+            series.attachAxis(axisX)
+            series.attachAxis(axisY)
+
+        # self.chart.legend().hide()
+        self.chart.legend().setVisible(True)
+        self.chart.legend().setAlignment(QtCore.Qt.AlignTop)
 
         self.chartView = QtCharts.QtCharts.QChartView(self.chart)
         self.chartView.setRenderHint(QtGui.QPainter.Antialiasing)
@@ -120,7 +138,8 @@ class LossViewer(QtWidgets.QMainWindow):
         dx = 0.5
         dy = np.ptp(self.Y) * 0.02
         self.chart.axisX().setRange(min(self.X) - dx, max(self.X) + dx)
-        self.chart.axisY().setRange(min(self.Y) - dy, max(self.Y) + dy)
+        self.chart.axisY().setRange(max(1e-12, min(self.Y) - dy), max(self.Y) + dy)
+        print(max(1e-12, min(self.Y) - dy), max(self.Y) + dy)
 
     def set_start_time(self, t0):
         self.t0 = t0
