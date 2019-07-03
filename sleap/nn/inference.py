@@ -505,7 +505,7 @@ class Predictor:
         h_w_scale = np.array((h/vid_h, w/vid_w))
 
         # Initialize tracking
-        tracker = FlowShiftTracker(window=self.flow_window, verbosity=0)
+        tracker = FlowShiftTracker(window=self.flow_window, verbosity=1)
 
         # Initialize parallel pool
         pool = multiprocessing.Pool(processes=usable_cpu_count())
@@ -569,13 +569,13 @@ class Predictor:
                     viz_output_path = viz_output_path[:-(len(".json"))]
                 viz_output_path += ".h5"
                 # write file
-                with h5py.File(viz_output_path, "w") as f:
-                    ds = f.create_dataset("confmaps", data=confmaps,
-                                           compression="gzip", compression_opts=1)
-                    ds = f.create_dataset("pafs", data=pafs,
-                                            compression="gzip", compression_opts=1)
-                    ds = f.create_dataset("box", data=mov,
-                                            compression="gzip", compression_opts=1)
+                # with h5py.File(viz_output_path, "w") as f:
+                #     ds = f.create_dataset("confmaps", data=confmaps,
+                #                            compression="gzip", compression_opts=1)
+                #     ds = f.create_dataset("pafs", data=pafs,
+                #                             compression="gzip", compression_opts=1)
+                #     ds = f.create_dataset("box", data=mov,
+                #                             compression="gzip", compression_opts=1)
 
             # Find peaks
             t0 = time()
@@ -783,10 +783,11 @@ def load_predicted_labels_json_old(
 def main(args):
     data_path = args.data_path
     confmap_model_path = args.confmap_model_path
+    save_path = args.output if args.output else data_path + ".predictions.json"
     paf_model_path = args.paf_model_path
-    save_path = data_path + ".predictions.json"
     skeleton_path = args.skeleton_path
     frames = args.frames
+
 
     if args.resize_input:
         # Load video
@@ -812,7 +813,15 @@ def main(args):
 
 if __name__ == "__main__":
 
-    def frame_list(frame_str):
+    def frame_list(frame_str: str):
+
+        # Handle ranges of frames. Must be of the form "1-200"
+        if '-' in frame_str:
+            min_max = frame_str.split('-')
+            min_frame = int(min_max[0])
+            max_frame = int(min_max[1])
+            return list(range(min_frame, max_frame+1))
+
         return [int(x) for x in frame_str.split(",")] if len(frame_str) else None
 
     parser = argparse.ArgumentParser()
@@ -826,7 +835,11 @@ if __name__ == "__main__":
     parser.add_argument('--with-tracking', dest='with_tracking', action='store_const',
                     const=True, default=False,
                     help='just visualize predicted confmaps/pafs (default False)')
-    parser.add_argument('--frames', type=frame_list, default="", help='list of frames to predict (default is entire video)')
+    parser.add_argument('--frames', type=frame_list, default="",
+                        help='list of frames to predict. Either comma separated list (e.g. 1,2,3) or'
+                             'a range separated by hyphen (e.g. 1-3). (default is entire video)')
+    parser.add_argument('--output', type=str, default=None,
+                        help='The output filename to use for the predicted data.')
 
     args = parser.parse_args()
 

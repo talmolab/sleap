@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 from typing import List, Tuple, Dict, Union
 
 import numpy as np
+import h5py as h5
 import cv2
 import attr
 
@@ -218,12 +219,27 @@ class FlowShiftTracker:
             sections = np.cumsum([len(x) for x in pts_ref])[:-1]
             pts_fs = np.split(pts_fs, sections, axis=0)
             status = np.split(status, sections, axis=0)
+            status_sum = [np.sum(x) for x in status]
             err = np.split(err, sections, axis=0)
 
             # Store shifted instances with metadata
             shifted_instances = [ShiftedInstance(parent=ref, points=pts, frame=frame)
                                  for ref, pts, found in zip(instances_ref, pts_fs, status)
                                  if np.sum(found) > 0]
+
+            # Get the track present in the shifted instances
+            shifted_tracks = list({instance.track for instance in shifted_instances})
+
+            # If we lost a track on this frame, that is, none of the shifted instances
+            # for a track were found to flow to this frame, lets at least use the last
+            # tracked instance
+            prev_tracks = {instance.track: instance for instance in labeled_frames[img_idx-1]}
+            for prev_track, instance in prev_tracks.items():
+                if prev_track in shifted_tracks:
+                    continue
+                shifted_instances.append(instance)
+                shifted_tracks.append(prev_track)
+
             self.tracks.add_instances(shifted_instances)
 
             if len(frame.instances) == 0:
@@ -233,7 +249,6 @@ class FlowShiftTracker:
 
             # Reduce distances by track
             unassigned_pts = np.stack(instances_pts, axis=0) # instances x nodes x 2
-            shifted_tracks = list({instance.track for instance in shifted_instances})
             if self.verbosity > 0:
                 logger.info(f"[t = {t}] Flow shift matching {len(unassigned_pts)} "
                              f"instances to {len(shifted_tracks)} ref tracks")
@@ -278,6 +293,10 @@ class FlowShiftTracker:
                     logger.info(f"[t = {t}] Assigned remaining instance {i} to newly "
                                  f"spawned track {instance.track.name} "
                                  f"(best cost = {cost_matrix[i,:].min()})")
+
+        trs = {i.track for f in labeled_frames for i in f.instances}
+        print(f"Tracks: {trs}")
+
 
     def occupancy(self):
         """ Compute occupancy matrix """
