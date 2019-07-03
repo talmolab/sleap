@@ -363,7 +363,7 @@ class Labels(MutableSequence):
         # allow either Labels or list of LabeledFrames
         if isinstance(new_frames, Labels): new_frames = new_frames.labeled_frames
         # return if this isn't non-empty list of labeled frames
-        if not isinstance(new_frames, list) or len(new_fames) == 0: return False
+        if not isinstance(new_frames, list) or len(new_frames) == 0: return False
         if not isinstance(new_frames[0], LabeledFrame): return False
         # copy the labeled frames
         self.labeled_frames.extend(new_frames)
