@@ -352,6 +352,25 @@ class Labels(MutableSequence):
         """Sets the suggested frames."""
         self.suggestions = suggestions
 
+    def extend_from(self, new_frames):
+        """Merge data from another Labels object or list of LabeledFrames into self.
+
+        Arg:
+            new_frames: the object from which to copy data
+        Returns:
+            bool, True if we added frames, False otherwise
+        """
+        # allow either Labels or list of LabeledFrames
+        if isinstance(new_frames, Labels): new_frames = new_frames.labeled_frames
+        # return if this isn't non-empty list of labeled frames
+        if not isinstance(new_frames, list) or len(new_frfames) == 0: return False
+        if not isinstance(new_frames[0], LabeledFrame): return False
+        # copy the labeled frames
+        self.labeled_frames.extend(new_frames)
+        # update videos/skeletons/nodes/etc using all the labeled frames now present
+        self.__attrs_post_init__()
+        return True
+
     def to_dict(self):
         """
         Serialize all labels in the underling list of LabeledFrames to a

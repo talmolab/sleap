@@ -796,7 +796,7 @@ class MainWindow(QMainWindow):
     def updateSeekbarMarks(self):
         # If there are tracks, mark whether track has instance in frame.
         if len(self.labels.tracks):
-            self.player.seekbar.setTracksFromLabels(self.labels)
+            self.player.seekbar.setTracksFromLabels(self.labels, self.video)
         # Otherwise, mark which frames have any instances.
         else:
             # list of frame_idx for simple markers for labeled frames
@@ -819,6 +819,7 @@ class MainWindow(QMainWindow):
             all_marks = labeled_marks + suggestion_marks
 
             self.player.seekbar.setMarks(all_marks)
+        print(len(self.player.seekbar.getMarks()))
 
     def generateSuggestions(self, params):
         new_suggestions = dict()
@@ -889,7 +890,7 @@ class MainWindow(QMainWindow):
         if len(filename) == 0: return
 
         new_labels = Labels.load_json(filename, match_to=self.labels)
-        self.labels.labeled_frames.extend(new_labels.labeled_frames)
+        self.labels.extend_from(new_labels)
 
         print(f"new lf: {len(new_labels.labeled_frames)}")
         # update display/ui
