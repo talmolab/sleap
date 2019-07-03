@@ -69,7 +69,7 @@ def test_labels_json(tmpdir, multi_skel_vid_labels):
 
     # Check that we don't have the very same objects
     assert not multi_skel_vid_labels.skeletons[0] is loaded_labels.skeletons[0]
-    assert not multi_skel_vid_labels.nodes[3] is loaded_labels.nodes[3]
+    assert not multi_skel_vid_labels.nodes[3] in loaded_labels.nodes
     assert not multi_skel_vid_labels.videos[0] is loaded_labels.videos[0]
 
     # Reload json using objects from original labels
@@ -77,7 +77,7 @@ def test_labels_json(tmpdir, multi_skel_vid_labels):
 
     # Check that we now do have the same objects
     assert multi_skel_vid_labels.skeletons[0] is loaded_labels.skeletons[0]
-    assert multi_skel_vid_labels.nodes[3] is loaded_labels.nodes[3]
+    assert multi_skel_vid_labels.nodes[3] in loaded_labels.nodes
     assert multi_skel_vid_labels.videos[0] is loaded_labels.videos[0]
 
 def test_load_labels_json_old(tmpdir):
