@@ -679,7 +679,6 @@ class Labels(MutableSequence):
         Returns:
             A list of ImgStoreVideo objects that represent the stored frames.
         """
-
         # For each label
         imgstore_vids = []
         for v_idx, v in enumerate(self.videos):
