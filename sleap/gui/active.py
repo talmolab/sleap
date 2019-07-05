@@ -49,6 +49,7 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         self.training_profile_widgets = {
                 ModelOutputType.CONFIDENCE_MAP: self.form_widget.fields["conf_job"],
                 ModelOutputType.PART_AFFINITY_FIELD: self.form_widget.fields["paf_job"],
+                ModelOutputType.CENTROIDS: self.form_widget.fields["centroid_job"],
                 }
 
         for model_type, field in self.training_profile_widgets.items():
@@ -223,9 +224,15 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         if idx == -1: return
         if idx < len(jobs):
             name, job = jobs[idx]
+
             training_params = cattr.unstructure(job.trainer)
             training_params_specific = {f"{key}_{str(model_type)}":val for key,val in training_params.items()}
-            training_params = {**training_params, **training_params_specific}
+            # confmap and paf models should share some params shown in dialog (e.g. scale)
+            # but centroids does not, so just set any centroid_foo fields from its profile
+            if model_type in [ModelOutputType.CENTROIDS]:
+                training_params = training_params_specific
+            else:
+                training_params = {**training_params, **training_params_specific}
             self.form_widget.set_form_data(training_params)
 
             # is the model already trained?
@@ -342,7 +349,8 @@ def find_saved_jobs(job_dir, jobs=None):
 
     return jobs
 
-def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=None, frames_to_predict=None, skip_learning=False):
+def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=None,
+                                    frames_to_predict=None, skip_learning=False):
     # Imports here so we don't load TensorFlow before necessary
     from sleap.nn.monitor import LossViewer
     from sleap.nn.training import TrainingJob
@@ -352,14 +360,6 @@ def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=Non
     from PySide2 import QtWidgets
 
     labels = labels or Labels.load_json(labels_filename)
-
-    # If the video frames are large, determine factor to downsample for active learning
-#     scale = 1
-#     rescale_under = 1024
-#     h, w = labels.videos[0].height, labels.videos[0].width
-#     largest_dim = max(h, w)
-#     while largest_dim/scale > rescale_under:
-#         scale += 1
 
     # Prepare our TrainingJobs
 
@@ -460,9 +460,9 @@ def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=Non
 
                 # run predictions for desired frames in this video
                 # video_lfs = predictor.predict(input_video=video, frames=frames, output_path=inference_output_path)
-                # video_lfs = predictor.predict_process(input_video=video, frames=frames, output_path=inference_output_path)
 
-                pool, result = predictor.predict_async(input_video=video, frames=frames, output_path=inference_output_path)
+                pool, result = predictor.predict_async(input_video=video, frames=frames,
+                                        output_path=inference_output_path)
 
                 while not result.ready():
                     QtWidgets.QApplication.instance().processEvents()
