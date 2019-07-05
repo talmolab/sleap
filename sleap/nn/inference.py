@@ -444,6 +444,9 @@ class Predictor:
         min_score_midpts: FIXME
         min_score_integral: FIXME
         add_last_edge: FIXME
+        with_tracking: Should tracking be run after inference.
+        flow_window: The number of frames that tracking should look back when trying to identify
+        instances.
 
     """
 
@@ -460,11 +463,11 @@ class Predictor:
     add_last_edge: bool = True
     with_tracking: bool = False
     flow_window: int = 15
-    save_shifted_instances: bool = True
 
     def predict(self, input_video: Union[str, Video],
                 output_path: Optional[str] = None,
-                frames: Optional[List[int]] = None) -> List[LabeledFrame]:
+                frames: Optional[List[int]] = None,
+                save_confmaps_pafs: bool = True) -> List[LabeledFrame]:
         """
         Run the entire inference pipeline on an input video or file object.
 
@@ -562,20 +565,21 @@ class Predictor:
             logger.info(f"  pafs: shape={pafs.shape}, ptp={np.ptp(pafs)}")
 
             # Save confmaps and pafs
-            if output_path is not None:
+            if output_path is not None and save_confmaps_pafs:
+
                 # output_path is full path to labels.json, so replace "json" with "h5"
                 viz_output_path = output_path
                 if viz_output_path.endswith(".json"):
                     viz_output_path = viz_output_path[:-(len(".json"))]
                 viz_output_path += ".h5"
                 # write file
-                # with h5py.File(viz_output_path, "w") as f:
-                #     ds = f.create_dataset("confmaps", data=confmaps,
-                #                            compression="gzip", compression_opts=1)
-                #     ds = f.create_dataset("pafs", data=pafs,
-                #                             compression="gzip", compression_opts=1)
-                #     ds = f.create_dataset("box", data=mov,
-                #                             compression="gzip", compression_opts=1)
+                with h5py.File(viz_output_path, "w") as f:
+                    ds = f.create_dataset("confmaps", data=confmaps,
+                                           compression="gzip", compression_opts=1)
+                    ds = f.create_dataset("pafs", data=pafs,
+                                            compression="gzip", compression_opts=1)
+                    ds = f.create_dataset("box", data=mov,
+                                            compression="gzip", compression_opts=1)
 
             # Find peaks
             t0 = time()
@@ -808,7 +812,8 @@ def main(args):
     predictor = Predictor(model=model, skeleton=skeleton, with_tracking=args.with_tracking)
 
     # Run the inference pipeline
-    return predictor.predict(input_video=data_path, output_path=save_path, frames=frames)
+    return predictor.predict(input_video=data_path, output_path=save_path, frames=frames,
+                            save_confmaps_pafs=args.save_confmaps_pafs)
 
 
 if __name__ == "__main__":
@@ -840,6 +845,9 @@ if __name__ == "__main__":
                              'a range separated by hyphen (e.g. 1-3). (default is entire video)')
     parser.add_argument('--output', type=str, default=None,
                         help='The output filename to use for the predicted data.')
+    parser.add_argument('--save_confmaps_pafs', type=bool, default=False,
+                        help='Whether to save the confidence maps or pads')
+
 
     args = parser.parse_args()
 
