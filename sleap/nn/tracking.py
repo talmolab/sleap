@@ -233,7 +233,7 @@ class FlowShiftTracker:
             # If we lost a track on this frame, that is, none of the shifted instances
             # for a track were found to flow to this frame, lets at least use the last
             # tracked instance
-            prev_tracks = {instance.track: instance for instance in labeled_frames[img_idx-1]}
+            prev_tracks = {instance.track: instance for instance in labeled_frames[img_idx-1] if instance.track}
             for prev_track, instance in prev_tracks.items():
                 if prev_track in shifted_tracks:
                     continue
