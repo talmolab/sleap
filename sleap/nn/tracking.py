@@ -253,12 +253,12 @@ class FlowShiftTracker:
                                  for ref, pts, found in zip(instances_ref, pts_fs, status)
                                  if np.sum(found) > 0]
 
+            # Get the track present in the shifted instances
+            shifted_tracks = list({instance.track for instance in shifted_instances})
+
             if len(shifted_instances) == 0:
                 logger.info(f"[t = {t}] Optical flow failed, using last known positions for each track.")
                 shifted_instances = self.tracks.get_last_known()
-
-            # Get the track present in the shifted instances
-            shifted_tracks = list({instance.track for instance in shifted_instances})
 
             self.tracks.add_instances(shifted_instances, frame_index=t)
 

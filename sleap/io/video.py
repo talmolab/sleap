@@ -632,7 +632,7 @@ class Video:
 
         store = imgstore.new_for_format(format,
                                         mode='w', basedir=path,
-                                        imgshape=self.shape,
+                                        imgshape=(self.shape[1], self.shape[2], self.shape[3]),
                                         chunksize=1000)
 
         # Write the JSON for the original video object to the metadata
