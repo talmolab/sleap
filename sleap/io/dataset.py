@@ -384,21 +384,7 @@ class Labels(MutableSequence):
             for vid in {lf.video for lf in self.labeled_frames}:
                 self.merge_matching_frames(video=vid)
         else:
-            frames_found = dict()
-            # move instances into first frame with matching frame_idx
-            for idx, lf in enumerate(self.labeled_frames):
-                if lf.video == video:
-                    if lf.frame_idx in frames_found.keys():
-                        # move instances
-                        dst_idx = frames_found[lf.frame_idx]
-                        self.labeled_frames[dst_idx].instances.extend(lf.instances)
-                        lf.instances = []
-                    else:
-                        # note first lf with this frame_idx
-                        frames_found[lf.frame_idx] = idx
-            # remove labeled frames with no instances
-            self.labeled_frames = list(filter(lambda lf: len(lf.instances),
-                                              self.labeled_frames))
+            self.labeled_frames = LabeledFrame.merge_frames(self.labeled_frames, video=video)
 
     def to_dict(self):
         """

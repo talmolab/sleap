@@ -724,3 +724,22 @@ class LabeledFrame:
         distinct_track_instances = [inst for inst in self._instances
             if type(inst) == Instance or inst.track not in user_tracks]
         return distinct_track_instances
+
+    @staticmethod
+    def merge_frames(labeled_frames, video):
+        frames_found = dict()
+        # move instances into first frame with matching frame_idx
+        for idx, lf in enumerate(labeled_frames):
+            if lf.video == video:
+                if lf.frame_idx in frames_found.keys():
+                    # move instances
+                    dst_idx = frames_found[lf.frame_idx]
+                    labeled_frames[dst_idx].instances.extend(lf.instances)
+                    lf.instances = []
+                else:
+                    # note first lf with this frame_idx
+                    frames_found[lf.frame_idx] = idx
+        # remove labeled frames with no instances
+        labeled_frames = list(filter(lambda lf: len(lf.instances),
+                                     labeled_frames))
+        return labeled_frames
