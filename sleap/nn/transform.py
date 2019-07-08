@@ -1,7 +1,7 @@
 import attr
 import cv2
 import numpy as np
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 from sleap.nn.datagen import _bbs_from_points, _pad_bbs, _crop
 
@@ -15,6 +15,8 @@ class DataTransform:
     scale: float = 1.0
     frame_idxs: List[int] = attr.ib(default=attr.Factory(list))
     bounding_boxes: List = attr.ib(default=attr.Factory(list))
+    crop_size: Optional[int] = None
+    is_cropped: bool = False
     
     def _init_frame_idxs(self, frame_count):
         if len(self.frame_idxs) == 0:
@@ -99,6 +101,8 @@ class DataTransform:
 
         self.bounding_boxes = bbs
         self.frame_idxs = list(map(lambda i: self.frame_idxs[i], idxs))
+        self.crop_size = crop_size
+        self.is_cropped = True
 
         return imgs
         

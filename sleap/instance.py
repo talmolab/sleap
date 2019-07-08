@@ -341,6 +341,13 @@ class Instance:
 
         return self._points_array_cache
 
+    @property
+    def centroid(self) -> np.ndarray:
+        """Returns instance centroid as (x,y) numpy row vector."""
+        points = self.points_array(invisible_as_nan=True)
+        centroid = np.nanmedian(points, axis=0)
+        return centroid
+
     @classmethod
     def to_pandas_df(cls, instances: Union['Instance', List['Instance']], skip_nan:bool = True) -> pd.DataFrame:
         """

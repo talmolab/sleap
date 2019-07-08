@@ -374,6 +374,14 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, transform, img_idx
 
         matched_instances_t.append(PredictedInstance(skeleton=skeleton, points=pts, score=match[-2]))
 
+    # For centroid crop just return instance closest to centroid
+    if len(matched_instances_t) > 1 and transform.is_cropped:
+        crop_centroid = np.array(((transform.crop_size, transform.crop_size),))
+        # sort by distance from crop centroid
+        matched_instances_t.sort(key=lambda inst: np.linalg.norm(inst.centroid - crop_centroid))
+        # just use closest
+        matched_instances_t = matched_instances_t[0]
+
     return matched_instances_t
 
 def match_peaks_paf(peaks, peak_vals, pafs, skeleton,
