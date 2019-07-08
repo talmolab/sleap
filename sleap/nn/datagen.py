@@ -362,12 +362,8 @@ def instance_crops(imgs: np.ndarray, points: list,
     frame_count = imgs.shape[0]
     img_shape = imgs.shape[1], imgs.shape[2]
 
-    # List of bounding box for every instance
-    bbs = [point_array_bounding_box(point_array) for frame in points for point_array in frame]
-    bbs = [(int(x0), int(y0), int(x1), int(y1)) for (x0, y0, x1, y1) in bbs]
-
-    # List to map bb to its img frame idx
-    img_idxs = [i for i, frame in enumerate(points) for _ in frame]
+    # List of bounding box for every instance, map from list idx -> frame idx
+    bbs, img_idxs = _bbs_from_points(points)
 
     # Find least power of 2 that's large enough to bound all the instances
     max_height = max((y1 - y0 for (x0, y0, x1, y1) in bbs))
@@ -381,7 +377,7 @@ def instance_crops(imgs: np.ndarray, points: list,
 
     # Grow all bounding boxes to the same size
     box_shape = min(box_side, img_shape[0]), min(box_side, img_shape[1])
-    bbs = list(map(lambda bb: pad_rect_to(*bb, box_shape, img_shape), bbs))
+    bbs = _pad_bbs(bbs, box_shape, img_shape)
 
     # Add bounding boxes for negative samples
     neg_sample_list = []
@@ -410,9 +406,7 @@ def instance_crops(imgs: np.ndarray, points: list,
     bbs.extend(neg_bbs[:negative_samples])
 
     # Crop images
-
-    imgs = [imgs[img_idxs[i], bb[1]:bb[3], bb[0]:bb[2]] for i, bb in enumerate(bbs)] # imgs[frame_idx, y0:y1, x0:x1]
-    imgs = np.stack(imgs, axis=0)
+    imgs = _crop(imgs, img_idxs, bbs)
 
     # Make point arrays for each image (instead of each frame as before)
 
@@ -425,6 +419,16 @@ def instance_crops(imgs: np.ndarray, points: list,
 
     return imgs, points
 
+def _bbs_from_points(points):
+    # List of bounding box for every instance
+    bbs = [point_array_bounding_box(point_array) for frame in points for point_array in frame]
+    bbs = [(int(x0), int(y0), int(x1), int(y1)) for (x0, y0, x1, y1) in bbs]
+
+    # List to map bb to its img frame idx
+    img_idxs = [i for i, frame in enumerate(points) for _ in frame]
+
+    return bbs, img_idxs
+
 def _overlap_area(box_a, box_b):
     # determine the (x, y)-coordinates of the intersection rectangle
     xA = max(box_a[0], box_b[0])
@@ -436,6 +440,36 @@ def _overlap_area(box_a, box_b):
     inter_area = max(0, xB - xA + 1) * max(0, yB - yA + 1)
 
     return inter_area
+
+def _pad_bbs(bbs, box_shape, img_shape):
+    return list(map(lambda bb: pad_rect_to(*bb, box_shape, img_shape), bbs))
+
+def _crop(imgs, img_idxs, bbs) -> np.ndarray:
+    imgs = [imgs[img_idxs[i], bb[1]:bb[3], bb[0]:bb[2]] for i, bb in enumerate(bbs)] # imgs[frame_idx, y0:y1, x0:x1]
+    imgs = np.stack(imgs, axis=0)
+    return imgs
+
+def fullsize_points_from_crop(idx: int, point_array: np.ndarray,
+                              bbs: list, img_idxs: list):
+    """
+    Map point within crop back to original image frames.
+
+    Args:
+        idx: index in imgs stack
+        point_array: (x, y) for each node, ndarray with shape (nodes, 2)
+        bbs: list idx -> bounding box
+        img_idxs: list idx -> frame_idx
+    Returns:
+        frame_idx, point_array
+    """
+    bb = bbs[idx]
+
+    top_left_point = ((bb[0], bb[1]),) # for (x, y) column vector
+    point_array += np.array(top_left_point)
+
+    frame_idx = img_idxs[idx]
+
+    return frame_idx, point_array
 
 def demo_datagen_time():
     data_path = "tests/data/json_format_v2/centered_pair_predictions.json"
