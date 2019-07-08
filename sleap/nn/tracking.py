@@ -335,6 +335,8 @@ class FlowShiftTracker:
                                  f"spawned track {instance.track.name} "
                                  f"(best cost = {cost_matrix[i,:].min()})")
 
+        # Update the last know data structures for the last frame.
+        self.tracks.update_track_last_known(labeled_frames[img_idx - 1], max_shift=None)
 
     def occupancy(self):
         """ Compute occupancy matrix """
