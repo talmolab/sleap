@@ -592,7 +592,12 @@ class Labels(MutableSequence):
 
             # Make a tmpdir, located in the directory that the file exists, to unzip
             # its contents.
-            tmp_dir = tempfile.mkdtemp(dir=os.path.dirname(filename))
+            tmp_dir = os.path.join(os.path.dirname(filename),
+                                   f"tmp_{os.path.basename(filename)}")
+            if os.path.exists(tmp_dir):
+                shutil.rmtree(tmp_dir)
+            os.mkdir(tmp_dir)
+            #tmp_dir = tempfile.mkdtemp(dir=os.path.dirname(filename))
 
             try:
 
@@ -734,7 +739,6 @@ class Labels(MutableSequence):
         Returns:
             A list of ImgStoreVideo objects that represent the stored frames.
         """
-
         # For each label
         imgstore_vids = []
         for v_idx, v in enumerate(self.videos):

@@ -471,6 +471,9 @@ class Predictor:
         min_score_midpts: FIXME
         min_score_integral: FIXME
         add_last_edge: FIXME
+        with_tracking: Should tracking be run after inference.
+        flow_window: The number of frames that tracking should look back when trying to identify
+        instances.
 
     """
 
@@ -488,7 +491,6 @@ class Predictor:
     add_last_edge: bool = True
     with_tracking: bool = False
     flow_window: int = 15
-    save_shifted_instances: bool = True
 
     def predict_centroids(self, imgs: np.ndarray) -> List[List[np.ndarray]]:
 
@@ -521,6 +523,7 @@ class Predictor:
     def predict(self, input_video: Union[dict, Video],
                 output_path: Optional[str] = None,
                 frames: Optional[List[int]] = None,
+                save_confmaps_pafs: bool = True,
                 is_async: bool = False) -> List[LabeledFrame]:
         """
         Run the entire inference pipeline on an input video or file object.
@@ -585,7 +588,7 @@ class Predictor:
         h_w_scale = np.array((h/vid_h, w/vid_w))
 
         # Initialize tracking
-        tracker = FlowShiftTracker(window=self.flow_window, verbosity=0)
+        tracker = FlowShiftTracker(window=self.flow_window, verbosity=1)
 
         # Initialize parallel pool
         pool = None if is_async else multiprocessing.Pool(processes=usable_cpu_count())
@@ -638,7 +641,8 @@ class Predictor:
             logger.info(f"  pafs: shape={pafs.shape}, ptp={np.ptp(pafs)}")
 
             # Save confmaps and pafs
-            if output_path is not None:
+            if output_path is not None and save_confmaps_pafs:
+
                 # output_path is full path to labels.json, so replace "json" with "h5"
                 viz_output_path = output_path
                 if viz_output_path.endswith(".json"):
@@ -891,10 +895,11 @@ def load_predicted_labels_json_old(
 def main(args):
     data_path = args.data_path
     confmap_model_path = args.confmap_model_path
+    save_path = args.output if args.output else data_path + ".predictions.json"
     paf_model_path = args.paf_model_path
-    save_path = data_path + ".predictions.json"
     skeleton_path = args.skeleton_path
     frames = args.frames
+
 
     if args.resize_input:
         # Load video
@@ -915,12 +920,21 @@ def main(args):
     predictor = Predictor(model=model, skeleton=skeleton, with_tracking=args.with_tracking)
 
     # Run the inference pipeline
-    return predictor.predict(input_video=data_path, output_path=save_path, frames=frames)
+    return predictor.predict(input_video=data_path, output_path=save_path, frames=frames,
+                            save_confmaps_pafs=args.save_confmaps_pafs)
 
 
 if __name__ == "__main__":
 
-    def frame_list(frame_str):
+    def frame_list(frame_str: str):
+
+        # Handle ranges of frames. Must be of the form "1-200"
+        if '-' in frame_str:
+            min_max = frame_str.split('-')
+            min_frame = int(min_max[0])
+            max_frame = int(min_max[1])
+            return list(range(min_frame, max_frame+1))
+
         return [int(x) for x in frame_str.split(",")] if len(frame_str) else None
 
     parser = argparse.ArgumentParser()
@@ -934,7 +948,14 @@ if __name__ == "__main__":
     parser.add_argument('--with-tracking', dest='with_tracking', action='store_const',
                     const=True, default=False,
                     help='just visualize predicted confmaps/pafs (default False)')
-    parser.add_argument('--frames', type=frame_list, default="", help='list of frames to predict (default is entire video)')
+    parser.add_argument('--frames', type=frame_list, default="",
+                        help='list of frames to predict. Either comma separated list (e.g. 1,2,3) or'
+                             'a range separated by hyphen (e.g. 1-3). (default is entire video)')
+    parser.add_argument('--output', type=str, default=None,
+                        help='The output filename to use for the predicted data.')
+    parser.add_argument('--save_confmaps_pafs', type=bool, default=False,
+                        help='Whether to save the confidence maps or pads')
+
 
     args = parser.parse_args()
 

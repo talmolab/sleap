@@ -311,7 +311,10 @@ class ImgStoreVideo:
 
     @property
     def channels(self):
-        return self.__img.shape[2]
+        if len(self.__img.shape) < 3:
+            return 1
+        else:
+            return self.__img.shape[2]
 
     @property
     def width(self):
@@ -597,7 +600,7 @@ class Video:
             format: By default it will create a DirectoryImgStore with lossless PNG format.
             Unless the frame_indices = None, in which case, it will default to 'mjpeg/avi'
             format for video.
-            index_by_original: ImgStores are great for storing a collection of frame
+            index_by_original: ImgStores are great for storing a collection of
             selected frames from an larger video. If the index_by_original is set to
             True than the get_frame function will accept the original frame numbers of
             from original video. If False, then it will accept the frame index from the
@@ -622,14 +625,19 @@ class Video:
             if os.path.isdir(path):
                 shutil.rmtree(path, ignore_errors=True)
 
+        # If the video is already an imgstore, we just need to copy it
+        # if type(self) is ImgStoreVideo:
+        #     new_backend = self.backend.copy_to(path)
+        #     return self.__class__(backend=new_backend)
+
         store = imgstore.new_for_format(format,
                                         mode='w', basedir=path,
-                                        imgshape=self.get_frame(0).shape,
+                                        imgshape=(self.shape[1], self.shape[2], self.shape[3]),
                                         chunksize=1000)
 
         # Write the JSON for the original video object to the metadata
         # of the imgstore for posterity
-        store.add_extra_data(sourc_sleap_video_obj=Video.cattr().unstructure(self))
+        store.add_extra_data(source_sleap_video_obj=Video.cattr().unstructure(self))
 
         import time
         for frame_num in frame_numbers:
