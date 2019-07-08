@@ -90,6 +90,11 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         for model_type, field in self.training_profile_widgets.items():
             idx = field.currentIndex()
             job_filename, job = self.job_options[model_type][idx]
+
+            if job.model.output_type == ModelOutputType.CENTROIDS and not form_data.get("_use_centroids",False):
+                # skip centroid training job
+                continue
+
             training_jobs[model_type] = job
             # update training job from params in form
             trainer = job.trainer
