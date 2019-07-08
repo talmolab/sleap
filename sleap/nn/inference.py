@@ -376,11 +376,13 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, transform, img_idx
 
     # For centroid crop just return instance closest to centroid
     if len(matched_instances_t) > 1 and transform.is_cropped:
-        crop_centroid = np.array(((transform.crop_size, transform.crop_size),))
+        crop_centroid = np.array(((transform.crop_size//2, transform.crop_size//2),)) # center of crop box
+        crop_centroid = transform.invert(img_idx, crop_centroid) # relative to original image
         # sort by distance from crop centroid
         matched_instances_t.sort(key=lambda inst: np.linalg.norm(inst.centroid - crop_centroid))
+
         # just use closest
-        matched_instances_t = matched_instances_t[0]
+        matched_instances_t = matched_instances_t[0:1]
 
     return matched_instances_t
 
@@ -572,13 +574,14 @@ class Predictor:
         num_frames = len(frames)
         vid_h = vid.shape[1]
         vid_w = vid.shape[2]
-        scale = h / vid_h
+        scale = h / vid_h if ModelOutputType.CENTROIDS not in self.sleap_models.keys() else 1.0
         logger.info("Opened video:")
         logger.info("  Source: " + str(vid.backend))
         logger.info("  Frames: %d" % num_frames)
         logger.info("  Frame shape: %d x %d" % (vid_h, vid_w))
         logger.info("  Scale: %f" % scale)
         logger.info(f"  True Scale: {h/vid_h, w/vid_w}")
+        logger.info(f"  Crop around predicted centroids? {ModelOutputType.CENTROIDS in self.sleap_models.keys()}")
         h_w_scale = np.array((h/vid_h, w/vid_w))
 
         # Initialize tracking
