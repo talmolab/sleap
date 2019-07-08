@@ -29,7 +29,7 @@ from sleap.io.dataset import Labels
 from sleap.nn.augmentation import Augmenter
 from sleap.nn.model import Model, ModelOutputType
 from sleap.nn.monitor import LossViewer
-from sleap.nn.datagen import generate_confmaps_from_points, generate_pafs_from_points, generate_images, generate_points, instance_crops
+from sleap.nn.datagen import generate_confmaps_from_points, generate_pafs_from_points, generate_images, generate_points, instance_crops, generate_centroid_points
 
 
 @attr.s(auto_attribs=True)
@@ -186,8 +186,11 @@ class Trainer:
         imgs = generate_images(labels, scale=self.scale)
         points = generate_points(labels, scale=self.scale)
 
+        # Convert instance points to centroids (if training centroids)
+        if model.output_type == ModelOutputType.CENTROIDS:
+            points = generate_centroid_points(points)
         # Crop images to instances (if desired)
-        if self.instance_crop:
+        elif self.instance_crop:
             imgs, points = instance_crops(imgs, points, min_crop_size=self.min_crop_size)
 
         # Split data into train/validation
@@ -209,6 +212,8 @@ class Trainer:
             num_outputs_channels = len(skeleton.nodes)
         elif model.output_type == ModelOutputType.PART_AFFINITY_FIELD:
             num_outputs_channels = len(skeleton.edges) * 2
+        elif model.output_type == ModelOutputType.CENTROIDS:
+            num_outputs_channels = 1
 
         logger.info(f"Training set: {imgs_train.shape} -> {num_outputs_channels} channels")
         logger.info(f"Validation set: {imgs_val.shape} -> {num_outputs_channels} channels")
@@ -261,14 +266,21 @@ class Trainer:
             steps_per_epoch = self.steps_per_epoch
 
         # TODO: Add support for multiple skeletons
+
         # Setup data generation
         img_shape = (imgs_train.shape[1], imgs_train.shape[2])
         if model.output_type == ModelOutputType.CONFIDENCE_MAP:
             def datagen_function(points):
-                return generate_confmaps_from_points(points, skeleton, img_shape, sigma=self.sigma)
+                return generate_confmaps_from_points(points, skeleton, img_shape,
+                            sigma=self.sigma)
         elif model.output_type == ModelOutputType.PART_AFFINITY_FIELD:
             def datagen_function(points):
-                return generate_pafs_from_points(points, skeleton, img_shape, sigma=self.sigma)
+                return generate_pafs_from_points(points, skeleton, img_shape,
+                            sigma=self.sigma)
+        elif model.output_type == ModelOutputType.CENTROIDS:
+            def datagen_function(points):
+                return generate_confmaps_from_points(points, None, img_shape,
+                            node_count=1, sigma=self.sigma)
         else:
             datagen_function = None
 

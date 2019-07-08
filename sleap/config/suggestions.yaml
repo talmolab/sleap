@@ -3,8 +3,8 @@ main:
 - name: method
   label: Method
   type: stacked
-  default: strides
-  options: strides,random,pca,brisk
+  default: random
+  options: random,strides,pca,brisk
   #removing hog for now since it's not implemented correctly
 
   strides:

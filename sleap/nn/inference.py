@@ -30,6 +30,7 @@ from sleap.util import usable_cpu_count
 from sleap.nn.model import ModelOutputType
 from sleap.nn.training import TrainingJob
 from sleap.nn.tracking import FlowShiftTracker, Track
+from sleap.nn.transform import DataTransform
 
 
 def get_available_gpus():
@@ -78,6 +79,11 @@ def get_inference_model(confmap_model_path: str, paf_model_path: str, new_input_
     # Combine models with tuple output
     model = keras.Model(new_input, [confmap_model(new_input), paf_model(new_input)])
 
+    model = convert_to_gpu_model(model)
+
+    return model
+
+def convert_to_gpu_model(model: keras.Model) -> keras.Model:
     gpu_list = get_available_gpus()
 
     if len(gpu_list) == 0:
@@ -89,7 +95,6 @@ def get_inference_model(confmap_model_path: str, paf_model_path: str, new_input_
         model = multi_gpu_model(model, gpus=len(gpu_list))
 
     return model
-
 
 def impeaksnms(I, min_thresh=0.3, sigma=3, return_val=True):
     """ Find peaks via non-maximum suppresion. """
@@ -200,7 +205,7 @@ def improfile(I, p0, p1, max_points=None):
     vals = np.stack([I[yi,xi] for xi, yi in zip(x,y)])
     return vals
 
-def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, scale,
+def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, transform, img_idx,
                       min_score_to_node_ratio=0.4,
                       min_score_midpts=0.05,
                       min_score_integral=0.8,
@@ -287,7 +292,6 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, scale,
     # Greedy matching of each edge candidate set
     subset = -1 * np.ones((0, len(skeleton.nodes)+2)) # ids, overall score, number of parts
     candidate = np.array([y for x in peaks_t for y in x]) # flattened set of all points
-    candidate = candidate / scale # rescale points to original image
     candidate_scores = np.array([y for x in peak_vals_t for y in x]) # flattened set of all peak scores
     for k, edge in enumerate(skeleton.edge_names):
         # No matches for this edge
@@ -350,6 +354,9 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, scale,
     score_to_node_ratio = subset[:,-2] / subset[:,-1]
     subset = subset[score_to_node_ratio > min_score_to_node_ratio, :]
 
+    # apply inverse transform to points
+    candidate[:,0:2] = transform.invert(img_idx, candidate[:,0:2])
+
     # Done with all the matching! Gather the data
     matched_instances_t = []
     for match in subset:
@@ -367,28 +374,41 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, scale,
 
         matched_instances_t.append(PredictedInstance(skeleton=skeleton, points=pts, score=match[-2]))
 
+    # For centroid crop just return instance closest to centroid
+    if len(matched_instances_t) > 1 and transform.is_cropped:
+        crop_centroid = np.array(((transform.crop_size//2, transform.crop_size//2),)) # center of crop box
+        crop_centroid = transform.invert(img_idx, crop_centroid) # relative to original image
+        # sort by distance from crop centroid
+        matched_instances_t.sort(key=lambda inst: np.linalg.norm(inst.centroid - crop_centroid))
+
+        # just use closest
+        matched_instances_t = matched_instances_t[0:1]
+
     return matched_instances_t
 
 def match_peaks_paf(peaks, peak_vals, pafs, skeleton,
-                    video, frame_indices, scale=1,
+                    video, transform,
                     min_score_to_node_ratio=0.4, min_score_midpts=0.05,
                     min_score_integral=0.8, add_last_edge=False, **kwargs):
     """ Computes PAF-based peak matching via greedy assignment and other such dragons """
 
     # Process each frame
     predicted_frames = []
-    for peaks_t, peak_vals_t, pafs_t, frame_idx in zip(peaks, peak_vals, pafs, frame_indices):
-        instances = match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, scale,
+    for img_idx, (peaks_t, peak_vals_t, pafs_t) in enumerate(zip(peaks, peak_vals, pafs)):
+        instances = match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton,
+                                   transform, img_idx,
                                    min_score_to_node_ratio=min_score_to_node_ratio,
                                    min_score_midpts=min_score_midpts,
                                    min_score_integral=min_score_integral,
                                    add_last_edge=add_last_edge,)
+        frame_idx = transform.get_frame_idxs(img_idx)
         predicted_frames.append(LabeledFrame(video=video, frame_idx=frame_idx, instances=instances))
 
+    predicted_frames = LabeledFrame.merge_frames(predicted_frames, video=video)
     return predicted_frames
 
 def match_peaks_paf_par(peaks, peak_vals, pafs, skeleton,
-                        video, frame_indices, scale=1,
+                        video, transform,
                         min_score_to_node_ratio=0.4,
                         min_score_midpts=0.05,
                         min_score_integral=0.8,
@@ -400,9 +420,10 @@ def match_peaks_paf_par(peaks, peak_vals, pafs, skeleton,
         pool = multiprocessing.Pool()
 
     futures = []
-    for peaks_t, peak_vals_t, pafs_t, frame_idx in zip(peaks, peak_vals, pafs, frame_indices):
-        future = pool.apply_async(match_peaks_frame, [peaks_t, peak_vals_t, pafs_t, skeleton],
-                                  dict(scale=scale,
+    for img_idx, (peaks_t, peak_vals_t, pafs_t) in enumerate(zip(peaks, peak_vals, pafs)):
+        future = pool.apply_async(match_peaks_frame,
+                                  [peaks_t, peak_vals_t, pafs_t, skeleton],
+                                  dict(transform=transform, img_idx=img_idx,
                                        min_score_to_node_ratio=min_score_to_node_ratio,
                                        min_score_midpts=min_score_midpts,
                                        min_score_integral=min_score_integral,
@@ -410,9 +431,9 @@ def match_peaks_paf_par(peaks, peak_vals, pafs, skeleton,
         futures.append(future)
 
     predicted_frames = []
-    for future, frame_idx in zip(futures, frame_indices):
+    for img_idx, future in enumerate(futures):
         instances = future.get()
-
+        frame_idx = transform.get_frame_idxs(img_idx)
         # Ok, since we are doing this in parallel. Objects are getting serialized and sent
         # back and forth. This causes all instances to have a different skeleton object
         # This will cause problems later because checking if two skeletons are equal is
@@ -423,6 +444,7 @@ def match_peaks_paf_par(peaks, peak_vals, pafs, skeleton,
 
         predicted_frames.append(LabeledFrame(video=video, frame_idx=frame_idx, instances=instances))
 
+    predicted_frames = LabeledFrame.merge_frames(predicted_frames, video=video)
     return predicted_frames
 
 
@@ -469,6 +491,37 @@ class Predictor:
     add_last_edge: bool = True
     with_tracking: bool = False
     flow_window: int = 15
+
+    def predict_centroids(self, imgs: np.ndarray) -> List[List[np.ndarray]]:
+
+        # Load and prepare centroid model
+        centroid_job = self.sleap_models[ModelOutputType.CENTROIDS]
+        centroid_model_path = os.path.join(
+                                    centroid_job.save_dir,
+                                    centroid_job.best_model_filename)
+        keras_model = keras.models.load_model(centroid_model_path)
+        keras_model = convert_to_gpu_model(keras_model)
+
+        centroid_transform = DataTransform()
+        centroid_imgs_scaled = centroid_transform.scale_to(
+                                    imgs=imgs,
+                                    target_size=keras_model.input_shape[1:3])
+
+        # Predict centroids
+        centroid_confmaps = keras_model.predict(centroid_imgs_scaled.astype("float32") / 255,
+                                                batch_size=self.inference_batch_size)
+
+        peaks, peak_vals = find_all_peaks(centroid_confmaps,
+                                            min_thresh=self.nms_min_thresh,
+                                            sigma=self.nms_sigma)
+
+        centroids = [[np.expand_dims(frame_peaks[0][i], axis=0) / centroid_transform.scale
+                        for i in range(frame_peaks[0].shape[0])]
+                     for frame_peaks in peaks]
+
+        # Use predicted centroids (peaks) to crop images
+
+        return centroids
 
     def predict(self, input_video: Union[dict, Video],
                 output_path: Optional[str] = None,
@@ -527,13 +580,14 @@ class Predictor:
         num_frames = len(frames)
         vid_h = vid.shape[1]
         vid_w = vid.shape[2]
-        scale = h / vid_h
+        scale = h / vid_h if ModelOutputType.CENTROIDS not in self.sleap_models.keys() else 1.0
         logger.info("Opened video:")
         logger.info("  Source: " + str(vid.backend))
         logger.info("  Frames: %d" % num_frames)
         logger.info("  Frame shape: %d x %d" % (vid_h, vid_w))
         logger.info("  Scale: %f" % scale)
         logger.info(f"  True Scale: {h/vid_h, w/vid_w}")
+        logger.info(f"  Crop around predicted centroids? {ModelOutputType.CENTROIDS in self.sleap_models.keys()}")
         h_w_scale = np.array((h/vid_h, w/vid_w))
 
         # Initialize tracking
@@ -564,24 +618,20 @@ class Predictor:
             if frame_end > num_frames:
                 frame_end = num_frames
             frames_idx = frames[frame_start:frame_end]
-            mov = vid[frames_idx]
 
-            if (vid.height, vid.width) != (h, w):
-                # Resize the frames to the model input size
-                scaled_mov = np.zeros((mov.shape[0], h, w, mov.shape[3]))
-                for i in range(mov.shape[0]):
-                    img = cv2.resize(mov[i, :, :], (w, h))
-                     # add back singleton channel
-                    if model_channels == 1:
-                        img = img[..., None]
-                    else:
-                        # Although cv2 uses BGR order for channels, we shouldn't have to
-                        # swap order of color channels because a resize doesn't change it.
-                        # If we did have to convert BGR -> RGB, then we'd do this:
-                        # img = img[..., ::-1]
-                        pass
-                    scaled_mov[i, ...] = img
-                mov = scaled_mov
+            # Scale/crop using tranform object
+            transform = DataTransform(frame_idxs=frames_idx)
+
+            mov = vid[frames_idx]
+            if ModelOutputType.CENTROIDS in self.sleap_models.keys():
+                # Predict centroids and crop around these
+                centroids = self.predict_centroids(mov)
+                crop_size = h # match input of keras model
+                mov = transform.centroid_crop(mov, centroids, crop_size)
+
+            else:
+                # Scale (if target doesn't match current size)
+                mov = transform.scale_to(mov, target_size=(h,w))
 
             logger.info("  Read %d frames [%.1fs]" % (len(mov), time() - t0))
 
@@ -620,7 +670,7 @@ class Predictor:
             # Match peaks via PAFs
             t0 = time()
             predicted_frames_chunk = match_peaks_function(peaks, peak_vals, pafs, self.skeleton,
-                                            scale=scale, video=vid, frame_indices=frames_idx,
+                                            transform=transform, video=vid, frame_indices=frames_idx,
                                             min_score_to_node_ratio=self.min_score_to_node_ratio,
                                             min_score_midpts=self.min_score_midpts,
                                             min_score_integral=self.min_score_integral,
@@ -661,6 +711,7 @@ class Predictor:
         logger.info("Total: %.1f min" % (total_elapsed / 60))
 
         labels = Labels(labeled_frames=predicted_frames)
+        labels.merge_matching_frames()
 
         if is_async:
             return labels.to_dict()
@@ -724,6 +775,11 @@ class Predictor:
         # FIXME: hack to make inference run when image size isn't right for input layer
         if resize_hack:
             img_shape = (img_shape[0]//8*8, img_shape[1]//8*8, img_shape[2])
+
+        # if there's a centroid model, then we don't want to resize input of other models
+        # since we'll instead crop the images to match the model
+        if ModelOutputType.CENTROIDS in sleap_models.keys():
+            img_shape = None
 
         # Load the model and skeleton
         keras_model = get_inference_model(confmap_model_path, paf_model_path, img_shape)

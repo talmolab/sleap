@@ -5,6 +5,7 @@ import math
 import random
 
 from operator import itemgetter
+from typing import Optional
 
 from sleap.io.dataset import Labels
 
@@ -72,7 +73,10 @@ def generate_points(labels:Labels, scale: float=1.0, frame_limit: bool=None) -> 
                 for inst in lf.user_instances]
                 for lf in labels.user_labeled_frames[:frame_limit]]
 
-def generate_confmaps_from_points(frames_inst_points, skeleton, shape,
+def generate_confmaps_from_points(frames_inst_points,
+                        skeleton: Optional['Skeleton'],
+                        shape,
+                        node_count: Optional[int] = None,
                         sigma:float=5.0, scale:float=1.0, output_size=None) -> np.ndarray:
     """
     Generates confmaps for set of frames.
@@ -87,6 +91,11 @@ def generate_confmaps_from_points(frames_inst_points, skeleton, shape,
     Returns:
         confmaps as ndarray with shape (frames, h, w, nodes)
     """
+    if skeleton is None and node_count is None:
+        raise ValueError("Either skeleton or node_count must be specified.")
+
+    node_count = len(skeleton.nodes) if skeleton is not None else node_count
+
     full_size = shape
     if output_size is None:
         output_size = (shape[0] // (1/scale), shape[1] // (1/scale))
@@ -98,13 +107,12 @@ def generate_confmaps_from_points(frames_inst_points, skeleton, shape,
     ball = _get_conf_ball(full_size, output_size, sigma*scale)
 
     num_frames = len(frames_inst_points)
-    num_channels = len(skeleton.nodes)
-    confmaps = np.zeros((num_frames, output_size[0], output_size[1], num_channels),
+    confmaps = np.zeros((num_frames, output_size[0], output_size[1], node_count),
                         dtype="float32")
 
     for frame_idx, points_arrays in enumerate(frames_inst_points):
         for inst_points in points_arrays:
-            for node_idx in range(len(skeleton.nodes)):
+            for node_idx in range(node_count):
                 if not np.isnan(np.sum(inst_points[node_idx])):
                     x = inst_points[node_idx][0]
                     y = inst_points[node_idx][1]
@@ -293,7 +301,7 @@ def pad_rect_to(x0: int, y0: int, x1: int, y1: int, pad_to: tuple, within: tuple
 
     Returns:
         (x0, y0, x1, y1) for rect such that
-        * (y1-y2), (x1 - x0) = pad_to
+        * (y1-y0), (x1-x0) = pad_to
         * 0 <= (y1-y0) <= within h
         * 0 <= (x1-x0) <= within w
     """
@@ -324,6 +332,18 @@ def pad_rect_to(x0: int, y0: int, x1: int, y1: int, pad_to: tuple, within: tuple
 
     return x0, y0, x1, y1
 
+def generate_centroid_points(points: list) -> list:
+    """Takes the points for each instance and replaces it with a single centroid point."""
+
+    centroids = [[_centroid(*point_array_bounding_box(point_array))
+                    for point_array in frame] for frame in points]
+
+    return centroids
+
+def _centroid(x0, y0, x1, y1) -> np.ndarray:
+    a = np.array((x0+(x1-x0)/2, y0+(y1-y0)/2))
+    return np.expand_dims(a, axis=0)
+
 def instance_crops(imgs: np.ndarray, points: list,
                     min_crop_size: int=0, negative_samples: int=0) -> np.ndarray:
     """
@@ -342,12 +362,8 @@ def instance_crops(imgs: np.ndarray, points: list,
     frame_count = imgs.shape[0]
     img_shape = imgs.shape[1], imgs.shape[2]
 
-    # List of bounding box for every instance
-    bbs = [point_array_bounding_box(point_array) for frame in points for point_array in frame]
-    bbs = [(int(x0), int(y0), int(x1), int(y1)) for (x0, y0, x1, y1) in bbs]
-
-    # List to map bb to its img frame idx
-    img_idxs = [i for i, frame in enumerate(points) for _ in frame]
+    # List of bounding box for every instance, map from list idx -> frame idx
+    bbs, img_idxs = _bbs_from_points(points)
 
     # Find least power of 2 that's large enough to bound all the instances
     max_height = max((y1 - y0 for (x0, y0, x1, y1) in bbs))
@@ -361,7 +377,7 @@ def instance_crops(imgs: np.ndarray, points: list,
 
     # Grow all bounding boxes to the same size
     box_shape = min(box_side, img_shape[0]), min(box_side, img_shape[1])
-    bbs = list(map(lambda bb: pad_rect_to(*bb, box_shape, img_shape), bbs))
+    bbs = _pad_bbs(bbs, box_shape, img_shape)
 
     # Add bounding boxes for negative samples
     neg_sample_list = []
@@ -390,9 +406,7 @@ def instance_crops(imgs: np.ndarray, points: list,
     bbs.extend(neg_bbs[:negative_samples])
 
     # Crop images
-
-    imgs = [imgs[img_idxs[i], bb[1]:bb[3], bb[0]:bb[2]] for i, bb in enumerate(bbs)] # imgs[frame_idx, y0:y1, x0:x1]
-    imgs = np.stack(imgs, axis=0)
+    imgs = _crop(imgs, img_idxs, bbs)
 
     # Make point arrays for each image (instead of each frame as before)
 
@@ -405,6 +419,16 @@ def instance_crops(imgs: np.ndarray, points: list,
 
     return imgs, points
 
+def _bbs_from_points(points):
+    # List of bounding box for every instance
+    bbs = [point_array_bounding_box(point_array) for frame in points for point_array in frame]
+    bbs = [(int(x0), int(y0), int(x1), int(y1)) for (x0, y0, x1, y1) in bbs]
+
+    # List to map bb to its img frame idx
+    img_idxs = [i for i, frame in enumerate(points) for _ in frame]
+
+    return bbs, img_idxs
+
 def _overlap_area(box_a, box_b):
     # determine the (x, y)-coordinates of the intersection rectangle
     xA = max(box_a[0], box_b[0])
@@ -416,6 +440,36 @@ def _overlap_area(box_a, box_b):
     inter_area = max(0, xB - xA + 1) * max(0, yB - yA + 1)
 
     return inter_area
+
+def _pad_bbs(bbs, box_shape, img_shape):
+    return list(map(lambda bb: pad_rect_to(*bb, box_shape, img_shape), bbs))
+
+def _crop(imgs, img_idxs, bbs) -> np.ndarray:
+    imgs = [imgs[img_idxs[i], bb[1]:bb[3], bb[0]:bb[2]] for i, bb in enumerate(bbs)] # imgs[frame_idx, y0:y1, x0:x1]
+    imgs = np.stack(imgs, axis=0)
+    return imgs
+
+def fullsize_points_from_crop(idx: int, point_array: np.ndarray,
+                              bbs: list, img_idxs: list):
+    """
+    Map point within crop back to original image frames.
+
+    Args:
+        idx: index in imgs stack
+        point_array: (x, y) for each node, ndarray with shape (nodes, 2)
+        bbs: list idx -> bounding box
+        img_idxs: list idx -> frame_idx
+    Returns:
+        frame_idx, point_array
+    """
+    bb = bbs[idx]
+
+    top_left_point = ((bb[0], bb[1]),) # for (x, y) column vector
+    point_array += np.array(top_left_point)
+
+    frame_idx = img_idxs[idx]
+
+    return frame_idx, point_array
 
 def demo_datagen_time():
     data_path = "tests/data/json_format_v2/centered_pair_predictions.json"
@@ -456,7 +510,7 @@ def demo_datagen():
 
     points = generate_points(labels, scale)
 
-    imgs, points = instance_crops(imgs, points, min_crop_size=0, negative_samples=15)
+    # Prepare GUI demo
 
     from PySide2 import QtWidgets
     from sleap.io.video import Video
@@ -464,6 +518,23 @@ def demo_datagen():
     from sleap.gui.quiverplot import demo_pafs
 
     app = QtWidgets.QApplication([])
+
+    # Centroids
+
+    # generate centoid data on full frames before instance cropping
+    centroid_imgs = generate_images(labels, scale=.25)
+    centroid_vid = Video.from_numpy(centroid_imgs * 255)
+    centroid_points = generate_centroid_points(generate_points(labels, scale=.25))
+    centroid_confmaps = generate_confmaps_from_points(centroid_points, None,
+                                (centroid_imgs.shape[1], centroid_imgs.shape[2]),
+                                node_count=1, sigma=5.0)
+
+    demo_confmaps(centroid_confmaps, centroid_vid)
+
+    # Instance cropping
+
+    imgs, points = instance_crops(imgs, points, min_crop_size=0, negative_samples=15)
+
     vid = Video.from_numpy(imgs * 255)
 
     skeleton = labels.skeletons[0]

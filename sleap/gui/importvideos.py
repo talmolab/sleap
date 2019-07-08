@@ -53,7 +53,7 @@ class ImportVideos:
                                 None,
                                 "Select videos to import...", # dialogue title
                                 ".", # initial path
-                                "Any Video (*.h5 *.hd5v *.mp4 *.avi);;HDF5 (*.h5 *.hd5v);;Media Video (*.mp4 *.avi);;Any File (*.*)", # filters
+                                "Any Video (*.h5 *.hd5v *.mp4 *.avi *.json);;HDF5 (*.h5 *.hd5v);;ImgStore (*.json);;Media Video (*.mp4 *.avi);;Any File (*.*)", # filters
                                 #options=QFileDialog.DontUseNativeDialog
                                 )
         if len(file_names) > 0:
@@ -109,6 +109,12 @@ class ImportParamDialog(QDialog):
                 "video_type": "numpy",
                 "match": "npy",
                 "video_class": Video.from_numpy,
+                "params": []
+            },
+            {
+                "video_type": "imgstore",
+                "match": "json",
+                "video_class": Video.from_filename,
                 "params": []
             }
         ]

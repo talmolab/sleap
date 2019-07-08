@@ -32,12 +32,15 @@ class ModelOutputType(Enum):
     """
     CONFIDENCE_MAP = 0
     PART_AFFINITY_FIELD = 1
+    CENTROIDS = 2
 
     def __str__(self):
         if self == ModelOutputType.CONFIDENCE_MAP:
             return "confmaps"
         elif self == ModelOutputType.PART_AFFINITY_FIELD:
             return "pafs"
+        elif self == ModelOutputType.CENTROIDS:
+            return "centroids"
         else:
             # This shouldn't ever happen I don't think.
             raise NotImplementedError(f"__str__ not implemented for ModelOutputType={self}")

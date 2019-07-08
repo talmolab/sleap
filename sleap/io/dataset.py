@@ -147,7 +147,7 @@ class Labels(MutableSequence):
             raise KeyError("Invalid label indexing arguments.")
 
     def find(self, video: Video, frame_idx: int = None) -> List[LabeledFrame]:
-        """ Search for labeled frames given video and/or frame index. 
+        """ Search for labeled frames given video and/or frame index.
 
         Args:
             video: a `Video` instance that is associated with the labeled frames
@@ -227,7 +227,7 @@ class Labels(MutableSequence):
                         yield instance
 
     def _update_containers(self, new_label: LabeledFrame):
-        """ Ensure that top-level containers are kept updated with new 
+        """ Ensure that top-level containers are kept updated with new
         instances of objects that come along with new labels. """
 
         if new_label.video not in self.videos:
@@ -370,6 +370,21 @@ class Labels(MutableSequence):
         # update videos/skeletons/nodes/etc using all the labeled frames now present
         self.__attrs_post_init__()
         return True
+
+    def merge_matching_frames(self, video=None):
+        """
+        Combine all instances from LabeledFrames that have same frame_idx.
+
+        Args:
+            video (optional): combine for this video; if None, do all videos
+        Returns:
+            none
+        """
+        if video is None:
+            for vid in {lf.video for lf in self.labeled_frames}:
+                self.merge_matching_frames(video=vid)
+        else:
+            self.labeled_frames = LabeledFrame.merge_frames(self.labeled_frames, video=video)
 
     def to_dict(self):
         """

@@ -30,8 +30,28 @@ main:
   label: View Edge Profile...
   type: button
 
+- name: centroid_job
+  label: Centroid Training Profile
+  type: list
+  default: a
+  options: a,b,c
+
+- name: _view_centoids
+  label: View Centroid Profile...
+  type: button
+
+- name: _use_trained_centroids
+  label: Use trained centroid model
+  type: bool
+  default: False
+
 - name: instance_crop
-  label: Crop images to instances
+  label: Crop images to instances (for training)
+  type: bool
+  default: False
+
+- name: _use_centroids
+  label: Centroid detection (for inference)
   type: bool
   default: False
 

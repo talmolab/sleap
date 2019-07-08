@@ -49,6 +49,7 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         self.training_profile_widgets = {
                 ModelOutputType.CONFIDENCE_MAP: self.form_widget.fields["conf_job"],
                 ModelOutputType.PART_AFFINITY_FIELD: self.form_widget.fields["paf_job"],
+                ModelOutputType.CENTROIDS: self.form_widget.fields["centroid_job"],
                 }
 
         for model_type, field in self.training_profile_widgets.items():
@@ -89,16 +90,26 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         for model_type, field in self.training_profile_widgets.items():
             idx = field.currentIndex()
             job_filename, job = self.job_options[model_type][idx]
+
+            if job.model.output_type == ModelOutputType.CENTROIDS:
+                if not form_data.get("_use_centroids",False):
+                    # just use params from file for centroids
+                    continue
+                job = TrainingJob.load_json(job_filename)
+
             training_jobs[model_type] = job
-            # update training job from params in form
-            trainer = job.trainer
-            for key, val in form_data.items():
-                # check if field name is [var]_[model_type] (eg sigma_confmaps)
-                if key.split("_")[-1] == str(model_type):
-                    key = "_".join(key.split("_")[:-1])
-                # check if form field matches attribute of Trainer object
-                if key in dir(trainer):
-                    setattr(trainer, key, val)
+
+            if job.model.output_type != ModelOutputType.CENTROIDS:
+                # update training job from params in form
+                trainer = job.trainer
+                for key, val in form_data.items():
+                    # check if field name is [var]_[model_type] (eg sigma_confmaps)
+                    if key.split("_")[-1] == str(model_type):
+                        key = "_".join(key.split("_")[:-1])
+                    # check if form field matches attribute of Trainer object
+                    if key in dir(trainer):
+                        setattr(trainer, key, val)
+            # Use already trained model if desired
             if form_data.get(f"_use_trained_{str(model_type)}", False):
                 job.use_trained_model = True
 
@@ -119,7 +130,12 @@ class ActiveLearningDialog(QtWidgets.QDialog):
             for lf in new_lfs:
                 for inst in lf.instances:
                     inst.track = None
+
+        # Update Labels with new data
+        # add new labeled frames
         self.labels.extend_from(new_lfs)
+        # combine instances from labeledframes with same video/frame_idx
+        self.labels.merge_matching_frames()
 
         QtWidgets.QMessageBox(text=f"Active learning has finished. Instances were predicted on {len(new_lfs)} frames.").exec_()
 
@@ -163,9 +179,9 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         paf_win.activateWindow()
         paf_win.move(220+conf_win.rect().width(), 200)
 
-        # FIXME: close dialog so use can see other windows
+        # FIXME: hide dialog so use can see other windows
         # can we show these windows without closing dialog?
-        self.reject()
+        self.hide()
 
     # open profile editor in new dialog window
     def view_profile(self, filename, model_type, windows=[]):
@@ -223,9 +239,15 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         if idx == -1: return
         if idx < len(jobs):
             name, job = jobs[idx]
+
             training_params = cattr.unstructure(job.trainer)
             training_params_specific = {f"{key}_{str(model_type)}":val for key,val in training_params.items()}
-            training_params = {**training_params, **training_params_specific}
+            # confmap and paf models should share some params shown in dialog (e.g. scale)
+            # but centroids does not, so just set any centroid_foo fields from its profile
+            if model_type in [ModelOutputType.CENTROIDS]:
+                training_params = training_params_specific
+            else:
+                training_params = {**training_params, **training_params_specific}
             self.form_widget.set_form_data(training_params)
 
             # is the model already trained?
@@ -342,7 +364,8 @@ def find_saved_jobs(job_dir, jobs=None):
 
     return jobs
 
-def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=None, frames_to_predict=None, skip_learning=False):
+def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=None,
+                                    frames_to_predict=None, skip_learning=False):
     # Imports here so we don't load TensorFlow before necessary
     from sleap.nn.monitor import LossViewer
     from sleap.nn.training import TrainingJob
@@ -352,14 +375,6 @@ def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=Non
     from PySide2 import QtWidgets
 
     labels = labels or Labels.load_json(labels_filename)
-
-    # If the video frames are large, determine factor to downsample for active learning
-#     scale = 1
-#     rescale_under = 1024
-#     h, w = labels.videos[0].height, labels.videos[0].width
-#     largest_dim = max(h, w)
-#     while largest_dim/scale > rescale_under:
-#         scale += 1
 
     # Prepare our TrainingJobs
 
@@ -460,9 +475,9 @@ def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=Non
 
                 # run predictions for desired frames in this video
                 # video_lfs = predictor.predict(input_video=video, frames=frames, output_path=inference_output_path)
-                # video_lfs = predictor.predict_process(input_video=video, frames=frames, output_path=inference_output_path)
 
-                pool, result = predictor.predict_async(input_video=video, frames=frames, output_path=inference_output_path)
+                pool, result = predictor.predict_async(input_video=video, frames=frames,
+                                        output_path=inference_output_path)
 
                 while not result.ready():
                     QtWidgets.QApplication.instance().processEvents()
