@@ -832,14 +832,16 @@ class MainWindow(QMainWindow):
     def runActiveLearning(self):
         from sleap.gui.active import ActiveLearningDialog
 
+        # predict for clip if selected
+        # otherwise default is to predict on unlabeled suggested frames
+        start, end = self.player.seekbar.getSelection()
+        frames_to_predict = {self.video:list(range(start,end))} if start < end else None
+
         if self._active_learning_win is None:
-            # predict for clip if select
-            # otherwise default is to predict on unlabeled suggested frames
-            start, end = self.player.seekbar.getSelection()
-            frames_to_predict = {self.video:list(range(start,end))} if start < end else None
-            self._active_learning_win = ActiveLearningDialog(self.filename, self.labels, frames_to_predict=frames_to_predict)
-        else:
-            self._active_learning_win.show()
+            self._active_learning_win = ActiveLearningDialog(self.filename, self.labels)
+
+        self._active_learning_win.frames_to_predict = frames_to_predict
+        self._active_learning_win.show()
 
         if self._active_learning_win.exec_():
             # we ran active learning so update display/ui
@@ -847,7 +849,6 @@ class MainWindow(QMainWindow):
             self.updateSeekbarMarks()
             self.update_data_views()
             self.changestack_push("new predictions")
-            self._active_learning_win = None
 
     def visualizeOutputs(self):
         filters = ["HDF5 output (*.h5 *.hdf5)"]
