@@ -9,7 +9,7 @@ from sleap.io.dataset import Labels, load_labels_json_old
 
 TEST_H5_DATASET = 'tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5'
 
-def _check_labels_match(expected_labels, other_labels):
+def _check_labels_match(expected_labels, other_labels, format = 'png'):
     """
     A utitlity function to check whether to sets of labels match.
     This doesn't directly compares some things (like video objects).
@@ -37,7 +37,8 @@ def _check_labels_match(expected_labels, other_labels):
 
         # Compare the first frames of the videos, do it on a small sub-region to
         # make the test reasonable in time.
-        assert np.allclose(expected_label.video.get_frame(frame_idx)[0:15, 0:15, :],
+        if format is 'png':
+            assert np.allclose(expected_label.video.get_frame(frame_idx)[0:15, 0:15, :],
                     label.video.get_frame(frame_idx)[0:15, 0:15, :])
 
         # Compare the instances
@@ -228,8 +229,8 @@ def test_load_labels_mat(mat_labels):
     assert len(mat_labels.nodes) == 6
     assert len(mat_labels) == 43
 
-
-def test_save_labels_with_frame_data(multi_skel_vid_labels, tmpdir):
+@pytest.mark.parametrize("format", ['png', 'mjpeg/avi'])
+def test_save_labels_with_frame_data(multi_skel_vid_labels, tmpdir, format):
     """
     Test saving and loading a labels dataset with frame data included
     as JSON.
@@ -239,13 +240,17 @@ def test_save_labels_with_frame_data(multi_skel_vid_labels, tmpdir):
     multi_skel_vid_labels.labeled_frames = multi_skel_vid_labels.labeled_frames[5:30]
 
     filename = os.path.join(tmpdir, 'test.json')
-    Labels.save_json(multi_skel_vid_labels, filename=filename, save_frame_data=True)
+    Labels.save_json(multi_skel_vid_labels, filename=filename, save_frame_data=True, frame_data_format=format)
 
     # Load the data back in
     loaded_labels = Labels.load_json(f"{filename}.zip")
 
     # Check that we have the same thing
-    _check_labels_match(multi_skel_vid_labels, loaded_labels)
+    _check_labels_match(multi_skel_vid_labels, loaded_labels, format=format)
+
+    # Make sure we can load twice
+    loaded_labels = Labels.load_json(f"{filename}.zip")
+
 
 def test_save_labels_hdf5(multi_skel_vid_labels, tmpdir):
     # FIXME: This is not really implemented yet and needs a real test
