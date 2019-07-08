@@ -91,11 +91,14 @@ class ActiveLearningDialog(QtWidgets.QDialog):
             idx = field.currentIndex()
             job_filename, job = self.job_options[model_type][idx]
 
-            if job.model.output_type == ModelOutputType.CENTROIDS and not form_data.get("_use_centroids",False):
-                # skip centroid training job
+            if job.model.output_type == ModelOutputType.CENTROIDS:
+                if form_data.get("_use_centroids",False):
+                    training_jobs[model_type] = TrainingJob.load_json(job_filename)
+                # just use params from file for continue
                 continue
 
             training_jobs[model_type] = job
+
             # update training job from params in form
             trainer = job.trainer
             for key, val in form_data.items():
@@ -110,7 +113,8 @@ class ActiveLearningDialog(QtWidgets.QDialog):
 
         # Close the dialog now that we have the data from it
         self.accept()
-
+        print(training_jobs)
+        return
         # Run active learning pipeline using the TrainingJobs
         new_lfs = run_active_learning_pipeline(self.labels_filename, self.labels, training_jobs, self.frames_to_predict)
         # remove labeledframes without any predicted instances

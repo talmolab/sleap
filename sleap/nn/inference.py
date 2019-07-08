@@ -500,11 +500,12 @@ class Predictor:
                                     centroid_job.save_dir,
                                     centroid_job.best_model_filename)
         keras_model = keras.models.load_model(centroid_model_path)
-        img_shape = imgs.shape[1:4]
-        new_input_layer = keras.layers.Input(img_shape)
-        keras_model.layers.pop(0)
-        keras_model = keras.Model(new_input_layer, keras_model(new_input_layer))
         keras_model = convert_to_gpu_model(keras_model)
+
+        centroid_transform = DataTransform()
+        centroid_imgs_scaled = centroid_transform.scale_to(
+                                    imgs=imgs,
+                                    target_size=keras_model.input_shape[1:3])
 
         # Predict centroids
         centroid_confmaps = keras_model.predict(imgs.astype("float32") / 255,
@@ -514,7 +515,9 @@ class Predictor:
                                             min_thresh=self.nms_min_thresh,
                                             sigma=self.nms_sigma)
 
-        centroids = [[np.expand_dims(frame_peaks[0][i], axis=0) for i in range(frame_peaks[0].shape[0])] for frame_peaks in peaks]
+        centroids = [[np.expand_dims(frame_peaks[0][i], axis=0) / centroid_transform.scale
+                        for i in range(frame_peaks[0].shape[0])]
+                     for frame_peaks in peaks]
 
         # Use predicted centroids (peaks) to crop images
 
