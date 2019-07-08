@@ -128,6 +128,8 @@ class Trainer:
     scale: float = 1.0
     sigma: float = 5.0
     instance_crop: bool = False
+    min_crop_size: int = 0
+    negative_samples: int = 0
 
     def train(self,
               model: Model,
@@ -186,7 +188,7 @@ class Trainer:
 
         # Crop images to instances (if desired)
         if self.instance_crop:
-            imgs, points = instance_crops(imgs, points)
+            imgs, points = instance_crops(imgs, points, min_crop_size=self.min_crop_size)
 
         # Split data into train/validation
         imgs_train, imgs_val, outputs_train, outputs_val = \
@@ -422,7 +424,7 @@ class Trainer:
         # Callbacks: Tensorboard
         if tensorboard_dir is not None:
             callbacks.append(
-                TensorBoard(log_dir=f"{tensorboard_dir}/{model.name}{time()}",
+                TensorBoard(log_dir=f"{tensorboard_dir}/{output_type}{time()}",
                             batch_size=32, update_freq=150, histogram_freq=0,
                             write_graph=False, write_grads=False, write_images=False,
                             embeddings_freq=0, embeddings_layer_names=None,
@@ -548,7 +550,7 @@ class TrainingControllerZMQ(keras.callbacks.Callback):
         super().__init__()
 
     def __del__(self):
-        print(f"Closing the training controller socket/context.")
+        logger.info(f"Closing the training controller socket/context.")
         self.socket.close()
         self.context.term()
 
@@ -578,14 +580,14 @@ class TrainingControllerZMQ(keras.callbacks.Callback):
 
 
 class ProgressReporterZMQ(keras.callbacks.Callback):
-    def __init__(self, address="tcp://*", port=9001, what=""):
+    def __init__(self, address="tcp://127.0.0.1", port=9001, what="not_set"):
         self.address = "%s:%d" % (address, port)
         self.what = what
         # Initialize ZMQ
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.PUB)
-        self.socket.bind(self.address)
-        logger.info(f"Progress reporter publishing on: {self.address}")
+        self.socket.connect(self.address)
+        logger.info(f"Progress reporter publishing on: {self.address} for: {self.what}")
 
         # TODO: catch/throw exception about failure to connect
 
@@ -593,7 +595,10 @@ class ProgressReporterZMQ(keras.callbacks.Callback):
         super().__init__()
 
     def __del__(self):
-        print(f"Closing the reporter controller/context.")
+        logger.info(f"Closing the reporter controller/context.")
+        self.socket.setsockopt(zmq.LINGER, 0)
+        # url = self.socket.LAST_ENDPOINT
+        # self.socket.unbind(url)
         self.socket.close()
         self.context.term()
 
@@ -604,7 +609,6 @@ class ProgressReporterZMQ(keras.callbacks.Callback):
             logs: dict, currently no data is passed to this argument for this method
                 but that may change in the future.
         """
-        # self.logger.info("train_begin")
         self.socket.send_string(jsonpickle.encode(dict(what=self.what,event="train_begin", logs=logs)))
 
 
@@ -680,7 +684,7 @@ def main():
 
     # Controller
     ctrl = ctx.socket(zmq.PUB)
-    ctrl.bind("tcp://*:9000")
+    ctrl.connect("tcp://127.0.0.1:9000")
 
     # Progress monitoring
     sub = ctx.socket(zmq.SUB)

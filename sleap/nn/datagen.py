@@ -2,9 +2,14 @@
 
 import numpy as np
 import math
+import random
+
+from operator import itemgetter
+
 from sleap.io.dataset import Labels
 
-def generate_images(labels:Labels, scale: float=1.0, resize_hack=True) -> np.ndarray:
+def generate_images(labels:Labels, scale: float=1.0,
+                    resize_hack: bool=True, frame_limit: bool=None) -> np.ndarray:
     """
     Generate a ndarray of the image data for any labeled frames
 
@@ -18,7 +23,7 @@ def generate_images(labels:Labels, scale: float=1.0, resize_hack=True) -> np.nda
     import cv2
 
     imgs = []
-    for labeled_frame in labels.user_labeled_frames:
+    for labeled_frame in labels.user_labeled_frames[:frame_limit]:
         img = labeled_frame.video[labeled_frame.frame_idx][0]
         # rescale by factor
         y, x, c = img.shape
@@ -47,7 +52,7 @@ def generate_images(labels:Labels, scale: float=1.0, resize_hack=True) -> np.nda
 
     return imgs
 
-def generate_points(labels, scale: float=1.0) -> list:
+def generate_points(labels:Labels, scale: float=1.0, frame_limit: bool=None) -> list:
     """Generates point data for instances in frames in labels.
 
     Output is in the format expected by
@@ -65,9 +70,10 @@ def generate_points(labels, scale: float=1.0) -> list:
     """
     return [[inst.points_array(invisible_as_nan=True)*scale
                 for inst in lf.user_instances]
-                for lf in labels.user_labeled_frames]
+                for lf in labels.user_labeled_frames[:frame_limit]]
 
-def generate_confmaps_from_points(frames_inst_points, skeleton, shape, sigma=5.0, scale=1.0, output_size=None) -> np.ndarray:
+def generate_confmaps_from_points(frames_inst_points, skeleton, shape,
+                        sigma:float=5.0, scale:float=1.0, output_size=None) -> np.ndarray:
     """
     Generates confmaps for set of frames.
     This is used to generate confmaps on the fly during training,
@@ -89,11 +95,12 @@ def generate_confmaps_from_points(frames_inst_points, skeleton, shape, sigma=5.0
     full_size = tuple(map(int, full_size))
     output_size = tuple(map(int, output_size))
 
-    ball = get_conf_ball(full_size, output_size, sigma*scale)
+    ball = _get_conf_ball(full_size, output_size, sigma*scale)
 
     num_frames = len(frames_inst_points)
     num_channels = len(skeleton.nodes)
-    confmaps = np.zeros((num_frames, output_size[0], output_size[1], num_channels), dtype="float32")
+    confmaps = np.zeros((num_frames, output_size[0], output_size[1], num_channels),
+                        dtype="float32")
 
     for frame_idx, points_arrays in enumerate(frames_inst_points):
         for inst_points in points_arrays:
@@ -101,11 +108,12 @@ def generate_confmaps_from_points(frames_inst_points, skeleton, shape, sigma=5.0
                 if not np.isnan(np.sum(inst_points[node_idx])):
                     x = inst_points[node_idx][0]
                     y = inst_points[node_idx][1]
-                    raster_ball(arr=confmaps[frame_idx], ball=ball, c=node_idx, x=x, y=y)
+                    _raster_ball(arr=confmaps[frame_idx], ball=ball, c=node_idx, x=x, y=y)
 
     return confmaps
 
-def generate_pafs_from_points(frames_inst_points, skeleton, shape, sigma=5.0, scale=1, output_size=None) -> np.ndarray:
+def generate_pafs_from_points(frames_inst_points, skeleton, shape,
+                        sigma:float=5.0, scale:float=1.0, output_size=None) -> np.ndarray:
     """
     Generates pafs for set of frames.
     This is used to generate pafs on the fly during training,
@@ -130,7 +138,8 @@ def generate_pafs_from_points(frames_inst_points, skeleton, shape, sigma=5.0, sc
     num_frames = len(frames_inst_points)
     num_channels = len(skeleton.edges) * 2
 
-    pafs = np.zeros((num_frames, output_size[0], output_size[1], num_channels), dtype="float32")
+    pafs = np.zeros((num_frames, output_size[0], output_size[1], num_channels),
+                    dtype="float32")
     for frame_idx, points_arrays in enumerate(frames_inst_points):
         for inst_points in points_arrays:
             for c, (src_node, dst_node) in enumerate(skeleton.edges):
@@ -140,11 +149,11 @@ def generate_pafs_from_points(frames_inst_points, skeleton, shape, sigma=5.0, sc
                 y0 = inst_points[src_idx][1]
                 x1 = inst_points[dst_idx][0]
                 y1 = inst_points[dst_idx][1]
-                raster_pafs(pafs[frame_idx], c * 2, x0, y0, x1, y1, sigma)
+                _raster_pafs(pafs[frame_idx], c * 2, x0, y0, x1, y1, sigma)
 
     return pafs
 
-def get_conf_ball(full_size, output_size, sigma):
+def _get_conf_ball(full_size, output_size, sigma):
     # Pre-allocate coordinate grid
     xv = np.linspace(0, full_size[1] - 1, output_size[1], dtype="float32")
     yv = np.linspace(0, full_size[0] - 1, output_size[0], dtype="float32")
@@ -157,7 +166,7 @@ def get_conf_ball(full_size, output_size, sigma):
 
     return ball_window
 
-def raster_ball(arr, ball, c, x, y):
+def _raster_ball(arr, ball, c, x, y):
     x, y = int(x), int(y)
     ball_h, ball_w = ball.shape
     out_h, out_w, _ = arr.shape
@@ -214,7 +223,7 @@ def generate_confidence_maps(labels:Labels, sigma=5.0, scale=1):
 
     return confmaps
 
-def raster_pafs(arr, c, x0, y0, x1, y1, sigma=5):
+def _raster_pafs(arr, c, x0, y0, x1, y1, sigma):
     # skip if any nan
     if np.isnan(np.sum((x0, y0, x1, y1))): return
 
@@ -249,32 +258,7 @@ def raster_pafs(arr, c, x0, y0, x1, y1, sigma=5):
         arr[y, x, c] = edge_x
         arr[y, x, c + 1] = edge_y
 
-def get_labels_edge_points_list(labels):
-    return [(frame_idx, [instance_edge_points(instance) for instance in labeled_frame.instances]) for
-            frame_idx, labeled_frame in enumerate(labels)]
-
-def instance_edge_points(instance):
-    skeleton = instance.skeleton
-    points = [(edge_idx, (edge_points_tuples(instance, src_node, dst_node)))
-              for edge_idx, (src_node, dst_node)
-              in enumerate(skeleton.edges)
-              if points_are_present(instance, src_node, dst_node)]
-    return points
-
-def edge_points_tuples(instance, src_node, dst_node):
-    x0, y0 = instance[src_node].x, instance[src_node].y
-    x1, y1 = instance[dst_node].x, instance[dst_node].y
-    # (instance[src_node].x, instance[src_node].y), (instance[dst_node].x, instance[dst_node].y)
-    # return np.array((x0, y0)), np.array((x1, y1))
-    return (x0, y0), (x1, y1)
-
-def points_are_present(instance, src_node, dst_node):
-    if src_node in instance and dst_node in instance and instance[src_node].visible and instance[dst_node].visible:
-        return True
-    else:
-        return False
-
-def generate_pafs(labels: Labels, sigma=5.0, scale=1):
+def generate_pafs(labels: Labels, sigma:float=5.0, scale:float=1.0) -> np.ndarray:
     """Wrapper for generate_pafs_from_points which takes labels instead of points."""
 
     # TODO: multi-skeleton support
@@ -329,18 +313,19 @@ def pad_rect_to(x0: int, y0: int, x1: int, y1: int, pad_to: tuple, within: tuple
         x0 = 0
         x1 = pad_to_x
     if x1 > within_x:
-        x1 = within_x-1
-        x0 = within_x-pad_to_x-1
+        x1 = within_x
+        x0 = within_x-pad_to_x
     if y0 < 0:
         y0 = 0
         y1 = pad_to_y
     if y1 > within_y:
-        y1 = within_y-1
-        y0 = within_y-pad_to_y-1
+        y1 = within_y
+        y0 = within_y-pad_to_y
 
     return x0, y0, x1, y1
 
-def instance_crops(imgs, points, img_shape=None):
+def instance_crops(imgs: np.ndarray, points: list,
+                    min_crop_size: int=0, negative_samples: int=0) -> np.ndarray:
     """
     Take imgs, points and return imgs, points cropped around instances.
 
@@ -350,34 +335,62 @@ def instance_crops(imgs, points, img_shape=None):
     Args:
         imgs: output from generate_images()
         points: output from generate_points()
-        img_shape: FIXME: can we get rid of this?
+        min_crop_size: int, the minimum crop square size
     Returns:
         imgs, points (matching format of input)
     """
-    img_shape = img_shape or (imgs.shape[1], imgs.shape[2])
+    frame_count = imgs.shape[0]
+    img_shape = imgs.shape[1], imgs.shape[2]
 
     # List of bounding box for every instance
     bbs = [point_array_bounding_box(point_array) for frame in points for point_array in frame]
     bbs = [(int(x0), int(y0), int(x1), int(y1)) for (x0, y0, x1, y1) in bbs]
 
+    # List to map bb to its img frame idx
+    img_idxs = [i for i, frame in enumerate(points) for _ in frame]
+
     # Find least power of 2 that's large enough to bound all the instances
     max_height = max((y1 - y0 for (x0, y0, x1, y1) in bbs))
     max_width = max((x1 - x0 for (x0, y0, x1, y1) in bbs))
     max_dim = max(max_height, max_width)
+    max_dim = max(max_dim, min_crop_size)
     # TODO: add extra margin?
-    box_side = min((2**i for i in range(4, 10) if 2**i > max_dim), default=512) # 16 to 512
+    box_side = min((2**i for i in range(4, 10) if 2**i >= max_dim), default=512) # 16 to 512
 
     # TODO: make sure we have valid box_size
 
     # Grow all bounding boxes to the same size
-    box_shape = (box_side, box_side)
+    box_shape = min(box_side, img_shape[0]), min(box_side, img_shape[1])
     bbs = list(map(lambda bb: pad_rect_to(*bb, box_shape, img_shape), bbs))
+
+    # Add bounding boxes for negative samples
+    neg_sample_list = []
+
+    # Collect negative samples (and some extras)
+    for _ in range(max(int(negative_samples*1.5), negative_samples+10)):
+        # find negative sample
+        # pick a random image
+        sample_img_idx = random.randrange(frame_count)
+        # pick a random box within image
+        x, y = random.randrange(img_shape[1] - box_side), random.randrange(img_shape[0] - box_side)
+        sample_bb = (x, y, x+box_side, y+box_side)
+
+        frame_bbs = [bbs[i] for i, frame in enumerate(img_idxs) if frame == sample_img_idx]
+        area_covered = sum(map(lambda bb: _overlap_area(sample_bb, bb), frame_bbs))/(box_side**2)
+
+        # append negative sample to lists
+        neg_sample_list.append((area_covered, sample_img_idx, sample_bb))
+
+    # Pick the best samples
+    neg_sample_list.sort(key=itemgetter(0))
+    _, neg_img_idxs, neg_bbs = zip(*neg_sample_list)
+
+    # Include the negative samples with the positive samples
+    img_idxs.extend(neg_img_idxs[:negative_samples])
+    bbs.extend(neg_bbs[:negative_samples])
 
     # Crop images
 
-    # build list to map bb to its img frame idx
-    img_idxs = [i for i, frame in enumerate(points) for _ in frame]
-    # crop images
     imgs = [imgs[img_idxs[i], bb[1]:bb[3], bb[0]:bb[2]] for i, bb in enumerate(bbs)] # imgs[frame_idx, y0:y1, x0:x1]
     imgs = np.stack(imgs, axis=0)
 
@@ -385,12 +398,24 @@ def instance_crops(imgs, points, img_shape=None):
 
     # Note that we want all points from the frame, not just the points for the instance
     # around which we're cropping (i.e., point_array in frame_points).
-    points = [frame_points for frame_points in points for point_array in frame_points]
+    points = list(map(lambda i: points[i], img_idxs))
 
     # translate points to location w/in cropped image
     points = [point_array - np.asarray([bbs[i][0], bbs[i][1]]) for i, point_array in enumerate(points)]
 
     return imgs, points
+
+def _overlap_area(box_a, box_b):
+    # determine the (x, y)-coordinates of the intersection rectangle
+    xA = max(box_a[0], box_b[0])
+    yA = max(box_a[1], box_b[1])
+    xB = min(box_a[2], box_b[2])
+    yB = min(box_a[3], box_b[3])
+
+    # compute the area of intersection rectangle
+    inter_area = max(0, xB - xA + 1) * max(0, yB - yA + 1)
+
+    return inter_area
 
 def demo_datagen_time():
     data_path = "tests/data/json_format_v2/centered_pair_predictions.json"
@@ -431,7 +456,7 @@ def demo_datagen():
 
     points = generate_points(labels, scale)
 
-    imgs, points = instance_crops(imgs, points)
+    imgs, points = instance_crops(imgs, points, min_crop_size=0, negative_samples=15)
 
     from PySide2 import QtWidgets
     from sleap.io.video import Video

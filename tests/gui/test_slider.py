@@ -4,7 +4,7 @@ def test_slider(qtbot, centered_pair_predictions):
     
     labels = centered_pair_predictions
     
-    slider = VideoSlider(min=0, max=500, val=15, marks=(10,15))
+    slider = VideoSlider(min=0, max=1200, val=15, marks=(10,15))
     
     assert slider.value() == 15
     slider.setValue(20)
@@ -21,9 +21,9 @@ def test_slider(qtbot, centered_pair_predictions):
     slider.setTracks(20)
     assert slider.maximumHeight() != initial_height
     
-    slider.setTracksFromLabels(labels)
+    slider.setTracksFromLabels(labels, labels.videos[0])
     assert len(slider.getMarks()) == 2274
 
     slider.moveSelectionAnchor(5, 5)
     slider.releaseSelectionAnchor(100, 15)
-    assert slider.getSelection() == (13, 258)
+    assert slider.getSelection() == (31, 619)

@@ -81,26 +81,29 @@ class VideoSlider(QGraphicsView):
         self.setValue(val)
         self.setMarks(marks)
 
-    def setTracksFromLabels(self, labels):
+    def setTracksFromLabels(self, labels, video=None):
         """Set slider marks using track information from `Labels` object.
 
         Note that this is the only method coupled to a SLEAP object.
 
         Args:
             labels: the `labels` with tracks and labeled_frames
+            video: the video for which to show marks (default to first)
         """
+        video = video or labels.videos[0]
+
         track_count = len(labels.tracks)
         slider_marks = []
 
-        for labeled_frame in labels.labeled_frames:
-            for instance in labeled_frame.instances:
-                frame_idx = labeled_frame.frame_idx
-                if instance.track is not None:
-                    # Add mark with track
-                    slider_marks.append((labels.tracks.index(instance.track), frame_idx))
-                else:
-                    # Add mark without track
-                    slider_marks.append(frame_idx)
+        inst_frame_list = [(inst, lf.frame_idx) for lf in labels.find(video) for inst in lf.instances]
+
+        for instance, frame_idx in inst_frame_list:
+            if instance.track is not None:
+                # Add mark with track
+                slider_marks.append((labels.tracks.index(instance.track), frame_idx))
+            else:
+                # Add mark without track
+                slider_marks.append(frame_idx)
 
         self.setTracks(track_count)
         self.setMarks(slider_marks)
@@ -295,6 +298,10 @@ class VideoSlider(QGraphicsView):
         Args:
             new_mark: value to mark
         """
+        # check if mark is within slider range
+        if self._mark_val(new_mark) > self._val_max: return
+        if self._mark_val(new_mark) < self._val_min: return
+
         self._marks.add(new_mark)
 
         width = 0
@@ -332,6 +339,9 @@ class VideoSlider(QGraphicsView):
                                   pen, brush)
         self._mark_items[new_mark] = line
         if update: self.updatePos()
+
+    def _mark_val(self, mark):
+        return mark[1] if type(mark) == tuple else mark
 
     def updatePos(self):
         """Update the visual position of handle and slider annotations."""

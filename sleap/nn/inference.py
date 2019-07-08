@@ -13,8 +13,11 @@ import cv2
 import keras
 import attr
 
+from multiprocessing import Process, Pool
+from multiprocessing.pool import AsyncResult, ThreadPool
+
 from time import time
-from typing import Dict, List, Union, Optional
+from typing import Dict, List, Union, Optional, Tuple
 
 from scipy.ndimage import maximum_filter, gaussian_filter
 from keras.utils import multi_gpu_model
@@ -369,7 +372,7 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, scale,
 def match_peaks_paf(peaks, peak_vals, pafs, skeleton,
                     video, frame_indices, scale=1,
                     min_score_to_node_ratio=0.4, min_score_midpts=0.05,
-                    min_score_integral=0.8, add_last_edge=False):
+                    min_score_integral=0.8, add_last_edge=False, **kwargs):
     """ Computes PAF-based peak matching via greedy assignment and other such dragons """
 
     # Process each frame
@@ -390,7 +393,7 @@ def match_peaks_paf_par(peaks, peak_vals, pafs, skeleton,
                         min_score_midpts=0.05,
                         min_score_integral=0.8,
                         add_last_edge=False,
-                        pool=None):
+                        pool=None, **kwargs):
     """ Parallel version of PAF peak matching """
 
     if pool is None:
@@ -431,8 +434,10 @@ class Predictor:
     inference, non-maximum suppression peak finding, paf part matching, to tracking.
 
     Args:
-        model: A trained keras model used for confidence map and paf inference. FIXME: Should this be a keras model or a sLEAP model class
-        skeleton: The skeleton(s) to use for prediction. FIXME. This should be stored with the model I think
+        sleap_models: Dict with a TrainingJob for each required ModelOutputType;
+            can be used to construct keras model.
+        model: A trained keras model used for confidence map and paf inference.
+        skeleton: The skeleton(s) to use for prediction.
         inference_batch_size: Frames per inference batch (GPU memory limited)
         read_chunk_size: How many frames to read into CPU memory at a time (CPU memory limited)
         nms_min_thresh: A threshold of non-max suppression peak finding in confidence maps. All
@@ -450,8 +455,9 @@ class Predictor:
 
     """
 
-    model: keras.Model = attr.ib()
-    skeleton: Skeleton = attr.ib()
+    model: keras.Model = None
+    skeleton: Skeleton = None
+    sleap_models: Dict[ModelOutputType, TrainingJob] = None
     inference_batch_size: int = 2
     read_chunk_size: int = 256
     save_frequency: int = 1 # chunks
@@ -464,37 +470,60 @@ class Predictor:
     with_tracking: bool = False
     flow_window: int = 15
 
-    def predict(self, input_video: Union[str, Video],
+    def predict(self, input_video: Union[dict, Video],
                 output_path: Optional[str] = None,
                 frames: Optional[List[int]] = None,
-                save_confmaps_pafs: bool = True) -> List[LabeledFrame]:
+                save_confmaps_pafs: bool = True,
+                is_async: bool = False) -> List[LabeledFrame]:
         """
         Run the entire inference pipeline on an input video or file object.
 
         Args:
-            input_video: Either a video object or video filename.
-            output_path: The output path to save the results.
+            input_video: Either a video object or an unstructured video object (dict).
+            output_path (optional): The output path to save the results.
             frames (optional): List of frames to predict. If None, run entire video.
+            is_async (optional): Whether running function from separate process.
+                Default is False. If True, we won't spawn children.
 
         Returns:
             list of LabeledFrame objects
         """
 
-        # Load model
-        _, h, w, c = self.model.input_shape
-        model_channels = c
-        logger.info("Loaded models:")
-        logger.info("  Input shape: %d x %d x %d" % (h, w, c))
-
         # Open the video if we need it.
+        logger.info(f"Predict is async: {is_async}")
+
         try:
             input_video.get_frame(0)
             vid = input_video
         except AttributeError:
-            vid = Video.from_filename(input_video)
+            if isinstance(input_video, dict):
+                vid = Video.cattr().structure(input_video, Video)
+            elif isinstance(input_video, str):
+                vid = Video.from_filename(input_video)
+            else:
+                raise AttributeError(f"Unable to load input video: {input_video}")
+        logger.info("loaded video")
+        # Load model if necessary
+        # We do this within predict so we don't have to pickle model if running in a thread
+        keras_model = self.model
+        if keras_model is None and len(self.sleap_models):
+            keras_model = self.load_from_training_jobs(sleap_models=self.sleap_models,
+                                         frame_shape=(vid.height, vid.width, vid.channels))
+
+        if keras_model is None:
+            logger.warning("Predictor has no model.")
+            raise ValueError("Predictor has no model.")
+
+        if self.skeleton is None:
+            logger.warning("Predictor has no skeleton.")
+            raise ValueError("Predictor has no skeleton.")
+
+        _, h, w, c = keras_model.input_shape
+        model_channels = c
+        logger.info("Loaded models:")
+        logger.info("  Input shape: %d x %d x %d" % (h, w, c))
 
         frames = frames or list(range(vid.num_frames))
-
         num_frames = len(frames)
         vid_h = vid.shape[1]
         vid_w = vid.shape[2]
@@ -511,7 +540,7 @@ class Predictor:
         tracker = FlowShiftTracker(window=self.flow_window, verbosity=1)
 
         # Initialize parallel pool
-        pool = multiprocessing.Pool(processes=usable_cpu_count())
+        pool = None if is_async else multiprocessing.Pool(processes=usable_cpu_count())
 
         # Fix the number of threads for OpenCV, not that we are using
         # anything in OpenCV that is actually multi-threaded but maybe
@@ -558,9 +587,9 @@ class Predictor:
 
             # Run inference
             t0 = time()
-            confmaps, pafs = self.model.predict(mov.astype("float32") / 255, batch_size=self.inference_batch_size)
-            logger.info("  Inferred confmaps and PAFs [%.1fs]" % (time() - t0))
+            confmaps, pafs = keras_model.predict(mov.astype("float32") / 255, batch_size=self.inference_batch_size)
 
+            logger.info( "  Inferred confmaps and PAFs [%.1fs]" % (time() - t0))
             logger.info(f"  confmaps: shape={confmaps.shape}, ptp={np.ptp(confmaps)}")
             logger.info(f"  pafs: shape={pafs.shape}, ptp={np.ptp(pafs)}")
 
@@ -586,9 +615,11 @@ class Predictor:
             peaks, peak_vals = find_all_peaks(confmaps, min_thresh=self.nms_min_thresh, sigma=self.nms_sigma)
             logger.info("  Found peaks [%.1fs]" % (time() - t0))
 
+            match_peaks_function = match_peaks_paf_par if not is_async else match_peaks_paf
+
             # Match peaks via PAFs
             t0 = time()
-            predicted_frames_chunk = match_peaks_paf_par(peaks, peak_vals, pafs, self.skeleton,
+            predicted_frames_chunk = match_peaks_function(peaks, peak_vals, pafs, self.skeleton,
                                             scale=scale, video=vid, frame_indices=frames_idx,
                                             min_score_to_node_ratio=self.min_score_to_node_ratio,
                                             min_score_midpts=self.min_score_midpts,
@@ -627,23 +658,50 @@ class Predictor:
 
             sys.stdout.flush()
 
-
         logger.info("Total: %.1f min" % (total_elapsed / 60))
 
-        return predicted_frames
+        labels = Labels(labeled_frames=predicted_frames)
 
-    @classmethod
-    def from_training_jobs(cls,
-            training_jobs: Dict[ModelOutputType, TrainingJob],
-            labels: Optional[Labels]=None,
-            resize_hack=True):
+        if is_async:
+            return labels.to_dict()
+        else:
+            return labels
+
+    def predict_async(self, *args, **kwargs) -> Tuple[Pool, AsyncResult]:
         """
-        Construct a Predictor from some TrainingJobs.
+        Run the entire inference pipeline on an input file, using a background process.
 
         Args:
-            training_jobs: Dict with a TrainingJob for each required ModelOutputType
-            labels (optional): the Labels object for which we'll be making predictions
-                if not specified, we'll load labels for which we trained the confmaps
+            See Predictor.predict().
+            Note that video must be string rather than Video (which doesn't pickle).
+
+        Returns:
+            A tuple containing the multiprocessing.Process that is running predict, start() has been called.
+            And the AysncResult object that will contain the result when the job finishes.
+        """
+        kwargs["is_async"] = True
+        if isinstance(kwargs["input_video"], Video):
+            # unstructure input_video since it won't pickle
+            kwargs["input_video"] = Video.cattr().unstructure(kwargs["input_video"])
+
+        pool = Pool(processes=1)
+        result = pool.apply_async(self.predict, args=args, kwds=kwargs)
+
+        # Tell the pool to accept no new tasks
+        pool.close()
+
+        return pool, result
+
+    def load_from_training_jobs(self,
+            sleap_models: Dict[ModelOutputType, TrainingJob],
+            frame_shape: tuple,
+            resize_hack=True):
+        """
+        Load keras model and skeleton from some TrainingJobs.
+
+        Args:
+            sleap_models: Dict with a TrainingJob for each required ModelOutputType
+            frame_shape: (height, width, channels) of input for inference
         Returns:
             Predictor initialized with Keras model.
         """
@@ -651,29 +709,27 @@ class Predictor:
         # Build the Keras Model
         # This code makes assumptions about the types of TrainingJobs we've been given
 
-        confmap_job = training_jobs[ModelOutputType.CONFIDENCE_MAP]
-        pafs_job = training_jobs[ModelOutputType.PART_AFFINITY_FIELD]
+        confmap_job = sleap_models[ModelOutputType.CONFIDENCE_MAP]
+        pafs_job = sleap_models[ModelOutputType.PART_AFFINITY_FIELD]
 
         confmap_model_path = os.path.join(confmap_job.save_dir, confmap_job.best_model_filename)
         paf_model_path = os.path.join(pafs_job.save_dir, pafs_job.best_model_filename)
 
         scale = confmap_job.trainer.scale
-        labels = labels if labels is not None else Labels.load_json(confmap_job.labels_filename)
-        skeleton = labels.skeletons[0]
 
         # FIXME: we're now assuming that all the videos are the same size
-        vid = labels.videos[0]
-        img_shape = (int(vid.height//(1/scale)), int(vid.width//(1/scale)), vid.channels)
+        vid_height, vid_width, vid_channels = frame_shape
+        img_shape = (int(vid_height//(1/scale)), int(vid_width//(1/scale)), vid_channels)
 
         # FIXME: hack to make inference run when image size isn't right for input layer
         if resize_hack:
             img_shape = (img_shape[0]//8*8, img_shape[1]//8*8, img_shape[2])
 
-        # Load the model
+        # Load the model and skeleton
         keras_model = get_inference_model(confmap_model_path, paf_model_path, img_shape)
+        self.skeleton = confmap_job.model.skeletons[0]
 
-        # Return the Predictor ready to use
-        return cls(model=keras_model, skeleton=skeleton)
+        return keras_model
 
 
 def load_predicted_labels_json_old(
@@ -782,7 +838,6 @@ def load_predicted_labels_json_old(
         labels.append(label)
 
     return Labels(labels)
-
 
 def main(args):
     data_path = args.data_path

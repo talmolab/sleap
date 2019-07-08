@@ -163,6 +163,8 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
             val = None
         if widget.property("field_data_type") == "sci":
             val = float(val)
+        elif widget.property("field_data_type") == "int":
+            val = int(val)
         elif widget.property("field_data_type").startswith("file_"):
             val = None if val == "None" else val
         return val
@@ -238,7 +240,7 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
 
             # Store name and type on widget
             field.setObjectName(item["name"])
-            field.setProperty("field_data_type", item["type"])
+            field.setProperty("field_data_type", item.get("dtype", item["type"]))
             # Store widget by name
             self.fields[item["name"]] = field
             # Add field (and label if appropriate) to form layout
@@ -326,6 +328,8 @@ class StackBuilderWidget(QtWidgets.QWidget):
 class FieldComboWidget(QtWidgets.QComboBox):
     def __init__(self, *args, **kwargs):
         super(FieldComboWidget, self).__init__(*args, **kwargs)
+        self.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToContents)
+        self.setMinimumContentsLength(3)
 
     def set_options(self, options_list, select_item=None):
         self.clear()

@@ -62,6 +62,17 @@ datagen:
   type: bool
   default: False
 
+- name: min_crop_size
+  label: Minimum crop size
+  type: list
+  dtype: int
+  options: 0,64,128,256,512
+  default: 0
+
+- name: negative_samples
+  label: Negative samples (if cropping)
+  type: int
+  default: 0
 
 - name: augment_rotation
   label: Augmentation rotation
