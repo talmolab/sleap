@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 from typing import List, Tuple, Dict, Union
 
 import numpy as np
+import h5py as h5
 import cv2
 import attr
 
@@ -82,6 +83,7 @@ class ShiftedInstance:
 class Tracks:
     instances: Dict[int, list] = attr.ib(default=attr.Factory(dict))
     tracks: List[Track] = attr.ib(factory=list)
+    last_known_instance: Dict[Track, Instance] = attr.ib(factory=dict)
 
     def get_frame_instances(self, frame_idx: int, max_shift=None):
 
@@ -95,16 +97,40 @@ class Tracks:
 
         return instances
 
-    def add_instance(self, instance: Union[Instance, 'ShiftedInstance']):
-        frame_instances = self.instances.get(instance.frame_idx, [])
+    def add_instance(self, instance: Union[Instance, 'ShiftedInstance'], frame_index: int):
+        frame_instances = self.instances.get(frame_index, [])
         frame_instances.append(instance)
-        self.instances[instance.frame_idx] = frame_instances
+        self.instances[frame_index] = frame_instances
         if instance.track not in self.tracks:
             self.tracks.append(instance.track)
 
-    def add_instances(self, instances: list):
+    def add_instances(self, instances: list, frame_index: int):
         for instance in instances:
-            self.add_instance(instance)
+            self.add_instance(instance, frame_index)
+
+    def get_last_known(self, curr_frame_index: int = None, max_shift: int = None):
+        if curr_frame_index is None:
+            return list(self.last_known_instance.values())
+        else:
+            if max_shift is None:
+                return [i for i in self.last_known_instance.values()
+                        if i.track == curr_frame_index]
+            else:
+                return [i for i in self.last_known_instance.values()
+                        if (curr_frame_index-i.frame_idx) < max_shift]
+
+    def update_track_last_known(self, frame: LabeledFrame, max_shift: int = None):
+        for i in frame.instances:
+            assert i.track is not None
+            self.last_known_instance[i.track] = i
+
+        # Remove tracks from the dict that have exceeded the max_shift horizon
+        if max_shift is not None:
+            del_tracks = [track
+                          for track, instance in self.last_known_instance.items()
+                          if (frame.frame_idx-instance.frame_idx) > max_shift]
+            for key in del_tracks:
+                del self.last_known_instance[key]
 
 
 @attr.s(auto_attribs=True)
@@ -115,12 +141,12 @@ class FlowShiftTracker:
     of animals/objects across multiple frames in a video.
 
     Args:
-        window: TODO
-        of_win_size: TODO
-        of_max_level: TODO
-        of_max_count: TODO
-        of_epsilon: TODO
-        img_scale: TODO
+        window: The number of frames to look back into for instance id tracking.
+        of_win_size: The dimensions in pixels of the window to apply optical flow.
+        of_max_level: The number of Gaussian pyramid levels to run optical flow on.
+        of_max_count: The maximum amount of iterations for optical flow.
+        of_epsilon: The error tolerance for optical flow convergence.
+        img_scale: The image scale factor to apply to images.
         verbosity: The verbosity of logging for this module, the higher the level,
         the more informative.
         tracks: A Tracks object that stores tracks (animal instances through time/frames)
@@ -175,6 +201,12 @@ class FlowShiftTracker:
         # present.
         for img_idx, frame in enumerate(labeled_frames):
 
+            # Update the data structures in Tracks that keep the last
+            # known instance for each track. Do this for the last frame and
+            # skip on the first frame.
+            if img_idx > 0:
+                self.tracks.update_track_last_known(labeled_frames[img_idx-1], max_shift=None)
+
             # Copy the actual frame index for this labeled frame, we will
             # use this a lot.
             t = frame.frame_idx
@@ -184,12 +216,14 @@ class FlowShiftTracker:
             # If we do not have any active tracks, we will spawn one for each
             # matched instance and continue to the next frame.
             if len(self.tracks.tracks) == 0:
-                for i, instance in enumerate(frame.instances):
-                    instance.track = Track(spawned_on=t, name=f"{i}")
-                    self.tracks.add_instance(instance)
+                if len(frame.instances) > 0:
+                    for i, instance in enumerate(frame.instances):
+                        instance.track = Track(spawned_on=t, name=f"{i}")
+                        self.tracks.add_instance(instance, frame_index=t)
 
-                if self.verbosity > 0:
-                    logger.info(f"[t = {t}] Created {len(self.tracks.tracks)} initial tracks")
+                    if self.verbosity > 0 :
+                        logger.info(f"[t = {t}] Created {len(self.tracks.tracks)} initial tracks")
+
                 self.last_img = self._fix_img(imgs[img_idx].copy())
 
                 continue
@@ -218,13 +252,36 @@ class FlowShiftTracker:
             sections = np.cumsum([len(x) for x in pts_ref])[:-1]
             pts_fs = np.split(pts_fs, sections, axis=0)
             status = np.split(status, sections, axis=0)
+            status_sum = [np.sum(x) for x in status]
             err = np.split(err, sections, axis=0)
 
             # Store shifted instances with metadata
             shifted_instances = [ShiftedInstance(parent=ref, points=pts, frame=frame)
                                  for ref, pts, found in zip(instances_ref, pts_fs, status)
                                  if np.sum(found) > 0]
-            self.tracks.add_instances(shifted_instances)
+
+            # Get the track present in the shifted instances
+            shifted_tracks = list({instance.track for instance in shifted_instances})
+
+            last_known = self.tracks.get_last_known(curr_frame_index=t, max_shift=self.window)
+            alive_tracks = {i.track for i in last_known}
+
+            # If we didn't get any shifted instances from the reference frame, use the last
+            # know positions for each track.
+            if len(shifted_instances) == 0:
+                logger.info(f"[t = {t}] Optical flow failed, using last known positions for each track.")
+                shifted_instances = self.tracks.get_last_known()
+                shifted_tracks = list({instance.track for instance in shifted_instances})
+            else:
+                # We might have got some shifted instances, but make sure we aren't missing any
+                # tracks
+                for track in alive_tracks:
+                    if track in shifted_tracks:
+                        continue
+                    shifted_tracks.append(track)
+                    shifted_instances.append(self.tracks.last_known_instance[track])
+
+            self.tracks.add_instances(shifted_instances, frame_index=t)
 
             if len(frame.instances) == 0:
                 if self.verbosity > 0:
@@ -233,7 +290,6 @@ class FlowShiftTracker:
 
             # Reduce distances by track
             unassigned_pts = np.stack(instances_pts, axis=0) # instances x nodes x 2
-            shifted_tracks = list({instance.track for instance in shifted_instances})
             if self.verbosity > 0:
                 logger.info(f"[t = {t}] Flow shift matching {len(unassigned_pts)} "
                              f"instances to {len(shifted_tracks)} ref tracks")
@@ -262,7 +318,7 @@ class FlowShiftTracker:
             # Save assigned instances
             for i, j in zip(assigned_ind, track_ind):
                 frame.instances[i].track = shifted_tracks[j]
-                self.tracks.add_instance(frame.instances[i])
+                self.tracks.add_instance(frame.instances[i], frame_index=t)
 
                 if self.verbosity > 0:
                     logger.info(f"[t = {t}] Assigned instance {i} to existing track "
@@ -273,11 +329,14 @@ class FlowShiftTracker:
                 if i in assigned_ind: continue
                 instance = frame.instances[i]
                 instance.track = Track(spawned_on=t, name=f"{len(self.tracks.tracks)}")
-                self.tracks.add_instance(instance)
+                self.tracks.add_instance(instance, frame_index=t)
                 if self.verbosity > 0:
                     logger.info(f"[t = {t}] Assigned remaining instance {i} to newly "
                                  f"spawned track {instance.track.name} "
                                  f"(best cost = {cost_matrix[i,:].min()})")
+
+        # Update the last know data structures for the last frame.
+        self.tracks.update_track_last_known(labeled_frames[img_idx - 1], max_shift=None)
 
     def occupancy(self):
         """ Compute occupancy matrix """

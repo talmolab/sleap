@@ -40,6 +40,8 @@ class VideoSlider(QGraphicsView):
         self.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
         self.color_maps = [
             [0,   114,   189],

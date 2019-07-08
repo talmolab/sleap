@@ -207,6 +207,17 @@ def test_label_mutability():
     assert len(labels.find(dummy_video2)) == 0
     assert all([label not in labels for label in dummy_frames2])
 
+    labels.remove_video(dummy_video)
+    assert len(labels.find(dummy_video)) == 0
+
+    dummy_frames3 = [LabeledFrame(dummy_video, frame_idx=0, instances=[dummy_instance,]) for _ in range(10)]
+    labels.labeled_frames.extend(dummy_frames3)
+    assert len(labels) == 10
+    assert len(labels.labeled_frames[0].instances) == 1
+    labels.merge_matching_frames()
+    assert len(labels) == 1
+    assert len(labels.labeled_frames[0].instances) == 10
+
 
 def test_instance_access():
     labels = Labels()
@@ -227,7 +238,6 @@ def test_instance_access():
 def test_load_labels_mat(mat_labels):
     assert len(mat_labels.nodes) == 6
     assert len(mat_labels) == 43
-
 
 def test_save_labels_with_frame_data(multi_skel_vid_labels, tmpdir):
     """
