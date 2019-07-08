@@ -120,7 +120,12 @@ class ActiveLearningDialog(QtWidgets.QDialog):
             for lf in new_lfs:
                 for inst in lf.instances:
                     inst.track = None
+
+        # Update Labels with new data
+        # add new labeled frames
         self.labels.extend_from(new_lfs)
+        # combine instances from labeledframes with same video/frame_idx
+        self.labels.merge_matching_frames()
 
         QtWidgets.QMessageBox(text=f"Active learning has finished. Instances were predicted on {len(new_lfs)} frames.").exec_()
 
