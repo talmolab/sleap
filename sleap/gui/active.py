@@ -169,9 +169,9 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         paf_win.activateWindow()
         paf_win.move(220+conf_win.rect().width(), 200)
 
-        # FIXME: close dialog so use can see other windows
+        # FIXME: hide dialog so use can see other windows
         # can we show these windows without closing dialog?
-        self.reject()
+        self.hide()
 
     # open profile editor in new dialog window
     def view_profile(self, filename, model_type, windows=[]):
