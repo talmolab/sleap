@@ -609,6 +609,7 @@ class Predictor:
             if ModelOutputType.CENTROIDS in self.sleap_models.keys():
                 # Predict centroids and crop around these
                 centroids = self.predict_centroids(mov)
+                crop_size = h # match input of keras model
                 mov = transform.centroid_crop(mov, centroids, crop_size)
 
             else:
@@ -756,6 +757,11 @@ class Predictor:
         # FIXME: hack to make inference run when image size isn't right for input layer
         if resize_hack:
             img_shape = (img_shape[0]//8*8, img_shape[1]//8*8, img_shape[2])
+
+        # if there's a centroid model, then we don't want to resize input of other models
+        # since we'll instead crop the images to match the model
+        if ModelOutputType.CENTROIDS in sleap_models.keys():
+            img_shape = None
 
         # Load the model and skeleton
         keras_model = get_inference_model(confmap_model_path, paf_model_path, img_shape)
