@@ -137,6 +137,7 @@ class MainWindow(QMainWindow):
         self.player.changedPlot.connect(self.newFrame)
         self.player.changedData.connect(lambda inst: self.changestack_push("viewer change"))
         self.player.view.instanceDoubleClicked.connect(self.newInstance)
+        self.player.seekbar.selectionChanged.connect(lambda: self.updateStatusMessage())
         self.setCentralWidget(self.player)
 
         ####### Status bar #######
@@ -1382,6 +1383,9 @@ class MainWindow(QMainWindow):
     def updateStatusMessage(self, message = None):
         if message is None:
             message = f"Frame: {self.player.frame_idx+1}/{len(self.video)}"
+            start, end = self.player.seekbar.getSelection()
+            if start < end:
+                message += f" (selection: {start}-{end})"
 
         self.statusBar().showMessage(message)
         # self.statusBar().showMessage(f"Frame: {self.player.frame_idx+1}/{len(self.video)}  |  Labeled frames (video/total): {self.labels.instances[self.labels.instances.videoId == 1].frameIdx.nunique()}/{len(self.labels)}  |  Instances (frame/total): {len(frame_instances)}/{self.labels.points.instanceId.nunique()}")
