@@ -108,8 +108,16 @@ class Tracks:
         for instance in instances:
             self.add_instance(instance, frame_index)
 
-    def get_last_known(self):
-        return list(self.last_known_instance.values())
+    def get_last_known(self, curr_frame_index: int = None, max_shift: int = None):
+        if curr_frame_index is None:
+            return list(self.last_known_instance.values())
+        else:
+            if max_shift is None:
+                return [i for i in self.last_known_instance.values()
+                        if i.track == curr_frame_index]
+            else:
+                return [i for i in self.last_known_instance.values()
+                        if (curr_frame_index-i.frame_idx) < max_shift]
 
     def update_track_last_known(self, frame: LabeledFrame, max_shift: int = None):
         for i in frame.instances:
@@ -123,7 +131,6 @@ class Tracks:
                           if (frame.frame_idx-instance.frame_idx) > max_shift]
             for key in del_tracks:
                 del self.last_known_instance[key]
-
 
 
 @attr.s(auto_attribs=True)
@@ -256,9 +263,22 @@ class FlowShiftTracker:
             # Get the track present in the shifted instances
             shifted_tracks = list({instance.track for instance in shifted_instances})
 
+            last_known = self.tracks.get_last_known(curr_frame_index=t, max_shift=self.window)
+            alive_tracks = {i.track for i in last_known}
+
+            # If we didn't get any shifted instances from the reference frame, use the last
+            # know positions for each track.
             if len(shifted_instances) == 0:
                 logger.info(f"[t = {t}] Optical flow failed, using last known positions for each track.")
                 shifted_instances = self.tracks.get_last_known()
+            else:
+                # We might have got some shifted instances, but make sure we aren't missing any
+                # tracks
+                for track in alive_tracks:
+                    if track in shifted_tracks:
+                        continue
+                    shifted_tracks.append(track)
+                    shifted_instances.append(self.tracks.last_known_instance[track])
 
             self.tracks.add_instances(shifted_instances, frame_index=t)
 
