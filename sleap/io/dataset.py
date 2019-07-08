@@ -449,7 +449,8 @@ class Labels(MutableSequence):
     @staticmethod
     def save_json(labels: 'Labels', filename: str,
                   compress: bool = False,
-                  save_frame_data: bool = False):
+                  save_frame_data: bool = False,
+                  frame_data_format: str = 'png'):
         """
         Save a Labels instance to a JSON format.
 
@@ -463,6 +464,23 @@ class Labels(MutableSequence):
             video in the dataset, all frames that have labels will be stored as an imgstore
             dataset. If save_frame_data is True then compress will be forced to True since
             the archive must contain both the JSON data and image data stored in ImgStores.
+            frame_data_format: If save_frame_data is True, then this argument is used to set
+            the data format to use when writing frame data to ImgStore objects. Supported
+            formats should be:
+
+             * 'pgm',
+             * 'bmp',
+             * 'ppm',
+             * 'tif',
+             * 'png',
+             * 'jpg',
+             * 'npy',
+             * 'mjpeg/avi',
+             * 'h264/mkv',
+             * 'avc1/mp4'
+
+             Note: 'h264/mkv' and 'avc1/mp4' require separate installation of these codecs
+             on your system. They are excluded from sLEAP because of their GPL license.
 
         Returns:
             None
@@ -479,7 +497,7 @@ class Labels(MutableSequence):
                 # Create a set of new Video objects with imgstore backends. One for each
                 # of the videos. We will only include the labeled frames though. We will
                 # then replace each video with this new video
-                new_videos = labels.save_frame_data_imgstore(output_dir=tmp_dir)
+                new_videos = labels.save_frame_data_imgstore(output_dir=tmp_dir, format=frame_data_format)
 
                 # Convert to a dict, not JSON yet, because we need to patch up the videos
                 d = labels.to_dict()
@@ -595,8 +613,12 @@ class Labels(MutableSequence):
             tmp_dir = os.path.join(os.path.dirname(filename),
                                    f"tmp_{os.path.basename(filename)}")
             if os.path.exists(tmp_dir):
-                shutil.rmtree(tmp_dir)
-            os.mkdir(tmp_dir)
+                shutil.rmtree(tmp_dir, ignore_errors=True)
+            try:
+                os.mkdir(tmp_dir)
+            except FileExistsError:
+                pass
+
             #tmp_dir = tempfile.mkdtemp(dir=os.path.dirname(filename))
 
             try:
@@ -745,7 +767,11 @@ class Labels(MutableSequence):
             frame_nums = [f.frame_idx for f in self.labeled_frames if v == f.video]
 
             frames_filename = os.path.join(output_dir, f'frame_data_vid{v_idx}')
-            vid = v.to_imgstore(path=frames_filename, frame_numbers=frame_nums, format='png')
+            vid = v.to_imgstore(path=frames_filename, frame_numbers=frame_nums, format=format)
+
+            # Close the video for now
+            vid.close()
+
             imgstore_vids.append(vid)
 
         return imgstore_vids
