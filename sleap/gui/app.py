@@ -819,7 +819,6 @@ class MainWindow(QMainWindow):
             all_marks = labeled_marks + suggestion_marks
 
             self.player.seekbar.setMarks(all_marks)
-        print(len(self.player.seekbar.getMarks()))
 
     def generateSuggestions(self, params):
         new_suggestions = dict()
