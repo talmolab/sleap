@@ -508,7 +508,7 @@ class Predictor:
                                     target_size=keras_model.input_shape[1:3])
 
         # Predict centroids
-        centroid_confmaps = keras_model.predict(imgs.astype("float32") / 255,
+        centroid_confmaps = keras_model.predict(centroid_imgs_scaled.astype("float32") / 255,
                                                 batch_size=self.inference_batch_size)
 
         peaks, peak_vals = find_all_peaks(centroid_confmaps,

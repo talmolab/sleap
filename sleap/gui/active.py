@@ -92,29 +92,30 @@ class ActiveLearningDialog(QtWidgets.QDialog):
             job_filename, job = self.job_options[model_type][idx]
 
             if job.model.output_type == ModelOutputType.CENTROIDS:
-                if form_data.get("_use_centroids",False):
-                    training_jobs[model_type] = TrainingJob.load_json(job_filename)
-                # just use params from file for continue
-                continue
+                if not form_data.get("_use_centroids",False):
+                    # just use params from file for centroids
+                    continue
+                job = TrainingJob.load_json(job_filename)
 
             training_jobs[model_type] = job
 
-            # update training job from params in form
-            trainer = job.trainer
-            for key, val in form_data.items():
-                # check if field name is [var]_[model_type] (eg sigma_confmaps)
-                if key.split("_")[-1] == str(model_type):
-                    key = "_".join(key.split("_")[:-1])
-                # check if form field matches attribute of Trainer object
-                if key in dir(trainer):
-                    setattr(trainer, key, val)
+            if job.model.output_type != ModelOutputType.CENTROIDS:
+                # update training job from params in form
+                trainer = job.trainer
+                for key, val in form_data.items():
+                    # check if field name is [var]_[model_type] (eg sigma_confmaps)
+                    if key.split("_")[-1] == str(model_type):
+                        key = "_".join(key.split("_")[:-1])
+                    # check if form field matches attribute of Trainer object
+                    if key in dir(trainer):
+                        setattr(trainer, key, val)
+            # Use already trained model if desired
             if form_data.get(f"_use_trained_{str(model_type)}", False):
                 job.use_trained_model = True
 
         # Close the dialog now that we have the data from it
         self.accept()
-        print(training_jobs)
-        return
+
         # Run active learning pipeline using the TrainingJobs
         new_lfs = run_active_learning_pipeline(self.labels_filename, self.labels, training_jobs, self.frames_to_predict)
         # remove labeledframes without any predicted instances
