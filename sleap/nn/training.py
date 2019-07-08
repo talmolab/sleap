@@ -186,13 +186,12 @@ class Trainer:
         imgs = generate_images(labels, scale=self.scale)
         points = generate_points(labels, scale=self.scale)
 
-        # Crop images to instances (if desired)
-        if self.instance_crop:
-            imgs, points = instance_crops(imgs, points, min_crop_size=self.min_crop_size)
-
         # Convert instance points to centroids (if training centroids)
         if model.output_type == ModelOutputType.CENTROIDS:
             points = generate_centroid_points(points)
+        # Crop images to instances (if desired)
+        elif self.instance_crop:
+            imgs, points = instance_crops(imgs, points, min_crop_size=self.min_crop_size)
 
         # Split data into train/validation
         imgs_train, imgs_val, outputs_train, outputs_val = \
