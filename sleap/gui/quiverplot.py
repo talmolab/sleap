@@ -1,12 +1,6 @@
-from PySide2.QtWidgets import QApplication, QVBoxLayout, QWidget
-from PySide2.QtWidgets import QGraphicsView, QGraphicsScene
-from PySide2.QtWidgets import QGraphicsItem, QGraphicsObject
-from PySide2.QtWidgets import QGraphicsPixmapItem, QGraphicsLineItem
-from PySide2.QtGui import QImage, QPixmap
-from PySide2.QtGui import QPen, QBrush, QColor, QPaintDevice
-from PySide2.QtCore import QRectF, QPointF
-
-from PySide2.QtWidgets import QGridLayout, QGroupBox, QButtonGroup, QCheckBox
+from PySide2 import QtWidgets
+from PySide2.QtGui import QImage, QPixmap, QPen, QBrush, QColor, QPaintDevice
+from PySide2.QtCore import Qt, QRectF, QPointF
 
 import numpy as np
 import itertools
@@ -15,8 +9,8 @@ import math
 from sleap.io.video import Video, HDF5Video
 from sleap.gui.multicheck import MultiCheckWidget
 
-class MultiQuiverPlot(QGraphicsObject):
-    """QGraphicsObject to display multiple quiver plots in a QGraphicsView.
+class MultiQuiverPlot(QtWidgets.QGraphicsObject):
+    """QtWidgets.QGraphicsObject to display multiple quiver plots in a QtWidgets.QGraphicsView.
 
     Args:
         frame (numpy.array): Data for one frame of quiver plot data.
@@ -92,7 +86,7 @@ class MultiQuiverPlot(QGraphicsObject):
         self.decimation = decimation
 
         # if data range is outside [-1, 1], assume it's [-255, 255] and scale
-        if np.ptp(self.frame) > 2:
+        if np.ptp(self.frame) > 4:
             self.frame = self.frame.astype(np.float64)/255
 
         if show is None:
@@ -121,8 +115,8 @@ class MultiQuiverPlot(QGraphicsObject):
         """
         pass
 
-class QuiverPlot(QGraphicsObject):
-    """QGraphicsObject for drawing single quiver plot.
+class QuiverPlot(QtWidgets.QGraphicsObject):
+    """QtWidgets.QGraphicsObject for drawing single quiver plot.
 
     Args:
         field_x (numpy.array): (h, w) array of x component of vectors.
@@ -247,15 +241,25 @@ def show_pafs_from_h5(filename, input_format="channels_last", standalone=False):
 def demo_pafs(pafs, video, decimation=4, standalone=False):
     from sleap.gui.video import QtVideoPlayer
 
-    if standalone: app = QApplication([])
+    if standalone: app = QtWidgets.QApplication([])
 
     win = QtVideoPlayer(video=video)
     win.setWindowTitle("pafs")
+
+    decimation_size_bar = QtWidgets.QSlider(Qt.Horizontal)
+    decimation_size_bar.valueChanged.connect(lambda e: win.plot())
+    decimation_size_bar.setValue(decimation)
+    decimation_size_bar.setMinimum(1)
+    decimation_size_bar.setMaximum(10)
+    decimation_size_bar.setEnabled(True)
+    win.layout.addWidget(decimation_size_bar)
+
     win.show()
 
     def plot_fields(parent, i):
         if parent.frame_idx < pafs.shape[0]:
             frame_pafs = pafs[parent.frame_idx, ...]
+            decimation = decimation_size_bar.value()
             aff_fields_item = MultiQuiverPlot(frame_pafs, show=None, decimation=decimation)
             win.view.scene.addItem(aff_fields_item)
 
@@ -285,7 +289,7 @@ def foo():
     vid = HDF5Video(data_path, "/box", input_format=input_format)
     overlay_data = HDF5Video(data_path, "/pafs", input_format=input_format, convert_range=False)
     print(f"{overlay_data.frames}, {overlay_data.height}, {overlay_data.width}, {overlay_data.channels}")
-    app = QApplication([])
+    app = QtWidgets.QApplication([])
     window = QtVideoPlayer(video=vid)
 
     field_count = overlay_data.get_frame(1).shape[-1]//2 - 1
