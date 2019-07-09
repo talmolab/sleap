@@ -68,7 +68,7 @@ class LossViewer(QtWidgets.QMainWindow):
         axisY.setLabelsVisible(True)
         axisY.setMinorTickCount(1)
         axisY.setTitleText("Loss")
-        axisY.setBase(2)
+        axisY.setBase(10)
         self.chart.addAxis(axisY, QtCore.Qt.AlignLeft)
 
         for series in self.chart.series():
