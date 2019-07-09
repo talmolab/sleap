@@ -70,8 +70,9 @@ class VideoFrameSuggestions:
         return result
 
     @classmethod
-    def brisk(cls, video, sample_step, **kwargs):
+    def brisk(cls, video, initial_samples, **kwargs):
 
+        sample_step = video.frames//initial_samples
         feature_stack, frame_idx_map = cls.brisk_feature_stack(video, sample_step)
 
         result = cls.feature_stack_to_suggestions(
