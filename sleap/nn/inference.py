@@ -704,7 +704,8 @@ class Predictor:
             total_elapsed = time() - t0_start
             fps = len(predicted_frames) / total_elapsed
             frames_left = num_frames - len(predicted_frames)
-            logger.info("  Finished chunk [%.1fs / %.1f FPS / ETA: %.1f min]" % (elapsed, fps, (frames_left / fps) / 60))
+            eta = (frames_left / fps) if fps > 0 else 0
+            logger.info("  Finished chunk [%.1fs / %.1f FPS / ETA: %.1f min]" % (elapsed, fps, eta / 60))
 
             sys.stdout.flush()
 
