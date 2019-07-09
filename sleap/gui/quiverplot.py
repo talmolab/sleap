@@ -216,7 +216,10 @@ class QuiverPlot(QGraphicsObject):
             strides=(height * _strides[0], width * _strides[1], *_strides),
             writeable=False
         )
-        if False: tiles = np.swapaxes(tiles,0,1) # why do we need to swap axes sometimes?
+        # Since strides accesses the ndarray by memory, we need to swap axes if
+        # the array is stored column-major (Fortran), which it is from h5py.
+        if image.flags["F_CONTIGUOUS"]:
+            tiles = np.swapaxes(tiles,0,1)
         return np.mean(tiles, axis=(2,3))
 
     def boundingRect(self) -> QRectF:
