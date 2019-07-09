@@ -955,7 +955,7 @@ class MainWindow(QMainWindow):
         # go through each node in skeleton
         for node in self.skeleton.nodes:
             # if we're copying from a skeleton that has this node
-            if copy_instance is not None and node in copy_instance.nodes:
+            if copy_instance is not None and node in copy_instance.nodes and not copy_instance[node].isnan():
                 # just copy x, y, and visible
                 # we don't want to copy a PredictedPoint or score attribute
                 new_instance[node] = Point(
