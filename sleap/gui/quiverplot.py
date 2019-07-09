@@ -90,11 +90,11 @@ class MultiQuiverPlot(QGraphicsObject):
             [51, 113, 127]
             ]
         self.decimation = decimation
-        
+
         # if data range is outside [-1, 1], assume it's [-255, 255] and scale
         if np.ptp(self.frame) > 2:
             self.frame = self.frame.astype(np.float64)/255
-            
+
         if show is None:
             self.show_list = range(self.frame.shape[2]//2)
         else:
@@ -154,7 +154,7 @@ class QuiverPlot(QGraphicsObject):
     def _add_arrows(self, min_length=0.01):
         points = []
         if self.field_x is not None and self.field_y is not None:
-            
+
             dim_0 = self.field_x.shape[0]//self.decimation*self.decimation
             dim_1 = self.field_x.shape[1]//self.decimation*self.decimation
             raw_delta_yx = np.stack((self.field_y,self.field_x),axis=-1)
@@ -216,10 +216,12 @@ class QuiverPlot(QGraphicsObject):
             strides=(height * _strides[0], width * _strides[1], *_strides),
             writeable=False
         )
+
         # Since strides accesses the ndarray by memory, we need to swap axes if
         # the array is stored column-major (Fortran), which it is from h5py.
-        if image.flags["F_CONTIGUOUS"]:
+        if _strides[0] < _strides[1]:
             tiles = np.swapaxes(tiles,0,1)
+
         return np.mean(tiles, axis=(2,3))
 
     def boundingRect(self) -> QRectF:
@@ -242,7 +244,7 @@ def show_pafs_from_h5(filename, input_format="channels_last", standalone=False):
 
     return demo_pafs(pafs, video, standalone=standalone)
 
-def demo_pafs(pafs, video, decimation=1, standalone=False):
+def demo_pafs(pafs, video, decimation=4, standalone=False):
     from sleap.gui.video import QtVideoPlayer
 
     if standalone: app = QApplication([])
@@ -272,7 +274,7 @@ if __name__ == "__main__":
 
     data_path = "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"
     input_format="channels_first"
-    
+
     data_path = "/Volumes/fileset-mmurthy/nat/nyu-mouse/predict.h5"
     input_format = "channels_last"
 
