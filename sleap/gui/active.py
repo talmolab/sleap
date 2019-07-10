@@ -34,16 +34,6 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         learning_yaml = resource_filename(Requirement.parse("sleap"),"sleap/config/active.yaml")
         self.form_widget = YamlFormWidget(yaml_file=learning_yaml, title="Active Learning Settings")
 
-        # load list of job profiles from directory
-        profile_dir = resource_filename(Requirement.parse("sleap"), "sleap/training_profiles")
-        labels_dir = os.path.join(os.path.dirname(self.labels_filename), "models")
-        self.job_options = dict()
-        # list any profiles from previous runs
-        if os.path.exists(labels_dir):
-            find_saved_jobs(labels_dir, self.job_options)
-        # list default profiles
-        find_saved_jobs(profile_dir, self.job_options)
-
         # form ui
 
         self.training_profile_widgets = {
@@ -52,11 +42,8 @@ class ActiveLearningDialog(QtWidgets.QDialog):
                 ModelOutputType.CENTROIDS: self.form_widget.fields["centroid_job"],
                 }
 
-        for model_type, field in self.training_profile_widgets.items():
-            if model_type not in self.job_options:
-                self.job_options[model_type] = []
-            field.currentIndexChanged.connect(lambda idx, mt=model_type: self.select_job(mt, idx))
-            field.set_options(self.option_list_from_jobs(model_type))
+        self._rebuild_job_options()
+        self._update_job_menus(init=True)
 
         buttons = QtWidgets.QDialogButtonBox()
         self.cancel_button = buttons.addButton(QtWidgets.QDialogButtonBox.Cancel)
@@ -101,6 +88,35 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         buttons.rejected.connect(self.reject)
 
         self.update_gui()
+
+    def _rebuild_job_options(self):
+        # load list of job profiles from directory
+        profile_dir = resource_filename(Requirement.parse("sleap"), "sleap/training_profiles")
+        labels_dir = os.path.join(os.path.dirname(self.labels_filename), "models")
+
+        self.job_options = dict()
+
+        # list any profiles from previous runs
+        if os.path.exists(labels_dir):
+            find_saved_jobs(labels_dir, self.job_options)
+        # list default profiles
+        find_saved_jobs(profile_dir, self.job_options)
+
+    def _update_job_menus(self, init=False):
+        for model_type, field in self.training_profile_widgets.items():
+            if model_type not in self.job_options:
+                self.job_options[model_type] = []
+            if init:
+                field.currentIndexChanged.connect(lambda idx, mt=model_type: self.select_job(mt, idx))
+            field.set_options(self.option_list_from_jobs(model_type))
+
+    def show(self):
+        super(ActiveLearningDialog, self).show()
+
+        # TODO: keep selection and any items added from training editor
+
+        self._rebuild_job_options()
+        self._update_job_menus()
 
     def update_gui(self):
         form_data = self.form_widget.get_form_data()
