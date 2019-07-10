@@ -208,7 +208,7 @@ class FlowShiftTracker:
 
         # Go through each labeled frame and track all the instances
         # present.
-        t = None
+        t = self.last_frame_index
         for img_idx, frame in enumerate(labeled_frames):
 
             # Update the data structures in Tracks that keep the last
