@@ -13,7 +13,7 @@ from sleap.gui.formbuilder import YamlFormWidget
 from sleap.nn.model import ModelOutputType
 from sleap.nn.training import TrainingJob
 
-from PySide2 import QtWidgets
+from PySide2 import QtWidgets, QtCore
 
 class ActiveLearningDialog(QtWidgets.QDialog):
 
@@ -59,12 +59,21 @@ class ActiveLearningDialog(QtWidgets.QDialog):
             field.set_options(self.option_list_from_jobs(model_type))
 
         buttons = QtWidgets.QDialogButtonBox()
-        buttons.addButton(QtWidgets.QDialogButtonBox.Cancel)
-        buttons.addButton("Run Active Learning", QtWidgets.QDialogButtonBox.AcceptRole)
+        self.cancel_button = buttons.addButton(QtWidgets.QDialogButtonBox.Cancel)
+        self.run_button = buttons.addButton("Run Active Learning", QtWidgets.QDialogButtonBox.AcceptRole)
+
+        self.status_message = QtWidgets.QLabel("hi!")
+
+        buttons_layout = QtWidgets.QHBoxLayout()
+        buttons_layout.addWidget(self.status_message)
+        buttons_layout.addWidget(buttons, alignment=QtCore.Qt.AlignTop)
+
+        buttons_layout_widget = QtWidgets.QWidget()
+        buttons_layout_widget.setLayout(buttons_layout)
 
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.form_widget)
-        layout.addWidget(buttons)
+        layout.addWidget(buttons_layout_widget)
 
         self.setLayout(layout)
 
@@ -77,11 +86,75 @@ class ActiveLearningDialog(QtWidgets.QDialog):
             self.view_profile(self.form_widget["paf_job"],
                                 model_type=ModelOutputType.PART_AFFINITY_FIELD)
 
+        def edit_cent_profile():
+            self.view_profile(self.form_widget["centroid_job"],
+                                model_type=ModelOutputType.CENTROIDS)
+
         self.form_widget.buttons["_view_conf"].clicked.connect(edit_conf_profile)
         self.form_widget.buttons["_view_paf"].clicked.connect(edit_paf_profile)
+        self.form_widget.buttons["_view_centoids"].clicked.connect(edit_cent_profile)
         self.form_widget.buttons["_view_datagen"].clicked.connect(self.view_datagen)
+
+        self.form_widget.valueChanged.connect(lambda: self.update_gui())
+
         buttons.accepted.connect(self.run)
         buttons.rejected.connect(self.reject)
+
+        self.update_gui()
+
+    def update_gui(self):
+        form_data = self.form_widget.get_form_data()
+
+        can_run = True
+
+        use_centroids = form_data.get("_use_centroids", False)
+
+        if form_data.get("_use_trained_centroids", False):
+            # you must use centroids if you are using a centroid model
+            use_centroids = True
+            self.form_widget.set_form_data(dict(_use_centroids=True))
+            self.form_widget.fields["_use_centroids"].setEnabled(False)
+        else:
+            self.form_widget.fields["_use_centroids"].setEnabled(True)
+
+        if use_centroids:
+            # you must crop if you are using centroids
+            self.form_widget.set_form_data(dict(instance_crop=True))
+            self.form_widget.fields["instance_crop"].setEnabled(False)
+        else:
+            self.form_widget.fields["instance_crop"].setEnabled(True)
+
+        error_messages = []
+        if form_data.get("_use_trained_confmaps", False) and \
+                form_data.get("_use_trained_pafs", False):
+            # make sure trained models are compatible
+            conf_job = self._get_current_job(ModelOutputType.CONFIDENCE_MAP)
+            paf_job = self._get_current_job(ModelOutputType.PART_AFFINITY_FIELD)
+
+            if conf_job.trainer.scale != paf_job.trainer.scale:
+                can_run = False
+                error_messages.append(f"training image scale for confmaps ({conf_job.trainer.scale}) does not match pafs ({paf_job.trainer.scale})")
+            if conf_job.trainer.instance_crop != paf_job.trainer.instance_crop:
+                can_run = False
+                crop_model_name = "confmaps" if conf_job.trainer.instance_crop else "pafs"
+                error_messages.append(f"exactly one model ({crop_model_name}) was trained on crops")
+            if use_centroids and not conf_job.trainer.instance_crop:
+                can_run = False
+                error_messages.append(f"models used with centroids must be trained on cropped images")
+
+        message = ""
+        if not can_run:
+            message = "Unable to run with selected models:\n- " + \
+                      ";\n- ".join(error_messages) + "."
+        self.status_message.setText(message)
+
+        self.run_button.setEnabled(can_run)
+
+    def _get_current_job(self, model_type):
+        field = self.training_profile_widgets[model_type]
+        idx = field.currentIndex()
+        job_filename, job = self.job_options[model_type][idx]
+        return job
 
     def run(self):
         # Collect TrainingJobs and params from form
