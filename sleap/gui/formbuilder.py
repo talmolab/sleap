@@ -193,6 +193,7 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
             if item["type"] == "double":
                 field = QtWidgets.QDoubleSpinBox()
                 field.setValue(item["default"])
+                field.valueChanged.connect(lambda: self.valueChanged.emit())
 
             # int: show spinbox (number w/ up/down controls)
             elif item["type"] == "int":
@@ -204,16 +205,19 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
                     min, max = 0, item["default"] * 10
                     field.setRange(min, max)
                 field.setValue(item["default"])
+                field.valueChanged.connect(lambda: self.valueChanged.emit())
 
             # bool: show checkbox
             elif item["type"] == "bool":
                 field = QtWidgets.QCheckBox()
                 field.setChecked(item["default"])
+                field.stateChanged.connect(lambda: self.valueChanged.emit())
 
             # list: show drop-down menu
             elif item["type"] == "list":
                 field = FieldComboWidget()
                 field.set_options(item["options"].split(","), item["default"])
+                field.currentIndexChanged.connect(lambda: self.valueChanged.emit())
 
             # button
             elif item["type"] == "button":

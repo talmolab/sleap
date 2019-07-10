@@ -540,6 +540,13 @@ class TrainingJob:
                 if not os.path.exists(run.save_dir):
                     run.save_dir = os.path.dirname(filename)
 
+                    # convert from Windows path if necessary
+                    from pathlib import Path, PureWindowsPath
+
+                    if run.final_model_filename is not None:
+                        if run.final_model_filename.find("\\"):
+                            run.final_model_filename = Path(PureWindowsPath(run.final_model_filename))
+
         return run
 
 
