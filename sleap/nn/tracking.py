@@ -164,6 +164,7 @@ class FlowShiftTracker:
     def __attrs_post_init__(self):
         self.tracks = Tracks()
         self.last_img = None
+        self.last_frame_index = None
 
     def _fix_img(self, img: np.ndarray):
         # Drop single channel dimension and convert to uint8 in [0, 255] range
@@ -199,6 +200,7 @@ class FlowShiftTracker:
 
         # Go through each labeled frame and track all the instances
         # present.
+        t = None
         for img_idx, frame in enumerate(labeled_frames):
 
             # Update the data structures in Tracks that keep the last
@@ -209,6 +211,7 @@ class FlowShiftTracker:
 
             # Copy the actual frame index for this labeled frame, we will
             # use this a lot.
+            self.last_frame_index = t
             t = frame.frame_idx
 
             instances_pts = [i.points_array(cached=True) for i in frame.instances]
@@ -229,8 +232,9 @@ class FlowShiftTracker:
                 continue
 
             # Get all points in reference frame
-            instances_ref = self.tracks.get_frame_instances(t - 1, max_shift=self.window - 1)
+            instances_ref = self.tracks.get_frame_instances(self.last_frame_index, max_shift=self.window - 1)
             pts_ref = [instance.points_array(cached=True) for instance in instances_ref]
+
             if self.verbosity > 0:
                 tmp = min([instance.frame_idx for instance in instances_ref] +
                           [instance.source.frame_idx for instance in instances_ref
