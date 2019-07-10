@@ -164,6 +164,7 @@ class FlowShiftTracker:
     def __attrs_post_init__(self):
         self.tracks = Tracks()
         self.last_img = None
+        self.last_frame_index = None
 
     def _fix_img(self, img: np.ndarray):
         # Drop single channel dimension and convert to uint8 in [0, 255] range
@@ -194,11 +195,20 @@ class FlowShiftTracker:
             None
         """
 
+        # Labels.save_json(Labels(labeled_frames), filename='/tigress/dmturner/sleap/inference_debug/tracking_bug3.json',
+        #                  save_frame_data=True)
+
         # Convert img_scale to an array for use later
         img_scale = np.array(self.img_scale).astype("float32")
 
+        # Set logging to DEBUG if the user has set verbosity > 0
+        curr_log_level = logger.getEffectiveLevel()
+        if self.verbosity > 0:
+            logger.setLevel(logging.DEBUG)
+
         # Go through each labeled frame and track all the instances
         # present.
+        t = self.last_frame_index
         for img_idx, frame in enumerate(labeled_frames):
 
             # Update the data structures in Tracks that keep the last
@@ -209,6 +219,7 @@ class FlowShiftTracker:
 
             # Copy the actual frame index for this labeled frame, we will
             # use this a lot.
+            self.last_frame_index = t
             t = frame.frame_idx
 
             instances_pts = [i.points_array(cached=True) for i in frame.instances]
@@ -221,21 +232,20 @@ class FlowShiftTracker:
                         instance.track = Track(spawned_on=t, name=f"{i}")
                         self.tracks.add_instance(instance, frame_index=t)
 
-                    if self.verbosity > 0 :
-                        logger.info(f"[t = {t}] Created {len(self.tracks.tracks)} initial tracks")
+                    logger.debug(f"[t = {t}] Created {len(self.tracks.tracks)} initial tracks")
 
                 self.last_img = self._fix_img(imgs[img_idx].copy())
 
                 continue
 
             # Get all points in reference frame
-            instances_ref = self.tracks.get_frame_instances(t - 1, max_shift=self.window - 1)
+            instances_ref = self.tracks.get_frame_instances(self.last_frame_index, max_shift=self.window - 1)
             pts_ref = [instance.points_array(cached=True) for instance in instances_ref]
-            if self.verbosity > 0:
-                tmp = min([instance.frame_idx for instance in instances_ref] +
-                          [instance.source.frame_idx for instance in instances_ref
-                           if isinstance(instance, ShiftedInstance)])
-                logger.info(f"[t = {t}] Using {len(instances_ref)} refs back to t = {tmp}")
+
+            tmp = min([instance.frame_idx for instance in instances_ref] +
+                      [instance.source.frame_idx for instance in instances_ref
+                       if isinstance(instance, ShiftedInstance)])
+            logger.debug(f"[t = {t}] Using {len(instances_ref)} refs back to t = {tmp}")
 
             curr_img = self._fix_img(imgs[img_idx].copy())
 
@@ -269,7 +279,7 @@ class FlowShiftTracker:
             # If we didn't get any shifted instances from the reference frame, use the last
             # know positions for each track.
             if len(shifted_instances) == 0:
-                logger.info(f"[t = {t}] Optical flow failed, using last known positions for each track.")
+                logger.debug(f"[t = {t}] Optical flow failed, using last known positions for each track.")
                 shifted_instances = self.tracks.get_last_known()
                 shifted_tracks = list({instance.track for instance in shifted_instances})
             else:
@@ -284,15 +294,13 @@ class FlowShiftTracker:
             self.tracks.add_instances(shifted_instances, frame_index=t)
 
             if len(frame.instances) == 0:
-                if self.verbosity > 0:
-                    logger.info(f"[t = {t}] No matched instances to assign to tracks")
+                logger.debug(f"[t = {t}] No matched instances to assign to tracks")
                 continue
 
             # Reduce distances by track
             unassigned_pts = np.stack(instances_pts, axis=0) # instances x nodes x 2
-            if self.verbosity > 0:
-                logger.info(f"[t = {t}] Flow shift matching {len(unassigned_pts)} "
-                             f"instances to {len(shifted_tracks)} ref tracks")
+            logger.debug(f"[t = {t}] Flow shift matching {len(unassigned_pts)} "
+                         f"instances to {len(shifted_tracks)} ref tracks")
 
             cost_matrix = np.full((len(unassigned_pts), len(shifted_tracks)), np.nan)
             for i, track in enumerate(shifted_tracks):
@@ -320,9 +328,8 @@ class FlowShiftTracker:
                 frame.instances[i].track = shifted_tracks[j]
                 self.tracks.add_instance(frame.instances[i], frame_index=t)
 
-                if self.verbosity > 0:
-                    logger.info(f"[t = {t}] Assigned instance {i} to existing track "
-                                 f"{shifted_tracks[j].name} (cost = {cost_matrix[i,j]})")
+                logger.debug(f"[t = {t}] Assigned instance {i} to existing track "
+                             f"{shifted_tracks[j].name} (cost = {cost_matrix[i,j]})")
 
             # Spawn new tracks for unassigned instances
             for i, pts in enumerate(unassigned_pts):
@@ -330,13 +337,15 @@ class FlowShiftTracker:
                 instance = frame.instances[i]
                 instance.track = Track(spawned_on=t, name=f"{len(self.tracks.tracks)}")
                 self.tracks.add_instance(instance, frame_index=t)
-                if self.verbosity > 0:
-                    logger.info(f"[t = {t}] Assigned remaining instance {i} to newly "
-                                 f"spawned track {instance.track.name} "
-                                 f"(best cost = {cost_matrix[i,:].min()})")
+                logger.debug(f"[t = {t}] Assigned remaining instance {i} to newly "
+                             f"spawned track {instance.track.name} "
+                             f"(best cost = {cost_matrix[i,:].min()})")
 
         # Update the last know data structures for the last frame.
         self.tracks.update_track_last_known(labeled_frames[img_idx - 1], max_shift=None)
+
+        # Reset the logging level
+        logger.setLevel(curr_log_level)
 
     def occupancy(self):
         """ Compute occupancy matrix """

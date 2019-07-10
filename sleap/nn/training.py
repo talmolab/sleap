@@ -17,6 +17,7 @@ from multiprocessing.pool import AsyncResult
 from typing import Union, List, Dict, Tuple
 from time import time, sleep
 from datetime import datetime
+from pathlib import Path, PureWindowsPath
 
 from keras import backend as K
 from keras.layers import Input, Conv2D, BatchNormalization, Add, MaxPool2D, UpSampling2D, Concatenate
@@ -540,7 +541,19 @@ class TrainingJob:
                 if not os.path.exists(run.save_dir):
                     run.save_dir = os.path.dirname(filename)
 
+                    run.final_model_filename = cls._fix_path(run.final_model_filename)
+                    run.best_model_filename = cls._fix_path(run.best_model_filename)
+                    run.newest_model_filename = cls._fix_path(run.newest_model_filename)
+
         return run
+
+    @classmethod
+    def _fix_path(cls, path):
+        # convert from Windows path if necessary
+        if path is not None:
+            if path.find("\\"):
+                path = Path(PureWindowsPath(path))
+        return path
 
 
 class TrainingControllerZMQ(keras.callbacks.Callback):

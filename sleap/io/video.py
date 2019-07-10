@@ -744,5 +744,5 @@ class Video:
             if os.path.exists(img_store_dir):
                 return img_store_dir
 
-        raise FileNotFoundError(f"Cannot find a video file: f{path}")
+        raise FileNotFoundError(f"Cannot find a video file: {path}")
 

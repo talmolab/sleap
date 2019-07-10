@@ -77,9 +77,9 @@ def test_labels_json(tmpdir, multi_skel_vid_labels):
     loaded_labels = Labels.load_json(json_file_path, match_to=multi_skel_vid_labels)
 
     # Check that we now do have the same objects
-    assert multi_skel_vid_labels.skeletons[0] is loaded_labels.skeletons[0]
+    assert multi_skel_vid_labels.skeletons[0] in loaded_labels.skeletons
     assert multi_skel_vid_labels.nodes[3] in loaded_labels.nodes
-    assert multi_skel_vid_labels.videos[0] is loaded_labels.videos[0]
+    assert multi_skel_vid_labels.videos[0] in loaded_labels.videos
 
 def test_load_labels_json_old(tmpdir):
     new_file_path = os.path.join(tmpdir, 'centered_pair_v2.json')

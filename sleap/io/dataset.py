@@ -23,7 +23,7 @@ import scipy.io as sio
 import h5py as h5
 
 from collections import MutableSequence
-from typing import List, Union, Dict, Optional
+from typing import List, Union, Dict, Optional, _ForwardRef
 
 import pandas as pd
 
@@ -595,7 +595,7 @@ class Labels(MutableSequence):
 
         label_cattr.register_structure_hook(Union[List[Instance], List[PredictedInstance]],
                                             structure_instances_list)
-
+        label_cattr.register_structure_hook(_ForwardRef('PredictedInstance'), lambda x,type: label_cattr.structure(x, PredictedInstance))
         labels = label_cattr.structure(dicts['labels'], List[LabeledFrame])
 
         return cls(labeled_frames=labels, videos=videos, skeletons=skeletons, nodes=nodes, suggestions=suggestions)

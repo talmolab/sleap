@@ -910,15 +910,8 @@ class MainWindow(QMainWindow):
 
         # FIXME: filter by skeleton type
 
-        used_tracks = [inst.track
-                       for inst in self.labeled_frame.instances
-                       if type(inst) == Instance
-                       ]
-        unused_predictions = [inst
-                              for inst in self.labeled_frame.instances
-                              if inst.track not in used_tracks
-                              and type(inst) == PredictedInstance
-                              ]
+        from_predicted = copy_instance
+        unused_predictions = self.labeled_frame.unused_predictions
 
         from_prev_frame = False
         if copy_instance is None:
@@ -926,10 +919,12 @@ class MainWindow(QMainWindow):
             if selected_idx is not None:
                 # If the user has selected an instance, copy that one.
                 copy_instance = self.labeled_frame.instances[selected_idx]
+                from_predicted = copy_instance
             elif len(unused_predictions):
                 # If there are predicted instances that don't correspond to an instance
                 # in this frame, use the first predicted instance without matching instance.
                 copy_instance = unused_predictions[0]
+                from_predicted = copy_instance
             else:
                 # Otherwise, if there are instances in previous frames,
                 # copy the points from one of those instances.
@@ -949,13 +944,13 @@ class MainWindow(QMainWindow):
                         # Otherwise use the last instance added to previous frame.
                         copy_instance = prev_instances[-1]
                         from_prev_frame = True
-        new_instance = Instance(skeleton=self.skeleton)
+        new_instance = Instance(skeleton=self.skeleton, from_predicted=from_predicted)
         # the rect that's currently visibile in the window view
         in_view_rect = self.player.view.mapToScene(self.player.view.rect()).boundingRect()
         # go through each node in skeleton
         for node in self.skeleton.nodes:
             # if we're copying from a skeleton that has this node
-            if copy_instance is not None and node in copy_instance.nodes:
+            if copy_instance is not None and node in copy_instance.nodes and not copy_instance[node].isnan():
                 # just copy x, y, and visible
                 # we don't want to copy a PredictedPoint or score attribute
                 new_instance[node] = Point(
