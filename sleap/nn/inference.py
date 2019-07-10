@@ -493,15 +493,11 @@ class Predictor:
     with_tracking: bool = False
     flow_window: int = 15
 
+    _centroid_model: keras.Model = None
+
     def predict_centroids(self, imgs: np.ndarray) -> List[List[np.ndarray]]:
 
-        # Load and prepare centroid model
-        centroid_job = self.sleap_models[ModelOutputType.CENTROIDS]
-        centroid_model_path = os.path.join(
-                                    centroid_job.save_dir,
-                                    centroid_job.best_model_filename)
-        keras_model = keras.models.load_model(centroid_model_path)
-        keras_model = convert_to_gpu_model(keras_model)
+        keras_model = self._get_centroid_model()
 
         centroid_transform = DataTransform()
         centroid_imgs_scaled = centroid_transform.scale_to(
@@ -523,6 +519,18 @@ class Predictor:
         # Use predicted centroids (peaks) to crop images
 
         return centroids
+
+    def _get_centroid_model(self):
+        if self._centroid_model = None:
+            # Load and prepare centroid model
+            centroid_job = self.sleap_models[ModelOutputType.CENTROIDS]
+            centroid_model_path = os.path.join(
+                                        centroid_job.save_dir,
+                                        centroid_job.best_model_filename)
+            keras_model = keras.models.load_model(centroid_model_path)
+            keras_model = convert_to_gpu_model(keras_model)
+            self._centroid_model = keras_model
+        return self._centroid_model
 
     def predict(self, input_video: Union[dict, Video],
                 output_path: Optional[str] = None,
