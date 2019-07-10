@@ -355,7 +355,8 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, transform, img_idx
     subset = subset[score_to_node_ratio > min_score_to_node_ratio, :]
 
     # apply inverse transform to points
-    candidate[:,0:2] = transform.invert(img_idx, candidate[:,0:2])
+    if candidate.shape[0] > 0:
+        candidate[...,0:2] = transform.invert(img_idx, candidate[...,0:2])
 
     # Done with all the matching! Gather the data
     matched_instances_t = []
