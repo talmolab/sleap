@@ -195,6 +195,9 @@ class FlowShiftTracker:
             None
         """
 
+        # Labels.save_json(Labels(labeled_frames), filename='/tigress/dmturner/sleap/inference_debug/tracking_bug3.json',
+        #                  save_frame_data=True)
+
         # Convert img_scale to an array for use later
         img_scale = np.array(self.img_scale).astype("float32")
 
