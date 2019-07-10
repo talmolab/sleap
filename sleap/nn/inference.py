@@ -521,7 +521,7 @@ class Predictor:
         return centroids
 
     def _get_centroid_model(self):
-        if self._centroid_model = None:
+        if self._centroid_model is None:
             # Load and prepare centroid model
             centroid_job = self.sleap_models[ModelOutputType.CENTROIDS]
             centroid_model_path = os.path.join(
