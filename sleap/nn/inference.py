@@ -907,12 +907,18 @@ def load_predicted_labels_json_old(
 
 def main(args):
     data_path = args.data_path
-    confmap_model_path = args.confmap_model_path
     save_path = args.output if args.output else data_path + ".predictions.json"
-    paf_model_path = args.paf_model_path
-    skeleton_path = args.skeleton_path
     frames = args.frames
 
+    # Load each model JSON
+    jobs = [TrainingJob.load_json(model_filename) for model_filename in args.models]
+    sleap_models = dict(zip([j.model.output_type for j in jobs], jobs))
+
+    if ModelOutputType.CONFIDENCE_MAP not in sleap_models:
+        raise ValueError("No confidence map model found in specified models!")
+
+    if ModelOutputType.PART_AFFINITY_FIELD not in sleap_models:
+        raise ValueError("No part affinity field (PAF) model found in specified models!")
 
     if args.resize_input:
         # Load video
@@ -921,16 +927,8 @@ def main(args):
     else:
         img_shape = None
 
-    # Load the skeleton(s)
-    skeleton = Skeleton.load_json(skeleton_path)
-
-    logger.info(f"Skeleton (name={skeleton.name}, {len(skeleton.nodes)} nodes):")
-
-    # Load the model
-    model = get_inference_model(confmap_model_path, paf_model_path, img_shape)
-
     # Create a predictor to do the work.
-    predictor = Predictor(model=model, skeleton=skeleton, with_tracking=args.with_tracking)
+    predictor = Predictor(sleap_models=sleap_models, with_tracking=args.with_tracking)
 
     # Run the inference pipeline
     return predictor.predict(input_video=data_path, output_path=save_path, frames=frames,
@@ -952,9 +950,11 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("data_path", help="Path to video file")
-    parser.add_argument("confmap_model_path", help="Path to saved confmap model")
-    parser.add_argument("paf_model_path", help="Path to saved PAF model")
-    parser.add_argument("skeleton_path", help="Path to skeleton file")
+    parser.add_argument("-m", "--model", dest='models', action='append',
+                        help="Path to saved model (confmaps, pafs, ...) JSON. "
+                        "Multiple models can be specified, each preceded by "
+                        "--model. Confmap and PAF models are required.",
+                        required=True)
     parser.add_argument('--resize-input', dest='resize_input', action='store_const',
                     const=True, default=False,
                     help='resize the input layer to image size (default False)')
@@ -964,7 +964,7 @@ if __name__ == "__main__":
     parser.add_argument('--frames', type=frame_list, default="",
                         help='list of frames to predict. Either comma separated list (e.g. 1,2,3) or'
                              'a range separated by hyphen (e.g. 1-3). (default is entire video)')
-    parser.add_argument('--output', type=str, default=None,
+    parser.add_argument('-o', '--output', type=str, default=None,
                         help='The output filename to use for the predicted data.')
     parser.add_argument('--save_confmaps_pafs', type=bool, default=False,
                         help='Whether to save the confidence maps or pads')

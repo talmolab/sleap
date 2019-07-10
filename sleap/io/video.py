@@ -296,11 +296,8 @@ class ImgStoreVideo:
         # fix this later when loading these datasets.
         self.filename = os.path.abspath(self.filename)
 
-        # Open the imgstore
-        self.__store = imgstore.new_for_filename(self.filename)
-
-        # Read a frame so we can compute shape an such
-        self.__img, (frame_number, frame_timestamp) = self.__store.get_next_image()
+        self.__store = None
+        self.open()
 
     # The properties and methods below complete our contract with the
     # higher level Video interface.
@@ -340,6 +337,11 @@ class ImgStoreVideo:
         Returns:
             The numpy.ndarray representing the video frame data.
         """
+
+        # Check if we need to open the imgstore and do it if needed
+        if not self.imgstore:
+            self.open()
+
         if self.index_by_original:
             img, (frame_number, frame_timestamp) = self.__store.get_image(frame_number)
         else:
@@ -353,15 +355,41 @@ class ImgStoreVideo:
 
         return img
 
-        @property
-        def imgstore(self):
-            """
-            Get the underlying ImgStore object for this Video.
+    @property
+    def imgstore(self):
+        """
+        Get the underlying ImgStore object for this Video.
 
-            Returns:
-                The imgstore that is backing this video object.
-            """
-            return self.__store
+        Returns:
+            The imgstore that is backing this video object.
+        """
+        return self.__store
+
+    def open(self):
+        """
+        Open the image store if it isn't already open.
+
+        Returns:
+            None
+        """
+        if not self.imgstore:
+            # Open the imgstore
+            self.__store = imgstore.new_for_filename(self.filename)
+
+            # Read a frame so we can compute shape an such
+            self.__img, (frame_number, frame_timestamp) = self.__store.get_next_image()
+
+    def close(self):
+        """
+        Close the imgstore if it isn't already closed.
+
+        Returns:
+            None
+        """
+        if self.imgstore:
+            # Open the imgstore
+            self.__store.close()
+            self.__store = None
 
 
 @attr.s(auto_attribs=True, cmp=False)
@@ -716,5 +744,5 @@ class Video:
             if os.path.exists(img_store_dir):
                 return img_store_dir
 
-        raise FileNotFoundError(f"Cannot find a video file: f{path}")
+        raise FileNotFoundError(f"Cannot find a video file: {path}")
 
