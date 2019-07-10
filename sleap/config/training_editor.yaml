@@ -3,7 +3,7 @@ model:
 - name: output_type
   label: Training For
   type: list
-  options: confmaps,pafs
+  options: confmaps,pafs,centroids
   default: confmaps
 
 - name: depth
