@@ -1269,7 +1269,15 @@ def video_demo(labels, standalone=False):
     if standalone: app = QApplication([])
     window = QtVideoPlayer(video=video)
 
+    window.changedPlot.connect(lambda vp, idx: plot_instances(vp.view.scene, idx, labels, video))
 
+    window.show()
+    window.plot()
+
+    if standalone: app.exec_()
+
+def plot_instances(scene, frame_idx, labels, video=None):
+    video = video = labels.videos[0]
     cmap = np.array([
         [0,   114,   189],
         [217,  83,    25],
@@ -1279,23 +1287,17 @@ def video_demo(labels, standalone=False):
         [77,  190,   238],
         [162,  20,    47],
         ])
+    lfs = [label for label in labels.labels if label.video == video and label.frame_idx == frame_idx]
 
-    def plot_instances(vp, frame_idx):
+    if len(lfs) == 0: return
 
-        labeled_frame = [label for label in labels.labels if label.video == video and label.frame_idx == frame_idx][0]
+    labeled_frame = lfs[0]
 
-        for i, instance in enumerate(labeled_frame.instances_to_show):
-            # Plot instance
-            vp.addInstance(instance=instance, color=cmap[i%len(cmap)])
-        # hide node labels
-        vp.showLabels(False)
-
-    window.changedPlot.connect(plot_instances)
-
-    window.show()
-    window.plot()
-
-    if standalone: app.exec_()
+    for i, instance in enumerate(labeled_frame.instances_to_show):
+        # Plot instance
+        inst = QtInstance(instance=instance, color=cmap[i%len(cmap)])
+        inst.showLabels(False)
+        scene.addItem(inst)
 
 if __name__ == "__main__":
 
