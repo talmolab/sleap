@@ -108,7 +108,10 @@ class ActiveLearningDialog(QtWidgets.QDialog):
                 self.job_options[model_type] = []
             if init:
                 field.currentIndexChanged.connect(lambda idx, mt=model_type: self.select_job(mt, idx))
+            else:
+                field.blockSignals(True)
             field.set_options(self.option_list_from_jobs(model_type))
+            field.blockSignals(False)
 
     def show(self):
         super(ActiveLearningDialog, self).show()
