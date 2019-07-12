@@ -48,7 +48,7 @@ def get_frame_image(video, frame_idx, width, height, overlay_callback=None):
     qt_painter = QtGui.QPainter(qt_image)
     view.scene.render(qt_painter)
     qt_painter.end()
-    img = qimage2ndarray.rgb_view(qt_image)
+    img = qimage2ndarray.rgb_view(qt_image).copy()
 
     return img
 
