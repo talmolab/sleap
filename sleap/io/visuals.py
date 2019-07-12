@@ -25,7 +25,7 @@ def save_labeled_video(filename, labels, video, frames, fps=15, overlay_callback
                               overlay_callback=overlay_callback)
         # Convert RGB to BGR for OpenCV
         if img.shape[-1] == 3:
-            img = img[..., ::-1]
+            img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
 
         out.write(img)
 
@@ -48,7 +48,7 @@ def get_frame_image(video, frame_idx, width, height, overlay_callback=None):
     qt_painter = QtGui.QPainter(qt_image)
     view.scene.render(qt_painter)
     qt_painter.end()
-    img = qimage2ndarray.rgb_view(qt_image)
+    img = qimage2ndarray.rgb_view(qt_image).copy()
 
     return img
 
@@ -56,8 +56,8 @@ def add_confmaps(scene, idx, confmaps):
     overlay_item = ConfMapsPlot(confmaps[idx,...])
     scene.addItem(overlay_item)
 
-def add_pafs(scene, idx, pafs):
-    overlay_item = MultiQuiverPlot(pafs[idx,...], decimation=10)
+def add_pafs(scene, idx, pafs, decimation=10):
+    overlay_item = MultiQuiverPlot(pafs[idx,...], decimation=decimation)
     scene.addItem(overlay_item)
 
 if __name__ == "__main__":
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     parser.add_argument("data_path", help="Path to labels json file")
     parser.add_argument('-o', '--output', type=str, default=None,
                         help='The output filename for the video')
-    parser.add_argument('-f', '--fps', type=int, default=None,
+    parser.add_argument('-f', '--fps', type=int, default=15,
                         help='Frames per second')
     args = parser.parse_args()
 
