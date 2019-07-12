@@ -905,37 +905,7 @@ def load_predicted_labels_json_old(
 
     return Labels(labels)
 
-def main(args):
-    data_path = args.data_path
-    save_path = args.output if args.output else data_path + ".predictions.json"
-    frames = args.frames
-
-    # Load each model JSON
-    jobs = [TrainingJob.load_json(model_filename) for model_filename in args.models]
-    sleap_models = dict(zip([j.model.output_type for j in jobs], jobs))
-
-    if ModelOutputType.CONFIDENCE_MAP not in sleap_models:
-        raise ValueError("No confidence map model found in specified models!")
-
-    if ModelOutputType.PART_AFFINITY_FIELD not in sleap_models:
-        raise ValueError("No part affinity field (PAF) model found in specified models!")
-
-    if args.resize_input:
-        # Load video
-        vid = Video.from_filename(data_path)
-        img_shape = (vid.height, vid.width, vid.channels)
-    else:
-        img_shape = None
-
-    # Create a predictor to do the work.
-    predictor = Predictor(sleap_models=sleap_models, with_tracking=args.with_tracking)
-
-    # Run the inference pipeline
-    return predictor.predict(input_video=data_path, output_path=save_path, frames=frames,
-                            save_confmaps_pafs=args.save_confmaps_pafs)
-
-
-if __name__ == "__main__":
+def main():
 
     def frame_list(frame_str: str):
 
@@ -968,8 +938,43 @@ if __name__ == "__main__":
                         help='The output filename to use for the predicted data.')
     parser.add_argument('--save_confmaps_pafs', type=bool, default=False,
                         help='Whether to save the confidence maps or pads')
-
+    parser.add_argument('-v', '--verbose', help='Increase logging output verbosity.', action="store_true")
 
     args = parser.parse_args()
 
-    main(args)
+
+
+    data_path = args.data_path
+    save_path = args.output if args.output else data_path + ".predictions.json"
+    frames = args.frames
+
+    if args.verbose:
+        logging.basicConfig(level=logging.DEBUG)
+
+    # Load each model JSON
+    jobs = [TrainingJob.load_json(model_filename) for model_filename in args.models]
+    sleap_models = dict(zip([j.model.output_type for j in jobs], jobs))
+
+    if ModelOutputType.CONFIDENCE_MAP not in sleap_models:
+        raise ValueError("No confidence map model found in specified models!")
+
+    if ModelOutputType.PART_AFFINITY_FIELD not in sleap_models:
+        raise ValueError("No part affinity field (PAF) model found in specified models!")
+
+    if args.resize_input:
+        # Load video
+        vid = Video.from_filename(data_path)
+        img_shape = (vid.height, vid.width, vid.channels)
+    else:
+        img_shape = None
+
+    # Create a predictor to do the work.
+    predictor = Predictor(sleap_models=sleap_models, with_tracking=args.with_tracking)
+
+    # Run the inference pipeline
+    return predictor.predict(input_video=data_path, output_path=save_path, frames=frames,
+                            save_confmaps_pafs=args.save_confmaps_pafs)
+
+
+if __name__ == "__main__":
+   main()
