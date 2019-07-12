@@ -891,14 +891,17 @@ class MainWindow(QMainWindow):
 
     def importPredictions(self):
         filters = ["JSON labels (*.json)", "HDF5 dataset (*.h5 *.hdf5)", "Matlab dataset (*.mat)", "DeepLabCut csv (*.csv)"]
-        filename, selected_filter = QFileDialog.getOpenFileName(self, dir=None, caption="Import labeled data...", filter=";;".join(filters))
+        filenames, selected_filter = QFileDialog.getOpenFileNames(self, dir=None, caption="Import labeled data...", filter=";;".join(filters))
 
-        if len(filename) == 0: return
+        if len(filenames) == 0: return
 
-        new_labels = Labels.load_json(filename, match_to=self.labels)
-        self.labels.extend_from(new_labels)
+        for filename in filenames:
+            new_labels = Labels.load_json(filename, match_to=self.labels)
+            self.labels.extend_from(new_labels)
 
-        print(f"new lf: {len(new_labels.labeled_frames)}")
+            for vid in new_labels.videos:
+                print(f"Labels imported for {vid.filename}")
+                print(f"  frames labeled: {len(new_labels.find(vid))}")
         # update display/ui
         self.plotFrame()
         self.updateSeekbarMarks()
