@@ -631,26 +631,27 @@ class Predictor:
             # Scale/crop using tranform object
             transform = DataTransform(frame_idxs=frames_idx)
 
-            mov = vid[frames_idx]
+            mov_full = vid[frames_idx]
+
+            logger.info("  Read %d frames [%.1fs]" % (len(mov_full), time() - t0))
+
             if ModelOutputType.CENTROIDS in self.sleap_models.keys():
                 # Predict centroids and crop around these
-                centroids = self.predict_centroids(mov)
+                centroids = self.predict_centroids(mov_full)
                 crop_size = h # match input of keras model
-                mov = transform.centroid_crop(mov, centroids, crop_size)
+                mov = transform.centroid_crop(mov_full, centroids, crop_size)
 
             else:
                 # Scale (if target doesn't match current size)
-                mov = transform.scale_to(mov, target_size=(h,w))
-
-            logger.info("  Read %d frames [%.1fs]" % (len(mov), time() - t0))
+                mov = transform.scale_to(mov_full, target_size=(h,w))
 
             # Run inference
             t0 = time()
             confmaps, pafs = keras_model.predict(mov.astype("float32") / 255, batch_size=self.inference_batch_size)
 
             logger.info( "  Inferred confmaps and PAFs [%.1fs]" % (time() - t0))
-            logger.info(f"  confmaps: shape={confmaps.shape}, ptp={np.ptp(confmaps)}")
-            logger.info(f"  pafs: shape={pafs.shape}, ptp={np.ptp(pafs)}")
+            logger.info(f"    confmaps: shape={confmaps.shape}, ptp={np.ptp(confmaps)}")
+            logger.info(f"    pafs: shape={pafs.shape}, ptp={np.ptp(pafs)}")
 
             # Save confmaps and pafs
             if output_path is not None and save_confmaps_pafs:
@@ -689,7 +690,7 @@ class Predictor:
             # Track
             if self.with_tracking:
                 t0 = time()
-                tracker.process(mov, predicted_frames_chunk)
+                tracker.process(mov_full, predicted_frames_chunk)
                 logger.info("  Tracked IDs via flow shift [%.1fs]" % (time() - t0))
 
             # Save
@@ -705,7 +706,7 @@ class Predictor:
                 #  We should save in chunks then combine at the end.
                 labels = Labels(labeled_frames=predicted_frames)
                 if output_path is not None:
-                    Labels.save_json(labels, filename=output_path)
+                    Labels.save_json(labels, filename=output_path, compress=True)
 
                     logger.info("  Saved to: %s [%.1fs]" % (output_path, time() - t0))
 
@@ -949,7 +950,8 @@ def main():
     frames = args.frames
 
     if args.verbose:
-        logging.basicConfig(level=logging.DEBUG)
+        logging.basicConfig()
+        logging.getLogger().setLevel(logging.DEBUG)
 
     # Load each model JSON
     jobs = [TrainingJob.load_json(model_filename) for model_filename in args.models]
