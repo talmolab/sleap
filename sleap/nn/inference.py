@@ -600,7 +600,7 @@ class Predictor:
         h_w_scale = np.array((h/vid_h, w/vid_w))
 
         # Initialize tracking
-        tracker = FlowShiftTracker(window=self.flow_window, verbosity=1)
+        tracker = FlowShiftTracker(window=self.flow_window, verbosity=0)
 
         # Initialize parallel pool
         pool = None if is_async else multiprocessing.Pool(processes=usable_cpu_count())
