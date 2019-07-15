@@ -41,7 +41,7 @@ class VideoSlider(QGraphicsView):
 
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff) # ScrollBarAsNeeded
 
         self.color_maps = [
             [0,   114,   189],
@@ -54,12 +54,12 @@ class VideoSlider(QGraphicsView):
             ]
 
         self._track_height = 3
-        height = 19 if tracks == 0 else 8 + (self._track_height * tracks)
-        if height < 19: height = 19
+
+        height = 19
         slider_rect = QRect(0, 0, 200, height-3)
         handle_width = 6
         handle_rect = QRect(0, 1, handle_width, slider_rect.height()-2)
-
+        self.setMinimumHeight(height)
         self.setMaximumHeight(height)
 
         self.slider = self.scene.addRect(slider_rect)
@@ -112,28 +112,19 @@ class VideoSlider(QGraphicsView):
 
     def setTracks(self, tracks):
         """Set the number of tracks to show in slider.
-        
+
         Args:
             tracks: the number of tracks to show
         """
-        height = 19 if tracks == 0 else 8 + (self._track_height * tracks)
-        if height < 19: height = 19
-        self._set_height(height)
+        if tracks == 0:
+            min_height = max_height = 19
+        else:
+            min_height = max(19, 8 + (self._track_height * min(tracks, 20)))
+            max_height = max(19, 8 + (self._track_height * tracks))
 
-    def _set_height(self, height):
-        slider_rect = self.slider.rect()
-        handle_rect = self.handle.rect()
-        select_box_rect = self.select_box.rect()
-
-        slider_rect.setHeight(height-3)
-        handle_rect.setHeight(slider_rect.height()-2)
-        select_box_rect.setHeight(slider_rect.height()-2)
-
-        self.slider.setRect(slider_rect)
-        self.handle.setRect(handle_rect)
-        self.select_box.setRect(select_box_rect)
-
-        self.setMaximumHeight(height)
+        self.setMaximumHeight(max_height)
+        self.setMinimumHeight(min_height)
+        self.resizeEvent()
 
     def _toPos(self, val, center=False):
         x = val
@@ -389,15 +380,28 @@ class VideoSlider(QGraphicsView):
         if old != val:
             self.valueChanged.emit(self._val_main)
 
-    def resizeEvent(self, event):
+    def resizeEvent(self, event=None):
         """Override method to update visual size when necessary.
 
         Args:
             event
         """
-        rect = self.slider.rect()
-        rect.setWidth(event.size().width()-1)
-        self.slider.setRect(rect)
+
+        height = self.size().height()
+
+        slider_rect = self.slider.rect()
+        handle_rect = self.handle.rect()
+        select_box_rect = self.select_box.rect()
+
+        slider_rect.setHeight(height-3)
+        if event is not None: slider_rect.setWidth(event.size().width()-1)
+        handle_rect.setHeight(slider_rect.height()-2)
+        select_box_rect.setHeight(slider_rect.height()-2)
+
+        self.slider.setRect(slider_rect)
+        self.handle.setRect(handle_rect)
+        self.select_box.setRect(select_box_rect)
+
         self.updatePos()
 
 

@@ -12,6 +12,8 @@ Example usage:
     >>> vp.addInstance(instance = my_instance, color)
 """
 
+from PySide2 import QtWidgets
+
 from PySide2.QtWidgets import QApplication, QVBoxLayout, QWidget
 from PySide2.QtWidgets import QLabel, QPushButton, QSlider
 from PySide2.QtWidgets import QAction
@@ -68,11 +70,14 @@ class QtVideoPlayer(QWidget):
         self.seekbar.keyRelease.connect(self.keyReleaseEvent)
         self.seekbar.setEnabled(False)
 
+        splitter = QtWidgets.QSplitter(Qt.Vertical)
+        splitter.addWidget(self.view)
+        splitter.addWidget(self.seekbar)
+
         self.layout = QVBoxLayout()
-        self.layout.addWidget(self.view)
-        self.layout.addWidget(self.seekbar)
-        # self.layout.addWidget(btn)
+        self.layout.addWidget(splitter)
         self.setLayout(self.layout)
+
         self.view.show()
 
         if video is not None:
