@@ -178,6 +178,8 @@ class MainWindow(QMainWindow):
         self._menu_actions["goto next suggestion"] = labelMenu.addAction("Next Suggestion", self.nextSuggestedFrame, shortcuts["goto next suggestion"])
         self._menu_actions["goto prev suggestion"] = labelMenu.addAction("Previous Suggestion", lambda:self.nextSuggestedFrame(-1), shortcuts["goto prev suggestion"])
 
+        self._menu_actions["goto next track"] = labelMenu.addAction("Next Track Spawn Frame", self.nextTrackFrame, shortcuts["goto next track"])
+
         labelMenu.addSeparator()
         self._menu_actions["show labels"] = labelMenu.addAction("Show Node Names", self.toggleLabels, shortcuts["show labels"])
         self._menu_actions["show edges"] = labelMenu.addAction("Show Edges", self.toggleEdges, shortcuts["show edges"])
@@ -1279,6 +1281,13 @@ class MainWindow(QMainWindow):
         if next_frame is not None:
             selection_idx = self.labels.get_suggestions().index((next_video, next_frame))
             self.suggestionsTable.selectRow(selection_idx)
+
+    def nextTrackFrame(self):
+        cur_idx = self.player.frame_idx
+        video_tracks = {inst.track for lf in self.labels.find(self.video) for inst in lf}
+        next_idx = min([track.spawned_on for track in video_tracks if track.spawned_on > cur_idx], default=-1)
+        if next_idx > -1:
+            self.plotFrame(next_idx)
 
     def gotoVideoAndFrame(self, video, frame_idx):
         if video != self.video:

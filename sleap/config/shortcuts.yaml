@@ -18,6 +18,7 @@
 "goto prev":
 "goto next suggestion": QKeySequence.FindNext
 "goto prev suggestion": QKeySequence.FindPrevious
+"goto next track":
 "show labels": Qt.CTRL + Qt.Key_Tab
 "show edges": Qt.CTRL + Qt.SHIFT + Qt.Key_Tab
 "show trails": 
