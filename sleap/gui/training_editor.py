@@ -108,6 +108,7 @@ class TrainingEditor(QtWidgets.QDialog):
 
             output_type = dict(confmaps=ModelOutputType.CONFIDENCE_MAP,
                                pafs=ModelOutputType.PART_AFFINITY_FIELD,
+                               centroids=ModelOutputType.CENTROIDS
                                 )[model_data["output_type"]]
 
             backbone_kwargs = {key:val for key, val in model_data.items()
