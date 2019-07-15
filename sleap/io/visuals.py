@@ -1,4 +1,5 @@
-
+import os
+os.environ["QT_QPA_PLATFORM"] = "offscreen"
 
 from PySide2 import QtWidgets, QtGui
 
@@ -22,10 +23,12 @@ def save_labeled_video(filename, labels, video, frames, fps=15, overlay_callback
     # Create frame images
 
     t0 = clock()
-    imgs = []
     total_count = len(frames)
 
-    print(f"Generating {total_count} frame images...")
+    print(f"Writing video with {total_count} frame images...")
+
+    fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+    out = cv2.VideoWriter(filename, fourcc, fps, (video.width, video.height))
 
     for i, frame_idx in enumerate(frames):
         img = get_frame_image(video=video, frame_idx=frame_idx,
@@ -38,31 +41,13 @@ def save_labeled_video(filename, labels, video, frames, fps=15, overlay_callback
         elif img.shape[-1] == 1:
             img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
 
-        imgs.append(img)
-
         if i > 0 and i%100 == 0:
             elapsed = clock() - t0
             fps = i/elapsed
             remaining_time = (total_count - i)/fps
-            print(f"  frame {i}/{total_count} [{round(elapsed, 2)} s | {round(fps, 2)} FPS | approx {round(remaining_time, 2)} s remaining for generation}}]")
+            print(f"  frame {i}/{total_count} [{round(elapsed, 2)} s | {round(fps, 2)} FPS | approx {round(remaining_time, 2)} s remaining]")
 
-    print(f"Done generating frame images [{clock() - t0} s]")
-
-    # Write video
-
-    t0 = clock()
-    print("Writing video...")
-
-    fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-    out = cv2.VideoWriter(filename, fourcc, fps, (video.width, video.height))
-
-    for i, img in enumerate(imgs):
         out.write(img)
-        if i > 0 and i%100 == 0:
-            elapsed = clock() - t0
-            fps = i/elapsed
-            remaining_time = (total_count - i)/fps
-            print(f"  frame {i}/{total_count} [{round(elapsed, 2)} s | {round(fps, 2)} FPS | approx {round(remaining_time, 2)} s remaining for writing}}]")
 
     out.release()
 
@@ -111,7 +96,7 @@ if __name__ == "__main__":
     labels = Labels.load_json(args.data_path)
     vid = labels.videos[0]
 
-    app = QtWidgets.QApplication("-platform offscreen".split(" "))
+    app = QtWidgets.QApplication([])
 
     frames = [lf.frame_idx for lf in labels]
 
