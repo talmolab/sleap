@@ -1,3 +1,5 @@
+
+
 from PySide2 import QtWidgets, QtGui
 
 from sleap.io.video import Video
@@ -8,6 +10,7 @@ from sleap.gui.quiverplot import MultiQuiverPlot
 
 import cv2
 import numpy as np
+from time import time, clock
 import qimage2ndarray
 
 def save_labeled_video(filename, labels, video, frames, fps=15, overlay_callback=None):
@@ -16,23 +19,57 @@ def save_labeled_video(filename, labels, video, frames, fps=15, overlay_callback
     overlay_callback = overlay_callback or \
             (lambda scene, frame_idx:plot_instances(scene, frame_idx, labels))
 
-    fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-    out = cv2.VideoWriter(filename, fourcc, fps, (video.width, video.height))
-    
-    for i in frames:
-        img = get_frame_image(video=video, frame_idx=i,
+    # Create frame images
+
+    t0 = clock()
+    imgs = []
+    total_count = len(frames)
+
+    print(f"Generating {total_count} frame images...")
+
+    for i, frame_idx in enumerate(frames):
+        img = get_frame_image(video=video, frame_idx=frame_idx,
                               height=video.height, width=video.width,
                               overlay_callback=overlay_callback)
         # Convert RGB to BGR for OpenCV
         if img.shape[-1] == 3:
             img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+        # Convert grayscale to BGR
+        elif img.shape[-1] == 1:
+            img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
 
+        imgs.append(img)
+
+        if i > 0 and i%100 == 0:
+            elapsed = clock() - t0
+            fps = i/elapsed
+            remaining_time = (total_count - i)/fps
+            print(f"  frame {i}/{total_count} [{round(elapsed, 2)} s | {round(fps, 2)} FPS | approx {round(remaining_time, 2)} s remaining for generation}}]")
+
+    print(f"Done generating frame images [{clock() - t0} s]")
+
+    # Write video
+
+    t0 = clock()
+    print("Writing video...")
+
+    fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+    out = cv2.VideoWriter(filename, fourcc, fps, (video.width, video.height))
+
+    for i, img in enumerate(imgs):
         out.write(img)
+        if i > 0 and i%100 == 0:
+            elapsed = clock() - t0
+            fps = i/elapsed
+            remaining_time = (total_count - i)/fps
+            print(f"  frame {i}/{total_count} [{round(elapsed, 2)} s | {round(fps, 2)} FPS | approx {round(remaining_time, 2)} s remaining for writing}}]")
 
     out.release()
 
-def get_frame_image(video, frame_idx, width, height, overlay_callback=None):
+    print(f"Done writing video [{clock() - t0} s]")
 
+def get_frame_image(video, frame_idx, width, height, overlay_callback=None):
+#     img = video.get_frame(frame_idx).copy()
     view = GraphicsView()
     view.scene.setSceneRect(0, 0, width, height)
 
@@ -74,15 +111,18 @@ if __name__ == "__main__":
     labels = Labels.load_json(args.data_path)
     vid = labels.videos[0]
 
-    app = QtWidgets.QApplication([])
-    
+    app = QtWidgets.QApplication("-platform offscreen".split(" "))
+
     frames = [lf.frame_idx for lf in labels]
-        
-    print(f"Generating video with frames: {frames}")
+
+#     if len(frames) > 2000:
+#         frames = frames[:2000]
+
+    print(f"Generating video with {len(frames)} labeled frames.")
 
 
     filename = args.output or args.data_path + ".avi"
-    
+
     save_labeled_video(filename=filename,
                        labels=labels,
                        video=labels.videos[0],

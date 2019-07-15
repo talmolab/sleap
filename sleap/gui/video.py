@@ -1293,6 +1293,7 @@ def plot_instances(scene, frame_idx, labels, video=None):
 
     labeled_frame = lfs[0]
 
+    count_no_track = 0
     for i, instance in enumerate(labeled_frame.instances_to_show):
         if instance.track in labels.tracks:
             track_idx = labels.tracks.index(instance.track)
@@ -1304,6 +1305,7 @@ def plot_instances(scene, frame_idx, labels, video=None):
         # Plot instance
         inst = QtInstance(instance=instance,
                           color=cmap[track_idx%len(cmap)],
+                          predicted=True,
                           color_predicted=True)
         inst.showLabels(False)
         scene.addItem(inst)
