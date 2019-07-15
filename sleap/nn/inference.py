@@ -535,7 +535,7 @@ class Predictor:
     def predict(self, input_video: Union[dict, Video],
                 output_path: Optional[str] = None,
                 frames: Optional[List[int]] = None,
-                save_confmaps_pafs: bool = True,
+                save_confmaps_pafs: bool = False,
                 is_async: bool = False) -> List[LabeledFrame]:
         """
         Run the entire inference pipeline on an input video or file object.
