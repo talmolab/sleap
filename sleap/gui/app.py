@@ -560,7 +560,7 @@ class MainWindow(QMainWindow):
             labels = filename
             filename = None
             has_loaded = True
-        elif filename.endswith(".json"):
+        elif filename.endswith((".json", ".json.zip")):
             labels = Labels.load_json(filename, video_callback=gui_video_callback)
             has_loaded = True
         elif filename.endswith(".mat"):
@@ -890,7 +890,7 @@ class MainWindow(QMainWindow):
         self.changestack_push("removed predictions")
 
     def importPredictions(self):
-        filters = ["JSON labels (*.json)", "HDF5 dataset (*.h5 *.hdf5)", "Matlab dataset (*.mat)", "DeepLabCut csv (*.csv)"]
+        filters = ["JSON labels (*.json *.json.zip)", "HDF5 dataset (*.h5 *.hdf5)", "Matlab dataset (*.mat)", "DeepLabCut csv (*.csv)"]
         filenames, selected_filter = QFileDialog.getOpenFileNames(self, dir=None, caption="Import labeled data...", filter=";;".join(filters))
 
         if len(filenames) == 0: return
@@ -1133,7 +1133,7 @@ class MainWindow(QMainWindow):
         window.showMaximized()
 
     def openProject(self, first_open=False):
-        filters = ["JSON labels (*.json)", "HDF5 dataset (*.h5 *.hdf5)", "Matlab dataset (*.mat)", "DeepLabCut csv (*.csv)"]
+        filters = ["JSON labels (*.json *.json.zip)", "HDF5 dataset (*.h5 *.hdf5)", "Matlab dataset (*.mat)", "DeepLabCut csv (*.csv)"]
         filename, selected_filter = QFileDialog.getOpenFileName(self, dir=None, caption="Import labeled data...", filter=";;".join(filters))
 
         if len(filename) == 0: return
@@ -1148,7 +1148,7 @@ class MainWindow(QMainWindow):
     def saveProject(self):
         if self.filename is not None:
             filename = self.filename
-            if filename.endswith(".json"):
+            if filename.endswith((".json", ".json.zip")):
                 Labels.save_json(labels = self.labels, filename = filename)
             # Mark savepoint in change stack
             self.changestack_savepoint()
