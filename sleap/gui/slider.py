@@ -374,6 +374,17 @@ class VideoSlider(QGraphicsView):
         x = min(x, self.slider.rect().width()-self.handle.rect().width())
 
         val = self._toVal(x)
+
+        # snap to nearby mark within handle
+        mark_vals = [self._mark_val(mark) for mark in self._marks]
+        handle_left = self._toVal(x - self.handle.rect().width()/2)
+        handle_right = self._toVal(x + self.handle.rect().width()/2)
+        marks_in_handle = [mark for mark in mark_vals
+                           if handle_left < mark < handle_right]
+        if marks_in_handle:
+            marks_in_handle.sort(key=lambda m: (abs(m-val), m>val))
+            val = marks_in_handle[0]
+
         old = self.value()
         self.setValue(val)
 
