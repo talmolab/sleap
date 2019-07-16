@@ -838,15 +838,29 @@ class MainWindow(QMainWindow):
     def runActiveLearning(self):
         from sleap.gui.active import ActiveLearningDialog
 
-        # predict for clip if selected
-        # otherwise default is to predict on unlabeled suggested frames
-        start, end = self.player.seekbar.getSelection()
-        frames_to_predict = {self.video:list(range(start,end))} if start < end else None
+        def remove_user_labeled(video, frames, user_labeled_frames=self.labels.user_labeled_frames):
+            if len(frames) == 0: return frames
+            video_user_labeled_frame_idxs = [lf.frame_idx for lf in user_labeled_frames
+                                             if lf.video == video]
+            return list(set(frames) - set(video_user_labeled_frame_idxs))
+
+        selection = dict()
+        selection["frame"] = {self.video: self.player.frame_idx}
+        selection["clip"] = {self.video: list(range(*self.player.seekbar.getSelection()))}
+        selection["video"] = {self.video: list(range(self.video.num_frames))}
+
+        selection["suggestions"] = {
+            video:remove_user_labeled(video, self.labels.get_video_suggestions(video))
+            for video in self.labels.videos}
+
+        selection["random"] = {
+            video: remove_user_labeled(video, VideoFrameSuggestions.random(video=video))
+            for video in self.labels.videos}
 
         if self._active_learning_win is None:
             self._active_learning_win = ActiveLearningDialog(self.filename, self.labels)
 
-        self._active_learning_win.frames_to_predict = frames_to_predict
+        self._active_learning_win.frame_selection = selection
         self._active_learning_win.show()
 
         if self._active_learning_win.exec_():
@@ -1039,10 +1053,9 @@ class MainWindow(QMainWindow):
         self.player.view.selectInstance(idx)
 
     def _swap_tracks(self, new_track, old_track):
-        start, end = self.player.seekbar.getSelection()
-        if start < end:
+        if self.player.seekbar.getSelection.hasSelection():
             # If range is selected in seekbar, use that
-            frame_range = range(start, end)
+            frame_range = range(*self.player.seekbar.getSelection())
         else:
             # Otherwise, range is current to last frame
             frame_range = range(self.player.frame_idx, self.video.frames)
@@ -1235,8 +1248,8 @@ class MainWindow(QMainWindow):
         self.plotFrame(self.mark_idx)
 
     def extractClip(self):
-        start, end = self.player.seekbar.getSelection()
-        if start < end:
+        if self.player.seekbar.hasSelection():
+            start, end = self.player.seekbar.getSelection()
             clip_labeled_frames = [copy.copy(lf) for lf in self.labels.labeled_frames if lf.frame_idx in range(start, end)]
             clip_video_frames = self.video.get_frames(range(start, end))
             clip_video = Video.from_numpy(clip_video_frames)
@@ -1393,8 +1406,8 @@ class MainWindow(QMainWindow):
     def updateStatusMessage(self, message = None):
         if message is None:
             message = f"Frame: {self.player.frame_idx+1}/{len(self.video)}"
-            start, end = self.player.seekbar.getSelection()
-            if start < end:
+            if self.player.seekbar.hasSelection():
+                start, end = self.player.seekbar.getSelection()
                 message += f" (selection: {start}-{end})"
 
         self.statusBar().showMessage(message)

@@ -87,6 +87,12 @@ main:
   type: double
   default: 5.0
 
+- name: _predict_frames
+  label: Predict On
+  type: list
+  options: current frame,random frames
+  default: current frame
+
 - name: _view_datagen
   label: View Training Image Inputs...
   type: button

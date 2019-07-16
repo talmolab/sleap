@@ -3,6 +3,7 @@ import cattr
 
 from datetime import datetime
 import multiprocessing
+from functools import reduce
 from pkg_resources import Requirement, resource_filename
 from typing import Dict, List, Optional
 
@@ -18,16 +19,15 @@ from PySide2 import QtWidgets, QtCore
 class ActiveLearningDialog(QtWidgets.QDialog):
 
     def __init__(self,
-                labels_filename: str, labels: Labels,
-                only_predict: bool=False, frames_to_predict: Optional[Dict[Video, List[int]]]=None,
-                *args, **kwargs):
+                 labels_filename: str, labels: Labels,
+                 only_predict: bool=False,
+                 *args, **kwargs):
 
         super(ActiveLearningDialog, self).__init__(*args, **kwargs)
 
         self.labels_filename = labels_filename
         self.labels = labels
         self.only_predict = only_predict
-        self.frames_to_predict = frames_to_predict
 
         print(f"Number of frames to train on: {len(labels.user_labeled_frames)}")
 
@@ -112,6 +112,49 @@ class ActiveLearningDialog(QtWidgets.QDialog):
                 field.blockSignals(True)
             field.set_options(self.option_list_from_jobs(model_type))
             field.blockSignals(False)
+
+    @property
+    def frame_selection(self):
+        return self._frame_selection
+
+    @frame_selection.setter
+    def frame_selection(self, frame_selection):
+        self._frame_selection = frame_selection
+
+        if "_predict_frames" in self.form_widget.fields.keys():
+            prediction_options = []
+
+            def count_total_frames(videos_frames):
+                return reduce(lambda x,y:x+y, map(len, videos_frames.values()))
+
+            # Determine which options are available given _frame_selection
+
+            total_random = count_total_frames(self._frame_selection["random"])
+            total_suggestions = count_total_frames(self._frame_selection["suggestions"])
+            clip_length = count_total_frames(self._frame_selection["clip"])
+            video_length = count_total_frames(self._frame_selection["video"])
+
+            # Build list of options
+
+            prediction_options.append("current frame")
+
+            option = f"random frames ({total_random} total frames)"
+            prediction_options.append(option)
+            default_option = option
+
+            if total_suggestions > 0:
+                option = f"suggestion frames ({total_suggestions} total frames)"
+                prediction_options.append(option)
+                default_option = option
+
+            if clip_length > 0:
+                option = f"selected clip ({clip_length} frames)"
+                prediction_options.append(option)
+                default_option = option
+
+            prediction_options.append(f"entire video ({video_length} frames)")
+
+            self.form_widget.fields["_predict_frames"].set_options(prediction_options, default_option)
 
     def show(self):
         super(ActiveLearningDialog, self).show()
@@ -208,8 +251,31 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         # Close the dialog now that we have the data from it
         self.accept()
 
+        with_tracking = False
+        predict_frames_choice = form_data.get("_predict_frames", "")
+        if predict_frames_choice.startswith("current frame"):
+            frames_to_predict = self._frame_selection["frame"]
+        elif predict_frames_choice.startswith("random"):
+            frames_to_predict = self._frame_selection["random"]
+        elif predict_frames_choice.startswith("selected clip"):
+            frames_to_predict = self._frame_selection["clip"]
+            with_tracking = True
+        elif predict_frames_choice.startswith("suggested"):
+            frames_to_predict = self._frame_selection["suggestions"]
+        elif predict_frames_choice.startswith("entire video"):
+            frames_to_predict = self._frame_selection["video"]
+            with_tracking = True
+        else:
+            raise ValueError("No frames to predict.")
+
         # Run active learning pipeline using the TrainingJobs
-        new_lfs = run_active_learning_pipeline(self.labels_filename, self.labels, training_jobs, self.frames_to_predict)
+        new_lfs = run_active_learning_pipeline(
+                    labels_filename = self.labels_filename,
+                    labels = self.labels,
+                    training_jobs = training_jobs,
+                    frames_to_predict = frames_to_predict,
+                    with_tracking = with_tracking)
+
         # remove labeledframes without any predicted instances
         new_lfs = list(filter(lambda lf: len(lf.instances), new_lfs))
         # Update labels with results of active learning
@@ -457,7 +523,8 @@ def find_saved_jobs(job_dir, jobs=None):
     return jobs
 
 def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=None,
-                                    frames_to_predict=None, skip_learning=False):
+                                    frames_to_predict=None, with_tracking=False,
+                                    skip_learning=False):
     # Imports here so we don't load TensorFlow before necessary
     from sleap.nn.monitor import LossViewer
     from sleap.nn.training import TrainingJob
@@ -533,6 +600,7 @@ def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=Non
     if not skip_learning:
         # Create Predictor from the results of training
         predictor = Predictor(sleap_models=training_jobs)
+        predictor.with_tracking = with_tracking
 
     # Run the Predictor for suggested frames
     # We want to predict for suggested frames that don't already have user instances
@@ -546,21 +614,8 @@ def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=Non
     win.show()
     QtWidgets.QApplication.instance().processEvents()
 
-    if frames_to_predict is None:
-        frames_to_predict = {video:labels.get_video_suggestions(video) for video in labels.videos}
-    else:
-        # FIXME: assume that if we're given frames, then it's a continuous clip
-        predictor.with_tracking = True
-
     for video, frames in frames_to_predict.items():
         if len(frames):
-
-            if not predictor.with_tracking:
-                # remove frames that already have user instances
-                video_user_labeled_frame_idxs = [lf.frame_idx for lf in user_labeled_frames
-                                                    if lf.video == video]
-                frames = list(set(frames) - set(video_user_labeled_frame_idxs))
-
             if not skip_learning:
                 timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
                 inference_output_path = os.path.join(save_dir, f"{timestamp}.inference.json")
