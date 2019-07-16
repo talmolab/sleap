@@ -164,7 +164,7 @@ class ActiveLearningDialog(QtWidgets.QDialog):
             default_option = option
 
             if total_suggestions > 0:
-                option = f"suggestion frames ({total_suggestions} total frames)"
+                option = f"suggested frames ({total_suggestions} total frames)"
                 prediction_options.append(option)
                 default_option = option
 
