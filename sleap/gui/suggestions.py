@@ -110,8 +110,8 @@ class VideoFrameSuggestions:
 
         factor = cls.get_scale_factor(video)
 
-        frame_idx_map = [None] * sample_count
-        flat_stack = np.zeros((sample_count, video.height//factor*video.width//factor*video.channels))
+        frame_idx_map = []
+        flat_stack = []
 
         for i in range(sample_count):
             frame_idx = i * sample_step
@@ -120,8 +120,12 @@ class VideoFrameSuggestions:
             multichannel = (video.channels > 1)
             img = rescale(img, scale=.5, anti_aliasing=True, multichannel=multichannel)
 
-            flat_stack[i] = img.flatten()
-            frame_idx_map[i] = frame_idx
+            flat_img = img.flatten()
+
+            flat_stack.append(flat_img)
+            frame_idx_map.append(frame_idx)
+
+        flat_stack = np.stack(flat_stack, axis=0)
         return (flat_stack, frame_idx_map)
 
     @classmethod
