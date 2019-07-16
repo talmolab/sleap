@@ -866,18 +866,17 @@ class MainWindow(QMainWindow):
 
         if self._child_windows.get(mode, None) is None:
             self._child_windows[mode] = ActiveLearningDialog(self.filename, self.labels, mode)
-            self._child_windows[mode].finished.connect(self.learningWindowClosed)
+            self._child_windows[mode].learningFinished.connect(self.learningFinished)
 
         self._child_windows[mode].frame_selection = self._frames_for_prediction()
         self._child_windows[mode].open()
 
-    def learningWindowClosed(self, has_ran):
-        if has_ran:
-            # we ran active learning so update display/ui
-            self.plotFrame()
-            self.updateSeekbarMarks()
-            self.update_data_views()
-            self.changestack_push("new predictions")
+    def learningFinished(self):
+        # we ran active learning so update display/ui
+        self.plotFrame()
+        self.updateSeekbarMarks()
+        self.update_data_views()
+        self.changestack_push("new predictions")
 
     def runLearningExpert(self):
         self._show_learning_window("expert")

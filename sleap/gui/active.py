@@ -18,6 +18,8 @@ from PySide2 import QtWidgets, QtCore
 
 class ActiveLearningDialog(QtWidgets.QDialog):
 
+    learningFinished = QtCore.Signal()
+
     def __init__(self,
                  labels_filename: str, labels: Labels,
                  mode: str="expert",
@@ -341,6 +343,8 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         self.labels.extend_from(new_lfs)
         # combine instances from labeledframes with same video/frame_idx
         self.labels.merge_matching_frames()
+
+        self.learningFinished.emit()
 
         QtWidgets.QMessageBox(text=f"Active learning has finished. Instances were predicted on {len(new_lfs)} frames.").exec_()
 
