@@ -687,8 +687,10 @@ class Predictor:
                                             add_last_edge=self.add_last_edge, pool=pool)
             logger.info("  Matched peaks via PAFs [%.1fs]" % (time() - t0))
 
+            logger.info(f"  Instances found on {len(predicted_frames_chunk)} images.")
+
             # Track
-            if self.with_tracking:
+            if self.with_tracking and len(predicted_frames_chunk):
                 t0 = time()
                 tracker.process(mov_full, predicted_frames_chunk)
                 logger.info("  Tracked IDs via flow shift [%.1fs]" % (time() - t0))
