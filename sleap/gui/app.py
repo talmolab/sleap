@@ -429,6 +429,7 @@ class MainWindow(QMainWindow):
         has_multiple_videos = (self.labels is not None and len(self.labels.videos) > 1)
         has_labeled_frames = (len(self.labels.find(self.video)) > 0)
         has_suggestions = (len(self.labels.suggestions) > 0)
+        has_tracks = (len(self.labels.tracks) > 0)
         has_multiple_instances = (self.labeled_frame is not None and len(self.labeled_frame.instances) > 1)
         # todo: exclude predicted instances from count
         has_nodes_selected = (self.skeletonEdgesSrc.currentIndex() > -1 and
@@ -453,6 +454,8 @@ class MainWindow(QMainWindow):
 
         self._menu_actions["goto next suggestion"].setEnabled(has_suggestions)
         self._menu_actions["goto prev suggestion"].setEnabled(has_suggestions)
+
+        self._menu_actions["goto next track"].setEnabled(has_tracks)
 
         # Update buttons
         self._buttons["add edge"].setEnabled(has_nodes_selected)
@@ -1284,7 +1287,7 @@ class MainWindow(QMainWindow):
 
     def nextTrackFrame(self):
         cur_idx = self.player.frame_idx
-        video_tracks = {inst.track for lf in self.labels.find(self.video) for inst in lf}
+        video_tracks = {inst.track for lf in self.labels.find(self.video) for inst in lf if inst.track is not None}
         next_idx = min([track.spawned_on for track in video_tracks if track.spawned_on > cur_idx], default=-1)
         if next_idx > -1:
             self.plotFrame(next_idx)
