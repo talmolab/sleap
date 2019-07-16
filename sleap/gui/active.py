@@ -18,6 +18,8 @@ from PySide2 import QtWidgets, QtCore
 
 class ActiveLearningDialog(QtWidgets.QDialog):
 
+    learningFinished = QtCore.Signal()
+
     def __init__(self,
                  labels_filename: str, labels: Labels,
                  mode: str="expert",
@@ -342,6 +344,8 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         # combine instances from labeledframes with same video/frame_idx
         self.labels.merge_matching_frames()
 
+        self.learningFinished.emit()
+
         QtWidgets.QMessageBox(text=f"Active learning has finished. Instances were predicted on {len(new_lfs)} frames.").exec_()
 
     def view_datagen(self):
@@ -351,13 +355,15 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         from sleap.gui.confmapsplot import demo_confmaps
         from sleap.gui.quiverplot import demo_pafs
 
+        conf_job, _ = self._get_current_job(ModelOutputType.CONFIDENCE_MAP)
+
         # settings for datagen
         form_data = self.form_widget.get_form_data()
-        scale = form_data["scale"]
+        scale = form_data.get("scale", conf_job.trainer.scale)
         sigma = form_data.get("sigma", None)
         sigma_confmaps = form_data.get("sigma_confmaps", sigma)
         sigma_pafs = form_data.get("sigma_pafs", sigma)
-        instance_crop = form_data["instance_crop"]
+        instance_crop = form_data.get("instance_crop", conf_job.trainer.instance_crop)
         min_crop_size = form_data.get("min_crop_size", 0)
         negative_samples = form_data.get("negative_samples", 0)
 
