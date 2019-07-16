@@ -62,7 +62,7 @@ class MainWindow(QMainWindow):
         self.filename = None
         self._menu_actions = dict()
         self._buttons = dict()
-        self._active_learning_win = None
+        self._child_windows = dict()
 
         self._trail_manager = None
 
@@ -203,10 +203,13 @@ class MainWindow(QMainWindow):
 
         predictionMenu = self.menuBar().addMenu("Predict")
         self._menu_actions["active learning"] = predictionMenu.addAction("Run Active Learning...", self.runActiveLearning)
+        self._menu_actions["inference"] = predictionMenu.addAction("Run Inference...", self.runInference)
+        self._menu_actions["learning expert"] = predictionMenu.addAction("Expert Controls...", self.runLearningExpert)
+        predictionMenu.addSeparator()
         self._menu_actions["visualize models"] = predictionMenu.addAction("Visualize Model Outputs...", self.visualizeOutputs)
         predictionMenu.addSeparator()
-        self._menu_actions["remove predictions"] = predictionMenu.addAction("Delete Predictions...", self.deletePredictions)
         self._menu_actions["import predictions"] = predictionMenu.addAction("Import Predictions...", self.importPredictions)
+        self._menu_actions["remove predictions"] = predictionMenu.addAction("Delete Predictions...", self.deletePredictions)
         # self._menu_actions["import predictions"].setEnabled(False)
         # self._menu_actions["debug"] = predictionMenu.addAction("Debug", self.debug, Qt.CTRL + Qt.Key_D)
 
@@ -835,8 +838,7 @@ class MainWindow(QMainWindow):
         self.update_data_views()
         self.updateSeekbarMarks()
 
-    def runActiveLearning(self):
-        from sleap.gui.active import ActiveLearningDialog
+    def _frames_for_prediction(self):
 
         def remove_user_labeled(video, frames, user_labeled_frames=self.labels.user_labeled_frames):
             if len(frames) == 0: return frames
@@ -857,18 +859,34 @@ class MainWindow(QMainWindow):
             video: remove_user_labeled(video, VideoFrameSuggestions.random(video=video))
             for video in self.labels.videos}
 
-        if self._active_learning_win is None:
-            self._active_learning_win = ActiveLearningDialog(self.filename, self.labels)
+        return selection
 
-        self._active_learning_win.frame_selection = selection
-        self._active_learning_win.show()
+    def _show_learning_window(self, mode):
+        from sleap.gui.active import ActiveLearningDialog
 
-        if self._active_learning_win.exec_():
+        if self._child_windows.get(mode, None) is None:
+            self._child_windows[mode] = ActiveLearningDialog(self.filename, self.labels, mode)
+            self._child_windows[mode].finished.connect(self.learningWindowClosed)
+
+        self._child_windows[mode].frame_selection = self._frames_for_prediction()
+        self._child_windows[mode].open()
+
+    def learningWindowClosed(self, has_ran):
+        if has_ran:
             # we ran active learning so update display/ui
             self.plotFrame()
             self.updateSeekbarMarks()
             self.update_data_views()
             self.changestack_push("new predictions")
+
+    def runLearningExpert(self):
+        self._show_learning_window("expert")
+
+    def runInference(self):
+        self._show_learning_window("inference")
+
+    def runActiveLearning(self):
+        self._show_learning_window("learning")
 
     def visualizeOutputs(self):
         filters = ["HDF5 output (*.h5 *.hdf5)"]

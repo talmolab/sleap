@@ -20,6 +20,7 @@ class ActiveLearningDialog(QtWidgets.QDialog):
 
     def __init__(self,
                  labels_filename: str, labels: Labels,
+                 mode: str="expert",
                  only_predict: bool=False,
                  *args, **kwargs):
 
@@ -27,27 +28,41 @@ class ActiveLearningDialog(QtWidgets.QDialog):
 
         self.labels_filename = labels_filename
         self.labels = labels
+        self.mode = mode
         self.only_predict = only_predict
 
         print(f"Number of frames to train on: {len(labels.user_labeled_frames)}")
 
+        title = dict(learning="Active Learning",
+                     inference="Inference",
+                     expert="Inference Pipeline",
+                     )
+
         learning_yaml = resource_filename(Requirement.parse("sleap"),"sleap/config/active.yaml")
-        self.form_widget = YamlFormWidget(yaml_file=learning_yaml, title="Active Learning Settings")
+        self.form_widget = YamlFormWidget(
+                                yaml_file=learning_yaml,
+                                which_form=self.mode,
+                                title=title[self.mode] + " Settings")
 
         # form ui
 
-        self.training_profile_widgets = {
-                ModelOutputType.CONFIDENCE_MAP: self.form_widget.fields["conf_job"],
-                ModelOutputType.PART_AFFINITY_FIELD: self.form_widget.fields["paf_job"],
-                ModelOutputType.CENTROIDS: self.form_widget.fields["centroid_job"],
-                }
+        self.training_profile_widgets = dict()
+
+        if "conf_job" in self.form_widget.fields:
+            self.training_profile_widgets[ModelOutputType.CONFIDENCE_MAP] = self.form_widget.fields["conf_job"]
+        if "paf_job" in self.form_widget.fields:
+            self.training_profile_widgets[ModelOutputType.PART_AFFINITY_FIELD] = self.form_widget.fields["paf_job"]
+        if "centroid_job" in self.form_widget.fields:
+            self.training_profile_widgets[ModelOutputType.CENTROIDS] = self.form_widget.fields["centroid_job"]
 
         self._rebuild_job_options()
         self._update_job_menus(init=True)
 
         buttons = QtWidgets.QDialogButtonBox()
         self.cancel_button = buttons.addButton(QtWidgets.QDialogButtonBox.Cancel)
-        self.run_button = buttons.addButton("Run Active Learning", QtWidgets.QDialogButtonBox.AcceptRole)
+        self.run_button = buttons.addButton(
+                                "Run "+title[self.mode],
+                                QtWidgets.QDialogButtonBox.AcceptRole)
 
         self.status_message = QtWidgets.QLabel("hi!")
 
@@ -72,15 +87,18 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         def edit_paf_profile():
             self.view_profile(self.form_widget["paf_job"],
                                 model_type=ModelOutputType.PART_AFFINITY_FIELD)
-
         def edit_cent_profile():
             self.view_profile(self.form_widget["centroid_job"],
                                 model_type=ModelOutputType.CENTROIDS)
 
-        self.form_widget.buttons["_view_conf"].clicked.connect(edit_conf_profile)
-        self.form_widget.buttons["_view_paf"].clicked.connect(edit_paf_profile)
-        self.form_widget.buttons["_view_centoids"].clicked.connect(edit_cent_profile)
-        self.form_widget.buttons["_view_datagen"].clicked.connect(self.view_datagen)
+        if "_view_conf" in self.form_widget.buttons:
+            self.form_widget.buttons["_view_conf"].clicked.connect(edit_conf_profile)
+        if "_view_paf" in self.form_widget.buttons:
+            self.form_widget.buttons["_view_paf"].clicked.connect(edit_paf_profile)
+        if "_view_centoids" in self.form_widget.buttons:
+            self.form_widget.buttons["_view_centoids"].clicked.connect(edit_cent_profile)
+        if "_view_datagen" in self.form_widget.buttons:
+            self.form_widget.buttons["_view_datagen"].clicked.connect(self.view_datagen)
 
         self.form_widget.valueChanged.connect(lambda: self.update_gui())
 
@@ -109,8 +127,11 @@ class ActiveLearningDialog(QtWidgets.QDialog):
             if init:
                 field.currentIndexChanged.connect(lambda idx, mt=model_type: self.select_job(mt, idx))
             else:
+                # block signals so we can update combobox without overwriting
+                # any user data with the defaults from the profile
                 field.blockSignals(True)
             field.set_options(self.option_list_from_jobs(model_type))
+            # enable signals again so that choice of profile will update params
             field.blockSignals(False)
 
     @property
@@ -169,29 +190,30 @@ class ActiveLearningDialog(QtWidgets.QDialog):
 
         can_run = True
 
-        use_centroids = form_data.get("_use_centroids", False)
+        if "_use_centroids" in self.form_widget.fields:
+            use_centroids = form_data.get("_use_centroids", False)
 
-        if form_data.get("_use_trained_centroids", False):
-            # you must use centroids if you are using a centroid model
-            use_centroids = True
-            self.form_widget.set_form_data(dict(_use_centroids=True))
-            self.form_widget.fields["_use_centroids"].setEnabled(False)
-        else:
-            self.form_widget.fields["_use_centroids"].setEnabled(True)
+            if form_data.get("_use_trained_centroids", False):
+                # you must use centroids if you are using a centroid model
+                use_centroids = True
+                self.form_widget.set_form_data(dict(_use_centroids=True))
+                self.form_widget.fields["_use_centroids"].setEnabled(False)
+            else:
+                self.form_widget.fields["_use_centroids"].setEnabled(True)
 
-        if use_centroids:
-            # you must crop if you are using centroids
-            self.form_widget.set_form_data(dict(instance_crop=True))
-            self.form_widget.fields["instance_crop"].setEnabled(False)
-        else:
-            self.form_widget.fields["instance_crop"].setEnabled(True)
+            if use_centroids:
+                # you must crop if you are using centroids
+                self.form_widget.set_form_data(dict(instance_crop=True))
+                self.form_widget.fields["instance_crop"].setEnabled(False)
+            else:
+                self.form_widget.fields["instance_crop"].setEnabled(True)
 
         error_messages = []
         if form_data.get("_use_trained_confmaps", False) and \
                 form_data.get("_use_trained_pafs", False):
             # make sure trained models are compatible
-            conf_job = self._get_current_job(ModelOutputType.CONFIDENCE_MAP)
-            paf_job = self._get_current_job(ModelOutputType.PART_AFFINITY_FIELD)
+            conf_job, _ = self._get_current_job(ModelOutputType.CONFIDENCE_MAP)
+            paf_job, _ = self._get_current_job(ModelOutputType.PART_AFFINITY_FIELD)
 
             if conf_job.trainer.scale != paf_job.trainer.scale:
                 can_run = False
@@ -213,26 +235,42 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         self.run_button.setEnabled(can_run)
 
     def _get_current_job(self, model_type):
-        field = self.training_profile_widgets[model_type]
-        idx = field.currentIndex()
-        job_filename, job = self.job_options[model_type][idx]
-        return job
+        # by default use the first model for a given type
+        idx = 0
+        if model_type in self.training_profile_widgets:
+            field = self.training_profile_widgets[model_type]
+            idx = field.currentIndex()
 
-    def run(self):
-        # Collect TrainingJobs and params from form
+        job_filename, job = self.job_options[model_type][idx]
+
+        if model_type == ModelOutputType.CENTROIDS:
+            # reload centroid profile since we always want to use this
+            # rather than any scale and such entered by user
+            job = TrainingJob.load_json(job_filename)
+
+        return job, job_filename
+
+    def _get_model_types_to_use(self):
+        form_data = self.form_widget.get_form_data()
+        types_to_use = []
+
+        types_to_use.append(ModelOutputType.CONFIDENCE_MAP)
+        types_to_use.append(ModelOutputType.PART_AFFINITY_FIELD)
+
+        # by default we want to use centroids
+        if form_data.get("_use_centroids", True):
+            types_to_use.append(ModelOutputType.CENTROIDS)
+
+        return types_to_use
+
+    def _get_current_training_jobs(self):
         form_data = self.form_widget.get_form_data()
         training_jobs = dict()
-        for model_type, field in self.training_profile_widgets.items():
-            idx = field.currentIndex()
-            job_filename, job = self.job_options[model_type][idx]
 
-            if job.model.output_type == ModelOutputType.CENTROIDS:
-                if not form_data.get("_use_centroids",False):
-                    # just use params from file for centroids
-                    continue
-                job = TrainingJob.load_json(job_filename)
+        default_use_trained = (self.mode == "inference")
 
-            training_jobs[model_type] = job
+        for model_type in self._get_model_types_to_use():
+            job, _ = self._get_current_job(model_type)
 
             if job.model.output_type != ModelOutputType.CENTROIDS:
                 # update training job from params in form
@@ -245,8 +283,17 @@ class ActiveLearningDialog(QtWidgets.QDialog):
                     if key in dir(trainer):
                         setattr(trainer, key, val)
             # Use already trained model if desired
-            if form_data.get(f"_use_trained_{str(model_type)}", False):
+            if form_data.get(f"_use_trained_{str(model_type)}", default_use_trained):
                 job.use_trained_model = True
+
+            training_jobs[model_type] = job
+
+        return training_jobs
+
+    def run(self):
+        # Collect TrainingJobs and params from form
+        form_data = self.form_widget.get_form_data()
+        training_jobs = self._get_current_training_jobs()
 
         # Close the dialog now that we have the data from it
         self.accept()
@@ -266,7 +313,7 @@ class ActiveLearningDialog(QtWidgets.QDialog):
             frames_to_predict = self._frame_selection["video"]
             with_tracking = True
         else:
-            raise ValueError("No frames to predict.")
+            frames_to_predict = dict()
 
         # Run active learning pipeline using the TrainingJobs
         new_lfs = run_active_learning_pipeline(
@@ -387,8 +434,9 @@ class ActiveLearningDialog(QtWidgets.QDialog):
                     # insert at beginning of list
                     self.job_options[model_type].insert(0, (filename, job))
                     # update ui list
-                    field = self.training_profile_widgets[model_type]
-                    field.set_options(self.option_list_from_jobs(model_type), filename)
+                    if model_type in self.training_profile_widgets:
+                        field = self.training_profile_widgets[model_type]
+                        field.set_options(self.option_list_from_jobs(model_type), filename)
                 else:
                     QtWidgets.QMessageBox(text=f"Profile selected is for training {str(file_model_type)} instead of {str(model_type)}.").exec_()
 

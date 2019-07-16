@@ -1,4 +1,4 @@
-main:
+expert:
 
 - name: conf_job
   label: Node (confmap) Training Profile
@@ -96,3 +96,50 @@ main:
 - name: _view_datagen
   label: View Training Image Inputs...
   type: button
+
+learning:
+
+- name: min_crop_size
+  label: Minimum crop size
+  type: list
+  dtype: int
+  options: 0,64,128,256,512
+  default: 0
+
+- name: negative_samples
+  label: Negative samples
+  type: int
+  default: 20
+
+- name: batch_size
+  label: Batch Size
+  type: int
+  default: 2
+
+- name: sigma_confmaps
+  label: Sigma for confmaps
+  type: double
+  default: 5.0
+
+- name: sigma_pafs
+  label: Sigma for pafs
+  type: double
+  default: 5.0
+
+- name: _predict_frames
+  label: Predict On
+  type: list
+  options: current frame,random frames
+  default: current frame
+
+- name: _view_datagen
+  label: View Training Image Inputs...
+  type: button
+
+inference:
+
+- name: _predict_frames
+  label: Predict On
+  type: list
+  options: current frame,random frames
+  default: current frame
