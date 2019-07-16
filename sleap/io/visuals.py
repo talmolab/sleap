@@ -98,7 +98,7 @@ if __name__ == "__main__":
 
     app = QtWidgets.QApplication([])
 
-    frames = [lf.frame_idx for lf in labels]
+    frames = [lf.frame_idx for lf in labels if len(lf.instances)]
 
 #     if len(frames) > 2000:
 #         frames = frames[:2000]
