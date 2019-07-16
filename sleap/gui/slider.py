@@ -204,6 +204,11 @@ class VideoSlider(QGraphicsView):
         # Emit signal (even if user selected same region as before)
         self.selectionChanged.emit(*self.getSelection())
 
+    def hasSelection(self) -> bool:
+        """Return True if a clip is selected, False otherwise."""
+        a, b = self.getSelection()
+        return a < b
+
     def getSelection(self):
         """Return start and end value of current selection endpoints."""
         a, b = 0, 0
