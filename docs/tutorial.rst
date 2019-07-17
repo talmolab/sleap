@@ -299,7 +299,7 @@ Instance Track” submenu in the “Labels” menu.
 You can select instances by typing a number between 1 and 9, by clicking
 the instance in the frame, or by clicking the instance in the
 “Instances” panel (on the right side of your main window). When an
-instance is selected, you’ll see it’s track name. These track names can
+instance is selected, you’ll see its track name. These track names can
 be edited by double-clicking the track name in the “Instances” panel.
 
 When you assign an instance to a track, this change will also be applied
