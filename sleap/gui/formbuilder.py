@@ -45,6 +45,10 @@ class YamlFormWidget(QtWidgets.QGroupBox):
         """Return value for specified form field."""
         return FormBuilderLayout.get_widget_value(self.fields[key])
 
+    def __setitem__(self, key, val):
+        """Set value for specified form field."""
+        FormBuilderLayout.set_widget_value(self.fields[key], val)
+
     @property
     def buttons(self):
         """Returns a list of buttons in form (so we can connect to handlers)."""
@@ -159,6 +163,8 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
             val = None
         if widget.property("field_data_type") == "sci":
             val = float(val)
+        elif widget.property("field_data_type") == "int":
+            val = int(val)
         elif widget.property("field_data_type").startswith("file_"):
             val = None if val == "None" else val
         return val
@@ -187,6 +193,7 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
             if item["type"] == "double":
                 field = QtWidgets.QDoubleSpinBox()
                 field.setValue(item["default"])
+                field.valueChanged.connect(lambda: self.valueChanged.emit())
 
             # int: show spinbox (number w/ up/down controls)
             elif item["type"] == "int":
@@ -198,16 +205,19 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
                     min, max = 0, item["default"] * 10
                     field.setRange(min, max)
                 field.setValue(item["default"])
+                field.valueChanged.connect(lambda: self.valueChanged.emit())
 
             # bool: show checkbox
             elif item["type"] == "bool":
                 field = QtWidgets.QCheckBox()
                 field.setChecked(item["default"])
+                field.stateChanged.connect(lambda: self.valueChanged.emit())
 
             # list: show drop-down menu
             elif item["type"] == "list":
                 field = FieldComboWidget()
                 field.set_options(item["options"].split(","), item["default"])
+                field.currentIndexChanged.connect(lambda: self.valueChanged.emit())
 
             # button
             elif item["type"] == "button":
@@ -234,7 +244,7 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
 
             # Store name and type on widget
             field.setObjectName(item["name"])
-            field.setProperty("field_data_type", item["type"])
+            field.setProperty("field_data_type", item.get("dtype", item["type"]))
             # Store widget by name
             self.fields[item["name"]] = field
             # Add field (and label if appropriate) to form layout
@@ -322,6 +332,8 @@ class StackBuilderWidget(QtWidgets.QWidget):
 class FieldComboWidget(QtWidgets.QComboBox):
     def __init__(self, *args, **kwargs):
         super(FieldComboWidget, self).__init__(*args, **kwargs)
+        self.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToContents)
+        self.setMinimumContentsLength(3)
 
     def set_options(self, options_list, select_item=None):
         self.clear()

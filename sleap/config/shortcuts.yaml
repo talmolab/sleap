@@ -8,7 +8,7 @@
 "prev video": QKeySequence.Back
 "mark frame": Qt.CTRL + Qt.Key_M
 "goto marked": Qt.CTRL + Qt.SHIFT + Qt.Key_M
-"extract clip": Qt.CTRL + Qt.Key_E
+"extract clip":
 "add instance": Qt.CTRL + Qt.Key_I
 "delete instance": Qt.CTRL + Qt.Key_Backspace
 "transpose": Qt.CTRL + Qt.Key_T
@@ -18,6 +18,7 @@
 "goto prev":
 "goto next suggestion": QKeySequence.FindNext
 "goto prev suggestion": QKeySequence.FindPrevious
+"goto next track": Qt.CTRL + Qt.Key_E
 "show labels": Qt.CTRL + Qt.Key_Tab
 "show edges": Qt.CTRL + Qt.SHIFT + Qt.Key_Tab
 "show trails": 

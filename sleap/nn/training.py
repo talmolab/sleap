@@ -17,6 +17,7 @@ from multiprocessing.pool import AsyncResult
 from typing import Union, List, Dict, Tuple
 from time import time, sleep
 from datetime import datetime
+from pathlib import Path, PureWindowsPath
 
 from keras import backend as K
 from keras.layers import Input, Conv2D, BatchNormalization, Add, MaxPool2D, UpSampling2D, Concatenate
@@ -29,7 +30,7 @@ from sleap.io.dataset import Labels
 from sleap.nn.augmentation import Augmenter
 from sleap.nn.model import Model, ModelOutputType
 from sleap.nn.monitor import LossViewer
-from sleap.nn.datagen import generate_confmaps_from_points, generate_pafs_from_points, generate_images, generate_points, instance_crops
+from sleap.nn.datagen import generate_confmaps_from_points, generate_pafs_from_points, generate_images, generate_points, instance_crops, generate_centroid_points
 
 
 @attr.s(auto_attribs=True)
@@ -125,9 +126,11 @@ class Trainer:
     reduce_lr_min_lr: float = 1e-8
     early_stopping_min_delta: float = 1e-8
     early_stopping_patience: float = 3
-    scale: int = 1
+    scale: float = 1.0
     sigma: float = 5.0
     instance_crop: bool = False
+    min_crop_size: int = 0
+    negative_samples: int = 0
 
     def train(self,
               model: Model,
@@ -184,9 +187,12 @@ class Trainer:
         imgs = generate_images(labels, scale=self.scale)
         points = generate_points(labels, scale=self.scale)
 
+        # Convert instance points to centroids (if training centroids)
+        if model.output_type == ModelOutputType.CENTROIDS:
+            points = generate_centroid_points(points)
         # Crop images to instances (if desired)
-        if self.instance_crop:
-            imgs, points = instance_crops(imgs, points)
+        elif self.instance_crop:
+            imgs, points = instance_crops(imgs, points, min_crop_size=self.min_crop_size)
 
         # Split data into train/validation
         imgs_train, imgs_val, outputs_train, outputs_val = \
@@ -207,6 +213,8 @@ class Trainer:
             num_outputs_channels = len(skeleton.nodes)
         elif model.output_type == ModelOutputType.PART_AFFINITY_FIELD:
             num_outputs_channels = len(skeleton.edges) * 2
+        elif model.output_type == ModelOutputType.CENTROIDS:
+            num_outputs_channels = 1
 
         logger.info(f"Training set: {imgs_train.shape} -> {num_outputs_channels} channels")
         logger.info(f"Validation set: {imgs_val.shape} -> {num_outputs_channels} channels")
@@ -259,14 +267,21 @@ class Trainer:
             steps_per_epoch = self.steps_per_epoch
 
         # TODO: Add support for multiple skeletons
+
         # Setup data generation
         img_shape = (imgs_train.shape[1], imgs_train.shape[2])
         if model.output_type == ModelOutputType.CONFIDENCE_MAP:
             def datagen_function(points):
-                return generate_confmaps_from_points(points, skeleton, img_shape, sigma=self.sigma)
+                return generate_confmaps_from_points(points, skeleton, img_shape,
+                            sigma=self.sigma)
         elif model.output_type == ModelOutputType.PART_AFFINITY_FIELD:
             def datagen_function(points):
-                return generate_pafs_from_points(points, skeleton, img_shape, sigma=self.sigma)
+                return generate_pafs_from_points(points, skeleton, img_shape,
+                            sigma=self.sigma)
+        elif model.output_type == ModelOutputType.CENTROIDS:
+            def datagen_function(points):
+                return generate_confmaps_from_points(points, None, img_shape,
+                            node_count=1, sigma=self.sigma)
         else:
             datagen_function = None
 
@@ -295,7 +310,7 @@ class Trainer:
                            f"{model.name}.n={num_total}"
 
             # Build save path
-            save_path = os.path.join(save_dir, run_name)
+            save_path = os.path.join(save_dir, train_run.run_name)
             logger.info(f"Save path: {save_path}")
 
             # Check if it already exists
@@ -310,7 +325,7 @@ class Trainer:
         callbacks = self._setup_callbacks(
             train_run, save_path, train_datagen,
             tensorboard_dir, control_zmq_port,
-            progress_report_zmq_port)
+            progress_report_zmq_port, output_type=str(model.output_type))
 
         # Train!
         history = keras_model.fit_generator(
@@ -370,7 +385,7 @@ class Trainer:
     def _setup_callbacks(self, train_run: 'TrainingJob',
                          save_path, train_datagen,
                          tensorboard_dir, control_zmq_port,
-                         progress_report_zmq_port):
+                         progress_report_zmq_port, output_type):
         """
         Setup callbacks for the call to Keras fit_generator.
 
@@ -422,7 +437,7 @@ class Trainer:
         # Callbacks: Tensorboard
         if tensorboard_dir is not None:
             callbacks.append(
-                TensorBoard(log_dir=f"{tensorboard_dir}/{model.name}{time()}",
+                TensorBoard(log_dir=f"{tensorboard_dir}/{output_type}{time()}",
                             batch_size=32, update_freq=150, histogram_freq=0,
                             write_graph=False, write_grads=False, write_images=False,
                             embeddings_freq=0, embeddings_layer_names=None,
@@ -438,7 +453,7 @@ class Trainer:
         # Callbacks: ZMQ progress reporter
         if progress_report_zmq_port is not None:
             callbacks.append(
-                ProgressReporterZMQ(port=progress_report_zmq_port))
+                ProgressReporterZMQ(port=progress_report_zmq_port, what=output_type))
 
         return callbacks
 
@@ -521,7 +536,24 @@ class TrainingJob:
             except:
                 raise ValueError(f"Failure deserializing {filename} to TrainingJob.")
 
+            # if we can't find save_dir for job, set it to path of json we're loading
+            if run.save_dir is not None:
+                if not os.path.exists(run.save_dir):
+                    run.save_dir = os.path.dirname(filename)
+
+                    run.final_model_filename = cls._fix_path(run.final_model_filename)
+                    run.best_model_filename = cls._fix_path(run.best_model_filename)
+                    run.newest_model_filename = cls._fix_path(run.newest_model_filename)
+
         return run
+
+    @classmethod
+    def _fix_path(cls, path):
+        # convert from Windows path if necessary
+        if path is not None:
+            if path.find("\\"):
+                path = Path(PureWindowsPath(path))
+        return path
 
 
 class TrainingControllerZMQ(keras.callbacks.Callback):
@@ -543,7 +575,7 @@ class TrainingControllerZMQ(keras.callbacks.Callback):
         super().__init__()
 
     def __del__(self):
-        print(f"Closing the training controller socket/context.")
+        logger.info(f"Closing the training controller socket/context.")
         self.socket.close()
         self.context.term()
 
@@ -573,14 +605,14 @@ class TrainingControllerZMQ(keras.callbacks.Callback):
 
 
 class ProgressReporterZMQ(keras.callbacks.Callback):
-    def __init__(self, address="tcp://*", port=9001):
+    def __init__(self, address="tcp://127.0.0.1", port=9001, what="not_set"):
         self.address = "%s:%d" % (address, port)
-
+        self.what = what
         # Initialize ZMQ
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.PUB)
-        self.socket.bind(self.address)
-        logger.info(f"Progress reporter publishing on: {self.address}")
+        self.socket.connect(self.address)
+        logger.info(f"Progress reporter publishing on: {self.address} for: {self.what}")
 
         # TODO: catch/throw exception about failure to connect
 
@@ -588,7 +620,10 @@ class ProgressReporterZMQ(keras.callbacks.Callback):
         super().__init__()
 
     def __del__(self):
-        print(f"Closing the reporter controller/context.")
+        logger.info(f"Closing the reporter controller/context.")
+        self.socket.setsockopt(zmq.LINGER, 0)
+        # url = self.socket.LAST_ENDPOINT
+        # self.socket.unbind(url)
         self.socket.close()
         self.context.term()
 
@@ -599,18 +634,17 @@ class ProgressReporterZMQ(keras.callbacks.Callback):
             logs: dict, currently no data is passed to this argument for this method
                 but that may change in the future.
         """
-        # self.logger.info("train_begin")
-        self.socket.send_string(jsonpickle.encode(dict(event="train_begin", logs=logs)))
+        self.socket.send_string(jsonpickle.encode(dict(what=self.what,event="train_begin", logs=logs)))
 
 
     def on_batch_begin(self, batch, logs=None):
         """A backwards compatibility alias for `on_train_batch_begin`."""
         # self.logger.info("batch_begin")
-        self.socket.send_string(jsonpickle.encode(dict(event="batch_begin", batch=batch, logs=logs)))
+        self.socket.send_string(jsonpickle.encode(dict(what=self.what,event="batch_begin", batch=batch, logs=logs)))
 
     def on_batch_end(self, batch, logs=None):
         """A backwards compatibility alias for `on_train_batch_end`."""
-        self.socket.send_string(jsonpickle.encode(dict(event="batch_end", batch=batch, logs=logs)))
+        self.socket.send_string(jsonpickle.encode(dict(what=self.what,event="batch_end", batch=batch, logs=logs)))
 
     def on_epoch_begin(self, epoch, logs=None):
         """Called at the start of an epoch.
@@ -621,7 +655,7 @@ class ProgressReporterZMQ(keras.callbacks.Callback):
             logs: dict, currently no data is passed to this argument for this method
                 but that may change in the future.
         """
-        self.socket.send_string(jsonpickle.encode(dict(event="epoch_begin", epoch=epoch, logs=logs)))
+        self.socket.send_string(jsonpickle.encode(dict(what=self.what,event="epoch_begin", epoch=epoch, logs=logs)))
 
     def on_epoch_end(self, epoch, logs=None):
         """Called at the end of an epoch.
@@ -633,7 +667,7 @@ class ProgressReporterZMQ(keras.callbacks.Callback):
                 validation epoch if validation is performed. Validation result keys
                 are prefixed with `val_`.
         """
-        self.socket.send_string(jsonpickle.encode(dict(event="epoch_end", epoch=epoch, logs=logs)))
+        self.socket.send_string(jsonpickle.encode(dict(what=self.what,event="epoch_end", epoch=epoch, logs=logs)))
 
     def on_train_end(self, logs=None):
         """Called at the end of training.
@@ -642,7 +676,7 @@ class ProgressReporterZMQ(keras.callbacks.Callback):
             logs: dict, currently no data is passed to this argument for this method
                 but that may change in the future.
         """
-        self.socket.send_string(jsonpickle.encode(dict(event="train_end", logs=logs)))
+        self.socket.send_string(jsonpickle.encode(dict(what=self.what,event="train_end", logs=logs)))
 
 
 def main():
@@ -675,7 +709,7 @@ def main():
 
     # Controller
     ctrl = ctx.socket(zmq.PUB)
-    ctrl.bind("tcp://*:9000")
+    ctrl.connect("tcp://127.0.0.1:9000")
 
     # Progress monitoring
     sub = ctx.socket(zmq.SUB)

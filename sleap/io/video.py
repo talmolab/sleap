@@ -296,11 +296,8 @@ class ImgStoreVideo:
         # fix this later when loading these datasets.
         self.filename = os.path.abspath(self.filename)
 
-        # Open the imgstore
-        self.__store = imgstore.new_for_filename(self.filename)
-
-        # Read a frame so we can compute shape an such
-        self.__img, (frame_number, frame_timestamp) = self.__store.get_next_image()
+        self.__store = None
+        self.open()
 
     # The properties and methods below complete our contract with the
     # higher level Video interface.
@@ -311,7 +308,10 @@ class ImgStoreVideo:
 
     @property
     def channels(self):
-        return self.__img.shape[2]
+        if len(self.__img.shape) < 3:
+            return 1
+        else:
+            return self.__img.shape[2]
 
     @property
     def width(self):
@@ -337,6 +337,11 @@ class ImgStoreVideo:
         Returns:
             The numpy.ndarray representing the video frame data.
         """
+
+        # Check if we need to open the imgstore and do it if needed
+        if not self.imgstore:
+            self.open()
+
         if self.index_by_original:
             img, (frame_number, frame_timestamp) = self.__store.get_image(frame_number)
         else:
@@ -350,15 +355,41 @@ class ImgStoreVideo:
 
         return img
 
-        @property
-        def imgstore(self):
-            """
-            Get the underlying ImgStore object for this Video.
+    @property
+    def imgstore(self):
+        """
+        Get the underlying ImgStore object for this Video.
 
-            Returns:
-                The imgstore that is backing this video object.
-            """
-            return self.__store
+        Returns:
+            The imgstore that is backing this video object.
+        """
+        return self.__store
+
+    def open(self):
+        """
+        Open the image store if it isn't already open.
+
+        Returns:
+            None
+        """
+        if not self.imgstore:
+            # Open the imgstore
+            self.__store = imgstore.new_for_filename(self.filename)
+
+            # Read a frame so we can compute shape an such
+            self.__img, (frame_number, frame_timestamp) = self.__store.get_next_image()
+
+    def close(self):
+        """
+        Close the imgstore if it isn't already closed.
+
+        Returns:
+            None
+        """
+        if self.imgstore:
+            # Open the imgstore
+            self.__store.close()
+            self.__store = None
 
 
 @attr.s(auto_attribs=True, cmp=False)
@@ -597,7 +628,7 @@ class Video:
             format: By default it will create a DirectoryImgStore with lossless PNG format.
             Unless the frame_indices = None, in which case, it will default to 'mjpeg/avi'
             format for video.
-            index_by_original: ImgStores are great for storing a collection of frame
+            index_by_original: ImgStores are great for storing a collection of
             selected frames from an larger video. If the index_by_original is set to
             True than the get_frame function will accept the original frame numbers of
             from original video. If False, then it will accept the frame index from the
@@ -622,14 +653,19 @@ class Video:
             if os.path.isdir(path):
                 shutil.rmtree(path, ignore_errors=True)
 
+        # If the video is already an imgstore, we just need to copy it
+        # if type(self) is ImgStoreVideo:
+        #     new_backend = self.backend.copy_to(path)
+        #     return self.__class__(backend=new_backend)
+
         store = imgstore.new_for_format(format,
                                         mode='w', basedir=path,
-                                        imgshape=self.get_frame(0).shape,
+                                        imgshape=(self.shape[1], self.shape[2], self.shape[3]),
                                         chunksize=1000)
 
         # Write the JSON for the original video object to the metadata
         # of the imgstore for posterity
-        store.add_extra_data(sourc_sleap_video_obj=Video.cattr().unstructure(self))
+        store.add_extra_data(source_sleap_video_obj=Video.cattr().unstructure(self))
 
         import time
         for frame_num in frame_numbers:
@@ -708,5 +744,5 @@ class Video:
             if os.path.exists(img_store_dir):
                 return img_store_dir
 
-        raise FileNotFoundError(f"Cannot find a video file: f{path}")
+        raise FileNotFoundError(f"Cannot find a video file: {path}")
 

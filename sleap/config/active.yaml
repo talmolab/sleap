@@ -1,4 +1,4 @@
-main:
+expert:
 
 - name: conf_job
   label: Node (confmap) Training Profile
@@ -7,8 +7,13 @@ main:
   options: a,b,c
 
 - name: _view_conf
-  label: View Selected Node Profile...
+  label: View Node Profile...
   type: button
+
+- name: _use_trained_confmaps
+  label: Use trained confmap model
+  type: bool
+  default: False
 
 - name: paf_job
   label: Edge (paf) Training Profile
@@ -16,21 +21,125 @@ main:
   default: a
   options: a,b,c
 
-- name: _view_paf
-  label: View Selected Edge Profile...
-  type: button
-
-- name: instance_crop
-  label: Crop images to instances
+- name: _use_trained_pafs
+  label: Use trained paf model
   type: bool
   default: False
 
+- name: _view_paf
+  label: View Edge Profile...
+  type: button
+
+- name: centroid_job
+  label: Centroid Training Profile
+  type: list
+  default: a
+  options: a,b,c
+
+- name: _view_centoids
+  label: View Centroid Profile...
+  type: button
+
+- name: _use_trained_centroids
+  label: Use trained centroid model
+  type: bool
+  default: False
+
+- name: instance_crop
+  label: Crop images to instances (for training)
+  type: bool
+  default: False
+
+- name: _use_centroids
+  label: Centroid detection (for inference)
+  type: bool
+  default: False
+
+- name: min_crop_size
+  label: Minimum crop size
+  type: list
+  dtype: int
+  options: 0,64,128,256,512
+  default: 0
+
+- name: negative_samples
+  label: Negative samples (if cropping)
+  type: int
+  default: 0
+
+- name: batch_size
+  label: Batch Size
+  type: int
+  default: 2
+
 - name: scale
   label: Image rescaling factor
-  type: int
+  type: double
   default: 1
 
-- name: sigma
-  label: Sigma (for confmaps and pafs)
+- name: sigma_confmaps
+  label: Sigma for confmaps
   type: double
   default: 5.0
+
+- name: sigma_pafs
+  label: Sigma for pafs
+  type: double
+  default: 5.0
+
+- name: _predict_frames
+  label: Predict On
+  type: list
+  options: current frame,random frames
+  default: current frame
+
+- name: _view_datagen
+  label: View Training Image Inputs...
+  type: button
+
+learning:
+
+- name: min_crop_size
+  label: Minimum crop size
+  type: list
+  dtype: int
+  options: 0,64,128,256,512
+  default: 0
+
+- name: negative_samples
+  label: Negative samples
+  type: int
+  default: 20
+
+- name: batch_size
+  label: Batch Size
+  type: int
+  default: 2
+
+- name: sigma_confmaps
+  label: Sigma for confmaps
+  type: double
+  default: 5.0
+
+- name: sigma_pafs
+  label: Sigma for pafs
+  type: double
+  default: 5.0
+
+- name: _predict_frames
+  label: Predict On
+  type: list
+  options: current frame,random frames
+  default: current frame
+
+- name: _view_datagen
+  label: View Training Image Inputs...
+  type: button
+
+inference:
+
+- name: _predict_frames
+  label: Predict On
+  type: list
+  options: current frame,random frames
+  default: current frame

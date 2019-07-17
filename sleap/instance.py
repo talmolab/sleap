@@ -8,7 +8,7 @@ import numpy as np
 import h5py as h5
 import pandas as pd
 
-from typing import Dict, List, Union, Tuple
+from typing import Dict, List, Optional, Union, Tuple
 
 from attr import __init__
 
@@ -121,13 +121,20 @@ class Instance:
     Args:
         skeleton: The skeleton that this instance is associated with.
         points: A dictionary where keys are skeleton node names and values are _points.
-        track: An optional multi-frame object track associated with this instance. This allows
-        individual animals/objects to be tracked across frames.
+        track: An optional multi-frame object track associated with this instance.
+            This allows individual animals/objects to be tracked across frames.
+        from_predicted: The predicted instance (if any) that this was copied from.
     """
 
     skeleton: Skeleton
     track: Track = attr.ib(default=None)
+    from_predicted: Optional['PredictedInstance'] = attr.ib(default=None)
     _points: Dict[Node, Union[Point, PredictedPoint]] = attr.ib(default=attr.Factory(dict))
+
+    @from_predicted.validator
+    def _validate_from_predicted_(self, attribute, from_predicted):
+        if from_predicted is not None and type(from_predicted) != PredictedInstance:
+            raise TypeError(f"Instance.from_predicted type must be PredictedInstance (not {type(from_predicted)})")
 
     @_points.validator
     def _validate_all_points(self, attribute, points):
@@ -341,6 +348,13 @@ class Instance:
 
         return self._points_array_cache
 
+    @property
+    def centroid(self) -> np.ndarray:
+        """Returns instance centroid as (x,y) numpy row vector."""
+        points = self.points_array(invisible_as_nan=True)
+        centroid = np.nanmedian(points, axis=0)
+        return centroid
+
     @classmethod
     def to_pandas_df(cls, instances: Union['Instance', List['Instance']], skip_nan:bool = True) -> pd.DataFrame:
         """
@@ -376,9 +390,9 @@ class Instance:
         id = 0
         for instance_id, instance in enumerate(instances):
 
-            # Get all the attributes from the instance except the points dict
+            # Get all the attributes from the instance except the points dict or from_predicted
             irecord = {'id': id, 'instance_id': instance_id,
-                       **attr.asdict(instance, filter=lambda attr, value: attr.name != "_points")}
+                       **attr.asdict(instance, filter=lambda attr, value: attr.name not in ("_points", "from_predicted"))}
 
             # Convert the skeleton to it's name
             irecord['skeleton'] = irecord['skeleton'].name
@@ -611,6 +625,11 @@ class PredictedInstance(Instance):
     """
     score: float = attr.ib(default=0.0, converter=float)
 
+    def __attrs_post_init__(self):
+        super(PredictedInstance, self).__attrs_post_init__()
+        if self.from_predicted is not None:
+            raise ValueError("PredictedInstance should not have from_predicted.")
+
     @classmethod
     def from_instance(cls, instance: Instance, score):
         """
@@ -714,13 +733,56 @@ class LabeledFrame:
         return (len(self.user_instances) > 0)
 
     @property
+    def unused_predictions(self):
+        unused_predictions = []
+        any_tracks = [inst.track for inst in self._instances if inst.track is not None]
+        if len(any_tracks):
+            # use tracks to determine which predicted instances have been used
+            used_tracks = [inst.track for inst in self._instances
+                           if type(inst) == Instance and inst.track is not None
+                           ]
+            unused_predictions = [inst for inst in self._instances
+                                  if inst.track not in used_tracks
+                                  and type(inst) == PredictedInstance
+                                  ]
+
+        else:
+            # use from_predicted to determine which predicted instances have been used
+            # TODO: should we always do this instead of using tracks?
+            used_instances = [inst.from_predicted for inst in self._instances
+                              if inst.from_predicted is not None]
+            unused_predictions = [inst for inst in self._instances
+                                  if type(inst) == PredictedInstance
+                                  and inst not in used_instances]
+
+        return unused_predictions
+
+    @property
     def instances_to_show(self):
         """
         Return a list of instances associated with this frame, but excluding any
-        predicted instances for which there's a regular instance on the same track.
+        predicted instances for which there's a corresponding regular instance.
         """
-        user_tracks = [inst.track for inst in self._instances
-            if type(inst) == Instance and inst.track is not None]
-        distinct_track_instances = [inst for inst in self._instances
-            if type(inst) == Instance or inst.track not in user_tracks]
-        return distinct_track_instances
+        unused_predictions = self.unused_predictions
+        inst_to_show = [inst for inst in self._instances
+                        if type(inst) == Instance or inst in unused_predictions]
+        return inst_to_show
+
+    @staticmethod
+    def merge_frames(labeled_frames, video):
+        frames_found = dict()
+        # move instances into first frame with matching frame_idx
+        for idx, lf in enumerate(labeled_frames):
+            if lf.video == video:
+                if lf.frame_idx in frames_found.keys():
+                    # move instances
+                    dst_idx = frames_found[lf.frame_idx]
+                    labeled_frames[dst_idx].instances.extend(lf.instances)
+                    lf.instances = []
+                else:
+                    # note first lf with this frame_idx
+                    frames_found[lf.frame_idx] = idx
+        # remove labeled frames with no instances
+        labeled_frames = list(filter(lambda lf: len(lf.instances),
+                                     labeled_frames))
+        return labeled_frames

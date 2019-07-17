@@ -12,6 +12,8 @@ Example usage:
     >>> vp.addInstance(instance = my_instance, color)
 """
 
+from PySide2 import QtWidgets
+
 from PySide2.QtWidgets import QApplication, QVBoxLayout, QWidget
 from PySide2.QtWidgets import QLabel, QPushButton, QSlider
 from PySide2.QtWidgets import QAction
@@ -68,11 +70,14 @@ class QtVideoPlayer(QWidget):
         self.seekbar.keyRelease.connect(self.keyReleaseEvent)
         self.seekbar.setEnabled(False)
 
+        splitter = QtWidgets.QSplitter(Qt.Vertical)
+        splitter.addWidget(self.view)
+        splitter.addWidget(self.seekbar)
+
         self.layout = QVBoxLayout()
-        self.layout.addWidget(self.view)
-        self.layout.addWidget(self.seekbar)
-        # self.layout.addWidget(btn)
+        self.layout.addWidget(splitter)
         self.setLayout(self.layout)
+
         self.view.show()
 
         if video is not None:
@@ -789,6 +794,7 @@ class QtNodeLabel(QGraphicsTextItem):
     def mousePressEvent(self, event):
         """ Pass events along so that clicking label is like clicking node.
         """
+        self.setCursor(Qt.ArrowCursor)
         self.node.mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
@@ -799,6 +805,7 @@ class QtNodeLabel(QGraphicsTextItem):
     def mouseReleaseEvent(self, event):
         """ Pass events along so that clicking label is like clicking node.
         """
+        self.unsetCursor()
         self.node.mouseReleaseEvent(event)
 
     def wheelEvent(self, event):
@@ -821,7 +828,7 @@ class QtNode(QGraphicsEllipseItem):
         callbacks: List of functions to call after we update to the `Point`.
     """
     def __init__(self, parent, point:Point, radius:float, color:list, node_name:str = None,
-                    predicted=False, color_predicted=False,
+                    predicted=False, color_predicted=False, show_non_visible=True,
                     callbacks = None, *args, **kwargs):
         self._parent = parent
         self.point = point
@@ -831,6 +838,7 @@ class QtNode(QGraphicsEllipseItem):
         self.name = node_name
         self.predicted = predicted
         self.color_predicted = color_predicted
+        self.show_non_visible = show_non_visible
         self.callbacks = [] if callbacks is None else callbacks
         self.dragParent = False
 
@@ -882,6 +890,7 @@ class QtNode(QGraphicsEllipseItem):
         """
         self.point.x = self.scenePos().x()
         self.point.y = self.scenePos().y()
+        self.show()
 
         if self.point.visible:
             radius = self.radius
@@ -891,6 +900,8 @@ class QtNode(QGraphicsEllipseItem):
             radius = self.radius / 2.
             self.setPen(self.pen_missing)
             self.setBrush(self.brush_missing)
+            if not self.show_non_visible:
+                self.hide()
         self.setRect(-radius, -radius, radius*2, radius*2)
 
         for edge in self.edges:
@@ -909,6 +920,8 @@ class QtNode(QGraphicsEllipseItem):
         """
         # Do nothing if node is from predicted instance
         if self.parentObject().predicted: return
+
+        self.setCursor(Qt.ArrowCursor)
 
         if event.button() == Qt.LeftButton:
             # Alt-click to drag instance
@@ -949,6 +962,7 @@ class QtNode(QGraphicsEllipseItem):
         """ Custom event handler for mouse release.
         """
         #print(event)
+        self.unsetCursor()
         if self.dragParent:
             self.parentObject().mouseReleaseEvent(event)
             self.parentObject().setSelected(False)
@@ -980,9 +994,12 @@ class QtEdge(QGraphicsLineItem):
         src: The `QtNode` source node for the edge.
         dst: The `QtNode` destination node for the edge.
     """
-    def __init__(self, parent, src:QtNode, dst:QtNode, color, *args, **kwargs):
+    def __init__(self, parent, src:QtNode, dst:QtNode, color,
+                 show_non_visible=True,
+                 *args, **kwargs):
         self.src = src
         self.dst = dst
+        self.show_non_visible = show_non_visible
 
         super(QtEdge, self).__init__(self.src.point.x, self.src.point.y, self.dst.point.x, self.dst.point.y, parent=parent, *args, **kwargs)
 
@@ -1032,7 +1049,7 @@ class QtEdge(QGraphicsLineItem):
         if self.src.point.visible and self.dst.point.visible:
             self.full_opacity = 1
         else:
-            self.full_opacity = .5
+            self.full_opacity = .5 if self.show_non_visible else 0
         self.setOpacity(self.full_opacity)
 
         if node == self.src:
@@ -1065,12 +1082,15 @@ class QtInstance(QGraphicsObject):
 
     def __init__(self, skeleton:Skeleton = None, instance: Instance = None,
                  predicted=False, color_predicted=False,
-                 color=(0, 114, 189), markerRadius=4, *args, **kwargs):
+                 color=(0, 114, 189), markerRadius=4,
+                 show_non_visible=True,
+                 *args, **kwargs):
         super(QtInstance, self).__init__(*args, **kwargs)
         self.skeleton = skeleton if instance is None else instance.skeleton
         self.instance = instance
         self.predicted = predicted
         self.color_predicted = color_predicted
+        self.show_non_visible = show_non_visible
         self.selectable = not self.predicted or self.color_predicted
         self.color = color
         self.markerRadius = markerRadius
@@ -1112,7 +1132,8 @@ class QtInstance(QGraphicsObject):
         for (node, point) in self.instance.nodes_points:
             node_item = QtNode(parent=self, point=point, node_name=node.name,
                                predicted=self.predicted, color_predicted=self.color_predicted,
-                               color=self.color, radius=self.markerRadius)
+                               color=self.color, radius=self.markerRadius,
+                               show_non_visible=self.show_non_visible)
 
             self.nodes[node.name] = node_item
 
@@ -1121,7 +1142,7 @@ class QtInstance(QGraphicsObject):
             # Make sure that both nodes are present in this instance before drawing edge
             if src in self.nodes and dst in self.nodes:
                 edge_item = QtEdge(parent=self, src=self.nodes[src], dst=self.nodes[dst],
-                                   color=self.color)
+                                   color=self.color, show_non_visible=self.show_non_visible)
                 self.nodes[src].edges.append(edge_item)
                 self.nodes[dst].edges.append(edge_item)
                 self.edges.append(edge_item)
@@ -1264,47 +1285,15 @@ def video_demo(labels, standalone=False):
     if standalone: app = QApplication([])
     window = QtVideoPlayer(video=video)
 
-
-    cmap = np.array([
-        [0,   114,   189],
-        [217,  83,    25],
-        [237, 177,    32],
-        [126,  47,   142],
-        [119, 172,    48],
-        [77,  190,   238],
-        [162,  20,    47],
-        ])
-
-    def plot_instances(vp, frame_idx):
-
-        labeled_frame = [label for label in labels.labels if label.video == video and label.frame_idx == frame_idx][0]
-
-        for i, instance in enumerate(labeled_frame.instances_to_show):
-            # Plot instance
-            vp.addInstance(instance=instance, color=cmap[i%len(cmap)])
-        # hide node labels
-        vp.showLabels(False)
-
-    window.changedPlot.connect(plot_instances)
+    window.changedPlot.connect(lambda vp, idx: plot_instances(vp.view.scene, idx, labels, video))
 
     window.show()
     window.plot()
 
     if standalone: app.exec_()
 
-if __name__ == "__main__":
-
-    import h5py
-
-    data_path = "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"
-    vid = HDF5Video(data_path, "/box", input_format="channels_first")
-
-    app = QApplication([])
-    # app.setApplicationName("sLEAP Label")
-    # window = VideoPlayer(video=vid)
-    window = QtVideoPlayer(video=vid)
-
-    # lines(7)*255
+def plot_instances(scene, frame_idx, labels, video=None, fixed=True):
+    video = video = labels.videos[0]
     cmap = np.array([
         [0,   114,   189],
         [217,  83,    25],
@@ -1314,59 +1303,39 @@ if __name__ == "__main__":
         [77,  190,   238],
         [162,  20,    47],
         ])
+    lfs = [label for label in labels.labels if label.video == video and label.frame_idx == frame_idx]
 
-    skeleton = Skeleton("Fly")
-    skeleton.add_node(name="head")
-    skeleton.add_node(name="neck")
-    skeleton.add_node(name="thorax")
-    skeleton.add_node(name="abdomen")
-    skeleton.add_node(name="left-wing")
-    skeleton.add_node(name="right-wing")
-    skeleton.add_edge(source="head", destination="neck")
-    skeleton.add_edge(source="neck", destination="thorax")
-    skeleton.add_edge(source="thorax", destination="abdomen")
-    skeleton.add_edge(source="thorax", destination="left-wing")
-    skeleton.add_edge(source="thorax", destination="right-wing")
-    # skeleton.add_symmetry(node1="left-wing", node2="right-wing")
-    node_names = list(skeleton.graph.nodes)
+    if len(lfs) == 0: return
 
-    scale = 0.5
-    with h5py.File(data_path, "r") as f:
-        # skeleton = Skeleton.load_hdf5(f["skeleton"])
-        frames = {k: f["frames"][k][:].flatten() for k in ["videoId", "frameIdx"]}
-        points = {k: f["points"][k][:].flatten() for k in ["id", "frameIdx", "instanceId", "x", "y", "node", "visible"]}
+    labeled_frame = lfs[0]
 
-    window.seekbar.setMarks(range(len(frames["frameIdx"])))
+    count_no_track = 0
+    for i, instance in enumerate(labeled_frame.instances_to_show):
+        if instance.track in labels.tracks:
+            track_idx = labels.tracks.index(instance.track)
+        else:
+            # Instance without track
+            track_idx = len(labels.tracks) + count_no_track
+            count_no_track += 1
 
-    # points["frameIdx"] -= 1
-    points["x"] *= scale
-    points["y"] *= scale
-    points["node"] = points["node"].astype("uint8") - 1
-    points["visible"] = points["visible"].astype("bool")
+        # Plot instance
+        inst = QtInstance(instance=instance,
+                          color=cmap[track_idx%len(cmap)],
+                          predicted=fixed,
+                          color_predicted=True,
+                          show_non_visible=False)
+        inst.showLabels(False)
+        scene.addItem(inst)
+        inst.updatePoints()
 
-    def plot_instances(vp, idx):
+if __name__ == "__main__":
 
-        # Find instances in frame idx
-        is_in_frame = points["frameIdx"] == frames["frameIdx"][idx]
-        if not is_in_frame.any():
-            return
+    import argparse
+    from sleap.io.dataset import Labels
 
-        frame_instance_ids = np.unique(points["instanceId"][is_in_frame])
-        for i, instance_id in enumerate(frame_instance_ids):
-            is_instance = is_in_frame & (points["instanceId"] == instance_id)
-            instance_points = {node_names[n]: Point(x, y, visible=v) for x, y, n, v in
-                                            zip(*[points[k][is_instance] for k in ["x", "y", "node", "visible"]])
-                                            if n < len(node_names)}
+    parser = argparse.ArgumentParser()
+    parser.add_argument("data_path", help="Path to labels json file")
+    args = parser.parse_args()
 
-            # Plot instance
-            instance = Instance(skeleton=skeleton, points=instance_points)
-            vp.addInstance(instance=instance, predicted=True, color=cmap[i%len(cmap)])
-            vp.addInstance(instance=instance, color=cmap[i%len(cmap)])
-
-    window.changedPlot.connect(plot_instances)
-
-    window.show()
-    window.plot()
-
-    app.exec_()
-
+    labels = Labels.load_json(args.data_path)
+    video_demo(labels, standalone=True)

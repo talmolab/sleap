@@ -8,12 +8,16 @@ logger = logging.getLogger(__name__)
 
 import numpy as np
 import pandas as pd
+import h5py
 import cv2
 import keras
 import attr
 
+from multiprocessing import Process, Pool
+from multiprocessing.pool import AsyncResult, ThreadPool
+
 from time import time
-from typing import Dict, List, Union, Optional
+from typing import Dict, List, Union, Optional, Tuple
 
 from scipy.ndimage import maximum_filter, gaussian_filter
 from keras.utils import multi_gpu_model
@@ -26,6 +30,7 @@ from sleap.util import usable_cpu_count
 from sleap.nn.model import ModelOutputType
 from sleap.nn.training import TrainingJob
 from sleap.nn.tracking import FlowShiftTracker, Track
+from sleap.nn.transform import DataTransform
 
 
 def get_available_gpus():
@@ -74,6 +79,11 @@ def get_inference_model(confmap_model_path: str, paf_model_path: str, new_input_
     # Combine models with tuple output
     model = keras.Model(new_input, [confmap_model(new_input), paf_model(new_input)])
 
+    model = convert_to_gpu_model(model)
+
+    return model
+
+def convert_to_gpu_model(model: keras.Model) -> keras.Model:
     gpu_list = get_available_gpus()
 
     if len(gpu_list) == 0:
@@ -85,7 +95,6 @@ def get_inference_model(confmap_model_path: str, paf_model_path: str, new_input_
         model = multi_gpu_model(model, gpus=len(gpu_list))
 
     return model
-
 
 def impeaksnms(I, min_thresh=0.3, sigma=3, return_val=True):
     """ Find peaks via non-maximum suppresion. """
@@ -196,7 +205,7 @@ def improfile(I, p0, p1, max_points=None):
     vals = np.stack([I[yi,xi] for xi, yi in zip(x,y)])
     return vals
 
-def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, scale,
+def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, transform, img_idx,
                       min_score_to_node_ratio=0.4,
                       min_score_midpts=0.05,
                       min_score_integral=0.8,
@@ -283,7 +292,6 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, scale,
     # Greedy matching of each edge candidate set
     subset = -1 * np.ones((0, len(skeleton.nodes)+2)) # ids, overall score, number of parts
     candidate = np.array([y for x in peaks_t for y in x]) # flattened set of all points
-    candidate = candidate / scale # rescale points to original image
     candidate_scores = np.array([y for x in peak_vals_t for y in x]) # flattened set of all peak scores
     for k, edge in enumerate(skeleton.edge_names):
         # No matches for this edge
@@ -346,6 +354,10 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, scale,
     score_to_node_ratio = subset[:,-2] / subset[:,-1]
     subset = subset[score_to_node_ratio > min_score_to_node_ratio, :]
 
+    # apply inverse transform to points
+    if candidate.shape[0] > 0:
+        candidate[...,0:2] = transform.invert(img_idx, candidate[...,0:2])
+
     # Done with all the matching! Gather the data
     matched_instances_t = []
     for match in subset:
@@ -363,42 +375,56 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, scale,
 
         matched_instances_t.append(PredictedInstance(skeleton=skeleton, points=pts, score=match[-2]))
 
+    # For centroid crop just return instance closest to centroid
+    if len(matched_instances_t) > 1 and transform.is_cropped:
+        crop_centroid = np.array(((transform.crop_size//2, transform.crop_size//2),)) # center of crop box
+        crop_centroid = transform.invert(img_idx, crop_centroid) # relative to original image
+        # sort by distance from crop centroid
+        matched_instances_t.sort(key=lambda inst: np.linalg.norm(inst.centroid - crop_centroid))
+
+        # just use closest
+        matched_instances_t = matched_instances_t[0:1]
+
     return matched_instances_t
 
 def match_peaks_paf(peaks, peak_vals, pafs, skeleton,
-                    video, frame_indices, scale=1,
+                    video, transform,
                     min_score_to_node_ratio=0.4, min_score_midpts=0.05,
-                    min_score_integral=0.8, add_last_edge=False):
+                    min_score_integral=0.8, add_last_edge=False, **kwargs):
     """ Computes PAF-based peak matching via greedy assignment and other such dragons """
 
     # Process each frame
     predicted_frames = []
-    for peaks_t, peak_vals_t, pafs_t, frame_idx in zip(peaks, peak_vals, pafs, frame_indices):
-        instances = match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, scale,
+    for img_idx, (peaks_t, peak_vals_t, pafs_t) in enumerate(zip(peaks, peak_vals, pafs)):
+        instances = match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton,
+                                   transform, img_idx,
                                    min_score_to_node_ratio=min_score_to_node_ratio,
                                    min_score_midpts=min_score_midpts,
                                    min_score_integral=min_score_integral,
                                    add_last_edge=add_last_edge,)
+        frame_idx = transform.get_frame_idxs(img_idx)
         predicted_frames.append(LabeledFrame(video=video, frame_idx=frame_idx, instances=instances))
 
+    predicted_frames = LabeledFrame.merge_frames(predicted_frames, video=video)
     return predicted_frames
 
 def match_peaks_paf_par(peaks, peak_vals, pafs, skeleton,
-                        video, frame_indices, scale=1,
+                        video, transform,
                         min_score_to_node_ratio=0.4,
                         min_score_midpts=0.05,
                         min_score_integral=0.8,
                         add_last_edge=False,
-                        pool=None):
+                        pool=None, **kwargs):
     """ Parallel version of PAF peak matching """
 
     if pool is None:
         pool = multiprocessing.Pool()
 
     futures = []
-    for peaks_t, peak_vals_t, pafs_t, frame_idx in zip(peaks, peak_vals, pafs, frame_indices):
-        future = pool.apply_async(match_peaks_frame, [peaks_t, peak_vals_t, pafs_t, skeleton],
-                                  dict(scale=scale,
+    for img_idx, (peaks_t, peak_vals_t, pafs_t) in enumerate(zip(peaks, peak_vals, pafs)):
+        future = pool.apply_async(match_peaks_frame,
+                                  [peaks_t, peak_vals_t, pafs_t, skeleton],
+                                  dict(transform=transform, img_idx=img_idx,
                                        min_score_to_node_ratio=min_score_to_node_ratio,
                                        min_score_midpts=min_score_midpts,
                                        min_score_integral=min_score_integral,
@@ -406,9 +432,9 @@ def match_peaks_paf_par(peaks, peak_vals, pafs, skeleton,
         futures.append(future)
 
     predicted_frames = []
-    for future, frame_idx in zip(futures, frame_indices):
+    for img_idx, future in enumerate(futures):
         instances = future.get()
-
+        frame_idx = transform.get_frame_idxs(img_idx)
         # Ok, since we are doing this in parallel. Objects are getting serialized and sent
         # back and forth. This causes all instances to have a different skeleton object
         # This will cause problems later because checking if two skeletons are equal is
@@ -419,6 +445,7 @@ def match_peaks_paf_par(peaks, peak_vals, pafs, skeleton,
 
         predicted_frames.append(LabeledFrame(video=video, frame_idx=frame_idx, instances=instances))
 
+    predicted_frames = LabeledFrame.merge_frames(predicted_frames, video=video)
     return predicted_frames
 
 
@@ -430,8 +457,10 @@ class Predictor:
     inference, non-maximum suppression peak finding, paf part matching, to tracking.
 
     Args:
-        model: A trained keras model used for confidence map and paf inference. FIXME: Should this be a keras model or a sLEAP model class
-        skeleton: The skeleton(s) to use for prediction. FIXME. This should be stored with the model I think
+        sleap_models: Dict with a TrainingJob for each required ModelOutputType;
+            can be used to construct keras model.
+        model: A trained keras model used for confidence map and paf inference.
+        skeleton: The skeleton(s) to use for prediction.
         inference_batch_size: Frames per inference batch (GPU memory limited)
         read_chunk_size: How many frames to read into CPU memory at a time (CPU memory limited)
         nms_min_thresh: A threshold of non-max suppression peak finding in confidence maps. All
@@ -443,11 +472,15 @@ class Predictor:
         min_score_midpts: FIXME
         min_score_integral: FIXME
         add_last_edge: FIXME
+        with_tracking: Should tracking be run after inference.
+        flow_window: The number of frames that tracking should look back when trying to identify
+        instances.
 
     """
 
-    model: keras.Model = attr.ib()
-    skeleton: Skeleton = attr.ib()
+    model: keras.Model = None
+    skeleton: Skeleton = None
+    sleap_models: Dict[ModelOutputType, TrainingJob] = None
     inference_batch_size: int = 2
     read_chunk_size: int = 256
     save_frequency: int = 1 # chunks
@@ -459,53 +492,118 @@ class Predictor:
     add_last_edge: bool = True
     with_tracking: bool = False
     flow_window: int = 15
-    save_shifted_instances: bool = True
 
-    def predict(self, input_video: Union[str, Video],
+    _centroid_model: keras.Model = None
+
+    def predict_centroids(self, imgs: np.ndarray) -> List[List[np.ndarray]]:
+
+        keras_model = self._get_centroid_model()
+
+        centroid_transform = DataTransform()
+        centroid_imgs_scaled = centroid_transform.scale_to(
+                                    imgs=imgs,
+                                    target_size=keras_model.input_shape[1:3])
+
+        # Predict centroids
+        centroid_confmaps = keras_model.predict(centroid_imgs_scaled.astype("float32") / 255,
+                                                batch_size=self.inference_batch_size)
+
+        peaks, peak_vals = find_all_peaks(centroid_confmaps,
+                                            min_thresh=self.nms_min_thresh,
+                                            sigma=self.nms_sigma)
+
+        centroids = [[np.expand_dims(frame_peaks[0][i], axis=0) / centroid_transform.scale
+                        for i in range(frame_peaks[0].shape[0])]
+                     for frame_peaks in peaks]
+
+        # Use predicted centroids (peaks) to crop images
+
+        return centroids
+
+    def _get_centroid_model(self):
+        if self._centroid_model is None:
+            # Load and prepare centroid model
+            centroid_job = self.sleap_models[ModelOutputType.CENTROIDS]
+            centroid_model_path = os.path.join(
+                                        centroid_job.save_dir,
+                                        centroid_job.best_model_filename)
+            keras_model = keras.models.load_model(centroid_model_path)
+            keras_model = convert_to_gpu_model(keras_model)
+            self._centroid_model = keras_model
+        return self._centroid_model
+
+    def predict(self, input_video: Union[dict, Video],
                 output_path: Optional[str] = None,
-                frames: Optional[List[int]] = None) -> List[LabeledFrame]:
+                frames: Optional[List[int]] = None,
+                save_confmaps_pafs: bool = False,
+                is_async: bool = False) -> List[LabeledFrame]:
         """
         Run the entire inference pipeline on an input video or file object.
 
         Args:
-            input_video: Either a video object or video filename.
-            output_path: The output path to save the results.
+            input_video: Either a video object or an unstructured video object (dict).
+            output_path (optional): The output path to save the results.
             frames (optional): List of frames to predict. If None, run entire video.
+            is_async (optional): Whether running function from separate process.
+                Default is False. If True, we won't spawn children.
 
         Returns:
             list of LabeledFrame objects
         """
 
-        # Load model
-        _, h, w, c = self.model.input_shape
-        model_channels = c
-        logger.info("Loaded models:")
-        logger.info("  Input shape: %d x %d x %d" % (h, w, c))
-
         # Open the video if we need it.
+        logger.info(f"Predict is async: {is_async}")
+
         try:
             input_video.get_frame(0)
             vid = input_video
         except AttributeError:
-            vid = Video.from_filename(input_video)
+            if isinstance(input_video, dict):
+                vid = Video.cattr().structure(input_video, Video)
+            elif isinstance(input_video, str):
+                vid = Video.from_filename(input_video)
+            else:
+                raise AttributeError(f"Unable to load input video: {input_video}")
+        logger.info("loaded video")
+        # Load model if necessary
+        # We do this within predict so we don't have to pickle model if running in a thread
+        keras_model = self.model
+        if keras_model is None and len(self.sleap_models):
+            keras_model = self.load_from_training_jobs(sleap_models=self.sleap_models,
+                                         frame_shape=(vid.height, vid.width, vid.channels))
+
+        if keras_model is None:
+            logger.warning("Predictor has no model.")
+            raise ValueError("Predictor has no model.")
+
+        if self.skeleton is None:
+            logger.warning("Predictor has no skeleton.")
+            raise ValueError("Predictor has no skeleton.")
+
+        _, h, w, c = keras_model.input_shape
+        model_channels = c
+        logger.info("Loaded models:")
+        logger.info("  Input shape: %d x %d x %d" % (h, w, c))
 
         frames = frames or list(range(vid.num_frames))
-
         num_frames = len(frames)
         vid_h = vid.shape[1]
         vid_w = vid.shape[2]
-        scale = h / vid_h
+        scale = h / vid_h if ModelOutputType.CENTROIDS not in self.sleap_models.keys() else 1.0
         logger.info("Opened video:")
         logger.info("  Source: " + str(vid.backend))
         logger.info("  Frames: %d" % num_frames)
         logger.info("  Frame shape: %d x %d" % (vid_h, vid_w))
         logger.info("  Scale: %f" % scale)
+        logger.info(f"  True Scale: {h/vid_h, w/vid_w}")
+        logger.info(f"  Crop around predicted centroids? {ModelOutputType.CENTROIDS in self.sleap_models.keys()}")
+        h_w_scale = np.array((h/vid_h, w/vid_w))
 
         # Initialize tracking
         tracker = FlowShiftTracker(window=self.flow_window, verbosity=0)
 
         # Initialize parallel pool
-        pool = multiprocessing.Pool(processes=usable_cpu_count())
+        pool = None if is_async else multiprocessing.Pool(processes=usable_cpu_count())
 
         # Fix the number of threads for OpenCV, not that we are using
         # anything in OpenCV that is actually multi-threaded but maybe
@@ -529,51 +627,72 @@ class Predictor:
             if frame_end > num_frames:
                 frame_end = num_frames
             frames_idx = frames[frame_start:frame_end]
-            mov = vid[frames_idx]
 
-            if (vid.height, vid.width) != (h, w):
-                # Resize the frames to the model input size
-                scaled_mov = np.zeros((mov.shape[0], h, w, mov.shape[3]))
-                for i in range(mov.shape[0]):
-                    img = cv2.resize(mov[i, :, :], (w, h))
-                     # add back singleton channel
-                    if model_channels == 1:
-                        img = img[..., None]
-                    else:
-                        # TODO: figure out when/if this is necessary for RGB videos
-                        img = img[..., ::-1]
-                    scaled_mov[i, ...] = img
-                mov = scaled_mov
+            # Scale/crop using tranform object
+            transform = DataTransform(frame_idxs=frames_idx)
 
-            logger.info("  Read %d frames [%.1fs]" % (len(mov), time() - t0))
+            mov_full = vid[frames_idx]
+
+            logger.info("  Read %d frames [%.1fs]" % (len(mov_full), time() - t0))
+
+            if ModelOutputType.CENTROIDS in self.sleap_models.keys():
+                # Predict centroids and crop around these
+                centroids = self.predict_centroids(mov_full)
+                crop_size = h # match input of keras model
+                mov = transform.centroid_crop(mov_full, centroids, crop_size)
+
+            else:
+                # Scale (if target doesn't match current size)
+                mov = transform.scale_to(mov_full, target_size=(h,w))
 
             # Run inference
             t0 = time()
-            confmaps, pafs = self.model.predict(mov.astype("float32") / 255, batch_size=self.inference_batch_size)
-            logger.info("  Inferred confmaps and PAFs [%.1fs]" % (time() - t0))
+            confmaps, pafs = keras_model.predict(mov.astype("float32") / 255, batch_size=self.inference_batch_size)
 
-            logger.info(f"  confmaps: shape={confmaps.shape}, ptp={np.ptp(confmaps)}")
-            logger.info(f"  pafs: shape={pafs.shape}, ptp={np.ptp(pafs)}")
+            logger.info( "  Inferred confmaps and PAFs [%.1fs]" % (time() - t0))
+            logger.info(f"    confmaps: shape={confmaps.shape}, ptp={np.ptp(confmaps)}")
+            logger.info(f"    pafs: shape={pafs.shape}, ptp={np.ptp(pafs)}")
+
+            # Save confmaps and pafs
+            if output_path is not None and save_confmaps_pafs:
+
+                # output_path is full path to labels.json, so replace "json" with "h5"
+                viz_output_path = output_path
+                if viz_output_path.endswith(".json"):
+                    viz_output_path = viz_output_path[:-(len(".json"))]
+                viz_output_path += ".h5"
+                # write file
+                with h5py.File(viz_output_path, "w") as f:
+                    ds = f.create_dataset("confmaps", data=confmaps,
+                                           compression="gzip", compression_opts=1)
+                    ds = f.create_dataset("pafs", data=pafs,
+                                            compression="gzip", compression_opts=1)
+                    ds = f.create_dataset("box", data=mov,
+                                            compression="gzip", compression_opts=1)
 
             # Find peaks
             t0 = time()
             peaks, peak_vals = find_all_peaks(confmaps, min_thresh=self.nms_min_thresh, sigma=self.nms_sigma)
             logger.info("  Found peaks [%.1fs]" % (time() - t0))
 
+            match_peaks_function = match_peaks_paf_par if not is_async else match_peaks_paf
+
             # Match peaks via PAFs
             t0 = time()
-            predicted_frames_chunk = match_peaks_paf_par(peaks, peak_vals, pafs, self.skeleton,
-                                            scale=scale, video=vid, frame_indices=frames_idx,
+            predicted_frames_chunk = match_peaks_function(peaks, peak_vals, pafs, self.skeleton,
+                                            transform=transform, video=vid, frame_indices=frames_idx,
                                             min_score_to_node_ratio=self.min_score_to_node_ratio,
                                             min_score_midpts=self.min_score_midpts,
                                             min_score_integral=self.min_score_integral,
                                             add_last_edge=self.add_last_edge, pool=pool)
             logger.info("  Matched peaks via PAFs [%.1fs]" % (time() - t0))
 
+            logger.info(f"  Instances found on {len(predicted_frames_chunk)} images.")
+
             # Track
-            if self.with_tracking:
+            if self.with_tracking and len(predicted_frames_chunk):
                 t0 = time()
-                tracker.process(mov, predicted_frames_chunk)
+                tracker.process(mov_full, predicted_frames_chunk)
                 logger.info("  Tracked IDs via flow shift [%.1fs]" % (time() - t0))
 
             # Save
@@ -589,7 +708,7 @@ class Predictor:
                 #  We should save in chunks then combine at the end.
                 labels = Labels(labeled_frames=predicted_frames)
                 if output_path is not None:
-                    Labels.save_json(labels, filename=output_path)
+                    Labels.save_json(labels, filename=output_path, compress=True)
 
                     logger.info("  Saved to: %s [%.1fs]" % (output_path, time() - t0))
 
@@ -597,128 +716,56 @@ class Predictor:
             total_elapsed = time() - t0_start
             fps = len(predicted_frames) / total_elapsed
             frames_left = num_frames - len(predicted_frames)
-            logger.info("  Finished chunk [%.1fs / %.1f FPS / ETA: %.1f min]" % (elapsed, fps, (frames_left / fps) / 60))
+            eta = (frames_left / fps) if fps > 0 else 0
+            logger.info("  Finished chunk [%.1fs / %.1f FPS / ETA: %.1f min]" % (elapsed, fps, eta / 60))
 
             sys.stdout.flush()
 
-
         logger.info("Total: %.1f min" % (total_elapsed / 60))
 
-        return predicted_frames
+        labels = Labels(labeled_frames=predicted_frames)
+        labels.merge_matching_frames()
 
-    def run_visual(self, input_video: Union[str, Video], max_frames: int=None):
+        if is_async:
+            return labels.to_dict()
+        else:
+            return labels
+
+    def predict_async(self, *args, **kwargs) -> Tuple[Pool, AsyncResult]:
         """
-        Run the confmap/paf prediction on an input video or file object.
+        Run the entire inference pipeline on an input file, using a background process.
 
         Args:
-            input_video: Either a video object or video filename.
+            See Predictor.predict().
+            Note that video must be string rather than Video (which doesn't pickle).
 
         Returns:
-            confmaps, pafs: numpy arrays
+            A tuple containing the multiprocessing.Process that is running predict, start() has been called.
+            And the AysncResult object that will contain the result when the job finishes.
         """
+        kwargs["is_async"] = True
+        if isinstance(kwargs["input_video"], Video):
+            # unstructure input_video since it won't pickle
+            kwargs["input_video"] = Video.cattr().unstructure(kwargs["input_video"])
 
-        # Load model
-        _, h, w, c = self.model.input_shape
-        model_channels = c
-        logger.info("Loaded models:")
-        logger.info("  Input shape: %d x %d x %d" % (h, w, c))
+        pool = Pool(processes=1)
+        result = pool.apply_async(self.predict, args=args, kwds=kwargs)
 
-        # Open the video if we need it.
-        try:
-            input_video.get_frame(0)
-            vid = input_video
-        except AttributeError:
-            vid = Video.from_filename(input_video)
+        # Tell the pool to accept no new tasks
+        pool.close()
 
-        num_frames = max_frames or vid.num_frames
-        vid_h = vid.shape[1]
-        vid_w = vid.shape[2]
-        scale = h / vid_h
-        logger.info("Opened video:")
-        logger.info("  Source: " + str(vid.backend))
-        logger.info("  Frames: %d" % num_frames)
-        logger.info("  Frame shape: %d x %d" % (vid_h, vid_w))
-        logger.info("  Scale: %f" % scale)
+        return pool, result
 
-        # Initialize tracking
-        # tracker = FlowShiftTracker(window=self.flow_window, verbosity=0)
-
-        # Initialize parallel pool
-        pool = multiprocessing.Pool(processes=usable_cpu_count())
-
-        # Fix the number of threads for OpenCV, not that we are using
-        # anything in OpenCV that is actually multi-threaded but maybe
-        # we will down the line.
-        cv2.setNumThreads(usable_cpu_count())
-
-        # Process chunk-by-chunk!
-        t0_start = time()
-        predicted_frames: List[LabeledFrame] = []
-        num_chunks = int(np.ceil(num_frames / self.read_chunk_size))
-
-        confmaps = None
-        pafs = None
-
-        for chunk in range(num_chunks):
-            logger.info("Processing chunk %d/%d:" % (chunk + 1, num_chunks))
-            t0_chunk = time()
-
-            # Read the next batch of images
-            t0 = time()
-
-            # Read the next chunk of frames
-            frame_start = self.read_chunk_size * chunk
-            frame_end = frame_start + self.read_chunk_size
-            if frame_end > num_frames:
-                frame_end = num_frames
-            frames_idx = np.arange(frame_start, frame_end)
-            mov = vid[frame_start:frame_end]
-
-            # Preprocess the frames
-            if model_channels == 1:
-                mov = mov[:, :, :, 0]
-
-            # Resize the frames to the model input size
-            for i in range(mov.shape[0]):
-                mov[i, :, :] = cv2.resize(mov[i, :, :], (w, h))
-
-            # Add back singleton dimension
-            if model_channels == 1:
-                mov = mov[..., None]
-            else:
-                # TODO: figure out when/if this is necessary for RGB videos
-                mov = mov[..., ::-1]
-
-            logger.info("  Read %d frames [%.1fs]" % (len(mov), time() - t0))
-
-            # Run inference
-            t0 = time()
-            batch_confmaps, batch_pafs = self.model.predict(mov.astype("float32") / 255, batch_size=self.inference_batch_size)
-            logger.info("  Inferred confmaps and PAFs [%.1fs]" % (time() - t0))
-
-            # Save
-            confmaps = batch_confmaps if confmaps is None else np.concatenate((confmaps, batch_confmaps), axis=0)
-            pafs = batch_pafs if pafs is None else np.concatenate((pafs, batch_pafs), axis=0)
-
-            elapsed = time() - t0_chunk
-            total_elapsed = time() - t0_start
-
-            sys.stdout.flush()
-
-
-        logger.info("Total: %.1f min" % (total_elapsed / 60))
-
-        return confmaps, pafs
-
-    @classmethod
-    def from_training_jobs(cls,
-            training_jobs: Dict[ModelOutputType, TrainingJob],
-            labels: Optional[Labels]=None):
+    def load_from_training_jobs(self,
+            sleap_models: Dict[ModelOutputType, TrainingJob],
+            frame_shape: tuple,
+            resize_hack=True):
         """
-        Construct a Predictor from some TrainingJobs.
+        Load keras model and skeleton from some TrainingJobs.
 
         Args:
-            training_jobs: Dict with a TrainingJob for each required ModelOutputType
+            sleap_models: Dict with a TrainingJob for each required ModelOutputType
+            frame_shape: (height, width, channels) of input for inference
         Returns:
             Predictor initialized with Keras model.
         """
@@ -726,25 +773,32 @@ class Predictor:
         # Build the Keras Model
         # This code makes assumptions about the types of TrainingJobs we've been given
 
-        confmap_job = training_jobs[ModelOutputType.CONFIDENCE_MAP]
-        pafs_job = training_jobs[ModelOutputType.PART_AFFINITY_FIELD]
+        confmap_job = sleap_models[ModelOutputType.CONFIDENCE_MAP]
+        pafs_job = sleap_models[ModelOutputType.PART_AFFINITY_FIELD]
 
         confmap_model_path = os.path.join(confmap_job.save_dir, confmap_job.best_model_filename)
         paf_model_path = os.path.join(pafs_job.save_dir, pafs_job.best_model_filename)
 
         scale = confmap_job.trainer.scale
-        labels = labels or Labels.load_json(confmap_job.labels_filename)
-        skeleton = labels.skeletons[0]
 
         # FIXME: we're now assuming that all the videos are the same size
-        vid = labels.videos[0]
-        img_shape = (vid.height//scale, vid.width//scale, vid.channels)
+        vid_height, vid_width, vid_channels = frame_shape
+        img_shape = (int(vid_height//(1/scale)), int(vid_width//(1/scale)), vid_channels)
 
-        # Load the model
+        # FIXME: hack to make inference run when image size isn't right for input layer
+        if resize_hack:
+            img_shape = (img_shape[0]//8*8, img_shape[1]//8*8, img_shape[2])
+
+        # if there's a centroid model, then we don't want to resize input of other models
+        # since we'll instead crop the images to match the model
+        if ModelOutputType.CENTROIDS in sleap_models.keys():
+            img_shape = None
+
+        # Load the model and skeleton
         keras_model = get_inference_model(confmap_model_path, paf_model_path, img_shape)
+        self.skeleton = confmap_job.model.skeletons[0]
 
-        # Return the Predictor ready to use
-        return cls(model=keras_model, skeleton=skeleton)
+        return keras_model
 
 
 def load_predicted_labels_json_old(
@@ -854,47 +908,62 @@ def load_predicted_labels_json_old(
 
     return Labels(labels)
 
-def test_visual_inference(args):
+def main():
+
+    def frame_list(frame_str: str):
+
+        # Handle ranges of frames. Must be of the form "1-200"
+        if '-' in frame_str:
+            min_max = frame_str.split('-')
+            min_frame = int(min_max[0])
+            max_frame = int(min_max[1])
+            return list(range(min_frame, max_frame+1))
+
+        return [int(x) for x in frame_str.split(",")] if len(frame_str) else None
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("data_path", help="Path to video file")
+    parser.add_argument("-m", "--model", dest='models', action='append',
+                        help="Path to saved model (confmaps, pafs, ...) JSON. "
+                        "Multiple models can be specified, each preceded by "
+                        "--model. Confmap and PAF models are required.",
+                        required=True)
+    parser.add_argument('--resize-input', dest='resize_input', action='store_const',
+                    const=True, default=False,
+                    help='resize the input layer to image size (default False)')
+    parser.add_argument('--with-tracking', dest='with_tracking', action='store_const',
+                    const=True, default=False,
+                    help='just visualize predicted confmaps/pafs (default False)')
+    parser.add_argument('--frames', type=frame_list, default="",
+                        help='list of frames to predict. Either comma separated list (e.g. 1,2,3) or'
+                             'a range separated by hyphen (e.g. 1-3). (default is entire video)')
+    parser.add_argument('-o', '--output', type=str, default=None,
+                        help='The output filename to use for the predicted data.')
+    parser.add_argument('--save_confmaps_pafs', type=bool, default=False,
+                        help='Whether to save the confidence maps or pads')
+    parser.add_argument('-v', '--verbose', help='Increase logging output verbosity.', action="store_true")
+
+    args = parser.parse_args()
+
+
+
     data_path = args.data_path
-    confmap_model_path = args.confmap_model_path
-    paf_model_path = args.paf_model_path
-    save_path = data_path + ".predictions.json"
-    skeleton_path = args.skeleton_path
-
-    # Load video
-    vid = Video.from_filename(data_path)
-    img_shape = (vid.height, vid.width, vid.channels)
-
-    # Load the model
-    model = get_inference_model(confmap_model_path, paf_model_path, img_shape)
-
-    # Load the skeleton(s)
-    skeleton = Skeleton.load_json(skeleton_path)
-    logger.info(f"Skeleton (name={skeleton.name}, {len(skeleton.nodes)} nodes):")
-
-    # Create a predictor to do the work.
-    predictor = Predictor(model=model, skeleton=skeleton)
-
-    # Run the inference pipeline
-    confmaps, pafs = predictor.run_visual(input_video=vid, max_frames=100)
-
-    print(f"confmaps shape: {confmaps.shape}, pafs shape: {pafs.shape}")
-
-    from PySide2 import QtWidgets
-    from sleap.gui.confmapsplot import demo_confmaps
-    from sleap.gui.quiverplot import demo_pafs
-    app = QtWidgets.QApplication([])
-    demo_confmaps(confmaps, vid)
-    demo_pafs(pafs, vid)
-    app.exec_()
-
-def main(args):
-    data_path = args.data_path
-    confmap_model_path = args.confmap_model_path
-    paf_model_path = args.paf_model_path
-    save_path = data_path + ".predictions.json"
-    skeleton_path = args.skeleton_path
+    save_path = args.output if args.output else data_path + ".predictions.json"
     frames = args.frames
+
+    if args.verbose:
+        logging.basicConfig()
+        logging.getLogger().setLevel(logging.DEBUG)
+
+    # Load each model JSON
+    jobs = [TrainingJob.load_json(model_filename) for model_filename in args.models]
+    sleap_models = dict(zip([j.model.output_type for j in jobs], jobs))
+
+    if ModelOutputType.CONFIDENCE_MAP not in sleap_models:
+        raise ValueError("No confidence map model found in specified models!")
+
+    if ModelOutputType.PART_AFFINITY_FIELD not in sleap_models:
+        raise ValueError("No part affinity field (PAF) model found in specified models!")
 
     if args.resize_input:
         # Load video
@@ -903,45 +972,13 @@ def main(args):
     else:
         img_shape = None
 
-    # Load the skeleton(s)
-    skeleton = Skeleton.load_json(skeleton_path)
-
-    logger.info(f"Skeleton (name={skeleton.name}, {len(skeleton.nodes)} nodes):")
-
-    # Load the model
-    model = get_inference_model(confmap_model_path, paf_model_path, img_shape)
-
     # Create a predictor to do the work.
-    predictor = Predictor(model=model, skeleton=skeleton, with_tracking=args.with_tracking)
+    predictor = Predictor(sleap_models=sleap_models, with_tracking=args.with_tracking)
 
     # Run the inference pipeline
-    return predictor.predict(input_video=data_path, output_path=save_path, frames=frames)
+    return predictor.predict(input_video=data_path, output_path=save_path, frames=frames,
+                            save_confmaps_pafs=args.save_confmaps_pafs)
 
 
 if __name__ == "__main__":
-
-    def frame_list(frame_str):
-        return [int(x) for x in frame_str.split(",")] if len(frame_str) else None
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("data_path", help="Path to video file")
-    parser.add_argument("confmap_model_path", help="Path to saved confmap model")
-    parser.add_argument("paf_model_path", help="Path to saved PAF model")
-    parser.add_argument("skeleton_path", help="Path to skeleton file")
-    parser.add_argument('--resize-input', dest='resize_input', action='store_const',
-                    const=True, default=False,
-                    help='resize the input layer to image size (default False)')
-    parser.add_argument('--test-viz', dest='test_viz', action='store_const',
-                    const=True, default=False,
-                    help='just visualize predicted confmaps/pafs (default False)')
-    parser.add_argument('--with-tracking', dest='with_tracking', action='store_const',
-                    const=True, default=False,
-                    help='just visualize predicted confmaps/pafs (default False)')
-    parser.add_argument('--frames', type=frame_list, default="", help='list of frames to predict (default is entire video)')
-
-    args = parser.parse_args()
-
-    if args.test_viz:
-        test_visual_inference(args)
-    else:
-        main(args)
+   main()

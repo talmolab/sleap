@@ -23,7 +23,7 @@ import scipy.io as sio
 import h5py as h5
 
 from collections import MutableSequence
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Optional, _ForwardRef
 
 import pandas as pd
 
@@ -147,7 +147,7 @@ class Labels(MutableSequence):
             raise KeyError("Invalid label indexing arguments.")
 
     def find(self, video: Video, frame_idx: int = None) -> List[LabeledFrame]:
-        """ Search for labeled frames given video and/or frame index. 
+        """ Search for labeled frames given video and/or frame index.
 
         Args:
             video: a `Video` instance that is associated with the labeled frames
@@ -227,7 +227,7 @@ class Labels(MutableSequence):
                         yield instance
 
     def _update_containers(self, new_label: LabeledFrame):
-        """ Ensure that top-level containers are kept updated with new 
+        """ Ensure that top-level containers are kept updated with new
         instances of objects that come along with new labels. """
 
         if new_label.video not in self.videos:
@@ -352,6 +352,40 @@ class Labels(MutableSequence):
         """Sets the suggested frames."""
         self.suggestions = suggestions
 
+    def extend_from(self, new_frames):
+        """Merge data from another Labels object or list of LabeledFrames into self.
+
+        Arg:
+            new_frames: the object from which to copy data
+        Returns:
+            bool, True if we added frames, False otherwise
+        """
+        # allow either Labels or list of LabeledFrames
+        if isinstance(new_frames, Labels): new_frames = new_frames.labeled_frames
+        # return if this isn't non-empty list of labeled frames
+        if not isinstance(new_frames, list) or len(new_frames) == 0: return False
+        if not isinstance(new_frames[0], LabeledFrame): return False
+        # copy the labeled frames
+        self.labeled_frames.extend(new_frames)
+        # update videos/skeletons/nodes/etc using all the labeled frames now present
+        self.__attrs_post_init__()
+        return True
+
+    def merge_matching_frames(self, video=None):
+        """
+        Combine all instances from LabeledFrames that have same frame_idx.
+
+        Args:
+            video (optional): combine for this video; if None, do all videos
+        Returns:
+            none
+        """
+        if video is None:
+            for vid in {lf.video for lf in self.labeled_frames}:
+                self.merge_matching_frames(video=vid)
+        else:
+            self.labeled_frames = LabeledFrame.merge_frames(self.labeled_frames, video=video)
+
     def to_dict(self):
         """
         Serialize all labels in the underling list of LabeledFrames to a
@@ -415,7 +449,8 @@ class Labels(MutableSequence):
     @staticmethod
     def save_json(labels: 'Labels', filename: str,
                   compress: bool = False,
-                  save_frame_data: bool = False):
+                  save_frame_data: bool = False,
+                  frame_data_format: str = 'png'):
         """
         Save a Labels instance to a JSON format.
 
@@ -429,6 +464,23 @@ class Labels(MutableSequence):
             video in the dataset, all frames that have labels will be stored as an imgstore
             dataset. If save_frame_data is True then compress will be forced to True since
             the archive must contain both the JSON data and image data stored in ImgStores.
+            frame_data_format: If save_frame_data is True, then this argument is used to set
+            the data format to use when writing frame data to ImgStore objects. Supported
+            formats should be:
+
+             * 'pgm',
+             * 'bmp',
+             * 'ppm',
+             * 'tif',
+             * 'png',
+             * 'jpg',
+             * 'npy',
+             * 'mjpeg/avi',
+             * 'h264/mkv',
+             * 'avc1/mp4'
+
+             Note: 'h264/mkv' and 'avc1/mp4' require separate installation of these codecs
+             on your system. They are excluded from sLEAP because of their GPL license.
 
         Returns:
             None
@@ -445,7 +497,7 @@ class Labels(MutableSequence):
                 # Create a set of new Video objects with imgstore backends. One for each
                 # of the videos. We will only include the labeled frames though. We will
                 # then replace each video with this new video
-                new_videos = labels.save_frame_data_imgstore(output_dir=tmp_dir)
+                new_videos = labels.save_frame_data_imgstore(output_dir=tmp_dir, format=frame_data_format)
 
                 # Convert to a dict, not JSON yet, because we need to patch up the videos
                 d = labels.to_dict()
@@ -472,7 +524,7 @@ class Labels(MutableSequence):
                     file.write(json_str)
 
     @classmethod
-    def from_json(cls, data: Union[str, dict]):
+    def from_json(cls, data: Union[str, dict], match_to: Optional['Labels'] = None) -> 'Labels':
 
         # Parse the json string if needed.
         if data is str:
@@ -490,6 +542,25 @@ class Labels(MutableSequence):
         skeletons = Skeleton.make_cattr(idx_to_node).structure(dicts['skeletons'], List[Skeleton])
         videos = Video.cattr().structure(dicts['videos'], List[Video])
         tracks = cattr.structure(dicts['tracks'], List[Track])
+
+        # if we're given a Labels object to match, use its objects when they match
+        if match_to is not None:
+            for idx, sk in enumerate(skeletons):
+                for old_sk in match_to.skeletons:
+                    if sk.matches(old_sk):
+                        # use nodes from matched skeleton
+                        for (node, match_node) in zip(sk.nodes, old_sk.nodes):
+                            node_idx = nodes.index(node)
+                            nodes[node_idx] = match_node
+                        # use skeleton from match
+                        skeletons[idx] = old_sk
+                        break
+            for idx, vid in enumerate(videos):
+                for old_vid in match_to.videos:
+                    if vid.filename == old_vid.filename:
+                        # use video from match
+                        videos[idx] = old_vid
+                        break
 
         if "suggestions" in dicts:
             suggestions_cattr = cattr.Converter()
@@ -513,26 +584,42 @@ class Labels(MutableSequence):
         label_cattr.register_structure_hook(Union[Point, PredictedPoint], structure_points)
 
         def structure_instances_list(x, type):
-            if len(x) and 'score' in x[0].keys():
-                return label_cattr.structure(x, List[PredictedInstance])
-            else:
-                return label_cattr.structure(x, List[Instance])
+            inst_list = []
+            for inst_data in x:
+                if 'score' in inst_data.keys():
+                    inst = label_cattr.structure(inst_data, PredictedInstance)
+                else:
+                    inst = label_cattr.structure(inst_data, Instance)
+                inst_list.append(inst)
+            return inst_list
 
         label_cattr.register_structure_hook(Union[List[Instance], List[PredictedInstance]],
                                             structure_instances_list)
+        label_cattr.register_structure_hook(_ForwardRef('PredictedInstance'), lambda x,type: label_cattr.structure(x, PredictedInstance))
         labels = label_cattr.structure(dicts['labels'], List[LabeledFrame])
 
         return cls(labeled_frames=labels, videos=videos, skeletons=skeletons, nodes=nodes, suggestions=suggestions)
 
     @classmethod
-    def load_json(cls, filename: str, video_callback=None):
+    def load_json(cls, filename: str,
+                  video_callback=None,
+                  match_to: Optional['Labels'] = None):
 
         # Check if the file is a zipfile for not.
         if zipfile.is_zipfile(filename):
 
             # Make a tmpdir, located in the directory that the file exists, to unzip
             # its contents.
-            tmp_dir = tempfile.mkdtemp(dir=os.path.dirname(filename))
+            tmp_dir = os.path.join(os.path.dirname(filename),
+                                   f"tmp_{os.path.basename(filename)}")
+            if os.path.exists(tmp_dir):
+                shutil.rmtree(tmp_dir, ignore_errors=True)
+            try:
+                os.mkdir(tmp_dir)
+            except FileExistsError:
+                pass
+
+            #tmp_dir = tempfile.mkdtemp(dir=os.path.dirname(filename))
 
             try:
 
@@ -578,7 +665,7 @@ class Labels(MutableSequence):
 
                 # Try to load the labels filename.
                 try:
-                    labels = Labels.from_json(dicts)
+                    labels = Labels.from_json(dicts, match_to=match_to)
 
                 except FileNotFoundError:
 
@@ -592,7 +679,7 @@ class Labels(MutableSequence):
                         os.chdir(os.path.dirname(filename))
 
                     # Try again
-                    labels = Labels.from_json(dicts)
+                    labels = Labels.from_json(dicts, match_to=match_to)
 
                 except Exception as ex:
                     # Ok, we give up, where the hell are these videos!
@@ -674,14 +761,17 @@ class Labels(MutableSequence):
         Returns:
             A list of ImgStoreVideo objects that represent the stored frames.
         """
-
         # For each label
         imgstore_vids = []
         for v_idx, v in enumerate(self.videos):
             frame_nums = [f.frame_idx for f in self.labeled_frames if v == f.video]
 
             frames_filename = os.path.join(output_dir, f'frame_data_vid{v_idx}')
-            vid = v.to_imgstore(path=frames_filename, frame_numbers=frame_nums, format='png')
+            vid = v.to_imgstore(path=frames_filename, frame_numbers=frame_nums, format=format)
+
+            # Close the video for now
+            vid.close()
+
             imgstore_vids.append(vid)
 
         return imgstore_vids
@@ -930,4 +1020,3 @@ def load_labels_json_old(data_path: str, parsed_json: dict = None,
         labels.append(label)
 
     return Labels(labels)
-

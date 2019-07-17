@@ -9,7 +9,7 @@ from sleap.io.dataset import Labels, load_labels_json_old
 
 TEST_H5_DATASET = 'tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5'
 
-def _check_labels_match(expected_labels, other_labels):
+def _check_labels_match(expected_labels, other_labels, format = 'png'):
     """
     A utitlity function to check whether to sets of labels match.
     This doesn't directly compares some things (like video objects).
@@ -37,7 +37,8 @@ def _check_labels_match(expected_labels, other_labels):
 
         # Compare the first frames of the videos, do it on a small sub-region to
         # make the test reasonable in time.
-        assert np.allclose(expected_label.video.get_frame(frame_idx)[0:15, 0:15, :],
+        if format is 'png':
+            assert np.allclose(expected_label.video.get_frame(frame_idx)[0:15, 0:15, :],
                     label.video.get_frame(frame_idx)[0:15, 0:15, :])
 
         # Compare the instances
@@ -66,6 +67,19 @@ def test_labels_json(tmpdir, multi_skel_vid_labels):
 
     # Check that we have the same thing
     _check_labels_match(multi_skel_vid_labels, loaded_labels)
+
+    # Check that we don't have the very same objects
+    assert not multi_skel_vid_labels.skeletons[0] is loaded_labels.skeletons[0]
+    assert not multi_skel_vid_labels.nodes[3] in loaded_labels.nodes
+    assert not multi_skel_vid_labels.videos[0] is loaded_labels.videos[0]
+
+    # Reload json using objects from original labels
+    loaded_labels = Labels.load_json(json_file_path, match_to=multi_skel_vid_labels)
+
+    # Check that we now do have the same objects
+    assert multi_skel_vid_labels.skeletons[0] in loaded_labels.skeletons
+    assert multi_skel_vid_labels.nodes[3] in loaded_labels.nodes
+    assert multi_skel_vid_labels.videos[0] in loaded_labels.videos
 
 def test_load_labels_json_old(tmpdir):
     new_file_path = os.path.join(tmpdir, 'centered_pair_v2.json')
@@ -194,6 +208,17 @@ def test_label_mutability():
     assert len(labels.find(dummy_video2)) == 0
     assert all([label not in labels for label in dummy_frames2])
 
+    labels.remove_video(dummy_video)
+    assert len(labels.find(dummy_video)) == 0
+
+    dummy_frames3 = [LabeledFrame(dummy_video, frame_idx=0, instances=[dummy_instance,]) for _ in range(10)]
+    labels.labeled_frames.extend(dummy_frames3)
+    assert len(labels) == 10
+    assert len(labels.labeled_frames[0].instances) == 1
+    labels.merge_matching_frames()
+    assert len(labels) == 1
+    assert len(labels.labeled_frames[0].instances) == 10
+
 
 def test_instance_access():
     labels = Labels()
@@ -215,8 +240,8 @@ def test_load_labels_mat(mat_labels):
     assert len(mat_labels.nodes) == 6
     assert len(mat_labels) == 43
 
-
-def test_save_labels_with_frame_data(multi_skel_vid_labels, tmpdir):
+@pytest.mark.parametrize("format", ['png', 'mjpeg/avi'])
+def test_save_labels_with_frame_data(multi_skel_vid_labels, tmpdir, format):
     """
     Test saving and loading a labels dataset with frame data included
     as JSON.
@@ -226,13 +251,17 @@ def test_save_labels_with_frame_data(multi_skel_vid_labels, tmpdir):
     multi_skel_vid_labels.labeled_frames = multi_skel_vid_labels.labeled_frames[5:30]
 
     filename = os.path.join(tmpdir, 'test.json')
-    Labels.save_json(multi_skel_vid_labels, filename=filename, save_frame_data=True)
+    Labels.save_json(multi_skel_vid_labels, filename=filename, save_frame_data=True, frame_data_format=format)
 
     # Load the data back in
     loaded_labels = Labels.load_json(f"{filename}.zip")
 
     # Check that we have the same thing
-    _check_labels_match(multi_skel_vid_labels, loaded_labels)
+    _check_labels_match(multi_skel_vid_labels, loaded_labels, format=format)
+
+    # Make sure we can load twice
+    loaded_labels = Labels.load_json(f"{filename}.zip")
+
 
 def test_save_labels_hdf5(multi_skel_vid_labels, tmpdir):
     # FIXME: This is not really implemented yet and needs a real test

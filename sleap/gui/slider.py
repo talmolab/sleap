@@ -40,6 +40,8 @@ class VideoSlider(QGraphicsView):
         self.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff) # ScrollBarAsNeeded
 
         self.color_maps = [
             [0,   114,   189],
@@ -52,12 +54,12 @@ class VideoSlider(QGraphicsView):
             ]
 
         self._track_height = 3
-        height = 19 if tracks == 0 else 8 + (self._track_height * tracks)
-        if height < 19: height = 19
+
+        height = 19
         slider_rect = QRect(0, 0, 200, height-3)
         handle_width = 6
         handle_rect = QRect(0, 1, handle_width, slider_rect.height()-2)
-
+        self.setMinimumHeight(height)
         self.setMaximumHeight(height)
 
         self.slider = self.scene.addRect(slider_rect)
@@ -81,54 +83,48 @@ class VideoSlider(QGraphicsView):
         self.setValue(val)
         self.setMarks(marks)
 
-    def setTracksFromLabels(self, labels):
+    def setTracksFromLabels(self, labels, video=None):
         """Set slider marks using track information from `Labels` object.
 
         Note that this is the only method coupled to a SLEAP object.
 
         Args:
             labels: the `labels` with tracks and labeled_frames
+            video: the video for which to show marks (default to first)
         """
+        video = video or labels.videos[0]
+
         track_count = len(labels.tracks)
         slider_marks = []
 
-        for labeled_frame in labels.labeled_frames:
-            for instance in labeled_frame.instances:
-                frame_idx = labeled_frame.frame_idx
-                if instance.track is not None:
-                    # Add mark with track
-                    slider_marks.append((labels.tracks.index(instance.track), frame_idx))
-                else:
-                    # Add mark without track
-                    slider_marks.append(frame_idx)
+        inst_frame_list = [(inst, lf.frame_idx) for lf in labels.find(video) for inst in lf.instances]
+
+        for instance, frame_idx in inst_frame_list:
+            if instance.track is not None:
+                # Add mark with track
+                slider_marks.append((labels.tracks.index(instance.track), frame_idx))
+            else:
+                # Add mark without track
+                slider_marks.append(frame_idx)
 
         self.setTracks(track_count)
         self.setMarks(slider_marks)
 
     def setTracks(self, tracks):
         """Set the number of tracks to show in slider.
-        
+
         Args:
             tracks: the number of tracks to show
         """
-        height = 19 if tracks == 0 else 8 + (self._track_height * tracks)
-        if height < 19: height = 19
-        self._set_height(height)
+        if tracks == 0:
+            min_height = max_height = 19
+        else:
+            min_height = max(19, 8 + (self._track_height * min(tracks, 20)))
+            max_height = max(19, 8 + (self._track_height * tracks))
 
-    def _set_height(self, height):
-        slider_rect = self.slider.rect()
-        handle_rect = self.handle.rect()
-        select_box_rect = self.select_box.rect()
-
-        slider_rect.setHeight(height-3)
-        handle_rect.setHeight(slider_rect.height()-2)
-        select_box_rect.setHeight(slider_rect.height()-2)
-
-        self.slider.setRect(slider_rect)
-        self.handle.setRect(handle_rect)
-        self.select_box.setRect(select_box_rect)
-
-        self.setMaximumHeight(height)
+        self.setMaximumHeight(max_height)
+        self.setMinimumHeight(min_height)
+        self.resizeEvent()
 
     def _toPos(self, val, center=False):
         x = val
@@ -207,6 +203,11 @@ class VideoSlider(QGraphicsView):
             self.drawSelection(a, b)
         # Emit signal (even if user selected same region as before)
         self.selectionChanged.emit(*self.getSelection())
+
+    def hasSelection(self) -> bool:
+        """Return True if a clip is selected, False otherwise."""
+        a, b = self.getSelection()
+        return a < b
 
     def getSelection(self):
         """Return start and end value of current selection endpoints."""
@@ -295,6 +296,10 @@ class VideoSlider(QGraphicsView):
         Args:
             new_mark: value to mark
         """
+        # check if mark is within slider range
+        if self._mark_val(new_mark) > self._val_max: return
+        if self._mark_val(new_mark) < self._val_min: return
+
         self._marks.add(new_mark)
 
         width = 0
@@ -332,6 +337,9 @@ class VideoSlider(QGraphicsView):
                                   pen, brush)
         self._mark_items[new_mark] = line
         if update: self.updatePos()
+
+    def _mark_val(self, mark):
+        return mark[1] if type(mark) == tuple else mark
 
     def updatePos(self):
         """Update the visual position of handle and slider annotations."""
@@ -371,21 +379,45 @@ class VideoSlider(QGraphicsView):
         x = min(x, self.slider.rect().width()-self.handle.rect().width())
 
         val = self._toVal(x)
+
+        # snap to nearby mark within handle
+        mark_vals = [self._mark_val(mark) for mark in self._marks]
+        handle_left = self._toVal(x - self.handle.rect().width()/2)
+        handle_right = self._toVal(x + self.handle.rect().width()/2)
+        marks_in_handle = [mark for mark in mark_vals
+                           if handle_left < mark < handle_right]
+        if marks_in_handle:
+            marks_in_handle.sort(key=lambda m: (abs(m-val), m>val))
+            val = marks_in_handle[0]
+
         old = self.value()
         self.setValue(val)
 
         if old != val:
             self.valueChanged.emit(self._val_main)
 
-    def resizeEvent(self, event):
+    def resizeEvent(self, event=None):
         """Override method to update visual size when necessary.
 
         Args:
             event
         """
-        rect = self.slider.rect()
-        rect.setWidth(event.size().width()-1)
-        self.slider.setRect(rect)
+
+        height = self.size().height()
+
+        slider_rect = self.slider.rect()
+        handle_rect = self.handle.rect()
+        select_box_rect = self.select_box.rect()
+
+        slider_rect.setHeight(height-3)
+        if event is not None: slider_rect.setWidth(event.size().width()-1)
+        handle_rect.setHeight(slider_rect.height()-2)
+        select_box_rect.setHeight(slider_rect.height()-2)
+
+        self.slider.setRect(slider_rect)
+        self.handle.setRect(handle_rect)
+        self.select_box.setRect(select_box_rect)
+
         self.updatePos()
 
 
