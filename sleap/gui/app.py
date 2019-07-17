@@ -1070,7 +1070,7 @@ class MainWindow(QMainWindow):
         self.player.view.selectInstance(idx)
 
     def _swap_tracks(self, new_track, old_track):
-        if self.player.seekbar.getSelection.hasSelection():
+        if self.player.seekbar.hasSelection():
             # If range is selected in seekbar, use that
             frame_range = range(*self.player.seekbar.getSelection())
         else:
