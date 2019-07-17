@@ -2,7 +2,7 @@ Tutorial
 ========
 
 Before you can use sLEAP, you’ll need to install it. Follow the
-instructions at https://murthylab.github.io/sleap/ to install sLEAP and
+instructions at :ref:`Installation` to install sLEAP and
 start the GUI app.
 
 There are three main stages of using sLEAP:
@@ -223,7 +223,7 @@ those with predicted instances are marked in red. Predicted instances
 will *not* be used for future model training unless you correct the
 predictions in the GUI.
 
-[add visual: creating instance from prediction and making changes to it]
+|imagefix|
 
 Predicted instances in the frame are displayed in grey with yellow
 nodes. To edit a prediction, you’ll need to replace it with an editable
@@ -267,7 +267,7 @@ command line interface, run
 
 ::
 
-   python -m sleap.nn.inference ~~help
+   python -m sleap.nn.inference --help
 
 Track proofreading
 ~~~~~~~~~~~~~~~~~~
@@ -322,6 +322,7 @@ which a new track is spawned.
 .. |image5| image:: docs/_static/toggle-visibility.gif
 .. |image6| image:: docs/_static/learning-dialog.jpg
 .. |image7| image:: docs/_static/expert-dialog.jpg
+.. |imagefix| image:: docs/_static/fixing-predictions.gif
 .. |image8| image:: docs/_static/inference-dialog.jpg
 .. |image9| image:: docs/_static/fixing-track.gif
 
