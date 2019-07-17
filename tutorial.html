@@ -176,7 +176,7 @@
   <div class="section" id="tutorial">
 <h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h1>
 <p>Before you can use sLEAP, you’ll need to install it. Follow the
-instructions at <a class="reference external" href="https://murthylab.github.io/sleap/">https://murthylab.github.io/sleap/</a> to install sLEAP and
+instructions at <a class="reference internal" href="index.html#installation"><span class="std std-ref">Installation</span></a> to install sLEAP and
 start the GUI app.</p>
 <p>There are three main stages of using sLEAP:</p>
 <ol class="arabic simple">
@@ -358,7 +358,7 @@ seek-bar. Suggested frames which you labeled are marked in blue while
 those with predicted instances are marked in red. Predicted instances
 will <em>not</em> be used for future model training unless you correct the
 predictions in the GUI.</p>
-<p>[add visual: creating instance from prediction and making changes to it]</p>
+<p><img alt="imagefix" src="docs/_static/fixing-predictions.gif" /></p>
 <p>Predicted instances in the frame are displayed in grey with yellow
 nodes. To edit a prediction, you’ll need to replace it with an editable
 instance. There are a few ways to do this:</p>
@@ -395,7 +395,7 @@ range, rather than returning predictions on the suggested frames.</p>
 <p>It’s also possible to run inference using the command line interface
 (useful if you’re going to run on a cluster). For more details on the
 command line interface, run</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">sleap</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">inference</span> <span class="o">~~</span><span class="n">help</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">sleap</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">inference</span> <span class="o">--</span><span class="n">help</span>
 </pre></div>
 </div>
 <div class="section" id="track-proofreading">
@@ -421,7 +421,7 @@ Instance Track” submenu in the “Labels” menu.</p>
 <p>You can select instances by typing a number between 1 and 9, by clicking
 the instance in the frame, or by clicking the instance in the
 “Instances” panel (on the right side of your main window). When an
-instance is selected, you’ll see it’s track name. These track names can
+instance is selected, you’ll see its track name. These track names can
 be edited by double-clicking the track name in the “Instances” panel.</p>
 <p>When you assign an instance to a track, this change will also be applied
 to all <em>subsequent</em> frames. For instance, if you move an instance from
