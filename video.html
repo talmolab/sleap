@@ -82,6 +82,7 @@
             
               <p class="caption"><span class="caption-text">sLEAP Package</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="skeleton.html">Skeleton</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Video</a></li>
 <li class="toctree-l1"><a class="reference internal" href="instance.html">Instance</a></li>
@@ -216,6 +217,17 @@ for sLEAP.</p>
 </dd>
 </dl>
 <dl class="method">
+<dt id="sleap.io.video.ImgStoreVideo.close">
+<code class="sig-name descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/video.html#ImgStoreVideo.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.ImgStoreVideo.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close the imgstore if it isn’t already closed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.io.video.ImgStoreVideo.get_frame">
 <code class="sig-name descname">get_frame</code><span class="sig-paren">(</span><em class="sig-param">frame_number</em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="_modules/sleap/io/video.html#ImgStoreVideo.get_frame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.ImgStoreVideo.get_frame" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a frame from the underlying ImgStore video data.</p>
@@ -229,6 +241,28 @@ for sLEAP.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>The numpy.ndarray representing the video frame data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.video.ImgStoreVideo.imgstore">
+<em class="property">property </em><code class="sig-name descname">imgstore</code><a class="headerlink" href="#sleap.io.video.ImgStoreVideo.imgstore" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the underlying ImgStore object for this Video.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The imgstore that is backing this video object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.video.ImgStoreVideo.open">
+<code class="sig-name descname">open</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/video.html#ImgStoreVideo.open"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.ImgStoreVideo.open" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open the image store if it isn’t already open.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -469,7 +503,7 @@ This should facilitate conversion of any video to a loopbio imgstore.</p>
 <li><p><strong>format</strong> – By default it will create a DirectoryImgStore with lossless PNG format.</p></li>
 <li><p><strong>the frame_indices = None</strong><strong>, </strong><strong>in which case</strong><strong>, </strong><strong>it will default to 'mjpeg/avi'</strong> (<em>Unless</em>) – </p></li>
 <li><p><strong>for video.</strong> (<em>format</em>) – </p></li>
-<li><p><strong>index_by_original</strong> – ImgStores are great for storing a collection of frame</p></li>
+<li><p><strong>index_by_original</strong> – ImgStores are great for storing a collection of</p></li>
 <li><p><strong>frames from an larger video. If the index_by_original is set to</strong> (<em>selected</em>) – </p></li>
 <li><p><strong>than the get_frame function will accept the original frame numbers of</strong> (<em>True</em>) – </p></li>
 <li><p><strong>original video. If False</strong><strong>, </strong><strong>then it will accept the frame index from the</strong> (<em>from</em>) – </p></li>

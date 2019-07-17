@@ -80,6 +80,7 @@
             
               <p class="caption"><span class="caption-text">sLEAP Package</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../skeleton.html">Skeleton</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../video.html">Video</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../instance.html">Instance</a></li>
@@ -448,11 +449,8 @@
         <span class="c1"># fix this later when loading these datasets.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
 
-        <span class="c1"># Open the imgstore</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__store</span> <span class="o">=</span> <span class="n">imgstore</span><span class="o">.</span><span class="n">new_for_filename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
-
-        <span class="c1"># Read a frame so we can compute shape an such</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__img</span><span class="p">,</span> <span class="p">(</span><span class="n">frame_number</span><span class="p">,</span> <span class="n">frame_timestamp</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__store</span><span class="o">.</span><span class="n">get_next_image</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__store</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
 
     <span class="c1"># The properties and methods below complete our contract with the</span>
     <span class="c1"># higher level Video interface.</span>
@@ -463,7 +461,10 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">channels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__img</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">width</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -489,6 +490,11 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            The numpy.ndarray representing the video frame data.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Check if we need to open the imgstore and do it if needed</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">imgstore</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_by_original</span><span class="p">:</span>
             <span class="n">img</span><span class="p">,</span> <span class="p">(</span><span class="n">frame_number</span><span class="p">,</span> <span class="n">frame_timestamp</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__store</span><span class="o">.</span><span class="n">get_image</span><span class="p">(</span><span class="n">frame_number</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -500,17 +506,43 @@
         <span class="k">if</span> <span class="n">img</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
             <span class="n">img</span> <span class="o">=</span> <span class="n">img</span><span class="p">[:,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">]</span>
 
-        <span class="k">return</span> <span class="n">img</span>
+        <span class="k">return</span> <span class="n">img</span></div>
 
-        <span class="nd">@property</span>
-        <span class="k">def</span> <span class="nf">imgstore</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-            <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">            Get the underlying ImgStore object for this Video.</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">imgstore</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the underlying ImgStore object for this Video.</span>
 
-<span class="sd">            Returns:</span>
-<span class="sd">                The imgstore that is backing this video object.</span>
-<span class="sd">            &quot;&quot;&quot;</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__store</span></div></div>
+<span class="sd">        Returns:</span>
+<span class="sd">            The imgstore that is backing this video object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__store</span>
+
+<div class="viewcode-block" id="ImgStoreVideo.open"><a class="viewcode-back" href="../../../video.html#sleap.io.video.ImgStoreVideo.open">[docs]</a>    <span class="k">def</span> <span class="nf">open</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Open the image store if it isn&#39;t already open.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">imgstore</span><span class="p">:</span>
+            <span class="c1"># Open the imgstore</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__store</span> <span class="o">=</span> <span class="n">imgstore</span><span class="o">.</span><span class="n">new_for_filename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+
+            <span class="c1"># Read a frame so we can compute shape an such</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__img</span><span class="p">,</span> <span class="p">(</span><span class="n">frame_number</span><span class="p">,</span> <span class="n">frame_timestamp</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__store</span><span class="o">.</span><span class="n">get_next_image</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ImgStoreVideo.close"><a class="viewcode-back" href="../../../video.html#sleap.io.video.ImgStoreVideo.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Close the imgstore if it isn&#39;t already closed.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">imgstore</span><span class="p">:</span>
+            <span class="c1"># Open the imgstore</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__store</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__store</span> <span class="o">=</span> <span class="kc">None</span></div></div>
 
 
 <div class="viewcode-block" id="Video"><a class="viewcode-back" href="../../../video.html#sleap.io.video.Video">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="nb">cmp</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -749,7 +781,7 @@
 <span class="sd">            format: By default it will create a DirectoryImgStore with lossless PNG format.</span>
 <span class="sd">            Unless the frame_indices = None, in which case, it will default to &#39;mjpeg/avi&#39;</span>
 <span class="sd">            format for video.</span>
-<span class="sd">            index_by_original: ImgStores are great for storing a collection of frame</span>
+<span class="sd">            index_by_original: ImgStores are great for storing a collection of</span>
 <span class="sd">            selected frames from an larger video. If the index_by_original is set to</span>
 <span class="sd">            True than the get_frame function will accept the original frame numbers of</span>
 <span class="sd">            from original video. If False, then it will accept the frame index from the</span>
@@ -774,14 +806,19 @@
             <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
                 <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
+        <span class="c1"># If the video is already an imgstore, we just need to copy it</span>
+        <span class="c1"># if type(self) is ImgStoreVideo:</span>
+        <span class="c1">#     new_backend = self.backend.copy_to(path)</span>
+        <span class="c1">#     return self.__class__(backend=new_backend)</span>
+
         <span class="n">store</span> <span class="o">=</span> <span class="n">imgstore</span><span class="o">.</span><span class="n">new_for_format</span><span class="p">(</span><span class="nb">format</span><span class="p">,</span>
                                         <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">basedir</span><span class="o">=</span><span class="n">path</span><span class="p">,</span>
-                                        <span class="n">imgshape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_frame</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                                        <span class="n">imgshape</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]),</span>
                                         <span class="n">chunksize</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
 
         <span class="c1"># Write the JSON for the original video object to the metadata</span>
         <span class="c1"># of the imgstore for posterity</span>
-        <span class="n">store</span><span class="o">.</span><span class="n">add_extra_data</span><span class="p">(</span><span class="n">sourc_sleap_video_obj</span><span class="o">=</span><span class="n">Video</span><span class="o">.</span><span class="n">cattr</span><span class="p">()</span><span class="o">.</span><span class="n">unstructure</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+        <span class="n">store</span><span class="o">.</span><span class="n">add_extra_data</span><span class="p">(</span><span class="n">source_sleap_video_obj</span><span class="o">=</span><span class="n">Video</span><span class="o">.</span><span class="n">cattr</span><span class="p">()</span><span class="o">.</span><span class="n">unstructure</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
 
         <span class="kn">import</span> <span class="nn">time</span>
         <span class="k">for</span> <span class="n">frame_num</span> <span class="ow">in</span> <span class="n">frame_numbers</span><span class="p">:</span>
@@ -860,7 +897,7 @@
             <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">img_store_dir</span><span class="p">):</span>
                 <span class="k">return</span> <span class="n">img_store_dir</span>
 
-        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Cannot find a video file: f</span><span class="si">{path}</span><span class="s2">&quot;</span><span class="p">)</span></div></div>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Cannot find a video file: </span><span class="si">{path}</span><span class="s2">&quot;</span><span class="p">)</span></div></div>
 
 </pre></div>
 

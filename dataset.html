@@ -82,6 +82,7 @@
             
               <p class="caption"><span class="caption-text">sLEAP Package</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="skeleton.html">Skeleton</a></li>
 <li class="toctree-l1"><a class="reference internal" href="video.html">Video</a></li>
 <li class="toctree-l1"><a class="reference internal" href="instance.html">Instance</a></li>
@@ -203,6 +204,21 @@ labeled frames are added.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="sleap.io.dataset.Labels.extend_from">
+<code class="sig-name descname">extend_from</code><span class="sig-paren">(</span><em class="sig-param">new_frames</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.extend_from"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.extend_from" title="Permalink to this definition">¶</a></dt>
+<dd><p>Merge data from another Labels object or list of LabeledFrames into self.</p>
+<dl class="simple">
+<dt>Arg:</dt><dd><p>new_frames: the object from which to copy data</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>bool, True if we added frames, False otherwise</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.io.dataset.Labels.find">
 <code class="sig-name descname">find</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em>, <em class="sig-param">frame_idx: int = None</em><span class="sig-paren">)</span> &#x2192; List[sleap.instance.LabeledFrame]<a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.find"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.find" title="Permalink to this definition">¶</a></dt>
 <dd><p>Search for labeled frames given video and/or frame index.</p>
@@ -313,6 +329,20 @@ recommended.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="sleap.io.dataset.Labels.merge_matching_frames">
+<code class="sig-name descname">merge_matching_frames</code><span class="sig-paren">(</span><em class="sig-param">video=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.merge_matching_frames"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.merge_matching_frames" title="Permalink to this definition">¶</a></dt>
+<dd><p>Combine all instances from LabeledFrames that have same frame_idx.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>video</strong> (<em>optional</em>) – combine for this video; if None, do all videos</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>none</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.io.dataset.Labels.remove">
 <code class="sig-name descname">remove</code><span class="sig-paren">(</span><em class="sig-param">value: sleap.instance.LabeledFrame</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.remove"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.remove" title="Permalink to this definition">¶</a></dt>
 <dd><p>S.remove(value) – remove first occurrence of value.
@@ -372,7 +402,7 @@ will be included as empty imgstores.</p>
 
 <dl class="method">
 <dt id="sleap.io.dataset.Labels.save_json">
-<em class="property">static </em><code class="sig-name descname">save_json</code><span class="sig-paren">(</span><em class="sig-param">labels: sleap.io.dataset.Labels</em>, <em class="sig-param">filename: str</em>, <em class="sig-param">compress: bool = False</em>, <em class="sig-param">save_frame_data: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.save_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.save_json" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">save_json</code><span class="sig-paren">(</span><em class="sig-param">labels: sleap.io.dataset.Labels</em>, <em class="sig-param">filename: str</em>, <em class="sig-param">compress: bool = False</em>, <em class="sig-param">save_frame_data: bool = False</em>, <em class="sig-param">frame_data_format: str = 'png'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.save_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.save_json" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save a Labels instance to a JSON format.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -386,6 +416,23 @@ will be included as empty imgstores.</p>
 <li><p><strong>in the dataset</strong><strong>, </strong><strong>all frames that have labels will be stored as an imgstore</strong> (<em>video</em>) – </p></li>
 <li><p><strong>If save_frame_data is True then compress will be forced to True since</strong> (<em>dataset.</em>) – </p></li>
 <li><p><strong>archive must contain both the JSON data and image data stored in ImgStores.</strong> (<em>the</em>) – </p></li>
+<li><p><strong>frame_data_format</strong> – If save_frame_data is True, then this argument is used to set</p></li>
+<li><p><strong>data format to use when writing frame data to ImgStore objects. Supported</strong> (<em>the</em>) – </p></li>
+<li><p><strong>should be</strong> (<em>formats</em>) – <ul>
+<li><p>‘pgm’,</p></li>
+<li><p>’bmp’,</p></li>
+<li><p>’ppm’,</p></li>
+<li><p>’tif’,</p></li>
+<li><p>’png’,</p></li>
+<li><p>’jpg’,</p></li>
+<li><p>’npy’,</p></li>
+<li><p>’mjpeg/avi’,</p></li>
+<li><p>’h264/mkv’,</p></li>
+<li><p>’avc1/mp4’</p></li>
+</ul>
+<p>Note: ‘h264/mkv’ and ‘avc1/mp4’ require separate installation of these codecs
+on your system. They are excluded from sLEAP because of their GPL license.</p>
+</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>

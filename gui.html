@@ -81,6 +81,7 @@
             
               <p class="caption"><span class="caption-text">sLEAP Package</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="skeleton.html">Skeleton</a></li>
 <li class="toctree-l1"><a class="reference internal" href="video.html">Video</a></li>
 <li class="toctree-l1"><a class="reference internal" href="instance.html">Instance</a></li>
@@ -343,7 +344,7 @@ given in absolute coordinates for displayed frame.</p>
 
 <dl class="class">
 <dt id="sleap.gui.video.QtEdge">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.video.</code><code class="sig-name descname">QtEdge</code><span class="sig-paren">(</span><em class="sig-param">parent</em>, <em class="sig-param">src: sleap.gui.video.QtNode</em>, <em class="sig-param">dst: sleap.gui.video.QtNode</em>, <em class="sig-param">color</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtEdge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtEdge" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.video.</code><code class="sig-name descname">QtEdge</code><span class="sig-paren">(</span><em class="sig-param">parent</em>, <em class="sig-param">src: sleap.gui.video.QtNode</em>, <em class="sig-param">dst: sleap.gui.video.QtNode</em>, <em class="sig-param">color</em>, <em class="sig-param">show_non_visible=True</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtEdge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtEdge" title="Permalink to this definition">¶</a></dt>
 <dd><p>QGraphicsLineItem to handle display of edge between skeleton instance nodes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -396,7 +397,7 @@ given in absolute coordinates for displayed frame.</p>
 
 <dl class="class">
 <dt id="sleap.gui.video.QtInstance">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.video.</code><code class="sig-name descname">QtInstance</code><span class="sig-paren">(</span><em class="sig-param">skeleton: sleap.skeleton.Skeleton = None</em>, <em class="sig-param">instance: sleap.instance.Instance = None</em>, <em class="sig-param">predicted=False</em>, <em class="sig-param">color_predicted=False</em>, <em class="sig-param">color=(0</em>, <em class="sig-param">114</em>, <em class="sig-param">189)</em>, <em class="sig-param">markerRadius=4</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtInstance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtInstance" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.video.</code><code class="sig-name descname">QtInstance</code><span class="sig-paren">(</span><em class="sig-param">skeleton: sleap.skeleton.Skeleton = None</em>, <em class="sig-param">instance: sleap.instance.Instance = None</em>, <em class="sig-param">predicted=False</em>, <em class="sig-param">color_predicted=False</em>, <em class="sig-param">color=(0</em>, <em class="sig-param">114</em>, <em class="sig-param">189)</em>, <em class="sig-param">markerRadius=4</em>, <em class="sig-param">show_non_visible=True</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtInstance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtInstance" title="Permalink to this definition">¶</a></dt>
 <dd><p>QGraphicsObject for skeleton instances.</p>
 <p>This object stores the data for one skeleton instance
 and handles the events to manipulate the skeleton within
@@ -489,7 +490,7 @@ nodes in the skeleton to “complete”.</p></li>
 
 <dl class="class">
 <dt id="sleap.gui.video.QtNode">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.video.</code><code class="sig-name descname">QtNode</code><span class="sig-paren">(</span><em class="sig-param">parent</em>, <em class="sig-param">point: sleap.instance.Point</em>, <em class="sig-param">radius: float</em>, <em class="sig-param">color: list</em>, <em class="sig-param">node_name: str = None</em>, <em class="sig-param">predicted=False</em>, <em class="sig-param">color_predicted=False</em>, <em class="sig-param">callbacks=None</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtNode" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.video.</code><code class="sig-name descname">QtNode</code><span class="sig-paren">(</span><em class="sig-param">parent</em>, <em class="sig-param">point: sleap.instance.Point</em>, <em class="sig-param">radius: float</em>, <em class="sig-param">color: list</em>, <em class="sig-param">node_name: str = None</em>, <em class="sig-param">predicted=False</em>, <em class="sig-param">color_predicted=False</em>, <em class="sig-param">show_non_visible=True</em>, <em class="sig-param">callbacks=None</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtNode" title="Permalink to this definition">¶</a></dt>
 <dd><p>QGraphicsEllipseItem to handle display of skeleton instance node.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1073,7 +1074,7 @@ Shape of array should be (channels, height, width).</p></li>
 <span class="target" id="module-sleap.gui.quiverplot"></span><dl class="class">
 <dt id="sleap.gui.quiverplot.MultiQuiverPlot">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.gui.quiverplot.</code><code class="sig-name descname">MultiQuiverPlot</code><span class="sig-paren">(</span><em class="sig-param">frame: numpy.array = None</em>, <em class="sig-param">show: list = None</em>, <em class="sig-param">decimation: int = 9</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/quiverplot.html#MultiQuiverPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.quiverplot.MultiQuiverPlot" title="Permalink to this definition">¶</a></dt>
-<dd><p>QGraphicsObject to display multiple quiver plots in a QGraphicsView.</p>
+<dd><p>QtWidgets.QGraphicsObject to display multiple quiver plots in a QtWidgets.QGraphicsView.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1109,7 +1110,7 @@ Shape of array should be (channels, height, width).</p></li>
 <dl class="class">
 <dt id="sleap.gui.quiverplot.QuiverPlot">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.gui.quiverplot.</code><code class="sig-name descname">QuiverPlot</code><span class="sig-paren">(</span><em class="sig-param">field_x: numpy.array = None, field_y: numpy.array = None, color=[255, 255, 255], decimation=1, *args, **kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/quiverplot.html#QuiverPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.quiverplot.QuiverPlot" title="Permalink to this definition">¶</a></dt>
-<dd><p>QGraphicsObject for drawing single quiver plot.</p>
+<dd><p>QtWidgets.QGraphicsObject for drawing single quiver plot.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1325,6 +1326,12 @@ this can be either
 </dd></dl>
 
 <dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.hasSelection">
+<code class="sig-name descname">hasSelection</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.hasSelection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.hasSelection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if a clip is selected, False otherwise.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.gui.slider.VideoSlider.keyPressEvent">
 <code class="sig-name descname">keyPressEvent</code><span class="sig-paren">(</span><em class="sig-param">event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.keyPressEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.keyPressEvent" title="Permalink to this definition">¶</a></dt>
 <dd><p>Catch event and emit signal so something else can handle event.</p>
@@ -1410,7 +1417,7 @@ this can be either
 
 <dl class="method">
 <dt id="sleap.gui.slider.VideoSlider.resizeEvent">
-<code class="sig-name descname">resizeEvent</code><span class="sig-paren">(</span><em class="sig-param">event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.resizeEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.resizeEvent" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">resizeEvent</code><span class="sig-paren">(</span><em class="sig-param">event=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.resizeEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.resizeEvent" title="Permalink to this definition">¶</a></dt>
 <dd><p>Override method to update visual size when necessary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1461,12 +1468,15 @@ this can be either
 
 <dl class="method">
 <dt id="sleap.gui.slider.VideoSlider.setTracksFromLabels">
-<code class="sig-name descname">setTracksFromLabels</code><span class="sig-paren">(</span><em class="sig-param">labels</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.setTracksFromLabels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.setTracksFromLabels" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setTracksFromLabels</code><span class="sig-paren">(</span><em class="sig-param">labels</em>, <em class="sig-param">video=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.setTracksFromLabels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.setTracksFromLabels" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set slider marks using track information from <cite>Labels</cite> object.</p>
 <p>Note that this is the only method coupled to a SLEAP object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>labels</strong> – the <cite>labels</cite> with tracks and labeled_frames</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>labels</strong> – the <cite>labels</cite> with tracks and labeled_frames</p></li>
+<li><p><strong>video</strong> – the video for which to show marks (default to first)</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>

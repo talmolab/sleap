@@ -80,6 +80,7 @@
             
               <p class="caption"><span class="caption-text">sLEAP Package</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../skeleton.html">Skeleton</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../video.html">Video</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../instance.html">Instance</a></li>
@@ -164,6 +165,8 @@
 <span class="sd">    &gt;&gt;&gt; vp.addInstance(instance = my_instance, color)</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
+<span class="kn">from</span> <span class="nn">PySide2</span> <span class="k">import</span> <span class="n">QtWidgets</span>
+
 <span class="kn">from</span> <span class="nn">PySide2.QtWidgets</span> <span class="k">import</span> <span class="n">QApplication</span><span class="p">,</span> <span class="n">QVBoxLayout</span><span class="p">,</span> <span class="n">QWidget</span>
 <span class="kn">from</span> <span class="nn">PySide2.QtWidgets</span> <span class="k">import</span> <span class="n">QLabel</span><span class="p">,</span> <span class="n">QPushButton</span><span class="p">,</span> <span class="n">QSlider</span>
 <span class="kn">from</span> <span class="nn">PySide2.QtWidgets</span> <span class="k">import</span> <span class="n">QAction</span>
@@ -220,11 +223,14 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">seekbar</span><span class="o">.</span><span class="n">keyRelease</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keyReleaseEvent</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">seekbar</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
 
+        <span class="n">splitter</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QSplitter</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">Vertical</span><span class="p">)</span>
+        <span class="n">splitter</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="p">)</span>
+        <span class="n">splitter</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seekbar</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">layout</span> <span class="o">=</span> <span class="n">QVBoxLayout</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seekbar</span><span class="p">)</span>
-        <span class="c1"># self.layout.addWidget(btn)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">splitter</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">video</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -941,6 +947,7 @@
 <div class="viewcode-block" id="QtNodeLabel.mousePressEvent"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.QtNodeLabel.mousePressEvent">[docs]</a>    <span class="k">def</span> <span class="nf">mousePressEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Pass events along so that clicking label is like clicking node.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setCursor</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">ArrowCursor</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">mousePressEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="QtNodeLabel.mouseMoveEvent"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.QtNodeLabel.mouseMoveEvent">[docs]</a>    <span class="k">def</span> <span class="nf">mouseMoveEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
@@ -951,6 +958,7 @@
 <div class="viewcode-block" id="QtNodeLabel.mouseReleaseEvent"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.QtNodeLabel.mouseReleaseEvent">[docs]</a>    <span class="k">def</span> <span class="nf">mouseReleaseEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Pass events along so that clicking label is like clicking node.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unsetCursor</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">mouseReleaseEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="QtNodeLabel.wheelEvent"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.QtNodeLabel.wheelEvent">[docs]</a>    <span class="k">def</span> <span class="nf">wheelEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
@@ -973,7 +981,7 @@
 <span class="sd">        callbacks: List of functions to call after we update to the `Point`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">point</span><span class="p">:</span><span class="n">Point</span><span class="p">,</span> <span class="n">radius</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span> <span class="n">color</span><span class="p">:</span><span class="nb">list</span><span class="p">,</span> <span class="n">node_name</span><span class="p">:</span><span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-                    <span class="n">predicted</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">color_predicted</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">predicted</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">color_predicted</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">show_non_visible</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                     <span class="n">callbacks</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span> <span class="o">=</span> <span class="n">parent</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">point</span> <span class="o">=</span> <span class="n">point</span>
@@ -983,6 +991,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">node_name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">predicted</span> <span class="o">=</span> <span class="n">predicted</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">color_predicted</span> <span class="o">=</span> <span class="n">color_predicted</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">show_non_visible</span> <span class="o">=</span> <span class="n">show_non_visible</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span> <span class="o">=</span> <span class="p">[]</span> <span class="k">if</span> <span class="n">callbacks</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">callbacks</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dragParent</span> <span class="o">=</span> <span class="kc">False</span>
 
@@ -1034,6 +1043,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scenePos</span><span class="p">()</span><span class="o">.</span><span class="n">x</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scenePos</span><span class="p">()</span><span class="o">.</span><span class="n">y</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">visible</span><span class="p">:</span>
             <span class="n">radius</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius</span>
@@ -1043,6 +1053,8 @@
             <span class="n">radius</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius</span> <span class="o">/</span> <span class="mf">2.</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">setPen</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pen_missing</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">setBrush</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">brush_missing</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">show_non_visible</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">setRect</span><span class="p">(</span><span class="o">-</span><span class="n">radius</span><span class="p">,</span> <span class="o">-</span><span class="n">radius</span><span class="p">,</span> <span class="n">radius</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span> <span class="n">radius</span><span class="o">*</span><span class="mi">2</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="p">:</span>
@@ -1061,6 +1073,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Do nothing if node is from predicted instance</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parentObject</span><span class="p">()</span><span class="o">.</span><span class="n">predicted</span><span class="p">:</span> <span class="k">return</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setCursor</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">ArrowCursor</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">button</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">LeftButton</span><span class="p">:</span>
             <span class="c1"># Alt-click to drag instance</span>
@@ -1101,6 +1115,7 @@
         <span class="sd">&quot;&quot;&quot; Custom event handler for mouse release.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1">#print(event)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unsetCursor</span><span class="p">()</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dragParent</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">parentObject</span><span class="p">()</span><span class="o">.</span><span class="n">mouseReleaseEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">parentObject</span><span class="p">()</span><span class="o">.</span><span class="n">setSelected</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
@@ -1132,9 +1147,12 @@
 <span class="sd">        src: The `QtNode` source node for the edge.</span>
 <span class="sd">        dst: The `QtNode` destination node for the edge.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">src</span><span class="p">:</span><span class="n">QtNode</span><span class="p">,</span> <span class="n">dst</span><span class="p">:</span><span class="n">QtNode</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">src</span><span class="p">:</span><span class="n">QtNode</span><span class="p">,</span> <span class="n">dst</span><span class="p">:</span><span class="n">QtNode</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span>
+                 <span class="n">show_non_visible</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">src</span> <span class="o">=</span> <span class="n">src</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dst</span> <span class="o">=</span> <span class="n">dst</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">show_non_visible</span> <span class="o">=</span> <span class="n">show_non_visible</span>
 
         <span class="nb">super</span><span class="p">(</span><span class="n">QtEdge</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">src</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">src</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dst</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dst</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
@@ -1184,7 +1202,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">src</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">visible</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">dst</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">visible</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">full_opacity</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">full_opacity</span> <span class="o">=</span> <span class="o">.</span><span class="mi">5</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">full_opacity</span> <span class="o">=</span> <span class="o">.</span><span class="mi">5</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">show_non_visible</span> <span class="k">else</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">setOpacity</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">full_opacity</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">node</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">src</span><span class="p">:</span>
@@ -1217,12 +1235,15 @@
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">skeleton</span><span class="p">:</span><span class="n">Skeleton</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">instance</span><span class="p">:</span> <span class="n">Instance</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                  <span class="n">predicted</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">color_predicted</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                 <span class="n">color</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">114</span><span class="p">,</span> <span class="mi">189</span><span class="p">),</span> <span class="n">markerRadius</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                 <span class="n">color</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">114</span><span class="p">,</span> <span class="mi">189</span><span class="p">),</span> <span class="n">markerRadius</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                 <span class="n">show_non_visible</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">QtInstance</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span> <span class="o">=</span> <span class="n">skeleton</span> <span class="k">if</span> <span class="n">instance</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">instance</span><span class="o">.</span><span class="n">skeleton</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">instance</span> <span class="o">=</span> <span class="n">instance</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">predicted</span> <span class="o">=</span> <span class="n">predicted</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">color_predicted</span> <span class="o">=</span> <span class="n">color_predicted</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">show_non_visible</span> <span class="o">=</span> <span class="n">show_non_visible</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">selectable</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">predicted</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">color_predicted</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="n">color</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">markerRadius</span> <span class="o">=</span> <span class="n">markerRadius</span>
@@ -1264,7 +1285,8 @@
         <span class="k">for</span> <span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">nodes_points</span><span class="p">:</span>
             <span class="n">node_item</span> <span class="o">=</span> <span class="n">QtNode</span><span class="p">(</span><span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">point</span><span class="o">=</span><span class="n">point</span><span class="p">,</span> <span class="n">node_name</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
                                <span class="n">predicted</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">predicted</span><span class="p">,</span> <span class="n">color_predicted</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">color_predicted</span><span class="p">,</span>
-                               <span class="n">color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">color</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">markerRadius</span><span class="p">)</span>
+                               <span class="n">color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">color</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">markerRadius</span><span class="p">,</span>
+                               <span class="n">show_non_visible</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">show_non_visible</span><span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">node_item</span>
 
@@ -1273,7 +1295,7 @@
             <span class="c1"># Make sure that both nodes are present in this instance before drawing edge</span>
             <span class="k">if</span> <span class="n">src</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span> <span class="ow">and</span> <span class="n">dst</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
                 <span class="n">edge_item</span> <span class="o">=</span> <span class="n">QtEdge</span><span class="p">(</span><span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">src</span><span class="p">],</span> <span class="n">dst</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">dst</span><span class="p">],</span>
-                                   <span class="n">color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">color</span><span class="p">)</span>
+                                   <span class="n">color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">color</span><span class="p">,</span> <span class="n">show_non_visible</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">show_non_visible</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="o">.</span><span class="n">edges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">edge_item</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">dst</span><span class="p">]</span><span class="o">.</span><span class="n">edges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">edge_item</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">edge_item</span><span class="p">)</span>
@@ -1416,47 +1438,15 @@
     <span class="k">if</span> <span class="n">standalone</span><span class="p">:</span> <span class="n">app</span> <span class="o">=</span> <span class="n">QApplication</span><span class="p">([])</span>
     <span class="n">window</span> <span class="o">=</span> <span class="n">QtVideoPlayer</span><span class="p">(</span><span class="n">video</span><span class="o">=</span><span class="n">video</span><span class="p">)</span>
 
-
-    <span class="n">cmap</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
-        <span class="p">[</span><span class="mi">0</span><span class="p">,</span>   <span class="mi">114</span><span class="p">,</span>   <span class="mi">189</span><span class="p">],</span>
-        <span class="p">[</span><span class="mi">217</span><span class="p">,</span>  <span class="mi">83</span><span class="p">,</span>    <span class="mi">25</span><span class="p">],</span>
-        <span class="p">[</span><span class="mi">237</span><span class="p">,</span> <span class="mi">177</span><span class="p">,</span>    <span class="mi">32</span><span class="p">],</span>
-        <span class="p">[</span><span class="mi">126</span><span class="p">,</span>  <span class="mi">47</span><span class="p">,</span>   <span class="mi">142</span><span class="p">],</span>
-        <span class="p">[</span><span class="mi">119</span><span class="p">,</span> <span class="mi">172</span><span class="p">,</span>    <span class="mi">48</span><span class="p">],</span>
-        <span class="p">[</span><span class="mi">77</span><span class="p">,</span>  <span class="mi">190</span><span class="p">,</span>   <span class="mi">238</span><span class="p">],</span>
-        <span class="p">[</span><span class="mi">162</span><span class="p">,</span>  <span class="mi">20</span><span class="p">,</span>    <span class="mi">47</span><span class="p">],</span>
-        <span class="p">])</span>
-
-    <span class="k">def</span> <span class="nf">plot_instances</span><span class="p">(</span><span class="n">vp</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">):</span>
-
-        <span class="n">labeled_frame</span> <span class="o">=</span> <span class="p">[</span><span class="n">label</span> <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span><span class="o">.</span><span class="n">labels</span> <span class="k">if</span> <span class="n">label</span><span class="o">.</span><span class="n">video</span> <span class="o">==</span> <span class="n">video</span> <span class="ow">and</span> <span class="n">label</span><span class="o">.</span><span class="n">frame_idx</span> <span class="o">==</span> <span class="n">frame_idx</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">instance</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">labeled_frame</span><span class="o">.</span><span class="n">instances_to_show</span><span class="p">):</span>
-            <span class="c1"># Plot instance</span>
-            <span class="n">vp</span><span class="o">.</span><span class="n">addInstance</span><span class="p">(</span><span class="n">instance</span><span class="o">=</span><span class="n">instance</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">cmap</span><span class="p">[</span><span class="n">i</span><span class="o">%</span><span class="nb">len</span><span class="p">(</span><span class="n">cmap</span><span class="p">)])</span>
-        <span class="c1"># hide node labels</span>
-        <span class="n">vp</span><span class="o">.</span><span class="n">showLabels</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
-
-    <span class="n">window</span><span class="o">.</span><span class="n">changedPlot</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">plot_instances</span><span class="p">)</span>
+    <span class="n">window</span><span class="o">.</span><span class="n">changedPlot</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="k">lambda</span> <span class="n">vp</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="n">plot_instances</span><span class="p">(</span><span class="n">vp</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">scene</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">video</span><span class="p">))</span>
 
     <span class="n">window</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
     <span class="n">window</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
 
     <span class="k">if</span> <span class="n">standalone</span><span class="p">:</span> <span class="n">app</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
 
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
-
-    <span class="kn">import</span> <span class="nn">h5py</span>
-
-    <span class="n">data_path</span> <span class="o">=</span> <span class="s2">&quot;tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5&quot;</span>
-    <span class="n">vid</span> <span class="o">=</span> <span class="n">HDF5Video</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="s2">&quot;/box&quot;</span><span class="p">,</span> <span class="n">input_format</span><span class="o">=</span><span class="s2">&quot;channels_first&quot;</span><span class="p">)</span>
-
-    <span class="n">app</span> <span class="o">=</span> <span class="n">QApplication</span><span class="p">([])</span>
-    <span class="c1"># app.setApplicationName(&quot;sLEAP Label&quot;)</span>
-    <span class="c1"># window = VideoPlayer(video=vid)</span>
-    <span class="n">window</span> <span class="o">=</span> <span class="n">QtVideoPlayer</span><span class="p">(</span><span class="n">video</span><span class="o">=</span><span class="n">vid</span><span class="p">)</span>
-
-    <span class="c1"># lines(7)*255</span>
+<span class="k">def</span> <span class="nf">plot_instances</span><span class="p">(</span><span class="n">scene</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">video</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fixed</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="n">video</span> <span class="o">=</span> <span class="n">video</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">videos</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">cmap</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
         <span class="p">[</span><span class="mi">0</span><span class="p">,</span>   <span class="mi">114</span><span class="p">,</span>   <span class="mi">189</span><span class="p">],</span>
         <span class="p">[</span><span class="mi">217</span><span class="p">,</span>  <span class="mi">83</span><span class="p">,</span>    <span class="mi">25</span><span class="p">],</span>
@@ -1466,62 +1456,42 @@
         <span class="p">[</span><span class="mi">77</span><span class="p">,</span>  <span class="mi">190</span><span class="p">,</span>   <span class="mi">238</span><span class="p">],</span>
         <span class="p">[</span><span class="mi">162</span><span class="p">,</span>  <span class="mi">20</span><span class="p">,</span>    <span class="mi">47</span><span class="p">],</span>
         <span class="p">])</span>
+    <span class="n">lfs</span> <span class="o">=</span> <span class="p">[</span><span class="n">label</span> <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span><span class="o">.</span><span class="n">labels</span> <span class="k">if</span> <span class="n">label</span><span class="o">.</span><span class="n">video</span> <span class="o">==</span> <span class="n">video</span> <span class="ow">and</span> <span class="n">label</span><span class="o">.</span><span class="n">frame_idx</span> <span class="o">==</span> <span class="n">frame_idx</span><span class="p">]</span>
 
-    <span class="n">skeleton</span> <span class="o">=</span> <span class="n">Skeleton</span><span class="p">(</span><span class="s2">&quot;Fly&quot;</span><span class="p">)</span>
-    <span class="n">skeleton</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;head&quot;</span><span class="p">)</span>
-    <span class="n">skeleton</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;neck&quot;</span><span class="p">)</span>
-    <span class="n">skeleton</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;thorax&quot;</span><span class="p">)</span>
-    <span class="n">skeleton</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;abdomen&quot;</span><span class="p">)</span>
-    <span class="n">skeleton</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;left-wing&quot;</span><span class="p">)</span>
-    <span class="n">skeleton</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;right-wing&quot;</span><span class="p">)</span>
-    <span class="n">skeleton</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">&quot;head&quot;</span><span class="p">,</span> <span class="n">destination</span><span class="o">=</span><span class="s2">&quot;neck&quot;</span><span class="p">)</span>
-    <span class="n">skeleton</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">&quot;neck&quot;</span><span class="p">,</span> <span class="n">destination</span><span class="o">=</span><span class="s2">&quot;thorax&quot;</span><span class="p">)</span>
-    <span class="n">skeleton</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">&quot;thorax&quot;</span><span class="p">,</span> <span class="n">destination</span><span class="o">=</span><span class="s2">&quot;abdomen&quot;</span><span class="p">)</span>
-    <span class="n">skeleton</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">&quot;thorax&quot;</span><span class="p">,</span> <span class="n">destination</span><span class="o">=</span><span class="s2">&quot;left-wing&quot;</span><span class="p">)</span>
-    <span class="n">skeleton</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">&quot;thorax&quot;</span><span class="p">,</span> <span class="n">destination</span><span class="o">=</span><span class="s2">&quot;right-wing&quot;</span><span class="p">)</span>
-    <span class="c1"># skeleton.add_symmetry(node1=&quot;left-wing&quot;, node2=&quot;right-wing&quot;)</span>
-    <span class="n">node_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">skeleton</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lfs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="k">return</span>
 
-    <span class="n">scale</span> <span class="o">=</span> <span class="mf">0.5</span>
-    <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-        <span class="c1"># skeleton = Skeleton.load_hdf5(f[&quot;skeleton&quot;])</span>
-        <span class="n">frames</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;frames&quot;</span><span class="p">][</span><span class="n">k</span><span class="p">][:]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;videoId&quot;</span><span class="p">,</span> <span class="s2">&quot;frameIdx&quot;</span><span class="p">]}</span>
-        <span class="n">points</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;points&quot;</span><span class="p">][</span><span class="n">k</span><span class="p">][:]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;frameIdx&quot;</span><span class="p">,</span> <span class="s2">&quot;instanceId&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;node&quot;</span><span class="p">,</span> <span class="s2">&quot;visible&quot;</span><span class="p">]}</span>
+    <span class="n">labeled_frame</span> <span class="o">=</span> <span class="n">lfs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
-    <span class="n">window</span><span class="o">.</span><span class="n">seekbar</span><span class="o">.</span><span class="n">setMarks</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">frames</span><span class="p">[</span><span class="s2">&quot;frameIdx&quot;</span><span class="p">])))</span>
+    <span class="n">count_no_track</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">instance</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">labeled_frame</span><span class="o">.</span><span class="n">instances_to_show</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">instance</span><span class="o">.</span><span class="n">track</span> <span class="ow">in</span> <span class="n">labels</span><span class="o">.</span><span class="n">tracks</span><span class="p">:</span>
+            <span class="n">track_idx</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">tracks</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">track</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Instance without track</span>
+            <span class="n">track_idx</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">tracks</span><span class="p">)</span> <span class="o">+</span> <span class="n">count_no_track</span>
+            <span class="n">count_no_track</span> <span class="o">+=</span> <span class="mi">1</span>
 
-    <span class="c1"># points[&quot;frameIdx&quot;] -= 1</span>
-    <span class="n">points</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span> <span class="o">*=</span> <span class="n">scale</span>
-    <span class="n">points</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">]</span> <span class="o">*=</span> <span class="n">scale</span>
-    <span class="n">points</span><span class="p">[</span><span class="s2">&quot;node&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="s2">&quot;node&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;uint8&quot;</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
-    <span class="n">points</span><span class="p">[</span><span class="s2">&quot;visible&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="s2">&quot;visible&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;bool&quot;</span><span class="p">)</span>
+        <span class="c1"># Plot instance</span>
+        <span class="n">inst</span> <span class="o">=</span> <span class="n">QtInstance</span><span class="p">(</span><span class="n">instance</span><span class="o">=</span><span class="n">instance</span><span class="p">,</span>
+                          <span class="n">color</span><span class="o">=</span><span class="n">cmap</span><span class="p">[</span><span class="n">track_idx</span><span class="o">%</span><span class="nb">len</span><span class="p">(</span><span class="n">cmap</span><span class="p">)],</span>
+                          <span class="n">predicted</span><span class="o">=</span><span class="n">fixed</span><span class="p">,</span>
+                          <span class="n">color_predicted</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                          <span class="n">show_non_visible</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">inst</span><span class="o">.</span><span class="n">showLabels</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">scene</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">inst</span><span class="p">)</span>
+        <span class="n">inst</span><span class="o">.</span><span class="n">updatePoints</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">plot_instances</span><span class="p">(</span><span class="n">vp</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
 
-        <span class="c1"># Find instances in frame idx</span>
-        <span class="n">is_in_frame</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="s2">&quot;frameIdx&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">frames</span><span class="p">[</span><span class="s2">&quot;frameIdx&quot;</span><span class="p">][</span><span class="n">idx</span><span class="p">]</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_in_frame</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
-            <span class="k">return</span>
+    <span class="kn">import</span> <span class="nn">argparse</span>
+    <span class="kn">from</span> <span class="nn">sleap.io.dataset</span> <span class="k">import</span> <span class="n">Labels</span>
 
-        <span class="n">frame_instance_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">points</span><span class="p">[</span><span class="s2">&quot;instanceId&quot;</span><span class="p">][</span><span class="n">is_in_frame</span><span class="p">])</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">instance_id</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">frame_instance_ids</span><span class="p">):</span>
-            <span class="n">is_instance</span> <span class="o">=</span> <span class="n">is_in_frame</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">points</span><span class="p">[</span><span class="s2">&quot;instanceId&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">instance_id</span><span class="p">)</span>
-            <span class="n">instance_points</span> <span class="o">=</span> <span class="p">{</span><span class="n">node_names</span><span class="p">[</span><span class="n">n</span><span class="p">]:</span> <span class="n">Point</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">visible</span><span class="o">=</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span>
-                                            <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">points</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">is_instance</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;node&quot;</span><span class="p">,</span> <span class="s2">&quot;visible&quot;</span><span class="p">]])</span>
-                                            <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">node_names</span><span class="p">)}</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;data_path&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to labels json file&quot;</span><span class="p">)</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
 
-            <span class="c1"># Plot instance</span>
-            <span class="n">instance</span> <span class="o">=</span> <span class="n">Instance</span><span class="p">(</span><span class="n">skeleton</span><span class="o">=</span><span class="n">skeleton</span><span class="p">,</span> <span class="n">points</span><span class="o">=</span><span class="n">instance_points</span><span class="p">)</span>
-            <span class="n">vp</span><span class="o">.</span><span class="n">addInstance</span><span class="p">(</span><span class="n">instance</span><span class="o">=</span><span class="n">instance</span><span class="p">,</span> <span class="n">predicted</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">cmap</span><span class="p">[</span><span class="n">i</span><span class="o">%</span><span class="nb">len</span><span class="p">(</span><span class="n">cmap</span><span class="p">)])</span>
-            <span class="n">vp</span><span class="o">.</span><span class="n">addInstance</span><span class="p">(</span><span class="n">instance</span><span class="o">=</span><span class="n">instance</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">cmap</span><span class="p">[</span><span class="n">i</span><span class="o">%</span><span class="nb">len</span><span class="p">(</span><span class="n">cmap</span><span class="p">)])</span>
-
-    <span class="n">window</span><span class="o">.</span><span class="n">changedPlot</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">plot_instances</span><span class="p">)</span>
-
-    <span class="n">window</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-    <span class="n">window</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
-
-    <span class="n">app</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
-
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">load_json</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">data_path</span><span class="p">)</span>
+    <span class="n">video_demo</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">standalone</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 
            </div>

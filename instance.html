@@ -82,6 +82,7 @@
             
               <p class="caption"><span class="caption-text">sLEAP Package</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="skeleton.html">Skeleton</a></li>
 <li class="toctree-l1"><a class="reference internal" href="video.html">Video</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Instance</a></li>
@@ -157,18 +158,25 @@
 <span id="instance"></span><h1>Instance<a class="headerlink" href="#module-sleap.instance" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="sleap.instance.Instance">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.instance.</code><code class="sig-name descname">Instance</code><span class="sig-paren">(</span><em class="sig-param">skeleton: sleap.skeleton.Skeleton</em>, <em class="sig-param">track: sleap.instance.Track = None</em>, <em class="sig-param">points: Dict[sleap.skeleton.Node</em>, <em class="sig-param">sleap.instance.Point] = NOTHING</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/instance.html#Instance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.Instance" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.instance.</code><code class="sig-name descname">Instance</code><span class="sig-paren">(</span><em class="sig-param">skeleton: sleap.skeleton.Skeleton</em>, <em class="sig-param">track: sleap.instance.Track = None</em>, <em class="sig-param">from_predicted: Optional[PredictedInstance] = None</em>, <em class="sig-param">points: Dict[sleap.skeleton.Node</em>, <em class="sig-param">sleap.instance.Point] = NOTHING</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/instance.html#Instance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.Instance" title="Permalink to this definition">¶</a></dt>
 <dd><p>The class <a class="reference internal" href="#sleap.instance.Instance" title="sleap.instance.Instance"><code class="xref py py-class docutils literal notranslate"><span class="pre">Instance</span></code></a> represents a labelled instance of skeleton</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>skeleton</strong> – The skeleton that this instance is associated with.</p></li>
 <li><p><strong>points</strong> – A dictionary where keys are skeleton node names and values are _points.</p></li>
-<li><p><strong>track</strong> – An optional multi-frame object track associated with this instance. This allows</p></li>
-<li><p><strong>animals/objects to be tracked across frames.</strong> (<em>individual</em>) – </p></li>
+<li><p><strong>track</strong> – An optional multi-frame object track associated with this instance.
+This allows individual animals/objects to be tracked across frames.</p></li>
+<li><p><strong>from_predicted</strong> – The predicted instance (if any) that this was copied from.</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="sleap.instance.Instance.centroid">
+<em class="property">property </em><code class="sig-name descname">centroid</code><a class="headerlink" href="#sleap.instance.Instance.centroid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns instance centroid as (x,y) numpy row vector.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="sleap.instance.Instance.drop_all_nan_points">
 <em class="property">classmethod </em><code class="sig-name descname">drop_all_nan_points</code><span class="sig-paren">(</span><em class="sig-param">instances: List[Instance]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/instance.html#Instance.drop_all_nan_points"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.Instance.drop_all_nan_points" title="Permalink to this definition">¶</a></dt>
@@ -382,7 +390,7 @@ serialization.</p>
 
 <dl class="class">
 <dt id="sleap.instance.PredictedInstance">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.instance.</code><code class="sig-name descname">PredictedInstance</code><span class="sig-paren">(</span><em class="sig-param">skeleton: sleap.skeleton.Skeleton</em>, <em class="sig-param">track: sleap.instance.Track = None</em>, <em class="sig-param">points: Dict[sleap.skeleton.Node</em>, <em class="sig-param">sleap.instance.Point] = NOTHING</em>, <em class="sig-param">score=0.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/instance.html#PredictedInstance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.PredictedInstance" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.instance.</code><code class="sig-name descname">PredictedInstance</code><span class="sig-paren">(</span><em class="sig-param">skeleton: sleap.skeleton.Skeleton</em>, <em class="sig-param">track: sleap.instance.Track = None</em>, <em class="sig-param">from_predicted: Optional[PredictedInstance] = None</em>, <em class="sig-param">points: Dict[sleap.skeleton.Node</em>, <em class="sig-param">sleap.instance.Point] = NOTHING</em>, <em class="sig-param">score=0.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/instance.html#PredictedInstance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.PredictedInstance" title="Permalink to this definition">¶</a></dt>
 <dd><p>A predicted instance is an output of the inference procedure. It is
 the main output of the inference procedure.</p>
 <dl class="field-list simple">

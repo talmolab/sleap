@@ -80,6 +80,7 @@
             
               <p class="caption"><span class="caption-text">sLEAP Package</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../skeleton.html">Skeleton</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../video.html">Video</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../instance.html">Instance</a></li>
@@ -205,7 +206,7 @@
                                 <span class="kc">None</span><span class="p">,</span>
                                 <span class="s2">&quot;Select videos to import...&quot;</span><span class="p">,</span> <span class="c1"># dialogue title</span>
                                 <span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="c1"># initial path</span>
-                                <span class="s2">&quot;Any Video (*.h5 *.hd5v *.mp4 *.avi);;HDF5 (*.h5 *.hd5v);;Media Video (*.mp4 *.avi);;Any File (*.*)&quot;</span><span class="p">,</span> <span class="c1"># filters</span>
+                                <span class="s2">&quot;Any Video (*.h5 *.hd5v *.mp4 *.avi *.json);;HDF5 (*.h5 *.hd5v);;ImgStore (*.json);;Media Video (*.mp4 *.avi);;Any File (*.*)&quot;</span><span class="p">,</span> <span class="c1"># filters</span>
                                 <span class="c1">#options=QFileDialog.DontUseNativeDialog</span>
                                 <span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">file_names</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
@@ -261,6 +262,12 @@
                 <span class="s2">&quot;video_type&quot;</span><span class="p">:</span> <span class="s2">&quot;numpy&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;match&quot;</span><span class="p">:</span> <span class="s2">&quot;npy&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;video_class&quot;</span><span class="p">:</span> <span class="n">Video</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">,</span>
+                <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">[]</span>
+            <span class="p">},</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;video_type&quot;</span><span class="p">:</span> <span class="s2">&quot;imgstore&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;match&quot;</span><span class="p">:</span> <span class="s2">&quot;json&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;video_class&quot;</span><span class="p">:</span> <span class="n">Video</span><span class="o">.</span><span class="n">from_filename</span><span class="p">,</span>
                 <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">[]</span>
             <span class="p">}</span>
         <span class="p">]</span>

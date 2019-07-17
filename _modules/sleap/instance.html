@@ -80,6 +80,7 @@
             
               <p class="caption"><span class="caption-text">sLEAP Package</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorial.html">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../skeleton.html">Skeleton</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../video.html">Video</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../instance.html">Instance</a></li>
@@ -160,7 +161,7 @@
 <span class="kn">import</span> <span class="nn">h5py</span> <span class="k">as</span> <span class="nn">h5</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Tuple</span>
 
 <span class="kn">from</span> <span class="nn">attr</span> <span class="k">import</span> <span class="fm">__init__</span>
 
@@ -273,13 +274,20 @@
 <span class="sd">    Args:</span>
 <span class="sd">        skeleton: The skeleton that this instance is associated with.</span>
 <span class="sd">        points: A dictionary where keys are skeleton node names and values are _points.</span>
-<span class="sd">        track: An optional multi-frame object track associated with this instance. This allows</span>
-<span class="sd">        individual animals/objects to be tracked across frames.</span>
+<span class="sd">        track: An optional multi-frame object track associated with this instance.</span>
+<span class="sd">            This allows individual animals/objects to be tracked across frames.</span>
+<span class="sd">        from_predicted: The predicted instance (if any) that this was copied from.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">skeleton</span><span class="p">:</span> <span class="n">Skeleton</span>
     <span class="n">track</span><span class="p">:</span> <span class="n">Track</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">from_predicted</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s1">&#39;PredictedInstance&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">_points</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Node</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">Point</span><span class="p">,</span> <span class="n">PredictedPoint</span><span class="p">]]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">Factory</span><span class="p">(</span><span class="nb">dict</span><span class="p">))</span>
+
+    <span class="nd">@from_predicted</span><span class="o">.</span><span class="n">validator</span>
+    <span class="k">def</span> <span class="nf">_validate_from_predicted_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">from_predicted</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">from_predicted</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">from_predicted</span><span class="p">)</span> <span class="o">!=</span> <span class="n">PredictedInstance</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Instance.from_predicted type must be PredictedInstance (not {type(from_predicted)})&quot;</span><span class="p">)</span>
 
     <span class="nd">@_points</span><span class="o">.</span><span class="n">validator</span>
     <span class="k">def</span> <span class="nf">_validate_all_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">points</span><span class="p">):</span>
@@ -493,6 +501,13 @@
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_points_array_cache</span></div>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">centroid</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns instance centroid as (x,y) numpy row vector.&quot;&quot;&quot;</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points_array</span><span class="p">(</span><span class="n">invisible_as_nan</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">centroid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmedian</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">centroid</span>
+
 <div class="viewcode-block" id="Instance.to_pandas_df"><a class="viewcode-back" href="../../instance.html#sleap.instance.Instance.to_pandas_df">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">to_pandas_df</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">instances</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s1">&#39;Instance&#39;</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="s1">&#39;Instance&#39;</span><span class="p">]],</span> <span class="n">skip_nan</span><span class="p">:</span><span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -528,9 +543,9 @@
         <span class="nb">id</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">instance_id</span><span class="p">,</span> <span class="n">instance</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">instances</span><span class="p">):</span>
 
-            <span class="c1"># Get all the attributes from the instance except the points dict</span>
+            <span class="c1"># Get all the attributes from the instance except the points dict or from_predicted</span>
             <span class="n">irecord</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="nb">id</span><span class="p">,</span> <span class="s1">&#39;instance_id&#39;</span><span class="p">:</span> <span class="n">instance_id</span><span class="p">,</span>
-                       <span class="o">**</span><span class="n">attr</span><span class="o">.</span><span class="n">asdict</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="k">lambda</span> <span class="n">attr</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">attr</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="s2">&quot;_points&quot;</span><span class="p">)}</span>
+                       <span class="o">**</span><span class="n">attr</span><span class="o">.</span><span class="n">asdict</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="k">lambda</span> <span class="n">attr</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">attr</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;_points&quot;</span><span class="p">,</span> <span class="s2">&quot;from_predicted&quot;</span><span class="p">))}</span>
 
             <span class="c1"># Convert the skeleton to it&#39;s name</span>
             <span class="n">irecord</span><span class="p">[</span><span class="s1">&#39;skeleton&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">irecord</span><span class="p">[</span><span class="s1">&#39;skeleton&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
@@ -763,6 +778,11 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">score</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">converter</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
 
+    <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">PredictedInstance</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__attrs_post_init__</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">from_predicted</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;PredictedInstance should not have from_predicted.&quot;</span><span class="p">)</span>
+
 <div class="viewcode-block" id="PredictedInstance.from_instance"><a class="viewcode-back" href="../../instance.html#sleap.instance.PredictedInstance.from_instance">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_instance</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">instance</span><span class="p">:</span> <span class="n">Instance</span><span class="p">,</span> <span class="n">score</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -866,16 +886,59 @@
         <span class="k">return</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">user_instances</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
 
     <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">unused_predictions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">unused_predictions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">any_tracks</span> <span class="o">=</span> <span class="p">[</span><span class="n">inst</span><span class="o">.</span><span class="n">track</span> <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_instances</span> <span class="k">if</span> <span class="n">inst</span><span class="o">.</span><span class="n">track</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">any_tracks</span><span class="p">):</span>
+            <span class="c1"># use tracks to determine which predicted instances have been used</span>
+            <span class="n">used_tracks</span> <span class="o">=</span> <span class="p">[</span><span class="n">inst</span><span class="o">.</span><span class="n">track</span> <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_instances</span>
+                           <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">inst</span><span class="p">)</span> <span class="o">==</span> <span class="n">Instance</span> <span class="ow">and</span> <span class="n">inst</span><span class="o">.</span><span class="n">track</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                           <span class="p">]</span>
+            <span class="n">unused_predictions</span> <span class="o">=</span> <span class="p">[</span><span class="n">inst</span> <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_instances</span>
+                                  <span class="k">if</span> <span class="n">inst</span><span class="o">.</span><span class="n">track</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">used_tracks</span>
+                                  <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">inst</span><span class="p">)</span> <span class="o">==</span> <span class="n">PredictedInstance</span>
+                                  <span class="p">]</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># use from_predicted to determine which predicted instances have been used</span>
+            <span class="c1"># TODO: should we always do this instead of using tracks?</span>
+            <span class="n">used_instances</span> <span class="o">=</span> <span class="p">[</span><span class="n">inst</span><span class="o">.</span><span class="n">from_predicted</span> <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_instances</span>
+                              <span class="k">if</span> <span class="n">inst</span><span class="o">.</span><span class="n">from_predicted</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="n">unused_predictions</span> <span class="o">=</span> <span class="p">[</span><span class="n">inst</span> <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_instances</span>
+                                  <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">inst</span><span class="p">)</span> <span class="o">==</span> <span class="n">PredictedInstance</span>
+                                  <span class="ow">and</span> <span class="n">inst</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">used_instances</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">unused_predictions</span>
+
+    <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">instances_to_show</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a list of instances associated with this frame, but excluding any</span>
-<span class="sd">        predicted instances for which there&#39;s a regular instance on the same track.</span>
+<span class="sd">        predicted instances for which there&#39;s a corresponding regular instance.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">user_tracks</span> <span class="o">=</span> <span class="p">[</span><span class="n">inst</span><span class="o">.</span><span class="n">track</span> <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_instances</span>
-            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">inst</span><span class="p">)</span> <span class="o">==</span> <span class="n">Instance</span> <span class="ow">and</span> <span class="n">inst</span><span class="o">.</span><span class="n">track</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
-        <span class="n">distinct_track_instances</span> <span class="o">=</span> <span class="p">[</span><span class="n">inst</span> <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_instances</span>
-            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">inst</span><span class="p">)</span> <span class="o">==</span> <span class="n">Instance</span> <span class="ow">or</span> <span class="n">inst</span><span class="o">.</span><span class="n">track</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">user_tracks</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">distinct_track_instances</span>
+        <span class="n">unused_predictions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unused_predictions</span>
+        <span class="n">inst_to_show</span> <span class="o">=</span> <span class="p">[</span><span class="n">inst</span> <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_instances</span>
+                        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">inst</span><span class="p">)</span> <span class="o">==</span> <span class="n">Instance</span> <span class="ow">or</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">unused_predictions</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">inst_to_show</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">merge_frames</span><span class="p">(</span><span class="n">labeled_frames</span><span class="p">,</span> <span class="n">video</span><span class="p">):</span>
+        <span class="n">frames_found</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="c1"># move instances into first frame with matching frame_idx</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">lf</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">labeled_frames</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">lf</span><span class="o">.</span><span class="n">video</span> <span class="o">==</span> <span class="n">video</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">lf</span><span class="o">.</span><span class="n">frame_idx</span> <span class="ow">in</span> <span class="n">frames_found</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="c1"># move instances</span>
+                    <span class="n">dst_idx</span> <span class="o">=</span> <span class="n">frames_found</span><span class="p">[</span><span class="n">lf</span><span class="o">.</span><span class="n">frame_idx</span><span class="p">]</span>
+                    <span class="n">labeled_frames</span><span class="p">[</span><span class="n">dst_idx</span><span class="p">]</span><span class="o">.</span><span class="n">instances</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">lf</span><span class="o">.</span><span class="n">instances</span><span class="p">)</span>
+                    <span class="n">lf</span><span class="o">.</span><span class="n">instances</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># note first lf with this frame_idx</span>
+                    <span class="n">frames_found</span><span class="p">[</span><span class="n">lf</span><span class="o">.</span><span class="n">frame_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">idx</span>
+        <span class="c1"># remove labeled frames with no instances</span>
+        <span class="n">labeled_frames</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">lf</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">lf</span><span class="o">.</span><span class="n">instances</span><span class="p">),</span>
+                                     <span class="n">labeled_frames</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">labeled_frames</span>
 </pre></div>
 
            </div>

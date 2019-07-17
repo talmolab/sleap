@@ -82,6 +82,7 @@
             
               <p class="caption"><span class="caption-text">sLEAP Package</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="skeleton.html">Skeleton</a></li>
 <li class="toctree-l1"><a class="reference internal" href="video.html">Video</a></li>
 <li class="toctree-l1"><a class="reference internal" href="instance.html">Instance</a></li>
@@ -157,15 +158,17 @@
 <span id="inference"></span><h1>Inference<a class="headerlink" href="#module-sleap.nn.inference" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="sleap.nn.inference.Predictor">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">Predictor</code><span class="sig-paren">(</span><em class="sig-param">model: keras.engine.training.Model</em>, <em class="sig-param">skeleton: sleap.skeleton.Skeleton</em>, <em class="sig-param">inference_batch_size: int = 2</em>, <em class="sig-param">read_chunk_size: int = 256</em>, <em class="sig-param">save_frequency: int = 1</em>, <em class="sig-param">min_score_to_node_ratio: float = 0.2</em>, <em class="sig-param">min_score_midpts: float = 0.05</em>, <em class="sig-param">min_score_integral: float = 0.6</em>, <em class="sig-param">add_last_edge: bool = True</em>, <em class="sig-param">with_tracking: bool = False</em>, <em class="sig-param">flow_window: int = 15</em>, <em class="sig-param">save_shifted_instances: bool = True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/inference.html#Predictor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.Predictor" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">Predictor</code><span class="sig-paren">(</span><em class="sig-param">model: keras.engine.training.Model = None</em>, <em class="sig-param">skeleton: sleap.skeleton.Skeleton = None</em>, <em class="sig-param">sleap_models: Dict[sleap.nn.model.ModelOutputType</em>, <em class="sig-param">sleap.nn.training.TrainingJob] = None</em>, <em class="sig-param">inference_batch_size: int = 2</em>, <em class="sig-param">read_chunk_size: int = 256</em>, <em class="sig-param">save_frequency: int = 1</em>, <em class="sig-param">min_score_to_node_ratio: float = 0.2</em>, <em class="sig-param">min_score_midpts: float = 0.05</em>, <em class="sig-param">min_score_integral: float = 0.6</em>, <em class="sig-param">add_last_edge: bool = True</em>, <em class="sig-param">with_tracking: bool = False</em>, <em class="sig-param">flow_window: int = 15</em>, <em class="sig-param">centroid_model: keras.engine.training.Model = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/inference.html#Predictor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.Predictor" title="Permalink to this definition">¶</a></dt>
 <dd><p>The Predictor class takes a trained sLEAP model and runs
 the complete inference pipeline from confidence map/part affinity field
 inference, non-maximum suppression peak finding, paf part matching, to tracking.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> – A trained keras model used for confidence map and paf inference. FIXME: Should this be a keras model or a sLEAP model class</p></li>
-<li><p><strong>skeleton</strong> – The skeleton(s) to use for prediction. FIXME. This should be stored with the model I think</p></li>
+<li><p><strong>sleap_models</strong> – Dict with a TrainingJob for each required ModelOutputType;
+can be used to construct keras model.</p></li>
+<li><p><strong>model</strong> – A trained keras model used for confidence map and paf inference.</p></li>
+<li><p><strong>skeleton</strong> – The skeleton(s) to use for prediction.</p></li>
 <li><p><strong>inference_batch_size</strong> – Frames per inference batch (GPU memory limited)</p></li>
 <li><p><strong>read_chunk_size</strong> – How many frames to read into CPU memory at a time (CPU memory limited)</p></li>
 <li><p><strong>nms_min_thresh</strong> – A threshold of non-max suppression peak finding in confidence maps. All</p></li>
@@ -177,16 +180,22 @@ inference, non-maximum suppression peak finding, paf part matching, to tracking.
 <li><p><strong>min_score_midpts</strong> – FIXME</p></li>
 <li><p><strong>min_score_integral</strong> – FIXME</p></li>
 <li><p><strong>add_last_edge</strong> – FIXME</p></li>
+<li><p><strong>with_tracking</strong> – Should tracking be run after inference.</p></li>
+<li><p><strong>flow_window</strong> – The number of frames that tracking should look back when trying to identify</p></li>
+<li><p><strong>instances.</strong> – </p></li>
 </ul>
 </dd>
 </dl>
 <dl class="method">
-<dt id="sleap.nn.inference.Predictor.from_training_jobs">
-<em class="property">classmethod </em><code class="sig-name descname">from_training_jobs</code><span class="sig-paren">(</span><em class="sig-param">training_jobs: Dict[sleap.nn.model.ModelOutputType, sleap.nn.training.TrainingJob], labels: Optional[sleap.io.dataset.Labels] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/inference.html#Predictor.from_training_jobs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.Predictor.from_training_jobs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Construct a Predictor from some TrainingJobs.</p>
+<dt id="sleap.nn.inference.Predictor.load_from_training_jobs">
+<code class="sig-name descname">load_from_training_jobs</code><span class="sig-paren">(</span><em class="sig-param">sleap_models: Dict[sleap.nn.model.ModelOutputType, sleap.nn.training.TrainingJob], frame_shape: tuple, resize_hack=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/inference.html#Predictor.load_from_training_jobs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.Predictor.load_from_training_jobs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load keras model and skeleton from some TrainingJobs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>training_jobs</strong> – Dict with a TrainingJob for each required ModelOutputType</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sleap_models</strong> – Dict with a TrainingJob for each required ModelOutputType</p></li>
+<li><p><strong>frame_shape</strong> – (height, width, channels) of input for inference</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Predictor initialized with Keras model.</p>
@@ -196,14 +205,16 @@ inference, non-maximum suppression peak finding, paf part matching, to tracking.
 
 <dl class="method">
 <dt id="sleap.nn.inference.Predictor.predict">
-<code class="sig-name descname">predict</code><span class="sig-paren">(</span><em class="sig-param">input_video: Union[str, sleap.io.video.Video], output_path: Optional[str] = None, frames: Optional[List[int]] = None</em><span class="sig-paren">)</span> &#x2192; List[sleap.instance.LabeledFrame]<a class="reference internal" href="_modules/sleap/nn/inference.html#Predictor.predict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.Predictor.predict" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">predict</code><span class="sig-paren">(</span><em class="sig-param">input_video: Union[dict, sleap.io.video.Video], output_path: Optional[str] = None, frames: Optional[List[int]] = None, save_confmaps_pafs: bool = False, is_async: bool = False</em><span class="sig-paren">)</span> &#x2192; List[sleap.instance.LabeledFrame]<a class="reference internal" href="_modules/sleap/nn/inference.html#Predictor.predict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.Predictor.predict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run the entire inference pipeline on an input video or file object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>input_video</strong> – Either a video object or video filename.</p></li>
-<li><p><strong>output_path</strong> – The output path to save the results.</p></li>
+<li><p><strong>input_video</strong> – Either a video object or an unstructured video object (dict).</p></li>
+<li><p><strong>output_path</strong> (<em>optional</em>) – The output path to save the results.</p></li>
 <li><p><strong>frames</strong> (<em>optional</em>) – List of frames to predict. If None, run entire video.</p></li>
+<li><p><strong>is_async</strong> (<em>optional</em>) – Whether running function from separate process.
+Default is False. If True, we won’t spawn children.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -213,18 +224,19 @@ inference, non-maximum suppression peak finding, paf part matching, to tracking.
 </dd></dl>
 
 <dl class="method">
-<dt id="sleap.nn.inference.Predictor.run_visual">
-<code class="sig-name descname">run_visual</code><span class="sig-paren">(</span><em class="sig-param">input_video: Union[str, sleap.io.video.Video], max_frames: int = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/inference.html#Predictor.run_visual"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.Predictor.run_visual" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run the confmap/paf prediction on an input video or file object.</p>
+<dt id="sleap.nn.inference.Predictor.predict_async">
+<code class="sig-name descname">predict_async</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span> &#x2192; Tuple[multiprocessing.context.BaseContext.Pool, multiprocessing.pool.ApplyResult]<a class="reference internal" href="_modules/sleap/nn/inference.html#Predictor.predict_async"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.Predictor.predict_async" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run the entire inference pipeline on an input file, using a background process.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>input_video</strong> – Either a video object or video filename.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Predictor.predict</strong><strong>(</strong><strong>)</strong><strong></strong> (<em>See</em>) – </p></li>
+<li><p><strong>that video must be string rather than Video</strong> (<em>Note</em>) – </p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>numpy arrays</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>confmaps, pafs</p>
+<dd class="field-even"><p>A tuple containing the multiprocessing.Process that is running predict, start() has been called.
+And the AysncResult object that will contain the result when the job finishes.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -308,19 +320,19 @@ Labels object. This loads the prediced instances</p>
 
 <dl class="function">
 <dt id="sleap.nn.inference.match_peaks_frame">
-<code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">match_peaks_frame</code><span class="sig-paren">(</span><em class="sig-param">peaks_t</em>, <em class="sig-param">peak_vals_t</em>, <em class="sig-param">pafs_t</em>, <em class="sig-param">skeleton</em>, <em class="sig-param">scale</em>, <em class="sig-param">min_score_to_node_ratio=0.4</em>, <em class="sig-param">min_score_midpts=0.05</em>, <em class="sig-param">min_score_integral=0.8</em>, <em class="sig-param">add_last_edge=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/inference.html#match_peaks_frame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.match_peaks_frame" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">match_peaks_frame</code><span class="sig-paren">(</span><em class="sig-param">peaks_t</em>, <em class="sig-param">peak_vals_t</em>, <em class="sig-param">pafs_t</em>, <em class="sig-param">skeleton</em>, <em class="sig-param">transform</em>, <em class="sig-param">img_idx</em>, <em class="sig-param">min_score_to_node_ratio=0.4</em>, <em class="sig-param">min_score_midpts=0.05</em>, <em class="sig-param">min_score_integral=0.8</em>, <em class="sig-param">add_last_edge=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/inference.html#match_peaks_frame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.match_peaks_frame" title="Permalink to this definition">¶</a></dt>
 <dd><p>Matches single frame</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="sleap.nn.inference.match_peaks_paf">
-<code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">match_peaks_paf</code><span class="sig-paren">(</span><em class="sig-param">peaks</em>, <em class="sig-param">peak_vals</em>, <em class="sig-param">pafs</em>, <em class="sig-param">skeleton</em>, <em class="sig-param">video</em>, <em class="sig-param">frame_indices</em>, <em class="sig-param">scale=1</em>, <em class="sig-param">min_score_to_node_ratio=0.4</em>, <em class="sig-param">min_score_midpts=0.05</em>, <em class="sig-param">min_score_integral=0.8</em>, <em class="sig-param">add_last_edge=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/inference.html#match_peaks_paf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.match_peaks_paf" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">match_peaks_paf</code><span class="sig-paren">(</span><em class="sig-param">peaks</em>, <em class="sig-param">peak_vals</em>, <em class="sig-param">pafs</em>, <em class="sig-param">skeleton</em>, <em class="sig-param">video</em>, <em class="sig-param">transform</em>, <em class="sig-param">min_score_to_node_ratio=0.4</em>, <em class="sig-param">min_score_midpts=0.05</em>, <em class="sig-param">min_score_integral=0.8</em>, <em class="sig-param">add_last_edge=False</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/inference.html#match_peaks_paf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.match_peaks_paf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes PAF-based peak matching via greedy assignment and other such dragons</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="sleap.nn.inference.match_peaks_paf_par">
-<code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">match_peaks_paf_par</code><span class="sig-paren">(</span><em class="sig-param">peaks</em>, <em class="sig-param">peak_vals</em>, <em class="sig-param">pafs</em>, <em class="sig-param">skeleton</em>, <em class="sig-param">video</em>, <em class="sig-param">frame_indices</em>, <em class="sig-param">scale=1</em>, <em class="sig-param">min_score_to_node_ratio=0.4</em>, <em class="sig-param">min_score_midpts=0.05</em>, <em class="sig-param">min_score_integral=0.8</em>, <em class="sig-param">add_last_edge=False</em>, <em class="sig-param">pool=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/inference.html#match_peaks_paf_par"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.match_peaks_paf_par" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">match_peaks_paf_par</code><span class="sig-paren">(</span><em class="sig-param">peaks</em>, <em class="sig-param">peak_vals</em>, <em class="sig-param">pafs</em>, <em class="sig-param">skeleton</em>, <em class="sig-param">video</em>, <em class="sig-param">transform</em>, <em class="sig-param">min_score_to_node_ratio=0.4</em>, <em class="sig-param">min_score_midpts=0.05</em>, <em class="sig-param">min_score_integral=0.8</em>, <em class="sig-param">add_last_edge=False</em>, <em class="sig-param">pool=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/inference.html#match_peaks_paf_par"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.match_peaks_paf_par" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parallel version of PAF peak matching</p>
 </dd></dl>
 

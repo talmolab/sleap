@@ -80,6 +80,7 @@
             
               <p class="caption"><span class="caption-text">sLEAP Package</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../skeleton.html">Skeleton</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../video.html">Video</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../instance.html">Instance</a></li>
@@ -315,6 +316,15 @@
 
         <span class="k">return</span> <span class="n">image</span></div></div>
 
+<span class="k">def</span> <span class="nf">show_confmaps_from_h5</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">input_format</span><span class="o">=</span><span class="s2">&quot;channels_last&quot;</span><span class="p">,</span> <span class="n">standalone</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">video</span> <span class="o">=</span> <span class="n">HDF5Video</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;/box&quot;</span><span class="p">,</span> <span class="n">input_format</span><span class="o">=</span><span class="n">input_format</span><span class="p">)</span>
+    <span class="n">conf_data</span> <span class="o">=</span> <span class="n">HDF5Video</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;/confmaps&quot;</span><span class="p">,</span> <span class="n">input_format</span><span class="o">=</span><span class="n">input_format</span><span class="p">,</span> <span class="n">convert_range</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="n">confmaps_</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">conf_data</span><span class="o">.</span><span class="n">get_frame</span><span class="p">(</span><span class="n">i</span><span class="p">),</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">conf_data</span><span class="o">.</span><span class="n">frames</span><span class="p">)]</span>
+    <span class="n">confmaps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">confmaps_</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">demo_confmaps</span><span class="p">(</span><span class="n">confmaps</span><span class="o">=</span><span class="n">confmaps</span><span class="p">,</span> <span class="n">video</span><span class="o">=</span><span class="n">video</span><span class="p">,</span> <span class="n">standalone</span><span class="o">=</span><span class="n">standalone</span><span class="p">)</span>
+
 <span class="k">def</span> <span class="nf">demo_confmaps</span><span class="p">(</span><span class="n">confmaps</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">standalone</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="kn">from</span> <span class="nn">PySide2</span> <span class="k">import</span> <span class="n">QtWidgets</span>
     <span class="kn">from</span> <span class="nn">sleap.gui.video</span> <span class="k">import</span> <span class="n">QtVideoPlayer</span>
@@ -339,40 +349,11 @@
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
 
-    <span class="kn">from</span> <span class="nn">video</span> <span class="k">import</span> <span class="n">QtVideoPlayer</span>
+<span class="c1">#     data_path = &quot;tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5&quot;</span>
+<span class="c1">#     show_confmaps_from_h5(data_path, input_format=&quot;channels_first&quot;, standalone=True)</span>
 
-    <span class="n">data_path</span> <span class="o">=</span> <span class="s2">&quot;tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5&quot;</span>
-
-    <span class="n">vid</span> <span class="o">=</span> <span class="n">HDF5Video</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="s2">&quot;/box&quot;</span><span class="p">,</span> <span class="n">input_format</span><span class="o">=</span><span class="s2">&quot;channels_first&quot;</span><span class="p">)</span>
-    <span class="n">conf_data</span> <span class="o">=</span> <span class="n">HDF5Video</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="s2">&quot;/confmaps&quot;</span><span class="p">,</span> <span class="n">input_format</span><span class="o">=</span><span class="s2">&quot;channels_first&quot;</span><span class="p">)</span>
-
-    <span class="n">confmaps_</span> <span class="o">=</span> <span class="p">[</span><span class="n">conf_data</span><span class="o">.</span><span class="n">get_frame</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">conf_data</span><span class="o">.</span><span class="n">frames</span><span class="p">)]</span>
-    <span class="n">confmaps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">confmaps_</span><span class="p">)</span>
-
-    <span class="n">demo_confmaps</span><span class="p">(</span><span class="n">confmaps</span><span class="o">=</span><span class="n">confmaps</span><span class="p">,</span> <span class="n">video</span><span class="o">=</span><span class="n">vid</span><span class="p">,</span> <span class="n">standalone</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-<span class="c1">#     app = QApplication([])</span>
-<span class="c1">#     window = QtVideoPlayer(video=vid)</span>
-<span class="c1"># </span>
-<span class="c1">#     channel_box = MultiCheckWidget(</span>
-<span class="c1">#         count=conf_data.get_frame(0).shape[-1],</span>
-<span class="c1">#         title=&quot;Confidence Map Channel&quot;,</span>
-<span class="c1">#         default=True</span>
-<span class="c1">#         )</span>
-<span class="c1">#     channel_box.selectionChanged.connect(window.plot)</span>
-<span class="c1">#     window.layout.addWidget(channel_box)</span>
-<span class="c1"># </span>
-<span class="c1">#     def plot_confmaps(parent, item_idx):</span>
-<span class="c1">#         selected = channel_box.getSelected()</span>
-<span class="c1">#         conf_maps = ConfMapsPlot(conf_data.get_frame(parent.frame_idx), selected)</span>
-<span class="c1">#         window.view.scene.addItem(conf_maps)</span>
-<span class="c1"># </span>
-<span class="c1">#     window.changedPlot.connect(plot_confmaps)</span>
-<span class="c1"># </span>
-<span class="c1">#     window.show()</span>
-<span class="c1">#     window.plot()</span>
-<span class="c1"># </span>
-<span class="c1">#     app.exec_()</span>
+    <span class="n">data_path</span> <span class="o">=</span> <span class="s2">&quot;/Users/tabris/code/sleap/files/nyu-mouse/predict.h5&quot;</span>
+    <span class="n">show_confmaps_from_h5</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">input_format</span><span class="o">=</span><span class="s2">&quot;channels_last&quot;</span><span class="p">,</span> <span class="n">standalone</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 
            </div>

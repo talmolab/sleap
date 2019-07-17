@@ -81,6 +81,7 @@
             
               <p class="caption"><span class="caption-text">sLEAP Package</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="skeleton.html">Skeleton</a></li>
 <li class="toctree-l1"><a class="reference internal" href="video.html">Video</a></li>
 <li class="toctree-l1"><a class="reference internal" href="instance.html">Instance</a></li>
@@ -248,6 +249,8 @@
 </li>
       <li><a href="video.html#sleap.io.video.Video.cattr">cattr() (sleap.io.video.Video static method)</a>
 </li>
+      <li><a href="instance.html#sleap.instance.Instance.centroid">centroid() (sleap.instance.Instance property)</a>
+</li>
       <li><a href="gui.html#sleap.gui.video.GraphicsView.clear">clear() (sleap.gui.video.GraphicsView method)</a>
 </li>
       <li><a href="gui.html#sleap.gui.importvideos.VideoPreviewWidget.clear_video">clear_video() (sleap.gui.importvideos.VideoPreviewWidget method)</a>
@@ -263,6 +266,8 @@
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="gui.html#sleap.gui.video.GraphicsView.clearZoom">clearZoom() (sleap.gui.video.GraphicsView method)</a>
+</li>
+      <li><a href="video.html#sleap.io.video.ImgStoreVideo.close">close() (sleap.io.video.ImgStoreVideo method)</a>
 </li>
       <li><a href="gui.html#sleap.gui.confmapsplot.ConfMapPlot">ConfMapPlot (class in sleap.gui.confmapsplot)</a>
 </li>
@@ -316,15 +321,17 @@
 </li>
       <li><a href="skeleton.html#sleap.skeleton.Skeleton.edges_full">edges_full() (sleap.skeleton.Skeleton property)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="skeleton.html#sleap.skeleton.EdgeType">EdgeType (class in sleap.skeleton)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="gui.html#sleap.gui.slider.VideoSlider.enabled">enabled() (sleap.gui.slider.VideoSlider method)</a>
 </li>
       <li><a href="gui.html#sleap.gui.slider.VideoSlider.endSelection">endSelection() (sleap.gui.slider.VideoSlider method)</a>
 </li>
       <li><a href="training.html#sleap.nn.architectures.common.expand_to_n">expand_to_n() (in module sleap.nn.architectures.common)</a>
+</li>
+      <li><a href="dataset.html#sleap.io.dataset.Labels.extend_from">extend_from() (sleap.io.dataset.Labels method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -346,10 +353,10 @@
 </li>
       <li><a href="video.html#sleap.io.video.Video.fixup_path">fixup_path() (sleap.io.video.Video static method)</a>
 </li>
-      <li><a href="instance.html#sleap.instance.Instance.frame_idx">frame_idx() (sleap.instance.Instance property)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="instance.html#sleap.instance.Instance.frame_idx">frame_idx() (sleap.instance.Instance property)</a>
+</li>
       <li><a href="video.html#sleap.io.video.Video.from_filename">from_filename() (sleap.io.video.Video class method)</a>
 </li>
       <li><a href="video.html#sleap.io.video.Video.from_hdf5">from_hdf5() (sleap.io.video.Video class method)</a>
@@ -363,8 +370,6 @@
       <li><a href="video.html#sleap.io.video.Video.from_numpy">from_numpy() (sleap.io.video.Video class method)</a>
 </li>
       <li><a href="instance.html#sleap.instance.PredictedPoint.from_point">from_point() (sleap.instance.PredictedPoint class method)</a>
-</li>
-      <li><a href="inference.html#sleap.nn.inference.Predictor.from_training_jobs">from_training_jobs() (sleap.nn.inference.Predictor class method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -442,6 +447,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="gui.html#sleap.gui.video.GraphicsView.hasImage">hasImage() (sleap.gui.video.GraphicsView method)</a>
 </li>
+      <li><a href="gui.html#sleap.gui.slider.VideoSlider.hasSelection">hasSelection() (sleap.gui.slider.VideoSlider method)</a>
+</li>
       <li><a href="video.html#sleap.io.video.HDF5Video">HDF5Video (class in sleap.io.video)</a>
 </li>
       <li><a href="training.html#sleap.nn.architectures.hourglass.hourglass_block">hourglass_block() (in module sleap.nn.architectures.hourglass)</a>
@@ -452,6 +459,8 @@
 <h2 id="I">I</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="video.html#sleap.io.video.ImgStoreVideo.imgstore">imgstore() (sleap.io.video.ImgStoreVideo property)</a>
+</li>
       <li><a href="video.html#sleap.io.video.Video.imgstore_from_filenames">imgstore_from_filenames() (sleap.io.video.Video class method)</a>
 </li>
       <li><a href="video.html#sleap.io.video.ImgStoreVideo">ImgStoreVideo (class in sleap.io.video)</a>
@@ -466,10 +475,10 @@
 </li>
       <li><a href="gui.html#sleap.gui.importvideos.ImportParamWidget">ImportParamWidget (class in sleap.gui.importvideos)</a>
 </li>
-      <li><a href="gui.html#sleap.gui.importvideos.ImportVideos">ImportVideos (class in sleap.gui.importvideos)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="gui.html#sleap.gui.importvideos.ImportVideos">ImportVideos (class in sleap.gui.importvideos)</a>
+</li>
       <li><a href="inference.html#sleap.nn.inference.improfile">improfile() (in module sleap.nn.inference)</a>
 </li>
       <li><a href="dataset.html#sleap.io.dataset.Labels.index">index() (sleap.io.dataset.Labels method)</a>
@@ -522,6 +531,8 @@
 </li>
       <li><a href="skeleton.html#sleap.skeleton.Skeleton.load_all_hdf5">load_all_hdf5() (sleap.skeleton.Skeleton class method)</a>
 </li>
+      <li><a href="inference.html#sleap.nn.inference.Predictor.load_from_training_jobs">load_from_training_jobs() (sleap.nn.inference.Predictor method)</a>
+</li>
       <li><a href="instance.html#sleap.instance.Instance.load_hdf5">load_hdf5() (sleap.instance.Instance class method)</a>
 
       <ul>
@@ -573,6 +584,8 @@
 </li>
       </ul></li>
       <li><a href="video.html#sleap.io.video.MediaVideo">MediaVideo (class in sleap.io.video)</a>
+</li>
+      <li><a href="dataset.html#sleap.io.dataset.Labels.merge_matching_frames">merge_matching_frames() (sleap.io.dataset.Labels method)</a>
 </li>
       <li><a href="gui.html#sleap.gui.video.GraphicsView.mouseDoubleClickEvent">mouseDoubleClickEvent() (sleap.gui.video.GraphicsView method)</a>
 </li>
@@ -672,6 +685,8 @@
 </li>
       <li><a href="gui.html#sleap.gui.video.QtVideoPlayer.onSequenceSelect">onSequenceSelect() (sleap.gui.video.QtVideoPlayer method)</a>
 </li>
+      <li><a href="video.html#sleap.io.video.ImgStoreVideo.open">open() (sleap.io.video.ImgStoreVideo method)</a>
+</li>
       <li><a href="training.html#sleap.nn.architectures.hourglass.StackedHourglass.output">output() (sleap.nn.architectures.hourglass.StackedHourglass method)</a>
 
       <ul>
@@ -712,14 +727,14 @@
         <li><a href="gui.html#sleap.gui.video.QtNodeLabel.paint">(sleap.gui.video.QtNodeLabel method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="gui.html#sleap.gui.importvideos.VideoPreviewWidget.plot">plot() (sleap.gui.importvideos.VideoPreviewWidget method)</a>
 
       <ul>
         <li><a href="gui.html#sleap.gui.video.QtVideoPlayer.plot">(sleap.gui.video.QtVideoPlayer method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="instance.html#sleap.instance.Point">Point (class in sleap.instance)</a>
 </li>
       <li><a href="instance.html#sleap.instance.Instance.points">points() (sleap.instance.Instance method)</a>
@@ -727,6 +742,8 @@
       <li><a href="instance.html#sleap.instance.Instance.points_array">points_array() (sleap.instance.Instance method)</a>
 </li>
       <li><a href="inference.html#sleap.nn.inference.Predictor.predict">predict() (sleap.nn.inference.Predictor method)</a>
+</li>
+      <li><a href="inference.html#sleap.nn.inference.Predictor.predict_async">predict_async() (sleap.nn.inference.Predictor method)</a>
 </li>
       <li><a href="gui.html#sleap.gui.video.GraphicsView.predicted_instances">predicted_instances() (sleap.gui.video.GraphicsView property)</a>
 </li>
@@ -790,8 +807,6 @@
         <li><a href="gui.html#sleap.gui.video.GraphicsView.resizeEvent">(sleap.gui.video.GraphicsView method)</a>
 </li>
       </ul></li>
-      <li><a href="inference.html#sleap.nn.inference.Predictor.run_visual">run_visual() (sleap.nn.inference.Predictor method)</a>
-</li>
   </ul></td>
 </tr></table>
 
