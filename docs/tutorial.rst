@@ -264,8 +264,8 @@ range, rather than returning predictions on the suggested frames.
 Running inference remotely (optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-It’s also possible to run inference using the command line interface
-(useful if you’re going to run on a cluster). The command to run inference on
+It’s also possible to run inference using the command line interface, which is
+useful if you’re going to run on a cluster). The command to run inference on
 an entire video is:
 
 ::
@@ -282,8 +282,9 @@ your project by opening your project and then using the "Import Predictions..."
 command in the "Predict" menu.
 
 Note that if you want to copy your trained models so that they can be used on
-another machine, you'll need to both the json files and the corresponding
-directories within your models directory. For example, you might copy:
+another machine (e.g., from a cluster), you'll need to copy both the json files
+and the corresponding directories within your models directory.
+For example, you might copy:
 
 ::
 
