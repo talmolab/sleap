@@ -395,8 +395,8 @@ seek-bar, inference will return predictions (with tracks) for that
 range, rather than returning predictions on the suggested frames.</p>
 <div class="section" id="running-inference-remotely-optional">
 <h3>Running inference remotely (optional)<a class="headerlink" href="#running-inference-remotely-optional" title="Permalink to this headline">¶</a></h3>
-<p>It’s also possible to run inference using the command line interface
-(useful if you’re going to run on a cluster). The command to run inference on
+<p>It’s also possible to run inference using the command line interface, which is
+useful if you’re going to run on a cluster). The command to run inference on
 an entire video is:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">sleap</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">inference</span> \
    <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">video</span><span class="o">.</span><span class="n">mp4</span> <span class="o">--</span><span class="k">with</span><span class="o">-</span><span class="n">tracking</span> \
@@ -410,8 +410,9 @@ which you can open from the GUI app. You can also import these predictions into
 your project by opening your project and then using the “Import Predictions…”
 command in the “Predict” menu.</p>
 <p>Note that if you want to copy your trained models so that they can be used on
-another machine, you’ll need to both the json files and the corresponding
-directories within your models directory. For example, you might copy:</p>
+another machine (e.g., from a cluster), you’ll need to copy both the json files
+and the corresponding directories within your models directory.
+For example, you might copy:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mf">190711_185300.</span><span class="n">centroids</span><span class="o">.</span><span class="n">UNet</span><span class="o">.</span><span class="n">n</span><span class="o">=</span><span class="mf">113.</span><span class="n">json</span>
 <span class="mf">190711_183049.</span><span class="n">pafs</span><span class="o">.</span><span class="n">LeapCNN</span><span class="o">.</span><span class="n">n</span><span class="o">=</span><span class="mf">226.</span><span class="n">json</span>
 <span class="mf">190711_181028.</span><span class="n">confmaps</span><span class="o">.</span><span class="n">UNet</span><span class="o">.</span><span class="n">n</span><span class="o">=</span><span class="mf">226.</span><span class="n">json</span>
