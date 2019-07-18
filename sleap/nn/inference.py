@@ -11,6 +11,7 @@ import pandas as pd
 import h5py
 import cv2
 import keras
+import tensorflow as tf
 import attr
 
 from multiprocessing import Process, Pool
@@ -495,7 +496,8 @@ class Predictor:
 
     _centroid_model: keras.Model = None
 
-    def predict_centroids(self, imgs: np.ndarray) -> List[List[np.ndarray]]:
+    def predict_centroids(self, imgs: np.ndarray, crop_size: int=None,
+                return_confmaps=False) -> List[List[np.ndarray]]:
 
         keras_model = self._get_centroid_model()
 
@@ -512,13 +514,38 @@ class Predictor:
                                             min_thresh=self.nms_min_thresh,
                                             sigma=self.nms_sigma)
 
-        centroids = [[np.expand_dims(frame_peaks[0][i], axis=0) / centroid_transform.scale
-                        for i in range(frame_peaks[0].shape[0])]
-                     for frame_peaks in peaks]
+        if crop_size is not None:
+            bb_half = crop_size//2
+            peak_idxs = []
+
+            with tf.Session() as sess:
+                for frame_peaks, frame_peak_vals in zip(peaks, peak_vals):
+                    boxes = np.stack([(frame_peaks[0][i][0]-bb_half,
+                                       frame_peaks[0][i][1]-bb_half,
+                                       frame_peaks[0][i][0]+bb_half,
+                                       frame_peaks[0][i][1]+bb_half)
+                                     for i in range(frame_peaks[0].shape[0])])
+                    # filter boxes
+                    box_select_idxs = tf.image.non_max_suppression(
+                                            boxes,
+                                            scores = frame_peak_vals[0],
+                                            max_output_size = boxes.shape[0])
+
+                    # get a list of peak indexes that we want to use for this frame
+                    peak_idxs.append(list(box_select_idxs.eval()))
+        else:
+            peak_idxs = [list(range(frame_peaks[0].shape[0])) for frame_peaks in peaks]
+
+        centroids = [[np.expand_dims(frame_peaks[0][peak_idx], axis=0) / centroid_transform.scale
+                        for peak_idx in frame_peak_idxs]
+                     for frame_peaks, frame_peak_idxs in zip(peaks, peak_idxs)]
 
         # Use predicted centroids (peaks) to crop images
 
-        return centroids
+        if return_confmaps:
+            return centroids, centroid_confmaps
+        else:
+            return centroids
 
     def _get_centroid_model(self):
         if self._centroid_model is None:
@@ -637,8 +664,8 @@ class Predictor:
 
             if ModelOutputType.CENTROIDS in self.sleap_models.keys():
                 # Predict centroids and crop around these
-                centroids = self.predict_centroids(mov_full)
                 crop_size = h # match input of keras model
+                centroids = self.predict_centroids(mov_full, crop_size)
                 mov = transform.centroid_crop(mov_full, centroids, crop_size)
 
             else:
