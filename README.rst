@@ -20,7 +20,7 @@ Social LEAP Estimates Animal Pose (sLEAP)
 
 **S**\ ocial **L**\ EAP **E**\ stimates **A**\ nimal **P**\ ose (**sLEAP**) is a framework for multi-animal
 body part position estimation via deep learning. It is the successor to LEAP_. **sLEAP** is written entirely in
-Python, supports multi-animal pose estimation, animal instance tracking, and a labeling\\training GUI that
+Python, supports multi-animal pose estimation, animal instance tracking, and a labeling/training GUI that
 supports active learning.
 
 .. _LEAP: https://github.com/talmo/leap
@@ -30,14 +30,13 @@ supports active learning.
 Installation
 ------------
 
-**sLEAP** is compatible with python versions 3.6 and above, with support for Windows and Linux. Mac OSX will probably
-work as well, however, this is untested as of now.
+**sLEAP** is compatible with Python versions 3.6 and above, with support for Windows and Linux. Mac OS X works but without GPU support.
 
 Windows
 -------
 
 Since **sLEAP** has a number of complex binary dependencies (TensorFlow, Keras, OpenCV), it is recommended to use the
-Anaconda_ python distribution to simplify installation.
+Anaconda_ Python distribution to simplify installation.
 
 Once Anaconda_ has been installed, go to start menu and type in *Anaconda*, which should bring up a menu entry
 **Anaconda Prompt** which opens a command line with the base anaconda environment activated. One of the key
@@ -47,7 +46,7 @@ different projects, mitigating issues of managing complex dependencies. To creat
 
 ::
 
-    (base) C:\>  conda create -n sleap_env -c sleap sleap python=3.6 -y
+    (base) C:\>  conda create -n sleap_env -c defaults -c sleap sleap python=3.6 -y
 
 Once the environment is finished installing, it can be activated using the following command:
 
@@ -73,9 +72,9 @@ you can run the labeling GUI by entering the following command:
 Linux
 -----
 
-No linux conda packages are currently provided by the **sLEAP** channel. However, installing via :code:`pip` should not
-be difficult on most Linux systems. The first step is to get a working version of tensorflow installed in your python
-environment. Follow official directions for installing TensorFlow_ with GPU support. Once tensor flow is installed, simple
+No Linux conda packages are currently provided by the **sLEAP** channel. However, installing via :code:`pip` should not
+be difficult on most Linux systems. The first step is to get a working version of TensorFlow installed in your Python
+environment. Follow official directions for installing TensorFlow_ with GPU support. Once TensorFlow is installed, simple
 issue the following command to install **sLEAP**
 
 .. _TensorFlow: https://www.tensorflow.org/install/gpu
@@ -89,6 +88,17 @@ issue the following command to install **sLEAP**
 ::
 
 > sleap-label
+
+Mac OS
+------
+
+The installation for Mac OS X is the same as for Linux, although there's no TensorFlow GPU support for Mac OS.
+You can install TensorFlow and **sLEAP** together by running
+
+::
+
+    pip install tensorflow git+https://github.com/murthylab/sleap.git
+
 
 Research
 --------
