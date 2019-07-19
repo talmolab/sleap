@@ -36,15 +36,20 @@ def save_labeled_video(filename, labels, video, frames, fps=15, overlay_callback
 
     for chunk_i in range(chunk_count):
 
+        print(f"Chunk {chunk_i}")
+
         # Read the next chunk of frames
         frame_start = chunk_size * chunk_i
         frame_end = min(frame_start + chunk_size, total_count)
         frames_idx_chunk = frames[frame_start:frame_end]
 
         # Load frames from video
+        section_t0 = clock()
         video_frame_images = video[frames_idx_chunk]
+        print(f"    read time: {clock() - section_t0}")
 
         # Add overlays to each frame
+        section_t0 = clock()
         imgs = []
         for i, frame_idx in enumerate(frames_idx_chunk):
             img = get_frame_image(video_frame=video_frame_images[i], frame_idx=frame_idx,
@@ -58,15 +63,18 @@ def save_labeled_video(filename, labels, video, frames, fps=15, overlay_callback
                 img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
 
             imgs.append(img)
+        print(f"    overlay time: {clock() - section_t0}")
 
         # Write frames to new video
+        section_t0 = clock()
         for img in imgs:
             out.write(img)
+        print(f"    write time: {clock() - section_t0}")
 
         elapsed = clock() - t0
         fps = frame_end/elapsed
         remaining_time = (total_count - i)/fps
-        print(f"  frame {frame_end}/{total_count} [{round(elapsed, 2)} s | {round(fps, 2)} FPS | approx {round(remaining_time, 2)} s remaining]")
+        print(f"Completed {frame_end}/{total_count} [{round(elapsed, 2)} s | {round(fps, 2)} FPS | approx {round(remaining_time, 2)} s remaining]")
 
 
     out.release()
