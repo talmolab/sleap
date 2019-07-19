@@ -18,6 +18,9 @@ def reader(out_q, video, frames):
     chunk_size = 64
     chunk_count = math.ceil(total_count/chunk_size)
 
+    print(f"Chunks: {chunk_count}, chunk size: {chunk_size}")
+
+    i = 0
     for chunk_i in range(chunk_count):
 
         # Read the next chunk of frames
@@ -25,15 +28,22 @@ def reader(out_q, video, frames):
         frame_end = min(frame_start + chunk_size, total_count)
         frames_idx_chunk = frames[frame_start:frame_end]
 
+        t0 = clock()
+
         # Load frames from video
-        section_t0 = clock()
         video_frame_images = video[frames_idx_chunk]
+
+        elapsed = clock() - t0
+        fps = len(frames_idx_chunk)/elapsed
+        print(f"reading chunk {i} in {elapsed} s = {fps} fps")
+        i += 1
 
         out_q.put((frames_idx_chunk, video_frame_images))
 
     out_q.put(_sentinel)
 
 def marker(in_q, out_q, labels):
+    chunk_i = 0
     while True:
         data = in_q.get()
 
@@ -43,6 +53,7 @@ def marker(in_q, out_q, labels):
 
         frames_idx_chunk, video_frame_images = data
 
+        t0 = clock()
         imgs = []
         for i, frame_idx in enumerate(frames_idx_chunk):
             img = get_frame_image(
@@ -51,6 +62,10 @@ def marker(in_q, out_q, labels):
                         labels=labels)
 
             imgs.append(img)
+        elapsed = clock() - t0
+        fps = len(imgs)/elapsed
+        print(f"marking chunk {chunk_i} in {elapsed} s = {fps} fps")
+        chunk_i += 1
         out_q.put(imgs)
 
     out_q.put(_sentinel)
@@ -59,6 +74,7 @@ def writer(in_q, filename, fps, img_w_h):
     fourcc = cv2.VideoWriter_fourcc(*'MJPG')
     out = cv2.VideoWriter(filename, fourcc, fps, img_w_h)
 
+    i = 0
     while True:
         data = in_q.get()
 
@@ -66,9 +82,13 @@ def writer(in_q, filename, fps, img_w_h):
             in_q.put(_sentinel)
             break
 
-        print("writing chunk")
+        t0 = clock()
         for img in data:
             out.write(img)
+        elapsed = clock() - t0
+        fps = len(data)/elapsed
+        print(f"writing chunk {i} in {elapsed} s = {fps} fps")
+        i += 1
 
     out.release()
 
