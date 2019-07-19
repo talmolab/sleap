@@ -6,25 +6,19 @@ import numpy as np
 import math
 from time import time, clock
 
-def save_labeled_video(filename, labels, video, frames, fps=15):
-    output_size = (video.height, video.width)
+from queue import Queue
+from threading import Thread
 
-    # Create frame images
+# Object that signals shutdown
+_sentinel = object()
 
-    t0 = clock()
+def reader(out_q, video, frames):
+
     total_count = len(frames)
-
-    print(f"Writing video with {total_count} frame images...")
-
-    fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-    out = cv2.VideoWriter(filename, fourcc, fps, (video.width, video.height))
-
-    chunk_size = 256
+    chunk_size = 64
     chunk_count = math.ceil(total_count/chunk_size)
 
     for chunk_i in range(chunk_count):
-
-        print(f"Chunk {chunk_i}/{chunk_count}")
 
         # Read the next chunk of frames
         frame_start = chunk_size * chunk_i
@@ -34,33 +28,72 @@ def save_labeled_video(filename, labels, video, frames, fps=15):
         # Load frames from video
         section_t0 = clock()
         video_frame_images = video[frames_idx_chunk]
-        print(f"    read time: {clock() - section_t0}")
 
-        # Add overlays to each frame
-        section_t0 = clock()
+        out_q.put((frames_idx_chunk, video_frame_images))
+
+    out_q.put(_sentinel)
+
+def marker(in_q, out_q, labels):
+    while True:
+        data = in_q.get()
+
+        if data is _sentinel:
+            in_q.put(_sentinel)
+            break
+
+        frames_idx_chunk, video_frame_images = data
+
         imgs = []
         for i, frame_idx in enumerate(frames_idx_chunk):
-            img = get_frame_image(video_frame=video_frame_images[i], frame_idx=frame_idx,
-                                  height=video.height, width=video.width)
+            img = get_frame_image(
+                        video_frame=video_frame_images[i],
+                        frame_idx=frame_idx,
+                        labels=labels)
 
             imgs.append(img)
-        print(f"    overlay time: {clock() - section_t0}")
+        out_q.put(imgs)
 
-        # Write frames to new video
-        section_t0 = clock()
-        for img in imgs:
+    out_q.put(_sentinel)
+
+def writer(in_q, filename, fps, img_w_h):
+    fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+    out = cv2.VideoWriter(filename, fourcc, fps, img_w_h)
+
+    while True:
+        data = in_q.get()
+
+        if data is _sentinel:
+            in_q.put(_sentinel)
+            break
+
+        print("writing chunk")
+        for img in data:
             out.write(img)
-        print(f"    write time: {clock() - section_t0}")
-
-        elapsed = clock() - t0
-        fps = frame_end/elapsed
-        remaining_time = (total_count - frame_end)/fps
-        print(f"Completed {frame_end}/{total_count} [{round(elapsed, 2)} s | {round(fps, 2)} FPS | approx {round(remaining_time, 2)} s remaining]")
-
 
     out.release()
 
-    print(f"Done writing video [{clock() - t0} s]")
+def save_labeled_video(filename, labels, video, frames, fps=15):
+    output_size = (video.height, video.width)
+
+    print(f"Writing video with {len(frames)} frame images...")
+
+    t0 = clock()
+
+    q1 = Queue()
+    q2 = Queue()
+
+    thread_read = Thread(target=reader, args=(q1, video, frames,))
+    thread_mark = Thread(target=marker, args=(q1, q2, labels,))
+    thread_write = Thread(target=writer, args=(q2, filename, fps, (video.width, video.height)))
+
+    thread_read.start()
+    thread_mark.start()
+    thread_write.start()
+    thread_write.join()
+
+    elapsed = clock() - t0
+    fps = len(frames)/elapsed
+    print(f"Done in {elapsed} s, fps = {fps}.")
 
 def img_to_cv(img):
     # Convert RGB to BGR for OpenCV
@@ -71,7 +104,7 @@ def img_to_cv(img):
         img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
     return img
 
-def get_frame_image(video_frame, frame_idx, width, height, overlay_callback=None):
+def get_frame_image(video_frame, frame_idx, labels):
     img = img_to_cv(video_frame)
     plot_instances_cv(img, frame_idx, labels)
     return img
