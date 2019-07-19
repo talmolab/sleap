@@ -1,5 +1,6 @@
 from sleap.io.video import Video
 from sleap.io.dataset import Labels
+from sleap.util import usable_cpu_count
 
 import cv2
 import numpy as np
@@ -9,16 +10,21 @@ from time import time, clock
 from queue import Queue
 from threading import Thread
 
+import logging
+logger = logging.getLogger(__name__)
+
 # Object that signals shutdown
 _sentinel = object()
 
 def reader(out_q, video, frames):
 
+    cv2.setNumThreads(usable_cpu_count())
+
     total_count = len(frames)
     chunk_size = 64
     chunk_count = math.ceil(total_count/chunk_size)
 
-    print(f"Chunks: {chunk_count}, chunk size: {chunk_size}")
+    logger.info(f"Chunks: {chunk_count}, chunk size: {chunk_size}")
 
     i = 0
     for chunk_i in range(chunk_count):
@@ -35,7 +41,7 @@ def reader(out_q, video, frames):
 
         elapsed = clock() - t0
         fps = len(frames_idx_chunk)/elapsed
-        print(f"reading chunk {i} in {elapsed} s = {fps} fps")
+        logger.debug(f"reading chunk {i} in {elapsed} s = {fps} fps")
         i += 1
 
         out_q.put((frames_idx_chunk, video_frame_images))
@@ -43,6 +49,9 @@ def reader(out_q, video, frames):
     out_q.put(_sentinel)
 
 def marker(in_q, out_q, labels):
+
+    cv2.setNumThreads(usable_cpu_count())
+
     chunk_i = 0
     while True:
         data = in_q.get()
@@ -64,13 +73,16 @@ def marker(in_q, out_q, labels):
             imgs.append(img)
         elapsed = clock() - t0
         fps = len(imgs)/elapsed
-        print(f"marking chunk {chunk_i} in {elapsed} s = {fps} fps")
+        logger.debug(f"drawing chunk {chunk_i} in {elapsed} s = {fps} fps")
         chunk_i += 1
         out_q.put(imgs)
 
     out_q.put(_sentinel)
 
 def writer(in_q, filename, fps, img_w_h):
+
+    cv2.setNumThreads(usable_cpu_count())
+
     fourcc = cv2.VideoWriter_fourcc(*'MJPG')
     out = cv2.VideoWriter(filename, fourcc, fps, img_w_h)
 
@@ -87,7 +99,7 @@ def writer(in_q, filename, fps, img_w_h):
             out.write(img)
         elapsed = clock() - t0
         fps = len(data)/elapsed
-        print(f"writing chunk {i} in {elapsed} s = {fps} fps")
+        logger.debug(f"writing chunk {i} in {elapsed} s = {fps} fps")
         i += 1
 
     out.release()
