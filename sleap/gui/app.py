@@ -167,6 +167,8 @@ class MainWindow(QMainWindow):
         labelMenu = self.menuBar().addMenu("Labels")
         self._menu_actions["add instance"] = labelMenu.addAction("Add Instance", self.newInstance, shortcuts["add instance"])
         self._menu_actions["delete instance"] = labelMenu.addAction("Delete Instance", self.deleteSelectedInstance, shortcuts["delete instance"])
+        self._menu_actions["delete track"] = labelMenu.addAction("Delete Instance and Track", self.deleteSelectedInstanceTrack, shortcuts["delete track"])
+
         self.track_menu = labelMenu.addMenu("Set Instance Track")
         self._menu_actions["transpose"] = labelMenu.addAction("Transpose Instance Tracks", self.transposeInstance, shortcuts["transpose"])
         self._menu_actions["select next"] = labelMenu.addAction("Select Next Instance", self.player.view.nextSelection, shortcuts["select next"])
@@ -1031,6 +1033,26 @@ class MainWindow(QMainWindow):
         self.changestack_push("delete instance")
 
         self.plotFrame()
+        self.updateSeekbarMarks()
+
+    def deleteSelectedInstanceTrack(self):
+        selected_inst = self.player.view.getSelectionInstance()
+        if selected_inst is None: return
+
+
+        track = selected_inst.track
+        self.labeled_frame.instances.remove(selected_inst)
+
+        if track is not None:
+            # remove any instance on this track
+            for lf in self.labels.find(self.video):
+                for inst in filter(lambda inst: inst.track == track, lf.instances):
+                    lf.instances.remove(inst)
+
+        self.changestack_push("delete track")
+
+        self.plotFrame()
+        self.updateTrackMenu()
         self.updateSeekbarMarks()
 
     def addTrack(self):

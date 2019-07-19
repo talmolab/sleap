@@ -11,6 +11,7 @@
 "extract clip":
 "add instance": Qt.CTRL + Qt.Key_I
 "delete instance": Qt.CTRL + Qt.Key_Backspace
+"delete track": Qt.CTRL + Qt.SHIFT + Qt.Key_Backspace
 "transpose": Qt.CTRL + Qt.Key_T
 "select next": QKeySequence(Qt.Key.Key_QuoteLeft)
 "clear selection": QKeySequence(Qt.Key.Key_Escape)
