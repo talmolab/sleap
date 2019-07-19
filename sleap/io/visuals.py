@@ -1,8 +1,3 @@
-import os
-os.environ["QT_QPA_PLATFORM"] = "offscreen"
-
-from PySide2 import QtWidgets, QtGui
-
 from sleap.io.video import Video
 from sleap.io.dataset import Labels
 
@@ -29,7 +24,7 @@ def save_labeled_video(filename, labels, video, frames, fps=15):
 
     for chunk_i in range(chunk_count):
 
-#         print(f"Chunk {chunk_i}")
+        print(f"Chunk {chunk_i}/{chunk_count}")
 
         # Read the next chunk of frames
         frame_start = chunk_size * chunk_i
@@ -39,7 +34,7 @@ def save_labeled_video(filename, labels, video, frames, fps=15):
         # Load frames from video
         section_t0 = clock()
         video_frame_images = video[frames_idx_chunk]
-#         print(f"    read time: {clock() - section_t0}")
+        print(f"    read time: {clock() - section_t0}")
 
         # Add overlays to each frame
         section_t0 = clock()
@@ -49,13 +44,13 @@ def save_labeled_video(filename, labels, video, frames, fps=15):
                                   height=video.height, width=video.width)
 
             imgs.append(img)
-#         print(f"    overlay time: {clock() - section_t0}")
+        print(f"    overlay time: {clock() - section_t0}")
 
         # Write frames to new video
         section_t0 = clock()
         for img in imgs:
             out.write(img)
-#         print(f"    write time: {clock() - section_t0}")
+        print(f"    write time: {clock() - section_t0}")
 
         elapsed = clock() - t0
         fps = frame_end/elapsed
@@ -150,8 +145,6 @@ if __name__ == "__main__":
 
     labels = Labels.load_json(args.data_path)
     vid = labels.videos[0]
-
-    app = QtWidgets.QApplication([])
 
     frames = [lf.frame_idx for lf in labels if len(lf.instances)]
 
