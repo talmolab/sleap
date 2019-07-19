@@ -11,6 +11,7 @@ from sleap.gui.quiverplot import MultiQuiverPlot
 
 import cv2
 import numpy as np
+import math
 from time import time, clock
 import qimage2ndarray
 
@@ -30,36 +31,54 @@ def save_labeled_video(filename, labels, video, frames, fps=15, overlay_callback
     fourcc = cv2.VideoWriter_fourcc(*'MJPG')
     out = cv2.VideoWriter(filename, fourcc, fps, (video.width, video.height))
 
-    for i, frame_idx in enumerate(frames):
-        img = get_frame_image(video=video, frame_idx=frame_idx,
-                              height=video.height, width=video.width,
-                              overlay_callback=overlay_callback)
-        # Convert RGB to BGR for OpenCV
-        if img.shape[-1] == 3:
-            img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-        # Convert grayscale to BGR
-        elif img.shape[-1] == 1:
-            img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+    chunk_size = 256
+    chunk_count = math.ceil(total_count/chunk_size)
 
-        if i > 0 and i%100 == 0:
-            elapsed = clock() - t0
-            fps = i/elapsed
-            remaining_time = (total_count - i)/fps
-            print(f"  frame {i}/{total_count} [{round(elapsed, 2)} s | {round(fps, 2)} FPS | approx {round(remaining_time, 2)} s remaining]")
+    for chunk_i in range(chunk_count):
 
-        out.write(img)
+        # Read the next chunk of frames
+        frame_start = chunk_size * chunk_i
+        frame_end = min(frame_start + chunk_size, total_count)
+        frames_idx_chunk = frames[frame_start:frame_end]
+
+        # Load frames from video
+        video_frame_images = video[frames_idx_chunk]
+
+        # Add overlays to each frame
+        imgs = []
+        for i, frame_idx in enumerate(frames_idx_chunk):
+            img = get_frame_image(video_frame=video_frame_images[i], frame_idx=frame_idx,
+                                  height=video.height, width=video.width,
+                                  overlay_callback=overlay_callback)
+            # Convert RGB to BGR for OpenCV
+            if img.shape[-1] == 3:
+                img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+            # Convert grayscale to BGR
+            elif img.shape[-1] == 1:
+                img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+
+            imgs.append(img)
+
+        # Write frames to new video
+        for img in imgs:
+            out.write(img)
+
+        elapsed = clock() - t0
+        fps = frame_end/elapsed
+        remaining_time = (total_count - i)/fps
+        print(f"  frame {frame_end}/{total_count} [{round(elapsed, 2)} s | {round(fps, 2)} FPS | approx {round(remaining_time, 2)} s remaining]")
+
 
     out.release()
 
     print(f"Done writing video [{clock() - t0} s]")
 
-def get_frame_image(video, frame_idx, width, height, overlay_callback=None):
-#     img = video.get_frame(frame_idx).copy()
+def get_frame_image(video_frame, frame_idx, width, height, overlay_callback=None):
     view = GraphicsView()
     view.scene.setSceneRect(0, 0, width, height)
 
     # video image
-    video_frame_image = qimage2ndarray.array2qimage(video.get_frame(frame_idx))
+    video_frame_image = qimage2ndarray.array2qimage(video_frame)
     view.setImage(video_frame_image)
 
     if callable(overlay_callback):
@@ -102,9 +121,6 @@ if __name__ == "__main__":
 
 #     if len(frames) > 2000:
 #         frames = frames[:2000]
-
-    print(f"Generating video with {len(frames)} labeled frames.")
-
 
     filename = args.output or args.data_path + ".avi"
 
