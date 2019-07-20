@@ -520,7 +520,7 @@ class Predictor:
 
             with tf.Session() as sess:
                 for frame_peaks, frame_peak_vals in zip(peaks, peak_vals):
-                    if len(frame_peaks[0].shape[0]):
+                    if frame_peaks[0].shape[0] > 0:
                         boxes = np.stack([(frame_peaks[0][i][0]-bb_half,
                                            frame_peaks[0][i][1]-bb_half,
                                            frame_peaks[0][i][0]+bb_half,
