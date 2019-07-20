@@ -520,20 +520,23 @@ class Predictor:
 
             with tf.Session() as sess:
                 for frame_peaks, frame_peak_vals in zip(peaks, peak_vals):
-                    boxes = np.stack([(frame_peaks[0][i][0]-bb_half,
-                                       frame_peaks[0][i][1]-bb_half,
-                                       frame_peaks[0][i][0]+bb_half,
-                                       frame_peaks[0][i][1]+bb_half)
-                                     for i in range(frame_peaks[0].shape[0])])
-                    # filter boxes
-                    box_select_idxs = tf.image.non_max_suppression(
-                                            boxes,
-                                            scores = frame_peak_vals[0],
-                                            max_output_size = boxes.shape[0],
-                                            iou_threshold=0.8)
+                    if len(frame_peaks[0].shape[0]):
+                        boxes = np.stack([(frame_peaks[0][i][0]-bb_half,
+                                           frame_peaks[0][i][1]-bb_half,
+                                           frame_peaks[0][i][0]+bb_half,
+                                           frame_peaks[0][i][1]+bb_half)
+                                         for i in range(frame_peaks[0].shape[0])])
+                        # filter boxes
+                        box_select_idxs = tf.image.non_max_suppression(
+                                                boxes,
+                                                scores = frame_peak_vals[0],
+                                                max_output_size = boxes.shape[0],
+                                                iou_threshold=0.8)
 
-                    # get a list of peak indexes that we want to use for this frame
-                    peak_idxs.append(list(box_select_idxs.eval()))
+                        # get a list of peak indexes that we want to use for this frame
+                        peak_idxs.append(list(box_select_idxs.eval()))
+                    else:
+                        peak_idxs.append([])
         else:
             peak_idxs = [list(range(frame_peaks[0].shape[0])) for frame_peaks in peaks]
 
@@ -970,6 +973,7 @@ def main():
     parser.add_argument('--save_confmaps_pafs', type=bool, default=False,
                         help='Whether to save the confidence maps or pads')
     parser.add_argument('-v', '--verbose', help='Increase logging output verbosity.', action="store_true")
+    parser.add_argument('-l', '--logfile', help='Write log file next to video.', action="store_true")
 
     args = parser.parse_args()
 
@@ -982,6 +986,9 @@ def main():
     if args.verbose:
         logging.basicConfig()
         logging.getLogger().setLevel(logging.DEBUG)
+
+    if args.logfile:
+        logging.basicConfig(filename=data_path+".log", filemode="w")
 
     # Load each model JSON
     jobs = [TrainingJob.load_json(model_filename) for model_filename in args.models]
