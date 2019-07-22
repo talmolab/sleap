@@ -158,7 +158,7 @@ def save_labeled_video(
             video: Video,
             frames: List[int],
             fps: int=15,
-            progress_queue: Queue=None):
+            gui_progress: bool=False):
     """Function to generate and save video with annotations."""
     output_size = (video.height, video.width)
 
@@ -181,14 +181,31 @@ def save_labeled_video(
     thread_mark.start()
     thread_write.start()
 
+    progress_win = None
+    if gui_progress:
+        from PySide2 import QtWidgets, QtCore
+
+        progress_win = QtWidgets.QProgressDialog(
+                            f"Generating video with {len(frames)} frames...",
+                            "Cancel",
+                            0, len(frames))
+        progress_win.setMinimumWidth(300)
+        progress_win.setWindowModality(QtCore.Qt.WindowModal)
+
     while True:
         frames_complete, elapsed = progress_queue.get()
         if frames_complete == -1:
             break
+        if progress_win is not None and progress_win.wasCanceled():
+            break
         fps = frames_complete/elapsed
         remaining_frames = len(frames) - frames_complete
         remaining_time = remaining_frames/fps
-        print(f"Finished {frames_complete} frames in {elapsed} s, fps = {fps}, approx {remaining_time} s remaining")
+
+        if gui_progress:
+            progress_win.setValue(frames_complete)
+        else:
+            print(f"Finished {frames_complete} frames in {elapsed} s, fps = {fps}, approx {remaining_time} s remaining")
 
     elapsed = clock() - t0
     fps = len(frames)/elapsed
