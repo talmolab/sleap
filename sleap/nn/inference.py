@@ -730,6 +730,12 @@ class Predictor:
                 # Predict centroids and crop around these
                 crop_size = h # match input of keras model
                 centroids = self.predict_centroids(mov_full, crop_size)
+
+                # Check if we found any centroids
+                if sum(map(len, centroids)) == 0:
+                    logger.info("  No centroids found so done with this chunk.")
+                    continue
+
                 mov = transform.centroid_crop(mov_full, centroids, crop_size)
 
             else:
