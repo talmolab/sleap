@@ -316,6 +316,7 @@ class ActiveLearningDialog(QtWidgets.QDialog):
             with_tracking = True
         else:
             frames_to_predict = dict()
+        save_confmaps_pafs = form_data.get("_save_confmaps_pafs", False)
 
         # Run active learning pipeline using the TrainingJobs
         new_lfs = run_active_learning_pipeline(
@@ -323,7 +324,8 @@ class ActiveLearningDialog(QtWidgets.QDialog):
                     labels = self.labels,
                     training_jobs = training_jobs,
                     frames_to_predict = frames_to_predict,
-                    with_tracking = with_tracking)
+                    with_tracking = with_tracking,
+                    save_confmaps_pafs = save_confmaps_pafs)
 
         # remove labeledframes without any predicted instances
         new_lfs = list(filter(lambda lf: len(lf.instances), new_lfs))
@@ -576,9 +578,14 @@ def find_saved_jobs(job_dir, jobs=None):
 
     return jobs
 
-def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=None,
-                                    frames_to_predict=None, with_tracking=False,
-                                    skip_learning=False):
+def run_active_learning_pipeline(
+            labels_filename: str,
+            labels: Labels=None,
+            training_jobs: Dict=None,
+            frames_to_predict: Dict=None,
+            with_tracking: bool=False,
+            save_confmaps_pafs: bool=False,
+            skip_learning: bool=False):
     # Imports here so we don't load TensorFlow before necessary
     from sleap.nn.monitor import LossViewer
     from sleap.nn.training import TrainingJob
