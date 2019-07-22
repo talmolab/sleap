@@ -227,8 +227,8 @@ class VideoSlider(QGraphicsView):
         """
         start = min(a, b)
         end = max(a, b)
-        start_pos = self._toPos(start)
-        end_pos = self._toPos(end)
+        start_pos = self._toPos(start, center=True)
+        end_pos = self._toPos(end, center=True)
         selection_rect = QRect(start_pos, 1,
                                end_pos-start_pos, self.slider.rect().height()-2)
 
@@ -244,7 +244,7 @@ class VideoSlider(QGraphicsView):
         """
         x = max(x, 0)
         x = min(x, self.slider.rect().width())
-        anchor_val = self._toVal(x)
+        anchor_val = self._toVal(x, center=True)
 
         if len(self._selection)%2 == 0:
             self.startSelection(anchor_val)
