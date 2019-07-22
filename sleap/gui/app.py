@@ -849,7 +849,7 @@ class MainWindow(QMainWindow):
             return list(set(frames) - set(video_user_labeled_frame_idxs))
 
         selection = dict()
-        selection["frame"] = {self.video: self.player.frame_idx}
+        selection["frame"] = {self.video: [self.player.frame_idx]}
         selection["clip"] = {self.video: list(range(*self.player.seekbar.getSelection()))}
         selection["video"] = {self.video: list(range(self.video.num_frames))}
 
