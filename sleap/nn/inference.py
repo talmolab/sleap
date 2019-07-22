@@ -973,7 +973,6 @@ def main():
     parser.add_argument('--save_confmaps_pafs', type=bool, default=False,
                         help='Whether to save the confidence maps or pads')
     parser.add_argument('-v', '--verbose', help='Increase logging output verbosity.', action="store_true")
-    parser.add_argument('-l', '--logfile', help='Write log file next to video.', action="store_true")
 
     args = parser.parse_args()
 
@@ -986,9 +985,8 @@ def main():
     if args.verbose:
         logging.basicConfig()
         logging.getLogger().setLevel(logging.DEBUG)
-
-    if args.logfile:
-        logging.basicConfig(filename=data_path+".log", filemode="w")
+    else
+        logging.getLogger().setLevel(logging.INFO)
 
     # Load each model JSON
     jobs = [TrainingJob.load_json(model_filename) for model_filename in args.models]
