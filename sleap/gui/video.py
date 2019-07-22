@@ -311,6 +311,12 @@ class QtVideoPlayer(QWidget):
             self.prevFrame()
         elif event.key() == Qt.Key.Key_Right:
             self.nextFrame()
+        elif event.key() == Qt.Key.Key_Up:
+            self.prevFrame(50)
+        elif event.key() == Qt.Key.Key_Down:
+            self.nextFrame(50)
+        elif event.key() == Qt.Key.Key_Space:
+            self.nextFrame(500)
         elif event.key() == Qt.Key.Key_Home:
             self.plot(0)
         elif event.key() == Qt.Key.Key_End:
