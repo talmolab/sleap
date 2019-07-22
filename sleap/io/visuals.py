@@ -6,6 +6,7 @@ import cv2
 import numpy as np
 import math
 from time import time, clock
+from typing import List
 
 from queue import Queue
 from threading import Thread
@@ -16,7 +17,15 @@ logger = logging.getLogger(__name__)
 # Object that signals shutdown
 _sentinel = object()
 
-def reader(out_q, video, frames):
+def reader(out_q: Queue, video: Video, frames: List[int]):
+    """Read frame images from video and send them into queue.
+
+    Args:
+        out_q: Queue to send (list of frame indexes, ndarray of frame images)
+            for chunks of video.
+        video: the `Video` object to read
+        frames: full list frame indexes we want to read
+    """
 
     cv2.setNumThreads(usable_cpu_count())
 
@@ -46,9 +55,20 @@ def reader(out_q, video, frames):
 
         out_q.put((frames_idx_chunk, video_frame_images))
 
+    # send _sentinal object into queue to signal that we're done
     out_q.put(_sentinel)
 
-def marker(in_q, out_q, labels):
+def marker(in_q: Queue, out_q: Queue, labels: Labels):
+    """Annotate frame images (draw instances).
+
+    Args:
+        in_q: Queue with (list of frame indexes, ndarray of frame images)
+        out_q: Queue to send annotated images as (images, h, w, channels) ndarray
+        labels: The `Labels` object from which to get data for annotating.
+
+    Returns:
+        None.
+    """
 
     cv2.setNumThreads(usable_cpu_count())
 
@@ -57,6 +77,7 @@ def marker(in_q, out_q, labels):
         data = in_q.get()
 
         if data is _sentinel:
+            # no more data to be received so stop
             in_q.put(_sentinel)
             break
 
@@ -77,34 +98,68 @@ def marker(in_q, out_q, labels):
         chunk_i += 1
         out_q.put(imgs)
 
+    # send _sentinal object into queue to signal that we're done
     out_q.put(_sentinel)
 
-def writer(in_q, filename, fps, img_w_h):
+def writer(in_q: Queue, progress_queue: Queue,
+           filename: str, fps: int, img_w_h: tuple):
+    """Write annotated images to video.
+
+    Args:
+        in_q: Queue with annotated images as (images, h, w, channels) ndarray
+        progress_queue: Queue to send progress as
+            (total frames written: int, elapsed time: float).
+            Send (-1, elapsed time) when done.
+        filename: full path to output video
+        fps: frames per second for output video
+        img_w_h: (w, h) for output video (note width first for opencv)
+
+    Returns:
+        None.
+    """
 
     cv2.setNumThreads(usable_cpu_count())
 
     fourcc = cv2.VideoWriter_fourcc(*'MJPG')
     out = cv2.VideoWriter(filename, fourcc, fps, img_w_h)
 
+    start_time = clock()
+    total_frames_written = 0
+
     i = 0
     while True:
         data = in_q.get()
 
         if data is _sentinel:
+            # no more data to be received so stop
             in_q.put(_sentinel)
             break
 
         t0 = clock()
         for img in data:
             out.write(img)
+
         elapsed = clock() - t0
         fps = len(data)/elapsed
         logger.debug(f"writing chunk {i} in {elapsed} s = {fps} fps")
         i += 1
 
-    out.release()
+        total_frames_written += len(data)
+        total_elapsed = clock() - start_time
+        progress_queue.put((total_frames_written, total_elapsed))
 
-def save_labeled_video(filename, labels, video, frames, fps=15):
+    out.release()
+    # send (-1, time) to signal done
+    progress_queue.put((-1, total_elapsed))
+
+def save_labeled_video(
+            filename: str,
+            labels: Labels,
+            video: Video,
+            frames: List[int],
+            fps: int=15,
+            gui_progress: bool=False):
+    """Function to generate and save video with annotations."""
     output_size = (video.height, video.width)
 
     print(f"Writing video with {len(frames)} frame images...")
@@ -113,15 +168,44 @@ def save_labeled_video(filename, labels, video, frames, fps=15):
 
     q1 = Queue()
     q2 = Queue()
+    progress_queue = Queue()
 
     thread_read = Thread(target=reader, args=(q1, video, frames,))
     thread_mark = Thread(target=marker, args=(q1, q2, labels,))
-    thread_write = Thread(target=writer, args=(q2, filename, fps, (video.width, video.height)))
+    thread_write = Thread(target=writer, args=(
+                                            q2, progress_queue, filename,
+                                            fps, (video.width, video.height),
+                                            ))
 
     thread_read.start()
     thread_mark.start()
     thread_write.start()
-    thread_write.join()
+
+    progress_win = None
+    if gui_progress:
+        from PySide2 import QtWidgets, QtCore
+
+        progress_win = QtWidgets.QProgressDialog(
+                            f"Generating video with {len(frames)} frames...",
+                            "Cancel",
+                            0, len(frames))
+        progress_win.setMinimumWidth(300)
+        progress_win.setWindowModality(QtCore.Qt.WindowModal)
+
+    while True:
+        frames_complete, elapsed = progress_queue.get()
+        if frames_complete == -1:
+            break
+        if progress_win is not None and progress_win.wasCanceled():
+            break
+        fps = frames_complete/elapsed
+        remaining_frames = len(frames) - frames_complete
+        remaining_time = remaining_frames/fps
+
+        if gui_progress:
+            progress_win.setValue(frames_complete)
+        else:
+            print(f"Finished {frames_complete} frames in {elapsed} s, fps = {fps}, approx {remaining_time} s remaining")
 
     elapsed = clock() - t0
     fps = len(frames)/elapsed

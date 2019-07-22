@@ -17,7 +17,7 @@ import attr
 from multiprocessing import Process, Pool
 from multiprocessing.pool import AsyncResult, ThreadPool
 
-from time import time
+from time import time, clock
 from typing import Dict, List, Union, Optional, Tuple
 
 from scipy.ndimage import maximum_filter, gaussian_filter
@@ -518,22 +518,26 @@ class Predictor:
             bb_half = crop_size//2
             peak_idxs = []
 
-            with tf.Session() as sess:
-                for frame_peaks, frame_peak_vals in zip(peaks, peak_vals):
+            for frame_peaks, frame_peak_vals in zip(peaks, peak_vals):
+                if frame_peaks[0].shape[0] > 0:
                     boxes = np.stack([(frame_peaks[0][i][0]-bb_half,
-                                       frame_peaks[0][i][1]-bb_half,
-                                       frame_peaks[0][i][0]+bb_half,
-                                       frame_peaks[0][i][1]+bb_half)
-                                     for i in range(frame_peaks[0].shape[0])])
+                             frame_peaks[0][i][1]-bb_half,
+                             frame_peaks[0][i][0]+bb_half,
+                             frame_peaks[0][i][1]+bb_half)
+                            for i in range(frame_peaks[0].shape[0])])
                     # filter boxes
-                    box_select_idxs = tf.image.non_max_suppression(
+                    box_select_idxs = self._bb_non_max_suppression_fast(
                                             boxes,
                                             scores = frame_peak_vals[0],
-                                            max_output_size = boxes.shape[0],
-                                            iou_threshold=0.8)
-
+                                            iou_threshold = 0.8
+                                            )
+                    if len(box_select_idxs) < boxes.shape[0]:
+                        logger.debug(f"    suppressed centroid crops from {boxes.shape[0]} to {len(box_select_idxs)}")
                     # get a list of peak indexes that we want to use for this frame
-                    peak_idxs.append(list(box_select_idxs.eval()))
+                    peak_idxs.append(box_select_idxs)
+                else:
+                    peak_idxs.append([])
+
         else:
             peak_idxs = [list(range(frame_peaks[0].shape[0])) for frame_peaks in peaks]
 
@@ -547,6 +551,63 @@ class Predictor:
             return centroids, centroid_confmaps
         else:
             return centroids
+
+    def _bb_non_max_suppression_fast(self, boxes, scores, iou_threshold):
+        """https://www.pyimagesearch.com/2015/02/16/faster-non-maximum-suppression-python/"""
+
+        # if there are no boxes, return an empty list
+        if len(boxes) == 0:
+            return []
+
+        # if the bounding boxes integers, convert them to floats --
+        # this is important since we'll be doing a bunch of divisions
+        if boxes.dtype.kind == "i":
+            boxes = boxes.astype("float")
+
+        # initialize the list of picked indexes
+        pick = []
+
+        # grab the coordinates of the bounding boxes
+        x1 = boxes[:,0]
+        y1 = boxes[:,1]
+        x2 = boxes[:,2]
+        y2 = boxes[:,3]
+
+        # compute the area of the bounding boxes and sort the bounding
+        # boxes by the bottom-right y-coordinate of the bounding box
+        area = (x2 - x1 + 1) * (y2 - y1 + 1)
+        idxs = np.argsort(scores)
+
+        # keep looping while some indexes still remain in the indexes
+        # list
+        while len(idxs) > 0:
+            # grab the last index in the indexes list and add the
+            # index value to the list of picked indexes
+            last = len(idxs) - 1
+            i = idxs[last]
+            pick.append(i)
+
+            # find the largest (x, y) coordinates for the start of
+            # the bounding box and the smallest (x, y) coordinates
+            # for the end of the bounding box
+            xx1 = np.maximum(x1[i], x1[idxs[:last]])
+            yy1 = np.maximum(y1[i], y1[idxs[:last]])
+            xx2 = np.minimum(x2[i], x2[idxs[:last]])
+            yy2 = np.minimum(y2[i], y2[idxs[:last]])
+
+            # compute the width and height of the bounding box
+            w = np.maximum(0, xx2 - xx1 + 1)
+            h = np.maximum(0, yy2 - yy1 + 1)
+
+            # compute the ratio of overlap
+            overlap = (w * h) / area[idxs[:last]]
+
+            # delete all indexes from the index list that have
+            idxs = np.delete(idxs, np.concatenate(([last],
+                np.where(overlap > iou_threshold)[0])))
+
+        # return the list of picked boxes
+        return pick
 
     def _get_centroid_model(self):
         if self._centroid_model is None:
@@ -663,6 +724,8 @@ class Predictor:
 
             logger.info("  Read %d frames [%.1fs]" % (len(mov_full), time() - t0))
 
+            # Transform images (crop or scale)
+            t0 = time()
             if ModelOutputType.CENTROIDS in self.sleap_models.keys():
                 # Predict centroids and crop around these
                 crop_size = h # match input of keras model
@@ -672,6 +735,7 @@ class Predictor:
             else:
                 # Scale (if target doesn't match current size)
                 mov = transform.scale_to(mov_full, target_size=(h,w))
+            logger.info( "  Transformed images [%.1fs]" % (time() - t0))
 
             # Run inference
             t0 = time()
@@ -982,6 +1046,8 @@ def main():
     if args.verbose:
         logging.basicConfig()
         logging.getLogger().setLevel(logging.DEBUG)
+    else:
+        logging.getLogger().setLevel(logging.INFO)
 
     # Load each model JSON
     jobs = [TrainingJob.load_json(model_filename) for model_filename in args.models]
