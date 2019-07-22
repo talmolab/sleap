@@ -162,7 +162,6 @@ class MainWindow(QMainWindow):
         videoMenu.addSeparator()
         self._menu_actions["mark frame"] = videoMenu.addAction("Mark Frame", self.markFrame, shortcuts["mark frame"])
         self._menu_actions["goto marked"] = videoMenu.addAction("Go to Marked Frame", self.goMarkedFrame, shortcuts["goto marked"])
-        self._menu_actions["extract clip"] = videoMenu.addAction("Extract Clip...", self.extractClip, shortcuts["extract clip"])
 
         labelMenu = self.menuBar().addMenu("Labels")
         self._menu_actions["add instance"] = labelMenu.addAction("Add Instance", self.newInstance, shortcuts["add instance"])
@@ -209,10 +208,11 @@ class MainWindow(QMainWindow):
         self._menu_actions["learning expert"] = predictionMenu.addAction("Expert Controls...", self.runLearningExpert)
         predictionMenu.addSeparator()
         self._menu_actions["visualize models"] = predictionMenu.addAction("Visualize Model Outputs...", self.visualizeOutputs)
-        predictionMenu.addSeparator()
         self._menu_actions["import predictions"] = predictionMenu.addAction("Import Predictions...", self.importPredictions)
         self._menu_actions["remove predictions"] = predictionMenu.addAction("Delete Predictions...", self.deletePredictions)
-        # self._menu_actions["import predictions"].setEnabled(False)
+        predictionMenu.addSeparator()
+        self._menu_actions["export clip"] = predictionMenu.addAction("Export Labeled Clip...", self.exportLabeledClip, shortcuts["export clip"])
+
         # self._menu_actions["debug"] = predictionMenu.addAction("Debug", self.debug, Qt.CTRL + Qt.Key_D)
 
         viewMenu = self.menuBar().addMenu("View")
@@ -1286,26 +1286,20 @@ class MainWindow(QMainWindow):
     def goMarkedFrame(self):
         self.plotFrame(self.mark_idx)
 
-    def extractClip(self):
+    def exportLabeledClip(self):
+        from sleap.io.visuals import save_labeled_video
         if self.player.seekbar.hasSelection():
-            start, end = self.player.seekbar.getSelection()
-            clip_labeled_frames = [copy.copy(lf) for lf in self.labels.labeled_frames if lf.frame_idx in range(start, end)]
-            clip_video_frames = self.video.get_frames(range(start, end))
-            clip_video = Video.from_numpy(clip_video_frames)
+            filename, _ = QFileDialog.getSaveFileName(self, caption="Save Video As...", dir=self.filename + ".avi", filter="AVI Video (*.avi)")
 
-            # adjust video and frame_idx for clip labeled frames
-            for lf in clip_labeled_frames:
-                lf.video = clip_video
-                lf.frame_idx -= start
+            if len(filename) == 0: return
 
-            # create new labels object with clip
-            clip_labels = Labels(clip_labeled_frames)
-
-            # clip_window = QtVideoPlayer(video=clip_video)
-            clip_window = MainWindow()
-            clip_window.showMaximized()
-            clip_window.importData(clip_labels)
-            clip_window.show()
+            save_labeled_video(
+                    labels=self.labels,
+                    video=self.video,
+                    filename=filename,
+                    frames=list(range(*self.player.seekbar.getSelection())),
+                    gui_progress=True
+                    )
 
     def previousLabeledFrameIndex(self):
         prev_idx = None
