@@ -666,6 +666,8 @@ class Predictor:
 
             logger.info("  Read %d frames [%.1fs]" % (len(mov_full), time() - t0))
 
+            # Transform images (crop or scale)
+            t0 = time()
             if ModelOutputType.CENTROIDS in self.sleap_models.keys():
                 # Predict centroids and crop around these
                 crop_size = h # match input of keras model
@@ -675,6 +677,7 @@ class Predictor:
             else:
                 # Scale (if target doesn't match current size)
                 mov = transform.scale_to(mov_full, target_size=(h,w))
+            logger.info( "  Transformed images [%.1fs]" % (time() - t0))
 
             # Run inference
             t0 = time()
