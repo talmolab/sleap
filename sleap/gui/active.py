@@ -684,8 +684,11 @@ def run_active_learning_pipeline(
                 # run predictions for desired frames in this video
                 # video_lfs = predictor.predict(input_video=video, frames=frames, output_path=inference_output_path)
 
-                pool, result = predictor.predict_async(input_video=video, frames=frames,
-                                        output_path=inference_output_path)
+                pool, result = predictor.predict_async(
+                                        input_video=video,
+                                        frames=frames,
+                                        output_path=inference_output_path,
+                                        save_confmaps_pafs=save_confmaps_pafs)
 
                 while not result.ready():
                     QtWidgets.QApplication.instance().processEvents()
