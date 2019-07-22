@@ -985,7 +985,7 @@ def main():
     if args.verbose:
         logging.basicConfig()
         logging.getLogger().setLevel(logging.DEBUG)
-    else
+    else:
         logging.getLogger().setLevel(logging.INFO)
 
     # Load each model JSON
