@@ -26,8 +26,8 @@ class TrackColorManager():
         # twelve
         # http://colorbrewer2.org/#type=qualitative&scheme=Paired&n=12
 
-        self._palettes = dict(
-        standard = [
+        self._palettes = {
+        "standard" : [
             [0,   114,   189],
             [217,  83,    25],
             [237, 177,    32],
@@ -36,7 +36,14 @@ class TrackColorManager():
             [77,  190,   238],
             [162,  20,    47],
         ],
-        solarized = [
+        "five+" : [
+            [228,26,28],
+            [55,126,184],
+            [77,175,74],
+            [152,78,163],
+            [255,127,0],
+        ],
+        "solarized" : [
             [181, 137, 0],
             [203, 75, 22],
             [220, 50, 47],
@@ -46,7 +53,7 @@ class TrackColorManager():
             [42, 161, 152],
             [133, 153, 0],
         ],
-        alphabet = [
+        "alphabet" : [
             [240,163,255],
             [0,117,220],
             [153,63,0],
@@ -74,7 +81,7 @@ class TrackColorManager():
             [255,255,0],
             [255,80,5],
         ],
-        twelve = [
+        "twelve" : [
             [31,120,180],
             [51,160,44],
             [227,26,28],
@@ -88,7 +95,13 @@ class TrackColorManager():
             [202,178,214],
             [255,255,153],
         ]
-        )
+        }
+
+        self.mode = "cycle"
+        self._modes = dict(
+                cycle=lambda i, c: i%c,
+                clip=lambda i, c: min(i,c-1),
+                )
 
         self.set_palette(palette)
 
@@ -106,12 +119,14 @@ class TrackColorManager():
 
     def set_palette(self, palette):
         if isinstance(palette, str):
+            self.mode = "clip" if palette.endswith("+") else "cycle"
+
             if palette in self._palettes:
-                self._color_maps = self._palettes[palette]
+                self._color_map = self._palettes[palette]
             else:
-                self._color_maps = self._palettes["standard"]
+                self._color_map = self._palettes["standard"]
         else:
-            self._color_maps = palette
+            self._color_map = palette
 
     def get_color(self, track: Union[Track, int]):
         """Return the color to use for a given track.
@@ -121,8 +136,9 @@ class TrackColorManager():
         Returns:
             (r, g, b)-tuple
         """
-        track_i = self.labels.tracks.index(track) if isinstance(track, Track) else track
-        color = self._color_maps[track_i%len(self._color_maps)]
+        track_idx = self.labels.tracks.index(track) if isinstance(track, Track) else track
+        color_idx = self._modes[self.mode](track_idx, len(self._color_map))
+        color = self._color_map[color_idx]
         return color
 
 
