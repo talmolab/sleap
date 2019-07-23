@@ -1140,6 +1140,8 @@ class QtInstance(QGraphicsObject):
         else:
             track_name = "[none]"
         instance_label_text += f"<b>Track</b>: {track_name}"
+        if hasattr(self.instance, "score"):
+            instance_label_text += f"<br /><b>Prediction Score</b>: {round(self.instance.score, 2)}"
         self.track_label.setHtml(instance_label_text)
 
         # Add nodes
