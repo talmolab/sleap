@@ -1,3 +1,5 @@
+import os
+
 from sleap.io.dataset import Labels
 
 if __name__ == "__main__":
@@ -7,13 +9,53 @@ if __name__ == "__main__":
     parser.add_argument("data_path", help="Path to labels json file")
     args = parser.parse_args()
 
-    labels = Labels.load_json(args.data_path)
+    def video_callback(video_list, new_paths=[os.path.dirname(args.data_path)]):
+        # Check each video
+        for video_item in video_list:
+            if "backend" in video_item and "filename" in video_item["backend"]:
+                current_filename = video_item["backend"]["filename"]
+                # check if we can find video
+                if not os.path.exists(current_filename):
+                    is_found = False
 
-    print(f"Number of labeled frames: {len(labels)}")
+                    current_basename = os.path.basename(current_filename)
+                    # handle unix, windows, or mixed paths
+                    if current_basename.find("/") > -1:
+                        current_basename = current_basename.split("/")[-1]
+                    if current_basename.find("\\") > -1:
+                        current_basename = current_basename.split("\\")[-1]
 
-    first_idx = min((lf.frame_idx for lf in labels))
-    last_idx = max((lf.frame_idx for lf in labels))
+                    # First see if we can find the file in another directory,
+                    # and if not, prompt the user to find the file.
 
-    print(f"  from {first_idx} to {last_idx}")
+                    # We'll check in the current working directory, and if the user has
+                    # already found any missing videos, check in the directory of those.
+                    for path_dir in new_paths:
+                        check_path = os.path.join(path_dir, current_basename)
+                        if os.path.exists(check_path):
+                            # we found the file in a different directory
+                            video_item["backend"]["filename"] = check_path
+                            is_found = True
+                            break
 
-    print(f"Video file: {labels.videos[0].filename}")
+    labels = Labels.load_json(args.data_path, video_callback=video_callback)
+
+    print(f"Labeled frames: {len(labels)}")
+    print(f"Tracks: {len(labels.tracks)}")
+
+    print(f"Video files:")
+
+    for vid in labels.videos:
+        lfs = labels.find(vid)
+
+        first_idx = min((lf.frame_idx for lf in lfs))
+        last_idx = max((lf.frame_idx for lf in lfs))
+
+        tracks = {inst.track for lf in lfs for inst in lf}
+        concurrent_count = max((len(lf.instances) for lf in lfs))
+
+        print(f"  {vid.filename}")
+        print(f"    labeled from {first_idx} to {last_idx}")
+        print(f"    tracks: {len(tracks)}")
+        print(f"    max instances in frame: {concurrent_count}")
+

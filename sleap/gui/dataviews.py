@@ -287,7 +287,15 @@ class LabeledFrameTableModel(QtCore.QAbstractTableModel):
     @labels.setter
     def labels(self, val):
         self._labels = val
-        self._color_manager = TrackColorManager(self._labels)
+        self.color_manager = TrackColorManager(val)
+
+    @property
+    def color_manager(self):
+        return self._color_manager
+
+    @color_manager.setter
+    def color_manager(self, val):
+        self._color_manager = val
 
     def data(self, index: QtCore.QModelIndex, role=Qt.DisplayRole):
         if index.isValid():
@@ -306,7 +314,7 @@ class LabeledFrameTableModel(QtCore.QAbstractTableModel):
                         return instance.skeleton.name
                 elif role == Qt.ForegroundRole:
                     if prop == "track" and instance.track is not None:
-                        return QColor(*self._color_manager.get_color(instance.track))
+                        return QColor(*self.color_manager.get_color(instance.track))
 
         return None
 

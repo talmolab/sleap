@@ -54,17 +54,18 @@ class QtVideoPlayer(QWidget):
         changedData: Emitted whenever data is changed by user
     """
 
-    changedPlot = Signal(QWidget, int)
+    changedPlot = Signal(QWidget, int, int)
     changedData = Signal(Instance)
 
-    def __init__(self, video: Video = None, *args, **kwargs):
+    def __init__(self, video: Video = None, color_manager=None, *args, **kwargs):
         super(QtVideoPlayer, self).__init__(*args, **kwargs)
 
         self._shift_key_down = False
         self.frame_idx = -1
+        self._color_manager = color_manager
         self.view = GraphicsView()
 
-        self.seekbar = VideoSlider()
+        self.seekbar = VideoSlider(color_manager=self._color_manager)
         self.seekbar.valueChanged.connect(lambda evt: self.plot(self.seekbar.value()))
         self.seekbar.keyPress.connect(self.keyPressEvent)
         self.seekbar.keyRelease.connect(self.keyReleaseEvent)
@@ -173,6 +174,10 @@ class QtVideoPlayer(QWidget):
         self.frame_idx = idx
         self.seekbar.setValue(self.frame_idx)
 
+        # Save index of selected instance
+        selected_idx = self.view.getSelection()
+        selected_idx = -1 if selected_idx is None else selected_idx # use -1 for no selection
+
         # Clear existing objects
         self.view.clear()
 
@@ -190,7 +195,7 @@ class QtVideoPlayer(QWidget):
         self.view.setImage(image)
 
         # Emit signal (it's better to use the signal than a callback)
-        self.changedPlot.emit(self, idx)
+        self.changedPlot.emit(self, idx, selected_idx)
 
     def nextFrame(self, dt=1):
         """ Go to next frame.
@@ -1125,14 +1130,19 @@ class QtInstance(QGraphicsObject):
         box_pen.setCosmetic(True)
         self.box.setPen(box_pen)
 
-        self.track_label = QGraphicsTextItem(parent=self)
+        self.track_label = QtTextWithBackground(parent=self)
         self.track_label.setDefaultTextColor(QColor(*self.color))
         self.track_label.setFlag(QGraphicsItem.ItemIgnoresTransformations)
+
+        instance_label_text = ""
         if self.instance.track is not None:
             track_name = self.instance.track.name
         else:
             track_name = "[none]"
-        self.track_label.setHtml(f"<b>Track</b>: {track_name}")
+        instance_label_text += f"<b>Track</b>: {track_name}"
+        if hasattr(self.instance, "score"):
+            instance_label_text += f"<br /><b>Prediction Score</b>: {round(self.instance.score, 2)}"
+        self.track_label.setHtml(instance_label_text)
 
         # Add nodes
         for (node, point) in self.instance.nodes_points:
@@ -1286,12 +1296,34 @@ class QtInstance(QGraphicsObject):
         """
         pass
 
+class QtTextWithBackground(QGraphicsTextItem):
+
+    def __init__(self, *args, **kwargs):
+        super(QtTextWithBackground, self).__init__(*args, **kwargs)
+
+    def boundingRect(self):
+        """ Method required by Qt.
+        """
+        return super(QtTextWithBackground, self).boundingRect()
+
+    def paint(self, painter, option, *args, **kwargs):
+        """ Method required by Qt.
+        """
+        text_color = self.defaultTextColor()
+        brush = painter.brush()
+        background_color = "white" if text_color.lightnessF() < .4 else "black"
+        background_color = QColor(background_color, a=.5)
+        painter.setBrush(QBrush(background_color))
+        painter.drawRect(self.boundingRect())
+        painter.setBrush(brush)
+        super(QtTextWithBackground, self).paint(painter, option, *args, **kwargs)
+
 def video_demo(labels, standalone=False):
     video = labels.videos[0]
     if standalone: app = QApplication([])
     window = QtVideoPlayer(video=video)
 
-    window.changedPlot.connect(lambda vp, idx: plot_instances(vp.view.scene, idx, labels, video))
+    window.changedPlot.connect(lambda vp, idx, select_idx: plot_instances(vp.view.scene, idx, labels, video))
 
     window.show()
     window.plot()
@@ -1299,16 +1331,8 @@ def video_demo(labels, standalone=False):
     if standalone: app.exec_()
 
 def plot_instances(scene, frame_idx, labels, video=None, fixed=True):
-    video = video = labels.videos[0]
-    cmap = np.array([
-        [0,   114,   189],
-        [217,  83,    25],
-        [237, 177,    32],
-        [126,  47,   142],
-        [119, 172,    48],
-        [77,  190,   238],
-        [162,  20,    47],
-        ])
+    video = labels.videos[0]
+    color_manager = TrackColorManager(labels)
     lfs = [label for label in labels.labels if label.video == video and label.frame_idx == frame_idx]
 
     if len(lfs) == 0: return
@@ -1317,16 +1341,16 @@ def plot_instances(scene, frame_idx, labels, video=None, fixed=True):
 
     count_no_track = 0
     for i, instance in enumerate(labeled_frame.instances_to_show):
-        if instance.track in labels.tracks:
-            track_idx = labels.tracks.index(instance.track)
+        if instance.track in self.labels.tracks:
+            pseudo_track = instance.track
         else:
             # Instance without track
-            track_idx = len(labels.tracks) + count_no_track
+            pseudo_track = len(self.labels.tracks) + count_no_track
             count_no_track += 1
 
         # Plot instance
         inst = QtInstance(instance=instance,
-                          color=cmap[track_idx%len(cmap)],
+                          color=color_manager(pseudo_track),
                           predicted=fixed,
                           color_predicted=True,
                           show_non_visible=False)

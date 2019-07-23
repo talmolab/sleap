@@ -8,6 +8,8 @@ from PySide2.QtWidgets import QSizePolicy, QLabel, QGraphicsRectItem
 from PySide2.QtGui import QPainter, QPen, QBrush, QColor, QKeyEvent
 from PySide2.QtCore import Qt, Signal, QRect, QRectF
 
+from sleap.gui.tracks import TrackColorManager
+
 class VideoSlider(QGraphicsView):
     """Drop-in replacement for QSlider with additional features.
 
@@ -32,6 +34,7 @@ class VideoSlider(QGraphicsView):
 
     def __init__(self, orientation=-1, min=0, max=100, val=0,
             marks=None, tracks=0,
+            color_manager=None,
             *args, **kwargs):
         super(VideoSlider, self).__init__(*args, **kwargs)
 
@@ -43,15 +46,7 @@ class VideoSlider(QGraphicsView):
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff) # ScrollBarAsNeeded
 
-        self.color_maps = [
-            [0,   114,   189],
-            [217,  83,    25],
-            [237, 177,    32],
-            [126,  47,   142],
-            [119, 172,    48],
-            [77,  190,   238],
-            [162,  20,    47],
-            ]
+        self._color_manager = color_manager or TrackColorManager()
 
         self._track_height = 3
 
@@ -310,7 +305,7 @@ class VideoSlider(QGraphicsView):
                 track = new_mark[0]
                 v_offset = 3 + (self._track_height * track)
                 height = 1
-                color = QColor(*self.color_maps[track%len(self.color_maps)])
+                color = QColor(*self._color_manager.get_color(track))
             else:
                 # rect (open/filled) if format: ("o", frame_idx) or ("f", frame_idx)
                 # ("p", frame_idx) when only predicted instances on frame
