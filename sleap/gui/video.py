@@ -57,14 +57,15 @@ class QtVideoPlayer(QWidget):
     changedPlot = Signal(QWidget, int)
     changedData = Signal(Instance)
 
-    def __init__(self, video: Video = None, *args, **kwargs):
+    def __init__(self, video: Video = None, color_manager=None, *args, **kwargs):
         super(QtVideoPlayer, self).__init__(*args, **kwargs)
 
         self._shift_key_down = False
         self.frame_idx = -1
+        self._color_manager = color_manager
         self.view = GraphicsView()
 
-        self.seekbar = VideoSlider()
+        self.seekbar = VideoSlider(color_manager=self._color_manager)
         self.seekbar.valueChanged.connect(lambda evt: self.plot(self.seekbar.value()))
         self.seekbar.keyPress.connect(self.keyPressEvent)
         self.seekbar.keyRelease.connect(self.keyReleaseEvent)
@@ -1299,16 +1300,8 @@ def video_demo(labels, standalone=False):
     if standalone: app.exec_()
 
 def plot_instances(scene, frame_idx, labels, video=None, fixed=True):
-    video = video = labels.videos[0]
-    cmap = np.array([
-        [0,   114,   189],
-        [217,  83,    25],
-        [237, 177,    32],
-        [126,  47,   142],
-        [119, 172,    48],
-        [77,  190,   238],
-        [162,  20,    47],
-        ])
+    video = labels.videos[0]
+    color_manager = TrackColorManager(labels)
     lfs = [label for label in labels.labels if label.video == video and label.frame_idx == frame_idx]
 
     if len(lfs) == 0: return
@@ -1317,16 +1310,16 @@ def plot_instances(scene, frame_idx, labels, video=None, fixed=True):
 
     count_no_track = 0
     for i, instance in enumerate(labeled_frame.instances_to_show):
-        if instance.track in labels.tracks:
-            track_idx = labels.tracks.index(instance.track)
+        if instance.track in self.labels.tracks:
+            pseudo_track = instance.track
         else:
             # Instance without track
-            track_idx = len(labels.tracks) + count_no_track
+            pseudo_track = len(self.labels.tracks) + count_no_track
             count_no_track += 1
 
         # Plot instance
         inst = QtInstance(instance=instance,
-                          color=cmap[track_idx%len(cmap)],
+                          color=color_manager(pseudo_track),
                           predicted=fixed,
                           color_predicted=True,
                           show_non_visible=False)

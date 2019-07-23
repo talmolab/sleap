@@ -25,7 +25,7 @@ from sleap.instance import Instance, PredictedInstance, Point, LabeledFrame, Tra
 from sleap.io.video import Video, HDF5Video, MediaVideo
 from sleap.io.dataset import Labels
 from sleap.gui.video import QtVideoPlayer
-from sleap.gui.tracks import TrackTrailManager
+from sleap.gui.tracks import TrackColorManager, TrackTrailManager
 from sleap.gui.dataviews import VideosTable, SkeletonNodesTable, SkeletonEdgesTable, \
     LabeledFrameTable, SkeletonNodeModel, SuggestionsTable
 from sleap.gui.importvideos import ImportVideos
@@ -43,15 +43,7 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__(*args, **kwargs)
 
         # lines(7)*255
-        self.cmap = np.array([
-        [0,   114,   189],
-        [217,  83,    25],
-        [237, 177,    32],
-        [126,  47,   142],
-        [119, 172,    48],
-        [77,  190,   238],
-        [162,  20,    47],
-        ])
+
 
         self.labels = Labels()
         self.skeleton = Skeleton()
@@ -64,6 +56,8 @@ class MainWindow(QMainWindow):
         self._buttons = dict()
         self._child_windows = dict()
 
+        self._color_palette = "standard"
+        self._color_manager = TrackColorManager(self.labels, self._color_palette)
         self._trail_manager = None
 
         self._show_labels = True
@@ -133,7 +127,7 @@ class MainWindow(QMainWindow):
                 shortcuts[action] = eval(key_string)
 
         ####### Video player #######
-        self.player = QtVideoPlayer()
+        self.player = QtVideoPlayer(color_manager=self._color_manager)
         self.player.changedPlot.connect(self.newFrame)
         self.player.changedData.connect(lambda inst: self.changestack_push("viewer change"))
         self.player.view.instanceDoubleClicked.connect(self.newInstance)
@@ -193,6 +187,14 @@ class MainWindow(QMainWindow):
             menu_item.setCheckable(True)
 
         self._menu_actions["color predicted"] = labelMenu.addAction("Color Predicted Instances", self.toggleColorPredicted, shortcuts["color predicted"])
+
+        self.paletteMenu = labelMenu.addMenu("Color Palette")
+        for palette_name in self._color_manager.palette_names:
+            menu_item = self.paletteMenu.addAction(f"{palette_name}",
+                            lambda x=palette_name: self.setPalette(x))
+            menu_item.setCheckable(True)
+        self.setPalette("standard")
+
         labelMenu.addSeparator()
         self._menu_actions["fit"] = labelMenu.addAction("Fit Instances to View", self.toggleAutoZoom, shortcuts["fit"])
 
@@ -480,6 +482,7 @@ class MainWindow(QMainWindow):
 
         self.instancesTable.model().labels = self.labels
         self.instancesTable.model().labeled_frame = self.labeled_frame
+        self.instancesTable.model().color_manager = self._color_manager
 
         self.suggestionsTable.model().labels = self.labels
 
@@ -501,6 +504,8 @@ class MainWindow(QMainWindow):
 
     def plotFrame(self, *args, **kwargs):
         """Wrap call to player.plot so we can redraw/update things."""
+        if self.video is None: return
+
         self.player.plot(*args, **kwargs)
         self.player.showLabels(self._show_labels)
         self.player.showEdges(self._show_edges)
@@ -588,6 +593,8 @@ class MainWindow(QMainWindow):
 
             if has_loaded:
                 self.changestack_clear()
+                self._color_manager.labels = self.labels
+                self._color_manager.set_palette(self._color_palette)
                 self._trail_manager = TrackTrailManager(self.labels, self.player.view.scene)
                 self.setTrailLength(self._trail_manager.trail_length)
 
@@ -1361,14 +1368,22 @@ class MainWindow(QMainWindow):
 
     def setTrailLength(self, trail_length):
         self._trail_manager.trail_length = trail_length
+        self._menu_check_single(self.trailLengthMenu, trail_length)
 
-        for menu_item in self.trailLengthMenu.children():
-            if menu_item.text() == str(trail_length):
+        if self.video is not None: self.plotFrame()
+
+    def setPalette(self, palette):
+        self._color_manager.set_palette(palette)
+        self._menu_check_single(self.paletteMenu, palette)
+        if self.video is not None: self.plotFrame()
+        self.updateSeekbarMarks()
+
+    def _menu_check_single(self, menu, item_text):
+        for menu_item in menu.children():
+            if menu_item.text() == str(item_text):
                 menu_item.setChecked(True)
             else:
                 menu_item.setChecked(False)
-
-        if self.video is not None: self.plotFrame()
 
     def toggleColorPredicted(self):
         self._color_predicted = not self._color_predicted
@@ -1416,16 +1431,18 @@ class MainWindow(QMainWindow):
 
         count_no_track = 0
         for i, instance in enumerate(self.labeled_frame.instances_to_show):
+
             if instance.track in self.labels.tracks:
-                track_idx = self.labels.tracks.index(instance.track)
+                pseudo_track = instance.track
             else:
                 # Instance without track
-                track_idx = len(self.labels.tracks) + count_no_track
+                pseudo_track = len(self.labels.tracks) + count_no_track
                 count_no_track += 1
+
             is_predicted = hasattr(instance,"score")
 
             player.addInstance(instance=instance,
-                               color=self.cmap[track_idx%len(self.cmap)],
+                               color=self._color_manager.get_color(pseudo_track),
                                predicted=is_predicted,
                                color_predicted=self._color_predicted)
 
