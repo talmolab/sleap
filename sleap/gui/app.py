@@ -595,7 +595,10 @@ class MainWindow(QMainWindow):
                 self.changestack_clear()
                 self._color_manager.labels = self.labels
                 self._color_manager.set_palette(self._color_palette)
-                self._trail_manager = TrackTrailManager(self.labels, self.player.view.scene)
+                self._trail_manager = TrackTrailManager(
+                                            labels = self.labels,
+                                            scene = self.player.view.scene,
+                                            color_manager = self._color_manager)
                 self.setTrailLength(self._trail_manager.trail_length)
 
                 if show_msg:

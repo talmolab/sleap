@@ -157,11 +157,11 @@ class TrackTrailManager():
         to plot the trails in scene.
     """
 
-    def __init__(self, labels: Labels, scene: QtWidgets.QGraphicsScene, trail_length: int=4):
+    def __init__(self, labels: Labels, scene: QtWidgets.QGraphicsScene, trail_length: int=4, color_manager=None):
         self.labels = labels
         self.scene = scene
         self.trail_length = trail_length
-        self._color_manager = TrackColorManager(labels)
+        self._color_manager = color_manager or TrackColorManager(labels)
 
     def get_track_trails(self, frame_selection, track: Track):
         """Get data needed to draw track trail.
