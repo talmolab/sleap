@@ -1130,7 +1130,7 @@ class QtInstance(QGraphicsObject):
         box_pen.setCosmetic(True)
         self.box.setPen(box_pen)
 
-        self.track_label = QGraphicsTextItem(parent=self)
+        self.track_label = QtTextWithBackground(parent=self)
         self.track_label.setDefaultTextColor(QColor(*self.color))
         self.track_label.setFlag(QGraphicsItem.ItemIgnoresTransformations)
 
@@ -1295,6 +1295,28 @@ class QtInstance(QGraphicsObject):
         """ Method required by Qt.
         """
         pass
+
+class QtTextWithBackground(QGraphicsTextItem):
+
+    def __init__(self, *args, **kwargs):
+        super(QtTextWithBackground, self).__init__(*args, **kwargs)
+
+    def boundingRect(self):
+        """ Method required by Qt.
+        """
+        return super(QtTextWithBackground, self).boundingRect()
+
+    def paint(self, painter, option, *args, **kwargs):
+        """ Method required by Qt.
+        """
+        text_color = self.defaultTextColor()
+        brush = painter.brush()
+        background_color = "white" if text_color.lightnessF() < .4 else "black"
+        background_color = QColor(background_color, a=.5)
+        painter.setBrush(QBrush(background_color))
+        painter.drawRect(self.boundingRect())
+        painter.setBrush(brush)
+        super(QtTextWithBackground, self).paint(painter, option, *args, **kwargs)
 
 def video_demo(labels, standalone=False):
     video = labels.videos[0]
