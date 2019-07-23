@@ -54,7 +54,7 @@ class QtVideoPlayer(QWidget):
         changedData: Emitted whenever data is changed by user
     """
 
-    changedPlot = Signal(QWidget, int)
+    changedPlot = Signal(QWidget, int, int)
     changedData = Signal(Instance)
 
     def __init__(self, video: Video = None, color_manager=None, *args, **kwargs):
@@ -174,6 +174,10 @@ class QtVideoPlayer(QWidget):
         self.frame_idx = idx
         self.seekbar.setValue(self.frame_idx)
 
+        # Save index of selected instance
+        selected_idx = self.view.getSelection()
+        selected_idx = -1 if selected_idx is None else selected_idx # use -1 for no selection
+
         # Clear existing objects
         self.view.clear()
 
@@ -191,7 +195,7 @@ class QtVideoPlayer(QWidget):
         self.view.setImage(image)
 
         # Emit signal (it's better to use the signal than a callback)
-        self.changedPlot.emit(self, idx)
+        self.changedPlot.emit(self, idx, selected_idx)
 
     def nextFrame(self, dt=1):
         """ Go to next frame.
@@ -1129,11 +1133,14 @@ class QtInstance(QGraphicsObject):
         self.track_label = QGraphicsTextItem(parent=self)
         self.track_label.setDefaultTextColor(QColor(*self.color))
         self.track_label.setFlag(QGraphicsItem.ItemIgnoresTransformations)
+
+        instance_label_text = ""
         if self.instance.track is not None:
             track_name = self.instance.track.name
         else:
             track_name = "[none]"
-        self.track_label.setHtml(f"<b>Track</b>: {track_name}")
+        instance_label_text += f"<b>Track</b>: {track_name}"
+        self.track_label.setHtml(instance_label_text)
 
         # Add nodes
         for (node, point) in self.instance.nodes_points:
@@ -1292,7 +1299,7 @@ def video_demo(labels, standalone=False):
     if standalone: app = QApplication([])
     window = QtVideoPlayer(video=video)
 
-    window.changedPlot.connect(lambda vp, idx: plot_instances(vp.view.scene, idx, labels, video))
+    window.changedPlot.connect(lambda vp, idx, select_idx: plot_instances(vp.view.scene, idx, labels, video))
 
     window.show()
     window.plot()

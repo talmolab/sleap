@@ -1422,7 +1422,7 @@ class MainWindow(QMainWindow):
         instances = labeled_frame[0].instances if len(labeled_frame) > 0 else []
         return instances
 
-    def newFrame(self, player, frame_idx):
+    def newFrame(self, player, frame_idx, selected_idx):
 
         labeled_frame = [label for label in self.labels.labels if label.video == self.video and label.frame_idx == frame_idx]
         self.labeled_frame = labeled_frame[0] if len(labeled_frame) > 0 else LabeledFrame(video=self.video, frame_idx=frame_idx)
@@ -1448,6 +1448,10 @@ class MainWindow(QMainWindow):
 
         if self._trail_manager is not None and self._show_trails:
             self._trail_manager.add_trails_to_scene(frame_idx)
+
+        # Select instance if there was already selection
+        if selected_idx > -1:
+            player.view.selectInstance(selected_idx)
 
         player.view.updatedViewer.emit()
 
