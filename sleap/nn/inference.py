@@ -529,7 +529,7 @@ class Predictor:
                     box_select_idxs = self._bb_non_max_suppression_fast(
                                             boxes,
                                             scores = frame_peak_vals[0],
-                                            iou_threshold = 0.8
+                                            iou_threshold = 0.9
                                             )
                     if len(box_select_idxs) < boxes.shape[0]:
                         logger.debug(f"    suppressed centroid crops from {boxes.shape[0]} to {len(box_select_idxs)}")
