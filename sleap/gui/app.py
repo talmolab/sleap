@@ -212,6 +212,7 @@ class MainWindow(QMainWindow):
         self._menu_actions["visualize models"] = predictionMenu.addAction("Visualize Model Outputs...", self.visualizeOutputs)
         self._menu_actions["import predictions"] = predictionMenu.addAction("Import Predictions...", self.importPredictions)
         self._menu_actions["remove predictions"] = predictionMenu.addAction("Delete Predictions...", self.deletePredictions)
+        self._menu_actions["remove clip predictions"] = predictionMenu.addAction("Delete Predictions from Clip...", self.deleteClipPredictions)
         predictionMenu.addSeparator()
         self._menu_actions["export clip"] = predictionMenu.addAction("Export Labeled Clip...", self.exportLabeledClip, shortcuts["export clip"])
 
@@ -920,6 +921,28 @@ class MainWindow(QMainWindow):
     def deletePredictions(self):
 
         predicted_instances = [(lf, inst) for lf in self.labels for inst in lf if type(inst) == PredictedInstance]
+
+        resp = QMessageBox.critical(self,
+                "Removing predicted instances",
+                f"There are {len(predicted_instances)} predicted instances. "
+                "Are you sure you want to delete these?",
+                QMessageBox.Yes, QMessageBox.No)
+
+        if resp == QMessageBox.No: return
+
+        for lf, inst in predicted_instances:
+            inst_idx = lf.index(inst)
+            del lf[inst_idx]
+
+        self.plotFrame()
+        self.updateSeekbarMarks()
+        self.changestack_push("removed predictions")
+
+    def deleteClipPredictions(self):
+
+        predicted_instances = [(lf, inst) for lf in self.labels for inst in lf
+                                if lf.frame_idx in range(*self.player.seekbar.getSelection())
+                                and type(inst) == PredictedInstance]
 
         resp = QMessageBox.critical(self,
                 "Removing predicted instances",
