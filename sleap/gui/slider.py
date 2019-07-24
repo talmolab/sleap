@@ -78,29 +78,50 @@ class VideoSlider(QGraphicsView):
         self.setValue(val)
         self.setMarks(marks)
 
-    def setTracksFromLabels(self, labels, video=None):
+    def setTracksFromLabels(self, labels, video):
         """Set slider marks using track information from `Labels` object.
 
         Note that this is the only method coupled to a SLEAP object.
 
         Args:
             labels: the `labels` with tracks and labeled_frames
-            video: the video for which to show marks (default to first)
+            video: the video for which to show marks
         """
-        video = video or labels.videos[0]
-
         track_count = len(labels.tracks)
         slider_marks = []
 
-        inst_frame_list = [(inst, lf.frame_idx) for lf in labels.find(video) for inst in lf.instances]
+        inst_frame_list = [(inst, lf) for lf in labels.find(video) for inst in lf.instances]
 
-        for instance, frame_idx in inst_frame_list:
+        for instance, lf in inst_frame_list:
+            frame_idx = lf.frame_idx
             if instance.track is not None:
                 # Add mark with track
                 slider_marks.append((labels.tracks.index(instance.track), frame_idx))
             else:
                 # Add mark without track
                 slider_marks.append(frame_idx)
+
+
+
+        # list of frame_idx for simple markers for labeled frames
+        labeled_marks = [lf.frame_idx for _, lf in inst_frame_list]
+        user_labeled = [lf.frame_idx for _, lf in inst_frame_list if len(lf.user_instances)]
+        # "f" for suggestions with instances and "o" for those without
+        # "f" means "filled", "o" means "open"
+        # "p" for suggestions with only predicted instances
+        def mark_type(frame):
+            if frame in user_labeled:
+                return "f"
+            elif frame in labeled_marks:
+                return "p"
+            else:
+                return "o"
+        # list of (type, frame) tuples for suggestions
+        suggestion_marks = [(mark_type(frame_idx), frame_idx)
+            for frame_idx in labels.get_video_suggestions(video)]
+        # combine marks for labeled frame and marks for suggested frames
+        slider_marks.extend(suggestion_marks)
+
 
         self.setTracks(track_count)
         self.setMarks(slider_marks)

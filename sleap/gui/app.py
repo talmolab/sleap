@@ -817,31 +817,8 @@ class MainWindow(QMainWindow):
         self.plotFrame()
 
     def updateSeekbarMarks(self):
-        # If there are tracks, mark whether track has instance in frame.
-        if len(self.labels.tracks):
-            self.player.seekbar.setTracksFromLabels(self.labels, self.video)
-        # Otherwise, mark which frames have any instances.
-        else:
-            # list of frame_idx for simple markers for labeled frames
-            labeled_marks = [lf.frame_idx for lf in self.labels.find(self.video) if len(lf.instances)]
-            user_labeled = [lf.frame_idx for lf in self.labels.find(self.video) if len(lf.user_instances)]
-            # "f" for suggestions with instances and "o" for those without
-            # "f" means "filled", "o" means "open"
-            # "p" for suggestions with only predicted instances
-            def mark_type(frame):
-                if frame in user_labeled:
-                    return "f"
-                elif frame in labeled_marks:
-                    return "p"
-                else:
-                    return "o"
-            # list of (type, frame) tuples for suggestions
-            suggestion_marks = [(mark_type(frame_idx), frame_idx)
-                for frame_idx in self.labels.get_video_suggestions(self.video)]
-            # combine marks for labeled frame and marks for suggested frames
-            all_marks = labeled_marks + suggestion_marks
+        self.player.seekbar.setTracksFromLabels(self.labels, self.video)
 
-            self.player.seekbar.setMarks(all_marks)
 
     def generateSuggestions(self, params):
         new_suggestions = dict()
