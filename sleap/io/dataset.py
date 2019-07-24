@@ -9,6 +9,7 @@ storage format.
 """
 
 import os
+import re
 import zipfile
 import atexit
 import glob
@@ -515,6 +516,10 @@ class Labels(MutableSequence):
                 json_str = labels.to_json()
 
             if compress or save_frame_data:
+
+                # Ensure that filename ends with .json
+                # shutil will append .zip
+                filename = re.sub("(\.json)?(\.zip)?$", ".json", filename)
 
                 # Write the json to the tmp directory, we will zip it up with the frame data.
                 with open(os.path.join(tmp_dir, os.path.basename(filename)), 'w') as file:
