@@ -1216,7 +1216,9 @@ class MainWindow(QMainWindow):
         if self.filename is not None:
             filename = self.filename
             if filename.endswith((".json", ".json.zip")):
-                Labels.save_json(labels = self.labels, filename = filename)
+                compress = filename.endswith(".zip")
+                Labels.save_json(labels = self.labels, filename = filename,
+                                    compress = compress)
             # Mark savepoint in change stack
             self.changestack_savepoint()
             # Redraw. Not sure why, but sometimes we need to do this.
@@ -1230,13 +1232,17 @@ class MainWindow(QMainWindow):
         p = PurePath(default_name)
         default_name = str(p.with_name(f"{p.stem} copy{p.suffix}"))
 
-        filters = ["JSON labels (*.json)", "HDF5 dataset (*.h5 *.hdf5)"]
-        filename, selected_filter = QFileDialog.getSaveFileName(self, caption="Save As...", dir=default_name, filter=";;".join(filters))
+        filters = ["JSON labels (*.json)", "Compressed JSON (*.zip)", "HDF5 dataset (*.h5)"]
+        filename, selected_filter = QFileDialog.getSaveFileName(self,
+                                        caption="Save As...",
+                                        dir=default_name,
+                                        filter=";;".join(filters))
 
         if len(filename) == 0: return
 
-        if filename.endswith(".json"):
-            Labels.save_json(labels = self.labels, filename = filename)
+        if filename.endswith((".json", ".zip")):
+            compress = filename.endswith(".zip")
+            Labels.save_json(labels = self.labels, filename = filename, compress = compress)
             self.filename = filename
             # Mark savepoint in change stack
             self.changestack_savepoint()
