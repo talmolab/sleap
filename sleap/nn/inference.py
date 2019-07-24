@@ -1033,7 +1033,7 @@ def main():
                     const=True, default=False,
                     help='just visualize predicted confmaps/pafs (default False)')
     parser.add_argument('--frames', type=frame_list, default="",
-                        help='list of frames to predict. Either comma separated list (e.g. 1,2,3) or'
+                        help='list of frames to predict. Either comma separated list (e.g. 1,2,3) or '
                              'a range separated by hyphen (e.g. 1-3). (default is entire video)')
     parser.add_argument('-o', '--output', type=str, default=None,
                         help='The output filename to use for the predicted data.')
@@ -1043,10 +1043,12 @@ def main():
 
     args = parser.parse_args()
 
-
+    output_suffix = ".predictions.json"
+    if args.frames is not None:
+        output_suffix = f".frames{min(args.frames)}_{max(args.frames)}" + output_suffix
 
     data_path = args.data_path
-    save_path = args.output if args.output else data_path + ".predictions.json"
+    save_path = args.output if args.output else data_path + output_suffix
     frames = args.frames
 
     if args.verbose:
