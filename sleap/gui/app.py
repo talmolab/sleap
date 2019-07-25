@@ -365,7 +365,7 @@ class MainWindow(QMainWindow):
         #
         self.update_gui_timer = QtCore.QTimer()
         self.update_gui_timer.timeout.connect(self.update_gui_state)
-        self.update_gui_timer.start(0)
+        self.update_gui_timer.start(0.1)
 
         ####### Points #######
         # points_layout = _make_dock("Points", tab_with=instances_layout.parent().parent())
@@ -435,7 +435,7 @@ class MainWindow(QMainWindow):
         has_selected_instance = (self.player.view.getSelection() is not None)
         has_unsaved_changes = self.changestack_has_changes()
         has_multiple_videos = (self.labels is not None and len(self.labels.videos) > 1)
-        has_labeled_frames = (len(self.labels.find(self.video)) > 0)
+        has_labeled_frames = any((lf.video == self.video for lf in self.labels))
         has_suggestions = (len(self.labels.suggestions) > 0)
         has_tracks = (len(self.labels.tracks) > 0)
         has_multiple_instances = (self.labeled_frame is not None and len(self.labeled_frame.instances) > 1)
