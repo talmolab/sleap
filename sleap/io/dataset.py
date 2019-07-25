@@ -17,6 +17,7 @@ import glob
 import attr
 import cattr
 import json
+import ujson
 import shutil
 import tempfile
 import numpy as np
@@ -38,6 +39,12 @@ from sleap.instance import Instance, Point, LabeledFrame, \
     Track, PredictedPoint, PredictedInstance
 from sleap.io.video import Video
 from sleap.util import save_dict_to_hdf5
+
+def json_loads(json_str: str):
+    try:
+        return ujson.loads(json_str)
+    except:
+        return json.loads(json_str)
 
 """
 The version number to put in the Labels JSON format.
@@ -538,7 +545,7 @@ class Labels(MutableSequence):
 
         # Parse the json string if needed.
         if data is str:
-            dicts = json.loads(data)
+            dicts = json_loads(data)
         else:
             dicts = data
 
@@ -661,7 +668,7 @@ class Labels(MutableSequence):
             # We do this to tell apart old JSON data from leap_dev vs the
             # newer format for sLEAP.
             json_str = file.read()
-            dicts = json.loads(json_str)
+            dicts = json_loads(json_str)
 
             # If we have a version number, then it is new sLEAP format
             if "version" in dicts:
@@ -951,7 +958,7 @@ def load_labels_json_old(data_path: str, parsed_json: dict = None,
         A newly constructed Labels object.
     """
     if parsed_json is None:
-        data = json.loads(open(data_path).read())
+        data = json_loads(open(data_path).read())
     else:
         data = parsed_json
 

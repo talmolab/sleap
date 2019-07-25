@@ -32,6 +32,7 @@ requirements:
     - psutil
     - pyzmq
     - pyyaml
+    - ujson
     - pip
 
 
