@@ -616,7 +616,9 @@ class Labels(MutableSequence):
                         break
             for idx, vid in enumerate(videos):
                 for old_vid in match_to.videos:
-                    if vid.filename == old_vid.filename:
+                    # compare last three parts of path
+                    weak_match = vid.filename.split("/")[-3:] == old_vid.filename.split("/")[-3:]
+                    if vid.filename == old_vid.filename or weak_match:
                         # use video from match
                         videos[idx] = old_vid
                         break
