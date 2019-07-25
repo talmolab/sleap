@@ -12,11 +12,13 @@ main:
     label: Suggestions per video
     type: int
     default: 10
+    range: 1,1000
   random:
   - name: per_video
     label: Suggestions per video
     type: int
     default: 10
+    range: 1,1000
   pca:
   - name: clusters
     label: Number of clusters
