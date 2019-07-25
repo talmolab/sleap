@@ -208,6 +208,55 @@ class Labels(MutableSequence):
             count = len([inst for inst in labeled_frame.instances if type(inst)==Instance])
         return count
 
+    def find_track_instances(self, video: Video, track: Union[Track, int], frame_range=None) -> List[Instance]:
+        """Get instances for a given track.
+
+        Args:
+            video: the `Video`
+            track: the `Track` or int ("pseudo-track" index to instance list)
+            frame_range (optional):
+                If specified, only return instances on frames in range.
+                If None, return all instances for given track.
+        Returns:
+            list of `Instance` objects
+        """
+
+        def does_track_match(inst, tr, labeled_frame):
+            match = False
+            if type(tr) == Track and inst.track is tr:
+                match = True
+            elif (type(tr) == int and labeled_frame.instances.index(inst) == tr
+                    and inst.track is None):
+                match = True
+            return match
+
+        track_instances = [instance
+                            for lf in self.find(video)
+                            for instance in lf.instances
+                            if does_track_match(instance, track, lf)
+                                and (frame_range is None or lf.frame_idx in frame_range)]
+        return track_instances
+
+    def swap_tracks(self, video: Video, new_track: Union[Track, int], old_track: Union[Track, int], frame_range=None):
+        """Swap specified tracks for all instances in a given range of frames.
+
+        Returns:
+            None.
+        """
+        # get all instances in old/new tracks
+        old_track_instances = self.find_track_instances(video, old_track, frame_range)
+        new_track_instances = self.find_track_instances(video, new_track, frame_range)
+
+        # swap new to old tracks on all instances
+        for instance in old_track_instances:
+            instance.track = new_track
+        # old_track can be `Track` or int
+        # If int, it's index in instance list which we'll use as a pseudo-track,
+        # but we won't set instances currently on new_track to old_track.
+        if type(old_track) == Track:
+            for instance in new_track_instances:
+                instance.track = old_track
+
     @property
     def all_instances(self):
         return list(self.instances())
@@ -932,6 +981,64 @@ class Labels(MutableSequence):
             labels.append(label)
 
         return cls(labels)
+
+    @classmethod
+    def make_gui_video_callback(cls, search_paths):
+        search_paths = search_paths or []
+        def gui_video_callback(video_list, new_paths=search_paths):
+            import os
+            from PySide2.QtWidgets import QFileDialog, QMessageBox
+
+            has_shown_prompt = False # have we already alerted user about missing files?
+
+            # Check each video
+            for video_item in video_list:
+                if "backend" in video_item and "filename" in video_item["backend"]:
+                    current_filename = video_item["backend"]["filename"]
+                    # check if we can find video
+                    if not os.path.exists(current_filename):
+                        is_found = False
+
+                        current_basename = os.path.basename(current_filename)
+                        # handle unix, windows, or mixed paths
+                        if current_basename.find("/") > -1:
+                            current_basename = current_basename.split("/")[-1]
+                        if current_basename.find("\\") > -1:
+                            current_basename = current_basename.split("\\")[-1]
+
+                        # First see if we can find the file in another directory,
+                        # and if not, prompt the user to find the file.
+
+                        # We'll check in the current working directory, and if the user has
+                        # already found any missing videos, check in the directory of those.
+                        for path_dir in new_paths:
+                            check_path = os.path.join(path_dir, current_basename)
+                            if os.path.exists(check_path):
+                                # we found the file in a different directory
+                                video_item["backend"]["filename"] = check_path
+                                is_found = True
+                                break
+
+                        # if we found this file, then move on to the next file
+                        if is_found: continue
+
+                        # Since we couldn't find the file on our own, prompt the user.
+
+                        if not has_shown_prompt:
+                            QMessageBox(text=f"We're unable to locate one or more video files for this project. Please locate {current_filename}.").exec_()
+                            has_shown_prompt = True
+
+                        current_root, current_ext = os.path.splitext(current_basename)
+                        caption = f"Please locate {current_basename}..."
+                        filters = [f"{current_root} file (*{current_ext})", "Any File (*.*)"]
+                        dir = None if len(new_paths) == 0 else new_paths[-1]
+                        new_filename, _ = QFileDialog.getOpenFileName(None, dir=dir, caption=caption, filter=";;".join(filters))
+                        # if we got an answer, then update filename for video
+                        if len(new_filename):
+                            video_item["backend"]["filename"] = new_filename
+                            # keep track of the directory chosen by user
+                            new_paths.append(os.path.dirname(new_filename))
+        return gui_video_callback
 
 
 def load_labels_json_old(data_path: str, parsed_json: dict = None,

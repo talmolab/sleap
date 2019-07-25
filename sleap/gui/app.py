@@ -154,6 +154,7 @@ class MainWindow(QMainWindow):
         self._menu_actions["next video"] = videoMenu.addAction("Next Video", self.nextVideo, shortcuts["next video"])
         self._menu_actions["prev video"] = videoMenu.addAction("Previous Video", self.previousVideo, shortcuts["prev video"])
         videoMenu.addSeparator()
+        self._menu_actions["goto frame"] = videoMenu.addAction("Go to Frame...", self.gotoFrame, shortcuts["goto frame"])
         self._menu_actions["mark frame"] = videoMenu.addAction("Mark Frame", self.markFrame, shortcuts["mark frame"])
         self._menu_actions["goto marked"] = videoMenu.addAction("Go to Marked Frame", self.goMarkedFrame, shortcuts["goto marked"])
 
@@ -365,7 +366,7 @@ class MainWindow(QMainWindow):
         #
         self.update_gui_timer = QtCore.QTimer()
         self.update_gui_timer.timeout.connect(self.update_gui_state)
-        self.update_gui_timer.start(0)
+        self.update_gui_timer.start(0.1)
 
         ####### Points #######
         # points_layout = _make_dock("Points", tab_with=instances_layout.parent().parent())
@@ -435,7 +436,7 @@ class MainWindow(QMainWindow):
         has_selected_instance = (self.player.view.getSelection() is not None)
         has_unsaved_changes = self.changestack_has_changes()
         has_multiple_videos = (self.labels is not None and len(self.labels.videos) > 1)
-        has_labeled_frames = (len(self.labels.find(self.video)) > 0)
+        has_labeled_frames = any((lf.video == self.video for lf in self.labels))
         has_suggestions = (len(self.labels.suggestions) > 0)
         has_tracks = (len(self.labels.tracks) > 0)
         has_multiple_instances = (self.labeled_frame is not None and len(self.labeled_frame.instances) > 1)
@@ -518,57 +519,8 @@ class MainWindow(QMainWindow):
 
         if len(filename) == 0: return
 
-        def gui_video_callback(video_list, new_paths=[os.path.dirname(filename)]):
-            from PySide2.QtWidgets import QFileDialog, QMessageBox
-
-            has_shown_prompt = False # have we already alerted user about missing files?
-
-            # Check each video
-            for video_item in video_list:
-                if "backend" in video_item and "filename" in video_item["backend"]:
-                    current_filename = video_item["backend"]["filename"]
-                    # check if we can find video
-                    if not os.path.exists(current_filename):
-                        is_found = False
-
-                        current_basename = os.path.basename(current_filename)
-                        # handle unix, windows, or mixed paths
-                        if current_basename.find("/") > -1:
-                            current_basename = current_basename.split("/")[-1]
-                        if current_basename.find("\\") > -1:
-                            current_basename = current_basename.split("\\")[-1]
-
-                        # First see if we can find the file in another directory,
-                        # and if not, prompt the user to find the file.
-
-                        # We'll check in the current working directory, and if the user has
-                        # already found any missing videos, check in the directory of those.
-                        for path_dir in new_paths:
-                            check_path = os.path.join(path_dir, current_basename)
-                            if os.path.exists(check_path):
-                                # we found the file in a different directory
-                                video_item["backend"]["filename"] = check_path
-                                is_found = True
-                                break
-
-                        # if we found this file, then move on to the next file
-                        if is_found: continue
-
-                        # Since we couldn't find the file on our own, prompt the user.
-
-                        if not has_shown_prompt:
-                            QMessageBox(text=f"We're unable to locate one or more video files for this project. Please locate {current_filename}.").exec_()
-                            has_shown_prompt = True
-
-                        current_root, current_ext = os.path.splitext(current_basename)
-                        caption = f"Please locate {current_basename}..."
-                        filters = [f"{current_root} file (*{current_ext})", "Any File (*.*)"]
-                        new_filename, _ = QFileDialog.getOpenFileName(self, dir=None, caption=caption, filter=";;".join(filters))
-                        # if we got an answer, then update filename for video
-                        if len(new_filename):
-                            video_item["backend"]["filename"] = new_filename
-                            # keep track of the directory chosen by user
-                            new_paths.append(os.path.dirname(new_filename))
+        gui_video_callback = Labels.make_gui_video_callback(
+                                    search_paths=[os.path.dirname(filename)])
 
         has_loaded = False
         labels = None
@@ -817,31 +769,7 @@ class MainWindow(QMainWindow):
         self.plotFrame()
 
     def updateSeekbarMarks(self):
-        # If there are tracks, mark whether track has instance in frame.
-        if len(self.labels.tracks):
-            self.player.seekbar.setTracksFromLabels(self.labels, self.video)
-        # Otherwise, mark which frames have any instances.
-        else:
-            # list of frame_idx for simple markers for labeled frames
-            labeled_marks = [lf.frame_idx for lf in self.labels.find(self.video) if len(lf.instances)]
-            user_labeled = [lf.frame_idx for lf in self.labels.find(self.video) if len(lf.user_instances)]
-            # "f" for suggestions with instances and "o" for those without
-            # "f" means "filled", "o" means "open"
-            # "p" for suggestions with only predicted instances
-            def mark_type(frame):
-                if frame in user_labeled:
-                    return "f"
-                elif frame in labeled_marks:
-                    return "p"
-                else:
-                    return "o"
-            # list of (type, frame) tuples for suggestions
-            suggestion_marks = [(mark_type(frame_idx), frame_idx)
-                for frame_idx in self.labels.get_video_suggestions(self.video)]
-            # combine marks for labeled frame and marks for suggested frames
-            all_marks = labeled_marks + suggestion_marks
-
-            self.player.seekbar.setMarks(all_marks)
+        self.player.seekbar.setTracksFromLabels(self.labels, self.video)
 
     def generateSuggestions(self, params):
         new_suggestions = dict()
@@ -967,7 +895,11 @@ class MainWindow(QMainWindow):
         if len(filenames) == 0: return
 
         for filename in filenames:
-            new_labels = Labels.load_json(filename, match_to=self.labels)
+            gui_video_callback = Labels.make_gui_video_callback(
+                                    search_paths=[os.path.dirname(filename)])
+
+            new_labels = Labels.load_json(filename, match_to=self.labels,
+                                            video_callback=gui_video_callback)
             self.labels.extend_from(new_labels)
 
             for vid in new_labels.videos:
@@ -1120,11 +1052,6 @@ class MainWindow(QMainWindow):
         if old_track is None:
             old_track = idx
 
-        self._swap_tracks(new_track, old_track)
-
-        self.player.view.selectInstance(idx)
-
-    def _swap_tracks(self, new_track, old_track):
         if self.player.seekbar.hasSelection():
             # If range is selected in seekbar, use that
             frame_range = range(*self.player.seekbar.getSelection())
@@ -1132,52 +1059,17 @@ class MainWindow(QMainWindow):
             # Otherwise, range is current to last frame
             frame_range = range(self.player.frame_idx, self.video.frames)
 
-        # get all instances in old/new tracks
-        old_track_instances = self._get_track_instances(old_track, frame_range)
-        new_track_instances = self._get_track_instances(new_track, frame_range)
+        self._swap_tracks(self.video, new_track, old_track, frame_range)
 
-        # swap new to old tracks on all instances
-        for instance in old_track_instances:
-            instance.track = new_track
-        # old_track can be `Track` or int
-        # If int, it's index in instance list which we'll use as a pseudo-track,
-        # but we won't set instances currently on new_track to old_track.
-        if type(old_track) == Track:
-            for instance in new_track_instances:
-                instance.track = old_track
+        self.player.view.selectInstance(idx)
+
+    def _swap_tracks(self, *args):
+        self.labels.swap_tracks(*args)
 
         self.changestack_push("swap tracks")
 
         self.plotFrame()
         self.updateSeekbarMarks()
-
-    def _get_track_instances(self, track, frame_range=None):
-        """Get instances for a given track.
-
-        Args:
-            track: the `Track` or int ("pseudo-track" index to instance list)
-            frame_range (optional):
-                If specific, only return instances on frames in range.
-                If None, return all instances for given track.
-        Returns:
-            list of `Instance` objects
-        """
-
-        def does_track_match(inst, tr, labeled_frame):
-            match = False
-            if type(tr) == Track and inst.track is tr:
-                match = True
-            elif (type(tr) == int and labeled_frame.instances.index(inst) == tr
-                    and inst.track is None):
-                match = True
-            return match
-
-        track_instances = [instance
-                            for labeled_frame in self.labels.labeled_frames
-                            for instance in labeled_frame.instances
-                            if does_track_match(instance, track, labeled_frame)
-                                and (frame_range is None or labeled_frame.frame_idx in frame_range)]
-        return track_instances
 
     def transposeInstance(self):
         # We're currently identifying instances by numeric index, so it's
@@ -1318,6 +1210,16 @@ class MainWindow(QMainWindow):
         new_idx = self.video_idx-1
         new_idx = len(self.labels.videos)-1 if new_idx < 0 else new_idx
         self.loadVideo(self.labels.videos[new_idx], new_idx)
+
+    def gotoFrame(self):
+        frame_number, okay = QtWidgets.QInputDialog.getInt(
+                                self,
+                                "Go To Frame...",
+                                "Frame Number:",
+                                self.player.frame_idx+1,
+                                1, self.video.frames)
+        if okay:
+            self.plotFrame(frame_number-1)
 
     def markFrame(self):
         self.mark_idx = self.player.frame_idx
