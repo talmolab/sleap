@@ -154,6 +154,7 @@ class MainWindow(QMainWindow):
         self._menu_actions["next video"] = videoMenu.addAction("Next Video", self.nextVideo, shortcuts["next video"])
         self._menu_actions["prev video"] = videoMenu.addAction("Previous Video", self.previousVideo, shortcuts["prev video"])
         videoMenu.addSeparator()
+        self._menu_actions["goto frame"] = videoMenu.addAction("Go to Frame...", self.gotoFrame, shortcuts["goto frame"])
         self._menu_actions["mark frame"] = videoMenu.addAction("Mark Frame", self.markFrame, shortcuts["mark frame"])
         self._menu_actions["goto marked"] = videoMenu.addAction("Go to Marked Frame", self.goMarkedFrame, shortcuts["goto marked"])
 
@@ -1254,6 +1255,16 @@ class MainWindow(QMainWindow):
         new_idx = self.video_idx-1
         new_idx = len(self.labels.videos)-1 if new_idx < 0 else new_idx
         self.loadVideo(self.labels.videos[new_idx], new_idx)
+
+    def gotoFrame(self):
+        frame_number, okay = QtWidgets.QInputDialog.getInt(
+                                self,
+                                "Go To Frame...",
+                                "Frame Number:",
+                                self.player.frame_idx+1,
+                                1, self.video.frames)
+        if okay:
+            self.plotFrame(frame_number-1)
 
     def markFrame(self):
         self.mark_idx = self.player.frame_idx
