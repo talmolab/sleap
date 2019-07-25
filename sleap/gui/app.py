@@ -519,57 +519,8 @@ class MainWindow(QMainWindow):
 
         if len(filename) == 0: return
 
-        def gui_video_callback(video_list, new_paths=[os.path.dirname(filename)]):
-            from PySide2.QtWidgets import QFileDialog, QMessageBox
-
-            has_shown_prompt = False # have we already alerted user about missing files?
-
-            # Check each video
-            for video_item in video_list:
-                if "backend" in video_item and "filename" in video_item["backend"]:
-                    current_filename = video_item["backend"]["filename"]
-                    # check if we can find video
-                    if not os.path.exists(current_filename):
-                        is_found = False
-
-                        current_basename = os.path.basename(current_filename)
-                        # handle unix, windows, or mixed paths
-                        if current_basename.find("/") > -1:
-                            current_basename = current_basename.split("/")[-1]
-                        if current_basename.find("\\") > -1:
-                            current_basename = current_basename.split("\\")[-1]
-
-                        # First see if we can find the file in another directory,
-                        # and if not, prompt the user to find the file.
-
-                        # We'll check in the current working directory, and if the user has
-                        # already found any missing videos, check in the directory of those.
-                        for path_dir in new_paths:
-                            check_path = os.path.join(path_dir, current_basename)
-                            if os.path.exists(check_path):
-                                # we found the file in a different directory
-                                video_item["backend"]["filename"] = check_path
-                                is_found = True
-                                break
-
-                        # if we found this file, then move on to the next file
-                        if is_found: continue
-
-                        # Since we couldn't find the file on our own, prompt the user.
-
-                        if not has_shown_prompt:
-                            QMessageBox(text=f"We're unable to locate one or more video files for this project. Please locate {current_filename}.").exec_()
-                            has_shown_prompt = True
-
-                        current_root, current_ext = os.path.splitext(current_basename)
-                        caption = f"Please locate {current_basename}..."
-                        filters = [f"{current_root} file (*{current_ext})", "Any File (*.*)"]
-                        new_filename, _ = QFileDialog.getOpenFileName(self, dir=None, caption=caption, filter=";;".join(filters))
-                        # if we got an answer, then update filename for video
-                        if len(new_filename):
-                            video_item["backend"]["filename"] = new_filename
-                            # keep track of the directory chosen by user
-                            new_paths.append(os.path.dirname(new_filename))
+        gui_video_callback = Labels.make_gui_video_callback(
+                                    search_paths=[os.path.dirname(filename)])
 
         has_loaded = False
         labels = None
@@ -944,7 +895,11 @@ class MainWindow(QMainWindow):
         if len(filenames) == 0: return
 
         for filename in filenames:
-            new_labels = Labels.load_json(filename, match_to=self.labels)
+            gui_video_callback = Labels.make_gui_video_callback(
+                                    search_paths=[os.path.dirname(filename)])
+
+            new_labels = Labels.load_json(filename, match_to=self.labels,
+                                            video_callback=gui_video_callback)
             self.labels.extend_from(new_labels)
 
             for vid in new_labels.videos:
