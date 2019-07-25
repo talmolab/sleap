@@ -819,7 +819,6 @@ class MainWindow(QMainWindow):
     def updateSeekbarMarks(self):
         self.player.seekbar.setTracksFromLabels(self.labels, self.video)
 
-
     def generateSuggestions(self, params):
         new_suggestions = dict()
         for video in self.labels.videos:
@@ -1097,11 +1096,6 @@ class MainWindow(QMainWindow):
         if old_track is None:
             old_track = idx
 
-        self._swap_tracks(new_track, old_track)
-
-        self.player.view.selectInstance(idx)
-
-    def _swap_tracks(self, new_track, old_track):
         if self.player.seekbar.hasSelection():
             # If range is selected in seekbar, use that
             frame_range = range(*self.player.seekbar.getSelection())
@@ -1109,52 +1103,17 @@ class MainWindow(QMainWindow):
             # Otherwise, range is current to last frame
             frame_range = range(self.player.frame_idx, self.video.frames)
 
-        # get all instances in old/new tracks
-        old_track_instances = self._get_track_instances(old_track, frame_range)
-        new_track_instances = self._get_track_instances(new_track, frame_range)
+        self._swap_tracks(self.video, new_track, old_track, frame_range)
 
-        # swap new to old tracks on all instances
-        for instance in old_track_instances:
-            instance.track = new_track
-        # old_track can be `Track` or int
-        # If int, it's index in instance list which we'll use as a pseudo-track,
-        # but we won't set instances currently on new_track to old_track.
-        if type(old_track) == Track:
-            for instance in new_track_instances:
-                instance.track = old_track
+        self.player.view.selectInstance(idx)
+
+    def _swap_tracks(self, *args):
+        self.labels.swap_tracks(*args)
 
         self.changestack_push("swap tracks")
 
         self.plotFrame()
         self.updateSeekbarMarks()
-
-    def _get_track_instances(self, track, frame_range=None):
-        """Get instances for a given track.
-
-        Args:
-            track: the `Track` or int ("pseudo-track" index to instance list)
-            frame_range (optional):
-                If specific, only return instances on frames in range.
-                If None, return all instances for given track.
-        Returns:
-            list of `Instance` objects
-        """
-
-        def does_track_match(inst, tr, labeled_frame):
-            match = False
-            if type(tr) == Track and inst.track is tr:
-                match = True
-            elif (type(tr) == int and labeled_frame.instances.index(inst) == tr
-                    and inst.track is None):
-                match = True
-            return match
-
-        track_instances = [instance
-                            for labeled_frame in self.labels.labeled_frames
-                            for instance in labeled_frame.instances
-                            if does_track_match(instance, track, labeled_frame)
-                                and (frame_range is None or labeled_frame.frame_idx in frame_range)]
-        return track_instances
 
     def transposeInstance(self):
         # We're currently identifying instances by numeric index, so it's

@@ -208,6 +208,55 @@ class Labels(MutableSequence):
             count = len([inst for inst in labeled_frame.instances if type(inst)==Instance])
         return count
 
+    def find_track_instances(self, video: Video, track: Union[Track, int], frame_range=None) -> List[Instance]:
+        """Get instances for a given track.
+
+        Args:
+            video: the `Video`
+            track: the `Track` or int ("pseudo-track" index to instance list)
+            frame_range (optional):
+                If specified, only return instances on frames in range.
+                If None, return all instances for given track.
+        Returns:
+            list of `Instance` objects
+        """
+
+        def does_track_match(inst, tr, labeled_frame):
+            match = False
+            if type(tr) == Track and inst.track is tr:
+                match = True
+            elif (type(tr) == int and labeled_frame.instances.index(inst) == tr
+                    and inst.track is None):
+                match = True
+            return match
+
+        track_instances = [instance
+                            for lf in self.find(video)
+                            for instance in lf.instances
+                            if does_track_match(instance, track, lf)
+                                and (frame_range is None or lf.frame_idx in frame_range)]
+        return track_instances
+
+    def swap_tracks(self, video: Video, new_track: Union[Track, int], old_track: Union[Track, int], frame_range=None):
+        """Swap specified tracks for all instances in a given range of frames.
+
+        Returns:
+            None.
+        """
+        # get all instances in old/new tracks
+        old_track_instances = self.find_track_instances(video, old_track, frame_range)
+        new_track_instances = self.find_track_instances(video, new_track, frame_range)
+
+        # swap new to old tracks on all instances
+        for instance in old_track_instances:
+            instance.track = new_track
+        # old_track can be `Track` or int
+        # If int, it's index in instance list which we'll use as a pseudo-track,
+        # but we won't set instances currently on new_track to old_track.
+        if type(old_track) == Track:
+            for instance in new_track_instances:
+                instance.track = old_track
+
     @property
     def all_instances(self):
         return list(self.instances())
