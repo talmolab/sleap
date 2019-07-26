@@ -1039,10 +1039,11 @@ class MainWindow(QMainWindow):
         self.updateSeekbarMarks()
 
     def setInstanceTrack(self, new_track):
-        idx = self.player.view.getSelection()
-        if idx is None: return
+        vis_idx = self.player.view.getSelection()
+        if vis_idx is None: return
 
-        selected_instance = self.labeled_frame.instances_to_show[idx]
+        selected_instance = self.labeled_frame.instances_to_show[vis_idx]
+        idx = self.labeled_frame.index(selected_instance)
 
         old_track = selected_instance.track
 
@@ -1104,7 +1105,8 @@ class MainWindow(QMainWindow):
         # Swap tracks for current and subsequent frames
         old_track, new_track = instance_0.track, instance_1.track
         if old_track is not None and new_track is not None:
-            self._swap_tracks(new_track, old_track)
+            frame_range = range(self.player.frame_idx, self.video.frames)
+            self._swap_tracks(self.video, new_track, old_track, frame_range)
 
         # instance_0.track, instance_1.track = instance_1.track, instance_0.track
 
@@ -1352,14 +1354,14 @@ class MainWindow(QMainWindow):
         pass
 
     def getInstancesFromFrameIdx(self, frame_idx):
-        labeled_frame = [label for label in self.labels.labels if label.video == self.video and label.frame_idx == frame_idx]
-        instances = labeled_frame[0].instances if len(labeled_frame) > 0 else []
+        lf = self.labels.find(self.video, frame_idx)
+        instances = lf[0].instances if len(lf) else []
         return instances
 
     def newFrame(self, player, frame_idx, selected_idx):
 
-        labeled_frame = [label for label in self.labels.labels if label.video == self.video and label.frame_idx == frame_idx]
-        self.labeled_frame = labeled_frame[0] if len(labeled_frame) > 0 else LabeledFrame(video=self.video, frame_idx=frame_idx)
+        lf = self.labels.find(self.video, frame_idx)
+        self.labeled_frame = lf[0] if len(lf) else LabeledFrame(video=self.video, frame_idx=frame_idx)
 
         self.update_data_views()
 
@@ -1399,7 +1401,6 @@ class MainWindow(QMainWindow):
                 message += f" (selection: {start}-{end})"
 
         self.statusBar().showMessage(message)
-        # self.statusBar().showMessage(f"Frame: {self.player.frame_idx+1}/{len(self.video)}  |  Labeled frames (video/total): {self.labels.instances[self.labels.instances.videoId == 1].frameIdx.nunique()}/{len(self.labels)}  |  Instances (frame/total): {len(frame_instances)}/{self.labels.points.instanceId.nunique()}")
 
 def main(*args, **kwargs):
     app = QApplication([])

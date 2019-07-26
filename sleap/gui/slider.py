@@ -10,6 +10,9 @@ from PySide2.QtCore import Qt, Signal, QRect, QRectF
 
 from sleap.gui.tracks import TrackColorManager
 
+from operator import itemgetter
+from itertools import groupby
+
 class VideoSlider(QGraphicsView):
     """Drop-in replacement for QSlider with additional features.
 
@@ -87,25 +90,35 @@ class VideoSlider(QGraphicsView):
             labels: the `labels` with tracks and labeled_frames
             video: the video for which to show marks
         """
+        lfs = labels.find(video)
+        tracks = list(filter(lambda track: any((inst.track==track for lf in lfs for inst in lf)), labels.tracks))
         track_count = len(labels.tracks)
+
         slider_marks = []
 
-        inst_frame_list = [(inst, lf) for lf in labels.find(video) for inst in lf.instances]
+        # Add marks with track
+        track_occupancy = list({(inst.track, lf.frame_idx) for lf in lfs for inst in lf.instances})
+        for track in tracks:
+            track_idx = labels.tracks.index(track)
+            frame_idxs = [frame_idx for inst_track, frame_idx in track_occupancy if inst_track == track]
+            frame_idxs.sort()
 
-        for instance, lf in inst_frame_list:
-            frame_idx = lf.frame_idx
-            if instance.track is not None:
-                # Add mark with track
-                slider_marks.append((labels.tracks.index(instance.track), frame_idx))
+            # If the track is 99.5% continuous, then treat as single range
+            if (max(frame_idxs)-min(frame_idxs))*.995 < len(frame_idxs):
+                slider_marks.append((track_idx, min(frame_idxs), max(frame_idxs)))
+            # Otherwise, find each continuous range
             else:
-                # Add mark without track
-                slider_marks.append(frame_idx)
+                for key, group in groupby(enumerate(frame_idxs), lambda x: x[0]-x[1]):
+                    group = list(map(itemgetter(1), group))
+                    slider_marks.append((track_idx, group[0], group[-1]))
 
-
+        # Add marks without track
+        frame_idxs = [lf.frame_idx for lf in lfs if any((inst.track==None for inst in lf))]
+        slider_marks.extend(frame_idxs)
 
         # list of frame_idx for simple markers for labeled frames
-        labeled_marks = [lf.frame_idx for _, lf in inst_frame_list]
-        user_labeled = [lf.frame_idx for _, lf in inst_frame_list if len(lf.user_instances)]
+        labeled_marks = [lf.frame_idx for lf in lfs]
+        user_labeled = [lf.frame_idx for lf in lfs if len(lf.user_instances)]
         # "f" for suggestions with instances and "o" for those without
         # "f" means "filled", "o" means "open"
         # "p" for suggestions with only predicted instances
@@ -121,7 +134,6 @@ class VideoSlider(QGraphicsView):
             for frame_idx in labels.get_video_suggestions(video)]
         # combine marks for labeled frame and marks for suggested frames
         slider_marks.extend(suggestion_marks)
-
 
         self.setTracks(track_count)
         self.setMarks(slider_marks)
@@ -322,11 +334,12 @@ class VideoSlider(QGraphicsView):
         filled = True
         if type(new_mark) == tuple:
             if type(new_mark[0]) == int:
-                # colored track if mark has format: (track_number, frame_idx)
+                # colored track if mark has format: (track_number, start_frame_idx, end_frame_idx)
                 track = new_mark[0]
                 v_offset = 3 + (self._track_height * track)
                 height = 1
                 color = QColor(*self._color_manager.get_color(track))
+                width = 0
             else:
                 # rect (open/filled) if format: ("o", frame_idx) or ("f", frame_idx)
                 # ("p", frame_idx) when only predicted instances on frame
@@ -366,7 +379,8 @@ class VideoSlider(QGraphicsView):
                 in_track = True
                 v = mark[1]
                 if type(mark[0]) == int:
-                    width = self._toPos(1)
+                    width_in_frames = mark[2] - mark[1]
+                    width = max(2, self._toPos(width_in_frames))
                 else:
                     width = 2
             else:

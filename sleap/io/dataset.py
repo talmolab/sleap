@@ -93,6 +93,13 @@ class Labels(MutableSequence):
         # Lets sort the tracks by spawned on and then name
         self.tracks.sort(key=lambda t:(t.spawned_on, t.name))
 
+        # Data structures for caching
+        self._lf_by_video = dict()
+        self._frame_idx_map = dict()
+        for video in self.videos:
+            self._lf_by_video[video] = [lf for lf in self.labels if lf.video == video]
+            self._frame_idx_map[video] = {lf.frame_idx: lf for lf in self._lf_by_video[video]}
+
         # Create a variable to store a temporary storage directory. When we unzip
         self.__temp_dir = None
 
@@ -163,11 +170,13 @@ class Labels(MutableSequence):
             List of `LabeledFrame`s that match the criteria. Empty if no matches found.
 
         """
-
         if frame_idx:
-            return [label for label in self.labels if label.video == video and label.frame_idx == frame_idx]
+            if video not in self._frame_idx_map: return []
+            if frame_idx not in self._frame_idx_map[video]: return []
+            return [self._frame_idx_map[video][frame_idx]]
         else:
-            return [label for label in self.labels if label.video == video]
+            if video not in self._lf_by_video: return []
+            return self._lf_by_video[video]
 
     def find_first(self, video: Video, frame_idx: int = None) -> LabeledFrame:
         """ Find the first occurrence of a labeled frame for the given video and/or frame index.
@@ -303,6 +312,14 @@ class Labels(MutableSequence):
         # Sort the tracks again
         self.tracks.sort(key=lambda t: (t.spawned_on, t.name))
 
+        # Update cache datastructures
+        if new_label.video not in self._lf_by_video:
+            self._lf_by_video[new_label.video] = []
+        if new_label.video not in self._frame_idx_map:
+            self._frame_idx_map[new_label.video] = dict()
+        self._lf_by_video[new_label.video].append(new_label)
+        self._frame_idx_map[new_label.video][new_label.frame_idx] = new_label
+
     def __setitem__(self, index, value: LabeledFrame):
         # TODO: Maybe we should remove this method altogether?
         self.labeled_frames.__setitem__(index, value)
@@ -319,10 +336,12 @@ class Labels(MutableSequence):
         self.insert(len(self) + 1, value)
 
     def __delitem__(self, key):
-        self.labeled_frames.__delitem__(key)
+        self.labeled_frames.remove(self.labeled_frames[key])
 
     def remove(self, value: LabeledFrame):
         self.labeled_frames.remove(value)
+        self._lf_by_video[new_label.video].remove(value)
+        del self._frame_idx_map[new_label.video][value.frame_idx]
 
     def add_video(self, video: Video):
         """ Add a video to the labels if it is not already in it.
@@ -354,6 +373,12 @@ class Labels(MutableSequence):
 
         # Delete video
         self.videos.remove(video)
+
+        # Remove from caches
+        if video in self._lf_by_video:
+            del self._lf_by_video[video]
+        if video in self._frame_idx_map:
+            del self._frame_idx_map[video]
 
     def get_video_suggestions(self, video:Video) -> list:
         """
@@ -616,7 +641,9 @@ class Labels(MutableSequence):
                         break
             for idx, vid in enumerate(videos):
                 for old_vid in match_to.videos:
-                    if vid.filename == old_vid.filename:
+                    # compare last three parts of path
+                    weak_match = vid.filename.split("/")[-3:] == old_vid.filename.split("/")[-3:]
+                    if vid.filename == old_vid.filename or weak_match:
                         # use video from match
                         videos[idx] = old_vid
                         break
