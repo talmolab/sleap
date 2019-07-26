@@ -102,8 +102,8 @@ class VideoSlider(QGraphicsView):
             track_idx = labels.tracks.index(track)
             frame_idxs = [frame_idx for inst_track, frame_idx in track_occupancy if inst_track == track]
 
-            # If the track is 90% continuous, then treat as single range
-            if (max(frame_idxs)-min(frame_idxs))*.9 < len(frame_idxs):
+            # If the track is 99.5% continuous, then treat as single range
+            if (max(frame_idxs)-min(frame_idxs))*.995 < len(frame_idxs):
                 slider_marks.append((track_idx, min(frame_idxs), max(frame_idxs)))
             # Otherwise, find each continuous range
             else:
