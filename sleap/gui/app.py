@@ -1039,10 +1039,11 @@ class MainWindow(QMainWindow):
         self.updateSeekbarMarks()
 
     def setInstanceTrack(self, new_track):
-        idx = self.player.view.getSelection()
-        if idx is None: return
+        vis_idx = self.player.view.getSelection()
+        if vis_idx is None: return
 
-        selected_instance = self.labeled_frame.instances_to_show[idx]
+        selected_instance = self.labeled_frame.instances_to_show[vis_idx]
+        idx = self.labeled_frame.index(selected_instance)
 
         old_track = selected_instance.track
 
