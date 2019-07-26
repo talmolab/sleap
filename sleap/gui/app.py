@@ -1104,7 +1104,8 @@ class MainWindow(QMainWindow):
         # Swap tracks for current and subsequent frames
         old_track, new_track = instance_0.track, instance_1.track
         if old_track is not None and new_track is not None:
-            self._swap_tracks(new_track, old_track)
+            frame_range = range(self.player.frame_idx, self.video.frames)
+            self._swap_tracks(self.video, new_track, old_track, frame_range)
 
         # instance_0.track, instance_1.track = instance_1.track, instance_0.track
 
