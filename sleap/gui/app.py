@@ -1353,14 +1353,14 @@ class MainWindow(QMainWindow):
         pass
 
     def getInstancesFromFrameIdx(self, frame_idx):
-        labeled_frame = [label for label in self.labels.labels if label.video == self.video and label.frame_idx == frame_idx]
-        instances = labeled_frame[0].instances if len(labeled_frame) > 0 else []
+        lf = self.labels.find(self.video, frame_idx)
+        instances = lf[0].instances if len(lf) else []
         return instances
 
     def newFrame(self, player, frame_idx, selected_idx):
 
-        labeled_frame = [label for label in self.labels.labels if label.video == self.video and label.frame_idx == frame_idx]
-        self.labeled_frame = labeled_frame[0] if len(labeled_frame) > 0 else LabeledFrame(video=self.video, frame_idx=frame_idx)
+        lf = self.labels.find(self.video, frame_idx)
+        self.labeled_frame = lf[0] if len(lf) else LabeledFrame(video=self.video, frame_idx=frame_idx)
 
         self.update_data_views()
 
@@ -1400,7 +1400,6 @@ class MainWindow(QMainWindow):
                 message += f" (selection: {start}-{end})"
 
         self.statusBar().showMessage(message)
-        # self.statusBar().showMessage(f"Frame: {self.player.frame_idx+1}/{len(self.video)}  |  Labeled frames (video/total): {self.labels.instances[self.labels.instances.videoId == 1].frameIdx.nunique()}/{len(self.labels)}  |  Instances (frame/total): {len(frame_instances)}/{self.labels.points.instanceId.nunique()}")
 
 def main(*args, **kwargs):
     app = QApplication([])
