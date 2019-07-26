@@ -872,6 +872,18 @@ class MainWindow(QMainWindow):
                                 if lf.frame_idx in range(*self.player.seekbar.getSelection())
                                 and type(inst) == PredictedInstance]
 
+        # If user selected an instance, then only delete for that track.
+        selected_inst = self.player.view.getSelectionInstance()
+        if selected_inst is not None:
+            track = selected_inst.track
+            if track == None:
+                # If user selected an instance without a track, delete only
+                # that instance and only on the current frame.
+                predicted_instances = [(self.labeled_frame, selected_inst)]
+            else:
+                # Filter by track
+                predicted_instances = list(filter(lambda x: x[1].track == track, predicted_instances))
+
         resp = QMessageBox.critical(self,
                 "Removing predicted instances",
                 f"There are {len(predicted_instances)} predicted instances. "
