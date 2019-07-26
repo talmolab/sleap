@@ -101,6 +101,7 @@ class VideoSlider(QGraphicsView):
         for track in tracks:
             track_idx = labels.tracks.index(track)
             frame_idxs = [frame_idx for inst_track, frame_idx in track_occupancy if inst_track == track]
+            frame_idxs.sort()
 
             # If the track is 99.5% continuous, then treat as single range
             if (max(frame_idxs)-min(frame_idxs))*.995 < len(frame_idxs):
