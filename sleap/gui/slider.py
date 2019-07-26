@@ -377,8 +377,8 @@ class VideoSlider(QGraphicsView):
             if type(mark) == tuple:
                 in_track = True
                 v = mark[1]
-                width_in_frames = mark[2] - mark[1]
                 if type(mark[0]) == int:
+                    width_in_frames = mark[2] - mark[1]
                     width = max(2, self._toPos(width_in_frames))
                 else:
                     width = 2
