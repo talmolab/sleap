@@ -91,30 +91,23 @@ class VideoSlider(QGraphicsView):
             video: the video for which to show marks
         """
         lfs = labels.find(video)
-        tracks = list(filter(lambda track: any((inst.track==track for lf in lfs for inst in lf)), labels.tracks))
+        tracks = labels.tracks #list(filter(lambda track: any((inst.track==track for lf in lfs for inst in lf)), labels.tracks))
         track_count = len(labels.tracks)
 
         slider_marks = []
 
         # Add marks with track
-        track_occupancy = list({(inst.track, lf.frame_idx) for lf in lfs for inst in lf.instances})
+        track_occupancy = labels.get_track_occupany(video)
         for track in tracks:
             track_idx = labels.tracks.index(track)
-            frame_idxs = [frame_idx for inst_track, frame_idx in track_occupancy if inst_track == track]
-            frame_idxs.sort()
-
-            # If the track is 99.5% continuous, then treat as single range
-            if (max(frame_idxs)-min(frame_idxs))*.995 < len(frame_idxs):
-                slider_marks.append((track_idx, min(frame_idxs), max(frame_idxs)))
-            # Otherwise, find each continuous range
-            else:
-                for key, group in groupby(enumerate(frame_idxs), lambda x: x[0]-x[1]):
-                    group = list(map(itemgetter(1), group))
-                    slider_marks.append((track_idx, group[0], group[-1]))
+            if track in track_occupancy:
+                for occupancy_range in track_occupancy[track].list:
+                    slider_marks.append((track_idx, *occupancy_range))
 
         # Add marks without track
-        frame_idxs = [lf.frame_idx for lf in lfs if any((inst.track==None for inst in lf))]
-        slider_marks.extend(frame_idxs)
+        if None in track_occupancy:
+            for occupancy_range in track_occupancy[None].list:
+                slider_marks.extend(range(*occupancy_range))
 
         # list of frame_idx for simple markers for labeled frames
         labeled_marks = [lf.frame_idx for lf in lfs]

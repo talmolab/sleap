@@ -872,6 +872,18 @@ class MainWindow(QMainWindow):
                                 if lf.frame_idx in range(*self.player.seekbar.getSelection())
                                 and type(inst) == PredictedInstance]
 
+        # If user selected an instance, then only delete for that track.
+        selected_inst = self.player.view.getSelectionInstance()
+        if selected_inst is not None:
+            track = selected_inst.track
+            if track == None:
+                # If user selected an instance without a track, delete only
+                # that instance and only on the current frame.
+                predicted_instances = [(self.labeled_frame, selected_inst)]
+            else:
+                # Filter by track
+                predicted_instances = list(filter(lambda x: x[1].track == track, predicted_instances))
+
         resp = QMessageBox.critical(self,
                 "Removing predicted instances",
                 f"There are {len(predicted_instances)} predicted instances. "
@@ -950,6 +962,7 @@ class MainWindow(QMainWindow):
                         # Otherwise use the last instance added to previous frame.
                         copy_instance = prev_instances[-1]
                         from_prev_frame = True
+        from_predicted = from_predicted if hasattr(from_predicted, "score") else None
         new_instance = Instance(skeleton=self.skeleton, from_predicted=from_predicted)
         # the rect that's currently visibile in the window view
         in_view_rect = self.player.view.mapToScene(self.player.view.rect()).boundingRect()
@@ -978,7 +991,7 @@ class MainWindow(QMainWindow):
             new_instance.track = copy_instance.track
 
         # Add the instance
-        self.labeled_frame.instances.append(new_instance)
+        self.labels.add_instance(self.labeled_frame, new_instance)
         self.changestack_push("new instance")
 
         if self.labeled_frame not in self.labels.labels:
@@ -994,7 +1007,7 @@ class MainWindow(QMainWindow):
         selected_inst = self.player.view.getSelectionInstance()
         if selected_inst is None: return
 
-        self.labeled_frame.instances.remove(selected_inst)
+        self.labels.remove_instance(self.labeled_frame, selected_inst)
         self.changestack_push("delete instance")
 
         self.plotFrame()
@@ -1004,15 +1017,16 @@ class MainWindow(QMainWindow):
         selected_inst = self.player.view.getSelectionInstance()
         if selected_inst is None: return
 
+        # to do: range of frames?
 
         track = selected_inst.track
-        self.labeled_frame.instances.remove(selected_inst)
+        self.labels.remove_instance(self.labeled_frame, selected_inst)
 
         if track is not None:
             # remove any instance on this track
             for lf in self.labels.find(self.video):
                 for inst in filter(lambda inst: inst.track == track, lf.instances):
-                    lf.instances.remove(inst)
+                    self.labels.remove_instance(lf, inst)
 
         self.changestack_push("delete track")
 
@@ -1028,7 +1042,7 @@ class MainWindow(QMainWindow):
         new_track = Track(spawned_on=self.player.frame_idx, name=next_number)
 
         self.changestack_start_atomic("add track")
-        self.labels.tracks.append(new_track)
+        self.labels.add_track(self.video, new_track)
         self.changestack_push("new track")
         self.setInstanceTrack(new_track)
         self.changestack_push("set track")
@@ -1048,29 +1062,41 @@ class MainWindow(QMainWindow):
         old_track = selected_instance.track
 
         # When setting track for an instance that doesn't already have a track set,
-        # we don't want to update *every* instance that also doesn't have a track.
-        # Instead, we'll use index in instance list as pseudo-track.
+        # just set for selected instance.
         if old_track is None:
-            old_track = idx
+            # Move anything already in the new track out of it
+            new_track_instances = self.labels.find_track_instances(
+                    video = self.video,
+                    track = new_track,
+                    frame_range = (self.player.frame_idx, self.player.frame_idx+1))
+            for instance in new_track_instances:
+                instance.track = None
+            # Move selected instance into new track
+            self.labels.track_set_instance(self.labeled_frame, selected_instance, new_track)
 
-        if self.player.seekbar.hasSelection():
-            # If range is selected in seekbar, use that
-            frame_range = range(*self.player.seekbar.getSelection())
+        # When the instance does already have a track, then we want to update
+        # the track for a range of frames.
         else:
-            # Otherwise, range is current to last frame
-            frame_range = range(self.player.frame_idx, self.video.frames)
 
-        self._swap_tracks(self.video, new_track, old_track, frame_range)
+            # Determine range that should be affected
+            if self.player.seekbar.hasSelection():
+                # If range is selected in seekbar, use that
+                frame_range = tuple(*self.player.seekbar.getSelection())
+            else:
+                # Otherwise, range is current to last frame
+                frame_range = (self.player.frame_idx, self.video.frames)
 
-        self.player.view.selectInstance(idx)
-
-    def _swap_tracks(self, *args):
-        self.labels.swap_tracks(*args)
+            # Do the swap
+            self.labels.track_swap(self.video, new_track, old_track, frame_range)
 
         self.changestack_push("swap tracks")
 
+        # Update visuals
         self.plotFrame()
         self.updateSeekbarMarks()
+
+        # Make sure the originally selected instance is still selected
+        self.player.view.selectInstance(idx)
 
     def transposeInstance(self):
         # We're currently identifying instances by numeric index, so it's
@@ -1099,18 +1125,22 @@ class MainWindow(QMainWindow):
 
         idx_0 = instance_ids[0]
         idx_1 = instance_ids[1]
+
         # Swap order in array (just for this frame) for when we don't have tracks
         instance_0 = self.labeled_frame.instances_to_show[idx_0]
         instance_1 = self.labeled_frame.instances_to_show[idx_1]
-        # Swap tracks for current and subsequent frames
+
+        # Swap tracks for current and subsequent frames when we do have tracks
         old_track, new_track = instance_0.track, instance_1.track
         if old_track is not None and new_track is not None:
-            frame_range = range(self.player.frame_idx, self.video.frames)
-            self._swap_tracks(self.video, new_track, old_track, frame_range)
+            frame_range = (self.player.frame_idx, self.video.frames)
+            self.labels.track_swap(self.video, new_track, old_track, frame_range)
 
-        # instance_0.track, instance_1.track = instance_1.track, instance_0.track
+        self.changestack_push("swap tracks")
 
+        # Update visuals
         self.plotFrame()
+        self.updateSeekbarMarks()
 
     def newProject(self):
         window = MainWindow()
