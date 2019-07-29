@@ -24,7 +24,7 @@ import scipy.io as sio
 import h5py as h5
 
 from collections import MutableSequence
-from typing import List, Union, Dict, Optional
+from typing import List, Union, Dict, Optional, Tuple
 
 try:
     from typing import ForwardRef
@@ -36,6 +36,7 @@ import pandas as pd
 from sleap.skeleton import Skeleton, Node
 from sleap.instance import Instance, Point, LabeledFrame, \
     Track, PredictedPoint, PredictedInstance
+from sleap.rangelist import RangeList
 from sleap.io.video import Video
 from sleap.util import save_dict_to_hdf5
 
@@ -96,9 +97,11 @@ class Labels(MutableSequence):
         # Data structures for caching
         self._lf_by_video = dict()
         self._frame_idx_map = dict()
+        self._track_occupancy = dict()
         for video in self.videos:
             self._lf_by_video[video] = [lf for lf in self.labels if lf.video == video]
             self._frame_idx_map[video] = {lf.frame_idx: lf for lf in self._lf_by_video[video]}
+            self._track_occupancy[video] = self._make_track_occupany(video)
 
         # Create a variable to store a temporary storage directory. When we unzip
         self.__temp_dir = None
@@ -217,7 +220,93 @@ class Labels(MutableSequence):
             count = len([inst for inst in labeled_frame.instances if type(inst)==Instance])
         return count
 
-    def find_track_instances(self, video: Video, track: Union[Track, int], frame_range=None) -> List[Instance]:
+    def get_track_occupany(self, video: Video):
+        try:
+            return self._track_occupancy[video]
+        except:
+            return []
+
+    def add_track(self, video: Video, track: Track):
+        self.tracks.append(track)
+        self._track_occupancy[video][track] = RangeList()
+
+    def track_set_instance(self, frame: LabeledFrame, instance: Instance, new_track: Track):
+        self.track_swap(frame.video, new_track, instance.track, (frame.frame_idx, frame.frame_idx+1))
+        if instance.track is None:
+            self._track_remove_instance(frame, instance)
+        instance.track = new_track
+
+    def track_swap(self, video: Video, new_track: Track, old_track: Track, frame_range: tuple):
+
+        # Get ranges in track occupancy cache
+        _, within_old, _ = self._track_occupancy[video][old_track].cut_range(frame_range)
+        _, within_new, _ = self._track_occupancy[video][new_track].cut_range(frame_range)
+
+        if old_track is not None:
+            # Instances that didn't already have track can't be handled here.
+            # See track_set_instance for this case.
+            self._track_occupancy[video][old_track].remove(frame_range)
+        self._track_occupancy[video][new_track].remove(frame_range)
+        self._track_occupancy[video][old_track].insert_list(within_new)
+        self._track_occupancy[video][new_track].insert_list(within_old)
+
+        # Update tracks set on instances
+
+        # Get all instances in old/new tracks
+        # Note that this won't match on None track.
+        old_track_instances = self.find_track_occupancy(video, old_track, frame_range)
+        new_track_instances = self.find_track_occupancy(video, new_track, frame_range)
+
+        # swap new to old tracks on all instances
+        for frame, instance in old_track_instances:
+            instance.track = new_track
+        # old_track can be `Track` or int
+        # If int, it's index in instance list which we'll use as a pseudo-track,
+        # but we won't set instances currently on new_track to old_track.
+        if type(old_track) == Track:
+            for frame, instance in new_track_instances:
+                instance.track = old_track
+
+    def _track_remove_instance(self, frame: LabeledFrame, instance: Instance):
+        # If this is only instance in track in frame, then remove frame from track.
+        if len(list(filter(lambda inst: inst.track == instance.track, frame.instances))) == 1:
+            self._track_occupancy[frame.video][instance.track].remove((frame.frame_idx, frame.frame_idx+1))
+
+    def remove_instance(self, frame: LabeledFrame, instance: Instance):
+        self._track_remove_instance(frame, instance)
+        frame.instances.remove(instance)
+
+    def add_instance(self, frame: LabeledFrame, instance: Instance):
+        if frame.video not in self._track_occupancy:
+            self._track_occupancy[frame.video] = dict()
+
+        # Ensure that there isn't already an Instance with this track
+        tracks_in_frame = [inst.track for inst in frame
+                           if type(inst) == Instance and inst.track is not None]
+        if instance.track in tracks_in_frame:
+            instance.track = None
+
+        # Add track in its not already present in labels
+        if instance.track not in self._track_occupancy[frame.video]:
+            self._track_occupancy[frame.video][instance.track] = RangeList()
+
+        self._track_occupancy[frame.video][instance.track].insert((frame.frame_idx, frame.frame_idx+1))
+        frame.instances.append(instance)
+
+    def _make_track_occupany(self, video):
+        frame_idx_map = self._frame_idx_map[video]
+
+        tracks = dict()
+        frame_idxs = sorted(frame_idx_map.keys())
+        for frame_idx in frame_idxs:
+            instances = frame_idx_map[frame_idx]
+            for instance in instances:
+                if instance.track not in tracks:
+                    tracks[instance.track] = RangeList()
+                tracks[instance.track].add(instance.frame_idx)
+        return tracks
+
+    def find_track_occupancy(self, video: Video, track: Union[Track, int], frame_range=None) -> List[Tuple[LabeledFrame, Instance]]:
         """Get instances for a given track.
 
         Args:
@@ -230,6 +319,8 @@ class Labels(MutableSequence):
             list of `Instance` objects
         """
 
+        frame_range = range(*frame_range) if type(frame_range) == tuple else frame_range
+
         def does_track_match(inst, tr, labeled_frame):
             match = False
             if type(tr) == Track and inst.track is tr:
@@ -239,32 +330,16 @@ class Labels(MutableSequence):
                 match = True
             return match
 
-        track_instances = [instance
+        track_frame_inst = [(lf, instance)
                             for lf in self.find(video)
                             for instance in lf.instances
                             if does_track_match(instance, track, lf)
                                 and (frame_range is None or lf.frame_idx in frame_range)]
-        return track_instances
+        return track_frame_inst
 
-    def swap_tracks(self, video: Video, new_track: Union[Track, int], old_track: Union[Track, int], frame_range=None):
-        """Swap specified tracks for all instances in a given range of frames.
 
-        Returns:
-            None.
-        """
-        # get all instances in old/new tracks
-        old_track_instances = self.find_track_instances(video, old_track, frame_range)
-        new_track_instances = self.find_track_instances(video, new_track, frame_range)
-
-        # swap new to old tracks on all instances
-        for instance in old_track_instances:
-            instance.track = new_track
-        # old_track can be `Track` or int
-        # If int, it's index in instance list which we'll use as a pseudo-track,
-        # but we won't set instances currently on new_track to old_track.
-        if type(old_track) == Track:
-            for instance in new_track_instances:
-                instance.track = old_track
+    def find_track_instances(self, *args, **kwargs) -> List[Instance]:
+        return [inst for lf, inst in self.find_track_occupancy(*args, **kwargs)]
 
     @property
     def all_instances(self):

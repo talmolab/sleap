@@ -22,7 +22,7 @@ def test_slider(qtbot, centered_pair_predictions):
     assert slider.maximumHeight() != initial_height
     
     slider.setTracksFromLabels(labels, labels.videos[0])
-    assert len(slider.getMarks()) == 38
+    assert len(slider.getMarks()) == 40
 
     slider.moveSelectionAnchor(5, 5)
     slider.releaseSelectionAnchor(100, 15)
