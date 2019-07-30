@@ -869,9 +869,10 @@ class MainWindow(QMainWindow):
 
     def deleteClipPredictions(self):
 
-        predicted_instances = [(lf, inst) for lf in self.labels for inst in lf
-                                if lf.frame_idx in range(*self.player.seekbar.getSelection())
-                                and type(inst) == PredictedInstance]
+        predicted_instances = [(lf, inst)
+                for lf in self.labels.find(self.video, frame_idx = range(*self.player.seekbar.getSelection()))
+                for inst in lf
+                if type(inst) == PredictedInstance]
 
         # If user selected an instance, then only delete for that track.
         selected_inst = self.player.view.getSelectionInstance()
@@ -893,9 +894,9 @@ class MainWindow(QMainWindow):
 
         if resp == QMessageBox.No: return
 
+        # Delete the instances
         for lf, inst in predicted_instances:
-            inst_idx = lf.index(inst)
-            del lf[inst_idx]
+            self.labels.remove_instance(lf, inst)
 
         self.plotFrame()
         self.updateSeekbarMarks()

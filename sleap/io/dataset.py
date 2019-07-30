@@ -162,7 +162,7 @@ class Labels(MutableSequence):
         else:
             raise KeyError("Invalid label indexing arguments.")
 
-    def find(self, video: Video, frame_idx: int = None) -> List[LabeledFrame]:
+    def find(self, video: Video, frame_idx: Union[int, range] = None) -> List[LabeledFrame]:
         """ Search for labeled frames given video and/or frame index.
 
         Args:
@@ -175,6 +175,8 @@ class Labels(MutableSequence):
         """
         if frame_idx:
             if video not in self._frame_idx_map: return []
+            if type(frame_idx) == range:
+                return [self._frame_idx_map[video][idx] for idx in frame_idx if idx in self._frame_idx_map[video]]
             if frame_idx not in self._frame_idx_map[video]: return []
             return [self._frame_idx_map[video][frame_idx]]
         else:
