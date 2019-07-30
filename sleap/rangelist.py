@@ -1,4 +1,8 @@
 class RangeList():
+    """
+    Class for manipulating a list of range intervals.
+    Each range interval in the list is a [start, end)-tuple.
+    """
 
     def __init__(self, range_list: list=None):
         self.list = range_list if range_list is not None else []
@@ -8,10 +12,12 @@ class RangeList():
 
     @property
     def list(self):
+        """Returns the list of ranges."""
         return self._list
 
     @list.setter
     def list(self, val):
+        """Sets the list of ranges."""
         self._list = val
 #         for i, r in enumerate(self._list):
 #             if type(r) == tuple:
@@ -19,15 +25,18 @@ class RangeList():
 
     @property
     def is_empty(self):
+        """Returns True if the list is empty."""
         return len(self.list) == 0
 
     def add(self, val, tolerance=0):
+        """Adds a single value, merges to last range if contiguous."""
         if len(self.list) and self.list[-1][1] + tolerance >= val:
             self.list[-1] = (self.list[-1][0], val+1)
         else:
             self.list.append((val, val+1))
 
     def insert(self, new_range: tuple):
+        """Adds a new range, merging to adjacent/overlapping ranges as appropriate."""
         new_range = self._as_tuple(new_range)
 
         pre, within, post = self.cut_range(new_range)
@@ -35,18 +44,22 @@ class RangeList():
         return self.list
 
     def insert_list(self, range_list: list):
+        """Adds each range from a list of ranges."""
         for range_ in range_list:
             self.insert(range_)
         return self.list
 
-    def remove(self, remove: tuple):                
+    def remove(self, remove: tuple):
+        """Removes everything that overlaps with given range."""
         pre, within, post = self.cut_range(remove)
         self.list = pre + post
 
     def cut(self, cut: int):
+        """Returns a pair of lists with everything before/after cut."""
         return self.cut_(self.list, cut)
 
     def cut_range(self, cut: tuple):
+        """Returns three lists, everthing before/within/after cut range."""
         if len(self.list) == 0: return [], [], []
         cut = self._as_tuple(cut)
 
@@ -94,22 +107,3 @@ class RangeList():
             return list_a[:-1] + [(last_a[0], first_b[1])] + list_b[1:]
         else:
             return list_a + list_b
-
-if __name__ == "__main__":
-    a = RangeList([(1,2),(3,5),(7,13),(50,100)])
-    print(a)
-    print("cut(8)", a.cut(8))
-    print("cut_range((60,70))", a.cut_range((60,70)))
-    print("insert((10,20))", a.insert((10,20)))
-    print("insert((5,8))", a.insert((5,8)))
-    a.remove((5,8))
-    print("after remove((5,8))", a.list)
-    b = RangeList()
-    b.add(1)
-    b.add(2)
-    b.add(4)
-    b.add(5)
-    b.add(6)
-    b.add(9)
-    b.add(10)
-    print("b",b)
