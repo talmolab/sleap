@@ -212,8 +212,10 @@ class MainWindow(QMainWindow):
         predictionMenu.addSeparator()
         self._menu_actions["visualize models"] = predictionMenu.addAction("Visualize Model Outputs...", self.visualizeOutputs)
         self._menu_actions["import predictions"] = predictionMenu.addAction("Import Predictions...", self.importPredictions)
+        predictionMenu.addSeparator()
         self._menu_actions["remove predictions"] = predictionMenu.addAction("Delete Predictions...", self.deletePredictions)
-        self._menu_actions["remove clip predictions"] = predictionMenu.addAction("Delete Predictions from Clip...", self.deleteClipPredictions)
+        self._menu_actions["remove clip predictions"] = predictionMenu.addAction("Delete Predictions from Clip...", self.deleteClipPredictions, shortcuts["delete clip"])
+        self._menu_actions["remove area predictions"] = predictionMenu.addAction("Delete Predictions from Area...", self.deleteAreaPredictions, shortcuts["delete area"])
         predictionMenu.addSeparator()
         self._menu_actions["export clip"] = predictionMenu.addAction("Export Labeled Clip...", self.exportLabeledClip, shortcuts["export clip"])
 
@@ -859,8 +861,7 @@ class MainWindow(QMainWindow):
         if resp == QMessageBox.No: return
 
         for lf, inst in predicted_instances:
-            inst_idx = lf.index(inst)
-            del lf[inst_idx]
+            self.labels.remove_instance(lf, inst)
 
         self.plotFrame()
         self.updateSeekbarMarks()
@@ -899,6 +900,57 @@ class MainWindow(QMainWindow):
         self.plotFrame()
         self.updateSeekbarMarks()
         self.changestack_push("removed predictions")
+
+    def deleteAreaPredictions(self):
+
+        # Callback to delete after area has been selected
+        def delete_area_callback(x0, y0, x1, y1):
+
+            # Disconnect callback since we only want to trigger once
+            self.player.view.areaSelected.disconnect(delete_area_callback)
+            self.updateStatusMessage()
+
+            # Make sure there was an area selected
+            if x0==x1 or y0==y1: return
+
+            min_corner = (x0, y0)
+            max_corner = (x1, y1)
+
+            def is_bounded(inst):
+                points_array = inst.points_array(invisible_as_nan=True)
+                valid_points = points_array[~np.isnan(points_array).any(axis=1)]
+
+                is_gt_min = np.all(valid_points >= min_corner)
+                is_lt_max = np.all(valid_points <= max_corner)
+                return is_gt_min and is_lt_max
+
+            # Find all instances contained in selected area
+            predicted_instances = [(lf, inst) for lf in self.labels.find(self.video)
+                                    for inst in lf
+                                    if type(inst) == PredictedInstance
+                                    and is_bounded(inst)]
+
+            # Confirm that we want to delete
+            resp = QMessageBox.critical(self,
+                    "Removing predicted instances",
+                    f"There are {len(predicted_instances)} predicted instances in the selected area across the entire video. "
+                    "Are you sure you want to delete these?",
+                    QMessageBox.Yes, QMessageBox.No)
+
+            if resp == QMessageBox.No: return
+
+            # Delete the instances
+            for lf, inst in predicted_instances:
+                self.labels.remove_instance(lf, inst)
+
+            # Update visuals
+            self.plotFrame()
+            self.updateSeekbarMarks()
+            self.changestack_push("removed predictions")
+
+        # Prompt the user to select area
+        self.updateStatusMessage(f"Please select the area from which to remove instances. This will be applied to all frames.")
+        self.player.onAreaSelection(delete_area_callback)
 
     def importPredictions(self):
         filters = ["JSON labels (*.json *.json.zip)", "HDF5 dataset (*.h5 *.hdf5)", "Matlab dataset (*.mat)", "DeepLabCut csv (*.csv)"]

@@ -268,6 +268,8 @@ class Labels(MutableSequence):
                 instance.track = old_track
 
     def _track_remove_instance(self, frame: LabeledFrame, instance: Instance):
+        if instance.track not in self._track_occupancy[frame.video]: return
+
         # If this is only instance in track in frame, then remove frame from track.
         if len(list(filter(lambda inst: inst.track == instance.track, frame.instances))) == 1:
             self._track_occupancy[frame.video][instance.track].remove((frame.frame_idx, frame.frame_idx+1))

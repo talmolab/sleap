@@ -17,6 +17,10 @@ class RangeList():
 #             if type(r) == tuple:
 #                 self._list[i] = range(r[0], r[1])
 
+    @property
+    def is_empty(self):
+        return len(self.list) == 0
+
     def add(self, val, tolerance=0):
         if len(self.list) and self.list[-1][1] + tolerance >= val:
             self.list[-1] = (self.list[-1][0], val+1)
