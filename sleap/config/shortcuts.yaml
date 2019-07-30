@@ -26,3 +26,5 @@
 "color predicted": 
 "fit": Qt.CTRL + Qt.Key_Equal
 "export clip":
+"delete clip":
+"delete area": Qt.CTRL + Qt.Key_K
