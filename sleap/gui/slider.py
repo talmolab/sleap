@@ -34,6 +34,7 @@ class VideoSlider(QGraphicsView):
     keyRelease = Signal(QKeyEvent)
     valueChanged = Signal(int)
     selectionChanged = Signal(int, int)
+    updatedTracks = Signal()
 
     def __init__(self, orientation=-1, min=0, max=100, val=0,
             marks=None, tracks=0,
@@ -91,18 +92,18 @@ class VideoSlider(QGraphicsView):
             video: the video for which to show marks
         """
         lfs = labels.find(video)
-        tracks = labels.tracks #list(filter(lambda track: any((inst.track==track for lf in lfs for inst in lf)), labels.tracks))
-        track_count = len(labels.tracks)
 
         slider_marks = []
+        track_idx = 0
 
         # Add marks with track
         track_occupancy = labels.get_track_occupany(video)
-        for track in tracks:
-            track_idx = labels.tracks.index(track)
-            if track in track_occupancy:
+        for track in labels.tracks:
+#             track_idx = labels.tracks.index(track)
+            if track in track_occupancy and not track_occupancy[track].is_empty:
                 for occupancy_range in track_occupancy[track].list:
                     slider_marks.append((track_idx, *occupancy_range))
+                track_idx += 1
 
         # Add marks without track
         if None in track_occupancy:
@@ -128,8 +129,10 @@ class VideoSlider(QGraphicsView):
         # combine marks for labeled frame and marks for suggested frames
         slider_marks.extend(suggestion_marks)
 
-        self.setTracks(track_count)
+        self.setTracks(track_idx)
         self.setMarks(slider_marks)
+
+        self.updatedTracks.emit()
 
     def setTracks(self, tracks):
         """Set the number of tracks to show in slider.
@@ -442,7 +445,7 @@ class VideoSlider(QGraphicsView):
         self.select_box.setRect(select_box_rect)
 
         self.updatePos()
-
+        super(VideoSlider, self).resizeEvent(event)
 
     def mousePressEvent(self, event):
         """Override method to move handle for mouse press/drag.
@@ -510,9 +513,9 @@ class VideoSlider(QGraphicsView):
         """Method required by Qt."""
         return self.slider.rect()
 
-    def paint(self, painter, option, widget=None):
+    def paint(self, *args, **kwargs):
         """Method required by Qt."""
-        pass
+        super(VideoSlider, self).paint(*args, **kwargs)
 
 if __name__ == "__main__":
     app = QApplication([])

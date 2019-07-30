@@ -71,12 +71,13 @@ class QtVideoPlayer(QWidget):
         self.seekbar.keyRelease.connect(self.keyReleaseEvent)
         self.seekbar.setEnabled(False)
 
-        splitter = QtWidgets.QSplitter(Qt.Vertical)
-        splitter.addWidget(self.view)
-        splitter.addWidget(self.seekbar)
+        self.splitter = QtWidgets.QSplitter(Qt.Vertical)
+        self.splitter.addWidget(self.view)
+        self.splitter.addWidget(self.seekbar)
+        self.seekbar.updatedTracks.connect(lambda: self.splitter.refresh())
 
         self.layout = QVBoxLayout()
-        self.layout.addWidget(splitter)
+        self.layout.addWidget(self.splitter)
         self.setLayout(self.layout)
 
         self.view.show()
@@ -555,7 +556,6 @@ class GraphicsView(QGraphicsView):
         """ Maintain current zoom on resize.
         """
         self.updateViewer()
-
 
     def mousePressEvent(self, event):
         """ Start mouse pan or zoom mode.
