@@ -298,6 +298,11 @@ class QtVideoPlayer(QWidget):
         if callable(on_each):
             on_each(indexes)
 
+    def onAreaSelection(self, callback: Callable):
+        self.view.doAreaSelection = True
+        self.view.setCursor(Qt.CrossCursor)
+        self.view.areaSelected.connect(callback)
+
     def keyReleaseEvent(self, event: QKeyEvent):
         if event.key() == Qt.Key.Key_Shift:
             self._shift_key_down = False
@@ -376,6 +381,7 @@ class GraphicsView(QGraphicsView):
     rightMouseButtonReleased = Signal(float, float)
     leftMouseButtonDoubleClicked = Signal(float, float)
     rightMouseButtonDoubleClicked = Signal(float, float)
+    areaSelected = Signal(float, float, float, float)
 
     def __init__(self, *args, **kwargs):
         """ https://github.com/marcel-goldschen-ohm/PyQtImageViewer/blob/master/QtImageViewer.py """
@@ -396,6 +402,7 @@ class GraphicsView(QGraphicsView):
 
         self.canZoom = True
         self.canPan = True
+        self.doAreaSelection = False
 
         self.zoomFactor = 1
         anchor_mode = QGraphicsView.AnchorUnderMouse
@@ -558,9 +565,16 @@ class GraphicsView(QGraphicsView):
         self._down_pos = event.pos()
         # behavior depends on which button is pressed
         if event.button() == Qt.LeftButton:
-            if self.canPan:
-                self.setDragMode(QGraphicsView.ScrollHandDrag)
+
+            if event.modifiers() == Qt.NoModifier:
+
+                if self.doAreaSelection:
+                    self.setDragMode(QGraphicsView.RubberBandDrag)
+                elif self.canPan:
+                    self.setDragMode(QGraphicsView.ScrollHandDrag)
+
             self.leftMouseButtonPressed.emit(scenePos.x(), scenePos.y())
+
         elif event.button() == Qt.RightButton:
             if self.canZoom:
                 self.setDragMode(QGraphicsView.RubberBandDrag)
@@ -588,6 +602,17 @@ class GraphicsView(QGraphicsView):
                     # If we want to allow selection of multiple instances, do this:
                     # instance.selected = (instance in clicked)
                 self.updatedSelection.emit()
+
+            # Check if user was selecting rectangular area
+            selection_rect = self.scene.selectionArea().boundingRect()
+            self.doAreaSelection = False
+            self.unsetCursor()
+            self.areaSelected.emit(
+                    selection_rect.left(),
+                    selection_rect.top(),
+                    selection_rect.right(),
+                    selection_rect.bottom())
+
             # finish drag
             self.setDragMode(QGraphicsView.NoDrag)
             # pass along event
