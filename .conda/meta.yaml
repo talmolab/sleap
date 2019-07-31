@@ -32,7 +32,7 @@ requirements:
     - psutil
     - pyzmq
     - pyyaml
-    - ujson
+    - python-rapidjson
     - pip
 
 

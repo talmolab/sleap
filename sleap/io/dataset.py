@@ -17,12 +17,13 @@ import glob
 import attr
 import cattr
 import json
-import ujson
+import rapidjson
 import shutil
 import tempfile
 import numpy as np
 import scipy.io as sio
 import h5py as h5
+import cbor
 
 from collections import MutableSequence
 from typing import List, Union, Dict, Optional
@@ -42,9 +43,29 @@ from sleap.util import save_dict_to_hdf5
 
 def json_loads(json_str: str):
     try:
-        return ujson.loads(json_str)
+        return rapidjson.loads(json_str)
     except:
         return json.loads(json_str)
+
+def json_dumps(d: Dict, filename: str = None):
+    """
+    A simple wrapper around the JSON encoder we are using.
+
+    Args:
+        d: The dict to write.
+        f: The filename to write to.
+
+    Returns:
+        None
+    """
+    import codecs
+    encoder = rapidjson
+
+    if filename:
+        with open(filename, 'w') as f:
+            encoder.dump(d, f, ensure_ascii=False)
+    else:
+        return encoder.dumps(d)
 
 """
 The version number to put in the Labels JSON format.
@@ -425,10 +446,15 @@ class Labels(MutableSequence):
         # as references to the above constructed lists to limit redundant data in the
         # json
         label_cattr = cattr.Converter()
-        label_cattr.register_unstructure_hook(Skeleton, lambda x: self.skeletons.index(x))
-        label_cattr.register_unstructure_hook(Video, lambda x: self.videos.index(x))
-        label_cattr.register_unstructure_hook(Node, lambda x: self.nodes.index(x))
-        label_cattr.register_unstructure_hook(Track, lambda x: self.tracks.index(x))
+        label_cattr.register_unstructure_hook(Skeleton, lambda x: str(self.skeletons.index(x)))
+        label_cattr.register_unstructure_hook(Video, lambda x: str(self.videos.index(x)))
+        label_cattr.register_unstructure_hook(Node, lambda x: str(self.nodes.index(x)))
+        label_cattr.register_unstructure_hook(Track, lambda x: str(self.tracks.index(x)))
+        #label_cattr.register_unstructure_hook(Point, Point.unstructure_hook)
+        #label_cattr.register_unstructure_hook(PredictedPoint, PredictedPoint.unstructure_hook)
+        #label_cattr.register_unstructure_hook(Instance, Instance.unstructure_hook(label_cattr))
+        #label_cattr.register_unstructure_hook(PredictedInstance, PredictedInstance.unstructure_hook(label_cattr))
+        #label_cattr.register_unstructure_hook(LabeledFrame, LabeledFrame.unstructure_hook(label_cattr))
 
         idx_to_node = {i: self.nodes[i] for i in range(len(self.nodes))}
 
@@ -457,7 +483,7 @@ class Labels(MutableSequence):
         """
 
         # Unstructure the data into dicts and dump to JSON.
-        return json.dumps(self.to_dict())
+        return json_dumps(self.to_dict())
 
     @staticmethod
     def save_json(labels: 'Labels', filename: str,
@@ -516,11 +542,8 @@ class Labels(MutableSequence):
                 d = labels.to_dict()
                 d['videos'] = Video.cattr().unstructure(new_videos)
 
-                # We can't call Labels.to_json, so we need to do this here. Not as clean as I
-                # would like.
-                json_str = json.dumps(d)
             else:
-                json_str = labels.to_json()
+                d = labels.to_dict()
 
             if compress or save_frame_data:
 
@@ -529,16 +552,15 @@ class Labels(MutableSequence):
                 filename = re.sub("(\.json)?(\.zip)?$", ".json", filename)
 
                 # Write the json to the tmp directory, we will zip it up with the frame data.
-                with open(os.path.join(tmp_dir, os.path.basename(filename)), 'w') as file:
-                    file.write(json_str)
+                full_out_filename = os.path.join(tmp_dir, os.path.basename(filename))
+                json_dumps(d, full_out_filename)
 
                 # Create the archive
                 shutil.make_archive(base_name=filename, root_dir=tmp_dir, format='zip')
 
             # If the user doesn't want to compress, then just write the json to the filename
             else:
-                with open(filename, 'w') as file:
-                    file.write(json_str)
+                json_dumps(d, filename)
 
     @classmethod
     def from_json(cls, data: Union[str, dict], match_to: Optional['Labels'] = None) -> 'Labels':
@@ -587,10 +609,12 @@ class Labels(MutableSequence):
             suggestions = dict()
 
         label_cattr = cattr.Converter()
-        label_cattr.register_structure_hook(Skeleton, lambda x,type: skeletons[x])
-        label_cattr.register_structure_hook(Video, lambda x,type: videos[x])
+        label_cattr.register_structure_hook(Skeleton, lambda x,type: skeletons[int(x)])
+        label_cattr.register_structure_hook(Video, lambda x,type: videos[int(x)])
         label_cattr.register_structure_hook(Node, lambda x,type: x if isinstance(x,Node) else nodes[int(x)])
-        label_cattr.register_structure_hook(Track, lambda x, type: None if x is None else tracks[x])
+        label_cattr.register_structure_hook(Track, lambda x, type: None if x is None else tracks[int(x)])
+        #label_cattr.register_structure_hook(Point, Point.structure_hook)
+        #label_cattr.register_structure_hook(PredictedPoint, PredictedPoint.structure_hook)
 
         def structure_points(x, type):
             if 'score' in x.keys():
@@ -612,7 +636,8 @@ class Labels(MutableSequence):
 
         label_cattr.register_structure_hook(Union[List[Instance], List[PredictedInstance]],
                                             structure_instances_list)
-        label_cattr.register_structure_hook(ForwardRef('PredictedInstance'), lambda x,type: label_cattr.structure(x, PredictedInstance))
+        label_cattr.register_structure_hook(ForwardRef('PredictedInstance'),
+                                            lambda x,type: label_cattr.structure(x, PredictedInstance))
         labels = label_cattr.structure(dicts['labels'], List[LabeledFrame])
 
         return cls(labeled_frames=labels, videos=videos, skeletons=skeletons, nodes=nodes, suggestions=suggestions)
@@ -723,10 +748,6 @@ class Labels(MutableSequence):
         Returns:
             None
         """
-
-        # Unstructure this labels dataset to a bunch of dicts, same as we do for
-        # JSON serialization.
-        d = self.to_dict()
 
         # Delete the file if it exists, we want to start from scratch since
         # h5py truncates the file which seems to not actually delete data

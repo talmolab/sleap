@@ -14,7 +14,7 @@ dependencies:
 - psutil
 - pyzmq
 - pyyaml
-- ujson
+- python-rapidjson
 - pip
 - pip:
     - opencv-python==3.4.2.17
