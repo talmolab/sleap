@@ -30,7 +30,7 @@ from sleap.io.dataset import Labels
 from sleap.nn.augmentation import Augmenter
 from sleap.nn.model import Model, ModelOutputType
 from sleap.nn.monitor import LossViewer
-from sleap.nn.datagen import generate_confmaps_from_points, generate_pafs_from_points, generate_images, generate_points, instance_crops, generate_centroid_points
+from sleap.nn.datagen import generate_training_data, generate_confmaps_from_points, generate_pafs_from_points, generate_images, generate_points, generate_centroid_points
 
 
 @attr.s(auto_attribs=True)
