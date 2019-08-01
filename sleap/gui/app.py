@@ -42,9 +42,6 @@ class MainWindow(QMainWindow):
     def __init__(self, data_path=None, video=None, import_data=None, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
 
-        # lines(7)*255
-
-
         self.labels = Labels()
         self.skeleton = Skeleton()
         self.labeled_frame = None
@@ -138,90 +135,115 @@ class MainWindow(QMainWindow):
         self.statusBar() # Initialize status bar
 
         ####### Menus #######
+
+        ### File Menu ###
+
         fileMenu = self.menuBar().addMenu("File")
         self._menu_actions["new"] = fileMenu.addAction("&New Project", self.newProject, shortcuts["new"])
         self._menu_actions["open"] = fileMenu.addAction("&Open Project...", self.openProject, shortcuts["open"])
+        fileMenu.addSeparator()
+        self._menu_actions["add videos"] = fileMenu.addAction("Add Videos...", self.addVideo, shortcuts["add videos"])
+        fileMenu.addSeparator()
         self._menu_actions["save"] = fileMenu.addAction("&Save", self.saveProject, shortcuts["save"])
         self._menu_actions["save as"] = fileMenu.addAction("Save As...", self.saveProjectAs, shortcuts["save as"])
         fileMenu.addSeparator()
         self._menu_actions["close"] = fileMenu.addAction("Quit", self.close, shortcuts["close"])
 
-        videoMenu = self.menuBar().addMenu("Video")
-        # videoMenu.addAction("Check video encoding").triggered.connect(self.checkVideoEncoding)
-        # videoMenu.addAction("Reencode for seeking").triggered.connect(self.reencodeForSeeking)
-        # videoMenu.addSeparator()
-        self._menu_actions["add videos"] = videoMenu.addAction("Add Videos...", self.addVideo, shortcuts["add videos"])
-        self._menu_actions["next video"] = videoMenu.addAction("Next Video", self.nextVideo, shortcuts["next video"])
-        self._menu_actions["prev video"] = videoMenu.addAction("Previous Video", self.previousVideo, shortcuts["prev video"])
-        videoMenu.addSeparator()
-        self._menu_actions["goto frame"] = videoMenu.addAction("Go to Frame...", self.gotoFrame, shortcuts["goto frame"])
-        self._menu_actions["mark frame"] = videoMenu.addAction("Mark Frame", self.markFrame, shortcuts["mark frame"])
-        self._menu_actions["goto marked"] = videoMenu.addAction("Go to Marked Frame", self.goMarkedFrame, shortcuts["goto marked"])
+        ### Go Menu ###
 
-        labelMenu = self.menuBar().addMenu("Labels")
-        self._menu_actions["add instance"] = labelMenu.addAction("Add Instance", self.newInstance, shortcuts["add instance"])
-        self._menu_actions["delete instance"] = labelMenu.addAction("Delete Instance", self.deleteSelectedInstance, shortcuts["delete instance"])
-        self._menu_actions["delete track"] = labelMenu.addAction("Delete Instance and Track", self.deleteSelectedInstanceTrack, shortcuts["delete track"])
+        goMenu = self.menuBar().addMenu("Go")
 
-        self.track_menu = labelMenu.addMenu("Set Instance Track")
-        self._menu_actions["transpose"] = labelMenu.addAction("Transpose Instance Tracks", self.transposeInstance, shortcuts["transpose"])
-        self._menu_actions["select next"] = labelMenu.addAction("Select Next Instance", self.player.view.nextSelection, shortcuts["select next"])
-        self._menu_actions["clear selection"] = labelMenu.addAction("Clear Selection", self.player.view.clearSelection, shortcuts["clear selection"])
-        labelMenu.addSeparator()
-        self._menu_actions["goto next"] = labelMenu.addAction("Next Labeled Frame", self.nextLabeledFrame, shortcuts["goto next"])
-        self._menu_actions["goto prev"] = labelMenu.addAction("Previous Labeled Frame", self.previousLabeledFrame, shortcuts["goto prev"])
+        self._menu_actions["goto next"] = goMenu.addAction("Next Labeled Frame", self.nextLabeledFrame, shortcuts["goto next"])
+        self._menu_actions["goto prev"] = goMenu.addAction("Previous Labeled Frame", self.previousLabeledFrame, shortcuts["goto prev"])
+        self._menu_actions["goto next suggestion"] = goMenu.addAction("Next Suggestion", self.nextSuggestedFrame, shortcuts["goto next suggestion"])
+        self._menu_actions["goto prev suggestion"] = goMenu.addAction("Previous Suggestion", lambda:self.nextSuggestedFrame(-1), shortcuts["goto prev suggestion"])
+        self._menu_actions["goto next track"] = goMenu.addAction("Next Track Spawn Frame", self.nextTrackFrame, shortcuts["goto next track"])
 
-        self._menu_actions["goto next suggestion"] = labelMenu.addAction("Next Suggestion", self.nextSuggestedFrame, shortcuts["goto next suggestion"])
-        self._menu_actions["goto prev suggestion"] = labelMenu.addAction("Previous Suggestion", lambda:self.nextSuggestedFrame(-1), shortcuts["goto prev suggestion"])
+        goMenu.addSeparator()
 
-        self._menu_actions["goto next track"] = labelMenu.addAction("Next Track Spawn Frame", self.nextTrackFrame, shortcuts["goto next track"])
+        self._menu_actions["next video"] = goMenu.addAction("Next Video", self.nextVideo, shortcuts["next video"])
+        self._menu_actions["prev video"] = goMenu.addAction("Previous Video", self.previousVideo, shortcuts["prev video"])
 
-        labelMenu.addSeparator()
-        self._menu_actions["show labels"] = labelMenu.addAction("Show Node Names", self.toggleLabels, shortcuts["show labels"])
-        self._menu_actions["show edges"] = labelMenu.addAction("Show Edges", self.toggleEdges, shortcuts["show edges"])
-        self._menu_actions["show trails"] = labelMenu.addAction("Show Trails", self.toggleTrails, shortcuts["show trails"])
+        goMenu.addSeparator()
 
-        self.trailLengthMenu = labelMenu.addMenu("Trail Length")
-        for length_option in (4, 10, 20):
-            menu_item = self.trailLengthMenu.addAction(f"{length_option}",
-                            lambda x=length_option: self.setTrailLength(x))
-            menu_item.setCheckable(True)
+        self._menu_actions["goto frame"] = goMenu.addAction("Go to Frame...", self.gotoFrame, shortcuts["goto frame"])
+        self._menu_actions["mark frame"] = goMenu.addAction("Mark Frame", self.markFrame, shortcuts["mark frame"])
+        self._menu_actions["goto marked"] = goMenu.addAction("Go to Marked Frame", self.goMarkedFrame, shortcuts["goto marked"])
 
-        self._menu_actions["color predicted"] = labelMenu.addAction("Color Predicted Instances", self.toggleColorPredicted, shortcuts["color predicted"])
 
-        self.paletteMenu = labelMenu.addMenu("Color Palette")
+        ### View Menu ###
+
+        viewMenu = self.menuBar().addMenu("View")
+
+        viewMenu.addSeparator()
+        self._menu_actions["color predicted"] = viewMenu.addAction("Color Predicted Instances", self.toggleColorPredicted, shortcuts["color predicted"])
+
+        self.paletteMenu = viewMenu.addMenu("Color Palette")
         for palette_name in self._color_manager.palette_names:
             menu_item = self.paletteMenu.addAction(f"{palette_name}",
                             lambda x=palette_name: self.setPalette(x))
             menu_item.setCheckable(True)
         self.setPalette("standard")
 
-        labelMenu.addSeparator()
-        self._menu_actions["fit"] = labelMenu.addAction("Fit Instances to View", self.toggleAutoZoom, shortcuts["fit"])
+        viewMenu.addSeparator()
 
+        self._menu_actions["show labels"] = viewMenu.addAction("Show Node Names", self.toggleLabels, shortcuts["show labels"])
+        self._menu_actions["show edges"] = viewMenu.addAction("Show Edges", self.toggleEdges, shortcuts["show edges"])
+        self._menu_actions["show trails"] = viewMenu.addAction("Show Trails", self.toggleTrails, shortcuts["show trails"])
+
+        self.trailLengthMenu = viewMenu.addMenu("Trail Length")
+        for length_option in (4, 10, 20):
+            menu_item = self.trailLengthMenu.addAction(f"{length_option}",
+                            lambda x=length_option: self.setTrailLength(x))
+            menu_item.setCheckable(True)
+
+        viewMenu.addSeparator()
+
+        self._menu_actions["fit"] = viewMenu.addAction("Fit Instances to View", self.toggleAutoZoom, shortcuts["fit"])
+
+        viewMenu.addSeparator()
+
+        # set menu checkmarks
         self._menu_actions["show labels"].setCheckable(True); self._menu_actions["show labels"].setChecked(self._show_labels)
         self._menu_actions["show edges"].setCheckable(True); self._menu_actions["show edges"].setChecked(self._show_edges)
         self._menu_actions["show trails"].setCheckable(True); self._menu_actions["show trails"].setChecked(self._show_trails)
         self._menu_actions["color predicted"].setCheckable(True); self._menu_actions["color predicted"].setChecked(self._color_predicted)
         self._menu_actions["fit"].setCheckable(True)
 
+        ### Label Menu ###
+
+        labelMenu = self.menuBar().addMenu("Labels")
+        self._menu_actions["add instance"] = labelMenu.addAction("Add Instance", self.newInstance, shortcuts["add instance"])
+        self._menu_actions["delete instance"] = labelMenu.addAction("Delete Instance", self.deleteSelectedInstance, shortcuts["delete instance"])
+
+        labelMenu.addSeparator()
+
+        self.track_menu = labelMenu.addMenu("Set Instance Track")
+        self._menu_actions["transpose"] = labelMenu.addAction("Transpose Instance Tracks", self.transposeInstance, shortcuts["transpose"])
+        self._menu_actions["delete track"] = labelMenu.addAction("Delete Instance and Track", self.deleteSelectedInstanceTrack, shortcuts["delete track"])
+
+        labelMenu.addSeparator()
+
+        self._menu_actions["select next"] = labelMenu.addAction("Select Next Instance", self.player.view.nextSelection, shortcuts["select next"])
+        self._menu_actions["clear selection"] = labelMenu.addAction("Clear Selection", self.player.view.clearSelection, shortcuts["clear selection"])
+
+        ### Predict Menu ###
+
         predictionMenu = self.menuBar().addMenu("Predict")
-        self._menu_actions["active learning"] = predictionMenu.addAction("Run Active Learning...", self.runActiveLearning)
+        self._menu_actions["active learning"] = predictionMenu.addAction("Run Active Learning...", self.runActiveLearning, shortcuts["learning"])
         self._menu_actions["inference"] = predictionMenu.addAction("Run Inference...", self.runInference)
         self._menu_actions["learning expert"] = predictionMenu.addAction("Expert Controls...", self.runLearningExpert)
         predictionMenu.addSeparator()
         self._menu_actions["visualize models"] = predictionMenu.addAction("Visualize Model Outputs...", self.visualizeOutputs)
         self._menu_actions["import predictions"] = predictionMenu.addAction("Import Predictions...", self.importPredictions)
         predictionMenu.addSeparator()
-        self._menu_actions["remove predictions"] = predictionMenu.addAction("Delete Predictions...", self.deletePredictions)
+        self._menu_actions["remove predictions"] = predictionMenu.addAction("Delete All Predictions...", self.deletePredictions)
         self._menu_actions["remove clip predictions"] = predictionMenu.addAction("Delete Predictions from Clip...", self.deleteClipPredictions, shortcuts["delete clip"])
         self._menu_actions["remove area predictions"] = predictionMenu.addAction("Delete Predictions from Area...", self.deleteAreaPredictions, shortcuts["delete area"])
         predictionMenu.addSeparator()
         self._menu_actions["export clip"] = predictionMenu.addAction("Export Labeled Clip...", self.exportLabeledClip, shortcuts["export clip"])
 
-        # self._menu_actions["debug"] = predictionMenu.addAction("Debug", self.debug, Qt.CTRL + Qt.Key_D)
-
-        viewMenu = self.menuBar().addMenu("View")
+        ############
 
         helpMenu = self.menuBar().addMenu("Help")
         helpMenu.addAction("Documentation", self.openDocumentation)
@@ -369,70 +391,6 @@ class MainWindow(QMainWindow):
         self.update_gui_timer = QtCore.QTimer()
         self.update_gui_timer.timeout.connect(self.update_gui_state)
         self.update_gui_timer.start(0.1)
-
-        ####### Points #######
-        # points_layout = _make_dock("Points", tab_with=instances_layout.parent().parent())
-        # self.pointsTable = _make_table(["id", "frameIdx", "instanceId", "x", "y", "node", "visible"])
-        # # self.pointsTable = _make_table_df(self.labels.points)
-        # points_layout.addWidget(self.pointsTable)
-
-        ####### Training #######
-#         training_layout = _make_dock("Training")
-#         gb = QGroupBox("Data representation")
-#         fl = QFormLayout()
-#         self.dataRange = QComboBox(); self.dataRange.addItems(["[0, 1]", "[-1, 1]"]); self.dataRange.setEditable(False)
-#         fl.addRow("Range:", self.dataRange)
-#         # TODO: range ([0, 1], [-1, 1])
-#         # TODO: normalization (z-score, CLAHE)
-#         self.dataScale = QDoubleSpinBox(); self.dataScale.setMinimum(0.25); self.dataScale.setValue(1.0)
-#         fl.addRow("Scale:", self.dataScale)
-# 
-#         gb.setLayout(fl)
-#         training_layout.addWidget(gb)
-# 
-#         gb = QGroupBox("Augmentation")
-#         fl = QFormLayout()
-#         self.augmentationRotation = QDoubleSpinBox(); self.augmentationRotation.setRange(0, 180); self.augmentationRotation.setValue(15.0)
-#         fl.addRow("Rotation:", self.augmentationRotation)
-#         self.augmentationFlipH = QCheckBox()
-#         fl.addRow("Flip (horizontal):", self.augmentationFlipH)
-#         # self.augmentationScaling = QDoubleSpinBox(); self.augmentationScaling.setRange(0.1, 2); self.augmentationScaling.setValue(1.0)
-#         # fl.addRow("Scaling:", self.augmentationScaling)
-#         gb.setLayout(fl)
-#         training_layout.addWidget(gb)
-# 
-#         gb = QGroupBox("Confidence maps")
-#         fl = QFormLayout()
-#         self.confmapsArchitecture = QComboBox(); self.confmapsArchitecture.addItems(["leap_cnn", "unet", "hourglass", "stacked_hourglass"]); self.confmapsArchitecture.setCurrentIndex(1); self.confmapsArchitecture.setEditable(False)
-#         fl.addRow("Architecture:", self.confmapsArchitecture)
-#         self.confmapsFilters = QSpinBox(); self.confmapsFilters.setMinimum(1); self.confmapsFilters.setValue(32)
-#         fl.addRow("Filters:", self.confmapsFilters)
-#         self.confmapsDepth = QSpinBox(); self.confmapsDepth.setMinimum(1); self.confmapsDepth.setValue(3)
-#         fl.addRow("Depth:", self.confmapsDepth)
-#         self.confmapsSigma = QDoubleSpinBox(); self.confmapsSigma.setMinimum(0.1); self.confmapsSigma.setValue(5.0)
-#         fl.addRow("Sigma:", self.confmapsSigma)
-#         btn = QPushButton("Train"); btn.clicked.connect(self.trainConfmaps)
-#         fl.addRow(btn)
-#         gb.setLayout(fl)
-#         training_layout.addWidget(gb)
-# 
-#         gb = QGroupBox("PAFs")
-#         fl = QFormLayout()
-#         self.pafsArchitecture = QComboBox(); self.pafsArchitecture.addItems(["leap_cnn", "unet", "hourglass", "stacked_hourglass"]); self.pafsArchitecture.setEditable(False)
-#         fl.addRow("Architecture:", self.pafsArchitecture)
-#         self.pafsFilters = QSpinBox(); self.pafsFilters.setMinimum(1); self.pafsFilters.setValue(32)
-#         fl.addRow("Filters:", self.pafsFilters)
-#         self.pafsDepth = QSpinBox(); self.pafsDepth.setMinimum(1); self.pafsDepth.setValue(3)
-#         fl.addRow("Depth:", self.pafsDepth)
-#         self.pafsSigma = QDoubleSpinBox(); self.pafsSigma.setMinimum(0.1); self.pafsSigma.setValue(5.0)
-#         fl.addRow("Sigma:", self.pafsSigma)
-#         btn = QPushButton("Train"); btn.clicked.connect(self.trainPAFs)
-#         fl.addRow(btn)
-#         gb.setLayout(fl)
-#         training_layout.addWidget(gb)
-
-    def debug(self):
-        print([lf for lf in self.labels if lf.frame_idx == 0])
 
     def update_gui_state(self):
         has_selected_instance = (self.player.view.getSelection() is not None)
@@ -869,9 +827,10 @@ class MainWindow(QMainWindow):
 
     def deleteClipPredictions(self):
 
-        predicted_instances = [(lf, inst) for lf in self.labels for inst in lf
-                                if lf.frame_idx in range(*self.player.seekbar.getSelection())
-                                and type(inst) == PredictedInstance]
+        predicted_instances = [(lf, inst)
+                for lf in self.labels.find(self.video, frame_idx = range(*self.player.seekbar.getSelection()))
+                for inst in lf
+                if type(inst) == PredictedInstance]
 
         # If user selected an instance, then only delete for that track.
         selected_inst = self.player.view.getSelectionInstance()
@@ -893,9 +852,9 @@ class MainWindow(QMainWindow):
 
         if resp == QMessageBox.No: return
 
+        # Delete the instances
         for lf, inst in predicted_instances:
-            inst_idx = lf.index(inst)
-            del lf[inst_idx]
+            self.labels.remove_instance(lf, inst)
 
         self.plotFrame()
         self.updateSeekbarMarks()
