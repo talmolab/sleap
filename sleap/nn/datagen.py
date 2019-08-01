@@ -5,12 +5,12 @@ import math
 import random
 
 from operator import itemgetter
-from typing import Optional
+from typing import Dict, List, Optional, Tuple
 
 from sleap.io.dataset import Labels
 
 def generate_images(labels:Labels, scale: float=1.0,
-                    resize_hack: bool=True, frame_limit: bool=None) -> np.ndarray:
+                    resize_hack: bool=True, frame_limit: int=None) -> np.ndarray:
     """
     Generate a ndarray of the image data for any labeled frames
 
@@ -344,27 +344,75 @@ def _centroid(x0, y0, x1, y1) -> np.ndarray:
     a = np.array((x0+(x1-x0)/2, y0+(y1-y0)/2))
     return np.expand_dims(a, axis=0)
 
-def instance_crops(imgs: np.ndarray, points: list,
-                    min_crop_size: int=0, negative_samples: int=0) -> np.ndarray:
+def instance_crops(
+            imgs: np.ndarray,
+            points: list,
+            min_crop_size: int=0,
+            negative_samples: int=0) -> Tuple[np.ndarray, List]:
     """
     Take imgs, points and return imgs, points cropped around instances.
 
     Note that if there are multiple instances in a image, this will result in more
-    (but smaller) instances than we started with.
+    (but smaller) images than we started with.
+
+    Includes crop for each instance, and optionally will also include random
+    "negative sample" crops that aren't centered on an instance.
 
     Args:
         imgs: output from generate_images()
         points: output from generate_points()
         min_crop_size: int, the minimum crop square size
+        negative_samples: int, number of *random* negative samples to include
     Returns:
         imgs, points (matching format of input)
     """
-    frame_count = imgs.shape[0]
     img_shape = imgs.shape[1], imgs.shape[2]
 
     # List of bounding box for every instance, map from list idx -> frame idx
     bbs, img_idxs = _bbs_from_points(points)
+    bbs = _pad_bbs_to_min(bbs, min_crop_size, img_shape)
 
+    # Crop images and combine/translate points
+    crop_imgs, crop_points = _crop_and_transform(imgs, points, img_idxs, bbs)
+
+    # Add bounding boxes for *random* negative samples
+    if negative_samples > 0:
+        neg_img_idxs, neg_bbs = get_random_negative_samples(img_idxs, bbs, img_shape, negative_samples)
+        neg_imgs, neg_points = _crop_and_transform(imgs, points, neg_img_idxs, neg_bbs)
+        crop_imgs, crop_points = _extend_crop_data(crop_imgs, crop_points, neg_imgs, neg_points)
+
+    return crop_imgs, crop_points
+
+def _crop_and_transform(imgs, points, img_idxs, bbs):
+    crop_imgs = _crop(imgs, img_idxs, bbs)
+    crop_points = _transform_crop_points(points, img_idxs, bbs)
+    return crop_imgs, crop_points
+
+def _extend_crop_data(imgs_a, points_a, imgs_b, points_b):
+    imgs = np.concatenate((imgs_a, imgs_b))
+    points = points_a + points_b
+    return imgs, points
+
+def _pad_bbs_to_min(bbs, min_crop_size, img_shape):
+    padded_bbs = _pad_bbs(
+                    bbs = bbs,
+                    box_shape = _bb_pad_shape(bbs, min_crop_size, img_shape),
+                    img_shape = img_shape)
+    return padded_bbs
+
+def _bb_pad_shape(bbs, min_crop_size, img_shape):
+    """
+    Given a list of bounding boxes, finds the square size which will be:
+
+        1. large enough to contain every bounding box
+        2. no larger than the image
+        3. at least as large as the minimum crop size
+
+    TODO: what should we do when these can't all be satisfied?
+
+    Returns:
+        (size, size) tuple
+    """
     # Find least power of 2 that's large enough to bound all the instances
     max_height = max((y1 - y0 for (x0, y0, x1, y1) in bbs))
     max_width = max((x1 - x0 for (x0, y0, x1, y1) in bbs))
@@ -377,9 +425,43 @@ def instance_crops(imgs: np.ndarray, points: list,
 
     # Grow all bounding boxes to the same size
     box_shape = min(box_side, img_shape[0]), min(box_side, img_shape[1])
-    bbs = _pad_bbs(bbs, box_shape, img_shape)
 
-    # Add bounding boxes for negative samples
+    return box_shape
+
+def _transform_crop_points(points, img_idxs, bbs):
+    """Takes points on the original images and returns points in bounding boxes.
+
+    The input points will be per frame, the output points will be per box;
+    we use img_idxs to figure out which bounding box goes with which frame.
+
+    The points are translated from original img coordinates to bb coordinates.
+
+    Args:
+        points: list (per img) of list (per inst) of points_array matrices
+            i.e., output from generate_point()
+        img_idxs: list mapping bb idx -> original img idx
+        bbs: list of (x0, y0, x1, y1) tuples
+            img_idxs, bbs = output from _bbs_from_points()
+    Returns:
+        new points list, per bounding box instead of per original img
+    """
+    # Make point arrays for each image (instead of each frame as before)
+
+    # Note that we want all points from the frame, not just the points for the instance
+    # around which we're cropping (i.e., point_array in frame_points).
+    crop_points = list(map(lambda i: points[i], img_idxs))
+
+    # translate points to location w/in cropped image
+    crop_points = [point_array - np.asarray([bbs[i][0], bbs[i][1]]) for i, point_array in enumerate(crop_points)]
+
+    return crop_points
+
+def get_random_negative_samples(img_idxs, bbs, img_shape, negative_samples):
+    if len(bbs) == 0: return
+
+    frame_count = len({frame for frame in img_idxs})
+    box_side = bbs[0][2] - bbs[0][0] # x1 - x0 for the first bb
+
     neg_sample_list = []
 
     # Collect negative samples (and some extras)
@@ -401,23 +483,7 @@ def instance_crops(imgs: np.ndarray, points: list,
     neg_sample_list.sort(key=itemgetter(0))
     _, neg_img_idxs, neg_bbs = zip(*neg_sample_list)
 
-    # Include the negative samples with the positive samples
-    img_idxs.extend(neg_img_idxs[:negative_samples])
-    bbs.extend(neg_bbs[:negative_samples])
-
-    # Crop images
-    imgs = _crop(imgs, img_idxs, bbs)
-
-    # Make point arrays for each image (instead of each frame as before)
-
-    # Note that we want all points from the frame, not just the points for the instance
-    # around which we're cropping (i.e., point_array in frame_points).
-    points = list(map(lambda i: points[i], img_idxs))
-
-    # translate points to location w/in cropped image
-    points = [point_array - np.asarray([bbs[i][0], bbs[i][1]]) for i, point_array in enumerate(points)]
-
-    return imgs, points
+    return neg_img_idxs[:negative_samples], neg_bbs[:negative_samples]
 
 def _bbs_from_points(points):
     # List of bounding box for every instance
