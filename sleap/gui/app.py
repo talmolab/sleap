@@ -227,12 +227,16 @@ class MainWindow(QMainWindow):
         self._menu_actions["select next"] = labelMenu.addAction("Select Next Instance", self.player.view.nextSelection, shortcuts["select next"])
         self._menu_actions["clear selection"] = labelMenu.addAction("Clear Selection", self.player.view.clearSelection, shortcuts["clear selection"])
 
+        labelMenu.addSeparator()
+
         ### Predict Menu ###
 
         predictionMenu = self.menuBar().addMenu("Predict")
         self._menu_actions["active learning"] = predictionMenu.addAction("Run Active Learning...", self.runActiveLearning, shortcuts["learning"])
         self._menu_actions["inference"] = predictionMenu.addAction("Run Inference...", self.runInference)
         self._menu_actions["learning expert"] = predictionMenu.addAction("Expert Controls...", self.runLearningExpert)
+        predictionMenu.addSeparator()
+        self._menu_actions["negative sample"] = predictionMenu.addAction("Mark Negative Training Sample...", self.markNegativeAnchor)
         predictionMenu.addSeparator()
         self._menu_actions["visualize models"] = predictionMenu.addAction("Visualize Model Outputs...", self.visualizeOutputs)
         self._menu_actions["import predictions"] = predictionMenu.addAction("Import Predictions...", self.importPredictions)
@@ -865,8 +869,6 @@ class MainWindow(QMainWindow):
         # Callback to delete after area has been selected
         def delete_area_callback(x0, y0, x1, y1):
 
-            # Disconnect callback since we only want to trigger once
-            self.player.view.areaSelected.disconnect(delete_area_callback)
             self.updateStatusMessage()
 
             # Make sure there was an area selected
@@ -910,6 +912,16 @@ class MainWindow(QMainWindow):
         # Prompt the user to select area
         self.updateStatusMessage(f"Please select the area from which to remove instances. This will be applied to all frames.")
         self.player.onAreaSelection(delete_area_callback)
+
+    def markNegativeAnchor(self):
+        def click_callback(x, y):
+            self.updateStatusMessage()
+            self.labels.add_negative_anchor(self.video, self.player.frame_idx, (x, y))
+            self.changestack_push("add negative anchors")
+
+        # Prompt the user to select area
+        self.updateStatusMessage(f"Please click where you want a negative sample...")
+        self.player.onPointSelection(click_callback)
 
     def importPredictions(self):
         filters = ["JSON labels (*.json *.json.zip)", "HDF5 dataset (*.h5 *.hdf5)", "Matlab dataset (*.mat)", "DeepLabCut csv (*.csv)"]
