@@ -351,8 +351,8 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         QtWidgets.QMessageBox(text=f"Active learning has finished. Instances were predicted on {len(new_lfs)} frames.").exec_()
 
     def view_datagen(self):
-        from sleap.nn.datagen import generate_images, generate_points, instance_crops, \
-                                generate_confmaps_from_points, generate_pafs_from_points
+        from sleap.nn.datagen import generate_training_data, \
+                generate_confmaps_from_points, generate_pafs_from_points
         from sleap.io.video import Video
         from sleap.gui.confmapsplot import demo_confmaps
         from sleap.gui.quiverplot import demo_pafs
@@ -369,16 +369,16 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         min_crop_size = form_data.get("min_crop_size", 0)
         negative_samples = form_data.get("negative_samples", 0)
 
-        labels = self.labels
-        imgs = generate_images(labels, scale, frame_limit=10)
-        points = generate_points(labels, scale, frame_limit=10)
+        imgs, points = generate_training_data(
+                                self.labels,
+                                params = dict(
+                                            frame_limit = 10,
+                                            scale = scale,
+                                            instance_crop = instance_crop,
+                                            min_crop_size = min_crop_size,
+                                            negative_samples = negative_samples))
 
-        if instance_crop:
-            imgs, points = instance_crops(imgs, points,
-                                          min_crop_size=min_crop_size,
-                                          negative_samples=negative_samples)
-
-        skeleton = labels.skeletons[0]
+        skeleton = self.labels.skeletons[0]
         img_shape = (imgs.shape[1], imgs.shape[2])
         vid = Video.from_numpy(imgs * 255)
 

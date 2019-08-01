@@ -70,6 +70,7 @@ class Labels(MutableSequence):
     nodes: List[Node] = attr.ib(default=attr.Factory(list))
     tracks: List[Track] = attr.ib(default=attr.Factory(list))
     suggestions: Dict[Video, list] = attr.ib(default=attr.Factory(dict))
+    negative_anchors: Dict[Video, list] = attr.ib(default=attr.Factory(dict))
 
     def __attrs_post_init__(self):
 
@@ -459,6 +460,18 @@ class Labels(MutableSequence):
         if video in self._frame_idx_map:
             del self._frame_idx_map[video]
 
+    def add_negative_anchor(self, video:Video, frame_idx: int, where: tuple):
+        """Adds a location for a negative training sample.
+
+        Args:
+            video: the `Video` for this negative sample
+            frame_idx: frame index
+            where: (x, y)
+        """
+        if video not in self.negative_anchors:
+            self.negative_anchors[video] = []
+        self.negative_anchors[video].append((frame_idx, *where))
+
     def get_video_suggestions(self, video:Video) -> list:
         """
         Returns the list of suggested frames for the specified video
@@ -560,6 +573,8 @@ class Labels(MutableSequence):
             * videos - The videos that that the instances occur on.
             * labels - The labeled frames
             * tracks - The tracks associated with each instance.
+            * suggestions - The suggested frames.
+            * negative_anchors - The negative training sample anchors.
         """
         # FIXME: Update list of nodes
         # We shouldn't have to do this here, but for some reason we're missing nodes
@@ -588,7 +603,8 @@ class Labels(MutableSequence):
             'videos': Video.cattr().unstructure(self.videos),
             'labels': label_cattr.unstructure(self.labeled_frames),
             'tracks': cattr.unstructure(self.tracks),
-            'suggestions': label_cattr.unstructure(self.suggestions)
+            'suggestions': label_cattr.unstructure(self.suggestions),
+            'negative_anchors': label_cattr.unstructure(self.negative_anchors)
          }
 
         return dicts
@@ -734,6 +750,13 @@ class Labels(MutableSequence):
         else:
             suggestions = dict()
 
+        if "negative_anchors" in dicts:
+            negative_anchors_cattr = cattr.Converter()
+            negative_anchors_cattr.register_structure_hook(Video, lambda x,type: videos[int(x)])
+            negative_anchors = negative_anchors_cattr.structure(dicts['negative_anchors'], Dict[Video, List])
+        else:
+            negative_anchors = dict()
+
         label_cattr = cattr.Converter()
         label_cattr.register_structure_hook(Skeleton, lambda x,type: skeletons[x])
         label_cattr.register_structure_hook(Video, lambda x,type: videos[x])
@@ -763,7 +786,12 @@ class Labels(MutableSequence):
         label_cattr.register_structure_hook(ForwardRef('PredictedInstance'), lambda x,type: label_cattr.structure(x, PredictedInstance))
         labels = label_cattr.structure(dicts['labels'], List[LabeledFrame])
 
-        return cls(labeled_frames=labels, videos=videos, skeletons=skeletons, nodes=nodes, suggestions=suggestions)
+        return cls(labeled_frames=labels,
+                    videos=videos,
+                    skeletons=skeletons,
+                    nodes=nodes,
+                    suggestions=suggestions,
+                    negative_anchors=negative_anchors)
 
     @classmethod
     def load_json(cls, filename: str,

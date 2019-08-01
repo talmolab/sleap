@@ -25,6 +25,7 @@
 "show trails": 
 "color predicted": 
 "fit": Qt.CTRL + Qt.Key_Equal
+"learning": Qt.CTRL + Qt.Key_L
 "export clip":
 "delete clip":
 "delete area": Qt.CTRL + Qt.Key_K

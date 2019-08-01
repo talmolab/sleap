@@ -6,6 +6,7 @@
     :caption: sLEAP Package
     :maxdepth: 3
 
+    tutorial
     skeleton
     video
     instance
