@@ -31,8 +31,11 @@ def generate_training_data(labels, params):
             i.e., frames -> instances -> point_array
     """
 
-    imgs = generate_images(labels, params["scale"])
-    points = generate_points(labels, params["scale"])
+    imgs = generate_images(labels, params["scale"],
+                frame_limit=params.get("frame_limit", None))
+
+    points = generate_points(labels, params["scale"],
+                frame_limit=params.get("frame_limit", None))
 
     if params["instance_crop"]:
         # Crop and include any *random* negative samples
