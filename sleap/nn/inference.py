@@ -34,8 +34,8 @@ from sleap.nn.training import TrainingJob
 from sleap.nn.tracking import FlowShiftTracker, Track
 from sleap.nn.transform import DataTransform
 
-SINGLE_INSTANCE_PER_CROP = False
-OVERLAPPING_INSTANCES_NMS = True
+SINGLE_INSTANCE_PER_CROP = True
+OVERLAPPING_INSTANCES_NMS = False
 
 def get_available_gpus():
     """
@@ -489,7 +489,7 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, transform, img_idx
         # sort by distance from crop centroid
         matched_instances_t.sort(key=lambda inst: np.linalg.norm(inst.centroid - crop_centroid))
 
-        logger.info(f"Crop has {len} instances, SINGLE_INSTANCE_PER_CROP so filter to 1 instance.")
+        logger.debug(f"SINGLE_INSTANCE_PER_CROP: crop has {len(matched_instances_t)} instances, filter to 1.")
 
         # just use closest
         matched_instances_t = matched_instances_t[0:1]
