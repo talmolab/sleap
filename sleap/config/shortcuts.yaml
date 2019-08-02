@@ -6,6 +6,7 @@
 "add videos": Qt.CTRL + Qt.Key_A
 "next video": QKeySequence.Forward
 "prev video": QKeySequence.Back
+"goto frame": Qt.CTRL + Qt.Key_J
 "mark frame": Qt.CTRL + Qt.Key_M
 "goto marked": Qt.CTRL + Qt.SHIFT + Qt.Key_M
 "add instance": Qt.CTRL + Qt.Key_I
@@ -24,4 +25,7 @@
 "show trails": 
 "color predicted": 
 "fit": Qt.CTRL + Qt.Key_Equal
+"learning": Qt.CTRL + Qt.Key_L
 "export clip":
+"delete clip":
+"delete area": Qt.CTRL + Qt.Key_K

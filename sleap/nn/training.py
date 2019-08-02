@@ -30,7 +30,7 @@ from sleap.io.dataset import Labels
 from sleap.nn.augmentation import Augmenter
 from sleap.nn.model import Model, ModelOutputType
 from sleap.nn.monitor import LossViewer
-from sleap.nn.datagen import generate_confmaps_from_points, generate_pafs_from_points, generate_images, generate_points, instance_crops, generate_centroid_points
+from sleap.nn.datagen import generate_training_data, generate_confmaps_from_points, generate_pafs_from_points, generate_images, generate_points, generate_centroid_points
 
 
 @attr.s(auto_attribs=True)
@@ -183,16 +183,21 @@ class Trainer:
         # on the Model class or on TrainingJob instead. Oh well.
         model.skeletons = labels.skeletons
 
-        # Generate images and points (outputs) datasets from the labels
-        imgs = generate_images(labels, scale=self.scale)
-        points = generate_points(labels, scale=self.scale)
-
-        # Convert instance points to centroids (if training centroids)
+        # Generate CENTROID training data
         if model.output_type == ModelOutputType.CENTROIDS:
-            points = generate_centroid_points(points)
-        # Crop images to instances (if desired)
-        elif self.instance_crop:
-            imgs, points = instance_crops(imgs, points, min_crop_size=self.min_crop_size)
+            imgs = generate_images(labels, scale=self.scale)
+            points = generate_centroid_points(
+                        generate_points(labels, scale=self.scale))
+
+        # Generate REGULAR training data
+        else:
+            imgs, points = generate_training_data(
+                                labels,
+                                params = dict(
+                                            scale = self.scale,
+                                            instance_crop = self.instance_crop,
+                                            min_crop_size = self.min_crop_size,
+                                            negative_samples = self.negative_samples))
 
         # Split data into train/validation
         imgs_train, imgs_val, outputs_train, outputs_val = \

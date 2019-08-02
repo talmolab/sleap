@@ -46,39 +46,64 @@ def get_available_gpus():
     local_device_protos = device_lib.list_local_devices()
     return [x.name for x in local_device_protos if x.device_type == 'GPU']
 
-def get_inference_model(confmap_model_path: str, paf_model_path: str, new_input_size: None) -> keras.Model:
+def get_inference_model(
+            confmap_model_path: str,
+            paf_model_path: Optional[str],
+            new_input_size: None) -> keras.Model:
     """ Loads and merges confmap and PAF models into one. """
 
     # Load
     confmap_model = keras.models.load_model(confmap_model_path)
-    paf_model = keras.models.load_model(paf_model_path)
-
     logger.info(f'confmap model trained on shape {confmap_model.input_shape}')
-    logger.info(f'paf model trained on shape {paf_model.input_shape}')
 
-    # Single input
-    if new_input_size is None:
-        new_input = confmap_model.input
+    if paf_model_path is None:
+        paf_model = None
+        logger.warning("No PAF model! Running in SINGLE INSTANCE mode.")
     else:
-        # create new input layout with given size (h, w, channels)
-        # this allows us to use model trained on cropped images
-        new_input = keras.layers.Input(new_input_size)
-        logger.info(f'adjusting model input shape to {new_input_size}')
+        paf_model = keras.models.load_model(paf_model_path)
+        logger.info(f'paf model trained on shape {paf_model.input_shape}')
 
     # Rename to prevent layer naming conflict
+
     confmap_model.name = "confmap_" + confmap_model.name
-    paf_model.name = "paf_" + paf_model.name
     for i in range(len(confmap_model.layers)):
         confmap_model.layers[i].name = "confmap_" + confmap_model.layers[i].name
-    for i in range(len(paf_model.layers)):
-        paf_model.layers[i].name = "paf_" + paf_model.layers[i].name
 
-    # Get rid of first layer
-    confmap_model.layers.pop(0)
-    paf_model.layers.pop(0)
+    if paf_model is not None:
+        paf_model.name = "paf_" + paf_model.name
+        for i in range(len(paf_model.layers)):
+            paf_model.layers[i].name = "paf_" + paf_model.layers[i].name
 
-    # Combine models with tuple output
-    model = keras.Model(new_input, [confmap_model(new_input), paf_model(new_input)])
+    # If we have confmap and paf models to combine
+    if paf_model is not None:
+        # Single input
+        if new_input_size is None:
+            new_input = confmap_model.input
+        else:
+            # create new input layout with given size (h, w, channels)
+            # this allows us to use model trained on cropped images
+            new_input = keras.layers.Input(new_input_size)
+            logger.info(f'adjusting model input shape to {new_input_size}')
+
+        # Get rid of first layer
+        confmap_model.layers.pop(0)
+        paf_model.layers.pop(0)
+
+        # Combine models with tuple output
+        model = keras.Model(new_input, [confmap_model(new_input), paf_model(new_input)])
+
+    # If we just have a confmap model
+    else:
+        # Resize input layer if necessary
+        if new_input_size is not None:
+            logger.info(f'adjusting model input shape to {new_input_size}')
+            new_input = keras.layers.Input(new_input_size)
+            confmap_model.layers.pop(0)
+            model = keras.Model(new_input, confmap_model(new_input))
+
+        # Otherwise just use the confmap model as is
+        else:
+            model = confmap_model
 
     model = convert_to_gpu_model(model)
 
@@ -172,6 +197,81 @@ def find_all_peaks(confmaps, min_thresh=0.3, sigma=3):
 
     return peaks, peak_vals
 
+def find_all_single_peaks(confmaps, min_thresh=0.3):
+    """
+    Finds single peak for each frames/channels in a stack of confidence maps.
+
+    Returns:
+        list of points array for each confmap
+        each points array is N(=channels) x 3 for x, y, peak val
+    """
+    all_point_arrays = []
+
+    for confmap in confmaps:
+        peaks_vals = [image_single_peak(confmap[...,i], min_thresh) for i in range(confmap.shape[-1])]
+        peaks_vals = [(*point, val) for point, val in peaks_vals]
+        points_array = np.stack(peaks_vals, axis=0)
+        all_point_arrays.append(points_array)
+
+    return all_point_arrays
+
+def match_single_peaks_frame(points_array, skeleton, transform, img_idx):
+    """
+    Make instance from points array returned by single peak finding.
+    This is for the pipeline that assumes there's exactly one instance per frame.
+
+    Returns:
+        PredictedInstance, or None if no points.
+    """
+    if points_array.shape[0] == 0: return None
+
+    # apply inverse transform to points
+    points_array[...,0:2] = transform.invert(img_idx, points_array[...,0:2])
+
+    pts = dict()
+    for i, node in enumerate(skeleton.nodes):
+        if not any(np.isnan(points_array[i])):
+            x, y, score = points_array[i]
+            # FIXME: is score just peak value or something else?
+            pt = PredictedPoint(x=x, y=y, score=score)
+            pts[node] = pt
+
+    matched_instance = None
+    if len(pts) > 0:
+        # FIXME: how should we calculate score for instance?
+        inst_score = np.sum(points_array[...,2]) / len(pts)
+        matched_instance = PredictedInstance(skeleton=skeleton, points=pts, score=inst_score)
+
+    return matched_instance
+
+def match_single_peaks_all(points_arrays, skeleton, video, transform):
+    """
+    Make labeled frames for the results of single peak finding.
+    This is for the pipeline that assumes there's exactly one instance per frame.
+
+    Returns:
+        list of LabeledFrames
+    """
+    predicted_frames = []
+    for img_idx, points_array in enumerate(points_arrays):
+        inst = match_single_peaks_frame(points_array, skeleton, transform, img_idx)
+        if inst is not None:
+            frame_idx = transform.get_frame_idxs(img_idx)
+            new_lf = LabeledFrame(video=video, frame_idx=frame_idx, instances=[inst])
+            predicted_frames.append(new_lf)
+    return predicted_frames
+
+def image_single_peak(I, min_thresh):
+    peak = np.unravel_index((np.argmax(I)), I.shape)
+    val = I[peak]
+
+    if val < min_thresh:
+        y, x = (np.nan, np.nan)
+        val = np.nan
+    else:
+        y, x = peak
+
+    return (x, y), val
 
 def improfile(I, p0, p1, max_points=None):
     """ Returns values of the image I evaluated along the line formed by points p0 and p1.
@@ -678,14 +778,14 @@ class Predictor:
         num_frames = len(frames)
         vid_h = vid.shape[1]
         vid_w = vid.shape[2]
-        scale = h / vid_h if ModelOutputType.CENTROIDS not in self.sleap_models.keys() else 1.0
+        scale = h / vid_h if ModelOutputType.CENTROIDS not in self.sleap_models else 1.0
         logger.info("Opened video:")
         logger.info("  Source: " + str(vid.backend))
         logger.info("  Frames: %d" % num_frames)
         logger.info("  Frame shape: %d x %d" % (vid_h, vid_w))
         logger.info("  Scale: %f" % scale)
         logger.info(f"  True Scale: {h/vid_h, w/vid_w}")
-        logger.info(f"  Crop around predicted centroids? {ModelOutputType.CENTROIDS in self.sleap_models.keys()}")
+        logger.info(f"  Crop around predicted centroids? {ModelOutputType.CENTROIDS in self.sleap_models}")
         h_w_scale = np.array((h/vid_h, w/vid_w))
 
         # Initialize tracking
@@ -726,7 +826,7 @@ class Predictor:
 
             # Transform images (crop or scale)
             t0 = time()
-            if ModelOutputType.CENTROIDS in self.sleap_models.keys():
+            if ModelOutputType.CENTROIDS in self.sleap_models:
                 # Predict centroids and crop around these
                 crop_size = h # match input of keras model
                 centroids = self.predict_centroids(mov_full, crop_size)
@@ -743,47 +843,71 @@ class Predictor:
                 mov = transform.scale_to(mov_full, target_size=(h,w))
             logger.info( "  Transformed images [%.1fs]" % (time() - t0))
 
-            # Run inference
-            t0 = time()
-            confmaps, pafs = keras_model.predict(mov.astype("float32") / 255, batch_size=self.inference_batch_size)
+            # If there's no PAF model, then we're assuming there's only a single
+            # instance for each frame. We'll use the highest peak from each
+            # channel as the node point.
+            if ModelOutputType.PART_AFFINITY_FIELD not in self.sleap_models:
+                # Run inference
+                t0 = time()
 
-            logger.info( "  Inferred confmaps and PAFs [%.1fs]" % (time() - t0))
-            logger.info(f"    confmaps: shape={confmaps.shape}, ptp={np.ptp(confmaps)}")
-            logger.info(f"    pafs: shape={pafs.shape}, ptp={np.ptp(pafs)}")
+                confmaps = keras_model.predict(mov.astype("float32") / 255, batch_size=self.inference_batch_size)
+                logger.info( "  Inferred confmaps [%.1fs]" % (time() - t0))
+                logger.info(f"    confmaps: shape={confmaps.shape}, ptp={np.ptp(confmaps)}")
 
-            # Save confmaps and pafs
-            if output_path is not None and save_confmaps_pafs:
+                # Save confmaps
+                if output_path is not None and save_confmaps_pafs:
+                    save_visual_outputs(
+                                output_path = output_path,
+                                data = dict(confmaps=confmaps, box=mov))
 
-                # output_path is full path to labels.json, so replace "json" with "h5"
-                viz_output_path = output_path
-                if viz_output_path.endswith(".json"):
-                    viz_output_path = viz_output_path[:-(len(".json"))]
-                viz_output_path += ".h5"
-                # write file
-                with h5py.File(viz_output_path, "w") as f:
-                    ds = f.create_dataset("confmaps", data=confmaps,
-                                           compression="gzip", compression_opts=1)
-                    ds = f.create_dataset("pafs", data=pafs,
-                                            compression="gzip", compression_opts=1)
-                    ds = f.create_dataset("box", data=mov,
-                                            compression="gzip", compression_opts=1)
+                # Use single highest peak for each node
+                t0 = time()
 
-            # Find peaks
-            t0 = time()
-            peaks, peak_vals = find_all_peaks(confmaps, min_thresh=self.nms_min_thresh, sigma=self.nms_sigma)
-            logger.info("  Found peaks [%.1fs]" % (time() - t0))
+                points_arrays = find_all_single_peaks(confmaps,
+                                        min_thresh=self.nms_min_thresh)
 
-            match_peaks_function = match_peaks_paf_par if not is_async else match_peaks_paf
+                predicted_frames_chunk = match_single_peaks_all(
+                                                points_arrays = points_arrays,
+                                                skeleton = self.skeleton,
+                                                transform = transform,
+                                                video = vid)
 
-            # Match peaks via PAFs
-            t0 = time()
-            predicted_frames_chunk = match_peaks_function(peaks, peak_vals, pafs, self.skeleton,
-                                            transform=transform, video=vid, frame_indices=frames_idx,
-                                            min_score_to_node_ratio=self.min_score_to_node_ratio,
-                                            min_score_midpts=self.min_score_midpts,
-                                            min_score_integral=self.min_score_integral,
-                                            add_last_edge=self.add_last_edge, pool=pool)
-            logger.info("  Matched peaks via PAFs [%.1fs]" % (time() - t0))
+                logger.info("  Used highest peaks to create instances [%.1fs]" % (time() - t0))
+
+            # Otherwise, run the regular pipeline that supports multiple
+            # instances per frame.
+            else:
+                # Run inference
+                t0 = time()
+
+                confmaps, pafs = keras_model.predict(mov.astype("float32") / 255, batch_size=self.inference_batch_size)
+
+                logger.info( "  Inferred confmaps and PAFs [%.1fs]" % (time() - t0))
+                logger.info(f"    confmaps: shape={confmaps.shape}, ptp={np.ptp(confmaps)}")
+                logger.info(f"    pafs: shape={pafs.shape}, ptp={np.ptp(pafs)}")
+
+                # Save confmaps and pafs
+                if output_path is not None and save_confmaps_pafs:
+                    save_visual_outputs(
+                            output_path = output_path,
+                            data = dict(confmaps=confmaps, pafs=pafs, box=mov))
+
+                # Find peaks
+                t0 = time()
+                peaks, peak_vals = find_all_peaks(confmaps, min_thresh=self.nms_min_thresh, sigma=self.nms_sigma)
+                logger.info("  Found peaks [%.1fs]" % (time() - t0))
+
+                match_peaks_function = match_peaks_paf_par if not is_async else match_peaks_paf
+
+                # Match peaks via PAFs
+                t0 = time()
+                predicted_frames_chunk = match_peaks_function(peaks, peak_vals, pafs, self.skeleton,
+                                                transform=transform, video=vid, frame_indices=frames_idx,
+                                                min_score_to_node_ratio=self.min_score_to_node_ratio,
+                                                min_score_midpts=self.min_score_midpts,
+                                                min_score_integral=self.min_score_integral,
+                                                add_last_edge=self.add_last_edge, pool=pool)
+                logger.info("  Matched peaks via PAFs [%.1fs]" % (time() - t0))
 
             logger.info(f"  Instances found on {len(predicted_frames_chunk)} images.")
 
@@ -872,10 +996,13 @@ class Predictor:
         # This code makes assumptions about the types of TrainingJobs we've been given
 
         confmap_job = sleap_models[ModelOutputType.CONFIDENCE_MAP]
-        pafs_job = sleap_models[ModelOutputType.PART_AFFINITY_FIELD]
-
         confmap_model_path = os.path.join(confmap_job.save_dir, confmap_job.best_model_filename)
-        paf_model_path = os.path.join(pafs_job.save_dir, pafs_job.best_model_filename)
+
+        if ModelOutputType.PART_AFFINITY_FIELD in sleap_models:
+            pafs_job = sleap_models[ModelOutputType.PART_AFFINITY_FIELD]
+            paf_model_path = os.path.join(pafs_job.save_dir, pafs_job.best_model_filename)
+        else:
+            pafs_job = paf_model_path = None
 
         scale = confmap_job.trainer.scale
 
@@ -898,6 +1025,18 @@ class Predictor:
 
         return keras_model
 
+
+def save_visual_outputs(output_path: str, data: dict):
+    # output_path is full path to labels.json, so replace "json" with "h5"
+    viz_output_path = output_path
+    if viz_output_path.endswith(".json"):
+        viz_output_path = viz_output_path[:-(len(".json"))]
+    viz_output_path += ".h5"
+
+    # write file
+    with h5py.File(viz_output_path, "w") as f:
+        for key, val in data.items():
+            f.create_dataset(key, data=val, compression="gzip")
 
 def load_predicted_labels_json_old(
         data_path: str, parsed_json: dict = None,
@@ -1033,7 +1172,7 @@ def main():
                     const=True, default=False,
                     help='just visualize predicted confmaps/pafs (default False)')
     parser.add_argument('--frames', type=frame_list, default="",
-                        help='list of frames to predict. Either comma separated list (e.g. 1,2,3) or'
+                        help='list of frames to predict. Either comma separated list (e.g. 1,2,3) or '
                              'a range separated by hyphen (e.g. 1-3). (default is entire video)')
     parser.add_argument('-o', '--output', type=str, default=None,
                         help='The output filename to use for the predicted data.')
@@ -1043,10 +1182,12 @@ def main():
 
     args = parser.parse_args()
 
-
+    output_suffix = ".predictions.json"
+    if args.frames is not None:
+        output_suffix = f".frames{min(args.frames)}_{max(args.frames)}" + output_suffix
 
     data_path = args.data_path
-    save_path = args.output if args.output else data_path + ".predictions.json"
+    save_path = args.output if args.output else data_path + output_suffix
     frames = args.frames
 
     if args.verbose:
@@ -1061,9 +1202,6 @@ def main():
 
     if ModelOutputType.CONFIDENCE_MAP not in sleap_models:
         raise ValueError("No confidence map model found in specified models!")
-
-    if ModelOutputType.PART_AFFINITY_FIELD not in sleap_models:
-        raise ValueError("No part affinity field (PAF) model found in specified models!")
 
     if args.resize_input:
         # Load video

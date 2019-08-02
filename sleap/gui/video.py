@@ -71,12 +71,13 @@ class QtVideoPlayer(QWidget):
         self.seekbar.keyRelease.connect(self.keyReleaseEvent)
         self.seekbar.setEnabled(False)
 
-        splitter = QtWidgets.QSplitter(Qt.Vertical)
-        splitter.addWidget(self.view)
-        splitter.addWidget(self.seekbar)
+        self.splitter = QtWidgets.QSplitter(Qt.Vertical)
+        self.splitter.addWidget(self.view)
+        self.splitter.addWidget(self.seekbar)
+        self.seekbar.updatedTracks.connect(lambda: self.splitter.refresh())
 
         self.layout = QVBoxLayout()
-        self.layout.addWidget(splitter)
+        self.layout.addWidget(self.splitter)
         self.setLayout(self.layout)
 
         self.view.show()
@@ -298,6 +299,23 @@ class QtVideoPlayer(QWidget):
         if callable(on_each):
             on_each(indexes)
 
+    @staticmethod
+    def _signal_once(signal, callback):
+        def call_once(*args):
+            signal.disconnect(call_once)
+            callback(*args)
+        signal.connect(call_once)
+
+    def onPointSelection(self, callback: Callable):
+        self.view.click_mode = "point"
+        self.view.setCursor(Qt.CrossCursor)
+        self._signal_once(self.view.pointSelected, callback)
+
+    def onAreaSelection(self, callback: Callable):
+        self.view.click_mode = "area"
+        self.view.setCursor(Qt.CrossCursor)
+        self._signal_once(self.view.areaSelected, callback)
+
     def keyReleaseEvent(self, event: QKeyEvent):
         if event.key() == Qt.Key.Key_Shift:
             self._shift_key_down = False
@@ -327,6 +345,7 @@ class QtVideoPlayer(QWidget):
         elif event.key() == Qt.Key.Key_End:
             self.plot(self.video.frames - 1)
         elif event.key() == Qt.Key.Key_Escape:
+            self.view.click_mode = ""
             self.view.clearSelection()
         elif event.key() == Qt.Key.Key_QuoteLeft:
             self.view.nextSelection()
@@ -376,6 +395,8 @@ class GraphicsView(QGraphicsView):
     rightMouseButtonReleased = Signal(float, float)
     leftMouseButtonDoubleClicked = Signal(float, float)
     rightMouseButtonDoubleClicked = Signal(float, float)
+    areaSelected = Signal(float, float, float, float)
+    pointSelected = Signal(float, float)
 
     def __init__(self, *args, **kwargs):
         """ https://github.com/marcel-goldschen-ohm/PyQtImageViewer/blob/master/QtImageViewer.py """
@@ -396,6 +417,7 @@ class GraphicsView(QGraphicsView):
 
         self.canZoom = True
         self.canPan = True
+        self.click_mode = ""
 
         self.zoomFactor = 1
         anchor_mode = QGraphicsView.AnchorUnderMouse
@@ -549,7 +571,6 @@ class GraphicsView(QGraphicsView):
         """
         self.updateViewer()
 
-
     def mousePressEvent(self, event):
         """ Start mouse pan or zoom mode.
         """
@@ -558,9 +579,18 @@ class GraphicsView(QGraphicsView):
         self._down_pos = event.pos()
         # behavior depends on which button is pressed
         if event.button() == Qt.LeftButton:
-            if self.canPan:
-                self.setDragMode(QGraphicsView.ScrollHandDrag)
+
+            if event.modifiers() == Qt.NoModifier:
+
+                if self.click_mode == "area":
+                    self.setDragMode(QGraphicsView.RubberBandDrag)
+                elif self.click_mode == "point":
+                    self.setDragMode(QGraphicsView.NoDrag)
+                elif self.canPan:
+                    self.setDragMode(QGraphicsView.ScrollHandDrag)
+
             self.leftMouseButtonPressed.emit(scenePos.x(), scenePos.y())
+
         elif event.button() == Qt.RightButton:
             if self.canZoom:
                 self.setDragMode(QGraphicsView.RubberBandDrag)
@@ -575,19 +605,38 @@ class GraphicsView(QGraphicsView):
         # check if mouse moved during click
         has_moved = (event.pos() != self._down_pos)
         if event.button() == Qt.LeftButton:
-            # Check if this was just a tap (not a drag)
-            if not has_moved:
-                # When just a tap, see if there's an item underneath to select
-                clicked = self.scene.items(scenePos, Qt.IntersectsItemBoundingRect)
-                clicked_instances = [item for item in clicked
-                                     if type(item) == QtInstance and item.selectable]
-                # We only handle single instance selection so pick at most one from list
-                clicked_instance = clicked_instances[0] if len(clicked_instances) else None
-                for idx, instance in enumerate(self.selectable_instances):
-                    instance.selected = (instance == clicked_instance)
-                    # If we want to allow selection of multiple instances, do this:
-                    # instance.selected = (instance in clicked)
-                self.updatedSelection.emit()
+
+            if self.click_mode == "":
+                # Check if this was just a tap (not a drag)
+                if not has_moved:
+                    # When just a tap, see if there's an item underneath to select
+                    clicked = self.scene.items(scenePos, Qt.IntersectsItemBoundingRect)
+                    clicked_instances = [item for item in clicked
+                                         if type(item) == QtInstance and item.selectable]
+                    # We only handle single instance selection so pick at most one from list
+                    clicked_instance = clicked_instances[0] if len(clicked_instances) else None
+                    for idx, instance in enumerate(self.selectable_instances):
+                        instance.selected = (instance == clicked_instance)
+                        # If we want to allow selection of multiple instances, do this:
+                        # instance.selected = (instance in clicked)
+                    self.updatedSelection.emit()
+
+            elif self.click_mode == "area":
+                # Check if user was selecting rectangular area
+                selection_rect = self.scene.selectionArea().boundingRect()
+
+                self.areaSelected.emit(
+                        selection_rect.left(),
+                        selection_rect.top(),
+                        selection_rect.right(),
+                        selection_rect.bottom())
+            elif self.click_mode == "point":
+                selection_point = scenePos
+                self.pointSelected.emit(scenePos.x(), scenePos.y())
+
+            self.click_mode = ""
+            self.unsetCursor()
+
             # finish drag
             self.setDragMode(QGraphicsView.NoDrag)
             # pass along event

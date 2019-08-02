@@ -139,8 +139,17 @@ class Augmenter(keras.utils.Sequence):
             frames_in_batch = [self.points[i] for i in idx]
             points_per_instance_per_frame = [[pa.shape[0] for pa in frame] for frame in frames_in_batch]
 
-            koi_in_frame = [imgaug.augmentables.kps.KeypointsOnImage.from_xy_array(np.concatenate(frame), shape=X[i].shape)
-                            for i, frame in enumerate(frames_in_batch)]
+            koi_in_frame = []
+            for i, frame in enumerate(frames_in_batch):
+                if len(frame):
+                    koi = imgaug.augmentables.kps.KeypointsOnImage.from_xy_array(
+                                np.concatenate(frame),
+                                shape=X[i].shape)
+                else:
+                    koi = imgaug.augmentables.kps.KeypointsOnImage(
+                                [],
+                                shape=X[i].shape)
+                koi_in_frame.append(koi)
 
             # Augment KeypointsOnImage
             aug_per_frame = aug_det.augment_keypoints(koi_in_frame)
@@ -201,29 +210,33 @@ class Augmenter(keras.utils.Sequence):
 
 def demo_augmentation():
     from sleap.io.dataset import Labels
-    from sleap.nn.datagen import generate_images, generate_points
+    from sleap.nn.datagen import generate_training_data
     from sleap.nn.datagen import generate_confmaps_from_points, generate_pafs_from_points
 
     data_path = "tests/data/json_format_v2/centered_pair_predictions.json"
     # data_path = "tests/data/json_format_v2/minimal_instance.json"
+#     data_path = "tests/data/json_format_v1/test.json"
 
     labels = Labels.load_json(data_path)
 
-    labels.labeled_frames = labels.labeled_frames[123:323:10]
+#     labels.labeled_frames = labels.labeled_frames[123:323:10]
 
     # Generate raw training data
     skeleton = labels.skeletons[0]
-    imgs = generate_images(labels)
-    points = generate_points(labels)
+    imgs, points = generate_training_data(labels, params = dict(
+                                    scale = 1,
+                                    instance_crop = True,
+                                    min_crop_size = 0,
+                                    negative_samples = 0))
     shape = (imgs.shape[1], imgs.shape[2])
 
     def datagen_from_points(points):
-        return generate_pafs_from_points(points, skeleton, shape)
-        # return generate_confmaps_from_points(points, skeleton, shape)
+#         return generate_pafs_from_points(points, skeleton, shape)
+        return generate_confmaps_from_points(points, skeleton, shape)
 
     # Augment
-    aug = Augmenter(X=imgs, Points=points, datagen=datagen_from_points, scale=(.5, 2))
-    imgs, pafs = aug[0]
+    aug = Augmenter(X=imgs, points=points, datagen=datagen_from_points, batch_size=80)
+    imgs, aug_out = aug[0]
 
     from sleap.io.video import Video
     from sleap.gui.confmapsplot import demo_confmaps
@@ -233,8 +246,8 @@ def demo_augmentation():
     # Visualize augmented training data
     vid = Video.from_numpy(imgs*255)
     app = QApplication([])
-    # demo_confmaps(confmaps, vid)
-    demo_pafs(pafs, vid)
+    demo_confmaps(aug_out, vid)
+#     demo_pafs(aug_out, vid)
     app.exec_()
 
 def demo_bad_augmentation():

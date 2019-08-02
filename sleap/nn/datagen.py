@@ -1,31 +1,97 @@
 """ Data generation routines """
 
+import cv2
 import numpy as np
 import math
 import random
 
 from operator import itemgetter
-from typing import Optional
+from typing import Dict, List, Optional, Tuple
 
 from sleap.io.dataset import Labels
 
-def generate_images(labels:Labels, scale: float=1.0,
-                    resize_hack: bool=True, frame_limit: bool=None) -> np.ndarray:
+def generate_training_data(labels, params):
     """
-    Generate a ndarray of the image data for any labeled frames
+    Generate imgs (ndarray) and points (list) to use for training.
+
+    Encapsulates:
+        generating images for relevant frames (generate_images)
+        generating points for relevant frames (generate_points)
+        cropping images (instance_crops)
+        adding random negative samples (also in instance_crops)
+        adding specific negative samples (negative_anchor_crops)
 
     Args:
         labels: the `Labels` object for which we want images
+        params: dict with any parameters we need for encapsulated functions
+    Returns:
+        (imgs, points)-tuple:
+        * imgs = ndarray with shape (images, height, width, channels)
+        * points = list (each frame) of lists (each instance) of ndarrays (of points)
+            i.e., frames -> instances -> point_array
+    """
+
+    imgs = generate_images(labels, params["scale"],
+                frame_limit=params.get("frame_limit", None))
+
+    points = generate_points(labels, params["scale"],
+                frame_limit=params.get("frame_limit", None))
+
+    if params["instance_crop"]:
+        # Crop and include any *random* negative samples
+        imgs, points = instance_crops(
+                            imgs, points,
+                            min_crop_size = params["min_crop_size"],
+                            negative_samples = params["negative_samples"])
+
+        # Include any *specific* negative samples
+        imgs, points = add_negative_anchor_crops(
+                            labels,
+                            imgs, points,
+                            scale=params["scale"])
+
+    return imgs, points
+
+def generate_images(labels:Labels, scale: float=1.0,
+                    resize_hack: bool=True, frame_limit: int=None) -> np.ndarray:
+    """
+    Generate a ndarray of the image data for any user labeled frames.
+
+    Wrapper that calls generate_images_from_list() with list of all frames
+    that were labeled by user.
+    """
+    frame_list = [(lf.video, lf.frame_idx)
+                  for lf in labels.user_labeled_frames[:frame_limit]]
+    return generate_images_from_list(labels, frame_list, scale, resize_hack)
+
+def generate_points(labels:Labels, scale: float=1.0, frame_limit: int=None) -> list:
+    """Generates point data for instances for any user labeled frames.
+
+    Wrapper that calls generate_points_from_list() with list of all frames
+    that were labeled by user.
+    """
+    frame_list = [(lf.video, lf.frame_idx)
+                  for lf in labels.user_labeled_frames[:frame_limit]]
+    return generate_points_from_list(labels, frame_list, scale)
+
+def generate_images_from_list(
+                    labels:Labels, frame_list: List[Tuple],
+                    scale: float=1.0, resize_hack: bool=True) -> np.ndarray:
+    """
+    Generate a ndarray of the image data for given list of frames
+
+    Args:
+        labels: the `Labels` object for which we want images
+        frame_list: list of (video, frame_idx) tuples
         scale: the factor to use when rescaling
+        resize_hack: if True, scale img so both dimensions are divisible by 8
 
     Returns:
         ndarray with shape (images, height, width, channels)
     """
-    import cv2
-
     imgs = []
-    for labeled_frame in labels.user_labeled_frames[:frame_limit]:
-        img = labeled_frame.video[labeled_frame.frame_idx][0]
+    for video, frame_idx in frame_list:
+        img = video[frame_idx][0]
         # rescale by factor
         y, x, c = img.shape
         if scale != 1.0 or resize_hack:
@@ -53,8 +119,8 @@ def generate_images(labels:Labels, scale: float=1.0,
 
     return imgs
 
-def generate_points(labels:Labels, scale: float=1.0, frame_limit: bool=None) -> list:
-    """Generates point data for instances in frames in labels.
+def generate_points_from_list(labels:Labels, frame_list: List[Tuple], scale: float=1.0) -> list:
+    """Generates point data for instances in specified frames.
 
     Output is in the format expected by
     * generate_confmaps_from_points()
@@ -63,15 +129,23 @@ def generate_points(labels:Labels, scale: float=1.0, frame_limit: bool=None) -> 
 
     Args:
         labels: the `Labels` object for which we want instance points
+        frame_list: list of (video, frame_idx) tuples
         scale: the factor to use when rescaling
 
     Returns:
         a list (each frame) of lists (each instance) of ndarrays (of points)
             i.e., frames -> instances -> point_array
     """
-    return [[inst.points_array(invisible_as_nan=True)*scale
-                for inst in lf.user_instances]
-                for lf in labels.user_labeled_frames[:frame_limit]]
+    def lf_points_from_singleton(lf_singleton):
+        if len(lf_singleton) == 0: return []
+        lf = lf_singleton[0]
+        points = [inst.points_array(invisible_as_nan=True)*scale
+                  for inst in lf.user_instances]
+        return points
+
+    lfs = [labels.find(video, frame_idx) for (video, frame_idx) in frame_list]
+
+    return list(map(lf_points_from_singleton, lfs))
 
 def generate_confmaps_from_points(frames_inst_points,
                         skeleton: Optional['Skeleton'],
@@ -340,31 +414,82 @@ def generate_centroid_points(points: list) -> list:
 
     return centroids
 
-def _centroid(x0, y0, x1, y1) -> np.ndarray:
-    a = np.array((x0+(x1-x0)/2, y0+(y1-y0)/2))
+def _to_np_point(x, y) -> np.ndarray:
+    a = np.array((x, y))
     return np.expand_dims(a, axis=0)
 
-def instance_crops(imgs: np.ndarray, points: list,
-                    min_crop_size: int=0, negative_samples: int=0) -> np.ndarray:
+def _centroid(x0, y0, x1, y1) -> np.ndarray:
+    return _to_np_point(x = x0+(x1-x0)/2, y = y0+(y1-y0)/2)
+
+def instance_crops(
+            imgs: np.ndarray,
+            points: list,
+            min_crop_size: int=0,
+            negative_samples: int=0) -> Tuple[np.ndarray, List]:
     """
     Take imgs, points and return imgs, points cropped around instances.
 
     Note that if there are multiple instances in a image, this will result in more
-    (but smaller) instances than we started with.
+    (but smaller) images than we started with.
+
+    Includes crop for each instance, and optionally will also include random
+    "negative sample" crops that aren't centered on an instance.
 
     Args:
         imgs: output from generate_images()
         points: output from generate_points()
         min_crop_size: int, the minimum crop square size
+        negative_samples: int, number of *random* negative samples to include
     Returns:
         imgs, points (matching format of input)
     """
-    frame_count = imgs.shape[0]
     img_shape = imgs.shape[1], imgs.shape[2]
 
     # List of bounding box for every instance, map from list idx -> frame idx
     bbs, img_idxs = _bbs_from_points(points)
+    bbs = _pad_bbs_to_min(bbs, min_crop_size, img_shape)
 
+    # Crop images and combine/translate points
+    crop_imgs, crop_points = _crop_and_transform(imgs, points, img_idxs, bbs)
+
+    # Add bounding boxes for *random* negative samples
+    if negative_samples > 0:
+        neg_img_idxs, neg_bbs = get_random_negative_samples(img_idxs, bbs, img_shape, negative_samples)
+        neg_imgs, neg_points = _crop_and_transform(imgs, points, neg_img_idxs, neg_bbs)
+        crop_imgs, crop_points = _extend_imgs_points(crop_imgs, crop_points, neg_imgs, neg_points)
+
+    return crop_imgs, crop_points
+
+def _crop_and_transform(imgs, points, img_idxs, bbs):
+    crop_imgs = _crop(imgs, img_idxs, bbs)
+    crop_points = _transform_crop_points(points, img_idxs, bbs)
+    return crop_imgs, crop_points
+
+def _extend_imgs_points(imgs_a, points_a, imgs_b, points_b):
+    imgs = np.concatenate((imgs_a, imgs_b))
+    points = points_a + points_b
+    return imgs, points
+
+def _pad_bbs_to_min(bbs, min_crop_size, img_shape):
+    padded_bbs = _pad_bbs(
+                    bbs = bbs,
+                    box_shape = _bb_pad_shape(bbs, min_crop_size, img_shape),
+                    img_shape = img_shape)
+    return padded_bbs
+
+def _bb_pad_shape(bbs, min_crop_size, img_shape):
+    """
+    Given a list of bounding boxes, finds the square size which will be:
+
+        1. large enough to contain every bounding box
+        2. no larger than the image
+        3. at least as large as the minimum crop size
+
+    TODO: what should we do when these can't all be satisfied?
+
+    Returns:
+        (size, size) tuple
+    """
     # Find least power of 2 that's large enough to bound all the instances
     max_height = max((y1 - y0 for (x0, y0, x1, y1) in bbs))
     max_width = max((x1 - x0 for (x0, y0, x1, y1) in bbs))
@@ -377,9 +502,106 @@ def instance_crops(imgs: np.ndarray, points: list,
 
     # Grow all bounding boxes to the same size
     box_shape = min(box_side, img_shape[0]), min(box_side, img_shape[1])
-    bbs = _pad_bbs(bbs, box_shape, img_shape)
 
-    # Add bounding boxes for negative samples
+    return box_shape
+
+def _transform_crop_points(points, img_idxs, bbs):
+    """Takes points on the original images and returns points in bounding boxes.
+
+    The input points will be per frame, the output points will be per box;
+    we use img_idxs to figure out which bounding box goes with which frame.
+
+    The points are translated from original img coordinates to bb coordinates.
+
+    Args:
+        points: list (per img) of list (per inst) of points_array matrices
+            i.e., output from generate_point()
+        img_idxs: list mapping bb idx -> original img idx
+        bbs: list of (x0, y0, x1, y1) tuples
+            img_idxs, bbs = output from _bbs_from_points()
+    Returns:
+        new points list, per bounding box instead of per original img
+    """
+    # Make point arrays for each image (instead of each frame as before)
+
+    # Note that we want all points from the frame, not just the points for the instance
+    # around which we're cropping (i.e., point_array in frame_points).
+    crop_points = list(map(lambda i: points[i], img_idxs))
+
+    # translate points to location w/in cropped image
+    crop_points = [_translate_points_array(points_array, bbs[i][0], bbs[i][1])
+                    for i, points_array in enumerate(crop_points)]
+
+    return crop_points
+
+def _translate_points_array(points_array, x, y):
+    if len(points_array) == 0: return points_array
+    return points_array - np.asarray([x,y])
+
+def negative_anchor_crops(
+            labels: Labels,
+            negative_anchors: Dict['Video', Dict[int, Tuple]],
+            scale, crop_size) -> Tuple[np.ndarray, List]:
+    """
+    Returns crops around *specific* negative samples from Labels object.
+
+    Args:
+        labels: the `Labels` object
+        scale: scale, should match scale given to generate_images()
+        crop_size: the size of the crops returned by instance_crops()
+    Returns:
+        imgs, points
+            These match output from instance_crops(),
+            and can be combined using _extend_crop_data().
+    """
+
+    # negative_anchors[video]: (frame_idx, x, y) for center of crop
+
+    neg_anchor_tuples = [(video, frame_idx, x, y)
+                    for video in negative_anchors
+                    for (frame_idx, x, y) in negative_anchors[video]]
+
+    if len(neg_anchor_tuples) == 0: return None, None
+
+    frame_list = [(video, frame_idx)
+                    for (video, frame_idx, x, y) in neg_anchor_tuples]
+    anchors = [[_to_np_point(x,y)]
+                    for (video, frame_idx, x, y) in neg_anchor_tuples]
+
+    imgs = generate_images_from_list(labels, frame_list, scale)
+    points = generate_points_from_list(labels, frame_list, scale)
+
+    # List of bounding box for every instance, map from list idx -> frame idx
+    bbs, img_idxs = _bbs_from_points(anchors)
+
+    # Grow all bounding boxes to the same size
+    bbs = _pad_bbs(bbs, (crop_size, crop_size), (imgs.shape[1], imgs.shape[2]))
+
+    # Crop images and combine/translate points
+    crop_imgs, crop_points = _crop_and_transform(imgs, points, img_idxs, bbs)
+
+    return crop_imgs, crop_points
+
+def add_negative_anchor_crops(labels: Labels, imgs: np.ndarray, points: list, scale: float) -> Tuple[np.ndarray, List]:
+    """Wrapper to build and append negative anchor crops."""
+    # Include any *specific* negative samples
+    neg_imgs, neg_points = negative_anchor_crops(
+                                labels,
+                                labels.negative_anchors,
+                                scale=scale,
+                                crop_size=imgs.shape[1])
+
+    if neg_imgs is not None:
+        imgs, points = _extend_imgs_points(imgs, points, neg_imgs, neg_points)
+
+    return imgs, points
+
+def get_random_negative_samples(img_idxs, bbs, img_shape, negative_samples):
+    if len(bbs) == 0: return
+
+    frame_count = len({frame for frame in img_idxs})
+    box_side = bbs[0][2] - bbs[0][0] # x1 - x0 for the first bb
+
     neg_sample_list = []
 
     # Collect negative samples (and some extras)
@@ -401,23 +623,7 @@ def instance_crops(imgs: np.ndarray, points: list,
     neg_sample_list.sort(key=itemgetter(0))
     _, neg_img_idxs, neg_bbs = zip(*neg_sample_list)
 
-    # Include the negative samples with the positive samples
-    img_idxs.extend(neg_img_idxs[:negative_samples])
-    bbs.extend(neg_bbs[:negative_samples])
-
-    # Crop images
-    imgs = _crop(imgs, img_idxs, bbs)
-
-    # Make point arrays for each image (instead of each frame as before)
-
-    # Note that we want all points from the frame, not just the points for the instance
-    # around which we're cropping (i.e., point_array in frame_points).
-    points = list(map(lambda i: points[i], img_idxs))
-
-    # translate points to location w/in cropped image
-    points = [point_array - np.asarray([bbs[i][0], bbs[i][1]]) for i, point_array in enumerate(points)]
-
-    return imgs, points
+    return neg_img_idxs[:negative_samples], neg_bbs[:negative_samples]
 
 def _bbs_from_points(points):
     # List of bounding box for every instance
@@ -498,17 +704,24 @@ def demo_datagen():
         # data_path = "tests/data/json_format_v2/minimal_instance.json"
 
     labels = Labels.load_json(data_path)
+    # testing
+    labels.negative_anchors = {labels.videos[0]: [(0, 125, 125), (0, 150, 150)]}
     # labels.labeled_frames = labels.labeled_frames[123:423:10]
 
     scale = .5
 
-    imgs = generate_images(labels, scale)
+    imgs, points = generate_training_data(
+                        labels = labels,
+                        params = dict(
+                                    scale = scale,
+                                    instance_crop = True,
+                                    min_crop_size = 0,
+                                    negative_samples = 0))
+
     print("--imgs--")
     print(imgs.shape)
     print(imgs.dtype)
     print(np.ptp(imgs))
-
-    points = generate_points(labels, scale)
 
     # Prepare GUI demo
 
@@ -530,10 +743,6 @@ def demo_datagen():
                                 node_count=1, sigma=5.0)
 
     demo_confmaps(centroid_confmaps, centroid_vid)
-
-    # Instance cropping
-
-    imgs, points = instance_crops(imgs, points, min_crop_size=0, negative_samples=15)
 
     vid = Video.from_numpy(imgs * 255)
 
