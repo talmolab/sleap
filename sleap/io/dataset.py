@@ -308,7 +308,7 @@ class Labels(MutableSequence):
             for instance in instances:
                 if instance.track not in tracks:
                     tracks[instance.track] = RangeList()
-                tracks[instance.track].add(instance.frame_idx)
+                tracks[instance.track].add(frame_idx)
         return tracks
 
     def find_track_occupancy(self, video: Video, track: Union[Track, int], frame_range=None) -> List[Tuple[LabeledFrame, Instance]]:
