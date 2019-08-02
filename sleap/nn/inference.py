@@ -554,16 +554,8 @@ def match_peaks_paf(peaks, peak_vals, pafs, skeleton,
         frame_idx = transform.get_frame_idxs(img_idx)
         predicted_frames.append(LabeledFrame(video=video, frame_idx=frame_idx, instances=instances))
 
-    # Combine LabeledFrame objects for the same video frame
-    predicted_frames = LabeledFrame.merge_frames(predicted_frames, video=video)
-
-    # Remove overlapping predicted instances
-    if OVERLAPPING_INSTANCES_NMS:
-        for lf in predicted_frames:
-            n = len(lf.instances)
-            instances_nms(lf.instances)
-            if len(lf.instances) < n:
-                logger.info("Removed {n-len(lf.instances)} overlapping instance(s) from frame {frame_idx}")
+    # Merge/filter predicted frames
+    predicted_frames = frames_post_match_peaks(predicted_frames, video)
 
     return predicted_frames
 
@@ -604,9 +596,26 @@ def match_peaks_paf_par(peaks, peak_vals, pafs, skeleton,
 
         predicted_frames.append(LabeledFrame(video=video, frame_idx=frame_idx, instances=instances))
 
-    predicted_frames = LabeledFrame.merge_frames(predicted_frames, video=video)
+    # Merge/filter predicted frames
+    predicted_frames = frames_post_match_peaks(predicted_frames, video)
+
     return predicted_frames
 
+def frames_post_match_peaks(predicted_frames, video):
+    # Combine LabeledFrame objects for the same video frame
+    predicted_frames = LabeledFrame.merge_frames(predicted_frames, video=video)
+
+    # Remove overlapping predicted instances
+    if OVERLAPPING_INSTANCES_NMS:
+        t0 = clock()
+        for lf in predicted_frames:
+            n = len(lf.instances)
+            instances_nms(lf.instances)
+            if len(lf.instances) < n:
+                logger.info(f"    Removed {n-len(lf.instances)} overlapping instance(s) from frame {lf.frame_idx}")
+        logger.info("    Instance NMS [%.1fs]" % (clock() - t0))
+
+    return predicted_frames
 
 @attr.s(auto_attribs=True)
 class Predictor:
