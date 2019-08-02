@@ -76,24 +76,6 @@ def test_instance_point_iter(skeleton):
         assert points[node.name] == point
 
 
-def test_instance_to_pandas_df(skeleton, instances):
-    """
-    Test generating pandas DataFrames from lists of instances.
-    """
-
-    # How many columns are supposed to be in point DataFrame
-    NUM_COLS = 9
-
-    NUM_INSTANCES = len(instances)
-
-    df = Instance.to_pandas_df(instances)
-
-    # Check to make sure we got the expected shape
-    assert df.shape == (3*NUM_INSTANCES, NUM_COLS)
-
-    # Check skip_nan is working
-    assert Instance.to_pandas_df(instances, skip_nan=False).shape == (4*NUM_INSTANCES, NUM_COLS)
-
 # Skip HDF5 saving of instances now because tracks are not saved properly
 @pytest.mark.skip
 def test_hdf5(instances, tmpdir):

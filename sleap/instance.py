@@ -19,10 +19,7 @@ from sleap.util import attr_to_dtype
 import attr
 
 
-# This can probably be a namedtuple but has been made a full class just in case
-# we need more complicated functionality later.
-@attr.s(auto_attribs=True, slots=True)
-class Point:
+class Point(np.record):
     """
     A very simple class to define a labelled point and any metadata associated with it.
 
@@ -30,41 +27,117 @@ class Point:
         x: The horizontal pixel location of the point within the image frame.
         y: The vertical pixel location of the point within the image frame.
         visible: Whether point is visible in the labelled image or not.
+        complete: Has the point been verified by the a user labeler.
     """
 
-    x: float = attr.ib(default=math.nan, converter=float)
-    y: float = attr.ib(default=math.nan, converter=float)
-    visible: bool = True
-    complete: bool = False
+    # Define the dtype from the point class attributes plus some
+    # additional fields we will use to relate point to instances and
+    # nodes.
+    dtype = np.dtype(
+        [('x', 'f8'),
+         ('y', 'f8'),
+         ('visible', '?'),
+         ('complete', '?')])
+
+    def __new__(cls, x: float = math.nan, y: float = math.nan,
+                visible: bool = True, complete: bool = False):
+
+        # HACK: This is a crazy way to instantiate at new Point but I can't figure
+        # out how recarray does it. So I just use it to make matrix of size 1 and
+        # index in to get the np.record/Point
+        # All of this is a giant hack so that Point(x=2,y=3) works like expected.
+        val = PointArray(1)[0]
+
+        val.x = x
+        val.y = y
+        val.visible = visible
+        val.complete = complete
+
+        return val
 
     def __str__(self):
         return f"({self.x}, {self.y})"
 
-    @classmethod
-    def dtype(cls):
+    def isnan(self):
         """
-        Get the compound numpy dtype of a point. This is very important for
-        serialization.
+        Are either of the coordinates a NaN value.
 
         Returns:
-            The compound numpy dtype of the point
+            True if x or y is NaN, False otherwise.
         """
-        return attr_to_dtype(cls)
-
-    def isnan(self):
         return math.isnan(self.x) or math.isnan(self.y)
 
+    @staticmethod
+    def asdict(p: 'Point') -> Dict:
+        """
+        Return the fields of the Point as a dict.
 
-@attr.s(auto_attribs=True, slots=True)
+        Returns:
+            A dict containing all the fields of the point.
+        """
+        return {'x': p.x, 'y': p.y, 'visible': bool(p.visible), 'complete': bool(p.complete)}
+
+    @classmethod
+    def fromdict(cls, d):
+        """
+        Create a Point from a dict of parameters.
+
+        Args:
+            d: A dict of parameters that will be passed to the constructor
+
+        Returns:
+            A Point object.
+        """
+        return cls(**d)
+
+
+# This turns PredictedPoint into an attrs class. Defines comparators for
+# us and generaly makes it behave better. Crazy that this works!
+Point = attr.s(these={name: attr.ib()
+                               for name in Point.dtype.names},
+                        init=False)(Point)
+
+
 class PredictedPoint(Point):
     """
     A predicted point is an output of the inference procedure. It has all
     the properties of a labeled point with an accompanying score.
 
     Args:
+        x: The horizontal pixel location of the point within the image frame.
+        y: The vertical pixel location of the point within the image frame.
+        visible: Whether point is visible in the labelled image or not.
+        complete: Has the point been verified by the a user labeler.
         score: The point level prediction score.
     """
-    score: float = attr.ib(default=0.0, converter=float)
+
+    # Define the dtype from the point class attributes plus some
+    # additional fields we will use to relate point to instances and
+    # nodes.
+    dtype = np.dtype(
+        [('x', 'f8'),
+         ('y', 'f8'),
+         ('visible', '?'),
+         ('complete', '?'),
+         ('score', 'f8')])
+
+    def __new__(cls, x: float = math.nan, y: float = math.nan,
+                visible: bool = True, complete: bool = False,
+                score: float = 0.0):
+
+        # HACK: This is a crazy way to instantiate at new Point but I can't figure
+        # out how recarray does it. So I just use it to make matrix of size 1 and
+        # index in to get the np.record/Point
+        # All of this is a giant hack so that Point(x=2,y=3) works like expected.
+        val = PredictedPointArray(1)[0]
+
+        val.x = x
+        val.y = y
+        val.visible = visible
+        val.complete = complete
+        val.score = score
+
+        return val
 
     @classmethod
     def from_point(cls, point: Point, score: float = 0.0):
@@ -78,7 +151,82 @@ class PredictedPoint(Point):
         Returns:
             A scored point based on the point passed in.
         """
-        return cls(**{**attr.asdict(point), 'score': score})
+        return cls(**{**Point.asdict(point), 'score': score})
+
+    @staticmethod
+    def asdict(p: 'PredictedPoint') -> Dict:
+        """
+        Return the fields of the PredictedPoint as a dict.
+
+        Returns:
+            A dict containing all the fields of the point.
+        """
+        return {'x': p.x, 'y': p.y, 'visible': bool(p.visible),
+                'complete': bool(p.complete), 'score': p.score}
+
+    @classmethod
+    def fromdict(cls, d: Dict) -> 'PredictedPoint':
+        """
+        Create a PredictedPoint from a dict of parameters.
+
+        Args:
+            d: A dict of parameters that will be passed to the constructor
+
+        Returns:
+            A PredictedPoint object.
+        """
+        return cls(**d)
+
+
+# This turns PredictedPoint into an attrs class. Defines comparators for
+# us and generaly makes it behave better. Crazy that this works!
+PredictedPoint = attr.s(these={name: attr.ib()
+                               for name in PredictedPoint.dtype.names},
+                        init=False)(PredictedPoint)
+
+
+
+class PointArray(np.recarray):
+    """
+    PointArray is a sub-class of numpy recarray which stores
+    Point objects as records.
+    """
+
+    _record_type = Point
+
+    def __new__(subtype, shape, buf=None, offset=0, strides=None,
+                formats=None, names=None, titles=None,
+                byteorder=None, aligned=False, order='C'):
+
+        dtype = subtype._record_type.dtype
+
+        if dtype is not None:
+            descr = np.dtype(dtype)
+        else:
+            descr = np.format_parser(formats, names, titles, aligned, byteorder)._descr
+
+        if buf is None:
+            self = np.ndarray.__new__(subtype, shape, (subtype._record_type, descr), order=order)
+        else:
+            self = np.ndarray.__new__(subtype, shape, (subtype._record_type, descr),
+                                      buffer=buf, offset=offset,
+                                      strides=strides, order=order)
+        return self
+
+    def __array_finalize__(self, obj):
+        """
+        Overide __array_finalize__ on recarray because it converting the dtype
+        of any np.void subclass to np.record, we don't want this.
+        """
+        pass
+
+
+class PredictedPointArray(PointArray):
+    """
+    PredictedPointArray is analogous to PointArray except for predicted
+    points.
+    """
+    _record_type = PredictedPoint
 
 
 @attr.s(slots=True, cmp=False)
@@ -354,70 +502,6 @@ class Instance:
         points = self.points_array(invisible_as_nan=True)
         centroid = np.nanmedian(points, axis=0)
         return centroid
-
-    @classmethod
-    def to_pandas_df(cls, instances: Union['Instance', List['Instance']], skip_nan:bool = True) -> pd.DataFrame:
-        """
-        Given an instance or list of instances, generate a pandas DataFrame that contains
-        all of the data in normalized form.
-        Args:
-            instances: A single instance or list of instances.
-            skip_nan: Whether to drop points that have NaN values for x or y.
-
-        Returns:
-            A pandas DataFrame that contains all of the isntance's points level data
-            in and normalized form. The columns of the DataFrame are:
-
-            * id - A unique number for each row of the table.
-            * instanceId - a unique id for each unique instance.
-            * skeleton - the name of the skeleton that this point is a part of.
-            * node - A string specifying the name of the skeleton node that this point value corresponds.
-            * videoId - A string specifying the video that this instance is in.
-            * frameIdx - The frame number of the video that this instance occurs on.
-            * visible - Whether the point in this row for this instance is visible.
-            * x - The horizontal pixel position of this node for this instance.
-            * y - The vertical pixel position of this node for this instance.
-        """
-
-        # If this is a single instance, make it a list
-        if type(instances) is Instance:
-            instances = [instances]
-
-        # Lets construct a list of dicts which will be records for the pandas data frame
-        records = []
-
-        # Extract all the data from each instance and its points
-        id = 0
-        for instance_id, instance in enumerate(instances):
-
-            # Get all the attributes from the instance except the points dict or from_predicted
-            irecord = {'id': id, 'instance_id': instance_id,
-                       **attr.asdict(instance, filter=lambda attr, value: attr.name not in ("_points", "from_predicted"))}
-
-            # Convert the skeleton to it's name
-            irecord['skeleton'] = irecord['skeleton'].name
-
-            # FIXME: Do the same for the video
-
-            for (node, point) in instance.nodes_points:
-
-                # Skip any NaN points if the user has asked for it.
-                if skip_nan and (math.isnan(point.x) or math.isnan(point.y)):
-                    continue
-
-                precord = {'node': node.name, **attr.asdict(point)} # FIXME: save other node attributes?
-
-                records.append({**irecord, **precord})
-
-        id = id + 1
-
-        # Construct a pandas data frame from this list of instances
-        if len(records) == 1:
-            df = pd.DataFrame.from_records(records, index=[0])
-        else:
-            df = pd.DataFrame.from_records(records)
-
-        return df
 
     @classmethod
     def save_hdf5(cls, file: Union[str, h5.File],

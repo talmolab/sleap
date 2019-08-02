@@ -24,7 +24,34 @@ def _check_labels_match(expected_labels, other_labels, format = 'png'):
 
     # Check the top level objects
     for x, y in zip(expected_labels.skeletons, other_labels.skeletons):
-        assert x.matches(y)
+
+        # Inline the skeleton matches check to see if we can get a better
+        # idea of why this test fails non-deterministically. The callstack
+        # doesn't go deeper than the method call in pytest for some reason.
+        # assert x.matches(y). The code below is weird because it is converted
+        # from Skeleton.__eq__.
+        self = x
+        other = y
+
+        # First check names, duh!
+        if other.name != self.name:
+            assert False
+
+        def dict_match(dict1, dict2):
+            return dict1 == dict2
+
+        # Check if the graphs are iso-morphic
+        import networkx as nx
+        is_isomorphic = nx.is_isomorphic(self._graph, other._graph, node_match=dict_match)
+
+        if not is_isomorphic:
+            assert False
+
+        # Now check that the nodes have the same labels and order. They can have
+        # different weights I guess?!
+        for node1, node2 in zip(self._graph.nodes, other._graph.nodes):
+            if node1.name != node2.name:
+                assert False
 
     for x, y in zip(expected_labels.tracks, other_labels.tracks):
         assert x.name == y.name and x.spawned_on == y.spawned_on
@@ -262,7 +289,7 @@ def test_save_labels_with_frame_data(multi_skel_vid_labels, tmpdir, format):
     # Make sure we can load twice
     loaded_labels = Labels.load_json(f"{filename}.zip")
 
-
+@pytest.mark.skip
 def test_save_labels_hdf5(multi_skel_vid_labels, tmpdir):
     # FIXME: This is not really implemented yet and needs a real test
     multi_skel_vid_labels.save_hdf5(filename=os.path.join(tmpdir, 'test.h5'), save_frame_data=False)

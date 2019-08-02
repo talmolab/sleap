@@ -618,11 +618,7 @@ class Labels(MutableSequence):
         label_cattr.register_unstructure_hook(Video, lambda x: str(self.videos.index(x)))
         label_cattr.register_unstructure_hook(Node, lambda x: str(self.nodes.index(x)))
         label_cattr.register_unstructure_hook(Track, lambda x: str(self.tracks.index(x)))
-        #label_cattr.register_unstructure_hook(Point, Point.unstructure_hook)
-        #label_cattr.register_unstructure_hook(PredictedPoint, PredictedPoint.unstructure_hook)
-        #label_cattr.register_unstructure_hook(Instance, Instance.unstructure_hook(label_cattr))
-        #label_cattr.register_unstructure_hook(PredictedInstance, PredictedInstance.unstructure_hook(label_cattr))
-        #label_cattr.register_unstructure_hook(LabeledFrame, LabeledFrame.unstructure_hook(label_cattr))
+        label_cattr.register_unstructure_hook(np.bool_, bool)
 
         idx_to_node = {i: self.nodes[i] for i in range(len(self.nodes))}
 
@@ -791,8 +787,6 @@ class Labels(MutableSequence):
         label_cattr.register_structure_hook(Video, lambda x,type: videos[int(x)])
         label_cattr.register_structure_hook(Node, lambda x,type: x if isinstance(x,Node) else nodes[int(x)])
         label_cattr.register_structure_hook(Track, lambda x, type: None if x is None else tracks[int(x)])
-        #label_cattr.register_structure_hook(Point, Point.structure_hook)
-        #label_cattr.register_structure_hook(PredictedPoint, PredictedPoint.structure_hook)
 
         def structure_points(x, type):
             if 'score' in x.keys():
