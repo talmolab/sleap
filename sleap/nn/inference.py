@@ -28,11 +28,14 @@ from sleap.io.dataset import Labels
 from sleap.io.video import Video
 from sleap.skeleton import Skeleton
 from sleap.util import usable_cpu_count
+from sleap.info.metrics import calculate_pairwise_cost
 from sleap.nn.model import ModelOutputType
 from sleap.nn.training import TrainingJob
 from sleap.nn.tracking import FlowShiftTracker, Track
 from sleap.nn.transform import DataTransform
 
+SINGLE_INSTANCE_PER_CROP = False
+OVERLAPPING_INSTANCES_NMS = True
 
 def get_available_gpus():
     """
@@ -262,7 +265,7 @@ def match_single_peaks_all(points_arrays, skeleton, video, transform):
     return predicted_frames
 
 def image_single_peak(I, min_thresh):
-    peak = np.unravel_index((np.argmax(I)), I.shape)
+    peak = np.unravel_index(I.argmax(), I.shape)
     val = I[peak]
 
     if val < min_thresh:
@@ -463,30 +466,75 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, transform, img_idx
     matched_instances_t = []
     for match in subset:
 
-        # Get teh predicted points for this predicted instance
-        pts = {}
+        # Get the predicted points for this predicted instance
+        pts = dict()
         for i, node_name in enumerate(skeleton.node_names):
             if match[i] >= 0:
                 match_idx = int(match[i])
                 pt = PredictedPoint(x=candidate[match_idx, 0], y=candidate[match_idx, 1],
                                     score=candidate_scores[match_idx])
-            else:
-                pt = PredictedPoint()
-            pts[node_name] = pt
+                pts[node_name] = pt
 
-        matched_instances_t.append(PredictedInstance(skeleton=skeleton, points=pts, score=match[-2]))
+        if len(pts):
+            matched_instances_t.append(PredictedInstance(skeleton=skeleton,
+                                                         points=pts,
+                                                         score=match[-2]))
 
     # For centroid crop just return instance closest to centroid
-    if len(matched_instances_t) > 1 and transform.is_cropped:
+    if SINGLE_INSTANCE_PER_CROP and len(matched_instances_t) > 1 and transform.is_cropped:
+
         crop_centroid = np.array(((transform.crop_size//2, transform.crop_size//2),)) # center of crop box
         crop_centroid = transform.invert(img_idx, crop_centroid) # relative to original image
+
         # sort by distance from crop centroid
         matched_instances_t.sort(key=lambda inst: np.linalg.norm(inst.centroid - crop_centroid))
+
+        logger.info(f"Crop has {len} instances, SINGLE_INSTANCE_PER_CROP so filter to 1 instance.")
 
         # just use closest
         matched_instances_t = matched_instances_t[0:1]
 
     return matched_instances_t
+
+def instances_nms(instances: List[PredictedInstance], thresh: float=4) -> List[PredictedInstance]:
+    """Remove overlapping instances from list."""
+    if len(instances) <= 1: return
+    
+    # Look for overlapping instances
+    overlap_matrix = calculate_pairwise_cost(instances, instances,
+        cost_function = lambda x: np.nan if all(np.isnan(x)) else np.nanmean(x))
+    
+    # Set diagonals over threshold since an instance doesn't overlap with itself
+    np.fill_diagonal(overlap_matrix, thresh+1)
+    overlap_matrix[np.isnan(overlap_matrix)] = thresh+1
+
+    instances_to_remove = []
+
+    def sort_funct(inst_idx):
+        # sort by number of points in instance, then by prediction score (desc)
+        return (len(instances[inst_idx].nodes), -getattr(instances[inst_idx], "score", 0))
+
+    while np.nanmin(overlap_matrix) < thresh:
+        # Find the pair of instances with greatest overlap
+        idx_a, idx_b = np.unravel_index(overlap_matrix.argmin(), overlap_matrix.shape)
+        
+        # Keep the instance with the most points (or the highest score if tied)
+        idxs = sorted([idx_a, idx_b], key=sort_funct)
+        pick_idx = idxs[0]
+        keep_idx = idxs[-1]
+        
+        # Remove this instance from overlap matrix
+        overlap_matrix[pick_idx, :] = thresh+1
+        overlap_matrix[:, pick_idx] = thresh+1
+
+        # Add to list of instances that we'll remove.
+        # We'll remove these later so list index doesn't change now.
+        instances_to_remove.append(instances[pick_idx])
+
+    # Remove selected instances from list
+    # Note that we're modifying the original list in place
+    for inst in instances_to_remove:
+        instances.remove(inst)
 
 def match_peaks_paf(peaks, peak_vals, pafs, skeleton,
                     video, transform,
@@ -506,7 +554,17 @@ def match_peaks_paf(peaks, peak_vals, pafs, skeleton,
         frame_idx = transform.get_frame_idxs(img_idx)
         predicted_frames.append(LabeledFrame(video=video, frame_idx=frame_idx, instances=instances))
 
+    # Combine LabeledFrame objects for the same video frame
     predicted_frames = LabeledFrame.merge_frames(predicted_frames, video=video)
+
+    # Remove overlapping predicted instances
+    if OVERLAPPING_INSTANCES_NMS:
+        for lf in predicted_frames:
+            n = len(lf.instances)
+            instances_nms(lf.instances)
+            if len(lf.instances) < n:
+                logger.info("Removed {n-len(lf.instances)} overlapping instance(s) from frame {frame_idx}")
+
     return predicted_frames
 
 def match_peaks_paf_par(peaks, peak_vals, pafs, skeleton,
