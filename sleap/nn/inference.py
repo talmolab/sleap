@@ -33,6 +33,7 @@ from sleap.nn.model import ModelOutputType
 from sleap.nn.training import TrainingJob
 from sleap.nn.tracking import FlowShiftTracker, Track
 from sleap.nn.transform import DataTransform
+from sleap.nn.datagen import bounding_box_nms
 
 SINGLE_INSTANCE_PER_CROP = False
 OVERLAPPING_INSTANCES_NMS = True
@@ -684,7 +685,7 @@ class Predictor:
                              frame_peaks[0][i][1]+bb_half)
                             for i in range(frame_peaks[0].shape[0])])
                     # filter boxes
-                    box_select_idxs = self._bb_non_max_suppression_fast(
+                    box_select_idxs = bounding_box_nms(
                                             boxes,
                                             scores = frame_peak_vals[0],
                                             iou_threshold = 0.9
@@ -709,63 +710,6 @@ class Predictor:
             return centroids, centroid_confmaps
         else:
             return centroids
-
-    def _bb_non_max_suppression_fast(self, boxes, scores, iou_threshold):
-        """https://www.pyimagesearch.com/2015/02/16/faster-non-maximum-suppression-python/"""
-
-        # if there are no boxes, return an empty list
-        if len(boxes) == 0:
-            return []
-
-        # if the bounding boxes integers, convert them to floats --
-        # this is important since we'll be doing a bunch of divisions
-        if boxes.dtype.kind == "i":
-            boxes = boxes.astype("float")
-
-        # initialize the list of picked indexes
-        pick = []
-
-        # grab the coordinates of the bounding boxes
-        x1 = boxes[:,0]
-        y1 = boxes[:,1]
-        x2 = boxes[:,2]
-        y2 = boxes[:,3]
-
-        # compute the area of the bounding boxes and sort the bounding
-        # boxes by the bottom-right y-coordinate of the bounding box
-        area = (x2 - x1 + 1) * (y2 - y1 + 1)
-        idxs = np.argsort(scores)
-
-        # keep looping while some indexes still remain in the indexes
-        # list
-        while len(idxs) > 0:
-            # grab the last index in the indexes list and add the
-            # index value to the list of picked indexes
-            last = len(idxs) - 1
-            i = idxs[last]
-            pick.append(i)
-
-            # find the largest (x, y) coordinates for the start of
-            # the bounding box and the smallest (x, y) coordinates
-            # for the end of the bounding box
-            xx1 = np.maximum(x1[i], x1[idxs[:last]])
-            yy1 = np.maximum(y1[i], y1[idxs[:last]])
-            xx2 = np.minimum(x2[i], x2[idxs[:last]])
-            yy2 = np.minimum(y2[i], y2[idxs[:last]])
-
-            # compute the width and height of the bounding box
-            w = np.maximum(0, xx2 - xx1 + 1)
-            h = np.maximum(0, yy2 - yy1 + 1)
-
-            # compute the ratio of overlap
-            overlap = (w * h) / area[idxs[:last]]
-
-            # delete all indexes from the index list that have
-            idxs = np.delete(idxs, np.concatenate(([last],
-                np.where(overlap > iou_threshold)[0])))
-
-        # return the list of picked boxes
-        return pick
 
     def _get_centroid_model(self):
         if self._centroid_model is None:
