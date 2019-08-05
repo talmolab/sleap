@@ -354,8 +354,8 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         from sleap.nn.datagen import generate_training_data, \
                 generate_confmaps_from_points, generate_pafs_from_points
         from sleap.io.video import Video
-        from sleap.gui.confmapsplot import demo_confmaps
-        from sleap.gui.quiverplot import demo_pafs
+        from sleap.gui.overlays.confmaps import demo_confmaps
+        from sleap.gui.overlays.pafs import demo_pafs
 
         conf_job, _ = self._get_current_job(ModelOutputType.CONFIDENCE_MAP)
 

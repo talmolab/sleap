@@ -798,8 +798,8 @@ def demo_datagen():
 
     from PySide2 import QtWidgets
     from sleap.io.video import Video
-    from sleap.gui.confmapsplot import demo_confmaps
-    from sleap.gui.quiverplot import demo_pafs
+    from sleap.gui.overlays.confmaps import demo_confmaps
+    from sleap.gui.overlays.pafs import demo_pafs
 
     app = QtWidgets.QApplication([])
 

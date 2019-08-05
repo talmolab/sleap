@@ -1,5 +1,5 @@
 from sleap.gui.video import QtVideoPlayer
-from sleap.gui.confmapsplot import ConfMapsPlot
+from sleap.gui.overlays.confmaps import ConfMapsPlot
 
 from sleap.io.video import Video
 
