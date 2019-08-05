@@ -1285,6 +1285,15 @@ class MainWindow(QMainWindow):
     def exportLabeledClip(self):
         from sleap.io.visuals import save_labeled_video
         if self.player.seekbar.hasSelection():
+
+            fps, okay = QtWidgets.QInputDialog.getInt(
+                                    self,
+                                    "Frames per second",
+                                    "Frames per second:",
+                                    getattr(self.video, "fps", 30),
+                                    1, 300)
+            if not okay: return
+
             filename, _ = QFileDialog.getSaveFileName(self, caption="Save Video As...", dir=self.filename + ".avi", filter="AVI Video (*.avi)")
 
             if len(filename) == 0: return
@@ -1294,6 +1303,7 @@ class MainWindow(QMainWindow):
                     video=self.video,
                     filename=filename,
                     frames=list(range(*self.player.seekbar.getSelection())),
+                    fps=fps,
                     gui_progress=True
                     )
 
