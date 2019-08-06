@@ -22,15 +22,17 @@ import pandas as pd
 
 from sleap.skeleton import Skeleton, Node
 from sleap.instance import Instance, PredictedInstance, Point, LabeledFrame, Track
-from sleap.io.video import Video, HDF5Video, MediaVideo
+from sleap.io.video import Video
 from sleap.io.dataset import Labels
 from sleap.gui.video import QtVideoPlayer
-from sleap.gui.tracks import TrackColorManager, TrackTrailManager
 from sleap.gui.dataviews import VideosTable, SkeletonNodesTable, SkeletonEdgesTable, \
     LabeledFrameTable, SkeletonNodeModel, SuggestionsTable
 from sleap.gui.importvideos import ImportVideos
 from sleap.gui.formbuilder import YamlFormWidget
 from sleap.gui.suggestions import VideoFrameSuggestions
+
+from sleap.gui.overlays.tracks import TrackColorManager, TrackTrailOverlay
+from sleap.gui.overlays.instance import InstanceOverlay
 
 OPEN_IN_NEW = True
 
@@ -55,12 +57,11 @@ class MainWindow(QMainWindow):
 
         self._color_palette = "standard"
         self._color_manager = TrackColorManager(self.labels, self._color_palette)
-        self._trail_manager = None
+
+        self.overlays = dict()
 
         self._show_labels = True
         self._show_edges = True
-        self._show_trails = False
-        self._color_predicted = False
         self._auto_zoom = False
 
         self.changestack_clear()
@@ -134,6 +135,8 @@ class MainWindow(QMainWindow):
         ####### Status bar #######
         self.statusBar() # Initialize status bar
 
+        self.load_overlays()
+
         ####### Menus #######
 
         ### File Menu ###
@@ -206,8 +209,8 @@ class MainWindow(QMainWindow):
         # set menu checkmarks
         self._menu_actions["show labels"].setCheckable(True); self._menu_actions["show labels"].setChecked(self._show_labels)
         self._menu_actions["show edges"].setCheckable(True); self._menu_actions["show edges"].setChecked(self._show_edges)
-        self._menu_actions["show trails"].setCheckable(True); self._menu_actions["show trails"].setChecked(self._show_trails)
-        self._menu_actions["color predicted"].setCheckable(True); self._menu_actions["color predicted"].setChecked(self._color_predicted)
+        self._menu_actions["show trails"].setCheckable(True); self._menu_actions["show trails"].setChecked(self.overlays["trails"].show)
+        self._menu_actions["color predicted"].setCheckable(True); self._menu_actions["color predicted"].setChecked(self.overlays["instance"].color_predicted)
         self._menu_actions["fit"].setCheckable(True)
 
         ### Label Menu ###
@@ -396,6 +399,17 @@ class MainWindow(QMainWindow):
         self.update_gui_timer.timeout.connect(self.update_gui_state)
         self.update_gui_timer.start(0.1)
 
+    def load_overlays(self):
+        self.overlays["trails"] = TrackTrailOverlay(
+                                    labels = self.labels,
+                                    scene = self.player.view.scene,
+                                    color_manager = self._color_manager)
+
+        self.overlays["instance"] = InstanceOverlay(
+                                    labels = self.labels,
+                                    player = self.player,
+                                    color_manager = self._color_manager)
+
     def update_gui_state(self):
         has_selected_instance = (self.player.view.getSelection() is not None)
         has_unsaved_changes = self.changestack_has_changes()
@@ -512,11 +526,10 @@ class MainWindow(QMainWindow):
                 self.changestack_clear()
                 self._color_manager.labels = self.labels
                 self._color_manager.set_palette(self._color_palette)
-                self._trail_manager = TrackTrailManager(
-                                            labels = self.labels,
-                                            scene = self.player.view.scene,
-                                            color_manager = self._color_manager)
-                self.setTrailLength(self._trail_manager.trail_length)
+
+                self.load_overlays()
+
+                self.setTrailLength(self.overlays["trails"].trail_length)
 
                 if show_msg:
                     msgBox = QMessageBox(text=f"Imported {len(self.labels)} labeled frames.")
@@ -801,14 +814,20 @@ class MainWindow(QMainWindow):
 
         if len(filename) == 0: return
 
-        # show confmaps and pafs
-        from sleap.gui.confmapsplot import show_confmaps_from_h5
-        from sleap.gui.quiverplot import show_pafs_from_h5
+        show_confmaps = True
+        show_pafs = False
 
-        conf_win = show_confmaps_from_h5(filename)
-        conf_win.move(200, 200)
-        paf_win = show_pafs_from_h5(filename)
-        paf_win.move(220+conf_win.rect().width(), 200)
+        if show_confmaps:
+            from sleap.gui.overlays.confmaps import ConfmapOverlay
+            confmap_overlay = ConfmapOverlay.from_h5(filename, player=self.player)
+            self.player.changedPlot.connect(lambda parent, idx: confmap_overlay.add_to_scene(None, idx) if show_confmaps else None)
+
+        if show_pafs:
+            from sleap.gui.overlays.pafs import PafOverlay
+            paf_overlay = PafOverlay.from_h5(filename, player=self.player)
+            self.player.changedPlot.connect(lambda parent, idx: paf_overlay.add_to_scene(None, idx) if show_pafs else None)
+
+        self.plotFrame()
 
     def deletePredictions(self):
 
@@ -971,7 +990,7 @@ class MainWindow(QMainWindow):
                 # copy the points from one of those instances.
                 prev_idx = self.previousLabeledFrameIndex()
                 if prev_idx is not None:
-                    prev_instances = self.getInstancesFromFrameIdx(prev_idx)
+                    prev_instances = self.labels.find(self.video, prev_idx, return_new=True)[0].instances
                     if len(prev_instances) > len(self.labeled_frame.instances):
                         # If more instances in previous frame than current, then use the
                         # first unmatched instance.
@@ -1246,16 +1265,6 @@ class MainWindow(QMainWindow):
                 # accept avent (close)
                 event.accept()
 
-    def exportData(self):
-        pass
-    # def close(self):
-        # pass
-    def checkVideoEncoding(self):
-        pass
-    def reencodeForSeeking(self):
-        pass
-    def addVideoFolder(self):
-        pass
     def nextVideo(self):
         new_idx = self.video_idx+1
         new_idx = 0 if new_idx >= len(self.labels.videos) else new_idx
@@ -1285,6 +1294,15 @@ class MainWindow(QMainWindow):
     def exportLabeledClip(self):
         from sleap.io.visuals import save_labeled_video
         if self.player.seekbar.hasSelection():
+
+            fps, okay = QtWidgets.QInputDialog.getInt(
+                                    self,
+                                    "Frames per second",
+                                    "Frames per second:",
+                                    getattr(self.video, "fps", 30),
+                                    1, 300)
+            if not okay: return
+
             filename, _ = QFileDialog.getSaveFileName(self, caption="Save Video As...", dir=self.filename + ".avi", filter="AVI Video (*.avi)")
 
             if len(filename) == 0: return
@@ -1294,6 +1312,7 @@ class MainWindow(QMainWindow):
                     video=self.video,
                     filename=filename,
                     frames=list(range(*self.player.seekbar.getSelection())),
+                    fps=fps,
                     gui_progress=True
                     )
 
@@ -1351,12 +1370,12 @@ class MainWindow(QMainWindow):
         self.player.showEdges(self._show_edges)
 
     def toggleTrails(self):
-        self._show_trails = not self._show_trails
-        self._menu_actions["show trails"].setChecked(self._show_trails)
+        self.overlays["trails"].show = not self.overlays["trails"].show
+        self._menu_actions["show trails"].setChecked(self.overlays["trails"].show)
         self.plotFrame()
 
     def setTrailLength(self, trail_length):
-        self._trail_manager.trail_length = trail_length
+        self.overlays["trails"].trail_length = trail_length
         self._menu_check_single(self.trailLengthMenu, trail_length)
 
         if self.video is not None: self.plotFrame()
@@ -1375,8 +1394,8 @@ class MainWindow(QMainWindow):
                 menu_item.setChecked(False)
 
     def toggleColorPredicted(self):
-        self._color_predicted = not self._color_predicted
-        self._menu_actions["color predicted"].setChecked(self._color_predicted)
+        self.overlays["instance"].color_predicted = not self.overlays["instance"].color_predicted
+        self._menu_actions["color predicted"].setChecked(self.overlays["instance"].color_predicted)
         self.plotFrame()
 
     def toggleAutoZoom(self):
@@ -1393,58 +1412,26 @@ class MainWindow(QMainWindow):
     def openAbout(self):
         pass
 
-
-    def trainConfmaps(self):
-        from sleap.nn.datagen import generate_images, generate_confidence_maps
-        from sleap.nn.training import train
-
-        imgs, keys = generate_images(self.labels)
-        confmaps, _keys, points = generate_confidence_maps(self.labels)
-
-        self.confmapModel = train(imgs, confmaps, test_size=0.1, batch_norm=False, num_filters=64, batch_size=4, num_epochs=100, steps_per_epoch=100)
-
-    def trainPAFs(self):
-        pass
-
-    def getInstancesFromFrameIdx(self, frame_idx):
-        lf = self.labels.find(self.video, frame_idx)
-        instances = lf[0].instances if len(lf) else []
-        return instances
-
     def newFrame(self, player, frame_idx, selected_idx):
+        """Called each time a new frame is drawn."""
 
-        lf = self.labels.find(self.video, frame_idx)
-        self.labeled_frame = lf[0] if len(lf) else LabeledFrame(video=self.video, frame_idx=frame_idx)
+        # Store the current LabeledFrame (or make new, empty object)
+        self.labeled_frame = self.labels.find(self.video, frame_idx, return_new=True)[0]
 
-        self.update_data_views()
-
-        count_no_track = 0
-        for i, instance in enumerate(self.labeled_frame.instances_to_show):
-
-            if instance.track in self.labels.tracks:
-                pseudo_track = instance.track
-            else:
-                # Instance without track
-                pseudo_track = len(self.labels.tracks) + count_no_track
-                count_no_track += 1
-
-            is_predicted = hasattr(instance,"score")
-
-            player.addInstance(instance=instance,
-                               color=self._color_manager.get_color(pseudo_track),
-                               predicted=is_predicted,
-                               color_predicted=self._color_predicted)
-
-        if self._trail_manager is not None and self._show_trails:
-            self._trail_manager.add_trails_to_scene(frame_idx)
+        # Show instances, etc, for this frame
+        for overlay in self.overlays.values():
+            overlay.add_to_scene(self.video, frame_idx)
 
         # Select instance if there was already selection
         if selected_idx > -1:
             player.view.selectInstance(selected_idx)
 
-        player.view.updatedViewer.emit()
-
+        # Update related displays
         self.updateStatusMessage()
+        self.update_data_views()
+
+        # Trigger event after the overlays have been added
+        player.view.updatedViewer.emit()
 
     def updateStatusMessage(self, message = None):
         if message is None:
