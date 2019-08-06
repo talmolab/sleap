@@ -1265,16 +1265,6 @@ class MainWindow(QMainWindow):
                 # accept avent (close)
                 event.accept()
 
-    def exportData(self):
-        pass
-    # def close(self):
-        # pass
-    def checkVideoEncoding(self):
-        pass
-    def reencodeForSeeking(self):
-        pass
-    def addVideoFolder(self):
-        pass
     def nextVideo(self):
         new_idx = self.video_idx+1
         new_idx = 0 if new_idx >= len(self.labels.videos) else new_idx
@@ -1420,18 +1410,6 @@ class MainWindow(QMainWindow):
     def openKeyRef(self):
         pass
     def openAbout(self):
-        pass
-
-    def trainConfmaps(self):
-        from sleap.nn.datagen import generate_images, generate_confidence_maps
-        from sleap.nn.training import train
-
-        imgs, keys = generate_images(self.labels)
-        confmaps, _keys, points = generate_confidence_maps(self.labels)
-
-        self.confmapModel = train(imgs, confmaps, test_size=0.1, batch_norm=False, num_filters=64, batch_size=4, num_epochs=100, steps_per_epoch=100)
-
-    def trainPAFs(self):
         pass
 
     def newFrame(self, player, frame_idx, selected_idx):
