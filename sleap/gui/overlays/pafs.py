@@ -1,6 +1,4 @@
-from PySide2 import QtWidgets
-from PySide2.QtGui import QImage, QPixmap, QPen, QBrush, QColor, QPaintDevice
-from PySide2.QtCore import Qt, QRectF, QPointF
+from PySide2 import QtWidgets, QtGui, QtCore
 
 import numpy as np
 import itertools
@@ -8,6 +6,14 @@ import math
 
 from sleap.io.video import Video, HDF5Video
 from sleap.gui.multicheck import MultiCheckWidget
+
+from sleap.gui.overlays.hdf5 import HDF5DataOverlay, h5_colors
+
+class PafOverlay(HDF5DataOverlay):
+
+    @classmethod
+    def from_h5(cls, filename, input_format="channels_last", **kwargs):
+        return HDF5DataOverlay.from_h5(filename, "/pafs", input_format, overlay_class=MultiQuiverPlot, **kwargs)
 
 class MultiQuiverPlot(QtWidgets.QGraphicsObject):
     """QtWidgets.QGraphicsObject to display multiple quiver plots in a QtWidgets.QGraphicsView.
@@ -31,58 +37,6 @@ class MultiQuiverPlot(QtWidgets.QGraphicsObject):
         super(MultiQuiverPlot, self).__init__(*args, **kwargs)
         self.frame = frame
         self.affinity_field = []
-        self.color_maps = [
-            [204, 81, 81],
-            [127, 51, 51],
-            [81, 204, 204],
-            [51, 127, 127],
-            [142, 204, 81],
-            [89, 127, 51],
-            [142, 81, 204],
-            [89, 51, 127],
-            [204, 173, 81],
-            [127, 108, 51],
-            [81, 204, 112],
-            [51, 127, 70],
-            [81, 112, 204],
-            [51, 70, 127],
-            [204, 81, 173],
-            [127, 51, 108],
-            [204, 127, 81],
-            [127, 79, 51],
-            [188, 204, 81],
-            [117, 127, 51],
-            [96, 204, 81],
-            [60, 127, 51],
-            [81, 204, 158],
-            [51, 127, 98],
-            [81, 158, 204],
-            [51, 98, 127],
-            [96, 81, 204],
-            [60, 51, 127],
-            [188, 81, 204],
-            [117, 51, 127],
-            [204, 81, 127],
-            [127, 51, 79],
-            [204, 104, 81],
-            [127, 65, 51],
-            [204, 150, 81],
-            [127, 94, 51],
-            [204, 196, 81],
-            [127, 122, 51],
-            [165, 204, 81],
-            [103, 127, 51],
-            [119, 204, 81],
-            [74, 127, 51],
-            [81, 204, 89],
-            [51, 127, 55],
-            [81, 204, 135],
-            [51, 127, 84],
-            [81, 204, 181],
-            [51, 127, 113],
-            [81, 181, 204],
-            [51, 113, 127]
-            ]
         self.decimation = decimation
 
         # if data range is outside [-1, 1], assume it's [-255, 255] and scale
@@ -95,7 +49,7 @@ class MultiQuiverPlot(QtWidgets.QGraphicsObject):
             self.show_list = show
         for channel in self.show_list:
             if channel < self.frame.shape[-1]//2:
-                color_map = self.color_maps[channel % len(self.color_maps)]
+                color_map = h5_colors[channel % len(h5_colors)]
                 aff_field_item = QuiverPlot(
                     field_x=self.frame[..., channel*2],
                     field_y=self.frame[..., channel*2+1],
@@ -105,10 +59,10 @@ class MultiQuiverPlot(QtWidgets.QGraphicsObject):
                     )
                 self.affinity_field.append(aff_field_item)
 
-    def boundingRect(self) -> QRectF:
+    def boundingRect(self) -> QtCore.QRectF:
         """Method required by Qt.
         """
-        return QRectF()
+        return QtCore.QRectF()
 
     def paint(self, painter, option, widget=None):
         """Method required by Qt.
@@ -135,13 +89,13 @@ class QuiverPlot(QtWidgets.QGraphicsObject):
         self.color = color
         self.decimation = decimation
         pen_width = min(4, max(.1, math.log(self.decimation, 20)))
-        self.pen = QPen(QColor(*self.color), pen_width)
+        self.pen = QtGui.QPen(QtGui.QColor(*self.color), pen_width)
         self.points = []
-        self.rect = QRectF()
+        self.rect = QtCore.QRectF()
 
         if field_x is not None and field_y is not None:
             self.field_x, self.field_y = field_x, field_y
-            self.rect = QRectF(0,0,*self.field_x.shape)
+            self.rect = QtCore.QRectF(0,0,*self.field_x.shape)
 
             self._add_arrows()
 
@@ -189,7 +143,7 @@ class QuiverPlot(QtWidgets.QGraphicsObject):
                     points.append((x2[y,x],y2[y,x]))
                     points.append((p2_x[y,x],p2_y[y,x]))
                     points.append((x2[y,x],y2[y,x]))
-            self.points = list(itertools.starmap(QPointF,points))
+            self.points = list(itertools.starmap(QtCore.QPointF,points))
 
     def _decimate(self, image:np.array, box:int):
         height = width = box
@@ -218,9 +172,9 @@ class QuiverPlot(QtWidgets.QGraphicsObject):
 
         return np.mean(tiles, axis=(2,3))
 
-    def boundingRect(self) -> QRectF:
+    def boundingRect(self) -> QtCore.QRectF:
         """Method called by Qt in order to determine whether object is in visible frame."""
-        return QRectF(self.rect)
+        return QtCore.QRectF(self.rect)
 
     def paint(self, painter, option, widget=None):
         """Method called by Qt to draw object."""
@@ -246,7 +200,7 @@ def demo_pafs(pafs, video, decimation=4, standalone=False):
     win = QtVideoPlayer(video=video)
     win.setWindowTitle("pafs")
 
-    decimation_size_bar = QtWidgets.QSlider(Qt.Horizontal)
+    decimation_size_bar = QtWidgets.QSlider(QtCore.Qt.Horizontal)
     decimation_size_bar.valueChanged.connect(lambda e: win.plot())
     decimation_size_bar.setValue(decimation)
     decimation_size_bar.setMinimum(1)
@@ -307,7 +261,7 @@ def foo():
     # show one arrow for each decimation*decimation box
     default_decimation = 9
 
-    decimation_size_bar = QSlider(Qt.Horizontal)
+    decimation_size_bar = QSlider(QtCore.Qt.Horizontal)
     decimation_size_bar.valueChanged.connect(lambda evt: window.plot())
     decimation_size_bar.setValue(default_decimation)
     decimation_size_bar.setMinimum(1)

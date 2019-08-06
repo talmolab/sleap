@@ -814,14 +814,20 @@ class MainWindow(QMainWindow):
 
         if len(filename) == 0: return
 
-        # show confmaps and pafs
-        from sleap.gui.overlays.confmaps import show_confmaps_from_h5
-        from sleap.gui.overlays.pafs import show_pafs_from_h5
+        show_confmaps = True
+        show_pafs = False
 
-        conf_win = show_confmaps_from_h5(filename)
-        conf_win.move(200, 200)
-        paf_win = show_pafs_from_h5(filename)
-        paf_win.move(220+conf_win.rect().width(), 200)
+        if show_confmaps:
+            from sleap.gui.overlays.confmaps import ConfmapOverlay
+            confmap_overlay = ConfmapOverlay.from_h5(filename, player=self.player)
+            self.player.changedPlot.connect(lambda parent, idx: confmap_overlay.add_to_scene(None, idx) if show_confmaps else None)
+
+        if show_pafs:
+            from sleap.gui.overlays.pafs import PafOverlay
+            paf_overlay = PafOverlay.from_h5(filename, player=self.player)
+            self.player.changedPlot.connect(lambda parent, idx: paf_overlay.add_to_scene(None, idx) if show_pafs else None)
+
+        self.plotFrame()
 
     def deletePredictions(self):
 
