@@ -957,7 +957,8 @@ class Predictor:
                 if output_path is not None and save_confmaps_pafs:
                     save_visual_outputs(
                             output_path = output_path,
-                            data = dict(confmaps=confmaps, pafs=pafs, box=mov))
+                            data = dict(confmaps=confmaps, pafs=pafs, box=mov,
+                                frame_idxs=transform.frame_idxs, bounds=transform.bounding_boxes))
 
                 # Find peaks
                 t0 = time()
@@ -1101,9 +1102,15 @@ def save_visual_outputs(output_path: str, data: dict):
     viz_output_path += ".h5"
 
     # write file
-    with h5py.File(viz_output_path, "w") as f:
+    with h5py.File(viz_output_path, "a") as f:
         for key, val in data.items():
-            f.create_dataset(key, data=val, compression="gzip")
+            val = np.array(val)
+            if key in f:
+                f[key].resize(f[key].shape[0] + val.shape[0], axis=0)
+                f[key][-val.shape[0]:] = val
+            else:
+                maxshape = (None, *val.shape[1:])
+                f.create_dataset(key, data=val, maxshape=maxshape, compression="gzip")
 
 def load_predicted_labels_json_old(
         data_path: str, parsed_json: dict = None,
