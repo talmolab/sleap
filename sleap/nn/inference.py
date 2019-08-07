@@ -35,6 +35,7 @@ from sleap.nn.tracking import FlowShiftTracker, Track
 from sleap.nn.transform import DataTransform
 from sleap.nn.datagen import bounding_box_nms
 
+CROP_NMS_IOU = .9
 SINGLE_INSTANCE_PER_CROP = True
 OVERLAPPING_INSTANCES_NMS = False
 
@@ -697,7 +698,7 @@ class Predictor:
                     box_select_idxs = bounding_box_nms(
                                             boxes,
                                             scores = frame_peak_vals[0],
-                                            iou_threshold = 0.9
+                                            iou_threshold = CROP_NMS_IOU,
                                             )
                     if len(box_select_idxs) < boxes.shape[0]:
                         logger.debug(f"    suppressed centroid crops from {boxes.shape[0]} to {len(box_select_idxs)}")
@@ -901,7 +902,7 @@ class Predictor:
                 if output_path is not None and save_confmaps_pafs:
                     save_visual_outputs(
                             output_path = output_path,
-                            data = dict(confmaps=confmaps, pafs=pafs, box=mov,
+                            data = dict(confmaps=confmaps, pafs=pafs,
                                 frame_idxs=transform.frame_idxs, bounds=transform.bounding_boxes))
 
                 # Find peaks
