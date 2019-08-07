@@ -70,7 +70,7 @@ if __name__ == "__main__":
     print(f"tracks: {prediction_matrix.shape}")
 
     output_filename = re.sub("\.json(\.zip)?", "", args.data_path)
-    output_filename = output_filename + ".test_tracking.h5"
+    output_filename = output_filename + ".tracking.h5"
 
     with h5.File(output_filename, "w") as f:
         # We have to transpose the arrays since MATLAB expects column-major
