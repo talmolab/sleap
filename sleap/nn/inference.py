@@ -35,9 +35,7 @@ from sleap.nn.tracking import FlowShiftTracker, Track
 from sleap.nn.transform import DataTransform
 from sleap.nn.datagen import bounding_box_nms
 
-CROP_NMS_IOU = .9
-SINGLE_INSTANCE_PER_CROP = True
-OVERLAPPING_INSTANCES_NMS = False
+OVERLAPPING_INSTANCES_NMS = True
 
 def get_available_gpus():
     """
@@ -315,7 +313,8 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, transform, img_idx
                       min_score_to_node_ratio=0.4,
                       min_score_midpts=0.05,
                       min_score_integral=0.8,
-                      add_last_edge=False):
+                      add_last_edge=False,
+                      single_per_crop=True):
     """
     Matches single frame
     """
@@ -483,7 +482,7 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, transform, img_idx
                                                          score=match[-2]))
 
     # For centroid crop just return instance closest to centroid
-    if SINGLE_INSTANCE_PER_CROP and len(matched_instances_t) > 1 and transform.is_cropped:
+    if single_per_crop and len(matched_instances_t) > 1 and transform.is_cropped:
 
         crop_centroid = np.array(((transform.crop_size//2, transform.crop_size//2),)) # center of crop box
         crop_centroid = transform.invert(img_idx, crop_centroid) # relative to original image
@@ -541,7 +540,8 @@ def instances_nms(instances: List[PredictedInstance], thresh: float=4) -> List[P
 def match_peaks_paf(peaks, peak_vals, pafs, skeleton,
                     video, transform,
                     min_score_to_node_ratio=0.4, min_score_midpts=0.05,
-                    min_score_integral=0.8, add_last_edge=False, **kwargs):
+                    min_score_integral=0.8, add_last_edge=False, single_per_crop=True,
+                    **kwargs):
     """ Computes PAF-based peak matching via greedy assignment and other such dragons """
 
     # Process each frame
@@ -552,7 +552,8 @@ def match_peaks_paf(peaks, peak_vals, pafs, skeleton,
                                    min_score_to_node_ratio=min_score_to_node_ratio,
                                    min_score_midpts=min_score_midpts,
                                    min_score_integral=min_score_integral,
-                                   add_last_edge=add_last_edge,)
+                                   add_last_edge=add_last_edge,
+                                   single_per_crop=single_per_crop)
         frame_idx = transform.get_frame_idxs(img_idx)
         predicted_frames.append(LabeledFrame(video=video, frame_idx=frame_idx, instances=instances))
 
@@ -567,6 +568,7 @@ def match_peaks_paf_par(peaks, peak_vals, pafs, skeleton,
                         min_score_midpts=0.05,
                         min_score_integral=0.8,
                         add_last_edge=False,
+                        single_per_crop=True,
                         pool=None, **kwargs):
     """ Parallel version of PAF peak matching """
 
@@ -581,7 +583,8 @@ def match_peaks_paf_par(peaks, peak_vals, pafs, skeleton,
                                        min_score_to_node_ratio=min_score_to_node_ratio,
                                        min_score_midpts=min_score_midpts,
                                        min_score_integral=min_score_integral,
-                                       add_last_edge=add_last_edge))
+                                       add_last_edge=add_last_edge,
+                                       single_per_crop=single_per_crop,))
         futures.append(future)
 
     predicted_frames = []
@@ -662,10 +665,13 @@ class Predictor:
     add_last_edge: bool = True
     with_tracking: bool = False
     flow_window: int = 15
+    crop_iou_threshold: float = .9
+    single_per_crop: bool = True
 
     _centroid_model: keras.Model = None
 
     def predict_centroids(self, imgs: np.ndarray, crop_size: int=None,
+                iou_threshold: float=.9,
                 return_confmaps=False) -> List[List[np.ndarray]]:
 
         keras_model = self._get_centroid_model()
@@ -698,7 +704,7 @@ class Predictor:
                     box_select_idxs = bounding_box_nms(
                                             boxes,
                                             scores = frame_peak_vals[0],
-                                            iou_threshold = CROP_NMS_IOU,
+                                            iou_threshold = iou_threshold,
                                             )
                     if len(box_select_idxs) < boxes.shape[0]:
                         logger.debug(f"    suppressed centroid crops from {boxes.shape[0]} to {len(box_select_idxs)}")
@@ -841,7 +847,7 @@ class Predictor:
             if ModelOutputType.CENTROIDS in self.sleap_models:
                 # Predict centroids and crop around these
                 crop_size = h # match input of keras model
-                centroids = self.predict_centroids(mov_full, crop_size)
+                centroids = self.predict_centroids(mov_full, crop_size, self.crop_iou_threshold)
 
                 # Check if we found any centroids
                 if sum(map(len, centroids)) == 0:
@@ -919,7 +925,9 @@ class Predictor:
                                                 min_score_to_node_ratio=self.min_score_to_node_ratio,
                                                 min_score_midpts=self.min_score_midpts,
                                                 min_score_integral=self.min_score_integral,
-                                                add_last_edge=self.add_last_edge, pool=pool)
+                                                add_last_edge=self.add_last_edge,
+                                                single_per_crop=self.single_per_crop,
+                                                pool=pool)
                 logger.info("  Matched peaks via PAFs [%.1fs]" % (time() - t0))
 
             logger.info(f"  Instances found on {len(predicted_frames_chunk)} images.")
@@ -1055,7 +1063,8 @@ def save_visual_outputs(output_path: str, data: dict):
                 f[key][-val.shape[0]:] = val
             else:
                 maxshape = (None, *val.shape[1:])
-                f.create_dataset(key, data=val, maxshape=maxshape, compression="gzip")
+                f.create_dataset(key, data=val, maxshape=maxshape,
+                    compression="gzip", compression_opts=9)
 
 def load_predicted_labels_json_old(
         data_path: str, parsed_json: dict = None,
@@ -1195,8 +1204,13 @@ def main():
                              'a range separated by hyphen (e.g. 1-3). (default is entire video)')
     parser.add_argument('-o', '--output', type=str, default=None,
                         help='The output filename to use for the predicted data.')
-    parser.add_argument('--save_confmaps_pafs', type=bool, default=False,
-                        help='Whether to save the confidence maps or pads')
+    parser.add_argument('--save-confmaps-pafs', dest='save_confmaps_pafs', action='store_const',
+                    const=True, default=False,
+                        help='Whether to save the confidence maps or pafs')
+    parser.add_argument('--less-overlap', dest='less_overlap', action='store_const',
+                    const=True, default=False,
+                    help='use fewer crops and include all instances from each crop '
+                    '(works best if crops are much larger than instance bounding boxes)')
     parser.add_argument('-v', '--verbose', help='Increase logging output verbosity.', action="store_true")
 
     args = parser.parse_args()
@@ -1231,6 +1245,11 @@ def main():
 
     # Create a predictor to do the work.
     predictor = Predictor(sleap_models=sleap_models, with_tracking=args.with_tracking)
+
+    if args.less_overlap:
+        predictor.crop_iou_threshold = .8
+        predictor.single_per_crop = False
+        logger.info("Using 'less overlap' mode: crop nms iou .8, multiple instances per crop, instance nms.")
 
     # Run the inference pipeline
     return predictor.predict(input_video=data_path, output_path=save_path, frames=frames,
