@@ -18,10 +18,9 @@ import pandas as pd
 
 from typing import Callable
 
-from sleap.gui.video import QtVideoPlayer, QtInstance, QtEdge, QtNode
-from sleap.gui.tracks import TrackColorManager
-from sleap.io.video import Video, HDF5Video, MediaVideo
-from sleap.io.dataset import Labels, load_labels_json_old
+from sleap.gui.overlays.tracks import TrackColorManager
+from sleap.io.video import Video
+from sleap.io.dataset import Labels
 from sleap.instance import LabeledFrame
 from sleap.skeleton import Skeleton, Node
 

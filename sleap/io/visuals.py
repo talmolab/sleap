@@ -3,6 +3,7 @@ from sleap.io.dataset import Labels
 from sleap.util import usable_cpu_count
 
 import cv2
+import os
 import numpy as np
 import math
 from time import time, clock
@@ -58,13 +59,14 @@ def reader(out_q: Queue, video: Video, frames: List[int]):
     # send _sentinal object into queue to signal that we're done
     out_q.put(_sentinel)
 
-def marker(in_q: Queue, out_q: Queue, labels: Labels):
+def marker(in_q: Queue, out_q: Queue, labels: Labels, video_idx: int):
     """Annotate frame images (draw instances).
 
     Args:
         in_q: Queue with (list of frame indexes, ndarray of frame images)
         out_q: Queue to send annotated images as (images, h, w, channels) ndarray
-        labels: The `Labels` object from which to get data for annotating.
+        labels: the `Labels` object from which to get data for annotating.
+        video_idx: index of `Video` in `labels.videos` list
 
     Returns:
         None.
@@ -88,6 +90,7 @@ def marker(in_q: Queue, out_q: Queue, labels: Labels):
         for i, frame_idx in enumerate(frames_idx_chunk):
             img = get_frame_image(
                         video_frame=video_frame_images[i],
+                        video_idx=video_idx,
                         frame_idx=frame_idx,
                         labels=labels)
 
@@ -171,7 +174,7 @@ def save_labeled_video(
     progress_queue = Queue()
 
     thread_read = Thread(target=reader, args=(q1, video, frames,))
-    thread_mark = Thread(target=marker, args=(q1, q2, labels,))
+    thread_mark = Thread(target=marker, args=(q1, q2, labels, labels.videos.index(video)))
     thread_write = Thread(target=writer, args=(
                                             q2, progress_queue, filename,
                                             fps, (video.width, video.height),
@@ -220,15 +223,15 @@ def img_to_cv(img):
         img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
     return img
 
-def get_frame_image(video_frame, frame_idx, labels):
+def get_frame_image(video_frame, video_idx, frame_idx, labels):
     img = img_to_cv(video_frame)
-    plot_instances_cv(img, frame_idx, labels)
+    plot_instances_cv(img, video_idx, frame_idx, labels)
     return img
 
 def _point_int_tuple(point):
     return int(point.x), int(point.y)
 
-def plot_instances_cv(img, frame_idx, labels):
+def plot_instances_cv(img, video_idx, frame_idx, labels):
     cmap = ([
         [0,   114,   189],
         [217,  83,    25],
@@ -238,7 +241,7 @@ def plot_instances_cv(img, frame_idx, labels):
         [77,  190,   238],
         [162,  20,    47],
         ])
-    lfs = [label for label in labels.labels if label.video == labels.videos[0] and label.frame_idx == frame_idx]
+    lfs = labels.find(labels.videos[video_idx], frame_idx)
 
     if len(lfs) == 0: return
 
@@ -290,15 +293,18 @@ if __name__ == "__main__":
                         help='The output filename for the video')
     parser.add_argument('-f', '--fps', type=int, default=15,
                         help='Frames per second')
+    parser.add_argument('-l', '--limit', type=int, default=0,
+                    help='Limit video to this many frames')
     args = parser.parse_args()
 
-    labels = Labels.load_json(args.data_path)
+    video_callback = Labels.make_video_callback([os.path.dirname(args.data_path)])
+    labels = Labels.load_json(args.data_path, video_callback=video_callback)
+
     vid = labels.videos[0]
 
-    frames = [lf.frame_idx for lf in labels if len(lf.instances)]
-
-#     if len(frames) > 20:
-#         frames = frames[:20]
+    frames = sorted([lf.frame_idx for lf in labels if len(lf.instances)])
+    if args.limit:
+        frames = frames[:args.limit]
 
     filename = args.output or args.data_path + ".avi"
 

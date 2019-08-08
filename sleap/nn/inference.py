@@ -28,11 +28,14 @@ from sleap.io.dataset import Labels
 from sleap.io.video import Video
 from sleap.skeleton import Skeleton
 from sleap.util import usable_cpu_count
+from sleap.info.metrics import calculate_pairwise_cost
 from sleap.nn.model import ModelOutputType
 from sleap.nn.training import TrainingJob
 from sleap.nn.tracking import FlowShiftTracker, Track
 from sleap.nn.transform import DataTransform
+from sleap.nn.datagen import bounding_box_nms
 
+OVERLAPPING_INSTANCES_NMS = True
 
 def get_available_gpus():
     """
@@ -262,7 +265,7 @@ def match_single_peaks_all(points_arrays, skeleton, video, transform):
     return predicted_frames
 
 def image_single_peak(I, min_thresh):
-    peak = np.unravel_index((np.argmax(I)), I.shape)
+    peak = np.unravel_index(I.argmax(), I.shape)
     val = I[peak]
 
     if val < min_thresh:
@@ -310,7 +313,8 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, transform, img_idx
                       min_score_to_node_ratio=0.4,
                       min_score_midpts=0.05,
                       min_score_integral=0.8,
-                      add_last_edge=False):
+                      add_last_edge=False,
+                      single_per_crop=True):
     """
     Matches single frame
     """
@@ -463,35 +467,81 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, transform, img_idx
     matched_instances_t = []
     for match in subset:
 
-        # Get teh predicted points for this predicted instance
-        pts = {}
+        # Get the predicted points for this predicted instance
+        pts = dict()
         for i, node_name in enumerate(skeleton.node_names):
             if match[i] >= 0:
                 match_idx = int(match[i])
                 pt = PredictedPoint(x=candidate[match_idx, 0], y=candidate[match_idx, 1],
                                     score=candidate_scores[match_idx])
-            else:
-                pt = PredictedPoint()
-            pts[node_name] = pt
+                pts[node_name] = pt
 
-        matched_instances_t.append(PredictedInstance(skeleton=skeleton, points=pts, score=match[-2]))
+        if len(pts):
+            matched_instances_t.append(PredictedInstance(skeleton=skeleton,
+                                                         points=pts,
+                                                         score=match[-2]))
 
     # For centroid crop just return instance closest to centroid
-    if len(matched_instances_t) > 1 and transform.is_cropped:
+    if single_per_crop and len(matched_instances_t) > 1 and transform.is_cropped:
+
         crop_centroid = np.array(((transform.crop_size//2, transform.crop_size//2),)) # center of crop box
         crop_centroid = transform.invert(img_idx, crop_centroid) # relative to original image
+
         # sort by distance from crop centroid
         matched_instances_t.sort(key=lambda inst: np.linalg.norm(inst.centroid - crop_centroid))
+
+        logger.debug(f"SINGLE_INSTANCE_PER_CROP: crop has {len(matched_instances_t)} instances, filter to 1.")
 
         # just use closest
         matched_instances_t = matched_instances_t[0:1]
 
     return matched_instances_t
 
+def instances_nms(instances: List[PredictedInstance], thresh: float=4) -> List[PredictedInstance]:
+    """Remove overlapping instances from list."""
+    if len(instances) <= 1: return
+    
+    # Look for overlapping instances
+    overlap_matrix = calculate_pairwise_cost(instances, instances,
+        cost_function = lambda x: np.nan if all(np.isnan(x)) else np.nanmean(x))
+    
+    # Set diagonals over threshold since an instance doesn't overlap with itself
+    np.fill_diagonal(overlap_matrix, thresh+1)
+    overlap_matrix[np.isnan(overlap_matrix)] = thresh+1
+
+    instances_to_remove = []
+
+    def sort_funct(inst_idx):
+        # sort by number of points in instance, then by prediction score (desc)
+        return (len(instances[inst_idx].nodes), -getattr(instances[inst_idx], "score", 0))
+
+    while np.nanmin(overlap_matrix) < thresh:
+        # Find the pair of instances with greatest overlap
+        idx_a, idx_b = np.unravel_index(overlap_matrix.argmin(), overlap_matrix.shape)
+        
+        # Keep the instance with the most points (or the highest score if tied)
+        idxs = sorted([idx_a, idx_b], key=sort_funct)
+        pick_idx = idxs[0]
+        keep_idx = idxs[-1]
+        
+        # Remove this instance from overlap matrix
+        overlap_matrix[pick_idx, :] = thresh+1
+        overlap_matrix[:, pick_idx] = thresh+1
+
+        # Add to list of instances that we'll remove.
+        # We'll remove these later so list index doesn't change now.
+        instances_to_remove.append(instances[pick_idx])
+
+    # Remove selected instances from list
+    # Note that we're modifying the original list in place
+    for inst in instances_to_remove:
+        instances.remove(inst)
+
 def match_peaks_paf(peaks, peak_vals, pafs, skeleton,
                     video, transform,
                     min_score_to_node_ratio=0.4, min_score_midpts=0.05,
-                    min_score_integral=0.8, add_last_edge=False, **kwargs):
+                    min_score_integral=0.8, add_last_edge=False, single_per_crop=True,
+                    **kwargs):
     """ Computes PAF-based peak matching via greedy assignment and other such dragons """
 
     # Process each frame
@@ -502,11 +552,14 @@ def match_peaks_paf(peaks, peak_vals, pafs, skeleton,
                                    min_score_to_node_ratio=min_score_to_node_ratio,
                                    min_score_midpts=min_score_midpts,
                                    min_score_integral=min_score_integral,
-                                   add_last_edge=add_last_edge,)
+                                   add_last_edge=add_last_edge,
+                                   single_per_crop=single_per_crop)
         frame_idx = transform.get_frame_idxs(img_idx)
         predicted_frames.append(LabeledFrame(video=video, frame_idx=frame_idx, instances=instances))
 
-    predicted_frames = LabeledFrame.merge_frames(predicted_frames, video=video)
+    # Merge/filter predicted frames
+    predicted_frames = frames_post_match_peaks(predicted_frames, video)
+
     return predicted_frames
 
 def match_peaks_paf_par(peaks, peak_vals, pafs, skeleton,
@@ -515,6 +568,7 @@ def match_peaks_paf_par(peaks, peak_vals, pafs, skeleton,
                         min_score_midpts=0.05,
                         min_score_integral=0.8,
                         add_last_edge=False,
+                        single_per_crop=True,
                         pool=None, **kwargs):
     """ Parallel version of PAF peak matching """
 
@@ -529,7 +583,8 @@ def match_peaks_paf_par(peaks, peak_vals, pafs, skeleton,
                                        min_score_to_node_ratio=min_score_to_node_ratio,
                                        min_score_midpts=min_score_midpts,
                                        min_score_integral=min_score_integral,
-                                       add_last_edge=add_last_edge))
+                                       add_last_edge=add_last_edge,
+                                       single_per_crop=single_per_crop,))
         futures.append(future)
 
     predicted_frames = []
@@ -546,9 +601,26 @@ def match_peaks_paf_par(peaks, peak_vals, pafs, skeleton,
 
         predicted_frames.append(LabeledFrame(video=video, frame_idx=frame_idx, instances=instances))
 
-    predicted_frames = LabeledFrame.merge_frames(predicted_frames, video=video)
+    # Merge/filter predicted frames
+    predicted_frames = frames_post_match_peaks(predicted_frames, video)
+
     return predicted_frames
 
+def frames_post_match_peaks(predicted_frames, video):
+    # Combine LabeledFrame objects for the same video frame
+    predicted_frames = LabeledFrame.merge_frames(predicted_frames, video=video)
+
+    # Remove overlapping predicted instances
+    if OVERLAPPING_INSTANCES_NMS:
+        t0 = clock()
+        for lf in predicted_frames:
+            n = len(lf.instances)
+            instances_nms(lf.instances)
+            if len(lf.instances) < n:
+                logger.info(f"    Removed {n-len(lf.instances)} overlapping instance(s) from frame {lf.frame_idx}")
+        logger.info("    Instance NMS [%.1fs]" % (clock() - t0))
+
+    return predicted_frames
 
 @attr.s(auto_attribs=True)
 class Predictor:
@@ -593,10 +665,13 @@ class Predictor:
     add_last_edge: bool = True
     with_tracking: bool = False
     flow_window: int = 15
+    crop_iou_threshold: float = .9
+    single_per_crop: bool = True
 
     _centroid_model: keras.Model = None
 
     def predict_centroids(self, imgs: np.ndarray, crop_size: int=None,
+                iou_threshold: float=.9,
                 return_confmaps=False) -> List[List[np.ndarray]]:
 
         keras_model = self._get_centroid_model()
@@ -626,10 +701,10 @@ class Predictor:
                              frame_peaks[0][i][1]+bb_half)
                             for i in range(frame_peaks[0].shape[0])])
                     # filter boxes
-                    box_select_idxs = self._bb_non_max_suppression_fast(
+                    box_select_idxs = bounding_box_nms(
                                             boxes,
                                             scores = frame_peak_vals[0],
-                                            iou_threshold = 0.9
+                                            iou_threshold = iou_threshold,
                                             )
                     if len(box_select_idxs) < boxes.shape[0]:
                         logger.debug(f"    suppressed centroid crops from {boxes.shape[0]} to {len(box_select_idxs)}")
@@ -651,63 +726,6 @@ class Predictor:
             return centroids, centroid_confmaps
         else:
             return centroids
-
-    def _bb_non_max_suppression_fast(self, boxes, scores, iou_threshold):
-        """https://www.pyimagesearch.com/2015/02/16/faster-non-maximum-suppression-python/"""
-
-        # if there are no boxes, return an empty list
-        if len(boxes) == 0:
-            return []
-
-        # if the bounding boxes integers, convert them to floats --
-        # this is important since we'll be doing a bunch of divisions
-        if boxes.dtype.kind == "i":
-            boxes = boxes.astype("float")
-
-        # initialize the list of picked indexes
-        pick = []
-
-        # grab the coordinates of the bounding boxes
-        x1 = boxes[:,0]
-        y1 = boxes[:,1]
-        x2 = boxes[:,2]
-        y2 = boxes[:,3]
-
-        # compute the area of the bounding boxes and sort the bounding
-        # boxes by the bottom-right y-coordinate of the bounding box
-        area = (x2 - x1 + 1) * (y2 - y1 + 1)
-        idxs = np.argsort(scores)
-
-        # keep looping while some indexes still remain in the indexes
-        # list
-        while len(idxs) > 0:
-            # grab the last index in the indexes list and add the
-            # index value to the list of picked indexes
-            last = len(idxs) - 1
-            i = idxs[last]
-            pick.append(i)
-
-            # find the largest (x, y) coordinates for the start of
-            # the bounding box and the smallest (x, y) coordinates
-            # for the end of the bounding box
-            xx1 = np.maximum(x1[i], x1[idxs[:last]])
-            yy1 = np.maximum(y1[i], y1[idxs[:last]])
-            xx2 = np.minimum(x2[i], x2[idxs[:last]])
-            yy2 = np.minimum(y2[i], y2[idxs[:last]])
-
-            # compute the width and height of the bounding box
-            w = np.maximum(0, xx2 - xx1 + 1)
-            h = np.maximum(0, yy2 - yy1 + 1)
-
-            # compute the ratio of overlap
-            overlap = (w * h) / area[idxs[:last]]
-
-            # delete all indexes from the index list that have
-            idxs = np.delete(idxs, np.concatenate(([last],
-                np.where(overlap > iou_threshold)[0])))
-
-        # return the list of picked boxes
-        return pick
 
     def _get_centroid_model(self):
         if self._centroid_model is None:
@@ -829,7 +847,7 @@ class Predictor:
             if ModelOutputType.CENTROIDS in self.sleap_models:
                 # Predict centroids and crop around these
                 crop_size = h # match input of keras model
-                centroids = self.predict_centroids(mov_full, crop_size)
+                centroids = self.predict_centroids(mov_full, crop_size, self.crop_iou_threshold)
 
                 # Check if we found any centroids
                 if sum(map(len, centroids)) == 0:
@@ -890,7 +908,8 @@ class Predictor:
                 if output_path is not None and save_confmaps_pafs:
                     save_visual_outputs(
                             output_path = output_path,
-                            data = dict(confmaps=confmaps, pafs=pafs, box=mov))
+                            data = dict(confmaps=confmaps, pafs=pafs,
+                                frame_idxs=transform.frame_idxs, bounds=transform.bounding_boxes))
 
                 # Find peaks
                 t0 = time()
@@ -906,7 +925,9 @@ class Predictor:
                                                 min_score_to_node_ratio=self.min_score_to_node_ratio,
                                                 min_score_midpts=self.min_score_midpts,
                                                 min_score_integral=self.min_score_integral,
-                                                add_last_edge=self.add_last_edge, pool=pool)
+                                                add_last_edge=self.add_last_edge,
+                                                single_per_crop=self.single_per_crop,
+                                                pool=pool)
                 logger.info("  Matched peaks via PAFs [%.1fs]" % (time() - t0))
 
             logger.info(f"  Instances found on {len(predicted_frames_chunk)} images.")
@@ -1034,9 +1055,16 @@ def save_visual_outputs(output_path: str, data: dict):
     viz_output_path += ".h5"
 
     # write file
-    with h5py.File(viz_output_path, "w") as f:
+    with h5py.File(viz_output_path, "a") as f:
         for key, val in data.items():
-            f.create_dataset(key, data=val, compression="gzip")
+            val = np.array(val)
+            if key in f:
+                f[key].resize(f[key].shape[0] + val.shape[0], axis=0)
+                f[key][-val.shape[0]:] = val
+            else:
+                maxshape = (None, *val.shape[1:])
+                f.create_dataset(key, data=val, maxshape=maxshape,
+                    compression="gzip", compression_opts=9)
 
 def load_predicted_labels_json_old(
         data_path: str, parsed_json: dict = None,
@@ -1176,8 +1204,13 @@ def main():
                              'a range separated by hyphen (e.g. 1-3). (default is entire video)')
     parser.add_argument('-o', '--output', type=str, default=None,
                         help='The output filename to use for the predicted data.')
-    parser.add_argument('--save_confmaps_pafs', type=bool, default=False,
-                        help='Whether to save the confidence maps or pads')
+    parser.add_argument('--save-confmaps-pafs', dest='save_confmaps_pafs', action='store_const',
+                    const=True, default=False,
+                        help='Whether to save the confidence maps or pafs')
+    parser.add_argument('--less-overlap', dest='less_overlap', action='store_const',
+                    const=True, default=False,
+                    help='use fewer crops and include all instances from each crop '
+                    '(works best if crops are much larger than instance bounding boxes)')
     parser.add_argument('-v', '--verbose', help='Increase logging output verbosity.', action="store_true")
 
     args = parser.parse_args()
@@ -1212,6 +1245,11 @@ def main():
 
     # Create a predictor to do the work.
     predictor = Predictor(sleap_models=sleap_models, with_tracking=args.with_tracking)
+
+    if args.less_overlap:
+        predictor.crop_iou_threshold = .8
+        predictor.single_per_crop = False
+        logger.info("Using 'less overlap' mode: crop nms iou .8, multiple instances per crop, instance nms.")
 
     # Run the inference pipeline
     return predictor.predict(input_video=data_path, output_path=save_path, frames=frames,

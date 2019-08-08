@@ -21,7 +21,10 @@ class DataTransform:
     def _init_frame_idxs(self, frame_count):
         if len(self.frame_idxs) == 0:
             self.frame_idxs = list(range(frame_count))
-    
+
+    def get_data_idxs(self, frame_idx):
+        return [i for i in range(len(self.frame_idxs)) if self.frame_idxs[i] == frame_idx]
+
     def get_frame_idxs(self, idxs):
         if type(idxs) == int:
             return self._safe_frame_idx(idxs)
@@ -105,8 +108,8 @@ class DataTransform:
         self.is_cropped = True
 
         return imgs
-        
-    def invert(self, idx, point_array) -> np.ndarray:
+
+    def invert(self, idx: int, point_array: np.ndarray) -> np.ndarray:
         """
         Map points in a transformed image back on to the original image.
         

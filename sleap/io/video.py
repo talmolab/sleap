@@ -159,6 +159,10 @@ class MediaVideo:
         if self._detect_grayscale is True:
             self.grayscale = bool(np.alltrue(self.__test_frame[..., 0] == self.__test_frame[..., -1]))
 
+    @property
+    def fps(self):
+        return self.__reader.get(cv2.CAP_PROP_FPS)
+
     # The properties and methods below complete our contract with the
     # higher level Video interface.
 

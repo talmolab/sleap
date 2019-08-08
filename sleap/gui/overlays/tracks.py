@@ -3,12 +3,13 @@ from sleap.instance import Instance, PredictedInstance, Point, LabeledFrame, Tra
 from sleap.io.dataset import Labels
 from sleap.io.video import Video
 
+import attr
 import itertools
 from typing import Union
 
 from PySide2 import QtCore, QtWidgets, QtGui
 
-class TrackColorManager():
+class TrackColorManager:
     """Class to determine color to use for track. The color depends on the order of
     the tracks in `Labels` object, so we need to initialize with `Labels`.
 
@@ -141,8 +142,8 @@ class TrackColorManager():
         color = self._color_map[color_idx]
         return color
 
-
-class TrackTrailManager():
+@attr.s(auto_attribs=True)
+class TrackTrailOverlay:
     """Class to show track trails. You initialize this object with both its data source
     and its visual output scene, and it handles both extracting the relevant data for a
     given frame and plotting it in the output.
@@ -157,12 +158,12 @@ class TrackTrailManager():
         to plot the trails in scene.
     """
 
-    def __init__(self, labels: Labels, scene: QtWidgets.QGraphicsScene, trail_length: int=4, color_manager=None):
-        self.labels = labels
-        self.scene = scene
-        self.trail_length = trail_length
-        self._color_manager = color_manager or TrackColorManager(labels)
-
+    labels: Labels=None
+    scene: QtWidgets.QGraphicsScene=None
+    color_manager: TrackColorManager=TrackColorManager(labels)
+    trail_length: int=4
+    show: bool=False
+    
     def get_track_trails(self, frame_selection, track: Track):
         """Get data needed to draw track trail.
 
@@ -199,34 +200,38 @@ class TrackTrailManager():
 
         return all_trails
 
-    def get_frame_selection(self, frame_idx: int):
-        """Return list of `LabeledFrame`s to include in trail for specificed frame."""
-        frame_selection = [frame for frame in self.labels.labeled_frames
-                           if frame.frame_idx <= frame_idx]
+    def get_frame_selection(self, video: Video, frame_idx: int):
+        """Return list of `LabeledFrame`s to include in trail for specified frame."""
+
+        frame_selection = self.labels.find(video, range(0, frame_idx+1))
         frame_selection.sort(key=lambda x: x.frame_idx)
+
         return frame_selection[-self.trail_length:]
 
-    def get_tracks_in_frame(self, frame_idx: int):
+    def get_tracks_in_frame(self, video: Video, frame_idx: int):
         """Return list of tracks that have instance in specified frame."""
-        tracks_in_frame = [instance.track for frame in self.labels.labeled_frames for instance in frame
-                           if frame.frame_idx == frame_idx]
+        
+        tracks_in_frame = [inst.track for lf in self.labels.find(video, frame_idx) for inst in lf]
         return tracks_in_frame
 
-    def add_trails_to_scene(self, frame_idx: int):
+    def add_to_scene(self, video: Video, frame_idx: int):
         """Plot the trail on a given frame.
 
         Args:
+            video: current video
             frame_idx: index of the frame to which the trail is attached
         """
 
-        frame_selection = self.get_frame_selection(frame_idx)
-        tracks_in_frame = self.get_tracks_in_frame(frame_idx)
+        if not self.show: return
+
+        frame_selection = self.get_frame_selection(video, frame_idx)
+        tracks_in_frame = self.get_tracks_in_frame(video, frame_idx)
 
         for track in tracks_in_frame:
 
             trails = self.get_track_trails(frame_selection, track)
 
-            color = QtGui.QColor(*self._color_manager.get_color(track))
+            color = QtGui.QColor(*self.color_manager.get_color(track))
             pen = QtGui.QPen()
             pen.setCosmetic(True)
 
