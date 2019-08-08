@@ -10,10 +10,12 @@ from PySide2.QtWidgets import QTableWidget, QTableView, QTableWidgetItem
 from PySide2.QtWidgets import QMenu, QAction
 from PySide2.QtWidgets import QFileDialog, QMessageBox
 
+import copy
+import operator
 import os
 import sys
-import copy
 import yaml
+
 from pkg_resources import Requirement, resource_filename
 from pathlib import PurePath
 
@@ -247,6 +249,8 @@ class MainWindow(QMainWindow):
         self._menu_actions["remove predictions"] = predictionMenu.addAction("Delete All Predictions...", self.deletePredictions)
         self._menu_actions["remove clip predictions"] = predictionMenu.addAction("Delete Predictions from Clip...", self.deleteClipPredictions, shortcuts["delete clip"])
         self._menu_actions["remove area predictions"] = predictionMenu.addAction("Delete Predictions from Area...", self.deleteAreaPredictions, shortcuts["delete area"])
+        self._menu_actions["remove score predictions"] = predictionMenu.addAction("Delete Predictions with Low Score...", self.deleteLowScorePredictions)
+        self._menu_actions["remove frame limit predictions"] = predictionMenu.addAction("Delete Predictions beyond Frame Limit...", self.deleteFrameLimitPredictions)
         predictionMenu.addSeparator()
         self._menu_actions["export clip"] = predictionMenu.addAction("Export Labeled Clip...", self.exportLabeledClip, shortcuts["export clip"])
 
@@ -910,27 +914,67 @@ class MainWindow(QMainWindow):
                                     if type(inst) == PredictedInstance
                                     and is_bounded(inst)]
 
-            # Confirm that we want to delete
-            resp = QMessageBox.critical(self,
-                    "Removing predicted instances",
-                    f"There are {len(predicted_instances)} predicted instances in the selected area across the entire video. "
-                    "Are you sure you want to delete these?",
-                    QMessageBox.Yes, QMessageBox.No)
-
-            if resp == QMessageBox.No: return
-
-            # Delete the instances
-            for lf, inst in predicted_instances:
-                self.labels.remove_instance(lf, inst)
-
-            # Update visuals
-            self.plotFrame()
-            self.updateSeekbarMarks()
-            self.changestack_push("removed predictions")
+            self._delete_confirm(predicted_instances)
 
         # Prompt the user to select area
         self.updateStatusMessage(f"Please select the area from which to remove instances. This will be applied to all frames.")
         self.player.onAreaSelection(delete_area_callback)
+
+    def deleteLowScorePredictions(self):
+        score_thresh, okay = QtWidgets.QInputDialog.getDouble(
+                                self,
+                                "Delete Instances with Low Score...",
+                                "Score Below:",
+                                1,
+                                0, 100)
+        if okay:
+            # Find all instances contained in selected area
+            predicted_instances = [(lf, inst) for lf in self.labels.find(self.video)
+                                    for inst in lf
+                                    if type(inst) == PredictedInstance
+                                    and inst.score < score_thresh]
+
+            self._delete_confirm(predicted_instances)
+
+    def deleteFrameLimitPredictions(self):
+        count_thresh, okay = QtWidgets.QInputDialog.getInt(
+                                self,
+                                "Limit Instances in Frame...",
+                                "Maximum instances in a frame:",
+                                3,
+                                1, 100)
+        if okay:
+            predicted_instances = []
+            # Find all instances contained in selected area
+            for lf in self.labels.find(self.video):
+                if len(lf.instances) > count_thresh:
+                    # Get all but the count_thresh many instances with the highest score
+                    extra_instances = sorted(lf.instances,
+                                            key=operator.attrgetter('score')
+                                            )[:-count_thresh]
+                    predicted_instances.extend([(lf, inst) for inst in extra_instances])
+
+            self._delete_confirm(predicted_instances)
+
+    def _delete_confirm(self, lf_inst_list):
+
+        # Confirm that we want to delete
+        resp = QMessageBox.critical(self,
+                "Removing predicted instances",
+                f"There are {len(lf_inst_list)} predicted instances that would be deleted. "
+                "Are you sure you want to delete these?",
+                QMessageBox.Yes, QMessageBox.No)
+
+        if resp == QMessageBox.No: return
+
+        # Delete the instances
+        for lf, inst in lf_inst_list:
+            self.labels.remove_instance(lf, inst)
+
+        # Update visuals
+        self.plotFrame()
+        self.updateSeekbarMarks()
+        self.changestack_push("removed predictions")
 
     def markNegativeAnchor(self):
         def click_callback(x, y):
