@@ -137,9 +137,11 @@ class LossViewer(QtWidgets.QMainWindow):
         self.Y.append(y)
 
         dx = 0.5
-        dy = np.ptp(self.Y) * 0.02
+        dy = np.ptp(self.Y) * 0.04
+        low, high = np.quantile(self.Y, (.02, .98))
+
         self.chart.axisX().setRange(min(self.X) - dx, max(self.X) + dx)
-        self.chart.axisY().setRange(max(1e-12, min(self.Y) - dy), max(self.Y) + dy)
+        self.chart.axisY().setRange(low - dy, high + dy)
 
     def set_start_time(self, t0):
         self.t0 = t0
