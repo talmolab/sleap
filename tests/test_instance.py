@@ -176,18 +176,6 @@ def test_points_array(skeleton):
     assert np.allclose(pts[skeleton.node_to_index('head'), :], [0, 4])
     assert np.allclose(pts[skeleton.node_to_index('thorax'), :], [1, 2])
 
-    # Now use the cached version and make sure changes are not
-    # reflected
-    pts = instance1.points_array(cached=True)
-    assert np.allclose(pts[skeleton.node_to_index('thorax'), :], [1, 2])
-    instance1['thorax'] = Point(1, 6)
-    pts = instance1.points_array(cached=True)
-    assert np.allclose(pts[skeleton.node_to_index('thorax'), :], [1, 2])
-
-    # Now drop the cache and make sure changes are reflected.
-    pts = instance1.points_array()
-    assert np.allclose(pts[skeleton.node_to_index('thorax'), :], [1, 6])
-
 def test_instance_labeled_frame_ref(skeleton, centered_pair_vid):
     """
     Test whether links between labeled frames and instances are kept

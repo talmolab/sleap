@@ -286,17 +286,21 @@ class Skeleton:
         # Find all symmetric edges
         return [(src, dst, key, attr) for src, dst, key, attr in self._graph.edges(keys=True, data=True) if attr["type"] == EdgeType.SYMMETRY]
 
-    def node_to_index(self, node_name: str):
+    def node_to_index(self, node: Union[str, Node]):
         """
-        Return the index of the node with name node_name.
+        Return the index of the node, accepts either a node or string name of a Node.
 
         Args:
-            node_name: The name of the node.
+            node: The name of the node or the Node object.
 
         Returns:
             The index of the node in the graph.
         """
-        return list(self.graph.nodes).index(self.find_node(node_name))
+        node_list = list(self.graph.nodes)
+        try:
+            return node_list.index(node)
+        except ValueError:
+            return node_list.index(self.find_node(node))
 
     def add_node(self, name: str):
         """Add a node representing an animal part to the skeleton.

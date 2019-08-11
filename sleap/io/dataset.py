@@ -37,7 +37,7 @@ import pandas as pd
 
 from sleap.skeleton import Skeleton, Node
 from sleap.instance import Instance, Point, LabeledFrame, \
-    Track, PredictedPoint, PredictedInstance
+    Track, PredictedPoint, PredictedInstance, make_instance_cattr
 from sleap.rangelist import RangeList
 from sleap.io.video import Video
 from sleap.util import save_dict_to_hdf5
@@ -613,13 +613,13 @@ class Labels(MutableSequence):
         # of video and skeleton objects present in the labels. We will serialize these
         # as references to the above constructed lists to limit redundant data in the
         # json
-        label_cattr = cattr.Converter()
+        label_cattr = make_instance_cattr()
         label_cattr.register_unstructure_hook(Skeleton, lambda x: str(self.skeletons.index(x)))
         label_cattr.register_unstructure_hook(Video, lambda x: str(self.videos.index(x)))
         label_cattr.register_unstructure_hook(Node, lambda x: str(self.nodes.index(x)))
         label_cattr.register_unstructure_hook(Track, lambda x: str(self.tracks.index(x)))
-        label_cattr.register_unstructure_hook(np.bool_, bool)
 
+        # Make a converter for the top level skeletons list.
         idx_to_node = {i: self.nodes[i] for i in range(len(self.nodes))}
 
         skeleton_cattr = Skeleton.make_cattr(idx_to_node)
@@ -782,34 +782,12 @@ class Labels(MutableSequence):
         else:
             negative_anchors = dict()
 
-        label_cattr = cattr.Converter()
+        label_cattr = make_instance_cattr()
         label_cattr.register_structure_hook(Skeleton, lambda x,type: skeletons[int(x)])
         label_cattr.register_structure_hook(Video, lambda x,type: videos[int(x)])
         label_cattr.register_structure_hook(Node, lambda x,type: x if isinstance(x,Node) else nodes[int(x)])
         label_cattr.register_structure_hook(Track, lambda x, type: None if x is None else tracks[int(x)])
 
-        def structure_points(x, type):
-            if 'score' in x.keys():
-                return cattr.structure(x, PredictedPoint)
-            else:
-                return cattr.structure(x, Point)
-
-        label_cattr.register_structure_hook(Union[Point, PredictedPoint], structure_points)
-
-        def structure_instances_list(x, type):
-            inst_list = []
-            for inst_data in x:
-                if 'score' in inst_data.keys():
-                    inst = label_cattr.structure(inst_data, PredictedInstance)
-                else:
-                    inst = label_cattr.structure(inst_data, Instance)
-                inst_list.append(inst)
-            return inst_list
-
-        label_cattr.register_structure_hook(Union[List[Instance], List[PredictedInstance]],
-                                            structure_instances_list)
-        label_cattr.register_structure_hook(ForwardRef('PredictedInstance'),
-                                            lambda x,type: label_cattr.structure(x, PredictedInstance))
         labels = label_cattr.structure(dicts['labels'], List[LabeledFrame])
 
         return cls(labeled_frames=labels,
@@ -1049,7 +1027,6 @@ class Labels(MutableSequence):
                 x = points_[node_idx][0][i]
                 y = points_[node_idx][1][i]
                 new_inst[node] = Point(x, y)
-            new_inst.drop_nan_points()
             if len(new_inst.points()):
                 new_frame = LabeledFrame(video=vid, frame_idx=i)
                 new_frame.instances = new_inst,

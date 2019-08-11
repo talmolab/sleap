@@ -7,16 +7,21 @@ import math
 import numpy as np
 import h5py as h5
 import pandas as pd
+import cattr
 
 from typing import Dict, List, Optional, Union, Tuple
 
-from attr import __init__
+from numpy.lib.recfunctions import structured_to_unstructured
 
 from sleap.skeleton import Skeleton, Node
 from sleap.io.video import Video
-from sleap.util import attr_to_dtype
 
 import attr
+
+try:
+    from typing import ForwardRef
+except:
+    from typing import _ForwardRef as ForwardRef
 
 
 class Point(np.record):
@@ -66,29 +71,6 @@ class Point(np.record):
             True if x or y is NaN, False otherwise.
         """
         return math.isnan(self.x) or math.isnan(self.y)
-
-    @staticmethod
-    def asdict(p: 'Point') -> Dict:
-        """
-        Return the fields of the Point as a dict.
-
-        Returns:
-            A dict containing all the fields of the point.
-        """
-        return {'x': p.x, 'y': p.y, 'visible': bool(p.visible), 'complete': bool(p.complete)}
-
-    @classmethod
-    def fromdict(cls, d):
-        """
-        Create a Point from a dict of parameters.
-
-        Args:
-            d: A dict of parameters that will be passed to the constructor
-
-        Returns:
-            A Point object.
-        """
-        return cls(**d)
 
 
 # This turns PredictedPoint into an attrs class. Defines comparators for
@@ -153,37 +135,12 @@ class PredictedPoint(Point):
         """
         return cls(**{**Point.asdict(point), 'score': score})
 
-    @staticmethod
-    def asdict(p: 'PredictedPoint') -> Dict:
-        """
-        Return the fields of the PredictedPoint as a dict.
-
-        Returns:
-            A dict containing all the fields of the point.
-        """
-        return {'x': p.x, 'y': p.y, 'visible': bool(p.visible),
-                'complete': bool(p.complete), 'score': p.score}
-
-    @classmethod
-    def fromdict(cls, d: Dict) -> 'PredictedPoint':
-        """
-        Create a PredictedPoint from a dict of parameters.
-
-        Args:
-            d: A dict of parameters that will be passed to the constructor
-
-        Returns:
-            A PredictedPoint object.
-        """
-        return cls(**d)
-
 
 # This turns PredictedPoint into an attrs class. Defines comparators for
 # us and generaly makes it behave better. Crazy that this works!
 PredictedPoint = attr.s(these={name: attr.ib()
                                for name in PredictedPoint.dtype.names},
                         init=False)(PredictedPoint)
-
 
 
 class PointArray(np.recarray):
@@ -219,6 +176,22 @@ class PointArray(np.recarray):
         of any np.void subclass to np.record, we don't want this.
         """
         pass
+
+    @classmethod
+    def make_default(cls, size: int):
+        """
+        Construct a point array of specific size where each value in the array
+        is assigned the default values for a Point.
+
+        Args:
+            size: The number of points to allocate.
+
+        Returns:
+            A point array with all elements set to Point()
+        """
+        p = cls(size)
+        p[:] = cls._record_type()
+        return p
 
 
 class PredictedPointArray(PointArray):
@@ -261,23 +234,30 @@ class Track:
 # attributes _frame and _point_array_cache after init. These are private variables
 # that are created in post init so they are not serialized.
 
-@attr.s(auto_attribs=True)
+@attr.s(cmp=False, slots=True)
 class Instance:
     """
     The class :class:`Instance` represents a labelled instance of skeleton
 
     Args:
         skeleton: The skeleton that this instance is associated with.
-        points: A dictionary where keys are skeleton node names and values are _points.
+        points: A dictionary where keys are skeleton node names and values are Point objects. Alternatively,
+        a point array whose length and order matches skeleton.nodes
         track: An optional multi-frame object track associated with this instance.
             This allows individual animals/objects to be tracked across frames.
         from_predicted: The predicted instance (if any) that this was copied from.
+        frame: A back reference to the LabeledFrame that this Instance belongs to.
+        This field is set when Instances are added to LabeledFrame objects.
     """
 
-    skeleton: Skeleton
+    skeleton: Skeleton = attr.ib()
     track: Track = attr.ib(default=None)
     from_predicted: Optional['PredictedInstance'] = attr.ib(default=None)
-    _points: Dict[Node, Union[Point, PredictedPoint]] = attr.ib(default=attr.Factory(dict))
+    _points: PointArray = attr.ib(default=None)
+    frame: Union['LabeledFrame', None] = attr.ib(default=None)
+
+    # The underlying Point array type that this instances point array should be.
+    _point_array_type = PointArray
 
     @from_predicted.validator
     def _validate_from_predicted_(self, attribute, from_predicted):
@@ -295,39 +275,57 @@ class Instance:
         Raises:
             ValueError: If a point is associated with a skeleton node name that doesn't exist.
         """
-        is_string_dict = set(map(type, self._points)) == {str}
-        if is_string_dict:
-            for node_name in points.keys():
-                if not self.skeleton.has_node(node_name):
-                    raise KeyError(f"There is no node named {node_name} in {self.skeleton}")
+        if type(points) is dict:
+            is_string_dict = set(map(type, points)) == {str}
+            if is_string_dict:
+                for node_name in points.keys():
+                    if not self.skeleton.has_node(node_name):
+                        raise KeyError(f"There is no node named {node_name} in {self.skeleton}")
+        elif isinstance(points, PointArray):
+            if len(points) != len(self.skeleton.nodes):
+                raise ValueError("PointArray does not have the same number of rows as skeleton nodes.")
 
     def __attrs_post_init__(self):
 
-        # If the points dict is non-empty, validate it.
-        if self._points:
-            # Check if the dict contains all strings
-            is_string_dict = set(map(type, self._points)) == {str}
+        if not self.skeleton:
+            raise ValueError("No skeleton set for Instance")
 
-            # Check if the dict contains all Node objects
-            is_node_dict = set(map(type, self._points)) == {Node}
+        # If the user did not pass a points list initialize a point array for future
+        # points.
+        if not self._points:
 
-            # If the user fed in a dict whose keys are strings, these are node names,
-            # convert to node indices so we don't break references to skeleton nodes
-            # if the node name is relabeled.
-            if self._points and is_string_dict:
-                self._points = {self.skeleton.find_node(name): point for name,point in self._points.items()}
+            # Initialize an empty point array that is the size of the skeleton.
+            self._points = self._point_array_type.make_default(len(self.skeleton.nodes))
 
-            if not is_string_dict and not is_node_dict:
-                raise ValueError("points dictionary must be keyed by either strings " +
-                                 "(node names) or Nodes.")
+        else:
 
-        # Create here in post init so it is not serialized by cattrs, wish there was better way
-        # This field keeps track of any labeled frame that this Instance has been associated with.
-        self.frame: Union[LabeledFrame, None] = None
+            if type(self._points) is dict:
+                parray = self._point_array_type.make_default(len(self.skeleton.nodes))
+                Instance._points_dict_to_array(self._points, parray, self.skeleton)
+                self._points = parray
 
-        # A variable used to cache a constructed points_array call to save on time. This is only
-        # used when cached=True is passed to points_array
-        self._points_array_cache: Union[np.array, None] = None
+    @staticmethod
+    def _points_dict_to_array(points, parray, skeleton):
+
+        # Check if the dict contains all strings
+        is_string_dict = set(map(type, points)) == {str}
+
+        # Check if the dict contains all Node objects
+        is_node_dict = set(map(type, points)) == {Node}
+
+        # If the user fed in a dict whose keys are strings, these are node names,
+        # convert to node indices so we don't break references to skeleton nodes
+        # if the node name is relabeled.
+        if points and is_string_dict:
+            points = {skeleton.find_node(name): point for name, point in points.items()}
+
+        if not is_string_dict and not is_node_dict:
+            raise ValueError("points dictionary must be keyed by either strings " +
+                             "(node names) or Nodes.")
+
+        # Get rid of the points dict and replace with equivalent point array.
+        for node, point in points.items():
+            parray[skeleton.node_to_index(node)] = point
 
     def _node_to_index(self, node_name):
         """
@@ -343,7 +341,7 @@ class Instance:
 
     def __getitem__(self, node):
         """
-        Get the _points associated with particular skeleton node or list of skeleton nodes
+        Get the Points associated with particular skeleton node or list of skeleton nodes
 
         Args:
             node: A single node or list of nodes within the skeleton associated with this instance.
@@ -361,14 +359,10 @@ class Instance:
 
             return ret_list
 
-        if isinstance(node, str):
-            node = self.skeleton.find_node(node)
-        if node in self.skeleton.nodes:
-            if not node in self._points:
-                self._points[node] = Point()
-
+        try:
+            node = self._node_to_index(node)
             return self._points[node]
-        else:
+        except ValueError:
             raise KeyError(f"The underlying skeleton ({self.skeleton}) has no node '{node}'")
 
     def __contains__(self, node):
@@ -381,7 +375,17 @@ class Instance:
         Returns:
             bool: True if the point with the node name specified has a point in this instance.
         """
-        return node in self._points
+
+        if type(node) is Node:
+            node = node.name
+
+        if node not in self.skeleton:
+            return False
+
+        node_idx = self._node_to_index(node)
+
+        # If the points are nan, then they haven't been allocated.
+        return not self._points[node_idx].isnan()
 
     def __setitem__(self, node, value):
 
@@ -398,18 +402,20 @@ class Instance:
             for n, v in zip(node, value):
                 self.__setitem__(n, v)
         else:
-            if isinstance(node,str):
-                node = self.skeleton.find_node(node)
-
-            if node in self.skeleton.nodes:
-                self._points[node] = value
-            else:
+            try:
+                node_idx = self._node_to_index(node)
+                self._points[node_idx] = value
+            except ValueError:
                 raise KeyError(f"The underlying skeleton ({self.skeleton}) has no node '{node}'")
 
     def __delitem__(self, node):
         """ Delete node key and points associated with that node. """
-        # TODO: handle this case somehow?
-        pass
+        try:
+            node_idx = self._node_to_index(node)
+            self._points[node_idx].x = math.nan
+            self._points[node_idx].y = math.nan
+        except ValueError:
+            raise KeyError(f"The underlying skeleton ({self.skeleton}) has no node '{node}'")
 
     def matches(self, other):
         """
@@ -445,10 +451,10 @@ class Instance:
         Get the list of nodes that have been labelled for this instance.
 
         Returns:
-            A list of nodes that have been labelled for this instance.
+            A tuple of nodes that have been labelled for this instance.
 
         """
-        return tuple(self._points.keys())
+        return tuple(self.skeleton.nodes[i] for i, point in enumerate(self._points) if not point.isnan())
 
     @property
     def nodes_points(self):
@@ -459,19 +465,19 @@ class Instance:
         Returns:
             The instance's (node, point) tuple pairs for all labelled point.
         """
-        names_to_points = {node: point for node, point in self._points.items()}
+        names_to_points = dict(zip(self.nodes, self.points()))
         return names_to_points.items()
 
-    def points(self) -> Tuple:
+    def points(self) -> Tuple[Point]:
         """
         Return the list of labelled points, in order they were labelled.
 
         Returns:
             The list of labelled points, in order they were labelled.
         """
-        return tuple(self._points.values())
+        return tuple(point for point in self._points if not point.isnan())
 
-    def points_array(self, cached=False, invisible_as_nan=False) -> np.ndarray:
+    def points_array(self, copy: bool = True, invisible_as_nan: bool = False) -> np.ndarray:
         """
         Return the instance's points in array form.
 
@@ -485,16 +491,16 @@ class Instance:
             The order of the rows corresponds to the ordering of the skeleton nodes.
             Any skeleton node not defined will have NaNs present.
         """
-        if not cached or (cached and self._points_array_cache is None):
-            pts = np.ndarray((len(self.skeleton.nodes), 2))
-            for i, n in enumerate(self.skeleton.nodes):
-                p = self._points.get(n, Point())
-                pts[i, 0] = p.x if p.visible or not invisible_as_nan else np.nan
-                pts[i, 1] = p.y if p.visible or not invisible_as_nan else np.nan
 
-            self._points_array_cache = pts
+        if not copy and not invisible_as_nan:
+            return self._points[['x', 'y']]
+        else:
+            parray = structured_to_unstructured(self._points[['x', 'y']])
 
-        return self._points_array_cache
+            if invisible_as_nan:
+                parray[self._points.visible is False, :] = math.nan
+
+            return parray
 
     @property
     def centroid(self) -> np.ndarray:
@@ -653,36 +659,6 @@ class Instance:
 
         return instances
 
-    def drop_nan_points(self):
-        """
-        Drop any points for the instance that are not completely specified.
-
-        Returns:
-            None
-        """
-        is_nan = []
-        for n, p in self._points.items():
-            if p.isnan():
-                is_nan.append(n)
-
-        # Remove them
-        for n in is_nan:
-            self._points.pop(n, None)
-
-    @classmethod
-    def drop_all_nan_points(cls, instances: List['Instance']):
-        """
-        Call drop_nan_points on a list of Instances.
-
-        Args:
-            instances: The list of instances to call drop_nan_points() on.
-
-        Returns:
-            None
-        """
-        for i in instances:
-            i.drop_nan_points()
-
     @property
     def frame_idx(self) -> Union[None, int]:
         """
@@ -698,7 +674,7 @@ class Instance:
             return self.frame.frame_idx
 
 
-@attr.s(auto_attribs=True)
+@attr.s(cmp=False, slots=True)
 class PredictedInstance(Instance):
     """
     A predicted instance is an output of the inference procedure. It is
@@ -709,8 +685,12 @@ class PredictedInstance(Instance):
     """
     score: float = attr.ib(default=0.0, converter=float)
 
+    # The underlying Point array type that this instances point array should be.
+    _point_array_type = PredictedPointArray
+
     def __attrs_post_init__(self):
         super(PredictedInstance, self).__attrs_post_init__()
+
         if self.from_predicted is not None:
             raise ValueError("PredictedInstance should not have from_predicted.")
 
@@ -735,6 +715,86 @@ class PredictedInstance(Instance):
         del kw_args['_points']
         kw_args['score'] = score
         return cls(**kw_args)
+
+
+def make_instance_cattr():
+    """
+    Create a cattr converter for handling Lists of Instances/PredictedInstances
+
+    Returns:
+        A cattr converter with hooks registered for structuring and unstructuring
+        Instances.
+    """
+
+    converter = cattr.Converter()
+
+    #### UNSTRUCTURE HOOKS
+
+    # JSON dump cant handle NumPy bools so convert them. These are present
+    # in Point/PredictedPoint objects now since they are actually custom numpy dtypes.
+    converter.register_unstructure_hook(np.bool_, bool)
+
+    converter.register_unstructure_hook(PointArray, lambda x: None)
+    converter.register_unstructure_hook(PredictedPointArray, lambda x: None)
+    def unstructure_instance(x: Instance):
+
+        # Unstructure everything but the points array and frame attribute
+        d = {field.name: converter.unstructure(x.__getattribute__(field.name))
+             for field in attr.fields(x.__class__)
+             if field.name not in ['_points', 'frame']}
+
+        # Replace the point array with a dict
+        d['_points'] = converter.unstructure({k: v for k, v in x.nodes_points})
+
+        return d
+
+    converter.register_unstructure_hook(Instance, unstructure_instance)
+    converter.register_unstructure_hook(PredictedInstance, unstructure_instance)
+
+    ## STRUCTURE HOOKS
+
+    def structure_points(x, type):
+        if 'score' in x.keys():
+            return cattr.structure(x, PredictedPoint)
+        else:
+            return cattr.structure(x, Point)
+
+    converter.register_structure_hook(Union[Point, PredictedPoint], structure_points)
+
+    def structure_instances_list(x, type):
+        inst_list = []
+        for inst_data in x:
+            if 'score' in inst_data.keys():
+                inst = converter.structure(inst_data, PredictedInstance)
+            else:
+                inst = converter.structure(inst_data, Instance)
+            inst_list.append(inst)
+
+        return inst_list
+
+    converter.register_structure_hook(Union[List[Instance], List[PredictedInstance]],
+                                            structure_instances_list)
+
+    converter.register_structure_hook(ForwardRef('PredictedInstance'),
+                                      lambda x, type: converter.structure(x, PredictedInstance))
+
+    # We can register structure hooks for point arrays that do nothing
+    # because Instance can have a dict of points passed to it in place of
+    # a PointArray
+    def structure_point_array(x, t):
+        if x:
+            point1 = x[list(x.keys())[0]]
+            if 'score' in point1.keys():
+                return converter.structure(x, Dict[Node, PredictedPoint])
+            else:
+                return converter.structure(x, Dict[Node, Point])
+        else:
+            return {}
+
+    converter.register_structure_hook(PointArray, structure_point_array)
+    converter.register_structure_hook(PredictedPointArray, structure_point_array)
+
+    return converter
 
 
 @attr.s(auto_attribs=True)
@@ -871,3 +931,4 @@ class LabeledFrame:
         labeled_frames = list(filter(lambda lf: len(lf.instances),
                                      labeled_frames))
         return labeled_frames
+
