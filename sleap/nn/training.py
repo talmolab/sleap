@@ -221,14 +221,20 @@ class Trainer:
         elif model.output_type == ModelOutputType.CENTROIDS:
             num_outputs_channels = 1
 
-        # Determine output size
-        up_down_diff = model.backbone.down_blocks - model.backbone.up_blocks
-        output_img_size = (imgs_train.shape[1]//(2**up_down_diff),
-                           imgs_train.shape[2]//(2**up_down_diff))
+        # Determine input and output sizes
 
-        print(f"Training set: {imgs_train.shape} -> {output_img_size}, {num_outputs_channels} channels")
-        print(f"Validation set: {imgs_val.shape} -> {output_img_size}, {num_outputs_channels} channels")
-        print("===",up_down_diff, output_img_size,"===")
+        # If there are more downsampling layers than upsampling layers,
+        # then the output (confidence maps or part affinity fields) will
+        # be at a different scale than the input (images).
+        up_down_diff = model.backbone.down_blocks - model.backbone.up_blocks
+        output_scale = 1/(2**up_down_diff)
+
+        input_img_size = (imgs_train.shape[1], imgs_train.shape[2])
+        output_img_size = (input_img_size[0]*output_scale, input_img_size[1]*output_scale)
+
+        logger.info(f"Training set: {imgs_train.shape} -> {output_img_size}, {num_outputs_channels} channels")
+        logger.info(f"Validation set: {imgs_val.shape} -> {output_img_size}, {num_outputs_channels} channels")
+
         # Input layer
         img_input = Input((img_height, img_width, img_channels))
 
@@ -281,15 +287,15 @@ class Trainer:
         # Setup data generation
         if model.output_type == ModelOutputType.CONFIDENCE_MAP:
             def datagen_function(points):
-                return generate_confmaps_from_points(points, skeleton, output_img_size,
-                            sigma=self.sigma)
+                return generate_confmaps_from_points(points, skeleton, input_img_size,
+                            sigma=self.sigma, scale=output_scale)
         elif model.output_type == ModelOutputType.PART_AFFINITY_FIELD:
             def datagen_function(points):
-                return generate_pafs_from_points(points, skeleton, output_img_size,
-                            sigma=self.sigma)
+                return generate_pafs_from_points(points, skeleton, input_img_size,
+                            sigma=self.sigma, scale=output_scale)
         elif model.output_type == ModelOutputType.CENTROIDS:
             def datagen_function(points):
-                return generate_confmaps_from_points(points, None, output_img_size,
+                return generate_confmaps_from_points(points, None, input_img_size,
                             node_count=1, sigma=self.sigma)
         else:
             datagen_function = None

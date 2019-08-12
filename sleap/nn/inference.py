@@ -792,6 +792,10 @@ class Predictor:
         logger.info("Loaded models:")
         logger.info("  Input shape: %d x %d x %d" % (h, w, c))
 
+        # Determine any difference in scale between input and ouput
+        out_h = keras_model.output_shape[0][1]
+        out_scale = out_h/h
+
         frames = frames or list(range(vid.num_frames))
         num_frames = len(frames)
         vid_h = vid.shape[1]
@@ -802,6 +806,7 @@ class Predictor:
         logger.info("  Frames: %d" % num_frames)
         logger.info("  Frame shape: %d x %d" % (vid_h, vid_w))
         logger.info("  Scale: %f" % scale)
+        logger.info("  Multiscale output scale: %f" % out_scale)
         logger.info(f"  True Scale: {h/vid_h, w/vid_w}")
         logger.info(f"  Crop around predicted centroids? {ModelOutputType.CENTROIDS in self.sleap_models}")
         h_w_scale = np.array((h/vid_h, w/vid_w))
@@ -859,6 +864,10 @@ class Predictor:
             else:
                 # Scale (if target doesn't match current size)
                 mov = transform.scale_to(mov_full, target_size=(h,w))
+
+            # Adjust scale for model where output has different scale than input
+            transform.scale = transform.scale * out_scale
+
             logger.info( "  Transformed images [%.1fs]" % (time() - t0))
 
             # If there's no PAF model, then we're assuming there's only a single
