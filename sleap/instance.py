@@ -51,12 +51,14 @@ class Point(np.record):
         # out how recarray does it. So I just use it to make matrix of size 1 and
         # index in to get the np.record/Point
         # All of this is a giant hack so that Point(x=2,y=3) works like expected.
-        val = PointArray(1)[0]
+        val = PointArray(1)
+        val[0] = (x, y, visible, complete)
+        val = val[0]
 
-        val.x = x
-        val.y = y
-        val.visible = visible
-        val.complete = complete
+        # val.x = x
+        # val.y = y
+        # val.visible = visible
+        # val.complete = complete
 
         return val
 
@@ -111,13 +113,15 @@ class PredictedPoint(Point):
         # out how recarray does it. So I just use it to make matrix of size 1 and
         # index in to get the np.record/Point
         # All of this is a giant hack so that Point(x=2,y=3) works like expected.
-        val = PredictedPointArray(1)[0]
+        val = PredictedPointArray(1)
+        val[0] = (x, y, visible, complete, score)
+        val = val[0]
 
-        val.x = x
-        val.y = y
-        val.visible = visible
-        val.complete = complete
-        val.score = score
+        # val.x = x
+        # val.y = y
+        # val.visible = visible
+        # val.complete = complete
+        # val.score = score
 
         return val
 

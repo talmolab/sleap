@@ -296,7 +296,7 @@ class Skeleton:
         Returns:
             The index of the node in the graph.
         """
-        node_list = list(self.graph.nodes)
+        node_list = list(self._graph.nodes)
         try:
             return node_list.index(node)
         except ValueError:
