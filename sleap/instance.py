@@ -197,6 +197,23 @@ class PointArray(np.recarray):
         p[:] = cls._record_type()
         return p
 
+    def __getitem__(self, indx):
+        obj = super(np.recarray, self).__getitem__(indx)
+
+        # copy behavior of getattr, except that here
+        # we might also be returning a single element
+        if isinstance(obj, np.ndarray):
+            if obj.dtype.fields:
+                obj = obj.view(type(self))
+                #if issubclass(obj.dtype.type, numpy.void):
+                #    return obj.view(dtype=(self.dtype.type, obj.dtype))
+                return obj
+            else:
+                return obj.view(type=np.ndarray)
+        else:
+            # return a single element
+            return obj
+
 
 class PredictedPointArray(PointArray):
     """
@@ -204,7 +221,6 @@ class PredictedPointArray(PointArray):
     points.
     """
     _record_type = PredictedPoint
-
 
 @attr.s(slots=True, cmp=False)
 class Track:
@@ -296,7 +312,7 @@ class Instance:
 
         # If the user did not pass a points list initialize a point array for future
         # points.
-        if not self._points:
+        if self._points is None:
 
             # Initialize an empty point array that is the size of the skeleton.
             self._points = self._point_array_type.make_default(len(self.skeleton.nodes))
@@ -481,20 +497,29 @@ class Instance:
         """
         return tuple(point for point in self._points if not point.isnan())
 
-    def points_array(self, copy: bool = True, invisible_as_nan: bool = False) -> np.ndarray:
+    def points_array(self, copy: bool = True,
+                     invisible_as_nan: bool = False,
+                     full: bool = False) -> np.ndarray:
         """
         Return the instance's points in array form.
 
         Args:
-            cached: If True, use a cached version of the points data if available,
-            create cache if it doesn't exist. If False, recompute and cache each
-            call.
+            copy: If True, the return a copy of the points array as an
+            Nx2 ndarray where first column is x and second column is y.
+            If False, return a view of the underlying recarray.
+            invisible_as_nan: Should invisible points be marked as NaN.
+            full: If True, return the raw underlying recarray with all attributes
+            of the point, if not, return just the x and y coordinate. Assumes
+            copy is False and invisible_as_nan is False.
         Returns:
             A Nx2 array containing x and y coordinates of each point
             as the rows of the array and N is the number of nodes in the skeleton.
             The order of the rows corresponds to the ordering of the skeleton nodes.
             Any skeleton node not defined will have NaNs present.
         """
+
+        if full:
+            return self._points
 
         if not copy and not invisible_as_nan:
             return self._points[['x', 'y']]
@@ -512,156 +537,6 @@ class Instance:
         points = self.points_array(invisible_as_nan=True)
         centroid = np.nanmedian(points, axis=0)
         return centroid
-
-    @classmethod
-    def save_hdf5(cls, file: Union[str, h5.File],
-                  instances: Union['Instance', List['Instance']],
-                  skip_nan: bool = True):
-        """
-        Write the instance point level data to an HDF5 file and group. This
-        function writes the data to an HDF5 group not a dataset. Each
-        column of the data is a dataset. The datasets within the group
-        will be all the same length (the total number of points across all
-        instances). They are as follows:
-
-            * id - A unique number for each row of the table.
-            * instanceId - a unique id for each unique instance.
-            * skeleton - the name of the skeleton that this point is a part of.
-            * node - A string specifying the name of the skeleton node that this point value corresponds.
-            * videoId - A string specifying the video that this instance is in.
-            * frameIdx - The frame number of the video that this instance occurs on.
-            * visible - Whether the point in this row for this instance is visible.
-            * x - The horizontal pixel position of this node for this instance.
-            * y - The vertical pixel position of this node for this instance.
-
-        Args:
-            file: The HDF5 file to save the instance data to.
-            instances: A single instance or list of instances.
-            skip_nan: Whether to drop points that have NaN values for x or y.
-
-        Returns:
-            None
-        """
-
-        # Make it into a list of length one if needed.
-        if type(instances) is Instance:
-            instances = [instances]
-
-        if type(file) is str:
-            with h5.File(file) as _file:
-                Instance._save_hdf5(file=_file, instances=instances, skip_nan=skip_nan)
-        else:
-            Instance._save_hdf5(file=file, instances=instances, skip_nan=skip_nan)
-
-    @classmethod
-    def _save_hdf5(cls, file: h5.File, instances: List['Instance'], skip_nan: bool = True):
-
-        # Get all the unique skeleton objects in this list of instances
-        skeletons = {i.skeleton for i in instances}
-
-        # First, lets save the skeletons to the file
-        Skeleton.save_all_hdf5(file=file, skeletons=list(skeletons))
-
-        # Second, lets get the instance data as a pandas data frame.
-        df = cls.to_pandas_df(instances=instances, skip_nan=skip_nan)
-
-        # If the group doesn't exists, create it, but do so with track order.
-        # If it does exists, leave it be.
-        if 'points' not in file:
-            group = file.create_group('points', track_order=True)
-        else:
-            group = file['points']
-
-        # Write each column as a data frame.
-        for col in df:
-            vals = df[col].values
-            if col in group:
-                del group[col]
-
-            # If the column are objects (should be strings), convert to dtype=S, strings as per
-            # h5py recommendations.
-            if vals.dtype == np.dtype('O'):
-                dtype = h5.special_dtype(vlen=str)
-                group.create_dataset(name=col, shape=vals.shape,
-                                     data=vals,
-                                     dtype=dtype,
-                                     compression="gzip")
-            else:
-                group.create_dataset(name=col, shape=vals.shape,
-                                     data=vals, compression="gzip")
-
-    @classmethod
-    def load_hdf5(cls, file: Union[h5.File, str]) -> List['Instance']:
-        """
-        Load instance data from an HDF5 dataset.
-
-        Args:
-            file: The name of the HDF5 file or the open h5.File object.
-
-        Returns:
-            A list of Instance objects.
-        """
-
-        if type(file) is str:
-            with h5.File(file) as _file:
-                return Instance._load_hdf5(_file)
-        else:
-            return Instance._load_hdf5(file)
-
-    @classmethod
-    def _load_hdf5(self, file: h5.File):
-
-        # First, get all the skeletons in the HDF5 file
-        skeletons = Skeleton.load_all_hdf5(file=file, return_dict=True)
-
-        if 'points' not in file:
-            raise ValueError("No instance data found in dataset.")
-
-        group = file['points']
-
-        # Next get a dict that contains all the datasets for the instance
-        # data.
-        records = {}
-        for key, dset in group.items():
-            records[key] = dset[...]
-
-        # Convert to a data frame.
-        df = pd.DataFrame.from_dict(records)
-
-        # Lets first create all the points, start by grabbing the Point columns, grab only
-        # columns that exist. This is just in case we are reading an older form of the dataset
-        # format and the fields don't line up.
-        point_cols = [f.name for f in attr.fields(Point)]
-        point_cols = list(filter(lambda x: x in group, point_cols))
-
-        # Extract the points columns and convert dicts of keys and values.
-        points = df[[*point_cols]].to_dict('records')
-
-        # Convert to points dicts to points objects
-        points = [Point(**args) for args in points]
-
-        # Instance columns
-        instance_cols = [f.name for f in attr.fields(Instance)]
-        instance_cols = list(filter(lambda x: x in group, instance_cols))
-
-        instance_records = df[[*instance_cols]].to_dict('records')
-
-        # Convert skeletons references to skeleton objects
-        for r in instance_records:
-            r['skeleton'] = skeletons[r['skeleton']]
-
-        instances: List[Instance] = []
-        curr_id = -1 # Start with an invalid instance id so condition is tripped
-        for idx, r in enumerate(instance_records):
-            if curr_id == -1 or curr_id != df['instance_id'].values[idx]:
-                curr_id = df['instance_id'].values[idx]
-                curr_instance = Instance(**r)
-                instances.append(curr_instance)
-
-            # Add the point the instance
-            curr_instance[df['node'].values[idx]] = points[idx]
-
-        return instances
 
     @property
     def frame_idx(self) -> Union[None, int]:

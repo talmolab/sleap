@@ -76,37 +76,6 @@ def test_instance_point_iter(skeleton):
         assert points[node.name] == point
 
 
-# Skip HDF5 saving of instances now because tracks are not saved properly
-@pytest.mark.skip
-def test_hdf5(instances, tmpdir):
-    out_dir = tmpdir
-    path = os.path.join(out_dir, 'dataset.h5')
-
-    if os.path.isfile(path):
-        os.remove(path)
-
-    Instance.save_hdf5(file=path, instances=instances)
-
-    assert os.path.isfile(path)
-
-    # Make a deep copy, because we are gonna drop nan points in place.
-    # and I don't want to change the fixture.
-    instances_copy = copy.deepcopy(instances)
-
-    # Drop the NaN points
-    Instance.drop_all_nan_points(instances_copy)
-
-    # Make sure we can overwrite
-    Instance.save_hdf5(file=path, instances=instances_copy[0:100], skip_nan=False)
-
-    # Load the data back
-    instances2 = Instance.load_hdf5(file=path)
-
-    # Check that we get back the same instances
-    for i in range(len(instances2)):
-        assert instances_copy[i].matches(instances2[i])
-
-
 def test_skeleton_node_name_change():
     """
     Test that and instance is not broken after a node on the

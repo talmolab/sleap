@@ -62,11 +62,13 @@ def _check_labels_match(expected_labels, other_labels, format = 'png'):
 
         frame_idx = label.frame_idx
 
+        frame_data = label.video.get_frame(frame_idx)[0:15, 0:15, :]
+        expected_frame_data = expected_label.video.get_frame(frame_idx)[0:15, 0:15, :]
+
         # Compare the first frames of the videos, do it on a small sub-region to
         # make the test reasonable in time.
         if format is 'png':
-            assert np.allclose(expected_label.video.get_frame(frame_idx)[0:15, 0:15, :],
-                    label.video.get_frame(frame_idx)[0:15, 0:15, :])
+            assert np.allclose(frame_data, expected_frame_data)
 
         # Compare the instances
         assert all(i1.matches(i2) for (i1, i2) in zip(expected_label.instances, label.instances))
@@ -74,7 +76,6 @@ def _check_labels_match(expected_labels, other_labels, format = 'png'):
         # This test takes to long, break after 20 or so.
         if frame_idx > 20:
             break
-
 
 
 def test_labels_json(tmpdir, multi_skel_vid_labels):
@@ -263,9 +264,11 @@ def test_instance_access():
     assert len(list(labels.instances(video=dummy_video))) == 20
     assert len(list(labels.instances(video=dummy_video2))) == 30
 
+
 def test_load_labels_mat(mat_labels):
     assert len(mat_labels.nodes) == 6
     assert len(mat_labels) == 43
+
 
 @pytest.mark.parametrize("format", ['png', 'mjpeg/avi'])
 def test_save_labels_with_frame_data(multi_skel_vid_labels, tmpdir, format):
@@ -289,7 +292,14 @@ def test_save_labels_with_frame_data(multi_skel_vid_labels, tmpdir, format):
     # Make sure we can load twice
     loaded_labels = Labels.load_json(f"{filename}.zip")
 
-@pytest.mark.skip
-def test_save_labels_hdf5(multi_skel_vid_labels, tmpdir):
-    # FIXME: This is not really implemented yet and needs a real test
-    multi_skel_vid_labels.save_hdf5(filename=os.path.join(tmpdir, 'test.h5'), save_frame_data=False)
+
+def test_labels_hdf5(multi_skel_vid_labels, tmpdir):
+    labels = multi_skel_vid_labels
+    filename = os.path.join('.', 'test.h5')
+
+    Labels.save_hdf5(filename=filename, labels=labels)
+
+    loaded_labels = Labels.load_hdf5(filename=filename)
+
+    _check_labels_match(labels, loaded_labels)
+
