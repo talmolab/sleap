@@ -8,7 +8,7 @@ from PySide2.QtWidgets import QSizePolicy, QLabel, QGraphicsRectItem
 from PySide2.QtGui import QPainter, QPen, QBrush, QColor, QKeyEvent
 from PySide2.QtCore import Qt, Signal, QRect, QRectF
 
-from sleap.gui.tracks import TrackColorManager
+from sleap.gui.overlays.tracks import TrackColorManager
 
 from operator import itemgetter
 from itertools import groupby

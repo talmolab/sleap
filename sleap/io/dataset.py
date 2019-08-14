@@ -198,25 +198,31 @@ class Labels(MutableSequence):
         else:
             raise KeyError("Invalid label indexing arguments.")
 
-    def find(self, video: Video, frame_idx: Union[int, range] = None) -> List[LabeledFrame]:
+    def find(self, video: Video, frame_idx: Union[int, range] = None, return_new: bool=False) -> List[LabeledFrame]:
         """ Search for labeled frames given video and/or frame index.
 
         Args:
             video: a `Video` instance that is associated with the labeled frames
             frame_idx: an integer specifying the frame index within the video
+            return_new: return singleton of new `LabeledFrame` if none found?
 
         Returns:
             List of `LabeledFrame`s that match the criteria. Empty if no matches found.
 
         """
+        null_result = [LabeledFrame(video=video, frame_idx=frame_idx)] if return_new else []
+
         if frame_idx:
-            if video not in self._frame_idx_map: return []
+            if video not in self._frame_idx_map: return null_result
+
             if type(frame_idx) == range:
                 return [self._frame_idx_map[video][idx] for idx in frame_idx if idx in self._frame_idx_map[video]]
-            if frame_idx not in self._frame_idx_map[video]: return []
+
+            if frame_idx not in self._frame_idx_map[video]: return null_result
+
             return [self._frame_idx_map[video][frame_idx]]
         else:
-            if video not in self._lf_by_video: return []
+            if video not in self._lf_by_video: return null_result
             return self._lf_by_video[video]
 
     def find_first(self, video: Video, frame_idx: int = None) -> LabeledFrame:
@@ -343,7 +349,7 @@ class Labels(MutableSequence):
             for instance in instances:
                 if instance.track not in tracks:
                     tracks[instance.track] = RangeList()
-                tracks[instance.track].add(instance.frame_idx)
+                tracks[instance.track].add(frame_idx)
         return tracks
 
     def find_track_occupancy(self, video: Video, track: Union[Track, int], frame_range=None) -> List[Tuple[LabeledFrame, Instance]]:
@@ -1244,6 +1250,39 @@ class Labels(MutableSequence):
             labels.append(label)
 
         return cls(labels)
+
+    @classmethod
+    def make_video_callback(cls, search_paths=None):
+        search_paths = search_paths or []
+        def video_callback(video_list, new_paths=search_paths):
+            # Check each video
+            for video_item in video_list:
+                if "backend" in video_item and "filename" in video_item["backend"]:
+                    current_filename = video_item["backend"]["filename"]
+                    # check if we can find video
+                    if not os.path.exists(current_filename):
+                        is_found = False
+
+                        current_basename = os.path.basename(current_filename)
+                        # handle unix, windows, or mixed paths
+                        if current_basename.find("/") > -1:
+                            current_basename = current_basename.split("/")[-1]
+                        if current_basename.find("\\") > -1:
+                            current_basename = current_basename.split("\\")[-1]
+
+                        # First see if we can find the file in another directory,
+                        # and if not, prompt the user to find the file.
+
+                        # We'll check in the current working directory, and if the user has
+                        # already found any missing videos, check in the directory of those.
+                        for path_dir in new_paths:
+                            check_path = os.path.join(path_dir, current_basename)
+                            if os.path.exists(check_path):
+                                # we found the file in a different directory
+                                video_item["backend"]["filename"] = check_path
+                                is_found = True
+                                break
+        return video_callback
 
     @classmethod
     def make_gui_video_callback(cls, search_paths):

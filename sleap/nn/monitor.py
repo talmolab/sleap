@@ -99,6 +99,7 @@ class LossViewer(QtWidgets.QMainWindow):
         self.current_job_output_type = what
         self.epoch = 0
         self.epoch_size = 1
+        self.last_epoch_val_loss = None
         self.last_batch_number = 0
         self.is_running = False
 
@@ -151,7 +152,11 @@ class LossViewer(QtWidgets.QMainWindow):
         if self.t0 is not None and self.is_running:
             dt = time() - self.t0
             dt_min, dt_sec = divmod(dt, 60)
-            self.chart.setTitle(f"Runtime: {int(dt_min):02}:{int(dt_sec):02}")
+            title = f"Training Epoch <b>{self.epoch}</b> / "
+            title += f"Runtime: <b>{int(dt_min):02}:{int(dt_sec):02}</b>"
+            if self.last_epoch_val_loss is not None:
+                title += f"<br />Last Epoch Validation Loss: <b>{self.last_epoch_val_loss:.3e}</b>"
+            self.chart.setTitle(title)
 
     def check_messages(self, timeout=10):
         if self.sub and self.sub.poll(timeout, zmq.POLLIN):
@@ -173,6 +178,7 @@ class LossViewer(QtWidgets.QMainWindow):
                     self.epoch_size = max(self.epoch_size, self.last_batch_number + 1)
                     self.add_datapoint((self.epoch+1)*self.epoch_size, msg["logs"]["loss"], "epoch_loss")
                     if "val_loss" in msg["logs"].keys():
+                        self.last_epoch_val_loss = msg["logs"]["val_loss"]
                         self.add_datapoint((self.epoch+1)*self.epoch_size, msg["logs"]["val_loss"], "val_loss")
                 elif msg["event"] == "batch_end":
                     self.last_batch_number = msg["logs"]["batch"]

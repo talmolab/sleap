@@ -1,5 +1,5 @@
 from sleap.gui.video import QtVideoPlayer
-from sleap.gui.quiverplot import MultiQuiverPlot
+from sleap.gui.overlays.pafs import MultiQuiverPlot
 
 from sleap.io.video import Video
 

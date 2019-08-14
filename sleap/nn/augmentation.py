@@ -239,8 +239,8 @@ def demo_augmentation():
     imgs, aug_out = aug[0]
 
     from sleap.io.video import Video
-    from sleap.gui.confmapsplot import demo_confmaps
-    from sleap.gui.quiverplot import demo_pafs
+    from sleap.gui.overlays.confmaps import demo_confmaps
+    from sleap.gui.overlays.pafs import demo_pafs
     from PySide2.QtWidgets import QApplication
 
     # Visualize augmented training data
@@ -271,8 +271,8 @@ def demo_bad_augmentation():
     imgs, confmaps = aug[0]
 
     from sleap.io.video import Video
-    from sleap.gui.confmapsplot import demo_confmaps
-    from sleap.gui.quiverplot import demo_pafs
+    from sleap.gui.overlays.confmaps import demo_confmaps
+    from sleap.gui.overlays.pafs import demo_pafs
     from PySide2.QtWidgets import QApplication
 
     # Visualize augmented training data
