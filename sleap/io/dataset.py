@@ -914,13 +914,17 @@ class Labels(MutableSequence):
                 return load_labels_json_old(data_path=filename, parsed_json=dicts)
 
     @staticmethod
-    def save_hdf5(labels: 'Labels', filename: str, save_frame_data: bool = False):
+    def save_hdf5(labels: 'Labels', filename: str,
+                  append: bool = False,
+                  save_frame_data: bool = False):
         """
         Serialize the labels dataset to an HDF5 file.
 
         Args:
             labels: The Labels dataset to save
             filename: The file to serialize the dataset to.
+            append: Whether to append these labeled frames to the file or
+            not.
             save_frame_data: Whether to save the image frame data for any
             labeled frame as well. This is useful for uploading the HDF5 for
             model training when video files are to large to move. This will only
@@ -929,6 +933,10 @@ class Labels(MutableSequence):
         Returns:
             None
         """
+
+        # FIXME: Need to implement this.
+        if save_frame_data:
+            raise NotImplementedError('Saving frame data is not implemented yet with HDF5 Labels datasets.')
 
         # Delete the file if it exists, we want to start from scratch since
         # h5py truncates the file which seems to not actually delete data
@@ -949,7 +957,7 @@ class Labels(MutableSequence):
             # We will store Instances and PredcitedInstances in the same
             # table. instance_type=0 or Instance and instance_type=1 for
             # PredictedInstance, score will be ignored for Instances.
-            instance_dtype = np.dtype([('instance_id', 'u8'),
+            instance_dtype = np.dtype([('instance_id', 'i8'),
                                        ('instance_type', 'u1'),
                                        ('frame_id', 'u8'),
                                        ('skeleton', 'u4'),
@@ -983,6 +991,8 @@ class Labels(MutableSequence):
             point_id = 0
             pred_point_id = 0
             instance_id = 0
+            all_from_predicted = []
+            from_predicted_id = 0
             for frame_id, label in enumerate(labels):
                 frames[frame_id] = (frame_id, video_to_idx[label.video], label.frame_idx,
                                     instance_id, instance_id + len(label.instances))
@@ -998,13 +1008,19 @@ class Labels(MutableSequence):
                         score = np.nan
                         pid = point_id
 
+                        # Keep track of any from_predicted instance links, we will insert the
+                        # correct instance_id in the dataset after we are done.
+                        if instance.from_predicted:
+                            all_from_predicted.append(instance.from_predicted)
+                            from_predicted_id = from_predicted_id + 1
+
                     # Copy all the data
                     instances[instance_id] = (instance_id,
                                               instance_type_to_idx[instance_type],
                                               frame_id,
                                               skeleton_to_idx[instance.skeleton],
                                               track_to_idx[instance.track],
-                                              0,
+                                              -1,
                                               score,
                                               pid, pid + len(parray))
 
@@ -1019,7 +1035,10 @@ class Labels(MutableSequence):
 
                     instance_id = instance_id + 1
 
+            # We pre-allocated our points array with max possible size considering the max
+            # skeleton size, drop any unused points.
             points = points[0:point_id]
+            pred_points = pred_points[0:pred_point_id]
 
             f.create_dataset("points", (points.shape[0],), Point.dtype)[...] = points
             f.create_dataset("pred_points", (pred_points.shape[0],), PredictedPoint.dtype)[...] = pred_points
@@ -1055,13 +1074,14 @@ class Labels(MutableSequence):
             # Create the instances
             instances = []
             for i in instances_dset:
+                track = tracks[i['track']]
+                skeleton = labels.skeletons[i['skeleton']]
+
                 if i['instance_type'] == 0: # Instance
-                    instance = Instance(skeleton=labels.skeletons[i['skeleton']],
-                                        track=tracks[i['track']],
+                    instance = Instance(skeleton=skeleton, track=track,
                                         points=points[i['point_id_start']:i['point_id_end']])
                 else: # PredictedInstance
-                    instance = PredictedInstance(skeleton=labels.skeletons[i['skeleton']],
-                                                 track=labels.tracks[i['track']],
+                    instance = PredictedInstance(skeleton=skeleton, track=track,
                                                  points=pred_points[i['point_id_start']:i['point_id_end']],
                                                  score=i['score'])
                 instances.append(instance)

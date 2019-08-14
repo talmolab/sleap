@@ -214,13 +214,50 @@ class PointArray(np.recarray):
             # return a single element
             return obj
 
-
 class PredictedPointArray(PointArray):
     """
     PredictedPointArray is analogous to PointArray except for predicted
     points.
     """
     _record_type = PredictedPoint
+
+    @classmethod
+    def from_array(cls, a: PointArray):
+        """
+        Convert a PointArray to a PredictedPointArray, use the default
+        attribute values for PredictedPoints.
+
+        Args:
+            a: The array to convert.
+
+        Returns:
+            A PredictedPointArray with the same points as a.
+        """
+        v = cls.make_default(len(a))
+
+        for field in Point.dtype.names:
+            v[field] = a[field]
+
+        return v
+
+    @classmethod
+    def to_array(cls, a: 'PredictedPointArray'):
+        """
+        Convert a PredictedPointArray to a normal PointArray.
+
+        Args:
+            a: The array to convert.
+
+        Returns:
+            The converted array.
+        """
+        v = PointArray.make_default(len(a))
+
+        for field in Point.dtype.names:
+            v[field] = a[field]
+
+        return v
+
 
 @attr.s(slots=True, cmp=False)
 class Track:
@@ -447,6 +484,9 @@ class Instance:
         Returns:
             True if match, False otherwise.
         """
+        if type(self) is not type(other):
+            return False
+
         if list(self.points()) != list(other.points()):
             return False
 
@@ -588,10 +628,8 @@ class PredictedInstance(Instance):
         Returns:
             A PredictedInstance for the given Instance.
         """
-        kw_args = attr.asdict(instance, recurse=False)
-        kw_args['points'] = {key: PredictedPoint.from_point(val)
-                             for key, val in kw_args['_points'].items()}
-        del kw_args['_points']
+        kw_args = attr.asdict(instance, recurse=False, filter=lambda attr, value: attr.name != "_points")
+        kw_args['points'] = PredictedPointArray.from_array(instance._points)
         kw_args['score'] = score
         return cls(**kw_args)
 

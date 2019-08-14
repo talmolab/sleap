@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 
 from sleap.skeleton import Skeleton
-from sleap.instance import Instance, Point, LabeledFrame
+from sleap.instance import Instance, Point, LabeledFrame, PredictedInstance
 from sleap.io.video import Video, MediaVideo
 from sleap.io.dataset import Labels, load_labels_json_old
 
@@ -303,3 +303,23 @@ def test_labels_hdf5(multi_skel_vid_labels, tmpdir):
 
     _check_labels_match(labels, loaded_labels)
 
+
+def test_labels_predicted_hdf5(multi_skel_vid_labels, tmpdir):
+    labels = multi_skel_vid_labels
+    filename = os.path.join('.', 'test.h5')
+
+    # Lets promote some of these Instances to predicted instances
+    for label in labels:
+        for i, instance in enumerate(label.instances):
+            if i % 2 == 0:
+                label.instances[i] = PredictedInstance.from_instance(instance, 0.3)
+
+    # Lets also add some from_predicted values
+    for label in labels:
+        label.instances[1].from_predicted = label.instances[0]
+
+    Labels.save_hdf5(filename=filename, labels=labels)
+
+    loaded_labels = Labels.load_hdf5(filename=filename)
+
+    _check_labels_match(labels, loaded_labels)

@@ -71,3 +71,17 @@ def test_point_array(parray_cls):
     from numpy.lib.recfunctions import structured_to_unstructured
     np.testing.assert_array_equal(structured_to_unstructured(d1), structured_to_unstructured(d2))
 
+
+def test_from_and_to_array():
+    p = PointArray(3)
+
+    # Do a round trip conversion
+    r = PredictedPointArray.to_array(PredictedPointArray.from_array(p))
+
+    from numpy.lib.recfunctions import structured_to_unstructured
+    np.testing.assert_array_equal(structured_to_unstructured(p), structured_to_unstructured(r))
+
+    # Make sure conversion uses default score
+    r = PredictedPointArray.from_array(p)
+    assert r.score[0] == PredictedPointArray.make_default(1)[0].score
+
