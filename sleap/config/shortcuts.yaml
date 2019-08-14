@@ -15,8 +15,8 @@
 "transpose": Qt.CTRL + Qt.Key_T
 "select next": QKeySequence(Qt.Key.Key_QuoteLeft)
 "clear selection": QKeySequence(Qt.Key.Key_Escape)
-"goto next":
-"goto prev":
+"goto next": Qt.CTRL + Qt.Key_Period
+"goto prev": Qt.CTRL + Qt.Key_Comma
 "goto next suggestion": QKeySequence.FindNext
 "goto prev suggestion": QKeySequence.FindPrevious
 "goto next track": Qt.CTRL + Qt.Key_E
