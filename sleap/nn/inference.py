@@ -817,6 +817,10 @@ class Predictor:
         # we will down the line.
         cv2.setNumThreads(usable_cpu_count())
 
+        # Delete the output file if it exists already
+        if os.path.exists(output_path):
+            os.unlink(output_path)
+
         # Process chunk-by-chunk!
         t0_start = time()
         predicted_frames: List[LabeledFrame] = []
@@ -951,7 +955,11 @@ class Predictor:
                 #  We should save in chunks then combine at the end.
                 labels = Labels(labeled_frames=predicted_frames)
                 if output_path is not None:
-                    Labels.save_json(labels, filename=output_path, compress=True)
+
+                    if output_path.endswith('json'):
+                        Labels.save_json(labels, filename=output_path, compress=True)
+                    else:
+                        Labels.save_hdf5(labels, filename=output_path, append=True)
 
                     logger.info("  Saved to: %s [%.1fs]" % (output_path, time() - t0))
 
@@ -1204,6 +1212,9 @@ def main():
                              'a range separated by hyphen (e.g. 1-3). (default is entire video)')
     parser.add_argument('-o', '--output', type=str, default=None,
                         help='The output filename to use for the predicted data.')
+    parser.add_argument('--out_format', choices=['hdf5', 'json'], help='The format to use for'
+                        ' the output file. Either hdf5 or json. hdf5 is the default.',
+                        default='hdf5')
     parser.add_argument('--save-confmaps-pafs', dest='save_confmaps_pafs', action='store_const',
                     const=True, default=False,
                         help='Whether to save the confidence maps or pafs')
@@ -1215,7 +1226,11 @@ def main():
 
     args = parser.parse_args()
 
-    output_suffix = ".predictions.json"
+    if args.out_format == 'json':
+        output_suffix = ".predictions.json"
+    else:
+        output_suffix = ".predictions.h5"
+
     if args.frames is not None:
         output_suffix = f".frames{min(args.frames)}_{max(args.frames)}" + output_suffix
 
