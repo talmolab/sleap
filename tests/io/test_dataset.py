@@ -58,6 +58,7 @@ def _check_labels_match(expected_labels, other_labels, format = 'png'):
 
     # Check that we have the same thing
     for expected_label, label in zip(expected_labels.labels, other_labels.labels):
+
         assert expected_label.frame_idx == label.frame_idx
 
         frame_idx = label.frame_idx
@@ -295,7 +296,7 @@ def test_save_labels_with_frame_data(multi_skel_vid_labels, tmpdir, format):
 
 def test_labels_hdf5(multi_skel_vid_labels, tmpdir):
     labels = multi_skel_vid_labels
-    filename = os.path.join('.', 'test.h5')
+    filename = os.path.join(tmpdir, 'test.h5')
 
     Labels.save_hdf5(filename=filename, labels=labels)
 
@@ -306,7 +307,7 @@ def test_labels_hdf5(multi_skel_vid_labels, tmpdir):
 
 def test_labels_predicted_hdf5(multi_skel_vid_labels, tmpdir):
     labels = multi_skel_vid_labels
-    filename = os.path.join('.', 'test.h5')
+    filename = os.path.join(tmpdir, 'test.h5')
 
     # Lets promote some of these Instances to predicted instances
     for label in labels:
@@ -323,3 +324,24 @@ def test_labels_predicted_hdf5(multi_skel_vid_labels, tmpdir):
     loaded_labels = Labels.load_hdf5(filename=filename)
 
     _check_labels_match(labels, loaded_labels)
+
+def test_labels_append_hdf5(multi_skel_vid_labels, tmpdir):
+    labels = multi_skel_vid_labels
+    filename = os.path.join(tmpdir, 'test.h5')
+
+    # Save each frame of the Labels dataset one by one in append
+    # mode
+    for label in labels:
+
+        # Just do the first 20 to speed things up
+        if label.frame_idx > 20:
+            break
+
+        Labels.save_hdf5(filename=filename, labels=Labels([label]), append=True)
+
+    # Now load the dataset and make sure we get the same thing we started
+    # with.
+    loaded_labels = Labels.load_hdf5(filename=filename)
+
+    _check_labels_match(labels, loaded_labels)
+

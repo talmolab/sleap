@@ -940,17 +940,59 @@ class Labels(MutableSequence):
 
         # Delete the file if it exists, we want to start from scratch since
         # h5py truncates the file which seems to not actually delete data
-        # from the file.
-        if os.path.exists(filename):
+        # from the file. Don't if we are appending of course.
+        if os.path.exists(filename) and not append:
             os.unlink(filename)
 
         # Serialize all the meta-data to JSON.
         d = labels.to_dict(skip_labels=True)
 
-        with h5.File(filename, 'w') as f:
+        with h5.File(filename, 'a') as f:
 
             # Add all the JSON metadata
             meta_group = f.require_group('metadata')
+
+            # If we are appending and there already exists JSON metadata
+            if append and 'json' in meta_group.attrs:
+
+                # Otherwise, we need to read the JSON and append to the lists
+                old_labels = Labels.from_json(meta_group.attrs['json'].tostring().decode())
+
+                # A function to join to list but only include new non-dupe entries
+                # from the right hand list.
+                def append_unique(old, new):
+                    unique = []
+                    for x in new:
+                        try:
+                            matches = [y.matches(x) for y in old]
+                        except AttributeError:
+                            matches = [x == y for y in old]
+
+                        # If there were no matches, this is a unique object.
+                        if sum(matches) == 0:
+                            unique.append(x)
+                        else:
+                            # If we have an object that matches, replace the instance with
+                            # the one from the new list. This will will make sure objects
+                            # on the Instances are the same as those in the Labels lists.
+                            for i, match in enumerate(matches):
+                                if match:
+                                    old[i] = x
+
+                    return old + unique
+
+                # Append the lists
+                labels.tracks = append_unique(old_labels.tracks, labels.tracks)
+                labels.skeletons = append_unique(old_labels.skeletons, labels.skeletons)
+                labels.videos = append_unique(old_labels.videos, labels.videos)
+                labels.nodes = append_unique(old_labels.nodes, labels.nodes)
+
+                # FIXME: Do something for suggestions and negative_anchors
+
+                # Get the dict for JSON and save it over the old data
+                d = labels.to_dict(skip_labels=True)
+
+            # Output the dict to JSON
             meta_group.attrs['json'] = np.string_(json_dumps(d))
 
             # FIXME: We can probably construct these from attrs fields
@@ -962,7 +1004,7 @@ class Labels(MutableSequence):
                                        ('frame_id', 'u8'),
                                        ('skeleton', 'u4'),
                                        ('track', 'i4'),
-                                       ('from_predicted', 'u8'),
+                                       ('from_predicted', 'i8'),
                                        ('score', 'f4'),
                                        ('point_id_start', 'u8'),
                                        ('point_id_end', 'u8')])
@@ -988,14 +1030,28 @@ class Labels(MutableSequence):
             video_to_idx = {video: labels.videos.index(video) for video in labels.videos}
             instance_type_to_idx = {Instance: 0, PredictedInstance: 1}
 
+            # If we are appending, we need look inside to see what frame, instance, and point
+            # ids we need to start from. This gives us offsets to use.
+            if append and 'points' in f:
+                point_id_offset = f['points'].shape[0]
+                pred_point_id_offset = f['pred_points'].shape[0]
+                instance_id_offset = f['instances'][-1]['instance_id'] + 1
+                frame_id_offset = int(f['frames'][-1]['frame_id']) + 1
+            else:
+                point_id_offset = 0
+                pred_point_id_offset = 0
+                instance_id_offset = 0
+                frame_id_offset = 0
+
             point_id = 0
             pred_point_id = 0
             instance_id = 0
+            frame_id = 0
             all_from_predicted = []
             from_predicted_id = 0
             for frame_id, label in enumerate(labels):
-                frames[frame_id] = (frame_id, video_to_idx[label.video], label.frame_idx,
-                                    instance_id, instance_id + len(label.instances))
+                frames[frame_id] = (frame_id+frame_id_offset, video_to_idx[label.video], label.frame_idx,
+                                    instance_id+instance_id_offset, instance_id+instance_id_offset+len(label.instances))
                 for instance in label.instances:
                     parray = instance.points_array(copy=False, full=True)
                     instance_type = type(instance)
@@ -1003,10 +1059,10 @@ class Labels(MutableSequence):
                     # Check whether we are working with a PredictedInstance or an Instance.
                     if instance_type is PredictedInstance:
                         score = instance.score
-                        pid = pred_point_id
+                        pid = pred_point_id + pred_point_id_offset
                     else:
                         score = np.nan
-                        pid = point_id
+                        pid = point_id + point_id_offset
 
                         # Keep track of any from_predicted instance links, we will insert the
                         # correct instance_id in the dataset after we are done.
@@ -1015,7 +1071,7 @@ class Labels(MutableSequence):
                             from_predicted_id = from_predicted_id + 1
 
                     # Copy all the data
-                    instances[instance_id] = (instance_id,
+                    instances[instance_id] = (instance_id+instance_id_offset,
                                               instance_type_to_idx[instance_type],
                                               frame_id,
                                               skeleton_to_idx[instance.skeleton],
@@ -1040,10 +1096,21 @@ class Labels(MutableSequence):
             points = points[0:point_id]
             pred_points = pred_points[0:pred_point_id]
 
-            f.create_dataset("points", (points.shape[0],), Point.dtype)[...] = points
-            f.create_dataset("pred_points", (pred_points.shape[0],), PredictedPoint.dtype)[...] = pred_points
-            f.create_dataset("instances", (instances.shape[0],), instance_dtype)[...] = instances
-            f.create_dataset("frames", (frames.shape[0],), frame_dtype)[...] = frames
+            # Create datasets if we need to
+            if append and 'points' in f:
+                f['points'].resize((f["points"].shape[0] + points.shape[0]), axis = 0)
+                f['points'][-points.shape[0]:] = points
+                f['pred_points'].resize((f["pred_points"].shape[0] + pred_points.shape[0]), axis=0)
+                f['pred_points'][-pred_points.shape[0]:] = pred_points
+                f['instances'].resize((f["instances"].shape[0] + instances.shape[0]), axis=0)
+                f['instances'][-instances.shape[0]:] = instances
+                f['frames'].resize((f["frames"].shape[0] + frames.shape[0]), axis=0)
+                f['frames'][-frames.shape[0]:] = frames
+            else:
+                f.create_dataset("points", data=points, maxshape=(None,), dtype=Point.dtype)
+                f.create_dataset("pred_points", data=pred_points, maxshape=(None,), dtype=PredictedPoint.dtype)
+                f.create_dataset("instances", data=instances, maxshape=(None,), dtype=instance_dtype)
+                f.create_dataset("frames", data=frames, maxshape=(None,), dtype=frame_dtype)
 
     @classmethod
     def load_hdf5(cls, filename: str):

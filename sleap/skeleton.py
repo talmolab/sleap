@@ -57,6 +57,18 @@ class Node:
     def as_node(cls, node):
         return node if isinstance(node, cls) else cls(node)
 
+    def matches(self, other):
+        """
+        Check whether all attributes match between two nodes.
+
+        Args:
+            other: The node to compare to this one.
+
+        Returns:
+            True if all attributes match, False otherwise.
+        """
+        return other.name == self.name and other.weight == self.weight
+
 
 class Skeleton:
     """The main object for representing animal skeletons in LEAP.
