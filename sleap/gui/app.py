@@ -539,10 +539,9 @@ class MainWindow(QMainWindow):
                     msgBox = QMessageBox(text=f"Imported {len(self.labels)} labeled frames.")
                     msgBox.exec_()
 
-                if len(self.labels.labels) > 0:
-                    if len(self.labels.labels[0].instances) > 0:
-                        # TODO: add support for multiple skeletons
-                        self.skeleton = self.labels.labels[0].instances[0].skeleton
+                if len(self.labels.skeletons):
+                    # TODO: add support for multiple skeletons
+                    self.skeleton = self.labels.skeletons[0]
 
                 # Update UI tables
                 self.update_data_views()
