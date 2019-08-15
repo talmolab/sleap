@@ -23,7 +23,6 @@ import tempfile
 import numpy as np
 import scipy.io as sio
 import h5py as h5
-import cbor
 
 from collections import MutableSequence
 from typing import List, Union, Dict, Optional, Tuple
