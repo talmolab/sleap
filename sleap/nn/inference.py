@@ -500,11 +500,11 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, transform, img_idx
 def instances_nms(instances: List[PredictedInstance], thresh: float=4) -> List[PredictedInstance]:
     """Remove overlapping instances from list."""
     if len(instances) <= 1: return
-    
+
     # Look for overlapping instances
     overlap_matrix = calculate_pairwise_cost(instances, instances,
         cost_function = lambda x: np.nan if all(np.isnan(x)) else np.nanmean(x))
-    
+
     # Set diagonals over threshold since an instance doesn't overlap with itself
     np.fill_diagonal(overlap_matrix, thresh+1)
     overlap_matrix[np.isnan(overlap_matrix)] = thresh+1
@@ -518,12 +518,12 @@ def instances_nms(instances: List[PredictedInstance], thresh: float=4) -> List[P
     while np.nanmin(overlap_matrix) < thresh:
         # Find the pair of instances with greatest overlap
         idx_a, idx_b = np.unravel_index(overlap_matrix.argmin(), overlap_matrix.shape)
-        
+
         # Keep the instance with the most points (or the highest score if tied)
         idxs = sorted([idx_a, idx_b], key=sort_funct)
         pick_idx = idxs[0]
         keep_idx = idxs[-1]
-        
+
         # Remove this instance from overlap matrix
         overlap_matrix[pick_idx, :] = thresh+1
         overlap_matrix[:, pick_idx] = thresh+1
@@ -959,7 +959,7 @@ class Predictor:
                     if output_path.endswith('json'):
                         Labels.save_json(labels, filename=output_path, compress=True)
                     else:
-                        Labels.save_hdf5(labels, filename=output_path, append=True)
+                        Labels.save_hdf5(labels, filename=output_path)
 
                     logger.info("  Saved to: %s [%.1fs]" % (output_path, time() - t0))
 
