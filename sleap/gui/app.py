@@ -160,8 +160,12 @@ class MainWindow(QMainWindow):
 
         self._menu_actions["goto next"] = goMenu.addAction("Next Labeled Frame", self.nextLabeledFrame, shortcuts["goto next"])
         self._menu_actions["goto prev"] = goMenu.addAction("Previous Labeled Frame", self.previousLabeledFrame, shortcuts["goto prev"])
+
+        self._menu_actions["goto next user"] = goMenu.addAction("Next User Labeled Frame", self.nextUserLabeledFrame, shortcuts["goto next user"])
+
         self._menu_actions["goto next suggestion"] = goMenu.addAction("Next Suggestion", self.nextSuggestedFrame, shortcuts["goto next suggestion"])
         self._menu_actions["goto prev suggestion"] = goMenu.addAction("Previous Suggestion", lambda:self.nextSuggestedFrame(-1), shortcuts["goto prev suggestion"])
+
         self._menu_actions["goto next track"] = goMenu.addAction("Next Track Spawn Frame", self.nextTrackFrame, shortcuts["goto next track"])
 
         goMenu.addSeparator()
@@ -539,10 +543,9 @@ class MainWindow(QMainWindow):
                     msgBox = QMessageBox(text=f"Imported {len(self.labels)} labeled frames.")
                     msgBox.exec_()
 
-                if len(self.labels.labels) > 0:
-                    if len(self.labels.labels[0].instances) > 0:
-                        # TODO: add support for multiple skeletons
-                        self.skeleton = self.labels.labels[0].instances[0].skeleton
+                if len(self.labels.skeletons):
+                    # TODO: add support for multiple skeletons
+                    self.skeleton = self.labels.skeletons[0]
 
                 # Update UI tables
                 self.update_data_views()
@@ -1361,13 +1364,13 @@ class MainWindow(QMainWindow):
                     )
 
     def previousLabeledFrameIndex(self):
-        prev_idx = None
         cur_idx = self.player.frame_idx
-        frame_indexes = [frame.frame_idx for frame in self.labels.find(self.video)]
-        frame_indexes.sort()
-        if len(frame_indexes):
-            prev_idx = max(filter(lambda idx: idx < cur_idx, frame_indexes), default=frame_indexes[-1])
-        return prev_idx
+        frames = self.labels.frames(self.video, from_frame_idx=cur_idx, reverse=True)
+
+        try:
+            next_idx = next(frames).frame_idx
+        except:
+            return
 
     def previousLabeledFrame(self):
         prev_idx = self.previousLabeledFrameIndex()
@@ -1376,11 +1379,29 @@ class MainWindow(QMainWindow):
 
     def nextLabeledFrame(self):
         cur_idx = self.player.frame_idx
-        frame_indexes = [frame.frame_idx for frame in self.labels.find(self.video)]
-        frame_indexes.sort()
-        if len(frame_indexes):
-            next_idx = min(filter(lambda idx: idx > cur_idx, frame_indexes), default=frame_indexes[0])
-            self.plotFrame(next_idx)
+
+        frames = self.labels.frames(self.video, from_frame_idx=cur_idx)
+
+        try:
+            next_idx = next(frames).frame_idx
+        except:
+            return
+
+        self.plotFrame(next_idx)
+
+    def nextUserLabeledFrame(self):
+        cur_idx = self.player.frame_idx
+
+        frames = self.labels.frames(self.video, from_frame_idx=cur_idx)
+        # Filter to frames with user instances
+        frames = filter(lambda lf: lf.has_user_instances, frames)
+
+        try:
+            next_idx = next(frames).frame_idx
+        except:
+            return
+
+        self.plotFrame(next_idx)
 
     def nextSuggestedFrame(self, seek_direction=1):
         next_video, next_frame = self.labels.get_next_suggestion(self.video, self.player.frame_idx, seek_direction)
