@@ -177,7 +177,7 @@ class Labels(MutableSequence):
         """
         null_result = [LabeledFrame(video=video, frame_idx=frame_idx)] if return_new else []
 
-        if frame_idx:
+        if frame_idx is not None:
             if video not in self._frame_idx_map: return null_result
 
             if type(frame_idx) == range:
