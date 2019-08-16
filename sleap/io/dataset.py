@@ -190,6 +190,27 @@ class Labels(MutableSequence):
             if video not in self._lf_by_video: return null_result
             return self._lf_by_video[video]
 
+    def frames(self, video: Video, from_frame_idx: int = -1, reverse=False):
+        """
+        Iterator over all frames in a video, starting with first frame
+        after specified frame_idx (or first frame in video if none specified).
+        """
+        if video not in self._frame_idx_map: return None
+
+        # Get sorted list of frame indexes for this video
+        frame_idxs = sorted(self._frame_idx_map[video].keys(), reverse=reverse)
+
+        # Find the next frame index after the specified frame
+        next_frame_idx = min(filter(lambda x: x > from_frame_idx, frame_idxs))
+        cut_list_idx = frame_idxs.index(next_frame_idx)
+
+        # Shift list of frame indices to start with specified frame
+        frame_idxs = frame_idxs[cut_list_idx:] + frame_idxs[:cut_list_idx]
+
+        # Yield the frames
+        for idx in frame_idxs:
+            yield self._frame_idx_map[video][idx]
+
     def find_first(self, video: Video, frame_idx: int = None) -> LabeledFrame:
         """ Find the first occurrence of a labeled frame for the given video and/or frame index.
 
