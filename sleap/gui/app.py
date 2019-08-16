@@ -510,6 +510,9 @@ class MainWindow(QMainWindow):
             labels = filename
             filename = None
             has_loaded = True
+        elif filename.endswith(".h5"):
+            labels = Labels.load_hdf5(filename, video_callback=gui_video_callback)
+            has_loaded = True
         elif filename.endswith((".json", ".json.zip")):
             labels = Labels.load_json(filename, video_callback=gui_video_callback)
             has_loaded = True
@@ -522,7 +525,7 @@ class MainWindow(QMainWindow):
             has_loaded = True
 
         if do_load:
-            Instance.drop_all_nan_points(labels.all_instances)
+
             self.labels = labels
             self.filename = filename
 
