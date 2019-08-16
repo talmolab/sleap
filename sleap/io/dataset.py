@@ -201,7 +201,7 @@ class Labels(MutableSequence):
         frame_idxs = sorted(self._frame_idx_map[video].keys(), reverse=reverse)
 
         # Find the next frame index after the specified frame
-        next_frame_idx = min(filter(lambda x: x > from_frame_idx, frame_idxs))
+        next_frame_idx = min(filter(lambda x: x > from_frame_idx, frame_idxs), default=frame_idxs[0])
         cut_list_idx = frame_idxs.index(next_frame_idx)
 
         # Shift list of frame indices to start with specified frame
