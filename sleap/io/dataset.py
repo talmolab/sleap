@@ -566,6 +566,8 @@ class Labels(MutableSequence):
         if not isinstance(new_frames[0], LabeledFrame): return False
         # copy the labeled frames
         self.labeled_frames.extend(new_frames)
+        # merge labeled frames for the same video/frame idx
+        self.merge_matching_frames()
         # update videos/skeletons/nodes/etc using all the labeled frames now present
         self.__attrs_post_init__()
         return True
