@@ -16,7 +16,8 @@
 "select next": QKeySequence(Qt.Key.Key_QuoteLeft)
 "clear selection": QKeySequence(Qt.Key.Key_Escape)
 "goto next": Qt.CTRL + Qt.Key_Period
-"goto prev": Qt.CTRL + Qt.Key_Comma
+"goto prev": 
+"goto next user": Qt.CTRL + Qt.Key_Greater
 "goto next suggestion": QKeySequence.FindNext
 "goto prev suggestion": QKeySequence.FindPrevious
 "goto next track": Qt.CTRL + Qt.Key_E
