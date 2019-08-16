@@ -92,9 +92,10 @@ class Skeleton:
         # is returned.
         self._graph: nx.MultiDiGraph = nx.MultiDiGraph(name=name, num_edges_inserted=0)
 
-    def matches(self, other):
+    def matches(self, other: 'Skeleton'):
         """
-        Compare this `Skeleton` to another, modulo the particular `Node` objects in each graph.
+        Compare this `Skeleton` to another, ignoring skeleton name and
+        the identities of the `Node` objects in each graph.
 
         Args:
             other: The other skeleton.
@@ -102,7 +103,23 @@ class Skeleton:
         Returns:
             True if match, False otherwise.
         """
-        return self == other
+        def dict_match(dict1, dict2):
+            return dict1 == dict2
+
+        # Check if the graphs are iso-morphic
+        is_isomorphic = nx.is_isomorphic(self._graph, other._graph, node_match=dict_match)
+
+        if not is_isomorphic:
+            return False
+
+        # Now check that the nodes have the same labels and order. They can have
+        # different weights I guess?!
+        for node1, node2 in zip(self._graph.nodes, other._graph.nodes):
+            if node1.name != node2.name:
+                return False
+
+        # Check if the two graphs are equal
+        return True
 
     @property
     def graph(self):
@@ -860,23 +877,8 @@ class Skeleton:
         if other.name != self.name:
             return False
 
-        def dict_match(dict1, dict2):
-            return dict1 == dict2
-
-        # Check if the graphs are iso-morphic
-        is_isomorphic = nx.is_isomorphic(self._graph, other._graph, node_match=dict_match)
-
-        if not is_isomorphic:
-            return False
-
-        # Now check that the nodes have the same labels and order. They can have
-        # different weights I guess?!
-        for node1, node2 in zip(self._graph.nodes, other._graph.nodes):
-            if node1.name != node2.name:
-                return False
-
-        # Check if the two graphs are equal
-        return True
+        # Then check if the graphs match
+        return self.matches(other)
 
     def __hash__(self):
         """
