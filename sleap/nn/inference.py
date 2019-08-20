@@ -208,7 +208,9 @@ class Predictor:
             if ModelOutputType.CENTROIDS in self.sleap_models:
                 # Use centroid predictions to get subchunks of crops
 
-                subchunks_to_process = self.centroid_crop_inference()
+                subchunks_to_process = self.centroid_crop_inference(
+                                                mov_full, frames_idx,
+                                                iou_threshold=self.crop_iou_threshold)
 
             else:
                 # Scale without centroid cropping
@@ -379,8 +381,11 @@ class Predictor:
 
     # Methods for running inferring on components of pipeline
 
-    def centroid_crop_inference(self, imgs: np.ndarray) \
-                        -> List[Tuple[np.ndarray, DataTransform]]:
+    def centroid_crop_inference(self,
+                imgs: np.ndarray,
+                frames_idx: List[int],
+                iou_threshold: float=.9) \
+                -> List[Tuple[np.ndarray, DataTransform]]:
         """
         Takes stack of images and runs centroid inference to get crops.
 
@@ -393,37 +398,6 @@ class Predictor:
         Different subchunks can thus have different images sizes,
         which allows us to merge overlapping crops into larger crops.
         """
-
-        subchunks_to_process = []
-
-        model_data = get_model_data(self.sleap_models, [ModelOutputType.CONFIDENCE_MAP])
-
-        # Find centroids
-        centroids = self.predict_centroids(imgs, self.crop_iou_threshold)
-
-        # Check if we found any centroids
-        if sum(map(len, centroids)):
-            # Create transform object
-            transform = DataTransform(
-                            frame_idxs = frames_idx,
-                            scale = model_data["multiscale"])
-
-            # Do the cropping
-            imgs_cropped = transform.centroid_crop(imgs, centroids, crop_size)
-
-            subchunks_to_process.append((imgs_cropped, transform))
-
-            logger.info(f"  Centroids resulted in {len(imgs_cropped)} crops for this chunk.")
-
-        else:
-            logger.info("  No centroids found so done with this chunk.")
-
-        return subchunks_to_process
-
-    def predict_centroids(self,
-                imgs: np.ndarray,
-                iou_threshold: float=.9,
-                return_confmaps=False) -> List[List[np.ndarray]]:
 
         # Fetch centroid model (uses cache if already loaded)
 
@@ -461,7 +435,10 @@ class Predictor:
         # FIXME: should we instead save the unpadded bounding box size
         # from the training data and use that?
 
-        crop_size = model_package["model"].input_shape[1]
+        crop_model_package = self.fetch_model(
+                                input_size = None,
+                                output_types = [ModelOutputType.CONFIDENCE_MAP, ModelOutputType.PART_AFFINITY_FIELD])
+        crop_size = crop_model_package["model"].input_shape[1]
         bb_half = crop_size//2
 
         centroids = []
@@ -501,12 +478,29 @@ class Predictor:
             else:
                 centroids.append([])
 
-        # Use predicted centroids (peaks) to crop images
+        subchunks = []
 
-        if return_confmaps:
-            return centroids, centroid_confmaps
+        # Check if we found any centroids
+        if sum(map(len, centroids)):
+            model_data = get_model_data(self.sleap_models, [ModelOutputType.CONFIDENCE_MAP])
+
+            # Create transform object
+            transform = DataTransform(
+                            frame_idxs = frames_idx,
+                            scale = model_data["multiscale"])
+
+            # Do the cropping
+            imgs_cropped = transform.centroid_crop(imgs, centroids, crop_size)
+
+            # Add subchunk
+            subchunks.append((imgs_cropped, transform))
+
+            logger.info(f"  Centroids resulted in {len(imgs_cropped)} crops for this chunk.")
+
         else:
-            return centroids
+            logger.info("  No centroids found so done with this chunk.")
+
+        return subchunks
 
     def single_instance_inference(self, imgs, transform, video) -> List[LabeledFrame]:
         """Run the single instance pipeline for a stack of images."""
