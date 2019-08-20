@@ -107,66 +107,6 @@ class Predictor:
 
     _models: Dict = attr.ib(default=attr.Factory(dict))
 
-    def predict_centroids(self, imgs: np.ndarray, crop_size: int=None,
-                iou_threshold: float=.9,
-                return_confmaps=False) -> List[List[np.ndarray]]:
-
-        # Load centroid model as needed
-        model_package = self.fetch_model(
-                                input_size = None,
-                                output_types = [ModelOutputType.CENTROIDS])
-
-        centroid_transform = DataTransform()
-        centroid_imgs_scaled = centroid_transform.scale_to(
-                                    imgs=imgs,
-                                    target_size=model_package["model"].input_shape[1:3])
-
-        # Predict centroids
-        centroid_confmaps = model_package["model"].predict(centroid_imgs_scaled.astype("float32") / 255,
-                                                batch_size=self.inference_batch_size)
-
-        peaks, peak_vals = find_all_peaks(centroid_confmaps,
-                                            min_thresh=self.nms_min_thresh,
-                                            sigma=self.nms_sigma)
-
-        if crop_size is not None:
-            bb_half = crop_size//2
-            peak_idxs = []
-
-            for frame_peaks, frame_peak_vals in zip(peaks, peak_vals):
-                if frame_peaks[0].shape[0] > 0:
-                    boxes = np.stack([(frame_peaks[0][i][0]-bb_half,
-                             frame_peaks[0][i][1]-bb_half,
-                             frame_peaks[0][i][0]+bb_half,
-                             frame_peaks[0][i][1]+bb_half)
-                            for i in range(frame_peaks[0].shape[0])])
-                    # filter boxes
-                    box_select_idxs = bounding_box_nms(
-                                            boxes,
-                                            scores = frame_peak_vals[0],
-                                            iou_threshold = iou_threshold,
-                                            )
-                    if len(box_select_idxs) < boxes.shape[0]:
-                        logger.debug(f"    suppressed centroid crops from {boxes.shape[0]} to {len(box_select_idxs)}")
-                    # get a list of peak indexes that we want to use for this frame
-                    peak_idxs.append(box_select_idxs)
-                else:
-                    peak_idxs.append([])
-
-        else:
-            peak_idxs = [list(range(frame_peaks[0].shape[0])) for frame_peaks in peaks]
-
-        centroids = [[np.expand_dims(frame_peaks[0][peak_idx], axis=0) / centroid_transform.scale
-                        for peak_idx in frame_peak_idxs]
-                     for frame_peaks, frame_peak_idxs in zip(peaks, peak_idxs)]
-
-        # Use predicted centroids (peaks) to crop images
-
-        if return_confmaps:
-            return centroids, centroid_confmaps
-        else:
-            return centroids
-
     def predict(self,
                 input_video: Union[dict, Video],
                 frames: Optional[List[int]] = None,
@@ -265,41 +205,10 @@ class Predictor:
             # Transform images (crop or scale)
             t0 = time()
 
-            subchunks_to_process = []
-
             if ModelOutputType.CENTROIDS in self.sleap_models:
+                # Use centroid predictions to get subchunks of crops
 
-                # For centroids we'll need crop-sized models so we may as well
-                # load them here since we need to access data about the models.
-                model_package = self.fetch_model(
-                            input_size = None,
-                            output_types = [ModelOutputType.CONFIDENCE_MAP,
-                                ModelOutputType.PART_AFFINITY_FIELD])
-
-                model_data = get_model_data(self.sleap_models, [ModelOutputType.CONFIDENCE_MAP])
-
-                # Get training crop size
-                crop_size = model_package["model"].input_shape[1]
-
-                # Find centroids
-                centroids = self.predict_centroids(mov_full, crop_size, self.crop_iou_threshold)
-
-                # Check if we found any centroids
-                if sum(map(len, centroids)):
-                    # Create transform object
-                    transform = DataTransform(
-                                    frame_idxs = frames_idx,
-                                    scale = model_data["multiscale"])
-
-                    # Do the cropping
-                    mov = transform.centroid_crop(mov_full, centroids, crop_size)
-
-                    subchunks_to_process.append((mov, transform))
-
-                    logger.info(f"  Centroids resulted in {len(mov)} crops for this chunk.")
-
-                else:
-                    logger.info("  No centroids found so done with this chunk.")
+                subchunks_to_process = self.centroid_crop_inference()
 
             else:
                 # Scale without centroid cropping
@@ -467,6 +376,137 @@ class Predictor:
         pool.close()
 
         return pool, result
+
+    # Methods for running inferring on components of pipeline
+
+    def centroid_crop_inference(self, imgs: np.ndarray) \
+                        -> List[Tuple[np.ndarray, DataTransform]]:
+        """
+        Takes stack of images and runs centroid inference to get crops.
+
+        Arguments:
+            imgs: stack of images in a numpy matrix
+
+        Returns:
+            list of "subchunks", each an (images, transform)-tuple
+
+        Different subchunks can thus have different images sizes,
+        which allows us to merge overlapping crops into larger crops.
+        """
+
+        subchunks_to_process = []
+
+        model_data = get_model_data(self.sleap_models, [ModelOutputType.CONFIDENCE_MAP])
+
+        # Find centroids
+        centroids = self.predict_centroids(imgs, self.crop_iou_threshold)
+
+        # Check if we found any centroids
+        if sum(map(len, centroids)):
+            # Create transform object
+            transform = DataTransform(
+                            frame_idxs = frames_idx,
+                            scale = model_data["multiscale"])
+
+            # Do the cropping
+            imgs_cropped = transform.centroid_crop(imgs, centroids, crop_size)
+
+            subchunks_to_process.append((imgs_cropped, transform))
+
+            logger.info(f"  Centroids resulted in {len(imgs_cropped)} crops for this chunk.")
+
+        else:
+            logger.info("  No centroids found so done with this chunk.")
+
+        return subchunks_to_process
+
+    def predict_centroids(self,
+                imgs: np.ndarray,
+                iou_threshold: float=.9,
+                return_confmaps=False) -> List[List[np.ndarray]]:
+
+        # Fetch centroid model (uses cache if already loaded)
+
+        model_package = self.fetch_model(
+                                input_size = None,
+                                output_types = [ModelOutputType.CENTROIDS])
+
+        # Create transform
+
+        # This lets us scale the images before we predict centroids,
+        # and will also let us map the points on the scaled image to
+        # points on the original images so we can crop original images.
+
+        centroid_transform = DataTransform()
+
+        # Scale to match input size of trained centroid model
+        # Usually this will be 1/4-scale of original images
+
+        centroid_imgs_scaled = \
+            centroid_transform.scale_to(
+                    imgs=imgs,
+                    target_size=model_package["model"].input_shape[1:3])
+
+        # Predict centroid confidence maps, then find peaks
+
+        centroid_confmaps = model_package["model"].predict(centroid_imgs_scaled.astype("float32") / 255,
+                                                batch_size=self.inference_batch_size)
+
+        peaks, peak_vals = find_all_peaks(centroid_confmaps,
+                                            min_thresh=self.nms_min_thresh,
+                                            sigma=self.nms_sigma)
+
+        # Get training crop size to determine (min) centroid crop size
+
+        # FIXME: should we instead save the unpadded bounding box size
+        # from the training data and use that?
+
+        crop_size = model_package["model"].input_shape[1]
+        bb_half = crop_size//2
+
+        centroids = []
+
+        # Iterate over each frame to filter bounding boxes
+        for frame_idx, (frame_peaks, frame_peak_vals) in enumerate(zip(peaks, peak_vals)):
+
+            # If we found centroids on this frame...
+            if frame_peaks[0].shape[0] > 0:
+
+                # Pad each centroid into a bounding box
+                # (We're not using the pad function because it shifts
+                # boxes to fit within image.)
+
+                boxes = np.stack([(frame_peaks[0][i][0]-bb_half,
+                         frame_peaks[0][i][1]-bb_half,
+                         frame_peaks[0][i][0]+bb_half,
+                         frame_peaks[0][i][1]+bb_half)
+                        for i in range(frame_peaks[0].shape[0])])
+
+                # Filter boxes to get a list of peak indexes that we
+                # want to use for this frame
+
+                box_select_idxs = bounding_box_nms(
+                                        boxes,
+                                        scores = frame_peak_vals[0],
+                                        iou_threshold = iou_threshold,
+                                        )
+
+                if len(box_select_idxs) < boxes.shape[0]:
+                    logger.debug(f"    suppressed centroid crops from {boxes.shape[0]} to {len(box_select_idxs)}")
+
+                # Now get centroids for boxes we want to use
+                selected_centroids = [np.expand_dims(frame_peaks[0][peak_idx], axis=0) / centroid_transform.scale for peak_idx in box_select_idxs]
+
+                centroids.append(selected_centroids)
+            else:
+                centroids.append([])
+
+        # Use predicted centroids (peaks) to crop images
+
+        if return_confmaps:
+            return centroids, centroid_confmaps
+        else:
+            return centroids
 
     def single_instance_inference(self, imgs, transform, video) -> List[LabeledFrame]:
         """Run the single instance pipeline for a stack of images."""
