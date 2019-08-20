@@ -33,7 +33,7 @@ from sleap.nn.training import TrainingJob
 from sleap.nn.tracking import FlowShiftTracker, Track
 from sleap.nn.transform import DataTransform
 
-from sleap.nn.datagen import bounding_box_nms
+from sleap.nn.datagen import merge_boxes_with_overlap_and_padding
 from sleap.nn.loadmodel import load_model, get_model_data, get_model_skeleton
 from sleap.nn.peakfinding import find_all_peaks, find_all_single_peaks
 from sleap.nn.peakmatching import match_single_peaks_all, match_peaks_paf, match_peaks_paf_par, instances_nms
@@ -99,7 +99,7 @@ class Predictor:
     with_tracking: bool = False
     flow_window: int = 15
     crop_iou_threshold: float = .9
-    single_per_crop: bool = True
+    single_per_crop: bool = False
 
     output_path: Optional[str] = None
     save_confmaps_pafs: bool = False
@@ -399,6 +399,8 @@ class Predictor:
         which allows us to merge overlapping crops into larger crops.
         """
 
+        full_img_size = (imgs.shape[1], imgs.shape[2])
+
         # Fetch centroid model (uses cache if already loaded)
 
         model_package = self.fetch_model(
@@ -441,10 +443,10 @@ class Predictor:
         crop_size = crop_model_package["model"].input_shape[1]
         bb_half = crop_size//2
 
-        centroids = []
+        all_boxes = dict()
 
         # Iterate over each frame to filter bounding boxes
-        for frame_idx, (frame_peaks, frame_peak_vals) in enumerate(zip(peaks, peak_vals)):
+        for frame_i, (frame_peaks, frame_peak_vals) in enumerate(zip(peaks, peak_vals)):
 
             # If we found centroids on this frame...
             if frame_peaks[0].shape[0] > 0:
@@ -453,49 +455,56 @@ class Predictor:
                 # (We're not using the pad function because it shifts
                 # boxes to fit within image.)
 
-                boxes = np.stack([(frame_peaks[0][i][0]-bb_half,
+                boxes = [(frame_peaks[0][i][0]-bb_half,
                          frame_peaks[0][i][1]-bb_half,
                          frame_peaks[0][i][0]+bb_half,
                          frame_peaks[0][i][1]+bb_half)
-                        for i in range(frame_peaks[0].shape[0])])
+                        for i in range(frame_peaks[0].shape[0])]
 
-                # Filter boxes to get a list of peak indexes that we
-                # want to use for this frame
+                # Merge overlapping boxes and pad to multiple of crop size
+                merged_boxes = merge_boxes_with_overlap_and_padding(boxes, crop_size, full_img_size)
 
-                box_select_idxs = bounding_box_nms(
-                                        boxes,
-                                        scores = frame_peak_vals[0],
-                                        iou_threshold = iou_threshold,
-                                        )
+                # Keep track of all boxes, grouped by size and frame idx
+                for box in merged_boxes:
 
-                if len(box_select_idxs) < boxes.shape[0]:
-                    logger.debug(f"    suppressed centroid crops from {boxes.shape[0]} to {len(box_select_idxs)}")
+                    box_size = (box[2]-box[0], box[3]-box[1])
 
-                # Now get centroids for boxes we want to use
-                selected_centroids = [np.expand_dims(frame_peaks[0][peak_idx], axis=0) / centroid_transform.scale for peak_idx in box_select_idxs]
+                    if box_size not in all_boxes:
+                        all_boxes[box_size] = dict()
+                    if frame_i not in all_boxes[box_size]:
+                        all_boxes[box_size][frame_i] = []
 
-                centroids.append(selected_centroids)
-            else:
-                centroids.append([])
+                    all_boxes[box_size][frame_i].append(box)
 
         subchunks = []
 
-        # Check if we found any centroids
-        if sum(map(len, centroids)):
+        # Check if we found any boxes for this chunk of frames
+        if len(all_boxes):
             model_data = get_model_data(self.sleap_models, [ModelOutputType.CONFIDENCE_MAP])
 
-            # Create transform object
-            transform = DataTransform(
-                            frame_idxs = frames_idx,
-                            scale = model_data["multiscale"])
+            # We'll make a "subchunk" for each crop size
+            for crop_size in all_boxes:
 
-            # Do the cropping
-            imgs_cropped = transform.centroid_crop(imgs, centroids, crop_size)
+                # Make list of all boxes and corresponding img index.
+                subchunk_idxs = []
+                subchunk_boxes = []
 
-            # Add subchunk
-            subchunks.append((imgs_cropped, transform))
+                for frame_i, frame_boxes in all_boxes[crop_size].items():
+                    subchunk_boxes.extend(frame_boxes)
+                    subchunk_idxs.extend( [frame_i] * len(frame_boxes) )
 
-            logger.info(f"  Centroids resulted in {len(imgs_cropped)} crops for this chunk.")
+                # Create transform object
+                transform = DataTransform(
+                                frame_idxs = frames_idx,
+                                scale = model_data["multiscale"])
+
+                # Do the cropping
+                imgs_cropped = transform.crop(imgs, subchunk_boxes, subchunk_idxs)
+
+                # Add subchunk
+                subchunks.append((imgs_cropped, transform))
+
+                logger.info(f"  Subchunk for size {crop_size} has {len(imgs_cropped)} crops.")
 
         else:
             logger.info("  No centroids found so done with this chunk.")
