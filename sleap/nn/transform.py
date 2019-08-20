@@ -43,7 +43,7 @@ class DataTransform:
             imgs: ndarray with shape (count, height, width, channels)
             target_size: (h, w) tuple
         Returns:
-            imgs, scaled (second and third dimensions should match target size)
+            images scaled to target size
         """
         img_count, img_h, img_w, img_channels = imgs.shape
         h, w = target_size
@@ -72,7 +72,7 @@ class DataTransform:
             scaled_imgs = imgs
         
         # update object state (so we can invert)
-        self.scale = h/img_h
+        self.scale = self.scale * (h/img_h)
         
         return scaled_imgs
 
