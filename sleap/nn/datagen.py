@@ -567,7 +567,7 @@ def merge_boxes_with_overlap(boxes):
     # Now filter the other boxes for overlap amongst themselves
     other_boxes = merge_boxes_with_overlap(keep_boxes)
 
-    return first_box + other_boxes
+    return [first_box] + other_boxes
 
 def merge_boxes_with_overlap_and_padding(boxes, pad_factor_box, within):
     """
@@ -583,9 +583,11 @@ def merge_boxes_with_overlap_and_padding(boxes, pad_factor_box, within):
     if len(merged_boxes) == len(boxes):
         return merged_boxes
     else:
-        return merge_boxes_with_overlap_and_padding(merged_boxes, pad_factor_box)
+        return merge_boxes_with_overlap_and_padding(merged_boxes, pad_factor_box, within)
 
 def pad_box_to_multiple(box, pad_factor_box, within):
+    from math import ceil
+
     box_h = box[3] - box[1] # difference in y
     box_w = box[2] - box[0] # difference in x
 
@@ -598,7 +600,7 @@ def pad_box_to_multiple(box, pad_factor_box, within):
     multiple = max(multiple_h, multiple_w)
 
     # Return padded box
-    return pad_rect_to(*box, (pad_h, pad_w), within)
+    return pad_rect_to(*box, (pad_h*multiple, pad_w*multiple), within)
 
 def bounding_box_nms(boxes, scores, iou_threshold):
     """

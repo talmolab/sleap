@@ -455,14 +455,20 @@ class Predictor:
                 # (We're not using the pad function because it shifts
                 # boxes to fit within image.)
 
-                boxes = [(frame_peaks[0][i][0]-bb_half,
-                         frame_peaks[0][i][1]-bb_half,
-                         frame_peaks[0][i][0]+bb_half,
-                         frame_peaks[0][i][1]+bb_half)
-                        for i in range(frame_peaks[0].shape[0])]
+                boxes = []
+                for peak_i in range(frame_peaks[0].shape[0]):
+                    # Rescale peak back onto full-sized image
+                    peak_x = int(frame_peaks[0][peak_i][0] / centroid_transform.scale)
+                    peak_y = int(frame_peaks[0][peak_i][1] / centroid_transform.scale)
+
+                    boxes.append((peak_x-bb_half, peak_y-bb_half,
+                                  peak_x+bb_half, peak_y+bb_half))
 
                 # Merge overlapping boxes and pad to multiple of crop size
-                merged_boxes = merge_boxes_with_overlap_and_padding(boxes, crop_size, full_img_size)
+                merged_boxes = merge_boxes_with_overlap_and_padding(
+                                boxes=boxes,
+                                pad_factor_box=(crop_size, crop_size),
+                                within=full_img_size)
 
                 # Keep track of all boxes, grouped by size and frame idx
                 for box in merged_boxes:
