@@ -111,15 +111,18 @@ class Predictor:
                 iou_threshold: float=.9,
                 return_confmaps=False) -> List[List[np.ndarray]]:
 
-        keras_model = self._get_centroid_model()
+        # Load centroid model as needed
+        model_package = self.fetch_model(
+                                input_size = None,
+                                output_types = [ModelOutputType.CENTROIDS])
 
         centroid_transform = DataTransform()
         centroid_imgs_scaled = centroid_transform.scale_to(
                                     imgs=imgs,
-                                    target_size=keras_model.input_shape[1:3])
+                                    target_size=model_package["model"].input_shape[1:3])
 
         # Predict centroids
-        centroid_confmaps = keras_model.predict(centroid_imgs_scaled.astype("float32") / 255,
+        centroid_confmaps = model_package["model"].predict(centroid_imgs_scaled.astype("float32") / 255,
                                                 batch_size=self.inference_batch_size)
 
         peaks, peak_vals = find_all_peaks(centroid_confmaps,
@@ -273,6 +276,8 @@ class Predictor:
                             output_types = [ModelOutputType.CONFIDENCE_MAP,
                                 ModelOutputType.PART_AFFINITY_FIELD])
 
+                model_data = get_model_data(self.sleap_models, [ModelOutputType.CONFIDENCE_MAP])
+
                 # Get training crop size
                 crop_size = model_package["model"].input_shape[1]
 
@@ -288,6 +293,10 @@ class Predictor:
 
                     # Do the cropping
                     mov = transform.centroid_crop(mov_full, centroids, crop_size)
+
+                    subchunks_to_process.append((mov, transform))
+
+                    logger.info(f"  Centroids resulted in {len(mov)} crops for this chunk.")
 
                 else:
                     logger.info("  No centroids found so done with this chunk.")
@@ -338,7 +347,7 @@ class Predictor:
 
                 logger.info(f"  Running inference for subchunk:")
                 logger.info(f"    Shape: {subchunk_mov.shape}")
-                logger.info(f"    Scale: {subchunk_transform.scale}")
+                logger.info(f"    Prediction Scale: {subchunk_transform.scale}")
 
                 if ModelOutputType.PART_AFFINITY_FIELD not in self.sleap_models:
                     # Pipeline for predicting a single animal in a frame
@@ -359,7 +368,7 @@ class Predictor:
                                             subchunk_transform,
                                             vid)
 
-                logger.info(f"    Subchunk frames with instances found: {len(subchunk_lf)}")
+                logger.info(f"    Subchunk frames with instances found: {len(subchunk_lfs)}")
 
                 subchunk_results.append(subchunk_lfs)
 
@@ -382,12 +391,12 @@ class Predictor:
             for subchunk_frames in subchunk_results:
                 predicted_frames_chunk.extend(subchunk_frames)
 
-            logger.info(f"  Instances found on {len(predicted_frames_chunk)} out of {len(mov_ful)} frames.")
+            logger.info(f"  Instances found on {len(predicted_frames_chunk)} out of {len(mov_full)} frames.")
 
             if len(predicted_frames_chunk):
 
                 # Sort by frame index
-                predicted_frames_chunk.sort(key=lambda lf: lf.frame.idx)
+                predicted_frames_chunk.sort(key=lambda lf: lf.frame_idx)
 
                 # Track
                 if self.with_tracking and len(predicted_frames_chunk):
@@ -404,10 +413,10 @@ class Predictor:
                     # FIXME: We are re-writing the whole output each time, this is dumb.
                     #  We should save in chunks then combine at the end.
                     labels = Labels(labeled_frames=predicted_frames)
-                    if output_path is not None:
-                        Labels.save_json(labels, filename=output_path, compress=True)
+                    if self.output_path is not None:
+                        Labels.save_json(labels, filename=self.output_path, compress=True)
 
-                        logger.info("  Saved to: %s [%.1fs]" % (output_path, time() - t0))
+                        logger.info("  Saved to: %s [%.1fs]" % (self.output_path, time() - t0))
 
             elapsed = time() - t0_chunk
             total_elapsed = time() - t0_start
@@ -555,6 +564,8 @@ class Predictor:
                     output_path = self.output_path,
                     data = dict(confmaps=confmaps, pafs=pafs,
                         frame_idxs=transform.frame_idxs, bounds=transform.bounding_boxes))
+
+        return predicted_frames_chunk
 
     def fetch_model(self,
             input_size: tuple,

@@ -270,7 +270,7 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, transform, img_idx
         # sort by distance from crop centroid
         matched_instances_t.sort(key=lambda inst: np.linalg.norm(inst.centroid - crop_centroid))
 
-        logger.debug(f"SINGLE_INSTANCE_PER_CROP: crop has {len(matched_instances_t)} instances, filter to 1.")
+        # logger.debug(f"SINGLE_INSTANCE_PER_CROP: crop has {len(matched_instances_t)} instances, filter to 1.")
 
         # just use closest
         matched_instances_t = matched_instances_t[0:1]

@@ -66,7 +66,7 @@ def load_model(
             models.append(model)
 
         if len(models) == 1:
-            keras_model = keras.Model(new_input_layer, model[0])
+            keras_model = keras.Model(new_input_layer, models[0])
         else:
             # Merge multiple models into single model
             keras_model = keras.Model(new_input_layer, models)

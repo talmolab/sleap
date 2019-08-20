@@ -1,4 +1,3 @@
-import h5py
 from typing import Generator, Sequence, Tuple
 
 def batch_count(data, batch_size):
@@ -25,6 +24,10 @@ def batch(data: Sequence, batch_size: int) -> Generator[Tuple[int, int, Sequence
         yield i, start, data[start:end]
 
 def save_visual_outputs(output_path: str, data: dict):
+    import h5py
+    import numpy as np
+    from time import time
+
     t0 = time()
 
     # output_path is full path to labels.json, so replace "json" with "h5"
@@ -45,4 +48,4 @@ def save_visual_outputs(output_path: str, data: dict):
                 f.create_dataset(key, data=val, maxshape=maxshape,
                     compression="gzip", compression_opts=9)
 
-    logger.info("  Saved visual outputs [%.1fs]" % (time() - t0))
+    # logger.info("  Saved visual outputs [%.1fs]" % (time() - t0))
