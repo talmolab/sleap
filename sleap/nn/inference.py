@@ -36,6 +36,7 @@ from sleap.nn.transform import DataTransform
 from sleap.nn.datagen import merge_boxes_with_overlap_and_padding
 from sleap.nn.loadmodel import load_model, get_model_data, get_model_skeleton
 from sleap.nn.peakfinding import find_all_peaks, find_all_single_peaks
+from sleap.nn.peakfinding_tf import peak_tf_inference
 from sleap.nn.peakmatching import match_single_peaks_all, match_peaks_paf, match_peaks_paf_par, instances_nms
 from sleap.nn.util import batch, batch_count, save_visual_outputs
 
@@ -89,7 +90,7 @@ class Predictor:
     skeleton: Skeleton = None
     inference_batch_size: int = 2
     read_chunk_size: int = 256
-    save_frequency: int = 1 # chunks
+    save_frequency: int = 100 # chunks
     nms_min_thresh = 0.3
     nms_sigma = 3
     min_score_to_node_ratio: float = 0.2
@@ -301,6 +302,7 @@ class Predictor:
             predicted_frames_chunk = []
             for subchunk_frames in subchunk_results:
                 predicted_frames_chunk.extend(subchunk_frames)
+            predicted_frames_chunk = LabeledFrame.merge_frames(predicted_frames_chunk, video=vid)
 
             logger.info(f"  Instances found on {len(predicted_frames_chunk)} out of {len(mov_full)} frames.")
 
@@ -436,7 +438,7 @@ class Predictor:
 
         crop_model_package = self.fetch_model(
                                 input_size = None,
-                                output_types = [ModelOutputType.CONFIDENCE_MAP, ModelOutputType.PART_AFFINITY_FIELD])
+                                output_types = [ModelOutputType.CONFIDENCE_MAP])
         crop_size = crop_model_package["bounding_box_size"]
         bb_half = crop_size//2
 
@@ -557,23 +559,36 @@ class Predictor:
         """
 
         # Load appropriate models as needed
-        model_package = self.fetch_model(
+        conf_model = self.fetch_model(
                             input_size = imgs.shape[1:],
-                            output_types = [ModelOutputType.CONFIDENCE_MAP,
-                                ModelOutputType.PART_AFFINITY_FIELD])
+                            output_types = [ModelOutputType.CONFIDENCE_MAP])
 
-        t0 = time()
-
-        confmaps, pafs = model_package["model"].predict(imgs.astype("float32") / 255, batch_size=self.inference_batch_size)
-
-        logger.info( "  Inferred confmaps and PAFs [%.1fs]" % (time() - t0))
-        logger.info(f"    confmaps: shape={confmaps.shape}, ptp={np.ptp(confmaps)}")
-        logger.info(f"    pafs: shape={pafs.shape}, ptp={np.ptp(pafs)}")
+        paf_model = self.fetch_model(
+                            input_size = imgs.shape[1:],
+                            output_types = [ModelOutputType.PART_AFFINITY_FIELD])
 
         # Find peaks
         t0 = time()
-        peaks, peak_vals = find_all_peaks(confmaps, min_thresh=self.nms_min_thresh, sigma=self.nms_sigma)
-        logger.info("  Found peaks [%.1fs]" % (time() - t0))
+
+        peaks, peak_vals = peak_tf_inference(
+                            model = conf_model["model"],
+                            data = imgs.astype("float32")/255,
+                            min_thresh=self.nms_min_thresh,
+                            downsample_factor=int(1/paf_model["multiscale"]),
+                            upsample_factor=int(1/conf_model["multiscale"])
+                            )
+
+        transform.scale = transform.scale * paf_model["multiscale"]
+
+        logger.info("  Inferred confmaps and found-peaks (gpu) [%.1fs]" % (time() - t0))
+        logger.info(f"    peaks: {len(peaks)}")
+
+        # Infer pafs
+        t0 = time()
+        pafs = paf_model["model"].predict(imgs.astype("float32") / 255, batch_size=self.inference_batch_size)
+
+        logger.info( "  Inferred PAFs [%.1fs]" % (time() - t0))
+        logger.info(f"    pafs: shape={pafs.shape}, ptp={np.ptp(pafs)}")
 
         # Determine whether to use serial or parallel version of peak-finding
         # Use the serial version is we're already running in a thread pool
@@ -583,7 +598,7 @@ class Predictor:
         t0 = time()
 
         predicted_frames_chunk = match_peaks_function(
-                                        peaks, peak_vals, pafs, model_package["skeleton"],
+                                        peaks, peak_vals, pafs, conf_model["skeleton"],
                                         transform=transform, video=video,
                                         min_score_to_node_ratio=self.min_score_to_node_ratio,
                                         min_score_midpts=self.min_score_midpts,
@@ -626,7 +641,10 @@ class Predictor:
 
             keras_model = load_model(self.sleap_models, input_size, output_types)
             first_sleap_model = self.sleap_models[output_types[0]]
+            model_data = get_model_data(self.sleap_models, output_types)
             skeleton = get_model_skeleton(self.sleap_models, output_types)
+
+            # logger.info(f"Model multiscale: {model_data['multiscale']}")
 
             # If no input size was specified, then use the input size
             # from original trained model.
@@ -648,7 +666,8 @@ class Predictor:
 
             self._models[key] = dict(
                                     model=keras_model,
-                                    skeleton=skeleton,
+                                    skeleton=model_data["skeleton"],
+                                    multiscale=model_data["multiscale"],
                                     bounding_box_size=bounding_box_size
                                     )
 

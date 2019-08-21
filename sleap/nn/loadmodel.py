@@ -7,7 +7,9 @@ import keras
 from time import time, clock
 from typing import Dict, List, Union, Optional, Tuple
 
-from keras.utils import multi_gpu_model
+import tensorflow as tf
+import keras
+# keras = tf.keras
 
 from sleap.skeleton import Skeleton
 from sleap.nn.model import ModelOutputType
@@ -42,7 +44,7 @@ def load_model(
 
         models = []
 
-        new_input_layer = keras.layers.Input(input_size) if input_size is not None else None
+        new_input_layer = tf.keras.layers.Input(input_size) if input_size is not None else None
 
         for output_type in output_types:
 
@@ -66,14 +68,14 @@ def load_model(
             models.append(model)
 
         if len(models) == 1:
-            keras_model = keras.Model(new_input_layer, models[0])
+            keras_model = tf.keras.Model(new_input_layer, models[0])
         else:
             # Merge multiple models into single model
-            keras_model = keras.Model(new_input_layer, models)
+            keras_model = tf.keras.Model(new_input_layer, models)
 
             logger.info(f"  Merged {len(models)} into single model")
 
-    keras_model = convert_to_gpu_model(keras_model)
+    # keras_model = convert_to_gpu_model(keras_model)
 
     return keras_model
 
@@ -110,14 +112,19 @@ def get_model_skeleton(sleap_models, output_types) -> Skeleton:
 
 def load_model_from_job(job: TrainingJob) -> keras.Model:
     """Load keras Model from a specific TrainingJob."""
+
+    # init = tf.global_variables_initializer()
+    # keras.backend.get_session().run(init)
+    # logger.info("Initialized TF global variables.")
+
     # Load model from TrainingJob data
-    keras_model = keras.models.load_model(job_model_path(job))
+    keras_model = tf.keras.models.load_model(job_model_path(job))
 
     # Rename to prevent layer naming conflict
     name_prefix = f"{job.model.output_type}_"
-    keras_model.name = name_prefix + keras_model.name
+    keras_model._name = name_prefix + keras_model.name
     for i in range(len(keras_model.layers)):
-        keras_model.layers[i].name = name_prefix + keras_model.layers[i].name
+        keras_model.layers[i]._name = name_prefix + keras_model.layers[i].name
 
     return keras_model
 
@@ -146,6 +153,6 @@ def convert_to_gpu_model(model: keras.Model) -> keras.Model:
         logger.info(f'Detected {len(gpu_list)} GPU(s) for inference')
 
     if len(gpu_list) > 1:
-        model = multi_gpu_model(model, gpus=len(gpu_list))
+        model = keras.util.multi_gpu_model(model, gpus=len(gpu_list))
 
     return model

@@ -285,7 +285,9 @@ def plot_instance_cv(img, instance, color, marker_radius=4):
                         lineType=cv2.LINE_AA)
 
 if __name__ == "__main__":
+
     import argparse
+    from sleap.util import frame_list
 
     parser = argparse.ArgumentParser()
     parser.add_argument("data_path", help="Path to labels json file")
@@ -293,8 +295,9 @@ if __name__ == "__main__":
                         help='The output filename for the video')
     parser.add_argument('-f', '--fps', type=int, default=15,
                         help='Frames per second')
-    parser.add_argument('-l', '--limit', type=int, default=0,
-                    help='Limit video to this many frames')
+    parser.add_argument('--frames', type=frame_list, default="",
+                        help='list of frames to predict. Either comma separated list (e.g. 1,2,3) or '
+                             'a range separated by hyphen (e.g. 1-3). (default is entire video)')
     args = parser.parse_args()
 
     video_callback = Labels.make_video_callback([os.path.dirname(args.data_path)])
@@ -302,9 +305,10 @@ if __name__ == "__main__":
 
     vid = labels.videos[0]
 
-    frames = sorted([lf.frame_idx for lf in labels if len(lf.instances)])
-    if args.limit:
-        frames = frames[:args.limit]
+    if args.frames is None:
+        frames = sorted([lf.frame_idx for lf in labels if len(lf.instances)])
+    else:
+        frames = args.frames
 
     filename = args.output or args.data_path + ".avi"
 
