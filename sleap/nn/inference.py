@@ -89,7 +89,7 @@ class Predictor:
     skeleton: Skeleton = None
     inference_batch_size: int = 2
     read_chunk_size: int = 256
-    save_frequency: int = 1 # chunks
+    save_frequency: int = 100 # chunks
     nms_min_thresh = 0.3
     nms_sigma = 3
     min_score_to_node_ratio: float = 0.2
