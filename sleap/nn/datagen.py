@@ -536,6 +536,72 @@ def _translate_points_array(points_array, x, y):
     if len(points_array) == 0: return points_array
     return points_array - np.asarray([x,y])
 
+def merge_boxes(box_a, box_b):
+    """Return a box that contains both boxes."""
+
+    a_x1, a_y1, a_x2, a_y2 = box_a
+    b_x1, b_y1, b_x2, b_y2 = box_b
+
+    c_x1, c_y1 = min(a_x1, b_x1), min(a_y1, b_y1)
+    c_x2, c_y2 = max(a_x2, b_x2), max(a_y2, b_y2)
+
+    return (c_x1, c_y1, c_x2, c_y2)
+
+def merge_boxes_with_overlap(boxes):
+    """Return a list of boxes after merging any overlapping boxes."""
+
+    if len(boxes) < 2: return boxes
+
+    first_box = boxes[0]
+    other_boxes = boxes[1:]
+
+    keep_boxes = []
+
+    # Check first box against each of the other boxes
+    for box in other_boxes:
+        if box_overlap_area(first_box, box) > 0:
+            first_box = merge_boxes(first_box, box)
+        else:
+            keep_boxes.append(box)
+
+    # Now filter the other boxes for overlap amongst themselves
+    other_boxes = merge_boxes_with_overlap(keep_boxes)
+
+    return [first_box] + other_boxes
+
+def merge_boxes_with_overlap_and_padding(boxes, pad_factor_box, within):
+    """
+    Returns a list of boxes after merging any overlapping boxes
+    and padding each box to a size multiple of pad_factor_box.
+    """
+
+    # Pad then merge
+    padded_boxes = [pad_box_to_multiple(box, pad_factor_box, within) for box in boxes]
+    merged_boxes = merge_boxes_with_overlap(padded_boxes)
+
+    # If we merged any boxes, then do this again until we don't merge
+    if len(merged_boxes) == len(boxes):
+        return merged_boxes
+    else:
+        return merge_boxes_with_overlap_and_padding(merged_boxes, pad_factor_box, within)
+
+def pad_box_to_multiple(box, pad_factor_box, within):
+    from math import ceil
+
+    box_h = box[3] - box[1] # difference in y
+    box_w = box[2] - box[0] # difference in x
+
+    pad_h, pad_w = pad_factor_box
+
+    # Find multiple of pad_factor_box that's large enough to hold box
+    multiple_h, multiple_w = ceil(box_h / pad_h), ceil(box_w / pad_w)
+
+    # Maintain aspect ratio
+    multiple = max(multiple_h, multiple_w)
+
+    # Return padded box
+    return pad_rect_to(*box, (pad_h*multiple, pad_w*multiple), within)
+
 def bounding_box_nms(boxes, scores, iou_threshold):
     """
     Suppress bounding boxes which overlap more than iou_threshold.
@@ -683,7 +749,7 @@ def get_random_negative_samples(img_idxs, bbs, img_shape, negative_samples):
         sample_bb = (x, y, x+box_side, y+box_side)
 
         frame_bbs = [bbs[i] for i, frame in enumerate(img_idxs) if frame == sample_img_idx]
-        area_covered = sum(map(lambda bb: _overlap_area(sample_bb, bb), frame_bbs))/(box_side**2)
+        area_covered = sum(map(lambda bb: box_overlap_area(sample_bb, bb), frame_bbs))/(box_side**2)
 
         # append negative sample to lists
         neg_sample_list.append((area_covered, sample_img_idx, sample_bb))
@@ -704,7 +770,7 @@ def _bbs_from_points(points):
 
     return bbs, img_idxs
 
-def _overlap_area(box_a, box_b):
+def box_overlap_area(box_a, box_b):
     # determine the (x, y)-coordinates of the intersection rectangle
     xA = max(box_a[0], box_b[0])
     yA = max(box_a[1], box_b[1])
