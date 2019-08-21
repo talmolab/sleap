@@ -171,10 +171,9 @@
 
 <span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Callable</span>
 
-<span class="kn">from</span> <span class="nn">sleap.gui.video</span> <span class="k">import</span> <span class="n">QtVideoPlayer</span><span class="p">,</span> <span class="n">QtInstance</span><span class="p">,</span> <span class="n">QtEdge</span><span class="p">,</span> <span class="n">QtNode</span>
-<span class="kn">from</span> <span class="nn">sleap.gui.tracks</span> <span class="k">import</span> <span class="n">TrackColorManager</span>
-<span class="kn">from</span> <span class="nn">sleap.io.video</span> <span class="k">import</span> <span class="n">Video</span><span class="p">,</span> <span class="n">HDF5Video</span><span class="p">,</span> <span class="n">MediaVideo</span>
-<span class="kn">from</span> <span class="nn">sleap.io.dataset</span> <span class="k">import</span> <span class="n">Labels</span><span class="p">,</span> <span class="n">load_labels_json_old</span>
+<span class="kn">from</span> <span class="nn">sleap.gui.overlays.tracks</span> <span class="k">import</span> <span class="n">TrackColorManager</span>
+<span class="kn">from</span> <span class="nn">sleap.io.video</span> <span class="k">import</span> <span class="n">Video</span>
+<span class="kn">from</span> <span class="nn">sleap.io.dataset</span> <span class="k">import</span> <span class="n">Labels</span>
 <span class="kn">from</span> <span class="nn">sleap.instance</span> <span class="k">import</span> <span class="n">LabeledFrame</span>
 <span class="kn">from</span> <span class="nn">sleap.skeleton</span> <span class="k">import</span> <span class="n">Skeleton</span><span class="p">,</span> <span class="n">Node</span>
 
@@ -440,7 +439,15 @@
     <span class="nd">@labels</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span> <span class="o">=</span> <span class="n">val</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_color_manager</span> <span class="o">=</span> <span class="n">TrackColorManager</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">color_manager</span> <span class="o">=</span> <span class="n">TrackColorManager</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">color_manager</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_color_manager</span>
+
+    <span class="nd">@color_manager</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">color_manager</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_color_manager</span> <span class="o">=</span> <span class="n">val</span>
 
     <span class="k">def</span> <span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QModelIndex</span><span class="p">,</span> <span class="n">role</span><span class="o">=</span><span class="n">Qt</span><span class="o">.</span><span class="n">DisplayRole</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">index</span><span class="o">.</span><span class="n">isValid</span><span class="p">():</span>
@@ -459,7 +466,7 @@
                         <span class="k">return</span> <span class="n">instance</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">name</span>
                 <span class="k">elif</span> <span class="n">role</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">ForegroundRole</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">prop</span> <span class="o">==</span> <span class="s2">&quot;track&quot;</span> <span class="ow">and</span> <span class="n">instance</span><span class="o">.</span><span class="n">track</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                        <span class="k">return</span> <span class="n">QColor</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_color_manager</span><span class="o">.</span><span class="n">get_color</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">track</span><span class="p">))</span>
+                        <span class="k">return</span> <span class="n">QColor</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">color_manager</span><span class="o">.</span><span class="n">get_color</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">track</span><span class="p">))</span>
 
         <span class="k">return</span> <span class="kc">None</span>
 

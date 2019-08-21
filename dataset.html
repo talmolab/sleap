@@ -164,7 +164,7 @@ is a high level API to these data structures that abstracts away their underlyin
 storage format.</p>
 <dl class="class">
 <dt id="sleap.io.dataset.Labels">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.io.dataset.</code><code class="sig-name descname">Labels</code><span class="sig-paren">(</span><em class="sig-param">labeled_frames: List[sleap.instance.LabeledFrame] = NOTHING</em>, <em class="sig-param">videos: List[sleap.io.video.Video] = NOTHING</em>, <em class="sig-param">skeletons: List[sleap.skeleton.Skeleton] = NOTHING</em>, <em class="sig-param">nodes: List[sleap.skeleton.Node] = NOTHING</em>, <em class="sig-param">tracks: List[sleap.instance.Track] = NOTHING</em>, <em class="sig-param">suggestions: Dict[sleap.io.video.Video</em>, <em class="sig-param">list] = NOTHING</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.io.dataset.</code><code class="sig-name descname">Labels</code><span class="sig-paren">(</span><em class="sig-param">labeled_frames: List[sleap.instance.LabeledFrame] = NOTHING</em>, <em class="sig-param">videos: List[sleap.io.video.Video] = NOTHING</em>, <em class="sig-param">skeletons: List[sleap.skeleton.Skeleton] = NOTHING</em>, <em class="sig-param">nodes: List[sleap.skeleton.Node] = NOTHING</em>, <em class="sig-param">tracks: List[sleap.instance.Track] = NOTHING</em>, <em class="sig-param">suggestions: Dict[sleap.io.video.Video</em>, <em class="sig-param">list] = NOTHING</em>, <em class="sig-param">negative_anchors: Dict[sleap.io.video.Video</em>, <em class="sig-param">list] = NOTHING</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels" title="Permalink to this definition">¶</a></dt>
 <dd><p>The LEAP <a class="reference internal" href="#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><code class="xref py py-class docutils literal notranslate"><span class="pre">Labels</span></code></a> class represents an API for accessing labeled video
 frames and other associated metadata. This class is front-end for all
 interactions with loading, writing, and modifying these labels. The actual
@@ -183,6 +183,21 @@ interface.</p>
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="sleap.io.dataset.Labels.add_negative_anchor">
+<code class="sig-name descname">add_negative_anchor</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em>, <em class="sig-param">frame_idx: int</em>, <em class="sig-param">where: tuple</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.add_negative_anchor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.add_negative_anchor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a location for a negative training sample.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>video</strong> – the <cite>Video</cite> for this negative sample</p></li>
+<li><p><strong>frame_idx</strong> – frame index</p></li>
+<li><p><strong>where</strong> – (x, y)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="method">
 <dt id="sleap.io.dataset.Labels.add_video">
 <code class="sig-name descname">add_video</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.add_video"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.add_video" title="Permalink to this definition">¶</a></dt>
@@ -220,13 +235,14 @@ labeled frames are added.</p>
 
 <dl class="method">
 <dt id="sleap.io.dataset.Labels.find">
-<code class="sig-name descname">find</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em>, <em class="sig-param">frame_idx: int = None</em><span class="sig-paren">)</span> &#x2192; List[sleap.instance.LabeledFrame]<a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.find"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.find" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">find</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em>, <em class="sig-param">frame_idx: Union[int</em>, <em class="sig-param">range] = None</em>, <em class="sig-param">return_new: bool = False</em><span class="sig-paren">)</span> &#x2192; List[sleap.instance.LabeledFrame]<a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.find"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.find" title="Permalink to this definition">¶</a></dt>
 <dd><p>Search for labeled frames given video and/or frame index.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>video</strong> – a <cite>Video</cite> instance that is associated with the labeled frames</p></li>
 <li><p><strong>frame_idx</strong> – an integer specifying the frame index within the video</p></li>
+<li><p><strong>return_new</strong> – return singleton of new <cite>LabeledFrame</cite> if none found?</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -270,6 +286,32 @@ labeled frames are added.</p>
 <dd class="field-odd"><p>LabeledFrame</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.dataset.Labels.find_track_occupancy">
+<code class="sig-name descname">find_track_occupancy</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video, track: Union[sleap.instance.Track, int], frame_range=None</em><span class="sig-paren">)</span> &#x2192; List[Tuple[sleap.instance.LabeledFrame, sleap.instance.Instance]]<a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.find_track_occupancy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.find_track_occupancy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get instances for a given track.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>video</strong> – the <cite>Video</cite></p></li>
+<li><p><strong>track</strong> – the <cite>Track</cite> or int (“pseudo-track” index to instance list)</p></li>
+<li><p><strong>frame_range</strong> (<em>optional</em>) – If specified, only return instances on frames in range.
+If None, return all instances for given track.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>list of <cite>Instance</cite> objects</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.dataset.Labels.frames">
+<code class="sig-name descname">frames</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em>, <em class="sig-param">from_frame_idx: int = -1</em>, <em class="sig-param">reverse=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.frames"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.frames" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterator over all frames in a video, starting with first frame
+after specified frame_idx (or first frame in video if none specified).</p>
 </dd></dl>
 
 <dl class="method">
@@ -463,6 +505,8 @@ JSON and HDF5 serialized datasets.</p>
 <li><p>videos - The videos that that the instances occur on.</p></li>
 <li><p>labels - The labeled frames</p></li>
 <li><p>tracks - The tracks associated with each instance.</p></li>
+<li><p>suggestions - The suggested frames.</p></li>
+<li><p>negative_anchors - The negative training sample anchors.</p></li>
 </ul>
 </p>
 </dd>

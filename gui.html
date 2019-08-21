@@ -617,7 +617,7 @@ the very same <cite>Point</cite> object that’s defined outside our class.</p><
 
 <dl class="class">
 <dt id="sleap.gui.video.QtVideoPlayer">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.video.</code><code class="sig-name descname">QtVideoPlayer</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video = None</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtVideoPlayer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtVideoPlayer" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.video.</code><code class="sig-name descname">QtVideoPlayer</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video = None</em>, <em class="sig-param">color_manager=None</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtVideoPlayer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtVideoPlayer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Main QWidget for displaying video with skeleton instances.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1002,142 +1002,6 @@ even though it’s not a user-selectable param.</p>
 
 </dd></dl>
 
-<span class="target" id="module-sleap.gui.confmapsplot"></span><p>Module for showing confidence maps as an overlay within a QtVideoPlayer.</p>
-<p class="rubric">Example</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cm</span> <span class="o">=</span> <span class="n">ConfMapsPlot</span><span class="p">(</span><span class="n">conf_data</span><span class="o">.</span><span class="n">get_frame</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">window</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">cm</span><span class="p">)</span>
-</pre></div>
-</div>
-<dl class="class">
-<dt id="sleap.gui.confmapsplot.ConfMapPlot">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.confmapsplot.</code><code class="sig-name descname">ConfMapPlot</code><span class="sig-paren">(</span><em class="sig-param">confmap: numpy.array = None, color=[255, 255, 255], *args, **kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/confmapsplot.html#ConfMapPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.confmapsplot.ConfMapPlot" title="Permalink to this definition">¶</a></dt>
-<dd><p>QGraphicsPixmapItem object for drawing single channel of confidence map.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>confmap</strong> (<em>numpy.array</em>) – (h, w) array of one confidence map channel.</p></li>
-<li><p><strong>color</strong> (<em>list</em>) – optional (r, g, b) array for channel color.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>None.</p>
-</dd>
-</dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>In most cases this should only be called by ConfMapsPlot.</p>
-</div>
-<dl class="method">
-<dt id="sleap.gui.confmapsplot.ConfMapPlot.get_conf_image">
-<code class="sig-name descname">get_conf_image</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; PySide2.QtGui.QImage<a class="reference internal" href="_modules/sleap/gui/confmapsplot.html#ConfMapPlot.get_conf_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.confmapsplot.ConfMapPlot.get_conf_image" title="Permalink to this definition">¶</a></dt>
-<dd><p>Converts array data stored in object to QImage.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>QImage.</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="sleap.gui.confmapsplot.ConfMapsPlot">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.confmapsplot.</code><code class="sig-name descname">ConfMapsPlot</code><span class="sig-paren">(</span><em class="sig-param">frame: numpy.array = None</em>, <em class="sig-param">show=None</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/confmapsplot.html#ConfMapsPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.confmapsplot.ConfMapsPlot" title="Permalink to this definition">¶</a></dt>
-<dd><p>QGraphicsObject to display multiple confidence maps in a QGraphicsView.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>frame</strong> (<em>numpy.array</em>) – Data for one frame of confidence map data.
-Shape of array should be (channels, height, width).</p></li>
-<li><p><strong>show</strong> (<em>list</em><em>, </em><em>optional</em>) – List of channels to show. If None, show all channels.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>None.</p>
-</dd>
-</dl>
-<p>When initialized, creates one child ConfMapPlot item for each channel.</p>
-<dl class="method">
-<dt id="sleap.gui.confmapsplot.ConfMapsPlot.boundingRect">
-<code class="sig-name descname">boundingRect</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; PySide2.QtCore.QRectF<a class="reference internal" href="_modules/sleap/gui/confmapsplot.html#ConfMapsPlot.boundingRect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.confmapsplot.ConfMapsPlot.boundingRect" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method required by Qt.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.confmapsplot.ConfMapsPlot.paint">
-<code class="sig-name descname">paint</code><span class="sig-paren">(</span><em class="sig-param">painter</em>, <em class="sig-param">option</em>, <em class="sig-param">widget=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/confmapsplot.html#ConfMapsPlot.paint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.confmapsplot.ConfMapsPlot.paint" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method required by Qt.</p>
-</dd></dl>
-
-</dd></dl>
-
-<span class="target" id="module-sleap.gui.quiverplot"></span><dl class="class">
-<dt id="sleap.gui.quiverplot.MultiQuiverPlot">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.quiverplot.</code><code class="sig-name descname">MultiQuiverPlot</code><span class="sig-paren">(</span><em class="sig-param">frame: numpy.array = None</em>, <em class="sig-param">show: list = None</em>, <em class="sig-param">decimation: int = 9</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/quiverplot.html#MultiQuiverPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.quiverplot.MultiQuiverPlot" title="Permalink to this definition">¶</a></dt>
-<dd><p>QtWidgets.QGraphicsObject to display multiple quiver plots in a QtWidgets.QGraphicsView.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>frame</strong> (<em>numpy.array</em>) – Data for one frame of quiver plot data.
-Shape of array should be (channels, height, width).</p></li>
-<li><p><strong>show</strong> (<em>list</em><em>, </em><em>optional</em>) – List of channels to show. If None, show all channels.</p></li>
-<li><p><strong>decimation</strong> (<em>int</em><em>, </em><em>optional</em>) – Decimation factor. If 1, show every arrow.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>None.</p>
-</dd>
-</dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Each channel corresponds to two (h, w) arrays: x and y for the vector.</p>
-</div>
-<p>When initialized, creates one child QuiverPlot item for each channel.</p>
-<dl class="method">
-<dt id="sleap.gui.quiverplot.MultiQuiverPlot.boundingRect">
-<code class="sig-name descname">boundingRect</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; PySide2.QtCore.QRectF<a class="reference internal" href="_modules/sleap/gui/quiverplot.html#MultiQuiverPlot.boundingRect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.quiverplot.MultiQuiverPlot.boundingRect" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method required by Qt.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.quiverplot.MultiQuiverPlot.paint">
-<code class="sig-name descname">paint</code><span class="sig-paren">(</span><em class="sig-param">painter</em>, <em class="sig-param">option</em>, <em class="sig-param">widget=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/quiverplot.html#MultiQuiverPlot.paint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.quiverplot.MultiQuiverPlot.paint" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method required by Qt.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="sleap.gui.quiverplot.QuiverPlot">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.quiverplot.</code><code class="sig-name descname">QuiverPlot</code><span class="sig-paren">(</span><em class="sig-param">field_x: numpy.array = None, field_y: numpy.array = None, color=[255, 255, 255], decimation=1, *args, **kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/quiverplot.html#QuiverPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.quiverplot.QuiverPlot" title="Permalink to this definition">¶</a></dt>
-<dd><p>QtWidgets.QGraphicsObject for drawing single quiver plot.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>field_x</strong> (<em>numpy.array</em>) – (h, w) array of x component of vectors.</p></li>
-<li><p><strong>field_y</strong> (<em>numpy.array</em>) – (h, w) array of y component of vectors.</p></li>
-<li><p><strong>color</strong> (<em>list</em><em>, </em><em>optional</em>) – Arrow color. Format as (r, g, b) array.</p></li>
-<li><p><strong>decimation</strong> (<em>int</em><em>, </em><em>optional</em>) – Decimation factor. If 1, show every arrow.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>None.</p>
-</dd>
-</dl>
-<dl class="method">
-<dt id="sleap.gui.quiverplot.QuiverPlot.boundingRect">
-<code class="sig-name descname">boundingRect</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; PySide2.QtCore.QRectF<a class="reference internal" href="_modules/sleap/gui/quiverplot.html#QuiverPlot.boundingRect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.quiverplot.QuiverPlot.boundingRect" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method called by Qt in order to determine whether object is in visible frame.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.quiverplot.QuiverPlot.paint">
-<code class="sig-name descname">paint</code><span class="sig-paren">(</span><em class="sig-param">painter</em>, <em class="sig-param">option</em>, <em class="sig-param">widget=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/quiverplot.html#QuiverPlot.paint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.quiverplot.QuiverPlot.paint" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method called by Qt to draw object.</p>
-</dd></dl>
-
-</dd></dl>
-
 <span class="target" id="module-sleap.gui.dataviews"></span><dl class="class">
 <dt id="sleap.gui.dataviews.LabeledFrameTable">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.gui.dataviews.</code><code class="sig-name descname">LabeledFrameTable</code><span class="sig-paren">(</span><em class="sig-param">labeled_frame: sleap.instance.LabeledFrame = None</em>, <em class="sig-param">labels: sleap.io.dataset.Labels = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#LabeledFrameTable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.LabeledFrameTable" title="Permalink to this definition">¶</a></dt>
@@ -1236,7 +1100,7 @@ lists of Video instances.</p>
 <span class="target" id="module-sleap.gui.slider"></span><p>Drop-in replacement for QSlider with additional features.</p>
 <dl class="class">
 <dt id="sleap.gui.slider.VideoSlider">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.slider.</code><code class="sig-name descname">VideoSlider</code><span class="sig-paren">(</span><em class="sig-param">orientation=-1</em>, <em class="sig-param">min=0</em>, <em class="sig-param">max=100</em>, <em class="sig-param">val=0</em>, <em class="sig-param">marks=None</em>, <em class="sig-param">tracks=0</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.slider.</code><code class="sig-name descname">VideoSlider</code><span class="sig-paren">(</span><em class="sig-param">orientation=-1</em>, <em class="sig-param">min=0</em>, <em class="sig-param">max=100</em>, <em class="sig-param">val=0</em>, <em class="sig-param">marks=None</em>, <em class="sig-param">tracks=0</em>, <em class="sig-param">color_manager=None</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider" title="Permalink to this definition">¶</a></dt>
 <dd><p>Drop-in replacement for QSlider with additional features.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1397,7 +1261,7 @@ this can be either
 
 <dl class="method">
 <dt id="sleap.gui.slider.VideoSlider.paint">
-<code class="sig-name descname">paint</code><span class="sig-paren">(</span><em class="sig-param">painter</em>, <em class="sig-param">option</em>, <em class="sig-param">widget=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.paint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.paint" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">paint</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.paint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.paint" title="Permalink to this definition">¶</a></dt>
 <dd><p>Method required by Qt.</p>
 </dd></dl>
 
@@ -1468,14 +1332,14 @@ this can be either
 
 <dl class="method">
 <dt id="sleap.gui.slider.VideoSlider.setTracksFromLabels">
-<code class="sig-name descname">setTracksFromLabels</code><span class="sig-paren">(</span><em class="sig-param">labels</em>, <em class="sig-param">video=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.setTracksFromLabels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.setTracksFromLabels" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setTracksFromLabels</code><span class="sig-paren">(</span><em class="sig-param">labels</em>, <em class="sig-param">video</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.setTracksFromLabels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.setTracksFromLabels" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set slider marks using track information from <cite>Labels</cite> object.</p>
 <p>Note that this is the only method coupled to a SLEAP object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>labels</strong> – the <cite>labels</cite> with tracks and labeled_frames</p></li>
-<li><p><strong>video</strong> – the video for which to show marks (default to first)</p></li>
+<li><p><strong>video</strong> – the video for which to show marks</p></li>
 </ul>
 </dd>
 </dl>

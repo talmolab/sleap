@@ -169,9 +169,10 @@
 <span class="sd">        num_output_channels: The number of output channels of the block. These</span>
 <span class="sd">            are the final output tensors on which intermediate supervision may be</span>
 <span class="sd">            applied.</span>
-<span class="sd">        depth: The number of pooling steps applied to the input. The input must</span>
-<span class="sd">            be a tensor with `2^depth` height and width to allow for symmetric</span>
-<span class="sd">            pooling and upsampling with skip connections.</span>
+<span class="sd">        down_blocks: The number of pooling steps applied to the input. The input</span>
+<span class="sd">            must be a tensor with `2^depth` height and width to allow for</span>
+<span class="sd">            symmetric pooling and upsampling with skip connections.</span>
+<span class="sd">        up_blocks: The number of upsampling steps applied after downsampling.</span>
 <span class="sd">        convs_per_depth: The number of convolutions applied before pooling or</span>
 <span class="sd">            after upsampling.</span>
 <span class="sd">        num_filters: The base number feature channels of the block. The number of</span>
@@ -181,7 +182,8 @@
 <span class="sd">        interp: Method to use for interpolation when upsampling smaller features.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">down_blocks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">up_blocks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>
     <span class="n">convs_per_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
     <span class="n">num_filters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">16</span>
     <span class="n">kernel_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span>
@@ -256,7 +258,7 @@
         <span class="k">return</span> <span class="n">stacked_unet</span><span class="p">(</span><span class="n">x_in</span><span class="p">,</span> <span class="n">num_output_channels</span><span class="p">,</span> <span class="o">**</span><span class="n">attr</span><span class="o">.</span><span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div></div>
 
 
-<div class="viewcode-block" id="unet"><a class="viewcode-back" href="../../../../training.html#sleap.nn.architectures.unet.unet">[docs]</a><span class="k">def</span> <span class="nf">unet</span><span class="p">(</span><span class="n">x_in</span><span class="p">,</span> <span class="n">num_output_channels</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">convs_per_depth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">num_filters</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+<div class="viewcode-block" id="unet"><a class="viewcode-back" href="../../../../training.html#sleap.nn.architectures.unet.unet">[docs]</a><span class="k">def</span> <span class="nf">unet</span><span class="p">(</span><span class="n">x_in</span><span class="p">,</span> <span class="n">num_output_channels</span><span class="p">,</span> <span class="n">down_blocks</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">up_blocks</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">convs_per_depth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">num_filters</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
          <span class="n">kernel_size</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">upsampling_layers</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">interp</span><span class="o">=</span><span class="s2">&quot;bilinear&quot;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;U-net block.</span>
 
@@ -269,9 +271,10 @@
 <span class="sd">        num_output_channels: The number of output channels of the block. These</span>
 <span class="sd">            are the final output tensors on which intermediate supervision may be</span>
 <span class="sd">            applied.</span>
-<span class="sd">        depth: The number of pooling steps applied to the input. The input must</span>
-<span class="sd">            be a tensor with `2^depth` height and width to allow for symmetric</span>
-<span class="sd">            pooling and upsampling with skip connections.</span>
+<span class="sd">        down_blocks: The number of pooling steps applied to the input. The input</span>
+<span class="sd">            must be a tensor with `2^depth` height and width to allow for</span>
+<span class="sd">            symmetric pooling and upsampling with skip connections.</span>
+<span class="sd">        up_blocks: The number of upsampling steps applied after downsampling.</span>
 <span class="sd">        convs_per_depth: The number of convolutions applied before pooling or</span>
 <span class="sd">            after upsampling.</span>
 <span class="sd">        num_filters: The base number feature channels of the block. The number of</span>
@@ -287,8 +290,8 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># Check if input tensor has the right height/width for pooling given depth</span>
-    <span class="k">if</span> <span class="n">x_in</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">%</span> <span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">depth</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">x_in</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">%</span> <span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">depth</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Input tensor must have width and height dimensions divisible by </span><span class="si">%d</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">depth</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">x_in</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">%</span> <span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">down_blocks</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">x_in</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">%</span> <span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">down_blocks</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Input tensor must have width and height dimensions divisible by </span><span class="si">%d</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">down_blocks</span><span class="p">))</span>
 
     <span class="c1"># Ensure we have a tuple in case scalar provided</span>
     <span class="n">kernel_size</span> <span class="o">=</span> <span class="n">expand_to_n</span><span class="p">(</span><span class="n">kernel_size</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
@@ -298,7 +301,7 @@
     
     <span class="c1"># Downsampling</span>
     <span class="n">skip_layers</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">depth</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">down_blocks</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">convs_per_depth</span><span class="p">):</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">conv</span><span class="p">(</span><span class="n">num_filters</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">**</span> <span class="n">n</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="n">kernel_size</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
         <span class="n">skip_layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
@@ -306,11 +309,11 @@
 
     <span class="c1"># Middle</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">convs_per_depth</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">conv</span><span class="p">(</span><span class="n">num_filters</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">**</span> <span class="n">depth</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="n">kernel_size</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">conv</span><span class="p">(</span><span class="n">num_filters</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">**</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">depth</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">kernel_size</span><span class="o">=</span><span class="n">kernel_size</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">conv</span><span class="p">(</span><span class="n">num_filters</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">**</span> <span class="n">down_blocks</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="n">kernel_size</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">conv</span><span class="p">(</span><span class="n">num_filters</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">**</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">down_blocks</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">kernel_size</span><span class="o">=</span><span class="n">kernel_size</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
 
     <span class="c1"># Upsampling (with skips)</span>
-    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">depth</span><span class="p">)):</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">down_blocks</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">down_blocks</span><span class="o">-</span><span class="n">up_blocks</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">upsampling_layers</span><span class="p">:</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">UpSampling2D</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span> <span class="n">interpolation</span><span class="o">=</span><span class="n">interp</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>

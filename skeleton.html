@@ -537,8 +537,9 @@ Skeleton objects that handle serialization of skeletons objects.</p>
 
 <dl class="method">
 <dt id="sleap.skeleton.Skeleton.matches">
-<code class="sig-name descname">matches</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.matches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.matches" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compare this <cite>Skeleton</cite> to another, modulo the particular <cite>Node</cite> objects in each graph.</p>
+<code class="sig-name descname">matches</code><span class="sig-paren">(</span><em class="sig-param">other: sleap.skeleton.Skeleton</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.matches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.matches" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compare this <cite>Skeleton</cite> to another, ignoring skeleton name and
+the identities of the <cite>Node</cite> objects in each graph.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>other</strong> – The other skeleton.</p>

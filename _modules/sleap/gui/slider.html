@@ -161,6 +161,11 @@
 <span class="kn">from</span> <span class="nn">PySide2.QtGui</span> <span class="k">import</span> <span class="n">QPainter</span><span class="p">,</span> <span class="n">QPen</span><span class="p">,</span> <span class="n">QBrush</span><span class="p">,</span> <span class="n">QColor</span><span class="p">,</span> <span class="n">QKeyEvent</span>
 <span class="kn">from</span> <span class="nn">PySide2.QtCore</span> <span class="k">import</span> <span class="n">Qt</span><span class="p">,</span> <span class="n">Signal</span><span class="p">,</span> <span class="n">QRect</span><span class="p">,</span> <span class="n">QRectF</span>
 
+<span class="kn">from</span> <span class="nn">sleap.gui.overlays.tracks</span> <span class="k">import</span> <span class="n">TrackColorManager</span>
+
+<span class="kn">from</span> <span class="nn">operator</span> <span class="k">import</span> <span class="n">itemgetter</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">groupby</span>
+
 <div class="viewcode-block" id="VideoSlider"><a class="viewcode-back" href="../../../gui.html#sleap.gui.slider.VideoSlider">[docs]</a><span class="k">class</span> <span class="nc">VideoSlider</span><span class="p">(</span><span class="n">QGraphicsView</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Drop-in replacement for QSlider with additional features.</span>
 
@@ -182,9 +187,11 @@
     <span class="n">keyRelease</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">QKeyEvent</span><span class="p">)</span>
     <span class="n">valueChanged</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
     <span class="n">selectionChanged</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+    <span class="n">updatedTracks</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">orientation</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
             <span class="n">marks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tracks</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">color_manager</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">VideoSlider</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
@@ -196,15 +203,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">setHorizontalScrollBarPolicy</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">ScrollBarAlwaysOff</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">setVerticalScrollBarPolicy</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">ScrollBarAlwaysOff</span><span class="p">)</span> <span class="c1"># ScrollBarAsNeeded</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">color_maps</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="p">[</span><span class="mi">0</span><span class="p">,</span>   <span class="mi">114</span><span class="p">,</span>   <span class="mi">189</span><span class="p">],</span>
-            <span class="p">[</span><span class="mi">217</span><span class="p">,</span>  <span class="mi">83</span><span class="p">,</span>    <span class="mi">25</span><span class="p">],</span>
-            <span class="p">[</span><span class="mi">237</span><span class="p">,</span> <span class="mi">177</span><span class="p">,</span>    <span class="mi">32</span><span class="p">],</span>
-            <span class="p">[</span><span class="mi">126</span><span class="p">,</span>  <span class="mi">47</span><span class="p">,</span>   <span class="mi">142</span><span class="p">],</span>
-            <span class="p">[</span><span class="mi">119</span><span class="p">,</span> <span class="mi">172</span><span class="p">,</span>    <span class="mi">48</span><span class="p">],</span>
-            <span class="p">[</span><span class="mi">77</span><span class="p">,</span>  <span class="mi">190</span><span class="p">,</span>   <span class="mi">238</span><span class="p">],</span>
-            <span class="p">[</span><span class="mi">162</span><span class="p">,</span>  <span class="mi">20</span><span class="p">,</span>    <span class="mi">47</span><span class="p">],</span>
-            <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_color_manager</span> <span class="o">=</span> <span class="n">color_manager</span> <span class="ow">or</span> <span class="n">TrackColorManager</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_track_height</span> <span class="o">=</span> <span class="mi">3</span>
 
@@ -236,32 +235,57 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">setMarks</span><span class="p">(</span><span class="n">marks</span><span class="p">)</span>
 
-<div class="viewcode-block" id="VideoSlider.setTracksFromLabels"><a class="viewcode-back" href="../../../gui.html#sleap.gui.slider.VideoSlider.setTracksFromLabels">[docs]</a>    <span class="k">def</span> <span class="nf">setTracksFromLabels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">video</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="VideoSlider.setTracksFromLabels"><a class="viewcode-back" href="../../../gui.html#sleap.gui.slider.VideoSlider.setTracksFromLabels">[docs]</a>    <span class="k">def</span> <span class="nf">setTracksFromLabels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">video</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Set slider marks using track information from `Labels` object.</span>
 
 <span class="sd">        Note that this is the only method coupled to a SLEAP object.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            labels: the `labels` with tracks and labeled_frames</span>
-<span class="sd">            video: the video for which to show marks (default to first)</span>
+<span class="sd">            video: the video for which to show marks</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">video</span> <span class="o">=</span> <span class="n">video</span> <span class="ow">or</span> <span class="n">labels</span><span class="o">.</span><span class="n">videos</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">lfs</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">video</span><span class="p">)</span>
 
-        <span class="n">track_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">tracks</span><span class="p">)</span>
         <span class="n">slider_marks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">track_idx</span> <span class="o">=</span> <span class="mi">0</span>
 
-        <span class="n">inst_frame_list</span> <span class="o">=</span> <span class="p">[(</span><span class="n">inst</span><span class="p">,</span> <span class="n">lf</span><span class="o">.</span><span class="n">frame_idx</span><span class="p">)</span> <span class="k">for</span> <span class="n">lf</span> <span class="ow">in</span> <span class="n">labels</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">video</span><span class="p">)</span> <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">lf</span><span class="o">.</span><span class="n">instances</span><span class="p">]</span>
+        <span class="c1"># Add marks with track</span>
+        <span class="n">track_occupancy</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">get_track_occupany</span><span class="p">(</span><span class="n">video</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">track</span> <span class="ow">in</span> <span class="n">labels</span><span class="o">.</span><span class="n">tracks</span><span class="p">:</span>
+<span class="c1">#             track_idx = labels.tracks.index(track)</span>
+            <span class="k">if</span> <span class="n">track</span> <span class="ow">in</span> <span class="n">track_occupancy</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">track_occupancy</span><span class="p">[</span><span class="n">track</span><span class="p">]</span><span class="o">.</span><span class="n">is_empty</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">occupancy_range</span> <span class="ow">in</span> <span class="n">track_occupancy</span><span class="p">[</span><span class="n">track</span><span class="p">]</span><span class="o">.</span><span class="n">list</span><span class="p">:</span>
+                    <span class="n">slider_marks</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">track_idx</span><span class="p">,</span> <span class="o">*</span><span class="n">occupancy_range</span><span class="p">))</span>
+                <span class="n">track_idx</span> <span class="o">+=</span> <span class="mi">1</span>
 
-        <span class="k">for</span> <span class="n">instance</span><span class="p">,</span> <span class="n">frame_idx</span> <span class="ow">in</span> <span class="n">inst_frame_list</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">instance</span><span class="o">.</span><span class="n">track</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="c1"># Add mark with track</span>
-                <span class="n">slider_marks</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">labels</span><span class="o">.</span><span class="n">tracks</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">track</span><span class="p">),</span> <span class="n">frame_idx</span><span class="p">))</span>
+        <span class="c1"># Add marks without track</span>
+        <span class="k">if</span> <span class="kc">None</span> <span class="ow">in</span> <span class="n">track_occupancy</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">occupancy_range</span> <span class="ow">in</span> <span class="n">track_occupancy</span><span class="p">[</span><span class="kc">None</span><span class="p">]</span><span class="o">.</span><span class="n">list</span><span class="p">:</span>
+                <span class="n">slider_marks</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="o">*</span><span class="n">occupancy_range</span><span class="p">))</span>
+
+        <span class="c1"># list of frame_idx for simple markers for labeled frames</span>
+        <span class="n">labeled_marks</span> <span class="o">=</span> <span class="p">[</span><span class="n">lf</span><span class="o">.</span><span class="n">frame_idx</span> <span class="k">for</span> <span class="n">lf</span> <span class="ow">in</span> <span class="n">lfs</span><span class="p">]</span>
+        <span class="n">user_labeled</span> <span class="o">=</span> <span class="p">[</span><span class="n">lf</span><span class="o">.</span><span class="n">frame_idx</span> <span class="k">for</span> <span class="n">lf</span> <span class="ow">in</span> <span class="n">lfs</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lf</span><span class="o">.</span><span class="n">user_instances</span><span class="p">)]</span>
+        <span class="c1"># &quot;f&quot; for suggestions with instances and &quot;o&quot; for those without</span>
+        <span class="c1"># &quot;f&quot; means &quot;filled&quot;, &quot;o&quot; means &quot;open&quot;</span>
+        <span class="c1"># &quot;p&quot; for suggestions with only predicted instances</span>
+        <span class="k">def</span> <span class="nf">mark_type</span><span class="p">(</span><span class="n">frame</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">frame</span> <span class="ow">in</span> <span class="n">user_labeled</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s2">&quot;f&quot;</span>
+            <span class="k">elif</span> <span class="n">frame</span> <span class="ow">in</span> <span class="n">labeled_marks</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s2">&quot;p&quot;</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="c1"># Add mark without track</span>
-                <span class="n">slider_marks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">frame_idx</span><span class="p">)</span>
+                <span class="k">return</span> <span class="s2">&quot;o&quot;</span>
+        <span class="c1"># list of (type, frame) tuples for suggestions</span>
+        <span class="n">suggestion_marks</span> <span class="o">=</span> <span class="p">[(</span><span class="n">mark_type</span><span class="p">(</span><span class="n">frame_idx</span><span class="p">),</span> <span class="n">frame_idx</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">frame_idx</span> <span class="ow">in</span> <span class="n">labels</span><span class="o">.</span><span class="n">get_video_suggestions</span><span class="p">(</span><span class="n">video</span><span class="p">)]</span>
+        <span class="c1"># combine marks for labeled frame and marks for suggested frames</span>
+        <span class="n">slider_marks</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">suggestion_marks</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">setTracks</span><span class="p">(</span><span class="n">track_count</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">setMarks</span><span class="p">(</span><span class="n">slider_marks</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setTracks</span><span class="p">(</span><span class="n">track_idx</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setMarks</span><span class="p">(</span><span class="n">slider_marks</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">updatedTracks</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="VideoSlider.setTracks"><a class="viewcode-back" href="../../../gui.html#sleap.gui.slider.VideoSlider.setTracks">[docs]</a>    <span class="k">def</span> <span class="nf">setTracks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tracks</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Set the number of tracks to show in slider.</span>
@@ -380,8 +404,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">start</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
         <span class="n">end</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
-        <span class="n">start_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_toPos</span><span class="p">(</span><span class="n">start</span><span class="p">)</span>
-        <span class="n">end_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_toPos</span><span class="p">(</span><span class="n">end</span><span class="p">)</span>
+        <span class="n">start_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_toPos</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">end_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_toPos</span><span class="p">(</span><span class="n">end</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">selection_rect</span> <span class="o">=</span> <span class="n">QRect</span><span class="p">(</span><span class="n">start_pos</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span>
                                <span class="n">end_pos</span><span class="o">-</span><span class="n">start_pos</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">slider</span><span class="o">.</span><span class="n">rect</span><span class="p">()</span><span class="o">.</span><span class="n">height</span><span class="p">()</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span>
 
@@ -397,7 +421,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">x</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
         <span class="n">x</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">slider</span><span class="o">.</span><span class="n">rect</span><span class="p">()</span><span class="o">.</span><span class="n">width</span><span class="p">())</span>
-        <span class="n">anchor_val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_toVal</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">anchor_val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_toVal</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_selection</span><span class="p">)</span><span class="o">%</span><span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">startSelection</span><span class="p">(</span><span class="n">anchor_val</span><span class="p">)</span>
@@ -459,11 +483,12 @@
         <span class="n">filled</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">new_mark</span><span class="p">)</span> <span class="o">==</span> <span class="nb">tuple</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">new_mark</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="nb">int</span><span class="p">:</span>
-                <span class="c1"># colored track if mark has format: (track_number, frame_idx)</span>
+                <span class="c1"># colored track if mark has format: (track_number, start_frame_idx, end_frame_idx)</span>
                 <span class="n">track</span> <span class="o">=</span> <span class="n">new_mark</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
                 <span class="n">v_offset</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_track_height</span> <span class="o">*</span> <span class="n">track</span><span class="p">)</span>
                 <span class="n">height</span> <span class="o">=</span> <span class="mi">1</span>
-                <span class="n">color</span> <span class="o">=</span> <span class="n">QColor</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">color_maps</span><span class="p">[</span><span class="n">track</span><span class="o">%</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">color_maps</span><span class="p">)])</span>
+                <span class="n">color</span> <span class="o">=</span> <span class="n">QColor</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_color_manager</span><span class="o">.</span><span class="n">get_color</span><span class="p">(</span><span class="n">track</span><span class="p">))</span>
+                <span class="n">width</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="c1"># rect (open/filled) if format: (&quot;o&quot;, frame_idx) or (&quot;f&quot;, frame_idx)</span>
                 <span class="c1"># (&quot;p&quot;, frame_idx) when only predicted instances on frame</span>
@@ -503,7 +528,8 @@
                 <span class="n">in_track</span> <span class="o">=</span> <span class="kc">True</span>
                 <span class="n">v</span> <span class="o">=</span> <span class="n">mark</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
                 <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">mark</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="nb">int</span><span class="p">:</span>
-                    <span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_toPos</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="n">width_in_frames</span> <span class="o">=</span> <span class="n">mark</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">mark</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="n">width</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_toPos</span><span class="p">(</span><span class="n">width_in_frames</span><span class="p">))</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">width</span> <span class="o">=</span> <span class="mi">2</span>
             <span class="k">else</span><span class="p">:</span>
@@ -571,8 +597,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">handle</span><span class="o">.</span><span class="n">setRect</span><span class="p">(</span><span class="n">handle_rect</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">select_box</span><span class="o">.</span><span class="n">setRect</span><span class="p">(</span><span class="n">select_box_rect</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">updatePos</span><span class="p">()</span></div>
-
+        <span class="bp">self</span><span class="o">.</span><span class="n">updatePos</span><span class="p">()</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">VideoSlider</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">resizeEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="VideoSlider.mousePressEvent"><a class="viewcode-back" href="../../../gui.html#sleap.gui.slider.VideoSlider.mousePressEvent">[docs]</a>    <span class="k">def</span> <span class="nf">mousePressEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Override method to move handle for mouse press/drag.</span>
@@ -640,9 +666,9 @@
         <span class="sd">&quot;&quot;&quot;Method required by Qt.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">slider</span><span class="o">.</span><span class="n">rect</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="VideoSlider.paint"><a class="viewcode-back" href="../../../gui.html#sleap.gui.slider.VideoSlider.paint">[docs]</a>    <span class="k">def</span> <span class="nf">paint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">painter</span><span class="p">,</span> <span class="n">option</span><span class="p">,</span> <span class="n">widget</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="VideoSlider.paint"><a class="viewcode-back" href="../../../gui.html#sleap.gui.slider.VideoSlider.paint">[docs]</a>    <span class="k">def</span> <span class="nf">paint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Method required by Qt.&quot;&quot;&quot;</span>
-        <span class="k">pass</span></div></div>
+        <span class="nb">super</span><span class="p">(</span><span class="n">VideoSlider</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">paint</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
     <span class="n">app</span> <span class="o">=</span> <span class="n">QApplication</span><span class="p">([])</span>

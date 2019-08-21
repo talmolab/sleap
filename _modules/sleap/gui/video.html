@@ -207,28 +207,30 @@
 <span class="sd">        changedData: Emitted whenever data is changed by user</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">changedPlot</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">QWidget</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+    <span class="n">changedPlot</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">QWidget</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
     <span class="n">changedData</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">Instance</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">color_manager</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">QtVideoPlayer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_shift_key_down</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">frame_idx</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_color_manager</span> <span class="o">=</span> <span class="n">color_manager</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">view</span> <span class="o">=</span> <span class="n">GraphicsView</span><span class="p">()</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">seekbar</span> <span class="o">=</span> <span class="n">VideoSlider</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seekbar</span> <span class="o">=</span> <span class="n">VideoSlider</span><span class="p">(</span><span class="n">color_manager</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_color_manager</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">seekbar</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="k">lambda</span> <span class="n">evt</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seekbar</span><span class="o">.</span><span class="n">value</span><span class="p">()))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">seekbar</span><span class="o">.</span><span class="n">keyPress</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keyPressEvent</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">seekbar</span><span class="o">.</span><span class="n">keyRelease</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keyReleaseEvent</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">seekbar</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
 
-        <span class="n">splitter</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QSplitter</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">Vertical</span><span class="p">)</span>
-        <span class="n">splitter</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="p">)</span>
-        <span class="n">splitter</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seekbar</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">splitter</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QSplitter</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">Vertical</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">splitter</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">splitter</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seekbar</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seekbar</span><span class="o">.</span><span class="n">updatedTracks</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">splitter</span><span class="o">.</span><span class="n">refresh</span><span class="p">())</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">layout</span> <span class="o">=</span> <span class="n">QVBoxLayout</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">splitter</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">splitter</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
@@ -326,6 +328,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">frame_idx</span> <span class="o">=</span> <span class="n">idx</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">seekbar</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frame_idx</span><span class="p">)</span>
 
+        <span class="c1"># Save index of selected instance</span>
+        <span class="n">selected_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">getSelection</span><span class="p">()</span>
+        <span class="n">selected_idx</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="k">if</span> <span class="n">selected_idx</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">selected_idx</span> <span class="c1"># use -1 for no selection</span>
+
         <span class="c1"># Clear existing objects</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
 
@@ -343,7 +349,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">setImage</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
 
         <span class="c1"># Emit signal (it&#39;s better to use the signal than a callback)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">changedPlot</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">changedPlot</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">selected_idx</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="QtVideoPlayer.nextFrame"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.QtVideoPlayer.nextFrame">[docs]</a>    <span class="k">def</span> <span class="nf">nextFrame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Go to next frame.</span>
@@ -446,6 +452,23 @@
         <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">on_each</span><span class="p">):</span>
             <span class="n">on_each</span><span class="p">(</span><span class="n">indexes</span><span class="p">)</span></div>
 
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_signal_once</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="n">callback</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">call_once</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+            <span class="n">signal</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="n">call_once</span><span class="p">)</span>
+            <span class="n">callback</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">signal</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">call_once</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">onPointSelection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">click_mode</span> <span class="o">=</span> <span class="s2">&quot;point&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">setCursor</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">CrossCursor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_signal_once</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">pointSelected</span><span class="p">,</span> <span class="n">callback</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">onAreaSelection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">click_mode</span> <span class="o">=</span> <span class="s2">&quot;area&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">setCursor</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">CrossCursor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_signal_once</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">areaSelected</span><span class="p">,</span> <span class="n">callback</span><span class="p">)</span>
+
     <span class="k">def</span> <span class="nf">keyReleaseEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">QKeyEvent</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key</span><span class="o">.</span><span class="n">Key_Shift</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_shift_key_down</span> <span class="o">=</span> <span class="kc">False</span>
@@ -464,11 +487,18 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">prevFrame</span><span class="p">()</span>
         <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key</span><span class="o">.</span><span class="n">Key_Right</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">nextFrame</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key</span><span class="o">.</span><span class="n">Key_Up</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prevFrame</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key</span><span class="o">.</span><span class="n">Key_Down</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nextFrame</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key</span><span class="o">.</span><span class="n">Key_Space</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nextFrame</span><span class="p">(</span><span class="mi">500</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key</span><span class="o">.</span><span class="n">Key_Home</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key</span><span class="o">.</span><span class="n">Key_End</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">frames</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key</span><span class="o">.</span><span class="n">Key_Escape</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">click_mode</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">clearSelection</span><span class="p">()</span>
         <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key</span><span class="o">.</span><span class="n">Key_QuoteLeft</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">nextSelection</span><span class="p">()</span>
@@ -518,6 +548,8 @@
     <span class="n">rightMouseButtonReleased</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
     <span class="n">leftMouseButtonDoubleClicked</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
     <span class="n">rightMouseButtonDoubleClicked</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+    <span class="n">areaSelected</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+    <span class="n">pointSelected</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; https://github.com/marcel-goldschen-ohm/PyQtImageViewer/blob/master/QtImageViewer.py &quot;&quot;&quot;</span>
@@ -538,6 +570,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">canZoom</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">canPan</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">click_mode</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">zoomFactor</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="n">anchor_mode</span> <span class="o">=</span> <span class="n">QGraphicsView</span><span class="o">.</span><span class="n">AnchorUnderMouse</span>
@@ -691,7 +724,6 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">updateViewer</span><span class="p">()</span></div>
 
-
 <div class="viewcode-block" id="GraphicsView.mousePressEvent"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.GraphicsView.mousePressEvent">[docs]</a>    <span class="k">def</span> <span class="nf">mousePressEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Start mouse pan or zoom mode.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -700,9 +732,18 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_down_pos</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">pos</span><span class="p">()</span>
         <span class="c1"># behavior depends on which button is pressed</span>
         <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">button</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">LeftButton</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">canPan</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">setDragMode</span><span class="p">(</span><span class="n">QGraphicsView</span><span class="o">.</span><span class="n">ScrollHandDrag</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">modifiers</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">NoModifier</span><span class="p">:</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">click_mode</span> <span class="o">==</span> <span class="s2">&quot;area&quot;</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">setDragMode</span><span class="p">(</span><span class="n">QGraphicsView</span><span class="o">.</span><span class="n">RubberBandDrag</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">click_mode</span> <span class="o">==</span> <span class="s2">&quot;point&quot;</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">setDragMode</span><span class="p">(</span><span class="n">QGraphicsView</span><span class="o">.</span><span class="n">NoDrag</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">canPan</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">setDragMode</span><span class="p">(</span><span class="n">QGraphicsView</span><span class="o">.</span><span class="n">ScrollHandDrag</span><span class="p">)</span>
+
             <span class="bp">self</span><span class="o">.</span><span class="n">leftMouseButtonPressed</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">scenePos</span><span class="o">.</span><span class="n">x</span><span class="p">(),</span> <span class="n">scenePos</span><span class="o">.</span><span class="n">y</span><span class="p">())</span>
+
         <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">button</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">RightButton</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">canZoom</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">setDragMode</span><span class="p">(</span><span class="n">QGraphicsView</span><span class="o">.</span><span class="n">RubberBandDrag</span><span class="p">)</span>
@@ -717,19 +758,38 @@
         <span class="c1"># check if mouse moved during click</span>
         <span class="n">has_moved</span> <span class="o">=</span> <span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">pos</span><span class="p">()</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_down_pos</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">button</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">LeftButton</span><span class="p">:</span>
-            <span class="c1"># Check if this was just a tap (not a drag)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">has_moved</span><span class="p">:</span>
-                <span class="c1"># When just a tap, see if there&#39;s an item underneath to select</span>
-                <span class="n">clicked</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">items</span><span class="p">(</span><span class="n">scenePos</span><span class="p">,</span> <span class="n">Qt</span><span class="o">.</span><span class="n">IntersectsItemBoundingRect</span><span class="p">)</span>
-                <span class="n">clicked_instances</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">clicked</span>
-                                     <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="o">==</span> <span class="n">QtInstance</span> <span class="ow">and</span> <span class="n">item</span><span class="o">.</span><span class="n">selectable</span><span class="p">]</span>
-                <span class="c1"># We only handle single instance selection so pick at most one from list</span>
-                <span class="n">clicked_instance</span> <span class="o">=</span> <span class="n">clicked_instances</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">clicked_instances</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
-                <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">instance</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selectable_instances</span><span class="p">):</span>
-                    <span class="n">instance</span><span class="o">.</span><span class="n">selected</span> <span class="o">=</span> <span class="p">(</span><span class="n">instance</span> <span class="o">==</span> <span class="n">clicked_instance</span><span class="p">)</span>
-                    <span class="c1"># If we want to allow selection of multiple instances, do this:</span>
-                    <span class="c1"># instance.selected = (instance in clicked)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">updatedSelection</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">click_mode</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+                <span class="c1"># Check if this was just a tap (not a drag)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">has_moved</span><span class="p">:</span>
+                    <span class="c1"># When just a tap, see if there&#39;s an item underneath to select</span>
+                    <span class="n">clicked</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">items</span><span class="p">(</span><span class="n">scenePos</span><span class="p">,</span> <span class="n">Qt</span><span class="o">.</span><span class="n">IntersectsItemBoundingRect</span><span class="p">)</span>
+                    <span class="n">clicked_instances</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">clicked</span>
+                                         <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="o">==</span> <span class="n">QtInstance</span> <span class="ow">and</span> <span class="n">item</span><span class="o">.</span><span class="n">selectable</span><span class="p">]</span>
+                    <span class="c1"># We only handle single instance selection so pick at most one from list</span>
+                    <span class="n">clicked_instance</span> <span class="o">=</span> <span class="n">clicked_instances</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">clicked_instances</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+                    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">instance</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selectable_instances</span><span class="p">):</span>
+                        <span class="n">instance</span><span class="o">.</span><span class="n">selected</span> <span class="o">=</span> <span class="p">(</span><span class="n">instance</span> <span class="o">==</span> <span class="n">clicked_instance</span><span class="p">)</span>
+                        <span class="c1"># If we want to allow selection of multiple instances, do this:</span>
+                        <span class="c1"># instance.selected = (instance in clicked)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">updatedSelection</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span>
+
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">click_mode</span> <span class="o">==</span> <span class="s2">&quot;area&quot;</span><span class="p">:</span>
+                <span class="c1"># Check if user was selecting rectangular area</span>
+                <span class="n">selection_rect</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">selectionArea</span><span class="p">()</span><span class="o">.</span><span class="n">boundingRect</span><span class="p">()</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">areaSelected</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span>
+                        <span class="n">selection_rect</span><span class="o">.</span><span class="n">left</span><span class="p">(),</span>
+                        <span class="n">selection_rect</span><span class="o">.</span><span class="n">top</span><span class="p">(),</span>
+                        <span class="n">selection_rect</span><span class="o">.</span><span class="n">right</span><span class="p">(),</span>
+                        <span class="n">selection_rect</span><span class="o">.</span><span class="n">bottom</span><span class="p">())</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">click_mode</span> <span class="o">==</span> <span class="s2">&quot;point&quot;</span><span class="p">:</span>
+                <span class="n">selection_point</span> <span class="o">=</span> <span class="n">scenePos</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">pointSelected</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">scenePos</span><span class="o">.</span><span class="n">x</span><span class="p">(),</span> <span class="n">scenePos</span><span class="o">.</span><span class="n">y</span><span class="p">())</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">click_mode</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">unsetCursor</span><span class="p">()</span>
+
             <span class="c1"># finish drag</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">setDragMode</span><span class="p">(</span><span class="n">QGraphicsView</span><span class="o">.</span><span class="n">NoDrag</span><span class="p">)</span>
             <span class="c1"># pass along event</span>
@@ -1272,14 +1332,19 @@
         <span class="n">box_pen</span><span class="o">.</span><span class="n">setCosmetic</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">box</span><span class="o">.</span><span class="n">setPen</span><span class="p">(</span><span class="n">box_pen</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">track_label</span> <span class="o">=</span> <span class="n">QGraphicsTextItem</span><span class="p">(</span><span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">track_label</span> <span class="o">=</span> <span class="n">QtTextWithBackground</span><span class="p">(</span><span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">track_label</span><span class="o">.</span><span class="n">setDefaultTextColor</span><span class="p">(</span><span class="n">QColor</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">color</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">track_label</span><span class="o">.</span><span class="n">setFlag</span><span class="p">(</span><span class="n">QGraphicsItem</span><span class="o">.</span><span class="n">ItemIgnoresTransformations</span><span class="p">)</span>
+
+        <span class="n">instance_label_text</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">track</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">track_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">track</span><span class="o">.</span><span class="n">name</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">track_name</span> <span class="o">=</span> <span class="s2">&quot;[none]&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">track_label</span><span class="o">.</span><span class="n">setHtml</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;&lt;b&gt;Track&lt;/b&gt;: </span><span class="si">{track_name}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">instance_label_text</span> <span class="o">+=</span> <span class="n">f</span><span class="s2">&quot;&lt;b&gt;Track&lt;/b&gt;: </span><span class="si">{track_name}</span><span class="s2">&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">):</span>
+            <span class="n">instance_label_text</span> <span class="o">+=</span> <span class="n">f</span><span class="s2">&quot;&lt;br /&gt;&lt;b&gt;Prediction Score&lt;/b&gt;: {round(self.instance.score, 2)}&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">track_label</span><span class="o">.</span><span class="n">setHtml</span><span class="p">(</span><span class="n">instance_label_text</span><span class="p">)</span>
 
         <span class="c1"># Add nodes</span>
         <span class="k">for</span> <span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">nodes_points</span><span class="p">:</span>
@@ -1433,12 +1498,34 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div></div>
 
+<span class="k">class</span> <span class="nc">QtTextWithBackground</span><span class="p">(</span><span class="n">QGraphicsTextItem</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">QtTextWithBackground</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">boundingRect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method required by Qt.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">QtTextWithBackground</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">boundingRect</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">paint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">painter</span><span class="p">,</span> <span class="n">option</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method required by Qt.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">text_color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">defaultTextColor</span><span class="p">()</span>
+        <span class="n">brush</span> <span class="o">=</span> <span class="n">painter</span><span class="o">.</span><span class="n">brush</span><span class="p">()</span>
+        <span class="n">background_color</span> <span class="o">=</span> <span class="s2">&quot;white&quot;</span> <span class="k">if</span> <span class="n">text_color</span><span class="o">.</span><span class="n">lightnessF</span><span class="p">()</span> <span class="o">&lt;</span> <span class="o">.</span><span class="mi">4</span> <span class="k">else</span> <span class="s2">&quot;black&quot;</span>
+        <span class="n">background_color</span> <span class="o">=</span> <span class="n">QColor</span><span class="p">(</span><span class="n">background_color</span><span class="p">,</span> <span class="n">a</span><span class="o">=.</span><span class="mi">5</span><span class="p">)</span>
+        <span class="n">painter</span><span class="o">.</span><span class="n">setBrush</span><span class="p">(</span><span class="n">QBrush</span><span class="p">(</span><span class="n">background_color</span><span class="p">))</span>
+        <span class="n">painter</span><span class="o">.</span><span class="n">drawRect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">boundingRect</span><span class="p">())</span>
+        <span class="n">painter</span><span class="o">.</span><span class="n">setBrush</span><span class="p">(</span><span class="n">brush</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">QtTextWithBackground</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">paint</span><span class="p">(</span><span class="n">painter</span><span class="p">,</span> <span class="n">option</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
 <span class="k">def</span> <span class="nf">video_demo</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">standalone</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="n">video</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">videos</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">standalone</span><span class="p">:</span> <span class="n">app</span> <span class="o">=</span> <span class="n">QApplication</span><span class="p">([])</span>
     <span class="n">window</span> <span class="o">=</span> <span class="n">QtVideoPlayer</span><span class="p">(</span><span class="n">video</span><span class="o">=</span><span class="n">video</span><span class="p">)</span>
 
-    <span class="n">window</span><span class="o">.</span><span class="n">changedPlot</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="k">lambda</span> <span class="n">vp</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="n">plot_instances</span><span class="p">(</span><span class="n">vp</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">scene</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">video</span><span class="p">))</span>
+    <span class="n">window</span><span class="o">.</span><span class="n">changedPlot</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="k">lambda</span> <span class="n">vp</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">select_idx</span><span class="p">:</span> <span class="n">plot_instances</span><span class="p">(</span><span class="n">vp</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">scene</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">video</span><span class="p">))</span>
 
     <span class="n">window</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
     <span class="n">window</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
@@ -1446,16 +1533,8 @@
     <span class="k">if</span> <span class="n">standalone</span><span class="p">:</span> <span class="n">app</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
 
 <span class="k">def</span> <span class="nf">plot_instances</span><span class="p">(</span><span class="n">scene</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">video</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fixed</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-    <span class="n">video</span> <span class="o">=</span> <span class="n">video</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">videos</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">cmap</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
-        <span class="p">[</span><span class="mi">0</span><span class="p">,</span>   <span class="mi">114</span><span class="p">,</span>   <span class="mi">189</span><span class="p">],</span>
-        <span class="p">[</span><span class="mi">217</span><span class="p">,</span>  <span class="mi">83</span><span class="p">,</span>    <span class="mi">25</span><span class="p">],</span>
-        <span class="p">[</span><span class="mi">237</span><span class="p">,</span> <span class="mi">177</span><span class="p">,</span>    <span class="mi">32</span><span class="p">],</span>
-        <span class="p">[</span><span class="mi">126</span><span class="p">,</span>  <span class="mi">47</span><span class="p">,</span>   <span class="mi">142</span><span class="p">],</span>
-        <span class="p">[</span><span class="mi">119</span><span class="p">,</span> <span class="mi">172</span><span class="p">,</span>    <span class="mi">48</span><span class="p">],</span>
-        <span class="p">[</span><span class="mi">77</span><span class="p">,</span>  <span class="mi">190</span><span class="p">,</span>   <span class="mi">238</span><span class="p">],</span>
-        <span class="p">[</span><span class="mi">162</span><span class="p">,</span>  <span class="mi">20</span><span class="p">,</span>    <span class="mi">47</span><span class="p">],</span>
-        <span class="p">])</span>
+    <span class="n">video</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">videos</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">color_manager</span> <span class="o">=</span> <span class="n">TrackColorManager</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
     <span class="n">lfs</span> <span class="o">=</span> <span class="p">[</span><span class="n">label</span> <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span><span class="o">.</span><span class="n">labels</span> <span class="k">if</span> <span class="n">label</span><span class="o">.</span><span class="n">video</span> <span class="o">==</span> <span class="n">video</span> <span class="ow">and</span> <span class="n">label</span><span class="o">.</span><span class="n">frame_idx</span> <span class="o">==</span> <span class="n">frame_idx</span><span class="p">]</span>
 
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lfs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="k">return</span>
@@ -1464,16 +1543,16 @@
 
     <span class="n">count_no_track</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">instance</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">labeled_frame</span><span class="o">.</span><span class="n">instances_to_show</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">instance</span><span class="o">.</span><span class="n">track</span> <span class="ow">in</span> <span class="n">labels</span><span class="o">.</span><span class="n">tracks</span><span class="p">:</span>
-            <span class="n">track_idx</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">tracks</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">track</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">instance</span><span class="o">.</span><span class="n">track</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">tracks</span><span class="p">:</span>
+            <span class="n">pseudo_track</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">track</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Instance without track</span>
-            <span class="n">track_idx</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">tracks</span><span class="p">)</span> <span class="o">+</span> <span class="n">count_no_track</span>
+            <span class="n">pseudo_track</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">tracks</span><span class="p">)</span> <span class="o">+</span> <span class="n">count_no_track</span>
             <span class="n">count_no_track</span> <span class="o">+=</span> <span class="mi">1</span>
 
         <span class="c1"># Plot instance</span>
         <span class="n">inst</span> <span class="o">=</span> <span class="n">QtInstance</span><span class="p">(</span><span class="n">instance</span><span class="o">=</span><span class="n">instance</span><span class="p">,</span>
-                          <span class="n">color</span><span class="o">=</span><span class="n">cmap</span><span class="p">[</span><span class="n">track_idx</span><span class="o">%</span><span class="nb">len</span><span class="p">(</span><span class="n">cmap</span><span class="p">)],</span>
+                          <span class="n">color</span><span class="o">=</span><span class="n">color_manager</span><span class="p">(</span><span class="n">pseudo_track</span><span class="p">),</span>
                           <span class="n">predicted</span><span class="o">=</span><span class="n">fixed</span><span class="p">,</span>
                           <span class="n">color_predicted</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                           <span class="n">show_non_visible</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
