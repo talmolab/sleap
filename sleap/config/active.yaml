@@ -93,6 +93,11 @@ expert:
   options: current frame,random frames
   default: current frame
 
+- name: _save_confmaps_pafs
+  label: Save Visual Model Outputs
+  type: bool
+  default: False
+
 - name: _view_datagen
   label: View Training Image Inputs...
   type: button
@@ -132,6 +137,11 @@ learning:
   options: current frame,random frames
   default: current frame
 
+- name: _save_confmaps_pafs
+  label: Save Visual Model Outputs
+  type: bool
+  default: False
+
 - name: _view_datagen
   label: View Training Image Inputs...
   type: button
@@ -143,3 +153,8 @@ inference:
   type: list
   options: current frame,random frames
   default: current frame
+
+- name: _save_confmaps_pafs
+  label: Save Visual Model Outputs
+  type: bool
+  default: False

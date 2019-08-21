@@ -8,6 +8,11 @@ from PySide2.QtWidgets import QSizePolicy, QLabel, QGraphicsRectItem
 from PySide2.QtGui import QPainter, QPen, QBrush, QColor, QKeyEvent
 from PySide2.QtCore import Qt, Signal, QRect, QRectF
 
+from sleap.gui.overlays.tracks import TrackColorManager
+
+from operator import itemgetter
+from itertools import groupby
+
 class VideoSlider(QGraphicsView):
     """Drop-in replacement for QSlider with additional features.
 
@@ -29,9 +34,11 @@ class VideoSlider(QGraphicsView):
     keyRelease = Signal(QKeyEvent)
     valueChanged = Signal(int)
     selectionChanged = Signal(int, int)
+    updatedTracks = Signal()
 
     def __init__(self, orientation=-1, min=0, max=100, val=0,
             marks=None, tracks=0,
+            color_manager=None,
             *args, **kwargs):
         super(VideoSlider, self).__init__(*args, **kwargs)
 
@@ -43,15 +50,7 @@ class VideoSlider(QGraphicsView):
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff) # ScrollBarAsNeeded
 
-        self.color_maps = [
-            [0,   114,   189],
-            [217,  83,    25],
-            [237, 177,    32],
-            [126,  47,   142],
-            [119, 172,    48],
-            [77,  190,   238],
-            [162,  20,    47],
-            ]
+        self._color_manager = color_manager or TrackColorManager()
 
         self._track_height = 3
 
@@ -83,32 +82,57 @@ class VideoSlider(QGraphicsView):
         self.setValue(val)
         self.setMarks(marks)
 
-    def setTracksFromLabels(self, labels, video=None):
+    def setTracksFromLabels(self, labels, video):
         """Set slider marks using track information from `Labels` object.
 
         Note that this is the only method coupled to a SLEAP object.
 
         Args:
             labels: the `labels` with tracks and labeled_frames
-            video: the video for which to show marks (default to first)
+            video: the video for which to show marks
         """
-        video = video or labels.videos[0]
+        lfs = labels.find(video)
 
-        track_count = len(labels.tracks)
         slider_marks = []
+        track_idx = 0
 
-        inst_frame_list = [(inst, lf.frame_idx) for lf in labels.find(video) for inst in lf.instances]
+        # Add marks with track
+        track_occupancy = labels.get_track_occupany(video)
+        for track in labels.tracks:
+#             track_idx = labels.tracks.index(track)
+            if track in track_occupancy and not track_occupancy[track].is_empty:
+                for occupancy_range in track_occupancy[track].list:
+                    slider_marks.append((track_idx, *occupancy_range))
+                track_idx += 1
 
-        for instance, frame_idx in inst_frame_list:
-            if instance.track is not None:
-                # Add mark with track
-                slider_marks.append((labels.tracks.index(instance.track), frame_idx))
+        # Add marks without track
+        if None in track_occupancy:
+            for occupancy_range in track_occupancy[None].list:
+                slider_marks.extend(range(*occupancy_range))
+
+        # list of frame_idx for simple markers for labeled frames
+        labeled_marks = [lf.frame_idx for lf in lfs]
+        user_labeled = [lf.frame_idx for lf in lfs if len(lf.user_instances)]
+        # "f" for suggestions with instances and "o" for those without
+        # "f" means "filled", "o" means "open"
+        # "p" for suggestions with only predicted instances
+        def mark_type(frame):
+            if frame in user_labeled:
+                return "f"
+            elif frame in labeled_marks:
+                return "p"
             else:
-                # Add mark without track
-                slider_marks.append(frame_idx)
+                return "o"
+        # list of (type, frame) tuples for suggestions
+        suggestion_marks = [(mark_type(frame_idx), frame_idx)
+            for frame_idx in labels.get_video_suggestions(video)]
+        # combine marks for labeled frame and marks for suggested frames
+        slider_marks.extend(suggestion_marks)
 
-        self.setTracks(track_count)
+        self.setTracks(track_idx)
         self.setMarks(slider_marks)
+
+        self.updatedTracks.emit()
 
     def setTracks(self, tracks):
         """Set the number of tracks to show in slider.
@@ -227,8 +251,8 @@ class VideoSlider(QGraphicsView):
         """
         start = min(a, b)
         end = max(a, b)
-        start_pos = self._toPos(start)
-        end_pos = self._toPos(end)
+        start_pos = self._toPos(start, center=True)
+        end_pos = self._toPos(end, center=True)
         selection_rect = QRect(start_pos, 1,
                                end_pos-start_pos, self.slider.rect().height()-2)
 
@@ -244,7 +268,7 @@ class VideoSlider(QGraphicsView):
         """
         x = max(x, 0)
         x = min(x, self.slider.rect().width())
-        anchor_val = self._toVal(x)
+        anchor_val = self._toVal(x, center=True)
 
         if len(self._selection)%2 == 0:
             self.startSelection(anchor_val)
@@ -306,11 +330,12 @@ class VideoSlider(QGraphicsView):
         filled = True
         if type(new_mark) == tuple:
             if type(new_mark[0]) == int:
-                # colored track if mark has format: (track_number, frame_idx)
+                # colored track if mark has format: (track_number, start_frame_idx, end_frame_idx)
                 track = new_mark[0]
                 v_offset = 3 + (self._track_height * track)
                 height = 1
-                color = QColor(*self.color_maps[track%len(self.color_maps)])
+                color = QColor(*self._color_manager.get_color(track))
+                width = 0
             else:
                 # rect (open/filled) if format: ("o", frame_idx) or ("f", frame_idx)
                 # ("p", frame_idx) when only predicted instances on frame
@@ -350,7 +375,8 @@ class VideoSlider(QGraphicsView):
                 in_track = True
                 v = mark[1]
                 if type(mark[0]) == int:
-                    width = self._toPos(1)
+                    width_in_frames = mark[2] - mark[1]
+                    width = max(2, self._toPos(width_in_frames))
                 else:
                     width = 2
             else:
@@ -419,7 +445,7 @@ class VideoSlider(QGraphicsView):
         self.select_box.setRect(select_box_rect)
 
         self.updatePos()
-
+        super(VideoSlider, self).resizeEvent(event)
 
     def mousePressEvent(self, event):
         """Override method to move handle for mouse press/drag.
@@ -487,9 +513,9 @@ class VideoSlider(QGraphicsView):
         """Method required by Qt."""
         return self.slider.rect()
 
-    def paint(self, painter, option, widget=None):
+    def paint(self, *args, **kwargs):
         """Method required by Qt."""
-        pass
+        super(VideoSlider, self).paint(*args, **kwargs)
 
 if __name__ == "__main__":
     app = QApplication([])

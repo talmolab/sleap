@@ -16,9 +16,10 @@ class UNet:
         num_output_channels: The number of output channels of the block. These
             are the final output tensors on which intermediate supervision may be
             applied.
-        depth: The number of pooling steps applied to the input. The input must
-            be a tensor with `2^depth` height and width to allow for symmetric
-            pooling and upsampling with skip connections.
+        down_blocks: The number of pooling steps applied to the input. The input
+            must be a tensor with `2^depth` height and width to allow for
+            symmetric pooling and upsampling with skip connections.
+        up_blocks: The number of upsampling steps applied after downsampling.
         convs_per_depth: The number of convolutions applied before pooling or
             after upsampling.
         num_filters: The base number feature channels of the block. The number of
@@ -28,7 +29,8 @@ class UNet:
         interp: Method to use for interpolation when upsampling smaller features.
 
     """
-    depth: int = 3
+    down_blocks: int = 3
+    up_blocks: int = 3
     convs_per_depth: int = 2
     num_filters: int = 16
     kernel_size: int = 5
@@ -103,7 +105,7 @@ class StackedUNet:
         return stacked_unet(x_in, num_output_channels, **attr.asdict(self))
 
 
-def unet(x_in, num_output_channels, depth=3, convs_per_depth=2, num_filters=16,
+def unet(x_in, num_output_channels, down_blocks=3, up_blocks=3, convs_per_depth=2, num_filters=16,
          kernel_size=5, upsampling_layers=True, interp="bilinear"):
     """U-net block.
 
@@ -116,9 +118,10 @@ def unet(x_in, num_output_channels, depth=3, convs_per_depth=2, num_filters=16,
         num_output_channels: The number of output channels of the block. These
             are the final output tensors on which intermediate supervision may be
             applied.
-        depth: The number of pooling steps applied to the input. The input must
-            be a tensor with `2^depth` height and width to allow for symmetric
-            pooling and upsampling with skip connections.
+        down_blocks: The number of pooling steps applied to the input. The input
+            must be a tensor with `2^depth` height and width to allow for
+            symmetric pooling and upsampling with skip connections.
+        up_blocks: The number of upsampling steps applied after downsampling.
         convs_per_depth: The number of convolutions applied before pooling or
             after upsampling.
         num_filters: The base number feature channels of the block. The number of
@@ -134,8 +137,8 @@ def unet(x_in, num_output_channels, depth=3, convs_per_depth=2, num_filters=16,
     """
 
     # Check if input tensor has the right height/width for pooling given depth
-    if x_in.shape[-2] % (2**depth) != 0 or x_in.shape[-2] % (2**depth) != 0:
-        raise ValueError("Input tensor must have width and height dimensions divisible by %d." % (2**depth))
+    if x_in.shape[-2] % (2**down_blocks) != 0 or x_in.shape[-2] % (2**down_blocks) != 0:
+        raise ValueError("Input tensor must have width and height dimensions divisible by %d." % (2**down_blocks))
 
     # Ensure we have a tuple in case scalar provided
     kernel_size = expand_to_n(kernel_size, 2)
@@ -145,7 +148,7 @@ def unet(x_in, num_output_channels, depth=3, convs_per_depth=2, num_filters=16,
     
     # Downsampling
     skip_layers = []
-    for n in range(depth):
+    for n in range(down_blocks):
         for i in range(convs_per_depth):
             x = conv(num_filters * 2 ** n, kernel_size=kernel_size)(x)
         skip_layers.append(x)
@@ -153,11 +156,11 @@ def unet(x_in, num_output_channels, depth=3, convs_per_depth=2, num_filters=16,
 
     # Middle
     for i in range(convs_per_depth - 1):
-        x = conv(num_filters * 2 ** depth, kernel_size=kernel_size)(x)
-    x = conv(num_filters * 2 ** max(0, depth-1), kernel_size=kernel_size)(x)
+        x = conv(num_filters * 2 ** down_blocks, kernel_size=kernel_size)(x)
+    x = conv(num_filters * 2 ** max(0, down_blocks-1), kernel_size=kernel_size)(x)
 
     # Upsampling (with skips)
-    for n in reversed(range(depth)):
+    for n in range(down_blocks-1, down_blocks-up_blocks-1, -1):
         if upsampling_layers:
             x = UpSampling2D(size=(2,2), interpolation=interp)(x)
         else:

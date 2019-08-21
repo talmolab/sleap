@@ -1,16 +1,16 @@
-from sleap.gui.tracks import TrackColorManager, TrackTrailManager
+from sleap.gui.overlays.tracks import TrackColorManager, TrackTrailOverlay
 from sleap.io.video import Video
 
 def test_track_trails(centered_pair_predictions):
     
     labels = centered_pair_predictions
-    trail_manager = TrackTrailManager(labels=labels, scene=None, trail_length = 6)
+    trail_manager = TrackTrailOverlay(labels, scene=None, trail_length = 6)
     
-    frames = trail_manager.get_frame_selection(27)
+    frames = trail_manager.get_frame_selection(labels.videos[0], 27)
     assert len(frames) == 6
     assert frames[0].frame_idx == 22
     
-    tracks = trail_manager.get_tracks_in_frame(27)
+    tracks = trail_manager.get_tracks_in_frame(labels.videos[0], 27)
     assert len(tracks) == 2
     assert tracks[0].name == "1"
     assert tracks[1].name == "2"
@@ -31,7 +31,7 @@ def test_track_trails(centered_pair_predictions):
     # Test track colors
     color_manager = TrackColorManager(labels=labels)
 
-    tracks = trail_manager.get_tracks_in_frame(1099)
+    tracks = trail_manager.get_tracks_in_frame(labels.videos[0], 1099)
     assert len(tracks) == 5
 
     assert color_manager.get_color(tracks[3]) == [119, 172, 48]

@@ -316,6 +316,7 @@ class ActiveLearningDialog(QtWidgets.QDialog):
             with_tracking = True
         else:
             frames_to_predict = dict()
+        save_confmaps_pafs = form_data.get("_save_confmaps_pafs", False)
 
         # Run active learning pipeline using the TrainingJobs
         new_lfs = run_active_learning_pipeline(
@@ -323,7 +324,8 @@ class ActiveLearningDialog(QtWidgets.QDialog):
                     labels = self.labels,
                     training_jobs = training_jobs,
                     frames_to_predict = frames_to_predict,
-                    with_tracking = with_tracking)
+                    with_tracking = with_tracking,
+                    save_confmaps_pafs = save_confmaps_pafs)
 
         # remove labeledframes without any predicted instances
         new_lfs = list(filter(lambda lf: len(lf.instances), new_lfs))
@@ -349,11 +351,11 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         QtWidgets.QMessageBox(text=f"Active learning has finished. Instances were predicted on {len(new_lfs)} frames.").exec_()
 
     def view_datagen(self):
-        from sleap.nn.datagen import generate_images, generate_points, instance_crops, \
-                                generate_confmaps_from_points, generate_pafs_from_points
+        from sleap.nn.datagen import generate_training_data, \
+                generate_confmaps_from_points, generate_pafs_from_points
         from sleap.io.video import Video
-        from sleap.gui.confmapsplot import demo_confmaps
-        from sleap.gui.quiverplot import demo_pafs
+        from sleap.gui.overlays.confmaps import demo_confmaps
+        from sleap.gui.overlays.pafs import demo_pafs
 
         conf_job, _ = self._get_current_job(ModelOutputType.CONFIDENCE_MAP)
 
@@ -367,16 +369,16 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         min_crop_size = form_data.get("min_crop_size", 0)
         negative_samples = form_data.get("negative_samples", 0)
 
-        labels = self.labels
-        imgs = generate_images(labels, scale, frame_limit=10)
-        points = generate_points(labels, scale, frame_limit=10)
+        imgs, points = generate_training_data(
+                                self.labels,
+                                params = dict(
+                                            frame_limit = 10,
+                                            scale = scale,
+                                            instance_crop = instance_crop,
+                                            min_crop_size = min_crop_size,
+                                            negative_samples = negative_samples))
 
-        if instance_crop:
-            imgs, points = instance_crops(imgs, points,
-                                          min_crop_size=min_crop_size,
-                                          negative_samples=negative_samples)
-
-        skeleton = labels.skeletons[0]
+        skeleton = self.labels.skeletons[0]
         img_shape = (imgs.shape[1], imgs.shape[2])
         vid = Video.from_numpy(imgs * 255)
 
@@ -576,9 +578,14 @@ def find_saved_jobs(job_dir, jobs=None):
 
     return jobs
 
-def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=None,
-                                    frames_to_predict=None, with_tracking=False,
-                                    skip_learning=False):
+def run_active_learning_pipeline(
+            labels_filename: str,
+            labels: Labels=None,
+            training_jobs: Dict=None,
+            frames_to_predict: Dict=None,
+            with_tracking: bool=False,
+            save_confmaps_pafs: bool=False,
+            skip_learning: bool=False):
     # Imports here so we don't load TensorFlow before necessary
     from sleap.nn.monitor import LossViewer
     from sleap.nn.training import TrainingJob
@@ -677,8 +684,11 @@ def run_active_learning_pipeline(labels_filename, labels=None, training_jobs=Non
                 # run predictions for desired frames in this video
                 # video_lfs = predictor.predict(input_video=video, frames=frames, output_path=inference_output_path)
 
-                pool, result = predictor.predict_async(input_video=video, frames=frames,
-                                        output_path=inference_output_path)
+                pool, result = predictor.predict_async(
+                                        input_video=video,
+                                        frames=frames,
+                                        output_path=inference_output_path,
+                                        save_confmaps_pafs=save_confmaps_pafs)
 
                 while not result.ready():
                     QtWidgets.QApplication.instance().processEvents()

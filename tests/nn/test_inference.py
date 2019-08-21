@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 
-from sleap.nn.inference import load_predicted_labels_json_old
+from sleap.io.legacy import load_predicted_labels_json_old
 from sleap.nn.inference import find_all_peaks, match_peaks_paf, match_peaks_paf_par
 from sleap.nn.datagen import generate_images, generate_confidence_maps, generate_pafs
 from sleap.nn.transform import DataTransform

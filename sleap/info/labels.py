@@ -1,3 +1,5 @@
+import os
+
 from sleap.io.dataset import Labels
 
 if __name__ == "__main__":
@@ -7,13 +9,25 @@ if __name__ == "__main__":
     parser.add_argument("data_path", help="Path to labels json file")
     args = parser.parse_args()
 
-    labels = Labels.load_json(args.data_path)
+    video_callback = Labels.make_video_callback([os.path.dirname(args.data_path)])
+    labels = Labels.load_json(args.data_path, video_callback=video_callback)
 
-    print(f"Number of labeled frames: {len(labels)}")
+    print(f"Labeled frames: {len(labels)}")
+    print(f"Tracks: {len(labels.tracks)}")
 
-    first_idx = min((lf.frame_idx for lf in labels))
-    last_idx = max((lf.frame_idx for lf in labels))
+    print(f"Video files:")
 
-    print(f"  from {first_idx} to {last_idx}")
+    for vid in labels.videos:
+        lfs = labels.find(vid)
 
-    print(f"Video file: {labels.videos[0].filename}")
+        first_idx = min((lf.frame_idx for lf in lfs))
+        last_idx = max((lf.frame_idx for lf in lfs))
+
+        tracks = {inst.track for lf in lfs for inst in lf}
+        concurrent_count = max((len(lf.instances) for lf in lfs))
+
+        print(f"  {vid.filename}")
+        print(f"    labeled from {first_idx} to {last_idx}")
+        print(f"    tracks: {len(tracks)}")
+        print(f"    max instances in frame: {concurrent_count}")
+

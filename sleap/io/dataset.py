@@ -9,6 +9,7 @@ storage format.
 """
 
 import os
+import re
 import zipfile
 import atexit
 import glob
@@ -23,13 +24,19 @@ import scipy.io as sio
 import h5py as h5
 
 from collections import MutableSequence
-from typing import List, Union, Dict, Optional, _ForwardRef
+from typing import List, Union, Dict, Optional, Tuple
+
+try:
+    from typing import ForwardRef
+except:
+    from typing import _ForwardRef as ForwardRef
 
 import pandas as pd
 
 from sleap.skeleton import Skeleton, Node
 from sleap.instance import Instance, Point, LabeledFrame, \
     Track, PredictedPoint, PredictedInstance
+from sleap.rangelist import RangeList
 from sleap.io.video import Video
 from sleap.util import save_dict_to_hdf5
 
@@ -63,6 +70,7 @@ class Labels(MutableSequence):
     nodes: List[Node] = attr.ib(default=attr.Factory(list))
     tracks: List[Track] = attr.ib(default=attr.Factory(list))
     suggestions: Dict[Video, list] = attr.ib(default=attr.Factory(dict))
+    negative_anchors: Dict[Video, list] = attr.ib(default=attr.Factory(dict))
 
     def __attrs_post_init__(self):
 
@@ -86,6 +94,15 @@ class Labels(MutableSequence):
 
         # Lets sort the tracks by spawned on and then name
         self.tracks.sort(key=lambda t:(t.spawned_on, t.name))
+
+        # Data structures for caching
+        self._lf_by_video = dict()
+        self._frame_idx_map = dict()
+        self._track_occupancy = dict()
+        for video in self.videos:
+            self._lf_by_video[video] = [lf for lf in self.labels if lf.video == video]
+            self._frame_idx_map[video] = {lf.frame_idx: lf for lf in self._lf_by_video[video]}
+            self._track_occupancy[video] = self._make_track_occupany(video)
 
         # Create a variable to store a temporary storage directory. When we unzip
         self.__temp_dir = None
@@ -146,22 +163,53 @@ class Labels(MutableSequence):
         else:
             raise KeyError("Invalid label indexing arguments.")
 
-    def find(self, video: Video, frame_idx: int = None) -> List[LabeledFrame]:
+    def find(self, video: Video, frame_idx: Union[int, range] = None, return_new: bool=False) -> List[LabeledFrame]:
         """ Search for labeled frames given video and/or frame index.
 
         Args:
             video: a `Video` instance that is associated with the labeled frames
             frame_idx: an integer specifying the frame index within the video
+            return_new: return singleton of new `LabeledFrame` if none found?
 
         Returns:
             List of `LabeledFrame`s that match the criteria. Empty if no matches found.
 
         """
+        null_result = [LabeledFrame(video=video, frame_idx=frame_idx)] if return_new else []
 
-        if frame_idx:
-            return [label for label in self.labels if label.video == video and label.frame_idx == frame_idx]
+        if frame_idx is not None:
+            if video not in self._frame_idx_map: return null_result
+
+            if type(frame_idx) == range:
+                return [self._frame_idx_map[video][idx] for idx in frame_idx if idx in self._frame_idx_map[video]]
+
+            if frame_idx not in self._frame_idx_map[video]: return null_result
+
+            return [self._frame_idx_map[video][frame_idx]]
         else:
-            return [label for label in self.labels if label.video == video]
+            if video not in self._lf_by_video: return null_result
+            return self._lf_by_video[video]
+
+    def frames(self, video: Video, from_frame_idx: int = -1, reverse=False):
+        """
+        Iterator over all frames in a video, starting with first frame
+        after specified frame_idx (or first frame in video if none specified).
+        """
+        if video not in self._frame_idx_map: return None
+
+        # Get sorted list of frame indexes for this video
+        frame_idxs = sorted(self._frame_idx_map[video].keys(), reverse=reverse)
+
+        # Find the next frame index after the specified frame
+        next_frame_idx = min(filter(lambda x: x > from_frame_idx, frame_idxs), default=frame_idxs[0])
+        cut_list_idx = frame_idxs.index(next_frame_idx)
+
+        # Shift list of frame indices to start with specified frame
+        frame_idxs = frame_idxs[cut_list_idx:] + frame_idxs[:cut_list_idx]
+
+        # Yield the frames
+        for idx in frame_idxs:
+            yield self._frame_idx_map[video][idx]
 
     def find_first(self, video: Video, frame_idx: int = None) -> LabeledFrame:
         """ Find the first occurrence of a labeled frame for the given video and/or frame index.
@@ -201,6 +249,129 @@ class Labels(MutableSequence):
         if labeled_frame is not None:
             count = len([inst for inst in labeled_frame.instances if type(inst)==Instance])
         return count
+
+    def get_track_occupany(self, video: Video):
+        try:
+            return self._track_occupancy[video]
+        except:
+            return []
+
+    def add_track(self, video: Video, track: Track):
+        self.tracks.append(track)
+        self._track_occupancy[video][track] = RangeList()
+
+    def track_set_instance(self, frame: LabeledFrame, instance: Instance, new_track: Track):
+        self.track_swap(frame.video, new_track, instance.track, (frame.frame_idx, frame.frame_idx+1))
+        if instance.track is None:
+            self._track_remove_instance(frame, instance)
+        instance.track = new_track
+
+    def track_swap(self, video: Video, new_track: Track, old_track: Track, frame_range: tuple):
+
+        # Get ranges in track occupancy cache
+        _, within_old, _ = self._track_occupancy[video][old_track].cut_range(frame_range)
+        _, within_new, _ = self._track_occupancy[video][new_track].cut_range(frame_range)
+
+        if old_track is not None:
+            # Instances that didn't already have track can't be handled here.
+            # See track_set_instance for this case.
+            self._track_occupancy[video][old_track].remove(frame_range)
+        self._track_occupancy[video][new_track].remove(frame_range)
+        self._track_occupancy[video][old_track].insert_list(within_new)
+        self._track_occupancy[video][new_track].insert_list(within_old)
+
+        # Update tracks set on instances
+
+        # Get all instances in old/new tracks
+        # Note that this won't match on None track.
+        old_track_instances = self.find_track_occupancy(video, old_track, frame_range)
+        new_track_instances = self.find_track_occupancy(video, new_track, frame_range)
+
+        # swap new to old tracks on all instances
+        for frame, instance in old_track_instances:
+            instance.track = new_track
+        # old_track can be `Track` or int
+        # If int, it's index in instance list which we'll use as a pseudo-track,
+        # but we won't set instances currently on new_track to old_track.
+        if type(old_track) == Track:
+            for frame, instance in new_track_instances:
+                instance.track = old_track
+
+    def _track_remove_instance(self, frame: LabeledFrame, instance: Instance):
+        if instance.track not in self._track_occupancy[frame.video]: return
+
+        # If this is only instance in track in frame, then remove frame from track.
+        if len(list(filter(lambda inst: inst.track == instance.track, frame.instances))) == 1:
+            self._track_occupancy[frame.video][instance.track].remove((frame.frame_idx, frame.frame_idx+1))
+
+    def remove_instance(self, frame: LabeledFrame, instance: Instance):
+        self._track_remove_instance(frame, instance)
+        frame.instances.remove(instance)
+
+    def add_instance(self, frame: LabeledFrame, instance: Instance):
+        if frame.video not in self._track_occupancy:
+            self._track_occupancy[frame.video] = dict()
+
+        # Ensure that there isn't already an Instance with this track
+        tracks_in_frame = [inst.track for inst in frame
+                           if type(inst) == Instance and inst.track is not None]
+        if instance.track in tracks_in_frame:
+            instance.track = None
+
+        # Add track in its not already present in labels
+        if instance.track not in self._track_occupancy[frame.video]:
+            self._track_occupancy[frame.video][instance.track] = RangeList()
+
+        self._track_occupancy[frame.video][instance.track].insert((frame.frame_idx, frame.frame_idx+1))
+        frame.instances.append(instance)
+
+    def _make_track_occupany(self, video):
+        frame_idx_map = self._frame_idx_map[video]
+
+        tracks = dict()
+        frame_idxs = sorted(frame_idx_map.keys())
+        for frame_idx in frame_idxs:
+            instances = frame_idx_map[frame_idx]
+            for instance in instances:
+                if instance.track not in tracks:
+                    tracks[instance.track] = RangeList()
+                tracks[instance.track].add(frame_idx)
+        return tracks
+
+    def find_track_occupancy(self, video: Video, track: Union[Track, int], frame_range=None) -> List[Tuple[LabeledFrame, Instance]]:
+        """Get instances for a given track.
+
+        Args:
+            video: the `Video`
+            track: the `Track` or int ("pseudo-track" index to instance list)
+            frame_range (optional):
+                If specified, only return instances on frames in range.
+                If None, return all instances for given track.
+        Returns:
+            list of `Instance` objects
+        """
+
+        frame_range = range(*frame_range) if type(frame_range) == tuple else frame_range
+
+        def does_track_match(inst, tr, labeled_frame):
+            match = False
+            if type(tr) == Track and inst.track is tr:
+                match = True
+            elif (type(tr) == int and labeled_frame.instances.index(inst) == tr
+                    and inst.track is None):
+                match = True
+            return match
+
+        track_frame_inst = [(lf, instance)
+                            for lf in self.find(video)
+                            for instance in lf.instances
+                            if does_track_match(instance, track, lf)
+                                and (frame_range is None or lf.frame_idx in frame_range)]
+        return track_frame_inst
+
+
+    def find_track_instances(self, *args, **kwargs) -> List[Instance]:
+        return [inst for lf, inst in self.find_track_occupancy(*args, **kwargs)]
 
     @property
     def all_instances(self):
@@ -248,6 +419,14 @@ class Labels(MutableSequence):
         # Sort the tracks again
         self.tracks.sort(key=lambda t: (t.spawned_on, t.name))
 
+        # Update cache datastructures
+        if new_label.video not in self._lf_by_video:
+            self._lf_by_video[new_label.video] = []
+        if new_label.video not in self._frame_idx_map:
+            self._frame_idx_map[new_label.video] = dict()
+        self._lf_by_video[new_label.video].append(new_label)
+        self._frame_idx_map[new_label.video][new_label.frame_idx] = new_label
+
     def __setitem__(self, index, value: LabeledFrame):
         # TODO: Maybe we should remove this method altogether?
         self.labeled_frames.__setitem__(index, value)
@@ -264,10 +443,12 @@ class Labels(MutableSequence):
         self.insert(len(self) + 1, value)
 
     def __delitem__(self, key):
-        self.labeled_frames.__delitem__(key)
+        self.labeled_frames.remove(self.labeled_frames[key])
 
     def remove(self, value: LabeledFrame):
         self.labeled_frames.remove(value)
+        self._lf_by_video[new_label.video].remove(value)
+        del self._frame_idx_map[new_label.video][value.frame_idx]
 
     def add_video(self, video: Video):
         """ Add a video to the labels if it is not already in it.
@@ -299,6 +480,24 @@ class Labels(MutableSequence):
 
         # Delete video
         self.videos.remove(video)
+
+        # Remove from caches
+        if video in self._lf_by_video:
+            del self._lf_by_video[video]
+        if video in self._frame_idx_map:
+            del self._frame_idx_map[video]
+
+    def add_negative_anchor(self, video:Video, frame_idx: int, where: tuple):
+        """Adds a location for a negative training sample.
+
+        Args:
+            video: the `Video` for this negative sample
+            frame_idx: frame index
+            where: (x, y)
+        """
+        if video not in self.negative_anchors:
+            self.negative_anchors[video] = []
+        self.negative_anchors[video].append((frame_idx, *where))
 
     def get_video_suggestions(self, video:Video) -> list:
         """
@@ -367,6 +566,8 @@ class Labels(MutableSequence):
         if not isinstance(new_frames[0], LabeledFrame): return False
         # copy the labeled frames
         self.labeled_frames.extend(new_frames)
+        # merge labeled frames for the same video/frame idx
+        self.merge_matching_frames()
         # update videos/skeletons/nodes/etc using all the labeled frames now present
         self.__attrs_post_init__()
         return True
@@ -401,6 +602,8 @@ class Labels(MutableSequence):
             * videos - The videos that that the instances occur on.
             * labels - The labeled frames
             * tracks - The tracks associated with each instance.
+            * suggestions - The suggested frames.
+            * negative_anchors - The negative training sample anchors.
         """
         # FIXME: Update list of nodes
         # We shouldn't have to do this here, but for some reason we're missing nodes
@@ -429,7 +632,8 @@ class Labels(MutableSequence):
             'videos': Video.cattr().unstructure(self.videos),
             'labels': label_cattr.unstructure(self.labeled_frames),
             'tracks': cattr.unstructure(self.tracks),
-            'suggestions': label_cattr.unstructure(self.suggestions)
+            'suggestions': label_cattr.unstructure(self.suggestions),
+            'negative_anchors': label_cattr.unstructure(self.negative_anchors)
          }
 
         return dicts
@@ -511,6 +715,10 @@ class Labels(MutableSequence):
 
             if compress or save_frame_data:
 
+                # Ensure that filename ends with .json
+                # shutil will append .zip
+                filename = re.sub("(\.json)?(\.zip)?$", ".json", filename)
+
                 # Write the json to the tmp directory, we will zip it up with the frame data.
                 with open(os.path.join(tmp_dir, os.path.basename(filename)), 'w') as file:
                     file.write(json_str)
@@ -557,7 +765,9 @@ class Labels(MutableSequence):
                         break
             for idx, vid in enumerate(videos):
                 for old_vid in match_to.videos:
-                    if vid.filename == old_vid.filename:
+                    # compare last three parts of path
+                    weak_match = vid.filename.split("/")[-3:] == old_vid.filename.split("/")[-3:]
+                    if vid.filename == old_vid.filename or weak_match:
                         # use video from match
                         videos[idx] = old_vid
                         break
@@ -568,6 +778,13 @@ class Labels(MutableSequence):
             suggestions = suggestions_cattr.structure(dicts['suggestions'], Dict[Video, List])
         else:
             suggestions = dict()
+
+        if "negative_anchors" in dicts:
+            negative_anchors_cattr = cattr.Converter()
+            negative_anchors_cattr.register_structure_hook(Video, lambda x,type: videos[int(x)])
+            negative_anchors = negative_anchors_cattr.structure(dicts['negative_anchors'], Dict[Video, List])
+        else:
+            negative_anchors = dict()
 
         label_cattr = cattr.Converter()
         label_cattr.register_structure_hook(Skeleton, lambda x,type: skeletons[x])
@@ -595,10 +812,15 @@ class Labels(MutableSequence):
 
         label_cattr.register_structure_hook(Union[List[Instance], List[PredictedInstance]],
                                             structure_instances_list)
-        label_cattr.register_structure_hook(_ForwardRef('PredictedInstance'), lambda x,type: label_cattr.structure(x, PredictedInstance))
+        label_cattr.register_structure_hook(ForwardRef('PredictedInstance'), lambda x,type: label_cattr.structure(x, PredictedInstance))
         labels = label_cattr.structure(dicts['labels'], List[LabeledFrame])
 
-        return cls(labeled_frames=labels, videos=videos, skeletons=skeletons, nodes=nodes, suggestions=suggestions)
+        return cls(labeled_frames=labels,
+                    videos=videos,
+                    skeletons=skeletons,
+                    nodes=nodes,
+                    suggestions=suggestions,
+                    negative_anchors=negative_anchors)
 
     @classmethod
     def load_json(cls, filename: str,
@@ -922,6 +1144,97 @@ class Labels(MutableSequence):
             labels.append(label)
 
         return cls(labels)
+
+    @classmethod
+    def make_video_callback(cls, search_paths=None):
+        search_paths = search_paths or []
+        def video_callback(video_list, new_paths=search_paths):
+            # Check each video
+            for video_item in video_list:
+                if "backend" in video_item and "filename" in video_item["backend"]:
+                    current_filename = video_item["backend"]["filename"]
+                    # check if we can find video
+                    if not os.path.exists(current_filename):
+                        is_found = False
+
+                        current_basename = os.path.basename(current_filename)
+                        # handle unix, windows, or mixed paths
+                        if current_basename.find("/") > -1:
+                            current_basename = current_basename.split("/")[-1]
+                        if current_basename.find("\\") > -1:
+                            current_basename = current_basename.split("\\")[-1]
+
+                        # First see if we can find the file in another directory,
+                        # and if not, prompt the user to find the file.
+
+                        # We'll check in the current working directory, and if the user has
+                        # already found any missing videos, check in the directory of those.
+                        for path_dir in new_paths:
+                            check_path = os.path.join(path_dir, current_basename)
+                            if os.path.exists(check_path):
+                                # we found the file in a different directory
+                                video_item["backend"]["filename"] = check_path
+                                is_found = True
+                                break
+        return video_callback
+
+    @classmethod
+    def make_gui_video_callback(cls, search_paths):
+        search_paths = search_paths or []
+        def gui_video_callback(video_list, new_paths=search_paths):
+            import os
+            from PySide2.QtWidgets import QFileDialog, QMessageBox
+
+            has_shown_prompt = False # have we already alerted user about missing files?
+
+            # Check each video
+            for video_item in video_list:
+                if "backend" in video_item and "filename" in video_item["backend"]:
+                    current_filename = video_item["backend"]["filename"]
+                    # check if we can find video
+                    if not os.path.exists(current_filename):
+                        is_found = False
+
+                        current_basename = os.path.basename(current_filename)
+                        # handle unix, windows, or mixed paths
+                        if current_basename.find("/") > -1:
+                            current_basename = current_basename.split("/")[-1]
+                        if current_basename.find("\\") > -1:
+                            current_basename = current_basename.split("\\")[-1]
+
+                        # First see if we can find the file in another directory,
+                        # and if not, prompt the user to find the file.
+
+                        # We'll check in the current working directory, and if the user has
+                        # already found any missing videos, check in the directory of those.
+                        for path_dir in new_paths:
+                            check_path = os.path.join(path_dir, current_basename)
+                            if os.path.exists(check_path):
+                                # we found the file in a different directory
+                                video_item["backend"]["filename"] = check_path
+                                is_found = True
+                                break
+
+                        # if we found this file, then move on to the next file
+                        if is_found: continue
+
+                        # Since we couldn't find the file on our own, prompt the user.
+
+                        if not has_shown_prompt:
+                            QMessageBox(text=f"We're unable to locate one or more video files for this project. Please locate {current_filename}.").exec_()
+                            has_shown_prompt = True
+
+                        current_root, current_ext = os.path.splitext(current_basename)
+                        caption = f"Please locate {current_basename}..."
+                        filters = [f"{current_root} file (*{current_ext})", "Any File (*.*)"]
+                        dir = None if len(new_paths) == 0 else new_paths[-1]
+                        new_filename, _ = QFileDialog.getOpenFileName(None, dir=dir, caption=caption, filter=";;".join(filters))
+                        # if we got an answer, then update filename for video
+                        if len(new_filename):
+                            video_item["backend"]["filename"] = new_filename
+                            # keep track of the directory chosen by user
+                            new_paths.append(os.path.dirname(new_filename))
+        return gui_video_callback
 
 
 def load_labels_json_old(data_path: str, parsed_json: dict = None,
