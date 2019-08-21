@@ -432,15 +432,12 @@ class Predictor:
                                             min_thresh=self.nms_min_thresh,
                                             sigma=self.nms_sigma)
 
-        # Get training crop size to determine (min) centroid crop size
-
-        # FIXME: should we instead save the unpadded bounding box size
-        # from the training data and use that?
+        # Get training bounding box size to determine (min) centroid crop size
 
         crop_model_package = self.fetch_model(
                                 input_size = None,
                                 output_types = [ModelOutputType.CONFIDENCE_MAP, ModelOutputType.PART_AFFINITY_FIELD])
-        crop_size = crop_model_package["model"].input_shape[1]
+        crop_size = crop_model_package["bounding_box_size"]
         bb_half = crop_size//2
 
         all_boxes = dict()
@@ -628,6 +625,7 @@ class Predictor:
             # Load model
 
             keras_model = load_model(self.sleap_models, input_size, output_types)
+            first_sleap_model = self.sleap_models[output_types[0]]
             skeleton = get_model_skeleton(self.sleap_models, output_types)
 
             # If no input size was specified, then use the input size
@@ -636,11 +634,22 @@ class Predictor:
             if input_size is None:
                 input_size = keras_model.input_shape[1:]
 
+            # Get the size of the bounding box from training data
+            # (or the size of crop that model was trained on if the
+            # bounding box size wasn't set).
+
+            if first_sleap_model.trainer.instance_crop:
+                bounding_box_size = \
+                    first_sleap_model.trainer.bounding_box_size or keras_model.input_shape[1]
+            else:
+                bounding_box_size = None
+
             # Cache the model so we don't have to load it next time
 
             self._models[key] = dict(
                                     model=keras_model,
-                                    skeleton=skeleton
+                                    skeleton=skeleton,
+                                    bounding_box_size=bounding_box_size
                                     )
 
         # Return the keras Model

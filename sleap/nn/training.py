@@ -129,6 +129,7 @@ class Trainer:
     scale: float = 1.0
     sigma: float = 5.0
     instance_crop: bool = False
+    bounding_box_size: int = 0
     min_crop_size: int = 0
     negative_samples: int = 0
 
