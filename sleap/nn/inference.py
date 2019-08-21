@@ -301,6 +301,7 @@ class Predictor:
             predicted_frames_chunk = []
             for subchunk_frames in subchunk_results:
                 predicted_frames_chunk.extend(subchunk_frames)
+            predicted_frames_chunk = LabeledFrame.merge_frames(predicted_frames_chunk, video=vid)
 
             logger.info(f"  Instances found on {len(predicted_frames_chunk)} out of {len(mov_full)} frames.")
 
