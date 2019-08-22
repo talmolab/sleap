@@ -1,9 +1,7 @@
 import numpy as np
-
 from typing import Dict, List, Union, Optional, Tuple
 
 from sleap.instance import LabeledFrame, PredictedPoint, PredictedInstance
-
 from sleap.info.metrics import calculate_pairwise_cost
 
 def match_single_peaks_frame(points_array, skeleton, transform, img_idx):
@@ -120,6 +118,13 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, transform, img_idx
         dst_node_idx = skeleton.node_to_index(edge[1])
         paf_x = pafs_t[...,2*k]
         paf_y = pafs_t[...,2*k+1]
+
+        # Make sure matrix has rows for these nodes
+        if len(peaks_t) <= src_node_idx or len(peaks_t) <= dst_node_idx:
+            special_k.append(k)
+            connection_all.append([])
+            continue
+
         peaks_src = peaks_t[src_node_idx]
         peaks_dst = peaks_t[dst_node_idx]
         peak_vals_src = peak_vals_t[src_node_idx]
