@@ -86,14 +86,26 @@ class Labels(MutableSequence):
         # Ditto for nodes
         self.nodes = list(set(self.nodes).union({node for skeleton in self.skeletons for node in skeleton.nodes}))
 
-        # Ditto for tracks, a pattern is emerging here
-        self.tracks = list(set(self.tracks).union({instance.track
-                                                   for frame in self.labels
-                                                   for instance in frame.instances
-                                                   if instance.track}))
+        # Keep the tracks we already have
+        tracks = set(self.tracks)
+
+        # Add tracks from any Instances or PredictedInstances
+        tracks = tracks.union({instance.track
+                               for frame in self.labels
+                               for instance in frame.instances
+                               if instance.track})
+
+        # Add tracks from any PredictedInstance referenced by instance
+        # This fixes things when there's a referenced PredictionInstance
+        # which is no longer in the frame.
+        tracks = tracks.union({instance.from_predicted.track
+                               for frame in self.labels
+                               for instance in frame.instances
+                               if instance.from_predicted
+                                 and instance.from_predicted.track})
 
         # Lets sort the tracks by spawned on and then name
-        self.tracks.sort(key=lambda t:(t.spawned_on, t.name))
+        self.tracks = sorted(list(tracks), key=lambda t:(t.spawned_on, t.name))
 
         # Data structures for caching
         self._lf_by_video = dict()
