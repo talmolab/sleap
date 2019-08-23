@@ -394,16 +394,16 @@ def pad_rect_to(x0: int, y0: int, x1: int, y1: int, pad_to: tuple, within: tuple
     within_y, within_x = within
     if x0 < 0:
         x0 = 0
-        x1 = pad_to_x
+        x1 = min(within_x, pad_to_x)
     if x1 > within_x:
         x1 = within_x
-        x0 = within_x-pad_to_x
+        x0 = max(0, within_x-pad_to_x)
     if y0 < 0:
         y0 = 0
-        y1 = pad_to_y
+        y1 = min(within_y, pad_to_y)
     if y1 > within_y:
         y1 = within_y
-        y0 = within_y-pad_to_y
+        y0 = max(0, within_y-pad_to_y)
 
     return x0, y0, x1, y1
 

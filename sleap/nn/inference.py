@@ -403,7 +403,7 @@ class Predictor:
         which allows us to merge overlapping crops into larger crops.
         """
 
-        full_img_size = (imgs.shape[1], imgs.shape[2])
+        crop_within = (imgs.shape[1]//8*8, imgs.shape[2]//8*8)
 
         # Fetch centroid model (uses cache if already loaded)
 
@@ -469,7 +469,7 @@ class Predictor:
                 merged_boxes = merge_boxes_with_overlap_and_padding(
                                 boxes=boxes,
                                 pad_factor_box=(self.crop_growth, self.crop_growth),
-                                within=full_img_size)
+                                within=crop_within)
 
                 # Keep track of all boxes, grouped by size and frame idx
                 for box in merged_boxes:
