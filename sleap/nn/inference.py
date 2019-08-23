@@ -101,6 +101,8 @@ class Predictor:
     flow_window: int = 15
     crop_iou_threshold: float = .9
     single_per_crop: bool = False
+    crop_padding: int = 40
+    crop_growth: int = 64
 
     output_path: Optional[str] = None
     save_confmaps_pafs: bool = False
@@ -237,7 +239,7 @@ class Predictor:
                 # Scale if target doesn't match current size
                 mov = transform.scale_to(mov_full, target_size=scale_to)
 
-                subchunks_to_process.append((mov, transform))
+                subchunks_to_process = [(mov, transform)]
 
             logger.info("  Transformed images [%.1fs]" % (time() - t0))
 
@@ -440,7 +442,7 @@ class Predictor:
                                 input_size = None,
                                 output_types = [ModelOutputType.CONFIDENCE_MAP])
         crop_size = crop_model_package["bounding_box_size"]
-        bb_half = crop_size//2
+        bb_half = crop_size + self.crop_padding
 
         all_boxes = dict()
 
@@ -466,7 +468,7 @@ class Predictor:
                 # Merge overlapping boxes and pad to multiple of crop size
                 merged_boxes = merge_boxes_with_overlap_and_padding(
                                 boxes=boxes,
-                                pad_factor_box=(crop_size, crop_size),
+                                pad_factor_box=(self.crop_growth, self.crop_growth),
                                 within=full_img_size)
 
                 # Keep track of all boxes, grouped by size and frame idx
@@ -570,13 +572,15 @@ class Predictor:
         # Find peaks
         t0 = time()
 
-        peaks, peak_vals = peak_tf_inference(
-                            model = conf_model["model"],
-                            data = imgs.astype("float32")/255,
-                            min_thresh=self.nms_min_thresh,
-                            downsample_factor=int(1/paf_model["multiscale"]),
-                            upsample_factor=int(1/conf_model["multiscale"])
-                            )
+        peaks, peak_vals, confmaps = \
+                peak_tf_inference(
+                    model = conf_model["model"],
+                    data = imgs.astype("float32")/255,
+                    min_thresh=self.nms_min_thresh,
+                    downsample_factor=int(1/paf_model["multiscale"]),
+                    upsample_factor=int(1/conf_model["multiscale"]),
+                    return_confmaps=self.save_confmaps_pafs
+                    )
 
         transform.scale = transform.scale * paf_model["multiscale"]
 
