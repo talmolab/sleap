@@ -2,7 +2,7 @@
 
 import cv2
 import numpy as np
-import math
+from math import ceil
 import random
 
 from operator import itemgetter
@@ -31,8 +31,11 @@ def generate_training_data(labels, params):
             i.e., frames -> instances -> point_array
     """
 
+    resize_hack = not params["instance_crop"]
+
     imgs = generate_images(labels, params["scale"],
-                frame_limit=params.get("frame_limit", None))
+                frame_limit=params.get("frame_limit", None),
+                resize_hack=resize_hack)
 
     points = generate_points(labels, params["scale"],
                 frame_limit=params.get("frame_limit", None))
@@ -488,13 +491,13 @@ def _bb_pad_shape(bbs, min_crop_size, img_shape):
     Returns:
         (size, size) tuple
     """
-    # Find least power of 2 that's large enough to bound all the instances
+    # Find a nicely sized box that's large enough to bound all instances
     max_height = max((y1 - y0 for (x0, y0, x1, y1) in bbs))
     max_width = max((x1 - x0 for (x0, y0, x1, y1) in bbs))
     max_dim = max(max_height, max_width)
     max_dim = max(max_dim, min_crop_size)
-    # TODO: add extra margin?
-    box_side = min((2**i for i in range(4, 10) if 2**i >= max_dim), default=512) # 16 to 512
+    max_dim += 20 # pad
+    box_side = ceil(max_dim/64)*64 # round up to nearest multiple of 64
 
     # TODO: make sure we have valid box_size
 
@@ -586,7 +589,6 @@ def merge_boxes_with_overlap_and_padding(boxes, pad_factor_box, within):
         return merge_boxes_with_overlap_and_padding(merged_boxes, pad_factor_box, within)
 
 def pad_box_to_multiple(box, pad_factor_box, within):
-    from math import ceil
 
     box_h = box[3] - box[1] # difference in y
     box_w = box[2] - box[0] # difference in x
