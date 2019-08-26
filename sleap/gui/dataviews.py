@@ -351,10 +351,11 @@ class LabeledFrameTableModel(QtCore.QAbstractTableModel):
         f = Qt.ItemIsEnabled | Qt.ItemIsSelectable
         if index.isValid():
             idx = index.row()
-            instance = self.labeled_frame.instances_to_show[idx]
-            prop = self._props[index.column()]
-            if prop == "track" and instance.track is not None:
-                f |= Qt.ItemIsEditable
+            if idx < len(self.labeled_frame.instances_to_show):
+                instance = self.labeled_frame.instances_to_show[idx]
+                prop = self._props[index.column()]
+                if prop == "track" and instance.track is not None:
+                    f |= Qt.ItemIsEditable
         return f
 
 
