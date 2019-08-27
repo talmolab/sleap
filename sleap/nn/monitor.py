@@ -1,3 +1,4 @@
+from collections import deque
 import numpy as np
 from time import time, sleep
 import zmq
@@ -93,8 +94,10 @@ class LossViewer(QtWidgets.QMainWindow):
         wid.setLayout(layout)
         self.setCentralWidget(wid)
 
-        self.X = []
-        self.Y = []
+        # Only show that last 2000 batch values
+        self.X = deque(maxlen=2000)
+        self.Y = deque(maxlen=2000)
+
         self.t0 = None
         self.current_job_output_type = what
         self.epoch = 0
@@ -131,15 +134,29 @@ class LossViewer(QtWidgets.QMainWindow):
 
 
     def add_datapoint(self, x, y, which="batch"):
-        self.series[which].append(x, y)
 
-        self.X.append(x)
-        self.Y.append(y)
+        # Keep track of all batch points
+        if which == "batch":
+            self.X.append(x)
+            self.Y.append(y)
 
-        dx = 0.5
-        dy = np.ptp(self.Y) * 0.02
-        self.chart.axisX().setRange(min(self.X) - dx, max(self.X) + dx)
-        self.chart.axisY().setRange(max(1e-12, min(self.Y) - dy), max(self.Y) + dy)
+            # Redraw batch ever 40 points (faster than plotting each)
+            if x % 40 == 0:
+                xs, ys = self.X, self.Y
+                points = [QtCore.QPointF(x, y) for x, y in zip(xs, ys)]
+                self.series["batch"].replace(points)
+
+                # Set X scale to show all points
+                dx = 0.5
+                self.chart.axisX().setRange(min(self.X) - dx, max(self.X) + dx)
+
+                # Set Y scale to exclude outliers
+                dy = np.ptp(self.Y) * 0.04
+                low, high = np.quantile(self.Y, (.02, .98))
+
+                self.chart.axisY().setRange(low - dy, high + dy)
+        else:
+            self.series[which].append(x, y)
 
     def set_start_time(self, t0):
         self.t0 = t0
@@ -185,3 +202,19 @@ class LossViewer(QtWidgets.QMainWindow):
                     self.add_datapoint((self.epoch * self.epoch_size) + msg["logs"]["batch"], msg["logs"]["loss"])
 
         self.update_runtime()
+
+if __name__ == "__main__":
+    app = QtWidgets.QApplication([])
+    win = LossViewer()
+    win.show()
+
+    def test_point(x=[0]):
+        x[0] += 1
+        i = x[0]+1
+        win.add_datapoint(i, i%30+1)
+
+    t = QtCore.QTimer()
+    t.timeout.connect(test_point)
+    t.start(0)
+
+    app.exec_()
