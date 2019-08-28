@@ -15,13 +15,17 @@ from typing import Sequence
 
 from sleap.io.video import Video, HDF5Video
 from sleap.gui.video import QtVideoPlayer
-from sleap.gui.overlays.hdf5 import HDF5DataOverlay, h5_colors
+from sleap.gui.overlays.base import DataOverlay, h5_colors
 
-class ConfmapOverlay(HDF5DataOverlay):
+class ConfmapOverlay(DataOverlay):
 
     @classmethod
     def from_h5(cls, filename, input_format="channels_last", **kwargs):
-        return HDF5DataOverlay.from_h5(filename, "/confmaps", input_format, overlay_class=ConfMapsPlot, **kwargs)
+        return DataOverlay.from_h5(filename, "/confmaps", input_format, overlay_class=ConfMapsPlot, **kwargs)
+
+    @classmethod
+    def from_model(cls, filename, video, **kwargs):
+        return DataOverlay.from_model(filename, video, overlay_class=ConfMapsPlot, **kwargs)
 
 class ConfMapsPlot(QtWidgets.QGraphicsObject):
     """QGraphicsObject to display multiple confidence maps in a QGraphicsView.

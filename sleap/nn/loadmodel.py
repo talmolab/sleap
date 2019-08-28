@@ -80,7 +80,7 @@ def load_model(
     return keras_model
 
 def get_model_data(
-            sleap_models: List[TrainingJob],
+            sleap_models: Dict[ModelOutputType,TrainingJob],
             output_types: List[ModelOutputType]) -> Dict:
 
         model_type = output_types[0]
