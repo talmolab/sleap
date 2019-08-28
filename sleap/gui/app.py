@@ -829,7 +829,7 @@ class MainWindow(QMainWindow):
             # Model as overlay datasource
             # This will show live inference results
 
-            from sleap.gui.overlays.hdf5 import DataOverlay
+            from sleap.gui.overlays.base import DataOverlay
             overlay = DataOverlay.from_model(filename, self.video, player=self.player)
             self.player.changedPlot.connect(lambda parent, idx: overlay.add_to_scene(None, idx))
 

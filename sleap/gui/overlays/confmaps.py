@@ -15,7 +15,7 @@ from typing import Sequence
 
 from sleap.io.video import Video, HDF5Video
 from sleap.gui.video import QtVideoPlayer
-from sleap.gui.overlays.hdf5 import DataOverlay, h5_colors
+from sleap.gui.overlays.base import DataOverlay, h5_colors
 
 class ConfmapOverlay(DataOverlay):
 

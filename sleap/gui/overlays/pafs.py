@@ -7,7 +7,7 @@ import math
 from sleap.io.video import Video, HDF5Video
 from sleap.gui.multicheck import MultiCheckWidget
 
-from sleap.gui.overlays.hdf5 import DataOverlay, h5_colors
+from sleap.gui.overlays.base import DataOverlay, h5_colors
 
 class PafOverlay(DataOverlay):
 
