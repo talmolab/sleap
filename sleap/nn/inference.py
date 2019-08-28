@@ -139,8 +139,8 @@ class Predictor:
         cv2.setNumThreads(usable_cpu_count())
         
         # Delete the output file if it exists already
-        if os.path.exists(output_path):
-            os.unlink(output_path)
+        if os.path.exists(self.output_path):
+            os.unlink(self.output_path)
 
         logger.info(f"Predict is async: {is_async}")
 
@@ -331,10 +331,10 @@ class Predictor:
                     #  We should save in chunks then combine at the end.
                     labels = Labels(labeled_frames=predicted_frames)
                     if self.output_path is not None:
-                        if output_path.endswith('json'):
-                            Labels.save_json(labels, filename=output_path, compress=True)
+                        if self.output_path.endswith('json'):
+                            Labels.save_json(labels, filename=self.output_path, compress=True)
                         else:
-                            Labels.save_hdf5(labels, filename=output_path, append=True)
+                            Labels.save_hdf5(labels, filename=self.output_path, append=True)
 
                         logger.info("  Saved to: %s [%.1fs]" % (self.output_path, time() - t0))
 
