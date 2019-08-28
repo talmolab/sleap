@@ -1,3 +1,5 @@
+"""Base class for overlays."""
+
 from PySide2 import QtWidgets
 
 import attr
@@ -10,11 +12,33 @@ from sleap.nn.transform import DataTransform
 
 class HDF5Data(HDF5Video):
     def __getitem__(self, i):
+        """Get data for frame i from `HDF5Video` object."""
         x = self.get_frame(i)
         return np.clip(x,0,1)
 
 @attr.s(auto_attribs=True)
-class HDF5DataOverlay:
+class ModelData:
+    model: 'keras.Model'
+    video: Video
+
+    def __getitem__(self, i):
+        """Data data for frame i from predictor."""
+        frame_img = self.video[i]
+
+        # Trim to size that works for model
+        frame_img = frame_img[:, :self.video.height//8*8, :self.video.width//8*8, :]
+
+        frame_result = self.model.predict(frame_img.astype("float32") / 255)
+
+        # Scale the data values to [0, 1]
+        # This allows us to visualize data with small ptp value
+        frame_result = frame_result[0]/np.max(frame_result)
+        frame_result = np.clip(frame_result, 0, 1)
+
+        return frame_result
+
+@attr.s(auto_attribs=True)
+class DataOverlay:
 
     data: Sequence = None
     player: QtVideoPlayer = None
@@ -28,13 +52,23 @@ class HDF5DataOverlay:
             self._add(self.player.view.scene, self.overlay_class(self.data[frame_idx]))
 
         else:
-            for idx in self.transform.get_data_idxs(frame_idx):
+            # If data indices are different than frame indices, use data
+            # index; otherwise just use frame index.
+            idxs = self.transform.get_data_idxs(frame_idx) \
+                    if self.transform.frame_idxs else [frame_idx]
+
+            # Loop over indices, in case there's more than one for frame
+            for idx in idxs:
                 if idx in self.transform.bounding_boxes:
                     x, y, *_ = self.transform.bounding_boxes[idx]
                 else:
                     x, y = 0, 0
 
-                self._add(self.player.view.scene, self.overlay_class(self.data[idx]), (x,y))
+                overlay_object = self.overlay_class(
+                                    self.data[idx],
+                                    scale=self.transform.scale)
+
+                self._add(self.player.view.scene, overlay_object, (x,y))
 
     def _add(self, to: QtWidgets.QGraphicsScene, what: QtWidgets.QGraphicsObject, where: tuple=(0,0)):
         to.addItem(what)
@@ -50,9 +84,47 @@ class HDF5DataOverlay:
 
         transform = DataTransform(frame_idxs=frame_idxs, bounding_boxes=bounding_boxes)
 
-        conf_data = HDF5Data(filename, dataset, input_format=input_format, convert_range=False)
-        
-        return cls(data=conf_data, transform=transform, **kwargs)
+        data_object = HDF5Data(filename, dataset, input_format=input_format, convert_range=False)
+
+        return cls(data=data_object, transform=transform, **kwargs)
+
+    @classmethod
+    def from_model(cls, filename, video, **kwargs):
+        from sleap.nn.model import ModelOutputType
+        from sleap.nn.loadmodel import load_model, get_model_data
+        from sleap.nn.training import TrainingJob
+
+        trainingjob = TrainingJob.load_json(filename)
+
+        input_size = (video.height//8*8, video.width//8*8, video.channels)
+        model_output_type = trainingjob.model.output_type
+
+        model = load_model(
+                    sleap_models={model_output_type:trainingjob},
+                    input_size=input_size,
+                    output_types=[model_output_type])
+
+        model_data = get_model_data(
+                    sleap_models={model_output_type:trainingjob},
+                    output_types=[model_output_type])
+
+        data_object = ModelData(model, video)
+
+        from sleap.gui.overlays.confmaps import ConfMapsPlot
+        from sleap.gui.overlays.pafs import MultiQuiverPlot
+
+        if model_output_type == ModelOutputType.PART_AFFINITY_FIELD:
+            overlay_class = MultiQuiverPlot
+        else:
+            overlay_class = ConfMapsPlot
+
+        transform = DataTransform(scale=model_data["multiscale"])
+
+        return cls(
+                data=data_object,
+                transform=transform,
+                overlay_class=overlay_class,
+                **kwargs)
 
 h5_colors = [
     [204, 81, 81],
