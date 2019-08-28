@@ -29,7 +29,10 @@ class HDF5DataOverlay:
 
         else:
             for idx in self.transform.get_data_idxs(frame_idx):
-                x, y, *_ = self.transform.bounding_boxes[idx]
+                if idx in self.transform.bounding_boxes:
+                    x, y, *_ = self.transform.bounding_boxes[idx]
+                else:
+                    x, y = 0, 0
 
                 self._add(self.player.view.scene, self.overlay_class(self.data[idx]), (x,y))
 

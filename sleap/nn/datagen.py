@@ -174,11 +174,9 @@ def generate_confmaps_from_points(frames_inst_points,
     if output_size is None:
         output_size = (shape[0] // (1/scale), shape[1] // (1/scale))
 
-    # TODO: throw warning for truncation errors
-    full_size = tuple(map(int, full_size))
     output_size = tuple(map(int, output_size))
 
-    ball = _get_conf_ball(full_size, output_size, sigma*scale)
+    ball = _get_conf_ball(output_size, sigma*scale)
 
     num_frames = len(frames_inst_points)
     confmaps = np.zeros((num_frames, output_size[0], output_size[1], node_count),
@@ -188,8 +186,8 @@ def generate_confmaps_from_points(frames_inst_points,
         for inst_points in points_arrays:
             for node_idx in range(node_count):
                 if not np.isnan(np.sum(inst_points[node_idx])):
-                    x = inst_points[node_idx][0]
-                    y = inst_points[node_idx][1]
+                    x = inst_points[node_idx][0] * scale
+                    y = inst_points[node_idx][1] * scale
                     _raster_ball(arr=confmaps[frame_idx], ball=ball, c=node_idx, x=x, y=y)
 
     return confmaps
@@ -227,21 +225,21 @@ def generate_pafs_from_points(frames_inst_points, skeleton, shape,
             for c, (src_node, dst_node) in enumerate(skeleton.edges):
                 src_idx = skeleton.node_to_index(src_node.name)
                 dst_idx = skeleton.node_to_index(dst_node.name)
-                x0 = inst_points[src_idx][0]
-                y0 = inst_points[src_idx][1]
-                x1 = inst_points[dst_idx][0]
-                y1 = inst_points[dst_idx][1]
+                x0 = inst_points[src_idx][0] * scale
+                y0 = inst_points[src_idx][1] * scale
+                x1 = inst_points[dst_idx][0] * scale
+                y1 = inst_points[dst_idx][1] * scale
                 _raster_pafs(pafs[frame_idx], c * 2, x0, y0, x1, y1, sigma)
 
     return pafs
 
-def _get_conf_ball(full_size, output_size, sigma):
+def _get_conf_ball(output_size, sigma):
     # Pre-allocate coordinate grid
-    xv = np.linspace(0, full_size[1] - 1, output_size[1], dtype="float32")
-    yv = np.linspace(0, full_size[0] - 1, output_size[0], dtype="float32")
+    xv = np.linspace(0, output_size[1] - 1, output_size[1], dtype="float32")
+    yv = np.linspace(0, output_size[0] - 1, output_size[0], dtype="float32")
     XX, YY = np.meshgrid(xv, yv)
 
-    x, y = full_size[1]//2, full_size[0]//2
+    x, y = output_size[1]//2, output_size[0]//2
     ball_full = np.exp(-((YY - y) ** 2 + (XX - x) ** 2) / (2 * sigma ** 2))
     window_size = int(sigma*4)
     ball_window = ball_full[y-window_size:y+window_size, x-window_size:x+window_size]
@@ -538,6 +536,72 @@ def _translate_points_array(points_array, x, y):
     if len(points_array) == 0: return points_array
     return points_array - np.asarray([x,y])
 
+def merge_boxes(box_a, box_b):
+    """Return a box that contains both boxes."""
+
+    a_x1, a_y1, a_x2, a_y2 = box_a
+    b_x1, b_y1, b_x2, b_y2 = box_b
+
+    c_x1, c_y1 = min(a_x1, b_x1), min(a_y1, b_y1)
+    c_x2, c_y2 = max(a_x2, b_x2), max(a_y2, b_y2)
+
+    return (c_x1, c_y1, c_x2, c_y2)
+
+def merge_boxes_with_overlap(boxes):
+    """Return a list of boxes after merging any overlapping boxes."""
+
+    if len(boxes) < 2: return boxes
+
+    first_box = boxes[0]
+    other_boxes = boxes[1:]
+
+    keep_boxes = []
+
+    # Check first box against each of the other boxes
+    for box in other_boxes:
+        if box_overlap_area(first_box, box) > 0:
+            first_box = merge_boxes(first_box, box)
+        else:
+            keep_boxes.append(box)
+
+    # Now filter the other boxes for overlap amongst themselves
+    other_boxes = merge_boxes_with_overlap(keep_boxes)
+
+    return [first_box] + other_boxes
+
+def merge_boxes_with_overlap_and_padding(boxes, pad_factor_box, within):
+    """
+    Returns a list of boxes after merging any overlapping boxes
+    and padding each box to a size multiple of pad_factor_box.
+    """
+
+    # Pad then merge
+    padded_boxes = [pad_box_to_multiple(box, pad_factor_box, within) for box in boxes]
+    merged_boxes = merge_boxes_with_overlap(padded_boxes)
+
+    # If we merged any boxes, then do this again until we don't merge
+    if len(merged_boxes) == len(boxes):
+        return merged_boxes
+    else:
+        return merge_boxes_with_overlap_and_padding(merged_boxes, pad_factor_box, within)
+
+def pad_box_to_multiple(box, pad_factor_box, within):
+    from math import ceil
+
+    box_h = box[3] - box[1] # difference in y
+    box_w = box[2] - box[0] # difference in x
+
+    pad_h, pad_w = pad_factor_box
+
+    # Find multiple of pad_factor_box that's large enough to hold box
+    multiple_h, multiple_w = ceil(box_h / pad_h), ceil(box_w / pad_w)
+
+    # Maintain aspect ratio
+    multiple = max(multiple_h, multiple_w)
+
+    # Return padded box
+    return pad_rect_to(*box, (pad_h*multiple, pad_w*multiple), within)
+
 def bounding_box_nms(boxes, scores, iou_threshold):
     """
     Suppress bounding boxes which overlap more than iou_threshold.
@@ -685,7 +749,7 @@ def get_random_negative_samples(img_idxs, bbs, img_shape, negative_samples):
         sample_bb = (x, y, x+box_side, y+box_side)
 
         frame_bbs = [bbs[i] for i, frame in enumerate(img_idxs) if frame == sample_img_idx]
-        area_covered = sum(map(lambda bb: _overlap_area(sample_bb, bb), frame_bbs))/(box_side**2)
+        area_covered = sum(map(lambda bb: box_overlap_area(sample_bb, bb), frame_bbs))/(box_side**2)
 
         # append negative sample to lists
         neg_sample_list.append((area_covered, sample_img_idx, sample_bb))
@@ -706,7 +770,7 @@ def _bbs_from_points(points):
 
     return bbs, img_idxs
 
-def _overlap_area(box_a, box_b):
+def box_overlap_area(box_a, box_b):
     # determine the (x, y)-coordinates of the intersection rectangle
     xA = max(box_a[0], box_b[0])
     yA = max(box_a[1], box_b[1])
@@ -779,7 +843,7 @@ def demo_datagen():
     labels.negative_anchors = {labels.videos[0]: [(0, 125, 125), (0, 150, 150)]}
     # labels.labeled_frames = labels.labeled_frames[123:423:10]
 
-    scale = .5
+    scale = 1
 
     imgs, points = generate_training_data(
                         labels = labels,
@@ -806,21 +870,21 @@ def demo_datagen():
     # Centroids
 
     # generate centoid data on full frames before instance cropping
-    centroid_imgs = generate_images(labels, scale=.25)
-    centroid_vid = Video.from_numpy(centroid_imgs * 255)
-    centroid_points = generate_centroid_points(generate_points(labels, scale=.25))
-    centroid_confmaps = generate_confmaps_from_points(centroid_points, None,
-                                (centroid_imgs.shape[1], centroid_imgs.shape[2]),
-                                node_count=1, sigma=5.0)
+    # centroid_imgs = generate_images(labels, scale=.25)
+    # centroid_vid = Video.from_numpy(centroid_imgs * 255)
+    # centroid_points = generate_centroid_points(generate_points(labels, scale=.25))
+    # centroid_confmaps = generate_confmaps_from_points(centroid_points, None,
+    #                             (centroid_imgs.shape[1], centroid_imgs.shape[2]),
+    #                             node_count=1, sigma=5.0)
 
-    demo_confmaps(centroid_confmaps, centroid_vid)
+    # demo_confmaps(centroid_confmaps, centroid_vid)
 
     vid = Video.from_numpy(imgs * 255)
 
     skeleton = labels.skeletons[0]
     img_shape = (imgs.shape[1], imgs.shape[2])
 
-    confmaps = generate_confmaps_from_points(points, skeleton, img_shape, sigma=5.0*scale)
+    confmaps = generate_confmaps_from_points(points, skeleton, img_shape, scale=.5, sigma=5.0*scale)
     print("--confmaps--")
     print(confmaps.shape)
     print(confmaps.dtype)
@@ -828,7 +892,7 @@ def demo_datagen():
 
     demo_confmaps(confmaps, vid)
 
-    pafs = generate_pafs_from_points(points, skeleton, img_shape, sigma=5.0*scale)
+    pafs = generate_pafs_from_points(points, skeleton, img_shape, scale=.5, sigma=5.0*scale)
     print("--pafs--")
     print(pafs.shape)
     print(pafs.dtype)

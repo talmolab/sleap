@@ -659,9 +659,14 @@ def run_active_learning_pipeline(
     win.close()
 
     if not skip_learning:
+        timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
+        inference_output_path = os.path.join(save_dir, f"{timestamp}.inference.json")
+
         # Create Predictor from the results of training
-        predictor = Predictor(sleap_models=training_jobs)
-        predictor.with_tracking = with_tracking
+        predictor = Predictor(sleap_models=training_jobs,
+                                with_tracking=with_tracking,
+                                output_path=inference_output_path,
+                                save_confmaps_pafs=save_confmaps_pafs)
 
     # Run the Predictor for suggested frames
     # We want to predict for suggested frames that don't already have user instances
@@ -678,17 +683,12 @@ def run_active_learning_pipeline(
     for video, frames in frames_to_predict.items():
         if len(frames):
             if not skip_learning:
-                timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
-                inference_output_path = os.path.join(save_dir, f"{timestamp}.inference.json")
-
                 # run predictions for desired frames in this video
                 # video_lfs = predictor.predict(input_video=video, frames=frames, output_path=inference_output_path)
 
                 pool, result = predictor.predict_async(
                                         input_video=video,
-                                        frames=frames,
-                                        output_path=inference_output_path,
-                                        save_confmaps_pafs=save_confmaps_pafs)
+                                        frames=frames)
 
                 while not result.ready():
                     QtWidgets.QApplication.instance().processEvents()
