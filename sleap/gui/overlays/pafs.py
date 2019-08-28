@@ -7,13 +7,13 @@ import math
 from sleap.io.video import Video, HDF5Video
 from sleap.gui.multicheck import MultiCheckWidget
 
-from sleap.gui.overlays.hdf5 import HDF5DataOverlay, h5_colors
+from sleap.gui.overlays.base import DataOverlay, h5_colors
 
-class PafOverlay(HDF5DataOverlay):
+class PafOverlay(DataOverlay):
 
     @classmethod
     def from_h5(cls, filename, input_format="channels_last", **kwargs):
-        return HDF5DataOverlay.from_h5(filename, "/pafs", input_format, overlay_class=MultiQuiverPlot, **kwargs)
+        return DataOverlay.from_h5(filename, "/pafs", input_format, overlay_class=MultiQuiverPlot, **kwargs)
 
 class MultiQuiverPlot(QtWidgets.QGraphicsObject):
     """QtWidgets.QGraphicsObject to display multiple quiver plots in a QtWidgets.QGraphicsView.
@@ -33,11 +33,17 @@ class MultiQuiverPlot(QtWidgets.QGraphicsObject):
     When initialized, creates one child QuiverPlot item for each channel.
     """
 
-    def __init__(self, frame: np.array = None, show: list = None, decimation: int = 9, *args, **kwargs):
+    def __init__(self,
+            frame: np.array = None,
+            show: list = None,
+            decimation: int = 5,
+            scale: float = 1.0,
+            *args, **kwargs):
         super(MultiQuiverPlot, self).__init__(*args, **kwargs)
         self.frame = frame
         self.affinity_field = []
         self.decimation = decimation
+        self.scale = scale
 
         # if data range is outside [-1, 1], assume it's [-255, 255] and scale
         if np.ptp(self.frame) > 4:
@@ -55,6 +61,7 @@ class MultiQuiverPlot(QtWidgets.QGraphicsObject):
                     field_y=self.frame[..., channel*2+1],
                     color=color_map,
                     decimation=self.decimation,
+                    scale=self.scale,
                     parent=self
                     )
                 self.affinity_field.append(aff_field_item)
@@ -82,12 +89,19 @@ class QuiverPlot(QtWidgets.QGraphicsObject):
         None.
     """
 
-    def __init__(self, field_x: np.array = None, field_y: np.array = None, color=[255, 255, 255], decimation=1, *args, **kwargs):
+    def __init__(self,
+            field_x: np.array = None,
+            field_y: np.array = None,
+            color=[255, 255, 255],
+            decimation=1,
+            scale=1,
+            *args, **kwargs):
         super(QuiverPlot, self).__init__(*args, **kwargs)
 
         self.field_x, self.field_y = None, None
         self.color = color
         self.decimation = decimation
+        self.scale = scale
         pen_width = min(4, max(.1, math.log(self.decimation, 20)))
         self.pen = QtGui.QPen(QtGui.QColor(*self.color), pen_width)
         self.points = []
@@ -95,7 +109,11 @@ class QuiverPlot(QtWidgets.QGraphicsObject):
 
         if field_x is not None and field_y is not None:
             self.field_x, self.field_y = field_x, field_y
-            self.rect = QtCore.QRectF(0,0,*self.field_x.shape)
+
+            h, w = self.field_x.shape
+            h, w = int(h/self.scale), int(w/self.scale)
+
+            self.rect = QtCore.QRectF(0, 0, w, h)
 
             self._add_arrows()
 
@@ -103,22 +121,35 @@ class QuiverPlot(QtWidgets.QGraphicsObject):
         points = []
         if self.field_x is not None and self.field_y is not None:
 
+            raw_delta_yx = np.stack((self.field_y,self.field_x),axis=-1)
+
             dim_0 = self.field_x.shape[0]//self.decimation*self.decimation
             dim_1 = self.field_x.shape[1]//self.decimation*self.decimation
-            raw_delta_yx = np.stack((self.field_y,self.field_x),axis=-1)
+
             grid = np.mgrid[0:dim_0:self.decimation, 0:dim_1:self.decimation]
             loc_yx = np.moveaxis(grid,0,-1)
+
+            # Adjust by scaling factor
+            loc_yx = loc_yx * (1/self.scale)
+
             if self.decimation > 1:
                 delta_yx = self._decimate(raw_delta_yx, self.decimation)
+
+                # Shift locations to midpoint of decimation square
                 loc_yx += self.decimation//2
             else:
                 delta_yx = raw_delta_yx
+
+            # Split into x,y matrices
             loc_y, loc_x = loc_yx[...,0], loc_yx[...,1]
             delta_y, delta_x = delta_yx[...,0], delta_yx[...,1]
+
+            # Determine vector endpoint
             x2 = delta_x*self.decimation + loc_x
             y2 = delta_y*self.decimation + loc_y
             line_length = (delta_x**2 + delta_y**2)**.5
 
+            # Determine points for arrow
             arrow_head_size = line_length / 4
 
             u_dx = np.divide(delta_x, line_length, out=np.zeros_like(delta_x), where=line_length!=0)
@@ -129,6 +160,7 @@ class QuiverPlot(QtWidgets.QGraphicsObject):
             p2_x = x2 - u_dx*arrow_head_size + u_dy*arrow_head_size
             p2_y = y2 - u_dy*arrow_head_size - u_dx*arrow_head_size
 
+            # Build list of QPointF objects for faster drawing
             y_x_pairs = itertools.product(
                 range(delta_yx.shape[0]),
                 range(delta_yx.shape[1])

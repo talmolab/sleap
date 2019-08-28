@@ -634,7 +634,7 @@ class Predictor:
 
     def fetch_model(self,
             input_size: tuple,
-            output_types: List[ModelOutputType]) -> keras.Model:
+            output_types: List[ModelOutputType]) -> dict:
         """Loads and returns keras Model with caching."""
 
         key = (input_size, tuple(output_types))

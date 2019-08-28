@@ -813,26 +813,43 @@ class MainWindow(QMainWindow):
         self._show_learning_window("learning")
 
     def visualizeOutputs(self):
-        filters = ["HDF5 output (*.h5 *.hdf5)"]
+        filters = ["Model (*.json)", "HDF5 output (*.h5 *.hdf5)"]
+
+        # Default to opening from models directory from project
         models_dir = None
         if self.filename is not None:
             models_dir = os.path.join(os.path.dirname(self.filename), "models/")
+
+        # Show dialog
         filename, selected_filter = QFileDialog.getOpenFileName(self, dir=models_dir, caption="Import model outputs...", filter=";;".join(filters))
 
         if len(filename) == 0: return
 
-        show_confmaps = True
-        show_pafs = False
+        if selected_filter == filters[0]:
+            # Model as overlay datasource
+            # This will show live inference results
 
-        if show_confmaps:
-            from sleap.gui.overlays.confmaps import ConfmapOverlay
-            confmap_overlay = ConfmapOverlay.from_h5(filename, player=self.player)
-            self.player.changedPlot.connect(lambda parent, idx: confmap_overlay.add_to_scene(None, idx) if show_confmaps else None)
+            from sleap.gui.overlays.base import DataOverlay
+            overlay = DataOverlay.from_model(filename, self.video, player=self.player)
 
-        if show_pafs:
-            from sleap.gui.overlays.pafs import PafOverlay
-            paf_overlay = PafOverlay.from_h5(filename, player=self.player)
-            self.player.changedPlot.connect(lambda parent, idx: paf_overlay.add_to_scene(None, idx) if show_pafs else None)
+            self.overlays["inference"] = overlay
+
+        else:
+            # HDF5 as overlay datasource
+            # This will show saved inference results from previous run
+
+            show_confmaps = True
+            show_pafs = False
+
+            if show_confmaps:
+                from sleap.gui.overlays.confmaps import ConfmapOverlay
+                confmap_overlay = ConfmapOverlay.from_h5(filename, player=self.player)
+                self.player.changedPlot.connect(lambda parent, idx: confmap_overlay.add_to_scene(None, idx))
+
+            if show_pafs:
+                from sleap.gui.overlays.pafs import PafOverlay
+                paf_overlay = PafOverlay.from_h5(filename, player=self.player)
+                self.player.changedPlot.connect(lambda parent, idx: paf_overlay.add_to_scene(None, idx))
 
         self.plotFrame()
 
