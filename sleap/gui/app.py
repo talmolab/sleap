@@ -1251,10 +1251,14 @@ class MainWindow(QMainWindow):
     def saveProject(self):
         if self.filename is not None:
             filename = self.filename
+
             if filename.endswith((".json", ".json.zip")):
                 compress = filename.endswith(".zip")
                 Labels.save_json(labels = self.labels, filename = filename,
                                     compress = compress)
+            elif filename.endswith(".h5"):
+                Labels.save_hdf5(labels = self.labels, filename = filename)
+
             # Mark savepoint in change stack
             self.changestack_savepoint()
             # Redraw. Not sure why, but sometimes we need to do this.
@@ -1284,8 +1288,15 @@ class MainWindow(QMainWindow):
             self.changestack_savepoint()
             # Redraw. Not sure why, but sometimes we need to do this.
             self.plotFrame()
+        elif filename.endswith(".h5"):
+            Labels.save_hdf5(labels = self.labels, filename = filename)
+            self.filename = filename
+            # Mark savepoint in change stack
+            self.changestack_savepoint()
+            # Redraw. Not sure why, but sometimes we need to do this.
+            self.plotFrame()
         else:
-            QMessageBox(text=f"File not saved. Only .json currently implemented.").exec_()
+            QMessageBox(text=f"File not saved. Try saving as json.").exec_()
 
     def closeEvent(self, event):
         if not self.changestack_has_changes():
