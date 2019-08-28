@@ -831,7 +831,8 @@ class MainWindow(QMainWindow):
 
             from sleap.gui.overlays.base import DataOverlay
             overlay = DataOverlay.from_model(filename, self.video, player=self.player)
-            self.player.changedPlot.connect(lambda parent, idx: overlay.add_to_scene(None, idx))
+
+            self.overlays["inference"] = overlay
 
         else:
             # HDF5 as overlay datasource
