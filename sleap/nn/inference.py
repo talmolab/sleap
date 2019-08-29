@@ -137,6 +137,10 @@ class Predictor:
         # anything in OpenCV that is actually multi-threaded but maybe
         # we will down the line.
         cv2.setNumThreads(usable_cpu_count())
+        
+        # Delete the output file if it exists already
+        if os.path.exists(self.output_path):
+            os.unlink(self.output_path)
 
         logger.info(f"Predict is async: {is_async}")
 
@@ -724,8 +728,8 @@ def main():
     parser.add_argument('-o', '--output', type=str, default=None,
                         help='The output filename to use for the predicted data.')
     parser.add_argument('--out_format', choices=['hdf5', 'json'], help='The format to use for'
-                        ' the output file. Either hdf5 or json. hdf5 is the default.',
-                        default='hdf5')
+                    ' the output file. Either hdf5 or json. hdf5 is the default.',
+                    default='hdf5')
     parser.add_argument('--save-confmaps-pafs', dest='save_confmaps_pafs', action='store_const',
                     const=True, default=False,
                         help='Whether to save the confidence maps or pafs')

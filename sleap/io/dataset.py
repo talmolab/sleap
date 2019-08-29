@@ -120,30 +120,35 @@ class Labels(MutableSequence):
                                for skeleton in self.skeletons
                                for node in skeleton.nodes})
 
-        # Keep the tracks we already have
-        tracks = self.tracks
+        # Ditto for tracks, a pattern is emerging here
+        if len(self.tracks) == 0:
 
-        # Add tracks from any Instances or PredictedInstances
-        tracks = tracks + [instance.track
-                           for frame in self.labels
-                           for instance in frame.instances
-                           if instance.track]
+            # Add tracks from any Instances or PredictedInstances
+            tracks = {instance.track
+                       for frame in self.labels
+                       for instance in frame.instances
+                       if instance.track}
 
-        # Add tracks from any PredictedInstance referenced by instance
-        # This fixes things when there's a referenced PredictionInstance
-        # which is no longer in the frame.
-        tracks = tracks + [instance.from_predicted.track
-                           for frame in self.labels
-                           for instance in frame.instances
-                           if instance.from_predicted
-                            and instance.from_predicted.track]
+            # Add tracks from any PredictedInstance referenced by instance
+            # This fixes things when there's a referenced PredictionInstance
+            # which is no longer in the frame.
+            tracks = tracks.union({instance.from_predicted.track
+                                   for frame in self.labels
+                                   for instance in frame.instances
+                                   if instance.from_predicted
+                                     and instance.from_predicted.track})
 
-        # Make sure there are no duplicates
-        tracks = uniquify(tracks)
+            self.tracks = list(tracks)
 
         # Lets sort the tracks by spawned on and then name
-        self.tracks = sorted(list(tracks), key=lambda t:(t.spawned_on, t.name))
+        self.tracks.sort(key=lambda t:(t.spawned_on, t.name))
 
+        self._update_lookup_cache()
+
+        # Create a variable to store a temporary storage directory. When we unzip
+        self.__temp_dir = None
+
+    def _update_lookup_cache(self):
         # Data structures for caching
         self._lf_by_video = dict()
         self._frame_idx_map = dict()
@@ -152,9 +157,6 @@ class Labels(MutableSequence):
             self._lf_by_video[video] = [lf for lf in self.labels if lf.video == video]
             self._frame_idx_map[video] = {lf.frame_idx: lf for lf in self._lf_by_video[video]}
             self._track_occupancy[video] = self._make_track_occupany(video)
-
-        # Create a variable to store a temporary storage directory. When we unzip
-        self.__temp_dir = None
 
     # Below are convenience methods for working with Labels as list.
     # Maybe we should just inherit from list? Maybe this class shouldn't
@@ -1150,14 +1152,19 @@ class Labels(MutableSequence):
                 f.create_dataset("frames", data=frames, maxshape=(None,), dtype=frame_dtype)
 
     @classmethod
-    def load_hdf5(cls, filename: str):
+    def load_hdf5(cls, filename: str, video_callback=None):
 
         with h5.File(filename, 'r') as f:
 
             # Extract the Labels JSON metadata and create Labels object with just
             # this metadata.
-            meta_group = f.require_group('metadata')
-            labels = cls.from_json(meta_group.attrs['json'].tostring().decode())
+            dicts = json_loads(f.require_group('metadata').attrs['json'].tostring().decode())
+
+            # Use the callback if given to handle missing videos
+            if callable(video_callback):
+                video_callback(dicts["videos"])
+
+            labels = cls.from_json(dicts)
 
             frames_dset = f['frames'][:]
             instances_dset = f['instances'][:]
@@ -1197,6 +1204,9 @@ class Labels(MutableSequence):
                       for i, frame in enumerate(frames_dset)]
 
             labels.labeled_frames = frames
+
+            # Do the stuff that should happen after we have labeled frames
+            labels._update_lookup_cache()
 
         return labels
 

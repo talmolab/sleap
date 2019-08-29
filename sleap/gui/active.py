@@ -660,7 +660,7 @@ def run_active_learning_pipeline(
 
     if not skip_learning:
         timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
-        inference_output_path = os.path.join(save_dir, f"{timestamp}.inference.json")
+        inference_output_path = os.path.join(save_dir, f"{timestamp}.inference.h5")
 
         # Create Predictor from the results of training
         predictor = Predictor(sleap_models=training_jobs,
