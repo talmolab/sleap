@@ -32,23 +32,24 @@ class ModelData:
         if self.do_rescale:
             # Scale input image if model trained on scaled images
             inference_transform = DataTransform()
-
             frame_img = inference_transform.scale_to(
                         imgs=frame_img,
                         target_size=self.model.input_shape[1:3])
 
         # Get predictions
         frame_result = self.model.predict(frame_img.astype("float32") / 255)
-
         if self.do_rescale:
             frame_result = inference_transform.invert_scale(frame_result)
+
+        # We just want the single image results
+        frame_result = frame_result[0]
 
         # If max value is below 1, amplify values so max is 1.
         # This allows us to visualize model with small ptp value
         # even though this model may not give us adequate predictions.
         max_val = np.max(frame_result)
         if max_val < 1:
-            frame_result = frame_result[0]/np.max(frame_result)
+            frame_result = frame_result/np.max(frame_result)
 
         # Clip values to ensure that they're within [0, 1]
         frame_result = np.clip(frame_result, 0, 1)
