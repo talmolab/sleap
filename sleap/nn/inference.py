@@ -442,7 +442,9 @@ class Predictor:
                                 input_size = None,
                                 output_types = [ModelOutputType.CONFIDENCE_MAP])
         crop_size = crop_model_package["bounding_box_size"]
-        bb_half = crop_size + self.crop_padding
+        bb_half = (crop_size + self.crop_padding)//2
+
+        logger.info(f"  Centroid crop box size: {bb_half*2}")
 
         all_boxes = dict()
 
@@ -491,6 +493,12 @@ class Predictor:
 
             # We'll make a "subchunk" for each crop size
             for crop_size in all_boxes:
+
+                if crop_size[0] >= 1024:
+                    logger.info(f"  Skipping subchunk for size {crop_size}, would have {len(all_boxes[crop_size])} crops.")
+                    for debug_frame_idx in all_boxes[crop_size].keys():
+                        print(f"    frame {frames_idx[debug_frame_idx]}: {all_boxes[crop_size][debug_frame_idx]}")
+                    continue
 
                 # Make list of all boxes and corresponding img index.
                 subchunk_idxs = []
