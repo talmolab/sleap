@@ -20,6 +20,7 @@ class HDF5Data(HDF5Video):
 class ModelData:
     model: 'keras.Model'
     video: Video
+    do_rescale: bool=False
 
     def __getitem__(self, i):
         """Data data for frame i from predictor."""
@@ -28,11 +29,28 @@ class ModelData:
         # Trim to size that works for model
         frame_img = frame_img[:, :self.video.height//8*8, :self.video.width//8*8, :]
 
+        if self.do_rescale:
+            # Scale input image if model trained on scaled images
+            inference_transform = DataTransform()
+
+            frame_img = inference_transform.scale_to(
+                        imgs=frame_img,
+                        target_size=self.model.input_shape[1:3])
+
+        # Get predictions
         frame_result = self.model.predict(frame_img.astype("float32") / 255)
 
-        # Scale the data values to [0, 1]
-        # This allows us to visualize data with small ptp value
-        frame_result = frame_result[0]/np.max(frame_result)
+        if self.do_rescale:
+            frame_result = inference_transform.invert_scale(frame_result)
+
+        # If max value is below 1, amplify values so max is 1.
+        # This allows us to visualize model with small ptp value
+        # even though this model may not give us adequate predictions.
+        max_val = np.max(frame_result)
+        if max_val < 1:
+            frame_result = frame_result[0]/np.max(frame_result)
+
+        # Clip values to ensure that they're within [0, 1]
         frame_result = np.clip(frame_result, 0, 1)
 
         return frame_result
@@ -94,6 +112,8 @@ class DataOverlay:
         from sleap.nn.loadmodel import load_model, get_model_data
         from sleap.nn.training import TrainingJob
 
+        # Load the trained model
+
         trainingjob = TrainingJob.load_json(filename)
 
         input_size = (video.height//8*8, video.width//8*8, video.channels)
@@ -108,7 +128,16 @@ class DataOverlay:
                     sleap_models={model_output_type:trainingjob},
                     output_types=[model_output_type])
 
-        data_object = ModelData(model, video)
+        # Here we determine if the input should be scaled. If so, then
+        # the output of the model will also be rescaled accordingly.
+
+        do_rescale = model_data["scale"] < 1
+
+        # Construct the ModelData object that runs inference
+
+        data_object = ModelData(model, video, do_rescale=do_rescale)
+
+        # Determine whether to use confmap or paf overlay
 
         from sleap.gui.overlays.confmaps import ConfMapsPlot
         from sleap.gui.overlays.pafs import MultiQuiverPlot
@@ -117,6 +146,12 @@ class DataOverlay:
             overlay_class = MultiQuiverPlot
         else:
             overlay_class = ConfMapsPlot
+
+        # We use the transform scale for *multiscale* models
+        # with full-scale input and lower-scale output.
+        # This doesn't require rescaling the input, and the "scale"
+        # will be passed to the overlay object to do its own upscaling
+        # (at least for pafs).
 
         transform = DataTransform(scale=model_data["multiscale"])
 
