@@ -76,6 +76,21 @@ class HDF5Video:
             self.__width_idx = 2
             self.__height_idx = 1
 
+    def matches(self, other):
+        """
+        Check if attributes match.
+
+        Args:
+            other: The instance to compare with.
+
+        Returns:
+            True if attributes match, False otherwise
+        """
+        return self.filename == other.filename and \
+               self.dataset == other.dataset and \
+               self.convert_range == other.convert_range and \
+               self.input_format == other.input_format
+
     # The properties and methods below complete our contract with the
     # higher level Video interface.
 
@@ -158,6 +173,21 @@ class MediaVideo:
         # the first frame of data.
         if self._detect_grayscale is True:
             self.grayscale = bool(np.alltrue(self.__test_frame[..., 0] == self.__test_frame[..., -1]))
+
+    def matches(self, other):
+        """
+        Check if attributes match.
+
+        Args:
+            other: The instance to compare with.
+
+        Returns:
+            True if attributes match, False otherwise
+        """
+        return self.filename == other.filename and \
+               self.grayscale == other.grayscale and \
+               self.bgr == other.bgr
+
 
     @property
     def fps(self):
@@ -245,6 +275,18 @@ class NumpyVideo:
     # The properties and methods below complete our contract with the
     # higher level Video interface.
 
+    def matches(self, other):
+        """
+        Check if attributes match.
+
+        Args:
+            other: The instance to comapare with.
+
+        Returns:
+            True if attributes match, False otherwise
+        """
+        return np.all(self.__data == other.__data)
+
     @property
     def frames(self):
         return self.__data.shape[self.__frame_idx]
@@ -305,6 +347,18 @@ class ImgStoreVideo:
 
     # The properties and methods below complete our contract with the
     # higher level Video interface.
+
+    def matches(self, other):
+        """
+        Check if attributes match.
+
+        Args:
+            other: The instance to comapare with.
+
+        Returns:
+            True if attributes match, False otherwise
+        """
+        return self.filename == other.filename and self.index_by_original == other.index_by_original
 
     @property
     def frames(self):

@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 
 from sleap.skeleton import Skeleton
-from sleap.instance import Instance, Point, LabeledFrame
+from sleap.instance import Instance, Point, LabeledFrame, PredictedInstance
 from sleap.io.video import Video, MediaVideo
 from sleap.io.dataset import Labels, load_labels_json_old
 
@@ -24,22 +24,52 @@ def _check_labels_match(expected_labels, other_labels, format = 'png'):
 
     # Check the top level objects
     for x, y in zip(expected_labels.skeletons, other_labels.skeletons):
-        assert x.matches(y)
+
+        # Inline the skeleton matches check to see if we can get a better
+        # idea of why this test fails non-deterministically. The callstack
+        # doesn't go deeper than the method call in pytest for some reason.
+        # assert x.matches(y). The code below is weird because it is converted
+        # from Skeleton.__eq__.
+        self = x
+        other = y
+
+        # First check names, duh!
+        if other.name != self.name:
+            assert False
+
+        def dict_match(dict1, dict2):
+            return dict1 == dict2
+
+        # Check if the graphs are iso-morphic
+        import networkx as nx
+        is_isomorphic = nx.is_isomorphic(self._graph, other._graph, node_match=dict_match)
+
+        if not is_isomorphic:
+            assert False
+
+        # Now check that the nodes have the same labels and order. They can have
+        # different weights I guess?!
+        for node1, node2 in zip(self._graph.nodes, other._graph.nodes):
+            if node1.name != node2.name:
+                assert False
 
     for x, y in zip(expected_labels.tracks, other_labels.tracks):
         assert x.name == y.name and x.spawned_on == y.spawned_on
 
     # Check that we have the same thing
     for expected_label, label in zip(expected_labels.labels, other_labels.labels):
+
         assert expected_label.frame_idx == label.frame_idx
 
         frame_idx = label.frame_idx
 
+        frame_data = label.video.get_frame(frame_idx)[0:15, 0:15, :]
+        expected_frame_data = expected_label.video.get_frame(frame_idx)[0:15, 0:15, :]
+
         # Compare the first frames of the videos, do it on a small sub-region to
         # make the test reasonable in time.
         if format is 'png':
-            assert np.allclose(expected_label.video.get_frame(frame_idx)[0:15, 0:15, :],
-                    label.video.get_frame(frame_idx)[0:15, 0:15, :])
+            assert np.allclose(frame_data, expected_frame_data)
 
         # Compare the instances
         assert all(i1.matches(i2) for (i1, i2) in zip(expected_label.instances, label.instances))
@@ -47,7 +77,6 @@ def _check_labels_match(expected_labels, other_labels, format = 'png'):
         # This test takes to long, break after 20 or so.
         if frame_idx > 20:
             break
-
 
 
 def test_labels_json(tmpdir, multi_skel_vid_labels):
@@ -236,9 +265,11 @@ def test_instance_access():
     assert len(list(labels.instances(video=dummy_video))) == 20
     assert len(list(labels.instances(video=dummy_video2))) == 30
 
+
 def test_load_labels_mat(mat_labels):
     assert len(mat_labels.nodes) == 6
     assert len(mat_labels) == 43
+
 
 @pytest.mark.parametrize("format", ['png', 'mjpeg/avi'])
 def test_save_labels_with_frame_data(multi_skel_vid_labels, tmpdir, format):
@@ -263,6 +294,54 @@ def test_save_labels_with_frame_data(multi_skel_vid_labels, tmpdir, format):
     loaded_labels = Labels.load_json(f"{filename}.zip")
 
 
-def test_save_labels_hdf5(multi_skel_vid_labels, tmpdir):
-    # FIXME: This is not really implemented yet and needs a real test
-    multi_skel_vid_labels.save_hdf5(filename=os.path.join(tmpdir, 'test.h5'), save_frame_data=False)
+def test_labels_hdf5(multi_skel_vid_labels, tmpdir):
+    labels = multi_skel_vid_labels
+    filename = os.path.join(tmpdir, 'test.h5')
+
+    Labels.save_hdf5(filename=filename, labels=labels)
+
+    loaded_labels = Labels.load_hdf5(filename=filename)
+
+    _check_labels_match(labels, loaded_labels)
+
+
+def test_labels_predicted_hdf5(multi_skel_vid_labels, tmpdir):
+    labels = multi_skel_vid_labels
+    filename = os.path.join(tmpdir, 'test.h5')
+
+    # Lets promote some of these Instances to predicted instances
+    for label in labels:
+        for i, instance in enumerate(label.instances):
+            if i % 2 == 0:
+                label.instances[i] = PredictedInstance.from_instance(instance, 0.3)
+
+    # Lets also add some from_predicted values
+    for label in labels:
+        label.instances[1].from_predicted = label.instances[0]
+
+    Labels.save_hdf5(filename=filename, labels=labels)
+
+    loaded_labels = Labels.load_hdf5(filename=filename)
+
+    _check_labels_match(labels, loaded_labels)
+
+def test_labels_append_hdf5(multi_skel_vid_labels, tmpdir):
+    labels = multi_skel_vid_labels
+    filename = os.path.join(tmpdir, 'test.h5')
+
+    # Save each frame of the Labels dataset one by one in append
+    # mode
+    for label in labels:
+
+        # Just do the first 20 to speed things up
+        if label.frame_idx > 20:
+            break
+
+        Labels.save_hdf5(filename=filename, labels=Labels([label]), append=True)
+
+    # Now load the dataset and make sure we get the same thing we started
+    # with.
+    loaded_labels = Labels.load_hdf5(filename=filename)
+
+    _check_labels_match(labels, loaded_labels)
+

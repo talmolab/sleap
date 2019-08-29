@@ -1,9 +1,11 @@
 from typing import Generator, Sequence, Tuple
 
+
 def batch_count(data, batch_size):
     """Return number of batch_size batches into which data can be divided."""
     from math import ceil
     return ceil(len(data) / batch_size)
+
 
 def batch(data: Sequence, batch_size: int) -> Generator[Tuple[int, int, Sequence], None, None]:
     """Iterate over sequence data in batches.
@@ -22,6 +24,7 @@ def batch(data: Sequence, batch_size: int) -> Generator[Tuple[int, int, Sequence
         i = start//batch_size
         end = min(start + batch_size, total_row_count)
         yield i, start, data[start:end]
+
 
 def save_visual_outputs(output_path: str, data: dict):
     import h5py
@@ -49,3 +52,4 @@ def save_visual_outputs(output_path: str, data: dict):
                     compression="gzip", compression_opts=9)
 
     # logger.info("  Saved visual outputs [%.1fs]" % (time() - t0))
+
