@@ -40,7 +40,8 @@ from sleap.instance import Instance, Point, LabeledFrame, \
     make_instance_cattr, PointArray, PredictedPointArray
 from sleap.rangelist import RangeList
 from sleap.io.video import Video
-from sleap.util import save_dict_to_hdf5
+from sleap.util import uniquify
+
 
 def json_loads(json_str: str):
     try:
@@ -119,15 +120,29 @@ class Labels(MutableSequence):
                                for skeleton in self.skeletons
                                for node in skeleton.nodes})
 
-        # Ditto for tracks, a pattern is emerging here
-        if len(self.tracks) == 0:
-            self.tracks = list({instance.track
-                                for frame in self.labels
-                                for instance in frame.instances
-                                if instance.track})
+        # Keep the tracks we already have
+        tracks = self.tracks
+
+        # Add tracks from any Instances or PredictedInstances
+        tracks = tracks + [instance.track
+                           for frame in self.labels
+                           for instance in frame.instances
+                           if instance.track]
+
+        # Add tracks from any PredictedInstance referenced by instance
+        # This fixes things when there's a referenced PredictionInstance
+        # which is no longer in the frame.
+        tracks = tracks + [instance.from_predicted.track
+                           for frame in self.labels
+                           for instance in frame.instances
+                           if instance.from_predicted
+                            and instance.from_predicted.track]
+
+        # Make sure there are no duplicates
+        tracks = uniquify(tracks)
 
         # Lets sort the tracks by spawned on and then name
-        self.tracks.sort(key=lambda t:(t.spawned_on, t.name))
+        self.tracks = sorted(list(tracks), key=lambda t:(t.spawned_on, t.name))
 
         # Data structures for caching
         self._lf_by_video = dict()
@@ -211,7 +226,7 @@ class Labels(MutableSequence):
         """
         null_result = [LabeledFrame(video=video, frame_idx=frame_idx)] if return_new else []
 
-        if frame_idx:
+        if frame_idx is not None:
             if video not in self._frame_idx_map: return null_result
 
             if type(frame_idx) == range:
@@ -223,6 +238,27 @@ class Labels(MutableSequence):
         else:
             if video not in self._lf_by_video: return null_result
             return self._lf_by_video[video]
+
+    def frames(self, video: Video, from_frame_idx: int = -1, reverse=False):
+        """
+        Iterator over all frames in a video, starting with first frame
+        after specified frame_idx (or first frame in video if none specified).
+        """
+        if video not in self._frame_idx_map: return None
+
+        # Get sorted list of frame indexes for this video
+        frame_idxs = sorted(self._frame_idx_map[video].keys(), reverse=reverse)
+
+        # Find the next frame index after the specified frame
+        next_frame_idx = min(filter(lambda x: x > from_frame_idx, frame_idxs), default=frame_idxs[0])
+        cut_list_idx = frame_idxs.index(next_frame_idx)
+
+        # Shift list of frame indices to start with specified frame
+        frame_idxs = frame_idxs[cut_list_idx:] + frame_idxs[:cut_list_idx]
+
+        # Yield the frames
+        for idx in frame_idxs:
+            yield self._frame_idx_map[video][idx]
 
     def find_first(self, video: Video, frame_idx: int = None) -> LabeledFrame:
         """ Find the first occurrence of a labeled frame for the given video and/or frame index.
@@ -579,6 +615,8 @@ class Labels(MutableSequence):
         if not isinstance(new_frames[0], LabeledFrame): return False
         # copy the labeled frames
         self.labeled_frames.extend(new_frames)
+        # merge labeled frames for the same video/frame idx
+        self.merge_matching_frames()
         # update videos/skeletons/nodes/etc using all the labeled frames now present
         self.__attrs_post_init__()
         return True

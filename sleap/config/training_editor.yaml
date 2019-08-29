@@ -6,8 +6,13 @@ model:
   options: confmaps,pafs,centroids
   default: confmaps
 
-- name: depth
-  label: Depth
+- name: down_blocks
+  label: Down Blocks
+  type: int
+  default: 0
+
+- name: up_blocks
+  label: Up Blocks
   type: int
   default: 0
 

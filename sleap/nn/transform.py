@@ -17,7 +17,7 @@ class DataTransform:
     bounding_boxes: List = attr.ib(default=attr.Factory(list))
     crop_size: Optional[int] = None
     is_cropped: bool = False
-    
+
     def _init_frame_idxs(self, frame_count):
         if len(self.frame_idxs) == 0:
             self.frame_idxs = list(range(frame_count))
@@ -30,31 +30,57 @@ class DataTransform:
             return self._safe_frame_idx(idxs)
         else:
             return [self._safe_frame_idx(idx) for idx in idxs]
-            
+
     def _safe_frame_idx(self, idx: int):
         return self.frame_idxs[idx] if idx < len(self.frame_idxs) else idx
-    
+
     def scale_to(self, imgs, target_size):
         """
         Scale images to a specified (h, w) target size.
         If target size matches current image size, we don't do anything.
-        
+
         Args:
             imgs: ndarray with shape (count, height, width, channels)
             target_size: (h, w) tuple
         Returns:
-            imgs, scaled (second and third dimensions should match target size)
+            images scaled to target size
         """
         img_count, img_h, img_w, img_channels = imgs.shape
         h, w = target_size
 
         self._init_frame_idxs(img_count)
 
+        # update object state (so we can invert)
+        self.scale = self.scale * (h/img_h)
+
+        # return the scaled images
+        return self._scale(imgs, target_size)
+
+    def invert_scale(self, imgs):
+        """
+        Apply inverse of previous rescaling to images.
+
+        Args:
+            imgs: ndarray with shape (count, height, width, channels)
+        Returns:
+            images scaled by inverse of self.scale
+        """
+        # determine target size for inverting scale
+        img_count, img_h, img_w, img_channels = imgs.shape
+        target_size = (img_h * int(1/self.scale), img_w * int(1/self.scale))
+
+        return self.scale_to(imgs, target_size)
+
+    def _scale(self, imgs, target_size):
+        img_count, img_h, img_w, img_channels = imgs.shape
+        h, w = target_size
+
         # Resize the frames to the target_size if not current size
         if (img_h, img_w) != target_size:
 
             # build ndarray for new size
             scaled_imgs = np.zeros((imgs.shape[0], h, w, imgs.shape[3]))
+
             for i in range(imgs.shape[0]):
                 # resize using cv2
                 img = cv2.resize(imgs[i, :, :], (w, h))
@@ -70,10 +96,7 @@ class DataTransform:
                 scaled_imgs[i, ...] = img
         else:
             scaled_imgs = imgs
-        
-        # update object state (so we can invert)
-        self.scale = h/img_h
-        
+
         return scaled_imgs
 
     def centroid_crop(self, imgs: np.ndarray, centroids: list, crop_size: int=0):
@@ -88,10 +111,7 @@ class DataTransform:
         Returns:
             imgs, first dimension will be larger if more than one centroid per frame
         """
-        img_count = imgs.shape[0]
         img_shape = imgs.shape[1], imgs.shape[2]
-
-        self._init_frame_idxs(img_count)
 
         # List of bounding box for every instance, map from list idx -> frame idx
         bbs, idxs = _bbs_from_points(centroids)
@@ -100,11 +120,37 @@ class DataTransform:
         bbs = _pad_bbs(bbs, (crop_size, crop_size), img_shape)
 
         # Crop images
-        imgs = _crop(imgs, idxs, bbs)
+        return self.crop(imgs, bbs, idxs)
 
-        self.bounding_boxes = bbs
+    def crop(self, imgs:np.ndarray, boxes: list, idxs: list) -> np.ndarray:
+        """
+        Crop images to given boxes.
+
+        Updates state of DataTransform object so we can later invert on points.
+
+        Args:
+            imgs: ndarray with shape (count, height, width, channels)
+            boxes: list of crop boxes
+            idxs: list of image index for each crop box
+
+        Returns:
+            imgs, first dimension will be larger if more than one centroid per frame
+        """
+
+        if len(boxes) == 0:
+            raise ValueError("Crop requires a non-empty list of boxes.")
+        if len(imgs) == 0:
+            raise ValueError("Crop requires a non-empty stack of images.")
+
+        self._init_frame_idxs(imgs.shape[0])
+
+        # Crop images
+        imgs = _crop(imgs, idxs, boxes)
+
+        # Store transform state
+        self.bounding_boxes = boxes
         self.frame_idxs = list(map(lambda i: self.frame_idxs[i], idxs))
-        self.crop_size = crop_size
+        self.crop_size = boxes[0][2] - boxes[0][1]
         self.is_cropped = True
 
         return imgs
@@ -112,7 +158,7 @@ class DataTransform:
     def invert(self, idx: int, point_array: np.ndarray) -> np.ndarray:
         """
         Map points in a transformed image back on to the original image.
-        
+
         Args:
             idx: the index of the image (first dimension of transformed imgs)
             point_array: a 2d ndarray with (x, y) row for each point
@@ -125,8 +171,8 @@ class DataTransform:
         if idx < len(self.bounding_boxes):
             # translate point_array using corresponding bounding_box
             bb = self.bounding_boxes[idx]
-        
+
             top_left_point = ((bb[0], bb[1]),) # for (x, y) row vector
             new_point_array += np.array(top_left_point)
-                
+
         return new_point_array

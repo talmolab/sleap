@@ -129,6 +129,7 @@ class Trainer:
     scale: float = 1.0
     sigma: float = 5.0
     instance_crop: bool = False
+    bounding_box_size: int = 0
     min_crop_size: int = 0
     negative_samples: int = 0
 
@@ -221,8 +222,19 @@ class Trainer:
         elif model.output_type == ModelOutputType.CENTROIDS:
             num_outputs_channels = 1
 
-        logger.info(f"Training set: {imgs_train.shape} -> {num_outputs_channels} channels")
-        logger.info(f"Validation set: {imgs_val.shape} -> {num_outputs_channels} channels")
+        # Determine input and output sizes
+
+        # If there are more downsampling layers than upsampling layers,
+        # then the output (confidence maps or part affinity fields) will
+        # be at a different scale than the input (images).
+        up_down_diff = model.backbone.down_blocks - model.backbone.up_blocks
+        output_scale = 1/(2**up_down_diff)
+
+        input_img_size = (imgs_train.shape[1], imgs_train.shape[2])
+        output_img_size = (input_img_size[0]*output_scale, input_img_size[1]*output_scale)
+
+        logger.info(f"Training set: {imgs_train.shape} -> {output_img_size}, {num_outputs_channels} channels")
+        logger.info(f"Validation set: {imgs_val.shape} -> {output_img_size}, {num_outputs_channels} channels")
 
         # Input layer
         img_input = Input((img_height, img_width, img_channels))
@@ -274,18 +286,17 @@ class Trainer:
         # TODO: Add support for multiple skeletons
 
         # Setup data generation
-        img_shape = (imgs_train.shape[1], imgs_train.shape[2])
         if model.output_type == ModelOutputType.CONFIDENCE_MAP:
             def datagen_function(points):
-                return generate_confmaps_from_points(points, skeleton, img_shape,
-                            sigma=self.sigma)
+                return generate_confmaps_from_points(points, skeleton, input_img_size,
+                            sigma=self.sigma, scale=output_scale)
         elif model.output_type == ModelOutputType.PART_AFFINITY_FIELD:
             def datagen_function(points):
-                return generate_pafs_from_points(points, skeleton, img_shape,
-                            sigma=self.sigma)
+                return generate_pafs_from_points(points, skeleton, input_img_size,
+                            sigma=self.sigma, scale=output_scale)
         elif model.output_type == ModelOutputType.CENTROIDS:
             def datagen_function(points):
-                return generate_confmaps_from_points(points, None, img_shape,
+                return generate_confmaps_from_points(points, None, input_img_size,
                             node_count=1, sigma=self.sigma)
         else:
             datagen_function = None
@@ -687,13 +698,18 @@ class ProgressReporterZMQ(keras.callbacks.Callback):
 def main():
     from PySide2 import QtWidgets
 
-    from sleap.nn.architectures.unet import UNet
-    model = Model(output_type=ModelOutputType.CONFIDENCE_MAP,
-                  backbone=UNet(num_filters=16))
+#     from sleap.nn.architectures.unet import UNet
+#     model = Model(output_type=ModelOutputType.CONFIDENCE_MAP,
+#                   backbone=UNet(num_filters=16, depth=3, up_blocks=2))
+
+    from sleap.nn.architectures.leap import LeapCNN
+    model = Model(output_type=ModelOutputType.PART_AFFINITY_FIELD,
+                  backbone=LeapCNN(down_blocks=3, up_blocks=2,
+                    upsampling_layers=True, num_filters=32, interp="bilinear"))
 
     # Setup a Trainer object to train the model above
     trainer = Trainer(val_size=0.1, batch_size=4,
-                      num_epochs=1, steps_per_epoch=5,
+                      num_epochs=10, steps_per_epoch=5,
                       save_best_val=True,
                       save_every_epoch=True)
 
@@ -701,55 +717,24 @@ def main():
     pool, result = trainer.train_async(model=model,
                                   labels=Labels.load_json("tests/data/json_format_v1/centered_pair.json"),
                                   save_dir='test_train/',
-                                  run_name="training_run_1")
-
-    ctx = zmq.Context()
+                                  run_name="training_run_2")
 
     app = QtWidgets.QApplication()
-    loss_viewer = LossViewer(zmq_context=ctx)
-    loss_viewer.resize(600, 400)
-    loss_viewer.show()
+
     app.setQuitOnLastWindowClosed(True)
-    app.processEvents()
 
-    # Controller
-    ctrl = ctx.socket(zmq.PUB)
-    ctrl.connect("tcp://127.0.0.1:9000")
+    win = LossViewer()
+    win.resize(600, 400)
+    win.show()
 
-    # Progress monitoring
-    sub = ctx.socket(zmq.SUB)
-    sub.subscribe("")
-    sub.connect("tcp://127.0.0.1:9001")
-
-    def poll(timeout=10):
-        if sub.poll(timeout, zmq.POLLIN):
-            return jsonpickle.decode(sub.recv_string())
-        return None
-
-    t0 = time()
-
-    epoch = 0
-    while True:
-        msg = poll()
-        if msg is not None:
-            logger.info(msg)
-            if msg["event"] == "train_begin":
-                loss_viewer.set_start_time(time())
-            elif msg["event"] == "epoch_begin":
-                epoch = msg["epoch"]
-            elif msg["event"] == "batch_end":
-                loss_viewer.add_datapoint((epoch * 100) + msg["logs"]["batch"], msg["logs"]["loss"])
-            elif msg["event"] == "train_end":
-                break
-
-        loss_viewer.update_runtime()
+    while not result.ready():
         app.processEvents()
+        result.wait(.01)
 
     print("Get")
     train_job_path = result.get()
 
     # Stop training
-    ctrl.send_string(jsonpickle.encode(dict(command="stop")))
 
     app.closeAllWindows()
 

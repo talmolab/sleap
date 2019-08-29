@@ -86,3 +86,33 @@ def save_dict_to_hdf5(h5file: h5.File, path: str, dic: dict):
             h5file[path + key] = item
         else:
             raise ValueError('Cannot save %s type'%type(item))
+
+def frame_list(frame_str: str):
+
+    # Handle ranges of frames. Must be of the form "1-200"
+    if '-' in frame_str:
+        min_max = frame_str.split('-')
+        min_frame = int(min_max[0])
+        max_frame = int(min_max[1])
+        return list(range(min_frame, max_frame+1))
+
+    return [int(x) for x in frame_str.split(",")] if len(frame_str) else None
+
+
+def uniquify(seq):
+    """
+    Given a list, return unique elements but preserve order.
+
+    Note: This will not work on Python 3.5 or lower since dicts don't
+    preserve order.
+
+    Args:
+        seq: The list to remove duplicates from.
+
+    Returns:
+        The unique elements from the input list extracted in original order.
+    """
+
+    # Raymond Hettinger
+    # https://twitter.com/raymondh/status/944125570534621185
+    return list(dict.fromkeys(seq))
