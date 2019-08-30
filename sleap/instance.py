@@ -382,6 +382,9 @@ class Instance:
 
         # Get rid of the points dict and replace with equivalent point array.
         for node, point in points.items():
+            # Convert PredictedPoint to Point if Instance
+            if isinstance(parray, PointArray) and isinstance(point, PredictedPoint):
+                point = Point(x=point.x, y=point.y, visible=point.visible, complete=point.complete)
             parray[skeleton.node_to_index(node)] = point
 
     def _node_to_index(self, node_name):
