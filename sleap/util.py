@@ -97,3 +97,22 @@ def frame_list(frame_str: str):
         return list(range(min_frame, max_frame+1))
 
     return [int(x) for x in frame_str.split(",")] if len(frame_str) else None
+
+
+def uniquify(seq):
+    """
+    Given a list, return unique elements but preserve order.
+
+    Note: This will not work on Python 3.5 or lower since dicts don't
+    preserve order.
+
+    Args:
+        seq: The list to remove duplicates from.
+
+    Returns:
+        The unique elements from the input list extracted in original order.
+    """
+
+    # Raymond Hettinger
+    # https://twitter.com/raymondh/status/944125570534621185
+    return list(dict.fromkeys(seq))

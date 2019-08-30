@@ -17,6 +17,7 @@ import glob
 import attr
 import cattr
 import json
+import rapidjson
 import shutil
 import tempfile
 import numpy as np
@@ -35,10 +36,38 @@ import pandas as pd
 
 from sleap.skeleton import Skeleton, Node
 from sleap.instance import Instance, Point, LabeledFrame, \
-    Track, PredictedPoint, PredictedInstance
+    Track, PredictedPoint, PredictedInstance, \
+    make_instance_cattr, PointArray, PredictedPointArray
 from sleap.rangelist import RangeList
 from sleap.io.video import Video
-from sleap.util import save_dict_to_hdf5
+from sleap.util import uniquify
+
+
+def json_loads(json_str: str):
+    try:
+        return rapidjson.loads(json_str)
+    except:
+        return json.loads(json_str)
+
+def json_dumps(d: Dict, filename: str = None):
+    """
+    A simple wrapper around the JSON encoder we are using.
+
+    Args:
+        d: The dict to write.
+        f: The filename to write to.
+
+    Returns:
+        None
+    """
+    import codecs
+    encoder = rapidjson
+
+    if filename:
+        with open(filename, 'w') as f:
+            encoder.dump(d, f, ensure_ascii=False)
+    else:
+        return encoder.dumps(d)
 
 """
 The version number to put in the Labels JSON format.
@@ -74,39 +103,65 @@ class Labels(MutableSequence):
 
     def __attrs_post_init__(self):
 
+        # Add any videos/skeletons/nodes/tracks that are in labeled
+        # frames but not in the lists on our object
+        self._update_from_labels()
+
+        # Update caches used to find frames by frame index
+        self._update_lookup_cache()
+
+        # Create a variable to store a temporary storage directory
+        # used when we unzip
+        self.__temp_dir = None
+
+    def _update_from_labels(self, merge=False):
+        """Update top level attributes with data from labeled frames.
+
+        Args:
+            merge: if True, then update even if there's already data
+        """
+
         # Add any videos that are present in the labels but
         # missing from the video list
-        self.videos = list(set(self.videos).union({label.video for label in self.labels}))
+        if merge or len(self.videos) == 0:
+            self.videos = list(set(self.videos).union({label.video for label in self.labels}))
 
         # Ditto for skeletons
-        self.skeletons = list(set(self.skeletons).union({instance.skeleton
-                                                         for label in self.labels
-                                                         for instance in label.instances}))
+        if merge or len(self.skeletons) == 0:
+            self.skeletons = list(set(self.skeletons).union(
+                                {instance.skeleton
+                                   for label in self.labels
+                                   for instance in label.instances}))
 
         # Ditto for nodes
-        self.nodes = list(set(self.nodes).union({node for skeleton in self.skeletons for node in skeleton.nodes}))
+        if merge or len(self.nodes) == 0:
+            self.nodes = list(set(self.nodes).union({node for skeleton in self.skeletons for node in skeleton.nodes}))
 
-        # Keep the tracks we already have
-        tracks = set(self.tracks)
+        # Ditto for tracks, a pattern is emerging here
+        if merge or len(self.tracks) == 0:
+            tracks = set(self.tracks)
 
-        # Add tracks from any Instances or PredictedInstances
-        tracks = tracks.union({instance.track
-                               for frame in self.labels
-                               for instance in frame.instances
-                               if instance.track})
+            # Add tracks from any Instances or PredictedInstances
+            tracks = tracks.union({instance.track
+                       for frame in self.labels
+                       for instance in frame.instances
+                       if instance.track})
 
-        # Add tracks from any PredictedInstance referenced by instance
-        # This fixes things when there's a referenced PredictionInstance
-        # which is no longer in the frame.
-        tracks = tracks.union({instance.from_predicted.track
-                               for frame in self.labels
-                               for instance in frame.instances
-                               if instance.from_predicted
-                                 and instance.from_predicted.track})
+            # Add tracks from any PredictedInstance referenced by instance
+            # This fixes things when there's a referenced PredictionInstance
+            # which is no longer in the frame.
+            tracks = tracks.union({instance.from_predicted.track
+                                   for frame in self.labels
+                                   for instance in frame.instances
+                                   if instance.from_predicted
+                                     and instance.from_predicted.track})
 
-        # Lets sort the tracks by spawned on and then name
-        self.tracks = sorted(list(tracks), key=lambda t:(t.spawned_on, t.name))
+            self.tracks = list(tracks)
 
+        # Sort the tracks by spawned on and then name
+        self.tracks.sort(key=lambda t:(t.spawned_on, t.name))
+
+    def _update_lookup_cache(self):
         # Data structures for caching
         self._lf_by_video = dict()
         self._frame_idx_map = dict()
@@ -115,9 +170,6 @@ class Labels(MutableSequence):
             self._lf_by_video[video] = [lf for lf in self.labels if lf.video == video]
             self._frame_idx_map[video] = {lf.frame_idx: lf for lf in self._lf_by_video[video]}
             self._track_occupancy[video] = self._make_track_occupany(video)
-
-        # Create a variable to store a temporary storage directory. When we unzip
-        self.__temp_dir = None
 
     # Below are convenience methods for working with Labels as list.
     # Maybe we should just inherit from list? Maybe this class shouldn't
@@ -573,15 +625,21 @@ class Labels(MutableSequence):
         """
         # allow either Labels or list of LabeledFrames
         if isinstance(new_frames, Labels): new_frames = new_frames.labeled_frames
+
         # return if this isn't non-empty list of labeled frames
         if not isinstance(new_frames, list) or len(new_frames) == 0: return False
         if not isinstance(new_frames[0], LabeledFrame): return False
+
         # copy the labeled frames
         self.labeled_frames.extend(new_frames)
+
         # merge labeled frames for the same video/frame idx
         self.merge_matching_frames()
-        # update videos/skeletons/nodes/etc using all the labeled frames now present
-        self.__attrs_post_init__()
+
+        # update top level videos/nodes/skeletons/tracks
+        self._update_from_labels(merge=True)
+        self._update_lookup_cache()
+
         return True
 
     def merge_matching_frames(self, video=None):
@@ -599,12 +657,15 @@ class Labels(MutableSequence):
         else:
             self.labeled_frames = LabeledFrame.merge_frames(self.labeled_frames, video=video)
 
-    def to_dict(self):
+    def to_dict(self, skip_labels: bool = False):
         """
         Serialize all labels in the underling list of LabeledFrames to a
         dict structure. This function returns a nested dict structure
         composed entirely of primitive python types. It is used to create
         JSON and HDF5 serialized datasets.
+
+        Args:
+            skip_labels: If True, skip labels serialization and just do the metadata.
 
         Returns:
             A dict containing the followings top level keys:
@@ -617,6 +678,7 @@ class Labels(MutableSequence):
             * suggestions - The suggested frames.
             * negative_anchors - The negative training sample anchors.
         """
+
         # FIXME: Update list of nodes
         # We shouldn't have to do this here, but for some reason we're missing nodes
         # which are in the skeleton but don't have points (in the first instance?).
@@ -626,12 +688,13 @@ class Labels(MutableSequence):
         # of video and skeleton objects present in the labels. We will serialize these
         # as references to the above constructed lists to limit redundant data in the
         # json
-        label_cattr = cattr.Converter()
-        label_cattr.register_unstructure_hook(Skeleton, lambda x: self.skeletons.index(x))
-        label_cattr.register_unstructure_hook(Video, lambda x: self.videos.index(x))
-        label_cattr.register_unstructure_hook(Node, lambda x: self.nodes.index(x))
-        label_cattr.register_unstructure_hook(Track, lambda x: self.tracks.index(x))
+        label_cattr = make_instance_cattr()
+        label_cattr.register_unstructure_hook(Skeleton, lambda x: str(self.skeletons.index(x)))
+        label_cattr.register_unstructure_hook(Video, lambda x: str(self.videos.index(x)))
+        label_cattr.register_unstructure_hook(Node, lambda x: str(self.nodes.index(x)))
+        label_cattr.register_unstructure_hook(Track, lambda x: str(self.tracks.index(x)))
 
+        # Make a converter for the top level skeletons list.
         idx_to_node = {i: self.nodes[i] for i in range(len(self.nodes))}
 
         skeleton_cattr = Skeleton.make_cattr(idx_to_node)
@@ -642,11 +705,13 @@ class Labels(MutableSequence):
             'skeletons': skeleton_cattr.unstructure(self.skeletons),
             'nodes': cattr.unstructure(self.nodes),
             'videos': Video.cattr().unstructure(self.videos),
-            'labels': label_cattr.unstructure(self.labeled_frames),
             'tracks': cattr.unstructure(self.tracks),
             'suggestions': label_cattr.unstructure(self.suggestions),
             'negative_anchors': label_cattr.unstructure(self.negative_anchors)
          }
+
+        if not skip_labels:
+            dicts['labels'] = label_cattr.unstructure(self.labeled_frames)
 
         return dicts
 
@@ -660,7 +725,7 @@ class Labels(MutableSequence):
         """
 
         # Unstructure the data into dicts and dump to JSON.
-        return json.dumps(self.to_dict())
+        return json_dumps(self.to_dict())
 
     @staticmethod
     def save_json(labels: 'Labels', filename: str,
@@ -719,11 +784,8 @@ class Labels(MutableSequence):
                 d = labels.to_dict()
                 d['videos'] = Video.cattr().unstructure(new_videos)
 
-                # We can't call Labels.to_json, so we need to do this here. Not as clean as I
-                # would like.
-                json_str = json.dumps(d)
             else:
-                json_str = labels.to_json()
+                d = labels.to_dict()
 
             if compress or save_frame_data:
 
@@ -732,23 +794,22 @@ class Labels(MutableSequence):
                 filename = re.sub("(\.json)?(\.zip)?$", ".json", filename)
 
                 # Write the json to the tmp directory, we will zip it up with the frame data.
-                with open(os.path.join(tmp_dir, os.path.basename(filename)), 'w') as file:
-                    file.write(json_str)
+                full_out_filename = os.path.join(tmp_dir, os.path.basename(filename))
+                json_dumps(d, full_out_filename)
 
                 # Create the archive
                 shutil.make_archive(base_name=filename, root_dir=tmp_dir, format='zip')
 
             # If the user doesn't want to compress, then just write the json to the filename
             else:
-                with open(filename, 'w') as file:
-                    file.write(json_str)
+                json_dumps(d, filename)
 
     @classmethod
     def from_json(cls, data: Union[str, dict], match_to: Optional['Labels'] = None) -> 'Labels':
 
         # Parse the json string if needed.
-        if data is str:
-            dicts = json.loads(data)
+        if type(data) is str:
+            dicts = json_loads(data)
         else:
             dicts = data
 
@@ -798,41 +859,25 @@ class Labels(MutableSequence):
         else:
             negative_anchors = dict()
 
-        label_cattr = cattr.Converter()
-        label_cattr.register_structure_hook(Skeleton, lambda x,type: skeletons[x])
-        label_cattr.register_structure_hook(Video, lambda x,type: videos[x])
-        label_cattr.register_structure_hook(Node, lambda x,type: x if isinstance(x,Node) else nodes[int(x)])
-        label_cattr.register_structure_hook(Track, lambda x, type: None if x is None else tracks[x])
+        # If there is actual labels data, get it.
+        if 'labels' in dicts:
+            label_cattr = make_instance_cattr()
+            label_cattr.register_structure_hook(Skeleton, lambda x,type: skeletons[int(x)])
+            label_cattr.register_structure_hook(Video, lambda x,type: videos[int(x)])
+            label_cattr.register_structure_hook(Node, lambda x,type: x if isinstance(x,Node) else nodes[int(x)])
+            label_cattr.register_structure_hook(Track, lambda x, type: None if x is None else tracks[int(x)])
 
-        def structure_points(x, type):
-            if 'score' in x.keys():
-                return cattr.structure(x, PredictedPoint)
-            else:
-                return cattr.structure(x, Point)
-
-        label_cattr.register_structure_hook(Union[Point, PredictedPoint], structure_points)
-
-        def structure_instances_list(x, type):
-            inst_list = []
-            for inst_data in x:
-                if 'score' in inst_data.keys():
-                    inst = label_cattr.structure(inst_data, PredictedInstance)
-                else:
-                    inst = label_cattr.structure(inst_data, Instance)
-                inst_list.append(inst)
-            return inst_list
-
-        label_cattr.register_structure_hook(Union[List[Instance], List[PredictedInstance]],
-                                            structure_instances_list)
-        label_cattr.register_structure_hook(ForwardRef('PredictedInstance'), lambda x,type: label_cattr.structure(x, PredictedInstance))
-        labels = label_cattr.structure(dicts['labels'], List[LabeledFrame])
+            labels = label_cattr.structure(dicts['labels'], List[LabeledFrame])
+        else:
+            labels = []
 
         return cls(labeled_frames=labels,
                     videos=videos,
                     skeletons=skeletons,
                     nodes=nodes,
                     suggestions=suggestions,
-                    negative_anchors=negative_anchors)
+                    negative_anchors=negative_anchors,
+                    tracks=tracks)
 
     @classmethod
     def load_json(cls, filename: str,
@@ -885,7 +930,7 @@ class Labels(MutableSequence):
             # We do this to tell apart old JSON data from leap_dev vs the
             # newer format for sLEAP.
             json_str = file.read()
-            dicts = json.loads(json_str)
+            dicts = json_loads(json_str)
 
             # If we have a version number, then it is new sLEAP format
             if "version" in dicts:
@@ -926,12 +971,18 @@ class Labels(MutableSequence):
             else:
                 return load_labels_json_old(data_path=filename, parsed_json=dicts)
 
-    def save_hdf5(self, filename: str, save_frame_data: bool = True):
+    @staticmethod
+    def save_hdf5(labels: 'Labels', filename: str,
+                  append: bool = False,
+                  save_frame_data: bool = False):
         """
         Serialize the labels dataset to an HDF5 file.
 
         Args:
+            labels: The Labels dataset to save
             filename: The file to serialize the dataset to.
+            append: Whether to append these labeled frames to the file or
+            not.
             save_frame_data: Whether to save the image frame data for any
             labeled frame as well. This is useful for uploading the HDF5 for
             model training when video files are to large to move. This will only
@@ -941,45 +992,244 @@ class Labels(MutableSequence):
             None
         """
 
-        # Unstructure this labels dataset to a bunch of dicts, same as we do for
-        # JSON serialization.
-        d = self.to_dict()
+        # FIXME: Need to implement this.
+        if save_frame_data:
+            raise NotImplementedError('Saving frame data is not implemented yet with HDF5 Labels datasets.')
 
         # Delete the file if it exists, we want to start from scratch since
         # h5py truncates the file which seems to not actually delete data
-        # from the file.
-        if os.path.exists(filename):
+        # from the file. Don't if we are appending of course.
+        if os.path.exists(filename) and not append:
             os.unlink(filename)
 
-        with h5.File(filename, 'w') as f:
+        # Serialize all the meta-data to JSON.
+        d = labels.to_dict(skip_labels=True)
 
-            # Save the skeletons
-            #Skeleton.save_all_hdf5(filename=f, skeletons=self.skeletons)
+        with h5.File(filename, 'a') as f:
 
-            # Save the frame data for the videos. For each video, we will
-            # save a dataset that contains only the frame data that has been
-            # labelled.
-            if save_frame_data:
+            # Add all the JSON metadata
+            meta_group = f.require_group('metadata')
 
-                #
-                # # All videos data will be put in the videos group
-                # if 'frames' not in f:
-                #     frames_group = f.create_group('frames', track_order=True)
-                # else:
-                #     frames_group = f.require_group('frames')
-                self.save_frame_data_imgstore()
+            # If we are appending and there already exists JSON metadata
+            if append and 'json' in meta_group.attrs:
 
-                #
-                # dset = f.create_dataset(f"/frames/{v_idx}",
-                #                         data=v.get_frames(frame_idxs),
-                #                         compression="gzip")
-                #
-                # # Write the dataset to JSON string, then store it in a string
-                # # attribute
-                # dset.attrs[f"video_json"] = np.string_(json.dumps(d['videos'][v_idx]))
+                # Otherwise, we need to read the JSON and append to the lists
+                old_labels = Labels.from_json(meta_group.attrs['json'].tostring().decode())
 
-            # Save the instance level data
-            Instance.save_hdf5(file=f, instances=self.all_instances)
+                # A function to join to list but only include new non-dupe entries
+                # from the right hand list.
+                def append_unique(old, new):
+                    unique = []
+                    for x in new:
+                        try:
+                            matches = [y.matches(x) for y in old]
+                        except AttributeError:
+                            matches = [x == y for y in old]
+
+                        # If there were no matches, this is a unique object.
+                        if sum(matches) == 0:
+                            unique.append(x)
+                        else:
+                            # If we have an object that matches, replace the instance with
+                            # the one from the new list. This will will make sure objects
+                            # on the Instances are the same as those in the Labels lists.
+                            for i, match in enumerate(matches):
+                                if match:
+                                    old[i] = x
+
+                    return old + unique
+
+                # Append the lists
+                labels.tracks = append_unique(old_labels.tracks, labels.tracks)
+                labels.skeletons = append_unique(old_labels.skeletons, labels.skeletons)
+                labels.videos = append_unique(old_labels.videos, labels.videos)
+                labels.nodes = append_unique(old_labels.nodes, labels.nodes)
+
+                # FIXME: Do something for suggestions and negative_anchors
+
+                # Get the dict for JSON and save it over the old data
+                d = labels.to_dict(skip_labels=True)
+
+            # Output the dict to JSON
+            meta_group.attrs['json'] = np.string_(json_dumps(d))
+
+            # FIXME: We can probably construct these from attrs fields
+            # We will store Instances and PredcitedInstances in the same
+            # table. instance_type=0 or Instance and instance_type=1 for
+            # PredictedInstance, score will be ignored for Instances.
+            instance_dtype = np.dtype([('instance_id', 'i8'),
+                                       ('instance_type', 'u1'),
+                                       ('frame_id', 'u8'),
+                                       ('skeleton', 'u4'),
+                                       ('track', 'i4'),
+                                       ('from_predicted', 'i8'),
+                                       ('score', 'f4'),
+                                       ('point_id_start', 'u8'),
+                                       ('point_id_end', 'u8')])
+            frame_dtype = np.dtype([('frame_id', 'u8'),
+                                    ('video', 'u4'),
+                                    ('frame_idx', 'u8'),
+                                    ('instance_id_start', 'u8'),
+                                    ('instance_id_end', 'u8')])
+
+            num_instances = len(labels.all_instances)
+            max_skeleton_size = max([len(s.nodes) for s in labels.skeletons])
+
+            # Initialize data arrays for serialization
+            points = np.zeros(num_instances * max_skeleton_size, dtype=Point.dtype)
+            pred_points = np.zeros(num_instances * max_skeleton_size, dtype=PredictedPoint.dtype)
+            instances = np.zeros(num_instances, dtype=instance_dtype)
+            frames = np.zeros(len(labels), dtype=frame_dtype)
+
+            # Pre compute some structures to make serialization faster
+            skeleton_to_idx = {skeleton: labels.skeletons.index(skeleton) for skeleton in labels.skeletons}
+            track_to_idx = {track: labels.tracks.index(track) for track in labels.tracks}
+            track_to_idx[None] = -1
+            video_to_idx = {video: labels.videos.index(video) for video in labels.videos}
+            instance_type_to_idx = {Instance: 0, PredictedInstance: 1}
+
+            # If we are appending, we need look inside to see what frame, instance, and point
+            # ids we need to start from. This gives us offsets to use.
+            if append and 'points' in f:
+                point_id_offset = f['points'].shape[0]
+                pred_point_id_offset = f['pred_points'].shape[0]
+                instance_id_offset = f['instances'][-1]['instance_id'] + 1
+                frame_id_offset = int(f['frames'][-1]['frame_id']) + 1
+            else:
+                point_id_offset = 0
+                pred_point_id_offset = 0
+                instance_id_offset = 0
+                frame_id_offset = 0
+
+            point_id = 0
+            pred_point_id = 0
+            instance_id = 0
+            frame_id = 0
+            all_from_predicted = []
+            from_predicted_id = 0
+            for frame_id, label in enumerate(labels):
+                frames[frame_id] = (frame_id+frame_id_offset, video_to_idx[label.video], label.frame_idx,
+                                    instance_id+instance_id_offset, instance_id+instance_id_offset+len(label.instances))
+                for instance in label.instances:
+                    parray = instance.points_array(copy=False, full=True)
+                    instance_type = type(instance)
+
+                    # Check whether we are working with a PredictedInstance or an Instance.
+                    if instance_type is PredictedInstance:
+                        score = instance.score
+                        pid = pred_point_id + pred_point_id_offset
+                    else:
+                        score = np.nan
+                        pid = point_id + point_id_offset
+
+                        # Keep track of any from_predicted instance links, we will insert the
+                        # correct instance_id in the dataset after we are done.
+                        if instance.from_predicted:
+                            all_from_predicted.append(instance.from_predicted)
+                            from_predicted_id = from_predicted_id + 1
+
+                    # Copy all the data
+                    instances[instance_id] = (instance_id+instance_id_offset,
+                                              instance_type_to_idx[instance_type],
+                                              frame_id,
+                                              skeleton_to_idx[instance.skeleton],
+                                              track_to_idx[instance.track],
+                                              -1,
+                                              score,
+                                              pid, pid + len(parray))
+
+                    # If these are predicted points, copy them to the predicted point array
+                    # otherwise, use the normal point array
+                    if type(parray) is PredictedPointArray:
+                        pred_points[pred_point_id:pred_point_id + len(parray)] = parray
+                        pred_point_id = pred_point_id + len(parray)
+                    else:
+                        points[point_id:point_id + len(parray)] = parray
+                        point_id = point_id + len(parray)
+
+                    instance_id = instance_id + 1
+
+            # We pre-allocated our points array with max possible size considering the max
+            # skeleton size, drop any unused points.
+            points = points[0:point_id]
+            pred_points = pred_points[0:pred_point_id]
+
+            # Create datasets if we need to
+            if append and 'points' in f:
+                f['points'].resize((f["points"].shape[0] + points.shape[0]), axis = 0)
+                f['points'][-points.shape[0]:] = points
+                f['pred_points'].resize((f["pred_points"].shape[0] + pred_points.shape[0]), axis=0)
+                f['pred_points'][-pred_points.shape[0]:] = pred_points
+                f['instances'].resize((f["instances"].shape[0] + instances.shape[0]), axis=0)
+                f['instances'][-instances.shape[0]:] = instances
+                f['frames'].resize((f["frames"].shape[0] + frames.shape[0]), axis=0)
+                f['frames'][-frames.shape[0]:] = frames
+            else:
+                f.create_dataset("points", data=points, maxshape=(None,), dtype=Point.dtype)
+                f.create_dataset("pred_points", data=pred_points, maxshape=(None,), dtype=PredictedPoint.dtype)
+                f.create_dataset("instances", data=instances, maxshape=(None,), dtype=instance_dtype)
+                f.create_dataset("frames", data=frames, maxshape=(None,), dtype=frame_dtype)
+
+    @classmethod
+    def load_hdf5(cls, filename: str,
+            video_callback=None,
+            match_to: Optional['Labels'] = None):
+
+        with h5.File(filename, 'r') as f:
+
+            # Extract the Labels JSON metadata and create Labels object with just
+            # this metadata.
+            dicts = json_loads(f.require_group('metadata').attrs['json'].tostring().decode())
+
+            # Use the callback if given to handle missing videos
+            if callable(video_callback):
+                video_callback(dicts["videos"])
+
+            labels = cls.from_json(dicts, match_to=match_to)
+
+            frames_dset = f['frames'][:]
+            instances_dset = f['instances'][:]
+            points_dset = f['points'][:]
+            pred_points_dset = f['pred_points'][:]
+
+            # Rather than instantiate a bunch of Point\PredictedPoint objects, we will
+            # use inplace numpy recarrays. This will save a lot of time and memory
+            # when reading things in.
+            points = PointArray(buf=points_dset, shape=len(points_dset))
+            pred_points = PredictedPointArray(buf=pred_points_dset, shape=len(pred_points_dset))
+
+            # Extend the tracks list with a None track. We will signify this with a -1 in the
+            # data which will map to last element of tracks
+            tracks = labels.tracks.copy()
+            tracks.extend([None])
+
+            # Create the instances
+            instances = []
+            for i in instances_dset:
+                track = tracks[i['track']]
+                skeleton = labels.skeletons[i['skeleton']]
+
+                if i['instance_type'] == 0: # Instance
+                    instance = Instance(skeleton=skeleton, track=track,
+                                        points=points[i['point_id_start']:i['point_id_end']])
+                else: # PredictedInstance
+                    instance = PredictedInstance(skeleton=skeleton, track=track,
+                                                 points=pred_points[i['point_id_start']:i['point_id_end']],
+                                                 score=i['score'])
+                instances.append(instance)
+
+            # Create the labeled frames
+            frames = [LabeledFrame(video=labels.videos[frame['video']],
+                                   frame_idx=frame['frame_idx'],
+                                   instances=instances[frame['instance_id_start']:frame['instance_id_end']])
+                      for i, frame in enumerate(frames_dset)]
+
+            labels.labeled_frames = frames
+
+            # Do the stuff that should happen after we have labeled frames
+            labels._update_lookup_cache()
+
+        return labels
 
     def save_frame_data_imgstore(self, output_dir: str = './', format: str = 'png'):
         """
@@ -1068,7 +1318,6 @@ class Labels(MutableSequence):
                 x = points_[node_idx][0][i]
                 y = points_[node_idx][1][i]
                 new_inst[node] = Point(x, y)
-            new_inst.drop_nan_points()
             if len(new_inst.points()):
                 new_frame = LabeledFrame(video=vid, frame_idx=i)
                 new_frame.instances = new_inst,
@@ -1266,7 +1515,7 @@ def load_labels_json_old(data_path: str, parsed_json: dict = None,
         A newly constructed Labels object.
     """
     if parsed_json is None:
-        data = json.loads(open(data_path).read())
+        data = json_loads(open(data_path).read())
     else:
         data = parsed_json
 

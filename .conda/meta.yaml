@@ -21,9 +21,9 @@ requirements:
   host:
     - python=3.6
     - attrs
-    - jsonpickle
+    - jsonpickle=1.1
     - networkx
-    - tensorflow-gpu
+    - tensorflow-gpu=1.13
     - keras
     - scikit-learn
     - h5py
@@ -32,15 +32,16 @@ requirements:
     - psutil
     - pyzmq
     - pyyaml
+    - python-rapidjson
     - pip
 
 
   run:
     - python=3.6
     - attrs
-    - jsonpickle
+    - jsonpickle=1.1
     - networkx
-    - tensorflow-gpu
+    - tensorflow-gpu=1.13
     - keras
     - scikit-learn
     - h5py
