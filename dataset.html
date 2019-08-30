@@ -424,12 +424,15 @@ will be included as empty imgstores.</p>
 
 <dl class="method">
 <dt id="sleap.io.dataset.Labels.save_hdf5">
-<code class="sig-name descname">save_hdf5</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em>, <em class="sig-param">save_frame_data: bool = True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.save_hdf5"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.save_hdf5" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">save_hdf5</code><span class="sig-paren">(</span><em class="sig-param">labels: sleap.io.dataset.Labels</em>, <em class="sig-param">filename: str</em>, <em class="sig-param">append: bool = False</em>, <em class="sig-param">save_frame_data: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.save_hdf5"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.save_hdf5" title="Permalink to this definition">¶</a></dt>
 <dd><p>Serialize the labels dataset to an HDF5 file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>labels</strong> – The Labels dataset to save</p></li>
 <li><p><strong>filename</strong> – The file to serialize the dataset to.</p></li>
+<li><p><strong>append</strong> – Whether to append these labeled frames to the file or</p></li>
+<li><p><strong>not.</strong> – </p></li>
 <li><p><strong>save_frame_data</strong> – Whether to save the image frame data for any</p></li>
 <li><p><strong>frame as well. This is useful for uploading the HDF5 for</strong> (<em>labeled</em>) – </p></li>
 <li><p><strong>training when video files are to large to move. This will only</strong> (<em>model</em>) – </p></li>
@@ -491,14 +494,17 @@ on your system. They are excluded from sLEAP because of their GPL license.</p>
 
 <dl class="method">
 <dt id="sleap.io.dataset.Labels.to_dict">
-<code class="sig-name descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.to_dict" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">to_dict</code><span class="sig-paren">(</span><em class="sig-param">skip_labels: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.to_dict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Serialize all labels in the underling list of LabeledFrames to a
 dict structure. This function returns a nested dict structure
 composed entirely of primitive python types. It is used to create
 JSON and HDF5 serialized datasets.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p><ul class="simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>skip_labels</strong> – If True, skip labels serialization and just do the metadata.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
 <li><p>version - The version of the dict/json serialization format.</p></li>
 <li><p>skeletons - The skeletons associated with these underlying instances.</p></li>
 <li><p>nodes - The nodes that the skeletons represent.</p></li>
@@ -510,8 +516,8 @@ JSON and HDF5 serialized datasets.</p>
 </ul>
 </p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>A dict containing the followings top level keys</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>A dict containing the followings top level keys</p>
 </dd>
 </dl>
 </dd></dl>
@@ -528,6 +534,23 @@ JSON structured string.</p>
 </dl>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.io.dataset.json_dumps">
+<code class="sig-prename descclassname">sleap.io.dataset.</code><code class="sig-name descname">json_dumps</code><span class="sig-paren">(</span><em class="sig-param">d: Dict</em>, <em class="sig-param">filename: str = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#json_dumps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.json_dumps" title="Permalink to this definition">¶</a></dt>
+<dd><p>A simple wrapper around the JSON encoder we are using.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>d</strong> – The dict to write.</p></li>
+<li><p><strong>f</strong> – The filename to write to.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">

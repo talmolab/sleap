@@ -229,6 +229,21 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">__width_idx</span> <span class="o">=</span> <span class="mi">2</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__height_idx</span> <span class="o">=</span> <span class="mi">1</span>
 
+<div class="viewcode-block" id="HDF5Video.matches"><a class="viewcode-back" href="../../../video.html#sleap.io.video.HDF5Video.matches">[docs]</a>    <span class="k">def</span> <span class="nf">matches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if attributes match.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            other: The instance to compare with.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            True if attributes match, False otherwise</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">filename</span> <span class="ow">and</span> \
+               <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">dataset</span> <span class="ow">and</span> \
+               <span class="bp">self</span><span class="o">.</span><span class="n">convert_range</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">convert_range</span> <span class="ow">and</span> \
+               <span class="bp">self</span><span class="o">.</span><span class="n">input_format</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">input_format</span></div>
+
     <span class="c1"># The properties and methods below complete our contract with the</span>
     <span class="c1"># higher level Video interface.</span>
 
@@ -311,6 +326,21 @@
         <span class="c1"># the first frame of data.</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_detect_grayscale</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">grayscale</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">alltrue</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__test_frame</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">__test_frame</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+
+<div class="viewcode-block" id="MediaVideo.matches"><a class="viewcode-back" href="../../../video.html#sleap.io.video.MediaVideo.matches">[docs]</a>    <span class="k">def</span> <span class="nf">matches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if attributes match.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            other: The instance to compare with.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            True if attributes match, False otherwise</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">filename</span> <span class="ow">and</span> \
+               <span class="bp">self</span><span class="o">.</span><span class="n">grayscale</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">grayscale</span> <span class="ow">and</span> \
+               <span class="bp">self</span><span class="o">.</span><span class="n">bgr</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">bgr</span></div>
+
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">fps</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -398,6 +428,18 @@
     <span class="c1"># The properties and methods below complete our contract with the</span>
     <span class="c1"># higher level Video interface.</span>
 
+<div class="viewcode-block" id="NumpyVideo.matches"><a class="viewcode-back" href="../../../video.html#sleap.io.video.NumpyVideo.matches">[docs]</a>    <span class="k">def</span> <span class="nf">matches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if attributes match.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            other: The instance to comapare with.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            True if attributes match, False otherwise</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__data</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">__data</span><span class="p">)</span></div>
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">frames</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">__frame_idx</span><span class="p">]</span>
@@ -458,6 +500,18 @@
 
     <span class="c1"># The properties and methods below complete our contract with the</span>
     <span class="c1"># higher level Video interface.</span>
+
+<div class="viewcode-block" id="ImgStoreVideo.matches"><a class="viewcode-back" href="../../../video.html#sleap.io.video.ImgStoreVideo.matches">[docs]</a>    <span class="k">def</span> <span class="nf">matches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if attributes match.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            other: The instance to comapare with.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            True if attributes match, False otherwise</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">filename</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_by_original</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">index_by_original</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">frames</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>

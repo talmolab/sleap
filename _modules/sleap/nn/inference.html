@@ -204,10 +204,8 @@
 <span class="sd">    Pipeline:</span>
 
 <span class="sd">    * Pre-processing to load, crop and scale images</span>
-
 <span class="sd">    * Inference to predict confidence maps and part affinity fields,</span>
 <span class="sd">      and use these to generate PredictedInstances in LabeledFrames</span>
-
 <span class="sd">    * Post-processing to collate data from all frames, track instances</span>
 <span class="sd">      across frames, and save the results</span>
 
@@ -254,6 +252,8 @@
     <span class="n">flow_window</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">15</span>
     <span class="n">crop_iou_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">.</span><span class="mi">9</span>
     <span class="n">single_per_crop</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">crop_padding</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">40</span>
+    <span class="n">crop_growth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">64</span>
 
     <span class="n">output_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">save_confmaps_pafs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
@@ -325,6 +325,10 @@
         <span class="c1"># Initialize tracking</span>
         <span class="n">tracker</span> <span class="o">=</span> <span class="n">FlowShiftTracker</span><span class="p">(</span><span class="n">window</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">flow_window</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
+        <span class="c1"># Delete the output file if it exists already</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="p">)</span>
+
         <span class="c1"># Process chunk-by-chunk!</span>
         <span class="n">t0_start</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
         <span class="n">predicted_frames</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">LabeledFrame</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
@@ -390,7 +394,7 @@
                 <span class="c1"># Scale if target doesn&#39;t match current size</span>
                 <span class="n">mov</span> <span class="o">=</span> <span class="n">transform</span><span class="o">.</span><span class="n">scale_to</span><span class="p">(</span><span class="n">mov_full</span><span class="p">,</span> <span class="n">target_size</span><span class="o">=</span><span class="n">scale_to</span><span class="p">)</span>
 
-                <span class="n">subchunks_to_process</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">mov</span><span class="p">,</span> <span class="n">transform</span><span class="p">))</span>
+                <span class="n">subchunks_to_process</span> <span class="o">=</span> <span class="p">[(</span><span class="n">mov</span><span class="p">,</span> <span class="n">transform</span><span class="p">)]</span>
 
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;  Transformed images [</span><span class="si">%.1f</span><span class="s2">s]&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span><span class="p">))</span>
 
@@ -480,7 +484,10 @@
                     <span class="c1">#  We should save in chunks then combine at the end.</span>
                     <span class="n">labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="p">(</span><span class="n">labeled_frames</span><span class="o">=</span><span class="n">predicted_frames</span><span class="p">)</span>
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                        <span class="n">Labels</span><span class="o">.</span><span class="n">save_json</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="p">,</span> <span class="n">compress</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;json&#39;</span><span class="p">):</span>
+                            <span class="n">Labels</span><span class="o">.</span><span class="n">save_json</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="p">,</span> <span class="n">compress</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">Labels</span><span class="o">.</span><span class="n">save_hdf5</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="p">)</span>
 
                         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;  Saved to: </span><span class="si">%s</span><span class="s2"> [</span><span class="si">%.1f</span><span class="s2">s]&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="p">,</span> <span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span><span class="p">))</span>
 
@@ -554,7 +561,7 @@
 <span class="sd">        which allows us to merge overlapping crops into larger crops.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">full_img_size</span> <span class="o">=</span> <span class="p">(</span><span class="n">imgs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">imgs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">crop_within</span> <span class="o">=</span> <span class="p">(</span><span class="n">imgs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">//</span><span class="mi">8</span><span class="o">*</span><span class="mi">8</span><span class="p">,</span> <span class="n">imgs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">//</span><span class="mi">8</span><span class="o">*</span><span class="mi">8</span><span class="p">)</span>
 
         <span class="c1"># Fetch centroid model (uses cache if already loaded)</span>
 
@@ -593,7 +600,9 @@
                                 <span class="n">input_size</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                                 <span class="n">output_types</span> <span class="o">=</span> <span class="p">[</span><span class="n">ModelOutputType</span><span class="o">.</span><span class="n">CONFIDENCE_MAP</span><span class="p">])</span>
         <span class="n">crop_size</span> <span class="o">=</span> <span class="n">crop_model_package</span><span class="p">[</span><span class="s2">&quot;bounding_box_size&quot;</span><span class="p">]</span>
-        <span class="n">bb_half</span> <span class="o">=</span> <span class="n">crop_size</span><span class="o">//</span><span class="mi">2</span>
+        <span class="n">bb_half</span> <span class="o">=</span> <span class="p">(</span><span class="n">crop_size</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">crop_padding</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;  Centroid crop box size: {bb_half*2}&quot;</span><span class="p">)</span>
 
         <span class="n">all_boxes</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
 
@@ -619,8 +628,8 @@
                 <span class="c1"># Merge overlapping boxes and pad to multiple of crop size</span>
                 <span class="n">merged_boxes</span> <span class="o">=</span> <span class="n">merge_boxes_with_overlap_and_padding</span><span class="p">(</span>
                                 <span class="n">boxes</span><span class="o">=</span><span class="n">boxes</span><span class="p">,</span>
-                                <span class="n">pad_factor_box</span><span class="o">=</span><span class="p">(</span><span class="n">crop_size</span><span class="p">,</span> <span class="n">crop_size</span><span class="p">),</span>
-                                <span class="n">within</span><span class="o">=</span><span class="n">full_img_size</span><span class="p">)</span>
+                                <span class="n">pad_factor_box</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">crop_growth</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">crop_growth</span><span class="p">),</span>
+                                <span class="n">within</span><span class="o">=</span><span class="n">crop_within</span><span class="p">)</span>
 
                 <span class="c1"># Keep track of all boxes, grouped by size and frame idx</span>
                 <span class="k">for</span> <span class="n">box</span> <span class="ow">in</span> <span class="n">merged_boxes</span><span class="p">:</span>
@@ -642,6 +651,12 @@
 
             <span class="c1"># We&#39;ll make a &quot;subchunk&quot; for each crop size</span>
             <span class="k">for</span> <span class="n">crop_size</span> <span class="ow">in</span> <span class="n">all_boxes</span><span class="p">:</span>
+
+                <span class="k">if</span> <span class="n">crop_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">1024</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;  Skipping subchunk for size </span><span class="si">{crop_size}</span><span class="s2">, would have {len(all_boxes[crop_size])} crops.&quot;</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">debug_frame_idx</span> <span class="ow">in</span> <span class="n">all_boxes</span><span class="p">[</span><span class="n">crop_size</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;    frame </span><span class="si">{frames_idx[debug_frame_idx]}</span><span class="s2">: </span><span class="si">{all_boxes[crop_size][debug_frame_idx]}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">continue</span>
 
                 <span class="c1"># Make list of all boxes and corresponding img index.</span>
                 <span class="n">subchunk_idxs</span> <span class="o">=</span> <span class="p">[]</span>
@@ -723,13 +738,15 @@
         <span class="c1"># Find peaks</span>
         <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
 
-        <span class="n">peaks</span><span class="p">,</span> <span class="n">peak_vals</span> <span class="o">=</span> <span class="n">peak_tf_inference</span><span class="p">(</span>
-                            <span class="n">model</span> <span class="o">=</span> <span class="n">conf_model</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">],</span>
-                            <span class="n">data</span> <span class="o">=</span> <span class="n">imgs</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;float32&quot;</span><span class="p">)</span><span class="o">/</span><span class="mi">255</span><span class="p">,</span>
-                            <span class="n">min_thresh</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nms_min_thresh</span><span class="p">,</span>
-                            <span class="n">downsample_factor</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">paf_model</span><span class="p">[</span><span class="s2">&quot;multiscale&quot;</span><span class="p">]),</span>
-                            <span class="n">upsample_factor</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">conf_model</span><span class="p">[</span><span class="s2">&quot;multiscale&quot;</span><span class="p">])</span>
-                            <span class="p">)</span>
+        <span class="n">peaks</span><span class="p">,</span> <span class="n">peak_vals</span><span class="p">,</span> <span class="n">confmaps</span> <span class="o">=</span> \
+                <span class="n">peak_tf_inference</span><span class="p">(</span>
+                    <span class="n">model</span> <span class="o">=</span> <span class="n">conf_model</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">],</span>
+                    <span class="n">data</span> <span class="o">=</span> <span class="n">imgs</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;float32&quot;</span><span class="p">)</span><span class="o">/</span><span class="mi">255</span><span class="p">,</span>
+                    <span class="n">min_thresh</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nms_min_thresh</span><span class="p">,</span>
+                    <span class="n">downsample_factor</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">paf_model</span><span class="p">[</span><span class="s2">&quot;multiscale&quot;</span><span class="p">]),</span>
+                    <span class="n">upsample_factor</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">conf_model</span><span class="p">[</span><span class="s2">&quot;multiscale&quot;</span><span class="p">]),</span>
+                    <span class="n">return_confmaps</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">save_confmaps_pafs</span>
+                    <span class="p">)</span>
 
         <span class="n">transform</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="n">transform</span><span class="o">.</span><span class="n">scale</span> <span class="o">*</span> <span class="n">paf_model</span><span class="p">[</span><span class="s2">&quot;multiscale&quot;</span><span class="p">]</span>
 
@@ -783,7 +800,7 @@
 
 <div class="viewcode-block" id="Predictor.fetch_model"><a class="viewcode-back" href="../../../inference.html#sleap.nn.inference.Predictor.fetch_model">[docs]</a>    <span class="k">def</span> <span class="nf">fetch_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
             <span class="n">input_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">,</span>
-            <span class="n">output_types</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ModelOutputType</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">:</span>
+            <span class="n">output_types</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ModelOutputType</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Loads and returns keras Model with caching.&quot;&quot;&quot;</span>
 
         <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">input_size</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">output_types</span><span class="p">))</span>
@@ -859,18 +876,21 @@
                              <span class="s1">&#39;a range separated by hyphen (e.g. 1-3). (default is entire video)&#39;</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-o&#39;</span><span class="p">,</span> <span class="s1">&#39;--output&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                         <span class="n">help</span><span class="o">=</span><span class="s1">&#39;The output filename to use for the predicted data.&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--out_format&#39;</span><span class="p">,</span> <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;hdf5&#39;</span><span class="p">,</span> <span class="s1">&#39;json&#39;</span><span class="p">],</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;The format to use for&#39;</span>
+                    <span class="s1">&#39; the output file. Either hdf5 or json. hdf5 is the default.&#39;</span><span class="p">,</span>
+                    <span class="n">default</span><span class="o">=</span><span class="s1">&#39;hdf5&#39;</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--save-confmaps-pafs&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s1">&#39;save_confmaps_pafs&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_const&#39;</span><span class="p">,</span>
                     <span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                         <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Whether to save the confidence maps or pafs&#39;</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--less-overlap&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s1">&#39;less_overlap&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_const&#39;</span><span class="p">,</span>
-                    <span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                    <span class="n">help</span><span class="o">=</span><span class="s1">&#39;use fewer crops and include all instances from each crop &#39;</span>
-                    <span class="s1">&#39;(works best if crops are much larger than instance bounding boxes)&#39;</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-v&#39;</span><span class="p">,</span> <span class="s1">&#39;--verbose&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Increase logging output verbosity.&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">)</span>
 
     <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
 
-    <span class="n">output_suffix</span> <span class="o">=</span> <span class="s2">&quot;.predictions.json&quot;</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">out_format</span> <span class="o">==</span> <span class="s1">&#39;json&#39;</span><span class="p">:</span>
+        <span class="n">output_suffix</span> <span class="o">=</span> <span class="s2">&quot;.predictions.json&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">output_suffix</span> <span class="o">=</span> <span class="s2">&quot;.predictions.h5&quot;</span>
+
     <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">frames</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">output_suffix</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;.frames{min(args.frames)}_{max(args.frames)}&quot;</span> <span class="o">+</span> <span class="n">output_suffix</span>
 
@@ -903,11 +923,6 @@
                     <span class="n">output_path</span><span class="o">=</span><span class="n">save_path</span><span class="p">,</span>
                     <span class="n">save_confmaps_pafs</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">save_confmaps_pafs</span><span class="p">,</span>
                     <span class="n">with_tracking</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">with_tracking</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">less_overlap</span><span class="p">:</span>
-        <span class="n">predictor</span><span class="o">.</span><span class="n">crop_iou_threshold</span> <span class="o">=</span> <span class="o">.</span><span class="mi">8</span>
-        <span class="n">predictor</span><span class="o">.</span><span class="n">single_per_crop</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Using &#39;less overlap&#39; mode: crop nms iou .8, multiple instances per crop, instance nms.&quot;</span><span class="p">)</span>
 
     <span class="c1"># Run the inference pipeline</span>
     <span class="k">return</span> <span class="n">predictor</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">input_video</span><span class="o">=</span><span class="n">data_path</span><span class="p">,</span> <span class="n">frames</span><span class="o">=</span><span class="n">frames</span><span class="p">)</span>

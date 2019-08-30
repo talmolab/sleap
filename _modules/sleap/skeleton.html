@@ -208,7 +208,19 @@
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">as_node</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">node</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)</span> <span class="k">else</span> <span class="bp">cls</span><span class="p">(</span><span class="n">node</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">node</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)</span> <span class="k">else</span> <span class="bp">cls</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Node.matches"><a class="viewcode-back" href="../../skeleton.html#sleap.skeleton.Node.matches">[docs]</a>    <span class="k">def</span> <span class="nf">matches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check whether all attributes match between two nodes.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            other: The node to compare to this one.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            True if all attributes match, False otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">other</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">weight</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span></div></div>
 
 
 <div class="viewcode-block" id="Skeleton"><a class="viewcode-back" href="../../skeleton.html#sleap.skeleton.Skeleton">[docs]</a><span class="k">class</span> <span class="nc">Skeleton</span><span class="p">:</span>
@@ -456,17 +468,21 @@
         <span class="c1"># Find all symmetric edges</span>
         <span class="k">return</span> <span class="p">[(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span> <span class="k">for</span> <span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">if</span> <span class="n">attr</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">EdgeType</span><span class="o">.</span><span class="n">SYMMETRY</span><span class="p">]</span>
 
-<div class="viewcode-block" id="Skeleton.node_to_index"><a class="viewcode-back" href="../../skeleton.html#sleap.skeleton.Skeleton.node_to_index">[docs]</a>    <span class="k">def</span> <span class="nf">node_to_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<div class="viewcode-block" id="Skeleton.node_to_index"><a class="viewcode-back" href="../../skeleton.html#sleap.skeleton.Skeleton.node_to_index">[docs]</a>    <span class="k">def</span> <span class="nf">node_to_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Node</span><span class="p">]):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return the index of the node with name node_name.</span>
+<span class="sd">        Return the index of the node, accepts either a node or string name of a Node.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            node_name: The name of the node.</span>
+<span class="sd">            node: The name of the node or the Node object.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The index of the node in the graph.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">node_name</span><span class="p">))</span></div>
+        <span class="n">node_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">node_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">node_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">node</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="Skeleton.add_node"><a class="viewcode-back" href="../../skeleton.html#sleap.skeleton.Skeleton.add_node">[docs]</a>    <span class="k">def</span> <span class="nf">add_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Add a node representing an animal part to the skeleton.</span>

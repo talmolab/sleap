@@ -179,6 +179,20 @@ different things. All edges must specify one or more of the following types.</p>
 <em class="property">class </em><code class="sig-prename descclassname">sleap.skeleton.</code><code class="sig-name descname">Node</code><span class="sig-paren">(</span><em class="sig-param">name: str</em>, <em class="sig-param">weight: float = 1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Node" title="Permalink to this definition">¶</a></dt>
 <dd><p>The class <a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a> represents a potential skeleton node.
 (But note that nodes can exist without being part of a skeleton.)</p>
+<dl class="method">
+<dt id="sleap.skeleton.Node.matches">
+<code class="sig-name descname">matches</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Node.matches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Node.matches" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check whether all attributes match between two nodes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>other</strong> – The node to compare to this one.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if all attributes match, False otherwise.</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -574,11 +588,11 @@ the identities of the <cite>Node</cite> objects in each graph.</p>
 
 <dl class="method">
 <dt id="sleap.skeleton.Skeleton.node_to_index">
-<code class="sig-name descname">node_to_index</code><span class="sig-paren">(</span><em class="sig-param">node_name: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.node_to_index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.node_to_index" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the index of the node with name node_name.</p>
+<code class="sig-name descname">node_to_index</code><span class="sig-paren">(</span><em class="sig-param">node: Union[str, sleap.skeleton.Node]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.node_to_index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.node_to_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the index of the node, accepts either a node or string name of a Node.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>node_name</strong> – The name of the node.</p>
+<dd class="field-odd"><p><strong>node</strong> – The name of the node or the Node object.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>The index of the node in the graph.</p>
