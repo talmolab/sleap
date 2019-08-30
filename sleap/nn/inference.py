@@ -137,10 +137,6 @@ class Predictor:
         # anything in OpenCV that is actually multi-threaded but maybe
         # we will down the line.
         cv2.setNumThreads(usable_cpu_count())
-        
-        # Delete the output file if it exists already
-        if os.path.exists(self.output_path):
-            os.unlink(self.output_path)
 
         logger.info(f"Predict is async: {is_async}")
 
@@ -177,8 +173,8 @@ class Predictor:
         tracker = FlowShiftTracker(window=self.flow_window, verbosity=0)
 
         # Delete the output file if it exists already
-        if os.path.exists(output_path):
-            os.unlink(output_path)
+        if os.path.exists(self.output_path):
+            os.unlink(self.output_path)
 
         # Process chunk-by-chunk!
         t0_start = time()
@@ -335,10 +331,10 @@ class Predictor:
                     #  We should save in chunks then combine at the end.
                     labels = Labels(labeled_frames=predicted_frames)
                     if self.output_path is not None:
-                        if output_path.endswith('json'):
-                            Labels.save_json(labels, filename=output_path, compress=True)
+                        if self.output_path.endswith('json'):
+                            Labels.save_json(labels, filename=self.output_path, compress=True)
                         else:
-                            Labels.save_hdf5(labels, filename=output_path)
+                            Labels.save_hdf5(labels, filename=self.output_path)
 
                         logger.info("  Saved to: %s [%.1fs]" % (self.output_path, time() - t0))
 
@@ -733,10 +729,6 @@ def main():
     parser.add_argument('--save-confmaps-pafs', dest='save_confmaps_pafs', action='store_const',
                     const=True, default=False,
                         help='Whether to save the confidence maps or pafs')
-    parser.add_argument('--less-overlap', dest='less_overlap', action='store_const',
-                    const=True, default=False,
-                    help='use fewer crops and include all instances from each crop '
-                    '(works best if crops are much larger than instance bounding boxes)')
     parser.add_argument('-v', '--verbose', help='Increase logging output verbosity.', action="store_true")
 
     args = parser.parse_args()
@@ -778,11 +770,6 @@ def main():
                     output_path=save_path,
                     save_confmaps_pafs=args.save_confmaps_pafs,
                     with_tracking=args.with_tracking)
-
-    if args.less_overlap:
-        predictor.crop_iou_threshold = .8
-        predictor.single_per_crop = False
-        logger.info("Using 'less overlap' mode: crop nms iou .8, multiple instances per crop, instance nms.")
 
     # Run the inference pipeline
     return predictor.predict(input_video=data_path, frames=frames)
