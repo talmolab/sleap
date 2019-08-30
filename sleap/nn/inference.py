@@ -51,10 +51,8 @@ class Predictor:
     Pipeline:
 
     * Pre-processing to load, crop and scale images
-
     * Inference to predict confidence maps and part affinity fields,
       and use these to generate PredictedInstances in LabeledFrames
-
     * Post-processing to collate data from all frames, track instances
       across frames, and save the results
 
@@ -101,6 +99,8 @@ class Predictor:
     flow_window: int = 15
     crop_iou_threshold: float = .9
     single_per_crop: bool = False
+    crop_padding: int = 40
+    crop_growth: int = 64
 
     output_path: Optional[str] = None
     save_confmaps_pafs: bool = False
@@ -172,6 +172,10 @@ class Predictor:
         # Initialize tracking
         tracker = FlowShiftTracker(window=self.flow_window, verbosity=0)
 
+        # Delete the output file if it exists already
+        if os.path.exists(self.output_path):
+            os.unlink(self.output_path)
+
         # Process chunk-by-chunk!
         t0_start = time()
         predicted_frames: List[LabeledFrame] = []
@@ -237,7 +241,7 @@ class Predictor:
                 # Scale if target doesn't match current size
                 mov = transform.scale_to(mov_full, target_size=scale_to)
 
-                subchunks_to_process.append((mov, transform))
+                subchunks_to_process = [(mov, transform)]
 
             logger.info("  Transformed images [%.1fs]" % (time() - t0))
 
@@ -327,7 +331,10 @@ class Predictor:
                     #  We should save in chunks then combine at the end.
                     labels = Labels(labeled_frames=predicted_frames)
                     if self.output_path is not None:
-                        Labels.save_json(labels, filename=self.output_path, compress=True)
+                        if self.output_path.endswith('json'):
+                            Labels.save_json(labels, filename=self.output_path, compress=True)
+                        else:
+                            Labels.save_hdf5(labels, filename=self.output_path)
 
                         logger.info("  Saved to: %s [%.1fs]" % (self.output_path, time() - t0))
 
@@ -401,7 +408,7 @@ class Predictor:
         which allows us to merge overlapping crops into larger crops.
         """
 
-        full_img_size = (imgs.shape[1], imgs.shape[2])
+        crop_within = (imgs.shape[1]//8*8, imgs.shape[2]//8*8)
 
         # Fetch centroid model (uses cache if already loaded)
 
@@ -440,7 +447,9 @@ class Predictor:
                                 input_size = None,
                                 output_types = [ModelOutputType.CONFIDENCE_MAP])
         crop_size = crop_model_package["bounding_box_size"]
-        bb_half = crop_size//2
+        bb_half = (crop_size + self.crop_padding)//2
+
+        logger.info(f"  Centroid crop box size: {bb_half*2}")
 
         all_boxes = dict()
 
@@ -466,8 +475,8 @@ class Predictor:
                 # Merge overlapping boxes and pad to multiple of crop size
                 merged_boxes = merge_boxes_with_overlap_and_padding(
                                 boxes=boxes,
-                                pad_factor_box=(crop_size, crop_size),
-                                within=full_img_size)
+                                pad_factor_box=(self.crop_growth, self.crop_growth),
+                                within=crop_within)
 
                 # Keep track of all boxes, grouped by size and frame idx
                 for box in merged_boxes:
@@ -489,6 +498,12 @@ class Predictor:
 
             # We'll make a "subchunk" for each crop size
             for crop_size in all_boxes:
+
+                if crop_size[0] >= 1024:
+                    logger.info(f"  Skipping subchunk for size {crop_size}, would have {len(all_boxes[crop_size])} crops.")
+                    for debug_frame_idx in all_boxes[crop_size].keys():
+                        print(f"    frame {frames_idx[debug_frame_idx]}: {all_boxes[crop_size][debug_frame_idx]}")
+                    continue
 
                 # Make list of all boxes and corresponding img index.
                 subchunk_idxs = []
@@ -570,13 +585,15 @@ class Predictor:
         # Find peaks
         t0 = time()
 
-        peaks, peak_vals = peak_tf_inference(
-                            model = conf_model["model"],
-                            data = imgs.astype("float32")/255,
-                            min_thresh=self.nms_min_thresh,
-                            downsample_factor=int(1/paf_model["multiscale"]),
-                            upsample_factor=int(1/conf_model["multiscale"])
-                            )
+        peaks, peak_vals, confmaps = \
+                peak_tf_inference(
+                    model = conf_model["model"],
+                    data = imgs.astype("float32")/255,
+                    min_thresh=self.nms_min_thresh,
+                    downsample_factor=int(1/paf_model["multiscale"]),
+                    upsample_factor=int(1/conf_model["multiscale"]),
+                    return_confmaps=self.save_confmaps_pafs
+                    )
 
         transform.scale = transform.scale * paf_model["multiscale"]
 
@@ -630,7 +647,7 @@ class Predictor:
 
     def fetch_model(self,
             input_size: tuple,
-            output_types: List[ModelOutputType]) -> keras.Model:
+            output_types: List[ModelOutputType]) -> dict:
         """Loads and returns keras Model with caching."""
 
         key = (input_size, tuple(output_types))
@@ -706,18 +723,21 @@ def main():
                              'a range separated by hyphen (e.g. 1-3). (default is entire video)')
     parser.add_argument('-o', '--output', type=str, default=None,
                         help='The output filename to use for the predicted data.')
+    parser.add_argument('--out_format', choices=['hdf5', 'json'], help='The format to use for'
+                    ' the output file. Either hdf5 or json. hdf5 is the default.',
+                    default='hdf5')
     parser.add_argument('--save-confmaps-pafs', dest='save_confmaps_pafs', action='store_const',
                     const=True, default=False,
                         help='Whether to save the confidence maps or pafs')
-    parser.add_argument('--less-overlap', dest='less_overlap', action='store_const',
-                    const=True, default=False,
-                    help='use fewer crops and include all instances from each crop '
-                    '(works best if crops are much larger than instance bounding boxes)')
     parser.add_argument('-v', '--verbose', help='Increase logging output verbosity.', action="store_true")
 
     args = parser.parse_args()
 
-    output_suffix = ".predictions.json"
+    if args.out_format == 'json':
+        output_suffix = ".predictions.json"
+    else:
+        output_suffix = ".predictions.h5"
+
     if args.frames is not None:
         output_suffix = f".frames{min(args.frames)}_{max(args.frames)}" + output_suffix
 
@@ -750,11 +770,6 @@ def main():
                     output_path=save_path,
                     save_confmaps_pafs=args.save_confmaps_pafs,
                     with_tracking=args.with_tracking)
-
-    if args.less_overlap:
-        predictor.crop_iou_threshold = .8
-        predictor.single_per_crop = False
-        logger.info("Using 'less overlap' mode: crop nms iou .8, multiple instances per crop, instance nms.")
 
     # Run the inference pipeline
     return predictor.predict(input_video=data_path, frames=frames)

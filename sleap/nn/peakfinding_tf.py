@@ -115,7 +115,8 @@ def peak_tf_inference(model, data,
                   gaussian_size: int = 9,
                   gaussian_sigma: float = 3.0,
                   upsample_factor: int = 1,
-                  downsample_factor: int = 1):
+                  downsample_factor: int = 1,
+                  return_confmaps: bool = False):
 
     sess = keras.backend.get_session()
 
@@ -152,12 +153,16 @@ def peak_tf_inference(model, data,
     if upsample_factor > 1:
         outputs_dict["windows"] = windows
 
+    if return_confmaps:
+        outputs_dict["confmaps"] = confmaps
+
     # Convert dict to list of keys and list of tensors (to evaluate)
     outputs_keys, outputs_vals = list(outputs_dict.keys()), list(outputs_dict.values())
 
     peaks = []
     peak_vals = []
     windows = []
+    confmaps = []
 
     for batch_number, row_offset, data_batch in batch(data, batch_size=2):
 
@@ -179,8 +184,12 @@ def peak_tf_inference(model, data,
         if "windows" in outputs_dict:
             windows.append(outputs_dict["windows"])
 
+        if "confmaps" in outputs_dict:
+            confmaps.append(outputs_dict["confmaps"])
+
     peaks = np.concatenate(peaks)
     peak_vals = np.concatenate(peak_vals)
+    confmaps = np.concatenate(confmaps) if len(confmaps) else None
 
     # Extract frame and node index columns
     frame_node_idx = peaks[:, [0, 3]]
@@ -203,7 +212,7 @@ def peak_tf_inference(model, data,
     # (this matches the format of cpu-based peak-finding)
     peak_list, peak_val_list = split_matrices_by_double_index(frame_node_idx, peak_points, peak_vals) 
 
-    return peak_list, peak_val_list
+    return peak_list, peak_val_list, confmaps
 
 def split_matrices_by_double_index(idxs, *data_list):
     """Convert data matrices to lists of lists expected by other functions."""

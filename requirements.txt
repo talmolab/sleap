@@ -5,6 +5,7 @@ networkx
 tensorflow
 keras
 h5py
+python-rapidjson
 opencv-python==3.4.2.17
 pandas
 psutil

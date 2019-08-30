@@ -7,22 +7,24 @@ import math
 import numpy as np
 import h5py as h5
 import pandas as pd
+import cattr
 
 from typing import Dict, List, Optional, Union, Tuple
 
-from attr import __init__
+from numpy.lib.recfunctions import structured_to_unstructured
 
 from sleap.skeleton import Skeleton, Node
 from sleap.io.video import Video
-from sleap.util import attr_to_dtype
 
 import attr
 
+try:
+    from typing import ForwardRef
+except:
+    from typing import _ForwardRef as ForwardRef
 
-# This can probably be a namedtuple but has been made a full class just in case
-# we need more complicated functionality later.
-@attr.s(auto_attribs=True, slots=True)
-class Point:
+
+class Point(np.record):
     """
     A very simple class to define a labelled point and any metadata associated with it.
 
@@ -30,41 +32,98 @@ class Point:
         x: The horizontal pixel location of the point within the image frame.
         y: The vertical pixel location of the point within the image frame.
         visible: Whether point is visible in the labelled image or not.
+        complete: Has the point been verified by the a user labeler.
     """
 
-    x: float = attr.ib(default=math.nan, converter=float)
-    y: float = attr.ib(default=math.nan, converter=float)
-    visible: bool = True
-    complete: bool = False
+    # Define the dtype from the point class attributes plus some
+    # additional fields we will use to relate point to instances and
+    # nodes.
+    dtype = np.dtype(
+        [('x', 'f8'),
+         ('y', 'f8'),
+         ('visible', '?'),
+         ('complete', '?')])
+
+    def __new__(cls, x: float = math.nan, y: float = math.nan,
+                visible: bool = True, complete: bool = False):
+
+        # HACK: This is a crazy way to instantiate at new Point but I can't figure
+        # out how recarray does it. So I just use it to make matrix of size 1 and
+        # index in to get the np.record/Point
+        # All of this is a giant hack so that Point(x=2,y=3) works like expected.
+        val = PointArray(1)
+        val[0] = (x, y, visible, complete)
+        val = val[0]
+
+        # val.x = x
+        # val.y = y
+        # val.visible = visible
+        # val.complete = complete
+
+        return val
 
     def __str__(self):
         return f"({self.x}, {self.y})"
 
-    @classmethod
-    def dtype(cls):
+    def isnan(self):
         """
-        Get the compound numpy dtype of a point. This is very important for
-        serialization.
+        Are either of the coordinates a NaN value.
 
         Returns:
-            The compound numpy dtype of the point
+            True if x or y is NaN, False otherwise.
         """
-        return attr_to_dtype(cls)
-
-    def isnan(self):
         return math.isnan(self.x) or math.isnan(self.y)
 
 
-@attr.s(auto_attribs=True, slots=True)
+# This turns PredictedPoint into an attrs class. Defines comparators for
+# us and generaly makes it behave better. Crazy that this works!
+Point = attr.s(these={name: attr.ib()
+                               for name in Point.dtype.names},
+                        init=False)(Point)
+
+
 class PredictedPoint(Point):
     """
     A predicted point is an output of the inference procedure. It has all
     the properties of a labeled point with an accompanying score.
 
     Args:
+        x: The horizontal pixel location of the point within the image frame.
+        y: The vertical pixel location of the point within the image frame.
+        visible: Whether point is visible in the labelled image or not.
+        complete: Has the point been verified by the a user labeler.
         score: The point level prediction score.
     """
-    score: float = attr.ib(default=0.0, converter=float)
+
+    # Define the dtype from the point class attributes plus some
+    # additional fields we will use to relate point to instances and
+    # nodes.
+    dtype = np.dtype(
+        [('x', 'f8'),
+         ('y', 'f8'),
+         ('visible', '?'),
+         ('complete', '?'),
+         ('score', 'f8')])
+
+    def __new__(cls, x: float = math.nan, y: float = math.nan,
+                visible: bool = True, complete: bool = False,
+                score: float = 0.0):
+
+        # HACK: This is a crazy way to instantiate at new Point but I can't figure
+        # out how recarray does it. So I just use it to make matrix of size 1 and
+        # index in to get the np.record/Point
+        # All of this is a giant hack so that Point(x=2,y=3) works like expected.
+        val = PredictedPointArray(1)
+        val[0] = (x, y, visible, complete, score)
+        val = val[0]
+
+        # val.x = x
+        # val.y = y
+        # val.visible = visible
+        # val.complete = complete
+        # val.score = score
+
+        return val
 
     @classmethod
     def from_point(cls, point: Point, score: float = 0.0):
@@ -78,7 +137,126 @@ class PredictedPoint(Point):
         Returns:
             A scored point based on the point passed in.
         """
-        return cls(**{**attr.asdict(point), 'score': score})
+        return cls(**{**Point.asdict(point), 'score': score})
+
+
+# This turns PredictedPoint into an attrs class. Defines comparators for
+# us and generaly makes it behave better. Crazy that this works!
+PredictedPoint = attr.s(these={name: attr.ib()
+                               for name in PredictedPoint.dtype.names},
+                        init=False)(PredictedPoint)
+
+
+class PointArray(np.recarray):
+    """
+    PointArray is a sub-class of numpy recarray which stores
+    Point objects as records.
+    """
+
+    _record_type = Point
+
+    def __new__(subtype, shape, buf=None, offset=0, strides=None,
+                formats=None, names=None, titles=None,
+                byteorder=None, aligned=False, order='C'):
+
+        dtype = subtype._record_type.dtype
+
+        if dtype is not None:
+            descr = np.dtype(dtype)
+        else:
+            descr = np.format_parser(formats, names, titles, aligned, byteorder)._descr
+
+        if buf is None:
+            self = np.ndarray.__new__(subtype, shape, (subtype._record_type, descr), order=order)
+        else:
+            self = np.ndarray.__new__(subtype, shape, (subtype._record_type, descr),
+                                      buffer=buf, offset=offset,
+                                      strides=strides, order=order)
+        return self
+
+    def __array_finalize__(self, obj):
+        """
+        Overide __array_finalize__ on recarray because it converting the dtype
+        of any np.void subclass to np.record, we don't want this.
+        """
+        pass
+
+    @classmethod
+    def make_default(cls, size: int):
+        """
+        Construct a point array of specific size where each value in the array
+        is assigned the default values for a Point.
+
+        Args:
+            size: The number of points to allocate.
+
+        Returns:
+            A point array with all elements set to Point()
+        """
+        p = cls(size)
+        p[:] = cls._record_type()
+        return p
+
+    def __getitem__(self, indx):
+        obj = super(np.recarray, self).__getitem__(indx)
+
+        # copy behavior of getattr, except that here
+        # we might also be returning a single element
+        if isinstance(obj, np.ndarray):
+            if obj.dtype.fields:
+                obj = obj.view(type(self))
+                #if issubclass(obj.dtype.type, numpy.void):
+                #    return obj.view(dtype=(self.dtype.type, obj.dtype))
+                return obj
+            else:
+                return obj.view(type=np.ndarray)
+        else:
+            # return a single element
+            return obj
+
+class PredictedPointArray(PointArray):
+    """
+    PredictedPointArray is analogous to PointArray except for predicted
+    points.
+    """
+    _record_type = PredictedPoint
+
+    @classmethod
+    def from_array(cls, a: PointArray):
+        """
+        Convert a PointArray to a PredictedPointArray, use the default
+        attribute values for PredictedPoints.
+
+        Args:
+            a: The array to convert.
+
+        Returns:
+            A PredictedPointArray with the same points as a.
+        """
+        v = cls.make_default(len(a))
+
+        for field in Point.dtype.names:
+            v[field] = a[field]
+
+        return v
+
+    @classmethod
+    def to_array(cls, a: 'PredictedPointArray'):
+        """
+        Convert a PredictedPointArray to a normal PointArray.
+
+        Args:
+            a: The array to convert.
+
+        Returns:
+            The converted array.
+        """
+        v = PointArray.make_default(len(a))
+
+        for field in Point.dtype.names:
+            v[field] = a[field]
+
+        return v
 
 
 @attr.s(slots=True, cmp=False)
@@ -113,23 +291,30 @@ class Track:
 # attributes _frame and _point_array_cache after init. These are private variables
 # that are created in post init so they are not serialized.
 
-@attr.s(auto_attribs=True)
+@attr.s(cmp=False, slots=True)
 class Instance:
     """
     The class :class:`Instance` represents a labelled instance of skeleton
 
     Args:
         skeleton: The skeleton that this instance is associated with.
-        points: A dictionary where keys are skeleton node names and values are _points.
+        points: A dictionary where keys are skeleton node names and values are Point objects. Alternatively,
+        a point array whose length and order matches skeleton.nodes
         track: An optional multi-frame object track associated with this instance.
             This allows individual animals/objects to be tracked across frames.
         from_predicted: The predicted instance (if any) that this was copied from.
+        frame: A back reference to the LabeledFrame that this Instance belongs to.
+        This field is set when Instances are added to LabeledFrame objects.
     """
 
-    skeleton: Skeleton
+    skeleton: Skeleton = attr.ib()
     track: Track = attr.ib(default=None)
     from_predicted: Optional['PredictedInstance'] = attr.ib(default=None)
-    _points: Dict[Node, Union[Point, PredictedPoint]] = attr.ib(default=attr.Factory(dict))
+    _points: PointArray = attr.ib(default=None)
+    frame: Union['LabeledFrame', None] = attr.ib(default=None)
+
+    # The underlying Point array type that this instances point array should be.
+    _point_array_type = PointArray
 
     @from_predicted.validator
     def _validate_from_predicted_(self, attribute, from_predicted):
@@ -147,39 +332,60 @@ class Instance:
         Raises:
             ValueError: If a point is associated with a skeleton node name that doesn't exist.
         """
-        is_string_dict = set(map(type, self._points)) == {str}
-        if is_string_dict:
-            for node_name in points.keys():
-                if not self.skeleton.has_node(node_name):
-                    raise KeyError(f"There is no node named {node_name} in {self.skeleton}")
+        if type(points) is dict:
+            is_string_dict = set(map(type, points)) == {str}
+            if is_string_dict:
+                for node_name in points.keys():
+                    if not self.skeleton.has_node(node_name):
+                        raise KeyError(f"There is no node named {node_name} in {self.skeleton}")
+        elif isinstance(points, PointArray):
+            if len(points) != len(self.skeleton.nodes):
+                raise ValueError("PointArray does not have the same number of rows as skeleton nodes.")
 
     def __attrs_post_init__(self):
 
-        # If the points dict is non-empty, validate it.
-        if self._points:
-            # Check if the dict contains all strings
-            is_string_dict = set(map(type, self._points)) == {str}
+        if not self.skeleton:
+            raise ValueError("No skeleton set for Instance")
 
-            # Check if the dict contains all Node objects
-            is_node_dict = set(map(type, self._points)) == {Node}
+        # If the user did not pass a points list initialize a point array for future
+        # points.
+        if self._points is None:
 
-            # If the user fed in a dict whose keys are strings, these are node names,
-            # convert to node indices so we don't break references to skeleton nodes
-            # if the node name is relabeled.
-            if self._points and is_string_dict:
-                self._points = {self.skeleton.find_node(name): point for name,point in self._points.items()}
+            # Initialize an empty point array that is the size of the skeleton.
+            self._points = self._point_array_type.make_default(len(self.skeleton.nodes))
 
-            if not is_string_dict and not is_node_dict:
-                raise ValueError("points dictionary must be keyed by either strings " +
-                                 "(node names) or Nodes.")
+        else:
 
-        # Create here in post init so it is not serialized by cattrs, wish there was better way
-        # This field keeps track of any labeled frame that this Instance has been associated with.
-        self.frame: Union[LabeledFrame, None] = None
+            if type(self._points) is dict:
+                parray = self._point_array_type.make_default(len(self.skeleton.nodes))
+                Instance._points_dict_to_array(self._points, parray, self.skeleton)
+                self._points = parray
 
-        # A variable used to cache a constructed points_array call to save on time. This is only
-        # used when cached=True is passed to points_array
-        self._points_array_cache: Union[np.array, None] = None
+    @staticmethod
+    def _points_dict_to_array(points, parray, skeleton):
+
+        # Check if the dict contains all strings
+        is_string_dict = set(map(type, points)) == {str}
+
+        # Check if the dict contains all Node objects
+        is_node_dict = set(map(type, points)) == {Node}
+
+        # If the user fed in a dict whose keys are strings, these are node names,
+        # convert to node indices so we don't break references to skeleton nodes
+        # if the node name is relabeled.
+        if points and is_string_dict:
+            points = {skeleton.find_node(name): point for name, point in points.items()}
+
+        if not is_string_dict and not is_node_dict:
+            raise ValueError("points dictionary must be keyed by either strings " +
+                             "(node names) or Nodes.")
+
+        # Get rid of the points dict and replace with equivalent point array.
+        for node, point in points.items():
+            # Convert PredictedPoint to Point if Instance
+            if type(parray) == PointArray and type(point) == PredictedPoint:
+                point = Point(x=point.x, y=point.y, visible=point.visible, complete=point.complete)
+            parray[skeleton.node_to_index(node)] = point
 
     def _node_to_index(self, node_name):
         """
@@ -195,7 +401,7 @@ class Instance:
 
     def __getitem__(self, node):
         """
-        Get the _points associated with particular skeleton node or list of skeleton nodes
+        Get the Points associated with particular skeleton node or list of skeleton nodes
 
         Args:
             node: A single node or list of nodes within the skeleton associated with this instance.
@@ -213,14 +419,10 @@ class Instance:
 
             return ret_list
 
-        if isinstance(node, str):
-            node = self.skeleton.find_node(node)
-        if node in self.skeleton.nodes:
-            if not node in self._points:
-                self._points[node] = Point()
-
+        try:
+            node = self._node_to_index(node)
             return self._points[node]
-        else:
+        except ValueError:
             raise KeyError(f"The underlying skeleton ({self.skeleton}) has no node '{node}'")
 
     def __contains__(self, node):
@@ -233,7 +435,17 @@ class Instance:
         Returns:
             bool: True if the point with the node name specified has a point in this instance.
         """
-        return node in self._points
+
+        if type(node) is Node:
+            node = node.name
+
+        if node not in self.skeleton:
+            return False
+
+        node_idx = self._node_to_index(node)
+
+        # If the points are nan, then they haven't been allocated.
+        return not self._points[node_idx].isnan()
 
     def __setitem__(self, node, value):
 
@@ -250,18 +462,20 @@ class Instance:
             for n, v in zip(node, value):
                 self.__setitem__(n, v)
         else:
-            if isinstance(node,str):
-                node = self.skeleton.find_node(node)
-
-            if node in self.skeleton.nodes:
-                self._points[node] = value
-            else:
+            try:
+                node_idx = self._node_to_index(node)
+                self._points[node_idx] = value
+            except ValueError:
                 raise KeyError(f"The underlying skeleton ({self.skeleton}) has no node '{node}'")
 
     def __delitem__(self, node):
         """ Delete node key and points associated with that node. """
-        # TODO: handle this case somehow?
-        pass
+        try:
+            node_idx = self._node_to_index(node)
+            self._points[node_idx].x = math.nan
+            self._points[node_idx].y = math.nan
+        except ValueError:
+            raise KeyError(f"The underlying skeleton ({self.skeleton}) has no node '{node}'")
 
     def matches(self, other):
         """
@@ -273,6 +487,9 @@ class Instance:
         Returns:
             True if match, False otherwise.
         """
+        if type(self) is not type(other):
+            return False
+
         if list(self.points()) != list(other.points()):
             return False
 
@@ -297,10 +514,10 @@ class Instance:
         Get the list of nodes that have been labelled for this instance.
 
         Returns:
-            A list of nodes that have been labelled for this instance.
+            A tuple of nodes that have been labelled for this instance.
 
         """
-        return tuple(self._points.keys())
+        return tuple(self.skeleton.nodes[i] for i, point in enumerate(self._points) if not point.isnan())
 
     @property
     def nodes_points(self):
@@ -311,42 +528,51 @@ class Instance:
         Returns:
             The instance's (node, point) tuple pairs for all labelled point.
         """
-        names_to_points = {node: point for node, point in self._points.items()}
+        names_to_points = dict(zip(self.nodes, self.points()))
         return names_to_points.items()
 
-    def points(self) -> Tuple:
+    def points(self) -> Tuple[Point]:
         """
         Return the list of labelled points, in order they were labelled.
 
         Returns:
             The list of labelled points, in order they were labelled.
         """
-        return tuple(self._points.values())
+        return tuple(point for point in self._points if not point.isnan())
 
-    def points_array(self, cached=False, invisible_as_nan=False) -> np.ndarray:
+    def points_array(self, copy: bool = True,
+                     invisible_as_nan: bool = False,
+                     full: bool = False) -> np.ndarray:
         """
         Return the instance's points in array form.
 
         Args:
-            cached: If True, use a cached version of the points data if available,
-            create cache if it doesn't exist. If False, recompute and cache each
-            call.
+            copy: If True, the return a copy of the points array as an
+            Nx2 ndarray where first column is x and second column is y.
+            If False, return a view of the underlying recarray.
+            invisible_as_nan: Should invisible points be marked as NaN.
+            full: If True, return the raw underlying recarray with all attributes
+            of the point, if not, return just the x and y coordinate. Assumes
+            copy is False and invisible_as_nan is False.
         Returns:
             A Nx2 array containing x and y coordinates of each point
             as the rows of the array and N is the number of nodes in the skeleton.
             The order of the rows corresponds to the ordering of the skeleton nodes.
             Any skeleton node not defined will have NaNs present.
         """
-        if not cached or (cached and self._points_array_cache is None):
-            pts = np.ndarray((len(self.skeleton.nodes), 2))
-            for i, n in enumerate(self.skeleton.nodes):
-                p = self._points.get(n, Point())
-                pts[i, 0] = p.x if p.visible or not invisible_as_nan else np.nan
-                pts[i, 1] = p.y if p.visible or not invisible_as_nan else np.nan
 
-            self._points_array_cache = pts
+        if full:
+            return self._points
 
-        return self._points_array_cache
+        if not copy and not invisible_as_nan:
+            return self._points[['x', 'y']]
+        else:
+            parray = structured_to_unstructured(self._points[['x', 'y']])
+
+            if invisible_as_nan:
+                parray[self._points.visible is False, :] = math.nan
+
+            return parray
 
     @property
     def centroid(self) -> np.ndarray:
@@ -354,250 +580,6 @@ class Instance:
         points = self.points_array(invisible_as_nan=True)
         centroid = np.nanmedian(points, axis=0)
         return centroid
-
-    @classmethod
-    def to_pandas_df(cls, instances: Union['Instance', List['Instance']], skip_nan:bool = True) -> pd.DataFrame:
-        """
-        Given an instance or list of instances, generate a pandas DataFrame that contains
-        all of the data in normalized form.
-        Args:
-            instances: A single instance or list of instances.
-            skip_nan: Whether to drop points that have NaN values for x or y.
-
-        Returns:
-            A pandas DataFrame that contains all of the isntance's points level data
-            in and normalized form. The columns of the DataFrame are:
-
-            * id - A unique number for each row of the table.
-            * instanceId - a unique id for each unique instance.
-            * skeleton - the name of the skeleton that this point is a part of.
-            * node - A string specifying the name of the skeleton node that this point value corresponds.
-            * videoId - A string specifying the video that this instance is in.
-            * frameIdx - The frame number of the video that this instance occurs on.
-            * visible - Whether the point in this row for this instance is visible.
-            * x - The horizontal pixel position of this node for this instance.
-            * y - The vertical pixel position of this node for this instance.
-        """
-
-        # If this is a single instance, make it a list
-        if type(instances) is Instance:
-            instances = [instances]
-
-        # Lets construct a list of dicts which will be records for the pandas data frame
-        records = []
-
-        # Extract all the data from each instance and its points
-        id = 0
-        for instance_id, instance in enumerate(instances):
-
-            # Get all the attributes from the instance except the points dict or from_predicted
-            irecord = {'id': id, 'instance_id': instance_id,
-                       **attr.asdict(instance, filter=lambda attr, value: attr.name not in ("_points", "from_predicted"))}
-
-            # Convert the skeleton to it's name
-            irecord['skeleton'] = irecord['skeleton'].name
-
-            # FIXME: Do the same for the video
-
-            for (node, point) in instance.nodes_points:
-
-                # Skip any NaN points if the user has asked for it.
-                if skip_nan and (math.isnan(point.x) or math.isnan(point.y)):
-                    continue
-
-                precord = {'node': node.name, **attr.asdict(point)} # FIXME: save other node attributes?
-
-                records.append({**irecord, **precord})
-
-        id = id + 1
-
-        # Construct a pandas data frame from this list of instances
-        if len(records) == 1:
-            df = pd.DataFrame.from_records(records, index=[0])
-        else:
-            df = pd.DataFrame.from_records(records)
-
-        return df
-
-    @classmethod
-    def save_hdf5(cls, file: Union[str, h5.File],
-                  instances: Union['Instance', List['Instance']],
-                  skip_nan: bool = True):
-        """
-        Write the instance point level data to an HDF5 file and group. This
-        function writes the data to an HDF5 group not a dataset. Each
-        column of the data is a dataset. The datasets within the group
-        will be all the same length (the total number of points across all
-        instances). They are as follows:
-
-            * id - A unique number for each row of the table.
-            * instanceId - a unique id for each unique instance.
-            * skeleton - the name of the skeleton that this point is a part of.
-            * node - A string specifying the name of the skeleton node that this point value corresponds.
-            * videoId - A string specifying the video that this instance is in.
-            * frameIdx - The frame number of the video that this instance occurs on.
-            * visible - Whether the point in this row for this instance is visible.
-            * x - The horizontal pixel position of this node for this instance.
-            * y - The vertical pixel position of this node for this instance.
-
-        Args:
-            file: The HDF5 file to save the instance data to.
-            instances: A single instance or list of instances.
-            skip_nan: Whether to drop points that have NaN values for x or y.
-
-        Returns:
-            None
-        """
-
-        # Make it into a list of length one if needed.
-        if type(instances) is Instance:
-            instances = [instances]
-
-        if type(file) is str:
-            with h5.File(file) as _file:
-                Instance._save_hdf5(file=_file, instances=instances, skip_nan=skip_nan)
-        else:
-            Instance._save_hdf5(file=file, instances=instances, skip_nan=skip_nan)
-
-    @classmethod
-    def _save_hdf5(cls, file: h5.File, instances: List['Instance'], skip_nan: bool = True):
-
-        # Get all the unique skeleton objects in this list of instances
-        skeletons = {i.skeleton for i in instances}
-
-        # First, lets save the skeletons to the file
-        Skeleton.save_all_hdf5(file=file, skeletons=list(skeletons))
-
-        # Second, lets get the instance data as a pandas data frame.
-        df = cls.to_pandas_df(instances=instances, skip_nan=skip_nan)
-
-        # If the group doesn't exists, create it, but do so with track order.
-        # If it does exists, leave it be.
-        if 'points' not in file:
-            group = file.create_group('points', track_order=True)
-        else:
-            group = file['points']
-
-        # Write each column as a data frame.
-        for col in df:
-            vals = df[col].values
-            if col in group:
-                del group[col]
-
-            # If the column are objects (should be strings), convert to dtype=S, strings as per
-            # h5py recommendations.
-            if vals.dtype == np.dtype('O'):
-                dtype = h5.special_dtype(vlen=str)
-                group.create_dataset(name=col, shape=vals.shape,
-                                     data=vals,
-                                     dtype=dtype,
-                                     compression="gzip")
-            else:
-                group.create_dataset(name=col, shape=vals.shape,
-                                     data=vals, compression="gzip")
-
-    @classmethod
-    def load_hdf5(cls, file: Union[h5.File, str]) -> List['Instance']:
-        """
-        Load instance data from an HDF5 dataset.
-
-        Args:
-            file: The name of the HDF5 file or the open h5.File object.
-
-        Returns:
-            A list of Instance objects.
-        """
-
-        if type(file) is str:
-            with h5.File(file) as _file:
-                return Instance._load_hdf5(_file)
-        else:
-            return Instance._load_hdf5(file)
-
-    @classmethod
-    def _load_hdf5(self, file: h5.File):
-
-        # First, get all the skeletons in the HDF5 file
-        skeletons = Skeleton.load_all_hdf5(file=file, return_dict=True)
-
-        if 'points' not in file:
-            raise ValueError("No instance data found in dataset.")
-
-        group = file['points']
-
-        # Next get a dict that contains all the datasets for the instance
-        # data.
-        records = {}
-        for key, dset in group.items():
-            records[key] = dset[...]
-
-        # Convert to a data frame.
-        df = pd.DataFrame.from_dict(records)
-
-        # Lets first create all the points, start by grabbing the Point columns, grab only
-        # columns that exist. This is just in case we are reading an older form of the dataset
-        # format and the fields don't line up.
-        point_cols = [f.name for f in attr.fields(Point)]
-        point_cols = list(filter(lambda x: x in group, point_cols))
-
-        # Extract the points columns and convert dicts of keys and values.
-        points = df[[*point_cols]].to_dict('records')
-
-        # Convert to points dicts to points objects
-        points = [Point(**args) for args in points]
-
-        # Instance columns
-        instance_cols = [f.name for f in attr.fields(Instance)]
-        instance_cols = list(filter(lambda x: x in group, instance_cols))
-
-        instance_records = df[[*instance_cols]].to_dict('records')
-
-        # Convert skeletons references to skeleton objects
-        for r in instance_records:
-            r['skeleton'] = skeletons[r['skeleton']]
-
-        instances: List[Instance] = []
-        curr_id = -1 # Start with an invalid instance id so condition is tripped
-        for idx, r in enumerate(instance_records):
-            if curr_id == -1 or curr_id != df['instance_id'].values[idx]:
-                curr_id = df['instance_id'].values[idx]
-                curr_instance = Instance(**r)
-                instances.append(curr_instance)
-
-            # Add the point the instance
-            curr_instance[df['node'].values[idx]] = points[idx]
-
-        return instances
-
-    def drop_nan_points(self):
-        """
-        Drop any points for the instance that are not completely specified.
-
-        Returns:
-            None
-        """
-        is_nan = []
-        for n, p in self._points.items():
-            if p.isnan():
-                is_nan.append(n)
-
-        # Remove them
-        for n in is_nan:
-            self._points.pop(n, None)
-
-    @classmethod
-    def drop_all_nan_points(cls, instances: List['Instance']):
-        """
-        Call drop_nan_points on a list of Instances.
-
-        Args:
-            instances: The list of instances to call drop_nan_points() on.
-
-        Returns:
-            None
-        """
-        for i in instances:
-            i.drop_nan_points()
 
     @property
     def frame_idx(self) -> Union[None, int]:
@@ -614,7 +596,7 @@ class Instance:
             return self.frame.frame_idx
 
 
-@attr.s(auto_attribs=True)
+@attr.s(cmp=False, slots=True)
 class PredictedInstance(Instance):
     """
     A predicted instance is an output of the inference procedure. It is
@@ -625,8 +607,12 @@ class PredictedInstance(Instance):
     """
     score: float = attr.ib(default=0.0, converter=float)
 
+    # The underlying Point array type that this instances point array should be.
+    _point_array_type = PredictedPointArray
+
     def __attrs_post_init__(self):
         super(PredictedInstance, self).__attrs_post_init__()
+
         if self.from_predicted is not None:
             raise ValueError("PredictedInstance should not have from_predicted.")
 
@@ -645,12 +631,90 @@ class PredictedInstance(Instance):
         Returns:
             A PredictedInstance for the given Instance.
         """
-        kw_args = attr.asdict(instance, recurse=False)
-        kw_args['points'] = {key: PredictedPoint.from_point(val)
-                             for key, val in kw_args['_points'].items()}
-        del kw_args['_points']
+        kw_args = attr.asdict(instance, recurse=False, filter=lambda attr, value: attr.name != "_points")
+        kw_args['points'] = PredictedPointArray.from_array(instance._points)
         kw_args['score'] = score
         return cls(**kw_args)
+
+
+def make_instance_cattr():
+    """
+    Create a cattr converter for handling Lists of Instances/PredictedInstances
+
+    Returns:
+        A cattr converter with hooks registered for structuring and unstructuring
+        Instances.
+    """
+
+    converter = cattr.Converter()
+
+    #### UNSTRUCTURE HOOKS
+
+    # JSON dump cant handle NumPy bools so convert them. These are present
+    # in Point/PredictedPoint objects now since they are actually custom numpy dtypes.
+    converter.register_unstructure_hook(np.bool_, bool)
+
+    converter.register_unstructure_hook(PointArray, lambda x: None)
+    converter.register_unstructure_hook(PredictedPointArray, lambda x: None)
+    def unstructure_instance(x: Instance):
+
+        # Unstructure everything but the points array and frame attribute
+        d = {field.name: converter.unstructure(x.__getattribute__(field.name))
+             for field in attr.fields(x.__class__)
+             if field.name not in ['_points', 'frame']}
+
+        # Replace the point array with a dict
+        d['_points'] = converter.unstructure({k: v for k, v in x.nodes_points})
+
+        return d
+
+    converter.register_unstructure_hook(Instance, unstructure_instance)
+    converter.register_unstructure_hook(PredictedInstance, unstructure_instance)
+
+    ## STRUCTURE HOOKS
+
+    def structure_points(x, type):
+        if 'score' in x.keys():
+            return cattr.structure(x, PredictedPoint)
+        else:
+            return cattr.structure(x, Point)
+
+    converter.register_structure_hook(Union[Point, PredictedPoint], structure_points)
+
+    def structure_instances_list(x, type):
+        inst_list = []
+        for inst_data in x:
+            if 'score' in inst_data.keys():
+                inst = converter.structure(inst_data, PredictedInstance)
+            else:
+                inst = converter.structure(inst_data, Instance)
+            inst_list.append(inst)
+
+        return inst_list
+
+    converter.register_structure_hook(Union[List[Instance], List[PredictedInstance]],
+                                            structure_instances_list)
+
+    converter.register_structure_hook(ForwardRef('PredictedInstance'),
+                                      lambda x, type: converter.structure(x, PredictedInstance))
+
+    # We can register structure hooks for point arrays that do nothing
+    # because Instance can have a dict of points passed to it in place of
+    # a PointArray
+    def structure_point_array(x, t):
+        if x:
+            point1 = x[list(x.keys())[0]]
+            if 'score' in point1.keys():
+                return converter.structure(x, Dict[Node, PredictedPoint])
+            else:
+                return converter.structure(x, Dict[Node, Point])
+        else:
+            return {}
+
+    converter.register_structure_hook(PointArray, structure_point_array)
+    converter.register_structure_hook(PredictedPointArray, structure_point_array)
+
+    return converter
 
 
 @attr.s(auto_attribs=True)
@@ -787,3 +851,4 @@ class LabeledFrame:
         labeled_frames = list(filter(lambda lf: len(lf.instances),
                                      labeled_frames))
         return labeled_frames
+

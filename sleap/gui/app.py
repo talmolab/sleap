@@ -514,6 +514,9 @@ class MainWindow(QMainWindow):
             labels = filename
             filename = None
             has_loaded = True
+        elif filename.endswith(".h5"):
+            labels = Labels.load_hdf5(filename, video_callback=gui_video_callback)
+            has_loaded = True
         elif filename.endswith((".json", ".json.zip")):
             labels = Labels.load_json(filename, video_callback=gui_video_callback)
             has_loaded = True
@@ -526,7 +529,7 @@ class MainWindow(QMainWindow):
             has_loaded = True
 
         if do_load:
-            Instance.drop_all_nan_points(labels.all_instances)
+
             self.labels = labels
             self.filename = filename
 
@@ -813,26 +816,43 @@ class MainWindow(QMainWindow):
         self._show_learning_window("learning")
 
     def visualizeOutputs(self):
-        filters = ["HDF5 output (*.h5 *.hdf5)"]
+        filters = ["Model (*.json)", "HDF5 output (*.h5 *.hdf5)"]
+
+        # Default to opening from models directory from project
         models_dir = None
         if self.filename is not None:
             models_dir = os.path.join(os.path.dirname(self.filename), "models/")
+
+        # Show dialog
         filename, selected_filter = QFileDialog.getOpenFileName(self, dir=models_dir, caption="Import model outputs...", filter=";;".join(filters))
 
         if len(filename) == 0: return
 
-        show_confmaps = True
-        show_pafs = False
+        if selected_filter == filters[0]:
+            # Model as overlay datasource
+            # This will show live inference results
 
-        if show_confmaps:
-            from sleap.gui.overlays.confmaps import ConfmapOverlay
-            confmap_overlay = ConfmapOverlay.from_h5(filename, player=self.player)
-            self.player.changedPlot.connect(lambda parent, idx: confmap_overlay.add_to_scene(None, idx) if show_confmaps else None)
+            from sleap.gui.overlays.base import DataOverlay
+            overlay = DataOverlay.from_model(filename, self.video, player=self.player)
 
-        if show_pafs:
-            from sleap.gui.overlays.pafs import PafOverlay
-            paf_overlay = PafOverlay.from_h5(filename, player=self.player)
-            self.player.changedPlot.connect(lambda parent, idx: paf_overlay.add_to_scene(None, idx) if show_pafs else None)
+            self.overlays["inference"] = overlay
+
+        else:
+            # HDF5 as overlay datasource
+            # This will show saved inference results from previous run
+
+            show_confmaps = True
+            show_pafs = False
+
+            if show_confmaps:
+                from sleap.gui.overlays.confmaps import ConfmapOverlay
+                confmap_overlay = ConfmapOverlay.from_h5(filename, player=self.player)
+                self.player.changedPlot.connect(lambda parent, idx: confmap_overlay.add_to_scene(None, idx))
+
+            if show_pafs:
+                from sleap.gui.overlays.pafs import PafOverlay
+                paf_overlay = PafOverlay.from_h5(filename, player=self.player)
+                self.player.changedPlot.connect(lambda parent, idx: paf_overlay.add_to_scene(None, idx))
 
         self.plotFrame()
 
@@ -990,7 +1010,7 @@ class MainWindow(QMainWindow):
         self.player.onPointSelection(click_callback)
 
     def importPredictions(self):
-        filters = ["JSON labels (*.json *.json.zip)", "HDF5 dataset (*.h5 *.hdf5)", "Matlab dataset (*.mat)", "DeepLabCut csv (*.csv)"]
+        filters = ["HDF5 dataset (*.h5 *.hdf5)", "JSON labels (*.json *.json.zip)"]
         filenames, selected_filter = QFileDialog.getOpenFileNames(self, dir=None, caption="Import labeled data...", filter=";;".join(filters))
 
         if len(filenames) == 0: return
@@ -999,16 +1019,28 @@ class MainWindow(QMainWindow):
             gui_video_callback = Labels.make_gui_video_callback(
                                     search_paths=[os.path.dirname(filename)])
 
-            new_labels = Labels.load_json(filename, match_to=self.labels,
-                                            video_callback=gui_video_callback)
+            if filename.endswith((".h5", ".hdf5")):
+                new_labels = Labels.load_hdf5(
+                                filename,
+                                match_to=self.labels,
+                                video_callback=gui_video_callback)
+
+            elif filename.endswith((".json", ".json.zip")):
+                new_labels = Labels.load_json(
+                                filename,
+                                match_to=self.labels,
+                                video_callback=gui_video_callback)
+
             self.labels.extend_from(new_labels)
 
             for vid in new_labels.videos:
                 print(f"Labels imported for {vid.filename}")
                 print(f"  frames labeled: {len(new_labels.find(vid))}")
+
         # update display/ui
         self.plotFrame()
         self.updateSeekbarMarks()
+        self.update_data_views()
         self.changestack_push("new predictions")
 
     def newInstance(self, copy_instance=None):
@@ -1251,10 +1283,14 @@ class MainWindow(QMainWindow):
     def saveProject(self):
         if self.filename is not None:
             filename = self.filename
+
             if filename.endswith((".json", ".json.zip")):
                 compress = filename.endswith(".zip")
                 Labels.save_json(labels = self.labels, filename = filename,
                                     compress = compress)
+            elif filename.endswith(".h5"):
+                Labels.save_hdf5(labels = self.labels, filename = filename)
+
             # Mark savepoint in change stack
             self.changestack_savepoint()
             # Redraw. Not sure why, but sometimes we need to do this.
@@ -1284,8 +1320,15 @@ class MainWindow(QMainWindow):
             self.changestack_savepoint()
             # Redraw. Not sure why, but sometimes we need to do this.
             self.plotFrame()
+        elif filename.endswith(".h5"):
+            Labels.save_hdf5(labels = self.labels, filename = filename)
+            self.filename = filename
+            # Mark savepoint in change stack
+            self.changestack_savepoint()
+            # Redraw. Not sure why, but sometimes we need to do this.
+            self.plotFrame()
         else:
-            QMessageBox(text=f"File not saved. Only .json currently implemented.").exec_()
+            QMessageBox(text=f"File not saved. Try saving as json.").exec_()
 
     def closeEvent(self, event):
         if not self.changestack_has_changes():

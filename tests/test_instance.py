@@ -76,55 +76,6 @@ def test_instance_point_iter(skeleton):
         assert points[node.name] == point
 
 
-def test_instance_to_pandas_df(skeleton, instances):
-    """
-    Test generating pandas DataFrames from lists of instances.
-    """
-
-    # How many columns are supposed to be in point DataFrame
-    NUM_COLS = 9
-
-    NUM_INSTANCES = len(instances)
-
-    df = Instance.to_pandas_df(instances)
-
-    # Check to make sure we got the expected shape
-    assert df.shape == (3*NUM_INSTANCES, NUM_COLS)
-
-    # Check skip_nan is working
-    assert Instance.to_pandas_df(instances, skip_nan=False).shape == (4*NUM_INSTANCES, NUM_COLS)
-
-# Skip HDF5 saving of instances now because tracks are not saved properly
-@pytest.mark.skip
-def test_hdf5(instances, tmpdir):
-    out_dir = tmpdir
-    path = os.path.join(out_dir, 'dataset.h5')
-
-    if os.path.isfile(path):
-        os.remove(path)
-
-    Instance.save_hdf5(file=path, instances=instances)
-
-    assert os.path.isfile(path)
-
-    # Make a deep copy, because we are gonna drop nan points in place.
-    # and I don't want to change the fixture.
-    instances_copy = copy.deepcopy(instances)
-
-    # Drop the NaN points
-    Instance.drop_all_nan_points(instances_copy)
-
-    # Make sure we can overwrite
-    Instance.save_hdf5(file=path, instances=instances_copy[0:100], skip_nan=False)
-
-    # Load the data back
-    instances2 = Instance.load_hdf5(file=path)
-
-    # Check that we get back the same instances
-    for i in range(len(instances2)):
-        assert instances_copy[i].matches(instances2[i])
-
-
 def test_skeleton_node_name_change():
     """
     Test that and instance is not broken after a node on the
@@ -193,18 +144,6 @@ def test_points_array(skeleton):
     pts = instance1.points_array()
     assert np.allclose(pts[skeleton.node_to_index('head'), :], [0, 4])
     assert np.allclose(pts[skeleton.node_to_index('thorax'), :], [1, 2])
-
-    # Now use the cached version and make sure changes are not
-    # reflected
-    pts = instance1.points_array(cached=True)
-    assert np.allclose(pts[skeleton.node_to_index('thorax'), :], [1, 2])
-    instance1['thorax'] = Point(1, 6)
-    pts = instance1.points_array(cached=True)
-    assert np.allclose(pts[skeleton.node_to_index('thorax'), :], [1, 2])
-
-    # Now drop the cache and make sure changes are reflected.
-    pts = instance1.points_array()
-    assert np.allclose(pts[skeleton.node_to_index('thorax'), :], [1, 6])
 
 def test_instance_labeled_frame_ref(skeleton, centered_pair_vid):
     """

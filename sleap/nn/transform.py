@@ -50,11 +50,37 @@ class DataTransform:
 
         self._init_frame_idxs(img_count)
 
+        # update object state (so we can invert)
+        self.scale = self.scale * (h/img_h)
+
+        # return the scaled images
+        return self._scale(imgs, target_size)
+
+    def invert_scale(self, imgs):
+        """
+        Apply inverse of previous rescaling to images.
+
+        Args:
+            imgs: ndarray with shape (count, height, width, channels)
+        Returns:
+            images scaled by inverse of self.scale
+        """
+        # determine target size for inverting scale
+        img_count, img_h, img_w, img_channels = imgs.shape
+        target_size = (img_h * int(1/self.scale), img_w * int(1/self.scale))
+
+        return self.scale_to(imgs, target_size)
+
+    def _scale(self, imgs, target_size):
+        img_count, img_h, img_w, img_channels = imgs.shape
+        h, w = target_size
+
         # Resize the frames to the target_size if not current size
         if (img_h, img_w) != target_size:
 
             # build ndarray for new size
             scaled_imgs = np.zeros((imgs.shape[0], h, w, imgs.shape[3]))
+
             for i in range(imgs.shape[0]):
                 # resize using cv2
                 img = cv2.resize(imgs[i, :, :], (w, h))
@@ -70,9 +96,6 @@ class DataTransform:
                 scaled_imgs[i, ...] = img
         else:
             scaled_imgs = imgs
-
-        # update object state (so we can invert)
-        self.scale = self.scale * (h/img_h)
 
         return scaled_imgs
 
