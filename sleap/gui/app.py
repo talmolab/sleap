@@ -1010,7 +1010,7 @@ class MainWindow(QMainWindow):
         self.player.onPointSelection(click_callback)
 
     def importPredictions(self):
-        filters = ["JSON labels (*.json *.json.zip)", "HDF5 dataset (*.h5 *.hdf5)", "Matlab dataset (*.mat)", "DeepLabCut csv (*.csv)"]
+        filters = ["HDF5 dataset (*.h5 *.hdf5)", "JSON labels (*.json *.json.zip)"]
         filenames, selected_filter = QFileDialog.getOpenFileNames(self, dir=None, caption="Import labeled data...", filter=";;".join(filters))
 
         if len(filenames) == 0: return
@@ -1019,16 +1019,28 @@ class MainWindow(QMainWindow):
             gui_video_callback = Labels.make_gui_video_callback(
                                     search_paths=[os.path.dirname(filename)])
 
-            new_labels = Labels.load_json(filename, match_to=self.labels,
-                                            video_callback=gui_video_callback)
+            if filename.endswith((".h5", ".hdf5")):
+                new_labels = Labels.load_hdf5(
+                                filename,
+                                match_to=self.labels,
+                                video_callback=gui_video_callback)
+
+            elif filename.endswith((".json", ".json.zip")):
+                new_labels = Labels.load_json(
+                                filename,
+                                match_to=self.labels,
+                                video_callback=gui_video_callback)
+
             self.labels.extend_from(new_labels)
 
             for vid in new_labels.videos:
                 print(f"Labels imported for {vid.filename}")
                 print(f"  frames labeled: {len(new_labels.find(vid))}")
+
         # update display/ui
         self.plotFrame()
         self.updateSeekbarMarks()
+        self.update_data_views()
         self.changestack_push("new predictions")
 
     def newInstance(self, copy_instance=None):

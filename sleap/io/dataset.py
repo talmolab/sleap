@@ -103,31 +103,49 @@ class Labels(MutableSequence):
 
     def __attrs_post_init__(self):
 
+        # Add any videos/skeletons/nodes/tracks that are in labeled
+        # frames but not in the lists on our object
+        self._update_from_labels()
+
+        # Update caches used to find frames by frame index
+        self._update_lookup_cache()
+
+        # Create a variable to store a temporary storage directory
+        # used when we unzip
+        self.__temp_dir = None
+
+    def _update_from_labels(self, merge=False):
+        """Update top level attributes with data from labeled frames.
+
+        Args:
+            merge: if True, then update even if there's already data
+        """
+
         # Add any videos that are present in the labels but
         # missing from the video list
-        if len(self.videos) == 0:
-            self.videos = list({label.video for label in self.labels})
+        if merge or len(self.videos) == 0:
+            self.videos = list(set(self.videos).union({label.video for label in self.labels}))
 
         # Ditto for skeletons
-        if len(self.skeletons) == 0:
-            self.skeletons = list({instance.skeleton
+        if merge or len(self.skeletons) == 0:
+            self.skeletons = list(set(self.skeletons).union(
+                                {instance.skeleton
                                    for label in self.labels
-                                   for instance in label.instances})
+                                   for instance in label.instances}))
 
         # Ditto for nodes
-        if len(self.nodes) == 0:
-            self.nodes = list({node
-                               for skeleton in self.skeletons
-                               for node in skeleton.nodes})
+        if merge or len(self.nodes) == 0:
+            self.nodes = list(set(self.nodes).union({node for skeleton in self.skeletons for node in skeleton.nodes}))
 
         # Ditto for tracks, a pattern is emerging here
-        if len(self.tracks) == 0:
+        if merge or len(self.tracks) == 0:
+            tracks = set(self.tracks)
 
             # Add tracks from any Instances or PredictedInstances
-            tracks = {instance.track
+            tracks = tracks.union({instance.track
                        for frame in self.labels
                        for instance in frame.instances
-                       if instance.track}
+                       if instance.track})
 
             # Add tracks from any PredictedInstance referenced by instance
             # This fixes things when there's a referenced PredictionInstance
@@ -140,13 +158,8 @@ class Labels(MutableSequence):
 
             self.tracks = list(tracks)
 
-        # Lets sort the tracks by spawned on and then name
+        # Sort the tracks by spawned on and then name
         self.tracks.sort(key=lambda t:(t.spawned_on, t.name))
-
-        self._update_lookup_cache()
-
-        # Create a variable to store a temporary storage directory. When we unzip
-        self.__temp_dir = None
 
     def _update_lookup_cache(self):
         # Data structures for caching
@@ -612,15 +625,21 @@ class Labels(MutableSequence):
         """
         # allow either Labels or list of LabeledFrames
         if isinstance(new_frames, Labels): new_frames = new_frames.labeled_frames
+
         # return if this isn't non-empty list of labeled frames
         if not isinstance(new_frames, list) or len(new_frames) == 0: return False
         if not isinstance(new_frames[0], LabeledFrame): return False
+
         # copy the labeled frames
         self.labeled_frames.extend(new_frames)
+
         # merge labeled frames for the same video/frame idx
         self.merge_matching_frames()
-        # update videos/skeletons/nodes/etc using all the labeled frames now present
-        self.__attrs_post_init__()
+
+        # update top level videos/nodes/skeletons/tracks
+        self._update_from_labels(merge=True)
+        self._update_lookup_cache()
+
         return True
 
     def merge_matching_frames(self, video=None):
@@ -1152,7 +1171,9 @@ class Labels(MutableSequence):
                 f.create_dataset("frames", data=frames, maxshape=(None,), dtype=frame_dtype)
 
     @classmethod
-    def load_hdf5(cls, filename: str, video_callback=None):
+    def load_hdf5(cls, filename: str,
+            video_callback=None,
+            match_to: Optional['Labels'] = None):
 
         with h5.File(filename, 'r') as f:
 
@@ -1164,7 +1185,7 @@ class Labels(MutableSequence):
             if callable(video_callback):
                 video_callback(dicts["videos"])
 
-            labels = cls.from_json(dicts)
+            labels = cls.from_json(dicts, match_to=match_to)
 
             frames_dset = f['frames'][:]
             instances_dset = f['instances'][:]
