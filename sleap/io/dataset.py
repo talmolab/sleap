@@ -1237,6 +1237,20 @@ class Labels(MutableSequence):
 
         return labels
 
+    @classmethod
+    def load_file(cls, filename: str, *args, **kwargs):
+        if filename.endswith((".h5", ".hdf5")):
+            return cls.load_hdf5(filename, *args, **kwargs)
+        elif filename.endswith((".json", ".json.zip")):
+            return cls.load_json(filename, *args, **kwargs)
+        elif filename.endswith(".mat"):
+            return cls.load_mat(filename)
+        elif filename.endswith(".csv"):
+            # for now, the only csv we support is the DeepLabCut format
+            return cls.load_deeplabcut_csv(filename)
+        else:
+            raise ValueError(f"Cannot detect filetype for {filename}")
+
     def save_frame_data_imgstore(self, output_dir: str = './', format: str = 'png'):
         """
         Write all labeled frames from all videos to a collection of imgstore datasets.

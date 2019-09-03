@@ -103,7 +103,8 @@ def test_labels_json(tmpdir, multi_skel_vid_labels):
     assert not multi_skel_vid_labels.videos[0] is loaded_labels.videos[0]
 
     # Reload json using objects from original labels
-    loaded_labels = Labels.load_json(json_file_path, match_to=multi_skel_vid_labels)
+    # We'll also test load_file() here
+    loaded_labels = Labels.load_file(json_file_path, match_to=multi_skel_vid_labels)
 
     # Check that we now do have the same objects
     assert multi_skel_vid_labels.skeletons[0] in loaded_labels.skeletons
