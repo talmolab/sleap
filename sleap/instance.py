@@ -568,6 +568,12 @@ class Instance:
             Any skeleton node not defined will have NaNs present.
         """
 
+        # Check whether nodes have been removed from skeleton,
+        # and if so, remove them from _points here.
+        if len(self._nodes) > len(self.skeleton.nodes):
+            mask = [old_node in self.skeleton.nodes for old_node in self._nodes]
+            self._points = self._points[mask]
+
         if full:
             return self._points
 
