@@ -1448,6 +1448,8 @@ class Labels(MutableSequence):
 
             has_shown_prompt = False # have we already alerted user about missing files?
 
+            basename_list = []
+
             # Check each video
             for video_item in video_list:
                 if "backend" in video_item and "filename" in video_item["backend"]:
@@ -1468,22 +1470,22 @@ class Labels(MutableSequence):
 
                         # We'll check in the current working directory, and if the user has
                         # already found any missing videos, check in the directory of those.
-                        for path_dir in new_paths:
-                            check_path = os.path.join(path_dir, current_basename)
-                            if os.path.exists(check_path):
-                                # we found the file in a different directory
-                                video_item["backend"]["filename"] = check_path
-                                is_found = True
-                                break
+                        if current_basename not in basename_list:
+                            for path_dir in new_paths:
+                                check_path = os.path.join(path_dir, current_basename)
+                                if os.path.exists(check_path):
+                                    # we found the file in a different directory
+                                    video_item["backend"]["filename"] = check_path
+                                    is_found = True
+                                    break
 
                         # if we found this file, then move on to the next file
                         if is_found: continue
 
                         # Since we couldn't find the file on our own, prompt the user.
-
-                        if not has_shown_prompt:
-                            QMessageBox(text=f"We're unable to locate one or more video files for this project. Please locate {current_filename}.").exec_()
-                            has_shown_prompt = True
+                        print(f"Unable to find: {current_filename}")
+                        QMessageBox(text=f"We're unable to locate one or more video files for this project. Please locate {current_filename}.").exec_()
+                        has_shown_prompt = True
 
                         current_root, current_ext = os.path.splitext(current_basename)
                         caption = f"Please locate {current_basename}..."
@@ -1495,6 +1497,7 @@ class Labels(MutableSequence):
                             video_item["backend"]["filename"] = new_filename
                             # keep track of the directory chosen by user
                             new_paths.append(os.path.dirname(new_filename))
+                            basename_list.append(current_basename)
         return gui_video_callback
 
 
