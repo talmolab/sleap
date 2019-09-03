@@ -130,7 +130,7 @@ class MainWindow(QMainWindow):
         self.player = QtVideoPlayer(color_manager=self._color_manager)
         self.player.changedPlot.connect(self.newFrame)
         self.player.changedData.connect(lambda inst: self.changestack_push("viewer change"))
-        self.player.view.instanceDoubleClicked.connect(self.newInstance)
+        self.player.view.instanceDoubleClicked.connect(self.doubleClickInstance)
         self.player.seekbar.selectionChanged.connect(lambda: self.updateStatusMessage())
         self.setCentralWidget(self.player)
 
@@ -1043,6 +1043,28 @@ class MainWindow(QMainWindow):
         self.update_data_views()
         self.changestack_push("new predictions")
 
+    def doubleClickInstance(self, instance):
+        # When a predicted instance is double-clicked, add a new instance
+        if hasattr(instance, "score"):
+            self.newInstance(copy_instance = instance)
+
+        # When a regular instance is double-clicked, add any missing points
+        else:
+            # the rect that's currently visibile in the window view
+            in_view_rect = self.player.view.mapToScene(self.player.view.rect()).boundingRect()
+
+            for node in self.skeleton.nodes:
+                if node not in instance.nodes or instance[node].isnan():
+                    # pick random points within currently zoomed view
+                    x = in_view_rect.x() + (in_view_rect.width() * 0.1) \
+                        + (np.random.rand() * in_view_rect.width() * 0.8)
+                    y = in_view_rect.y() + (in_view_rect.height() * 0.1) \
+                        + (np.random.rand() * in_view_rect.height() * 0.8)
+                    # set point for node
+                    instance[node] = Point(x=x, y=y, visible=False)
+
+            self.plotFrame()
+
     def newInstance(self, copy_instance=None):
         if self.labeled_frame is None:
             return
@@ -1085,8 +1107,10 @@ class MainWindow(QMainWindow):
                         from_prev_frame = True
         from_predicted = from_predicted if hasattr(from_predicted, "score") else None
         new_instance = Instance(skeleton=self.skeleton, from_predicted=from_predicted)
+
         # the rect that's currently visibile in the window view
         in_view_rect = self.player.view.mapToScene(self.player.view.rect()).boundingRect()
+
         # go through each node in skeleton
         for node in self.skeleton.nodes:
             # if we're copying from a skeleton that has this node
@@ -1107,6 +1131,7 @@ class MainWindow(QMainWindow):
                 is_visible = copy_instance is None or not hasattr(copy_instance, "score")
                 # set point for node
                 new_instance[node] = Point(x=x, y=y, visible=is_visible)
+
         # If we're copying a predicted instance or from another frame, copy the track
         if hasattr(copy_instance, "score") or from_prev_frame:
             new_instance.track = copy_instance.track
