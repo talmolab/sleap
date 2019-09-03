@@ -319,14 +319,23 @@ def test_labels_predicted_hdf5(multi_skel_vid_labels, tmpdir):
     for label in labels:
         label.instances[1].from_predicted = label.instances[0]
 
-    # Try deleting a node from the skeleton
+    # Try adding a node to the skeleton
+    labels.skeletons[0].add_node("new node")
+
+    # Save and compare the results
+    Labels.save_hdf5(filename=filename, labels=labels)
+    loaded_labels = Labels.load_hdf5(filename=filename)
+    _check_labels_match(labels, loaded_labels)
+
+    # Try deleting nodes from the skeleton
+    node = labels.skeletons[0].nodes[-1]
+    labels.skeletons[0].delete_node(node)
     node = labels.skeletons[0].nodes[-1]
     labels.skeletons[0].delete_node(node)
 
+    # Save and compare the results
     Labels.save_hdf5(filename=filename, labels=labels)
-
     loaded_labels = Labels.load_hdf5(filename=filename)
-
     _check_labels_match(labels, loaded_labels)
 
 def test_labels_append_hdf5(multi_skel_vid_labels, tmpdir):

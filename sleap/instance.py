@@ -214,18 +214,12 @@ class PointArray(np.recarray):
             # return a single element
             return obj
 
-class PredictedPointArray(PointArray):
-    """
-    PredictedPointArray is analogous to PointArray except for predicted
-    points.
-    """
-    _record_type = PredictedPoint
-
     @classmethod
-    def from_array(cls, a: PointArray):
+    def from_array(cls, a: 'PointArray'):
         """
-        Convert a PointArray to a PredictedPointArray, use the default
-        attribute values for PredictedPoints.
+        Convert a PointArray to a new PointArray
+        (or child class, i.e., PredictedPointArray),
+        use the default attribute values for new array.
 
         Args:
             a: The array to convert.
@@ -239,6 +233,13 @@ class PredictedPointArray(PointArray):
             v[field] = a[field]
 
         return v
+
+class PredictedPointArray(PointArray):
+    """
+    PredictedPointArray is analogous to PointArray except for predicted
+    points.
+    """
+    _record_type = PredictedPoint
 
     @classmethod
     def to_array(cls, a: 'PredictedPointArray'):
@@ -547,6 +548,24 @@ class Instance:
         """
         return tuple(point for point in self._points if not point.isnan())
 
+    def fix_array(self):
+        """Fix points array after nodes have been added or removed."""
+
+        # Check if cached skeleton nodes are different than current nodes
+        if self._nodes != self.skeleton.nodes:
+            # Create new PointArray (or PredictedPointArray)
+            cls = type(self._points)
+            new_array = cls.make_default(len(self.skeleton.nodes))
+
+            # Add points into new array
+            for i, node in enumerate(self._nodes):
+                if node in self.skeleton.nodes:
+                    new_array[self.skeleton.nodes.index(node)] = self._points[i]
+
+            # Update points and nodes for this instance
+            self._points = new_array
+            self._nodes = self.skeleton.nodes
+
     def points_array(self, copy: bool = True,
                      invisible_as_nan: bool = False,
                      full: bool = False) -> np.ndarray:
@@ -567,12 +586,7 @@ class Instance:
             The order of the rows corresponds to the ordering of the skeleton nodes.
             Any skeleton node not defined will have NaNs present.
         """
-
-        # Check whether nodes have been removed from skeleton,
-        # and if so, remove them from _points here.
-        if len(self._nodes) > len(self.skeleton.nodes):
-            mask = [old_node in self.skeleton.nodes for old_node in self._nodes]
-            self._points = self._points[mask]
+        self.fix_array()
 
         if full:
             return self._points
