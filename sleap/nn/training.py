@@ -240,9 +240,10 @@ class Trainer:
         img_input = Input((img_height, img_width, img_channels))
 
         # Rectify image sizes not divisible by pooling factor
-        if hasattr(model.backbone, 'depth'):
-            depth = model.backbone.depth
+        depth = getattr(model.backbone, 'depth', default=0)
+        depth = depth or getattr(model.backbone, 'down_blocks', default=0)
 
+        if depth:
             pool_factor = 2 ** depth
             if img_height % pool_factor != 0 or img_width % pool_factor != 0:
                 logger.warning(

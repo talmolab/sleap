@@ -214,18 +214,12 @@ class PointArray(np.recarray):
             # return a single element
             return obj
 
-class PredictedPointArray(PointArray):
-    """
-    PredictedPointArray is analogous to PointArray except for predicted
-    points.
-    """
-    _record_type = PredictedPoint
-
     @classmethod
-    def from_array(cls, a: PointArray):
+    def from_array(cls, a: 'PointArray'):
         """
-        Convert a PointArray to a PredictedPointArray, use the default
-        attribute values for PredictedPoints.
+        Convert a PointArray to a new PointArray
+        (or child class, i.e., PredictedPointArray),
+        use the default attribute values for new array.
 
         Args:
             a: The array to convert.
@@ -239,6 +233,13 @@ class PredictedPointArray(PointArray):
             v[field] = a[field]
 
         return v
+
+class PredictedPointArray(PointArray):
+    """
+    PredictedPointArray is analogous to PointArray except for predicted
+    points.
+    """
+    _record_type = PredictedPoint
 
     @classmethod
     def to_array(cls, a: 'PredictedPointArray'):
@@ -311,6 +312,7 @@ class Instance:
     track: Track = attr.ib(default=None)
     from_predicted: Optional['PredictedInstance'] = attr.ib(default=None)
     _points: PointArray = attr.ib(default=None)
+    _nodes: List = attr.ib(default=None)
     frame: Union['LabeledFrame', None] = attr.ib(default=None)
 
     # The underlying Point array type that this instances point array should be.
@@ -360,6 +362,11 @@ class Instance:
                 parray = self._point_array_type.make_default(len(self.skeleton.nodes))
                 Instance._points_dict_to_array(self._points, parray, self.skeleton)
                 self._points = parray
+
+        # Now that we've validated the points, cache the list of nodes
+        # in the skeleton since the PointArray indexing will be linked
+        # to this list even if nodes are removed from the skeleton.
+        self._nodes = self.skeleton.nodes
 
     @staticmethod
     def _points_dict_to_array(points, parray, skeleton):
@@ -517,7 +524,8 @@ class Instance:
             A tuple of nodes that have been labelled for this instance.
 
         """
-        return tuple(self.skeleton.nodes[i] for i, point in enumerate(self._points) if not point.isnan())
+        return tuple(self._nodes[i] for i, point in enumerate(self._points)
+            if not point.isnan() and self._nodes[i] in self.skeleton.nodes)
 
     @property
     def nodes_points(self):
@@ -540,6 +548,24 @@ class Instance:
         """
         return tuple(point for point in self._points if not point.isnan())
 
+    def fix_array(self):
+        """Fix points array after nodes have been added or removed."""
+
+        # Check if cached skeleton nodes are different than current nodes
+        if self._nodes != self.skeleton.nodes:
+            # Create new PointArray (or PredictedPointArray)
+            cls = type(self._points)
+            new_array = cls.make_default(len(self.skeleton.nodes))
+
+            # Add points into new array
+            for i, node in enumerate(self._nodes):
+                if node in self.skeleton.nodes:
+                    new_array[self.skeleton.nodes.index(node)] = self._points[i]
+
+            # Update points and nodes for this instance
+            self._points = new_array
+            self._nodes = self.skeleton.nodes
+
     def points_array(self, copy: bool = True,
                      invisible_as_nan: bool = False,
                      full: bool = False) -> np.ndarray:
@@ -560,6 +586,7 @@ class Instance:
             The order of the rows corresponds to the ordering of the skeleton nodes.
             Any skeleton node not defined will have NaNs present.
         """
+        self.fix_array()
 
         if full:
             return self._points
@@ -631,7 +658,7 @@ class PredictedInstance(Instance):
         Returns:
             A PredictedInstance for the given Instance.
         """
-        kw_args = attr.asdict(instance, recurse=False, filter=lambda attr, value: attr.name != "_points")
+        kw_args = attr.asdict(instance, recurse=False, filter=lambda attr, value: attr.name not in ("_points", "_nodes"))
         kw_args['points'] = PredictedPointArray.from_array(instance._points)
         kw_args['score'] = score
         return cls(**kw_args)
