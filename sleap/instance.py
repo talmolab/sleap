@@ -638,7 +638,7 @@ class PredictedInstance(Instance):
         Returns:
             A PredictedInstance for the given Instance.
         """
-        kw_args = attr.asdict(instance, recurse=False, filter=lambda attr, value: attr.name != "_points")
+        kw_args = attr.asdict(instance, recurse=False, filter=lambda attr, value: attr.name not in ("_points", "_nodes"))
         kw_args['points'] = PredictedPointArray.from_array(instance._points)
         kw_args['score'] = score
         return cls(**kw_args)
