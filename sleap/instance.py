@@ -311,6 +311,7 @@ class Instance:
     track: Track = attr.ib(default=None)
     from_predicted: Optional['PredictedInstance'] = attr.ib(default=None)
     _points: PointArray = attr.ib(default=None)
+    _nodes: List = attr.ib(default=None)
     frame: Union['LabeledFrame', None] = attr.ib(default=None)
 
     # The underlying Point array type that this instances point array should be.
@@ -360,6 +361,11 @@ class Instance:
                 parray = self._point_array_type.make_default(len(self.skeleton.nodes))
                 Instance._points_dict_to_array(self._points, parray, self.skeleton)
                 self._points = parray
+
+        # Now that we've validated the points, cache the list of nodes
+        # in the skeleton since the PointArray indexing will be linked
+        # to this list even if nodes are removed from the skeleton.
+        self._nodes = self.skeleton.nodes
 
     @staticmethod
     def _points_dict_to_array(points, parray, skeleton):
@@ -517,7 +523,8 @@ class Instance:
             A tuple of nodes that have been labelled for this instance.
 
         """
-        return tuple(self.skeleton.nodes[i] for i, point in enumerate(self._points) if not point.isnan())
+        return tuple(self._nodes[i] for i, point in enumerate(self._points)
+            if not point.isnan() and self._nodes[i] in self.skeleton.nodes)
 
     @property
     def nodes_points(self):
