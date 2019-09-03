@@ -546,6 +546,7 @@ class Instance:
         Returns:
             The list of labelled points, in order they were labelled.
         """
+        self.fix_array()
         return tuple(point for point in self._points if not point.isnan())
 
     def fix_array(self):
