@@ -542,6 +542,12 @@ class Labels(MutableSequence):
             if label.video == video:
                 self.labeled_frames.remove(label)
 
+        # Delete data that's indexed by video
+        if video in self.suggestions:
+            del self.suggestions[video]
+        if video in self.negative_anchors:
+            del self.negative_anchors[video]
+
         # Delete video
         self.videos.remove(video)
 
