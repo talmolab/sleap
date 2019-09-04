@@ -345,9 +345,13 @@ class VideoSlider(QGraphicsView):
                     width = 2
                     filled = False
                     color = QColor("blue")
+                elif mark_type == "f":
+                    width = 2
+                    color = QColor("blue")
                 elif mark_type == "p":
                     width = 0
                     color = QColor("red")
+
         else:
             # line if mark has format: frame_idx
             v_offset = 3
