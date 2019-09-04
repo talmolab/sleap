@@ -514,19 +514,13 @@ class MainWindow(QMainWindow):
             labels = filename
             filename = None
             has_loaded = True
-        elif filename.endswith(".h5"):
-            labels = Labels.load_hdf5(filename, video_callback=gui_video_callback)
-            has_loaded = True
-        elif filename.endswith((".json", ".json.zip")):
-            labels = Labels.load_json(filename, video_callback=gui_video_callback)
-            has_loaded = True
-        elif filename.endswith(".mat"):
-            labels = Labels.load_mat(filename)
-            has_loaded = True
-        elif filename.endswith(".csv"):
-            # for now, the only csv we support is the DeepLabCut format
-            labels = Labels.load_deeplabcut_csv(filename)
-            has_loaded = True
+        else:
+            try:
+                labels = Labels.load_file(filename, video_callback=gui_video_callback)
+                has_loaded = True
+            except ValueError as e:
+                print(e)
+                QMessageBox(text=f"Unable to load {filename}.").exec_()
 
         if do_load:
 
@@ -761,7 +755,11 @@ class MainWindow(QMainWindow):
     def generateSuggestions(self, params):
         new_suggestions = dict()
         for video in self.labels.videos:
-            new_suggestions[video] = VideoFrameSuggestions.suggest(video, params)
+            new_suggestions[video] = VideoFrameSuggestions.suggest(
+                                            video=video,
+                                            labels=self.labels,
+                                            params=params)
+
         self.labels.set_suggestions(new_suggestions)
         self.update_data_views()
         self.updateSeekbarMarks()

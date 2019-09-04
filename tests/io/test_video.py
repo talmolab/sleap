@@ -67,7 +67,8 @@ def test_mp4_get_item(small_robot_mp4_vid):
 
 def test_mp4_file_not_found():
     with pytest.raises(FileNotFoundError):
-        Video.from_media("non-existent-filename.mp4")
+        vid = Video.from_media("non-existent-filename.mp4")
+        vid.channels
 
 def test_numpy_frames(small_robot_mp4_vid):
     clip_frames = small_robot_mp4_vid.get_frames((3,7,9))

@@ -262,7 +262,7 @@ class LabeledFrameTable(QTableView):
 
 
 class LabeledFrameTableModel(QtCore.QAbstractTableModel):
-    _props = ["points", "track", "skeleton",]
+    _props = ("points", "track", "score", "skeleton")
 
     def __init__(self, labeled_frame: LabeledFrame, labels: Labels):
         super(LabeledFrameTableModel, self).__init__()
@@ -304,6 +304,7 @@ class LabeledFrameTableModel(QtCore.QAbstractTableModel):
             if len(self.labeled_frame.instances_to_show) > (idx - 1):
                 instance = self.labeled_frame.instances_to_show[idx]
 
+                # Cell value
                 if role == Qt.DisplayRole:
                     if prop == "points":
                         return f"{len(instance.nodes)}/{len(instance.skeleton.nodes)}"
@@ -311,6 +312,13 @@ class LabeledFrameTableModel(QtCore.QAbstractTableModel):
                         return instance.track.name
                     elif prop == "skeleton":
                         return instance.skeleton.name
+                    elif prop == "score":
+                        if hasattr(instance, "score"):
+                            return f"{round(instance.score, 2)}"
+                        else:
+                            return ""
+
+                # Cell color
                 elif role == Qt.ForegroundRole:
                     if prop == "track" and instance.track is not None:
                         return QColor(*self.color_manager.get_color(instance.track))
