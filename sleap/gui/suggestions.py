@@ -15,7 +15,7 @@ class VideoFrameSuggestions:
     rescale_below=512
 
     @classmethod
-    def suggest(cls, video:Video, params:dict) -> list:
+    def suggest(cls, video:Video, params:dict, labels: 'Labels'=None) -> list:
         """
         This is the main entry point.
 
@@ -23,6 +23,7 @@ class VideoFrameSuggestions:
             video: a `Video` object for which we're generating suggestions
             params: a dict with all params to control how we generate suggestions
                 * minimally this will have a `method` corresponding to a method in class
+            labels: a `Labels` object
 
         Returns:
             list of frame suggestions
@@ -35,11 +36,12 @@ class VideoFrameSuggestions:
                                 pca=cls.pca_cluster,
                                 hog=cls.hog,
                                 brisk=cls.brisk,
+                                proofreading=cls.proofreading
                                 )
 
         method = params["method"]
         if method_functions.get(method, None) is not None:
-            return method_functions[method](video=video, **params)
+            return method_functions[method](video=video, labels=labels, **params)
         else:
             print(f"No {method} method found for generating suggestions.")
 
@@ -98,6 +100,38 @@ class VideoFrameSuggestions:
                     pca_components=pca_components,
                     interleave=interleave,
                     **kwargs)
+
+        return result
+
+    @classmethod
+    def proofreading(
+            cls, video: Video, labels: 'Labels', score_limit, instance_limit, **kwargs):
+
+        score_limit = float(score_limit)
+        instance_limit = int(instance_limit)
+
+        lfs = labels.find(video)
+
+        frames = len(lfs)
+        idxs = np.ndarray((frames), dtype="int")
+        scores = np.full((frames, instance_limit), 100.0, dtype="float")
+
+        # Build matrix with scores for instances in frames
+        for i, lf in enumerate(lfs):
+            # Scores from instances in frame
+            frame_scores = [inst.score for inst in lf if hasattr(inst, "score")]
+            # Just get the lowest scores
+            if len(frame_scores) > instance_limit:
+                frame_scores = sorted(frame_scores)[:instance_limit]
+            # Add to matrix
+            scores[i,:len(frame_scores)] = frame_scores
+            idxs[i] = lf.frame_idx
+
+        # Find instances below score of <score_limit>
+        low_instances = np.nansum(scores < score_limit, axis=1)
+
+        # Find all the frames with at least <instance_limit> low scoring instances
+        result = list(idxs[low_instances >= instance_limit])
 
         return result
 

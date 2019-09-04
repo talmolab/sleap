@@ -755,7 +755,11 @@ class MainWindow(QMainWindow):
     def generateSuggestions(self, params):
         new_suggestions = dict()
         for video in self.labels.videos:
-            new_suggestions[video] = VideoFrameSuggestions.suggest(video, params)
+            new_suggestions[video] = VideoFrameSuggestions.suggest(
+                                            video=video,
+                                            labels=self.labels,
+                                            params=params)
+
         self.labels.set_suggestions(new_suggestions)
         self.update_data_views()
         self.updateSeekbarMarks()
