@@ -786,6 +786,14 @@ class Labels(MutableSequence):
                 # then replace each video with this new video
                 new_videos = labels.save_frame_data_imgstore(output_dir=tmp_dir, format=frame_data_format)
 
+                # Make video paths relative
+                for vid in new_videos:
+                    tmp_path = vid.filename
+                    # Get the parent dir of the YAML file.
+                    img_store_dir = os.path.join(os.path.basename(os.path.split(tmp_path)[0]), os.path.basename(tmp_path))
+                    # Change to relative path
+                    vid.backend.filename = img_store_dir
+
                 # Convert to a dict, not JSON yet, because we need to patch up the videos
                 d = labels.to_dict()
                 d['videos'] = Video.cattr().unstructure(new_videos)
@@ -890,6 +898,8 @@ class Labels(MutableSequence):
                   video_callback=None,
                   match_to: Optional['Labels'] = None):
 
+        tmp_dir = None
+
         # Check if the file is a zipfile for not.
         if zipfile.is_zipfile(filename):
 
@@ -943,6 +953,10 @@ class Labels(MutableSequence):
 
                 # Cache the working directory.
                 cwd = os.getcwd()
+                # Replace local video paths (for imagestore)
+                if tmp_dir:
+                    for vid in dicts["videos"]:
+                        vid["backend"]["filename"] = os.path.join(tmp_dir, vid["backend"]["filename"])
 
                 # Use the callback if given to handle missing videos
                 if callable(video_callback):
