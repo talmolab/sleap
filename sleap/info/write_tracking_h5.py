@@ -41,7 +41,7 @@ if __name__ == "__main__":
                             is_found = True
                             break
 
-    labels = Labels.load_json(args.data_path, video_callback=video_callback)
+    labels = Labels.load_file(args.data_path, video_callback=video_callback)
 
     frame_count = len(labels)
     track_count = len(labels.tracks)
