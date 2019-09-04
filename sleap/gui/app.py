@@ -256,6 +256,7 @@ class MainWindow(QMainWindow):
         self._menu_actions["remove score predictions"] = predictionMenu.addAction("Delete Predictions with Low Score...", self.deleteLowScorePredictions)
         self._menu_actions["remove frame limit predictions"] = predictionMenu.addAction("Delete Predictions beyond Frame Limit...", self.deleteFrameLimitPredictions)
         predictionMenu.addSeparator()
+        self._menu_actions["export frames"] = predictionMenu.addAction("Export Training Package...", self.exportLabeledFrames)
         self._menu_actions["export clip"] = predictionMenu.addAction("Export Labeled Clip...", self.exportLabeledClip, shortcuts["export clip"])
 
         ############
@@ -1428,6 +1429,11 @@ class MainWindow(QMainWindow):
                     fps=fps,
                     gui_progress=True
                     )
+
+    def exportLabeledFrames(self):
+        filename, _ = QFileDialog.getSaveFileName(self, caption="Save Labeled Frames As...", dir=self.filename)
+        if len(filename) == 0: return
+        Labels.save_json(self.labels, filename, save_frame_data=True)
 
     def previousLabeledFrameIndex(self):
         cur_idx = self.player.frame_idx
