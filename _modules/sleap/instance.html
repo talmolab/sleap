@@ -365,20 +365,14 @@
                 <span class="k">return</span> <span class="n">obj</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># return a single element</span>
-            <span class="k">return</span> <span class="n">obj</span></div>
+            <span class="k">return</span> <span class="n">obj</span>
 
-<div class="viewcode-block" id="PredictedPointArray"><a class="viewcode-back" href="../../instance.html#sleap.instance.PredictedPointArray">[docs]</a><span class="k">class</span> <span class="nc">PredictedPointArray</span><span class="p">(</span><span class="n">PointArray</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    PredictedPointArray is analogous to PointArray except for predicted</span>
-<span class="sd">    points.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">_record_type</span> <span class="o">=</span> <span class="n">PredictedPoint</span>
-
-<div class="viewcode-block" id="PredictedPointArray.from_array"><a class="viewcode-back" href="../../instance.html#sleap.instance.PredictedPointArray.from_array">[docs]</a>    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_array</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">a</span><span class="p">:</span> <span class="n">PointArray</span><span class="p">):</span>
+<div class="viewcode-block" id="PointArray.from_array"><a class="viewcode-back" href="../../instance.html#sleap.instance.PointArray.from_array">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_array</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">a</span><span class="p">:</span> <span class="s1">&#39;PointArray&#39;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Convert a PointArray to a PredictedPointArray, use the default</span>
-<span class="sd">        attribute values for PredictedPoints.</span>
+<span class="sd">        Convert a PointArray to a new PointArray</span>
+<span class="sd">        (or child class, i.e., PredictedPointArray),</span>
+<span class="sd">        use the default attribute values for new array.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            a: The array to convert.</span>
@@ -391,7 +385,14 @@
         <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">Point</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
             <span class="n">v</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="n">field</span><span class="p">]</span>
 
-        <span class="k">return</span> <span class="n">v</span></div>
+        <span class="k">return</span> <span class="n">v</span></div></div>
+
+<div class="viewcode-block" id="PredictedPointArray"><a class="viewcode-back" href="../../instance.html#sleap.instance.PredictedPointArray">[docs]</a><span class="k">class</span> <span class="nc">PredictedPointArray</span><span class="p">(</span><span class="n">PointArray</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    PredictedPointArray is analogous to PointArray except for predicted</span>
+<span class="sd">    points.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_record_type</span> <span class="o">=</span> <span class="n">PredictedPoint</span>
 
 <div class="viewcode-block" id="PredictedPointArray.to_array"><a class="viewcode-back" href="../../instance.html#sleap.instance.PredictedPointArray.to_array">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">to_array</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">a</span><span class="p">:</span> <span class="s1">&#39;PredictedPointArray&#39;</span><span class="p">):</span>
@@ -464,6 +465,7 @@
     <span class="n">track</span><span class="p">:</span> <span class="n">Track</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">from_predicted</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s1">&#39;PredictedInstance&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">_points</span><span class="p">:</span> <span class="n">PointArray</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">_nodes</span><span class="p">:</span> <span class="n">List</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">frame</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s1">&#39;LabeledFrame&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
     <span class="c1"># The underlying Point array type that this instances point array should be.</span>
@@ -514,6 +516,11 @@
                 <span class="n">Instance</span><span class="o">.</span><span class="n">_points_dict_to_array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">,</span> <span class="n">parray</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_points</span> <span class="o">=</span> <span class="n">parray</span>
 
+        <span class="c1"># Now that we&#39;ve validated the points, cache the list of nodes</span>
+        <span class="c1"># in the skeleton since the PointArray indexing will be linked</span>
+        <span class="c1"># to this list even if nodes are removed from the skeleton.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">nodes</span>
+
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_points_dict_to_array</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">parray</span><span class="p">,</span> <span class="n">skeleton</span><span class="p">):</span>
 
@@ -538,7 +545,11 @@
             <span class="c1"># Convert PredictedPoint to Point if Instance</span>
             <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">parray</span><span class="p">)</span> <span class="o">==</span> <span class="n">PointArray</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">point</span><span class="p">)</span> <span class="o">==</span> <span class="n">PredictedPoint</span><span class="p">:</span>
                 <span class="n">point</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">point</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">point</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">visible</span><span class="o">=</span><span class="n">point</span><span class="o">.</span><span class="n">visible</span><span class="p">,</span> <span class="n">complete</span><span class="o">=</span><span class="n">point</span><span class="o">.</span><span class="n">complete</span><span class="p">)</span>
-            <span class="n">parray</span><span class="p">[</span><span class="n">skeleton</span><span class="o">.</span><span class="n">node_to_index</span><span class="p">(</span><span class="n">node</span><span class="p">)]</span> <span class="o">=</span> <span class="n">point</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">parray</span><span class="p">[</span><span class="n">skeleton</span><span class="o">.</span><span class="n">node_to_index</span><span class="p">(</span><span class="n">node</span><span class="p">)]</span> <span class="o">=</span> <span class="n">point</span>
+                <span class="c1"># parray[skeleton.node_to_index(node.name)] = point</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">pass</span>
 
     <span class="k">def</span> <span class="nf">_node_to_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_name</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -670,7 +681,9 @@
 <span class="sd">            A tuple of nodes that have been labelled for this instance.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">point</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">point</span><span class="o">.</span><span class="n">isnan</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fix_array</span><span class="p">()</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">point</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">point</span><span class="o">.</span><span class="n">isnan</span><span class="p">()</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">nodes_points</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -691,7 +704,26 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            The list of labelled points, in order they were labelled.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fix_array</span><span class="p">()</span>
         <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">point</span> <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_points</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">point</span><span class="o">.</span><span class="n">isnan</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="Instance.fix_array"><a class="viewcode-back" href="../../instance.html#sleap.instance.Instance.fix_array">[docs]</a>    <span class="k">def</span> <span class="nf">fix_array</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fix points array after nodes have been added or removed.&quot;&quot;&quot;</span>
+
+        <span class="c1"># Check if cached skeleton nodes are different than current nodes</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+            <span class="c1"># Create new PointArray (or PredictedPointArray)</span>
+            <span class="bp">cls</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">)</span>
+            <span class="n">new_array</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">make_default</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">nodes</span><span class="p">))</span>
+
+            <span class="c1"># Add points into new array</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+                    <span class="n">new_array</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">node</span><span class="p">)]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+            <span class="c1"># Update points and nodes for this instance</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_points</span> <span class="o">=</span> <span class="n">new_array</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">nodes</span></div>
 
 <div class="viewcode-block" id="Instance.points_array"><a class="viewcode-back" href="../../instance.html#sleap.instance.Instance.points_array">[docs]</a>    <span class="k">def</span> <span class="nf">points_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">copy</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
                      <span class="n">invisible_as_nan</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -713,6 +745,7 @@
 <span class="sd">            The order of the rows corresponds to the ordering of the skeleton nodes.</span>
 <span class="sd">            Any skeleton node not defined will have NaNs present.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fix_array</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">full</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_points</span>
@@ -784,7 +817,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            A PredictedInstance for the given Instance.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">kw_args</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">asdict</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="n">recurse</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="k">lambda</span> <span class="n">attr</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">attr</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="s2">&quot;_points&quot;</span><span class="p">)</span>
+        <span class="n">kw_args</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">asdict</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="n">recurse</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="k">lambda</span> <span class="n">attr</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">attr</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;_points&quot;</span><span class="p">,</span> <span class="s2">&quot;_nodes&quot;</span><span class="p">))</span>
         <span class="n">kw_args</span><span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">PredictedPointArray</span><span class="o">.</span><span class="n">from_array</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">_points</span><span class="p">)</span>
         <span class="n">kw_args</span><span class="p">[</span><span class="s1">&#39;score&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">score</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">kw_args</span><span class="p">)</span></div></div>

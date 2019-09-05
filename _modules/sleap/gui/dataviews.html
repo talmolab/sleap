@@ -415,7 +415,7 @@
 
 
 <span class="k">class</span> <span class="nc">LabeledFrameTableModel</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">QAbstractTableModel</span><span class="p">):</span>
-    <span class="n">_props</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;points&quot;</span><span class="p">,</span> <span class="s2">&quot;track&quot;</span><span class="p">,</span> <span class="s2">&quot;skeleton&quot;</span><span class="p">,]</span>
+    <span class="n">_props</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;points&quot;</span><span class="p">,</span> <span class="s2">&quot;track&quot;</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">,</span> <span class="s2">&quot;skeleton&quot;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labeled_frame</span><span class="p">:</span> <span class="n">LabeledFrame</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">LabeledFrameTableModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
@@ -457,6 +457,7 @@
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labeled_frame</span><span class="o">.</span><span class="n">instances_to_show</span><span class="p">)</span> <span class="o">&gt;</span> <span class="p">(</span><span class="n">idx</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
                 <span class="n">instance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labeled_frame</span><span class="o">.</span><span class="n">instances_to_show</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
 
+                <span class="c1"># Cell value</span>
                 <span class="k">if</span> <span class="n">role</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">DisplayRole</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">prop</span> <span class="o">==</span> <span class="s2">&quot;points&quot;</span><span class="p">:</span>
                         <span class="k">return</span> <span class="n">f</span><span class="s2">&quot;{len(instance.nodes)}/{len(instance.skeleton.nodes)}&quot;</span>
@@ -464,6 +465,13 @@
                         <span class="k">return</span> <span class="n">instance</span><span class="o">.</span><span class="n">track</span><span class="o">.</span><span class="n">name</span>
                     <span class="k">elif</span> <span class="n">prop</span> <span class="o">==</span> <span class="s2">&quot;skeleton&quot;</span><span class="p">:</span>
                         <span class="k">return</span> <span class="n">instance</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">name</span>
+                    <span class="k">elif</span> <span class="n">prop</span> <span class="o">==</span> <span class="s2">&quot;score&quot;</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">):</span>
+                            <span class="k">return</span> <span class="n">f</span><span class="s2">&quot;{round(instance.score, 2)}&quot;</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+
+                <span class="c1"># Cell color</span>
                 <span class="k">elif</span> <span class="n">role</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">ForegroundRole</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">prop</span> <span class="o">==</span> <span class="s2">&quot;track&quot;</span> <span class="ow">and</span> <span class="n">instance</span><span class="o">.</span><span class="n">track</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                         <span class="k">return</span> <span class="n">QColor</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">color_manager</span><span class="o">.</span><span class="n">get_color</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">track</span><span class="p">))</span>

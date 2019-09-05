@@ -695,6 +695,12 @@
             <span class="k">if</span> <span class="n">label</span><span class="o">.</span><span class="n">video</span> <span class="o">==</span> <span class="n">video</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">labeled_frames</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
 
+        <span class="c1"># Delete data that&#39;s indexed by video</span>
+        <span class="k">if</span> <span class="n">video</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">suggestions</span><span class="p">:</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">suggestions</span><span class="p">[</span><span class="n">video</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">video</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">negative_anchors</span><span class="p">:</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">negative_anchors</span><span class="p">[</span><span class="n">video</span><span class="p">]</span>
+
         <span class="c1"># Delete video</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">videos</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">video</span><span class="p">)</span>
 
@@ -933,6 +939,14 @@
                 <span class="c1"># then replace each video with this new video</span>
                 <span class="n">new_videos</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">save_frame_data_imgstore</span><span class="p">(</span><span class="n">output_dir</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="n">frame_data_format</span><span class="p">)</span>
 
+                <span class="c1"># Make video paths relative</span>
+                <span class="k">for</span> <span class="n">vid</span> <span class="ow">in</span> <span class="n">new_videos</span><span class="p">:</span>
+                    <span class="n">tmp_path</span> <span class="o">=</span> <span class="n">vid</span><span class="o">.</span><span class="n">filename</span>
+                    <span class="c1"># Get the parent dir of the YAML file.</span>
+                    <span class="n">img_store_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">)[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">))</span>
+                    <span class="c1"># Change to relative path</span>
+                    <span class="n">vid</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">img_store_dir</span>
+
                 <span class="c1"># Convert to a dict, not JSON yet, because we need to patch up the videos</span>
                 <span class="n">d</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
                 <span class="n">d</span><span class="p">[</span><span class="s1">&#39;videos&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">cattr</span><span class="p">()</span><span class="o">.</span><span class="n">unstructure</span><span class="p">(</span><span class="n">new_videos</span><span class="p">)</span>
@@ -1037,6 +1051,8 @@
                   <span class="n">video_callback</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                   <span class="n">match_to</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s1">&#39;Labels&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 
+        <span class="n">tmp_dir</span> <span class="o">=</span> <span class="kc">None</span>
+
         <span class="c1"># Check if the file is a zipfile for not.</span>
         <span class="k">if</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">is_zipfile</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
 
@@ -1090,6 +1106,10 @@
 
                 <span class="c1"># Cache the working directory.</span>
                 <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+                <span class="c1"># Replace local video paths (for imagestore)</span>
+                <span class="k">if</span> <span class="n">tmp_dir</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">vid</span> <span class="ow">in</span> <span class="n">dicts</span><span class="p">[</span><span class="s2">&quot;videos&quot;</span><span class="p">]:</span>
+                        <span class="n">vid</span><span class="p">[</span><span class="s2">&quot;backend&quot;</span><span class="p">][</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">vid</span><span class="p">[</span><span class="s2">&quot;backend&quot;</span><span class="p">][</span><span class="s2">&quot;filename&quot;</span><span class="p">])</span>
 
                 <span class="c1"># Use the callback if given to handle missing videos</span>
                 <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">video_callback</span><span class="p">):</span>
@@ -1384,6 +1404,20 @@
 
         <span class="k">return</span> <span class="n">labels</span>
 
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">load_file</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">&quot;.h5&quot;</span><span class="p">,</span> <span class="s2">&quot;.hdf5&quot;</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">load_hdf5</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">&quot;.json&quot;</span><span class="p">,</span> <span class="s2">&quot;.json.zip&quot;</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">load_json</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.mat&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">load_mat</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.csv&quot;</span><span class="p">):</span>
+            <span class="c1"># for now, the only csv we support is the DeepLabCut format</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">load_deeplabcut_csv</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Cannot detect filetype for </span><span class="si">{filename}</span><span class="s2">&quot;</span><span class="p">)</span>
+
 <div class="viewcode-block" id="Labels.save_frame_data_imgstore"><a class="viewcode-back" href="../../../dataset.html#sleap.io.dataset.Labels.save_frame_data_imgstore">[docs]</a>    <span class="k">def</span> <span class="nf">save_frame_data_imgstore</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;./&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;png&#39;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Write all labeled frames from all videos to a collection of imgstore datasets.</span>
@@ -1601,6 +1635,8 @@
 
             <span class="n">has_shown_prompt</span> <span class="o">=</span> <span class="kc">False</span> <span class="c1"># have we already alerted user about missing files?</span>
 
+            <span class="n">basename_list</span> <span class="o">=</span> <span class="p">[]</span>
+
             <span class="c1"># Check each video</span>
             <span class="k">for</span> <span class="n">video_item</span> <span class="ow">in</span> <span class="n">video_list</span><span class="p">:</span>
                 <span class="k">if</span> <span class="s2">&quot;backend&quot;</span> <span class="ow">in</span> <span class="n">video_item</span> <span class="ow">and</span> <span class="s2">&quot;filename&quot;</span> <span class="ow">in</span> <span class="n">video_item</span><span class="p">[</span><span class="s2">&quot;backend&quot;</span><span class="p">]:</span>
@@ -1621,22 +1657,22 @@
 
                         <span class="c1"># We&#39;ll check in the current working directory, and if the user has</span>
                         <span class="c1"># already found any missing videos, check in the directory of those.</span>
-                        <span class="k">for</span> <span class="n">path_dir</span> <span class="ow">in</span> <span class="n">new_paths</span><span class="p">:</span>
-                            <span class="n">check_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path_dir</span><span class="p">,</span> <span class="n">current_basename</span><span class="p">)</span>
-                            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">check_path</span><span class="p">):</span>
-                                <span class="c1"># we found the file in a different directory</span>
-                                <span class="n">video_item</span><span class="p">[</span><span class="s2">&quot;backend&quot;</span><span class="p">][</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">check_path</span>
-                                <span class="n">is_found</span> <span class="o">=</span> <span class="kc">True</span>
-                                <span class="k">break</span>
+                        <span class="k">if</span> <span class="n">current_basename</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">basename_list</span><span class="p">:</span>
+                            <span class="k">for</span> <span class="n">path_dir</span> <span class="ow">in</span> <span class="n">new_paths</span><span class="p">:</span>
+                                <span class="n">check_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path_dir</span><span class="p">,</span> <span class="n">current_basename</span><span class="p">)</span>
+                                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">check_path</span><span class="p">):</span>
+                                    <span class="c1"># we found the file in a different directory</span>
+                                    <span class="n">video_item</span><span class="p">[</span><span class="s2">&quot;backend&quot;</span><span class="p">][</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">check_path</span>
+                                    <span class="n">is_found</span> <span class="o">=</span> <span class="kc">True</span>
+                                    <span class="k">break</span>
 
                         <span class="c1"># if we found this file, then move on to the next file</span>
                         <span class="k">if</span> <span class="n">is_found</span><span class="p">:</span> <span class="k">continue</span>
 
                         <span class="c1"># Since we couldn&#39;t find the file on our own, prompt the user.</span>
-
-                        <span class="k">if</span> <span class="ow">not</span> <span class="n">has_shown_prompt</span><span class="p">:</span>
-                            <span class="n">QMessageBox</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;We&#39;re unable to locate one or more video files for this project. Please locate </span><span class="si">{current_filename}</span><span class="s2">.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
-                            <span class="n">has_shown_prompt</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Unable to find: </span><span class="si">{current_filename}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="n">QMessageBox</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;We&#39;re unable to locate one or more video files for this project. Please locate </span><span class="si">{current_filename}</span><span class="s2">.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
+                        <span class="n">has_shown_prompt</span> <span class="o">=</span> <span class="kc">True</span>
 
                         <span class="n">current_root</span><span class="p">,</span> <span class="n">current_ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">current_basename</span><span class="p">)</span>
                         <span class="n">caption</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Please locate </span><span class="si">{current_basename}</span><span class="s2">...&quot;</span>
@@ -1648,6 +1684,7 @@
                             <span class="n">video_item</span><span class="p">[</span><span class="s2">&quot;backend&quot;</span><span class="p">][</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_filename</span>
                             <span class="c1"># keep track of the directory chosen by user</span>
                             <span class="n">new_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">new_filename</span><span class="p">))</span>
+                            <span class="n">basename_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current_basename</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">gui_video_callback</span></div>
 
 

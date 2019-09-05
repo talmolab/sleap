@@ -158,7 +158,7 @@
 <span id="instance"></span><h1>Instance<a class="headerlink" href="#module-sleap.instance" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="sleap.instance.Instance">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.instance.</code><code class="sig-name descname">Instance</code><span class="sig-paren">(</span><em class="sig-param">skeleton: sleap.skeleton.Skeleton</em>, <em class="sig-param">track: sleap.instance.Track = None</em>, <em class="sig-param">from_predicted: Optional[PredictedInstance] = None</em>, <em class="sig-param">points: sleap.instance.PointArray = None</em>, <em class="sig-param">frame: Optional[LabeledFrame] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/instance.html#Instance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.Instance" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.instance.</code><code class="sig-name descname">Instance</code><span class="sig-paren">(</span><em class="sig-param">skeleton: sleap.skeleton.Skeleton</em>, <em class="sig-param">track: sleap.instance.Track = None</em>, <em class="sig-param">from_predicted: Optional[PredictedInstance] = None</em>, <em class="sig-param">points: sleap.instance.PointArray = None</em>, <em class="sig-param">nodes: List = None</em>, <em class="sig-param">frame: Optional[LabeledFrame] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/instance.html#Instance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.Instance" title="Permalink to this definition">¶</a></dt>
 <dd><p>The class <a class="reference internal" href="#sleap.instance.Instance" title="sleap.instance.Instance"><code class="xref py py-class docutils literal notranslate"><span class="pre">Instance</span></code></a> represents a labelled instance of skeleton</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -178,6 +178,12 @@ This allows individual animals/objects to be tracked across frames.</p></li>
 <dt id="sleap.instance.Instance.centroid">
 <em class="property">property </em><code class="sig-name descname">centroid</code><a class="headerlink" href="#sleap.instance.Instance.centroid" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns instance centroid as (x,y) numpy row vector.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.instance.Instance.fix_array">
+<code class="sig-name descname">fix_array</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/instance.html#Instance.fix_array"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.Instance.fix_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fix points array after nodes have been added or removed.</p>
 </dd></dl>
 
 <dl class="method">
@@ -300,6 +306,22 @@ Any skeleton node not defined will have NaNs present.</p>
 <dd><p>PointArray is a sub-class of numpy recarray which stores
 Point objects as records.</p>
 <dl class="method">
+<dt id="sleap.instance.PointArray.from_array">
+<em class="property">classmethod </em><code class="sig-name descname">from_array</code><span class="sig-paren">(</span><em class="sig-param">a: sleap.instance.PointArray</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/instance.html#PointArray.from_array"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.PointArray.from_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a PointArray to a new PointArray
+(or child class, i.e., PredictedPointArray),
+use the default attribute values for new array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>a</strong> – The array to convert.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A PredictedPointArray with the same points as a.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.instance.PointArray.make_default">
 <em class="property">classmethod </em><code class="sig-name descname">make_default</code><span class="sig-paren">(</span><em class="sig-param">size: int</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/instance.html#PointArray.make_default"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.PointArray.make_default" title="Permalink to this definition">¶</a></dt>
 <dd><p>Construct a point array of specific size where each value in the array
@@ -318,7 +340,7 @@ is assigned the default values for a Point.</p>
 
 <dl class="class">
 <dt id="sleap.instance.PredictedInstance">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.instance.</code><code class="sig-name descname">PredictedInstance</code><span class="sig-paren">(</span><em class="sig-param">skeleton: sleap.skeleton.Skeleton</em>, <em class="sig-param">track: sleap.instance.Track = None</em>, <em class="sig-param">from_predicted: Optional[PredictedInstance] = None</em>, <em class="sig-param">points: sleap.instance.PointArray = None</em>, <em class="sig-param">frame: Optional[LabeledFrame] = None</em>, <em class="sig-param">score=0.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/instance.html#PredictedInstance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.PredictedInstance" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.instance.</code><code class="sig-name descname">PredictedInstance</code><span class="sig-paren">(</span><em class="sig-param">skeleton: sleap.skeleton.Skeleton</em>, <em class="sig-param">track: sleap.instance.Track = None</em>, <em class="sig-param">from_predicted: Optional[PredictedInstance] = None</em>, <em class="sig-param">points: sleap.instance.PointArray = None</em>, <em class="sig-param">nodes: List = None</em>, <em class="sig-param">frame: Optional[LabeledFrame] = None</em>, <em class="sig-param">score=0.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/instance.html#PredictedInstance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.PredictedInstance" title="Permalink to this definition">¶</a></dt>
 <dd><p>A predicted instance is an output of the inference procedure. It is
 the main output of the inference procedure.</p>
 <dl class="field-list simple">
@@ -388,21 +410,6 @@ the properties of a labeled point with an accompanying score.</p>
 <em class="property">class </em><code class="sig-prename descclassname">sleap.instance.</code><code class="sig-name descname">PredictedPointArray</code><a class="reference internal" href="_modules/sleap/instance.html#PredictedPointArray"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.PredictedPointArray" title="Permalink to this definition">¶</a></dt>
 <dd><p>PredictedPointArray is analogous to PointArray except for predicted
 points.</p>
-<dl class="method">
-<dt id="sleap.instance.PredictedPointArray.from_array">
-<em class="property">classmethod </em><code class="sig-name descname">from_array</code><span class="sig-paren">(</span><em class="sig-param">a: sleap.instance.PointArray</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/instance.html#PredictedPointArray.from_array"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.PredictedPointArray.from_array" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert a PointArray to a PredictedPointArray, use the default
-attribute values for PredictedPoints.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>a</strong> – The array to convert.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A PredictedPointArray with the same points as a.</p>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="method">
 <dt id="sleap.instance.PredictedPointArray.to_array">
 <em class="property">classmethod </em><code class="sig-name descname">to_array</code><span class="sig-paren">(</span><em class="sig-param">a: sleap.instance.PredictedPointArray</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/instance.html#PredictedPointArray.to_array"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.PredictedPointArray.to_array" title="Permalink to this definition">¶</a></dt>

@@ -488,19 +488,23 @@
                 <span class="n">v_offset</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_track_height</span> <span class="o">*</span> <span class="n">track</span><span class="p">)</span>
                 <span class="n">height</span> <span class="o">=</span> <span class="mi">1</span>
                 <span class="n">color</span> <span class="o">=</span> <span class="n">QColor</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_color_manager</span><span class="o">.</span><span class="n">get_color</span><span class="p">(</span><span class="n">track</span><span class="p">))</span>
-                <span class="n">width</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="c1"># rect (open/filled) if format: (&quot;o&quot;, frame_idx) or (&quot;f&quot;, frame_idx)</span>
                 <span class="c1"># (&quot;p&quot;, frame_idx) when only predicted instances on frame</span>
                 <span class="n">mark_type</span> <span class="o">=</span> <span class="n">new_mark</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
                 <span class="n">v_offset</span> <span class="o">=</span> <span class="mi">3</span>
                 <span class="n">height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">slider</span><span class="o">.</span><span class="n">rect</span><span class="p">()</span><span class="o">.</span><span class="n">height</span><span class="p">()</span><span class="o">-</span><span class="mi">6</span>
-                <span class="n">width</span> <span class="o">=</span> <span class="mi">2</span>
-                <span class="n">color</span> <span class="o">=</span> <span class="n">QColor</span><span class="p">(</span><span class="s2">&quot;blue&quot;</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">mark_type</span> <span class="o">==</span> <span class="s2">&quot;o&quot;</span><span class="p">:</span>
+                    <span class="n">width</span> <span class="o">=</span> <span class="mi">2</span>
                     <span class="n">filled</span> <span class="o">=</span> <span class="kc">False</span>
-                <span class="k">if</span> <span class="n">mark_type</span> <span class="o">==</span> <span class="s2">&quot;p&quot;</span><span class="p">:</span>
+                    <span class="n">color</span> <span class="o">=</span> <span class="n">QColor</span><span class="p">(</span><span class="s2">&quot;blue&quot;</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">mark_type</span> <span class="o">==</span> <span class="s2">&quot;f&quot;</span><span class="p">:</span>
+                    <span class="n">width</span> <span class="o">=</span> <span class="mi">2</span>
+                    <span class="n">color</span> <span class="o">=</span> <span class="n">QColor</span><span class="p">(</span><span class="s2">&quot;blue&quot;</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">mark_type</span> <span class="o">==</span> <span class="s2">&quot;p&quot;</span><span class="p">:</span>
+                    <span class="n">width</span> <span class="o">=</span> <span class="mi">0</span>
                     <span class="n">color</span> <span class="o">=</span> <span class="n">QColor</span><span class="p">(</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># line if mark has format: frame_idx</span>
             <span class="n">v_offset</span> <span class="o">=</span> <span class="mi">3</span>
@@ -524,18 +528,18 @@
         <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_toPos</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">())</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">handle</span><span class="o">.</span><span class="n">setPos</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">mark</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mark_items</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">width</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">mark</span><span class="p">)</span> <span class="o">==</span> <span class="nb">tuple</span><span class="p">:</span>
                 <span class="n">in_track</span> <span class="o">=</span> <span class="kc">True</span>
                 <span class="n">v</span> <span class="o">=</span> <span class="n">mark</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
                 <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">mark</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="nb">int</span><span class="p">:</span>
                     <span class="n">width_in_frames</span> <span class="o">=</span> <span class="n">mark</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">mark</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
                     <span class="n">width</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_toPos</span><span class="p">(</span><span class="n">width_in_frames</span><span class="p">))</span>
-                <span class="k">else</span><span class="p">:</span>
+                <span class="k">elif</span> <span class="n">mark</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;o&quot;</span><span class="p">:</span>
                     <span class="n">width</span> <span class="o">=</span> <span class="mi">2</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">in_track</span> <span class="o">=</span> <span class="kc">False</span>
                 <span class="n">v</span> <span class="o">=</span> <span class="n">mark</span>
-                <span class="n">width</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_toPos</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_mark_items</span><span class="p">[</span><span class="n">mark</span><span class="p">]</span><span class="o">.</span><span class="n">setPos</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 
