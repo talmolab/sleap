@@ -71,7 +71,7 @@ if __name__ == "__main__":
     print(f"track_occupancy: {occupancy_matrix.shape}")
     print(f"tracks: {prediction_matrix.shape}")
 
-    output_filename = re.sub("\.json(\.zip)?", "", args.data_path)
+    output_filename = re.sub("(\.json(\.zip)?|\.h5)$", "", args.data_path)
     output_filename = output_filename + ".tracking.h5"
 
     with h5.File(output_filename, "w") as f:

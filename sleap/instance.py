@@ -392,7 +392,11 @@ class Instance:
             # Convert PredictedPoint to Point if Instance
             if type(parray) == PointArray and type(point) == PredictedPoint:
                 point = Point(x=point.x, y=point.y, visible=point.visible, complete=point.complete)
-            parray[skeleton.node_to_index(node)] = point
+            try:
+                parray[skeleton.node_to_index(node)] = point
+                # parray[skeleton.node_to_index(node.name)] = point
+            except:
+                pass
 
     def _node_to_index(self, node_name):
         """
@@ -524,6 +528,7 @@ class Instance:
             A tuple of nodes that have been labelled for this instance.
 
         """
+        self.fix_array()
         return tuple(self._nodes[i] for i, point in enumerate(self._points)
             if not point.isnan() and self._nodes[i] in self.skeleton.nodes)
 
