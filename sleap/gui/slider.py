@@ -335,19 +335,23 @@ class VideoSlider(QGraphicsView):
                 v_offset = 3 + (self._track_height * track)
                 height = 1
                 color = QColor(*self._color_manager.get_color(track))
-                width = 0
             else:
                 # rect (open/filled) if format: ("o", frame_idx) or ("f", frame_idx)
                 # ("p", frame_idx) when only predicted instances on frame
                 mark_type = new_mark[0]
                 v_offset = 3
                 height = self.slider.rect().height()-6
-                width = 2
-                color = QColor("blue")
                 if mark_type == "o":
+                    width = 2
                     filled = False
-                if mark_type == "p":
+                    color = QColor("blue")
+                elif mark_type == "f":
+                    width = 2
+                    color = QColor("blue")
+                elif mark_type == "p":
+                    width = 0
                     color = QColor("red")
+
         else:
             # line if mark has format: frame_idx
             v_offset = 3
@@ -371,18 +375,18 @@ class VideoSlider(QGraphicsView):
         x = self._toPos(self.value())
         self.handle.setPos(x, 0)
         for mark in self._mark_items.keys():
+            width = 0
             if type(mark) == tuple:
                 in_track = True
                 v = mark[1]
                 if type(mark[0]) == int:
                     width_in_frames = mark[2] - mark[1]
                     width = max(2, self._toPos(width_in_frames))
-                else:
+                elif mark[0] == "o":
                     width = 2
             else:
                 in_track = False
                 v = mark
-                width = 0
             x = self._toPos(v, center=True)
             self._mark_items[mark].setPos(x, 0)
 

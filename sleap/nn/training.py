@@ -240,9 +240,10 @@ class Trainer:
         img_input = Input((img_height, img_width, img_channels))
 
         # Rectify image sizes not divisible by pooling factor
-        if hasattr(model.backbone, 'depth'):
-            depth = model.backbone.depth
+        depth = getattr(model.backbone, 'depth', 0)
+        depth = depth or getattr(model.backbone, 'down_blocks', 0)
 
+        if depth:
             pool_factor = 2 ** depth
             if img_height % pool_factor != 0 or img_width % pool_factor != 0:
                 logger.warning(
@@ -428,6 +429,7 @@ class Trainer:
                     ModelCheckpoint(filepath=full_path,
                                     monitor="val_loss", save_best_only=True,
                                     save_weights_only=False, period=1))
+            TrainingJob.save_json(train_run, f"{save_path}.json")
 
         # Callbacks: Shuffle after every epoch
         if self.shuffle_every_epoch:
@@ -694,7 +696,6 @@ class ProgressReporterZMQ(keras.callbacks.Callback):
         """
         self.socket.send_string(jsonpickle.encode(dict(what=self.what,event="train_end", logs=logs)))
 
-
 def main():
     from PySide2 import QtWidgets
 
@@ -748,7 +749,32 @@ def main():
     import sys
     sys.exit(0)
 
+def run(labels_filename: str, job_filename: str):
+
+    labels = Labels.load_file(labels_filename)
+    job = TrainingJob.load_json(job_filename)
+
+    job.labels_filename = labels_filename
+    save_dir = os.path.join(os.path.dirname(labels_filename), "models")
+
+    job.trainer.train(
+                        model=job.model,
+                        labels=labels,
+                        save_dir=save_dir,
+                        control_zmq_port=None,
+                        progress_report_zmq_port=None
+                        )
 
 if __name__ == "__main__":
-    main()
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("labels_path", help="Path to labels file")
+    parser.add_argument("profile_path", help="Path to training job profile file")
+
+    args = parser.parse_args()
+
+    run(
+        labels_filename=args.labels_path,
+        job_filename=args.profile_path)
 

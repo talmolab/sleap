@@ -103,7 +103,8 @@ def test_labels_json(tmpdir, multi_skel_vid_labels):
     assert not multi_skel_vid_labels.videos[0] is loaded_labels.videos[0]
 
     # Reload json using objects from original labels
-    loaded_labels = Labels.load_json(json_file_path, match_to=multi_skel_vid_labels)
+    # We'll also test load_file() here
+    loaded_labels = Labels.load_file(json_file_path, match_to=multi_skel_vid_labels)
 
     # Check that we now do have the same objects
     assert multi_skel_vid_labels.skeletons[0] in loaded_labels.skeletons
@@ -319,10 +320,23 @@ def test_labels_predicted_hdf5(multi_skel_vid_labels, tmpdir):
     for label in labels:
         label.instances[1].from_predicted = label.instances[0]
 
+    # Try adding a node to the skeleton
+    labels.skeletons[0].add_node("new node")
+
+    # Save and compare the results
     Labels.save_hdf5(filename=filename, labels=labels)
-
     loaded_labels = Labels.load_hdf5(filename=filename)
+    _check_labels_match(labels, loaded_labels)
 
+    # Try deleting nodes from the skeleton
+    node = labels.skeletons[0].nodes[-1]
+    labels.skeletons[0].delete_node(node)
+    node = labels.skeletons[0].nodes[-1]
+    labels.skeletons[0].delete_node(node)
+
+    # Save and compare the results
+    Labels.save_hdf5(filename=filename, labels=labels)
+    loaded_labels = Labels.load_hdf5(filename=filename)
     _check_labels_match(labels, loaded_labels)
 
 def test_labels_append_hdf5(multi_skel_vid_labels, tmpdir):

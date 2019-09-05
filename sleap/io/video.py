@@ -152,27 +152,41 @@ class MediaVideo:
     grayscale: bool = attr.ib()
     bgr: bool = attr.ib(default=True)
     _detect_grayscale = False
+    _reader_ = None
+    _test_frame_ = None
 
     @grayscale.default
     def __grayscale_default__(self):
         self._detect_grayscale = True
         return False
 
-    def __attrs_post_init__(self):
+    @property
+    def __reader(self):
+        # Load if not already loaded
+        if self._reader_ is None:
+            if not os.path.isfile(self.filename):
+                raise FileNotFoundError(f"Could not find filename video filename named {self.filename}")
 
-        if not os.path.isfile(self.filename):
-            raise FileNotFoundError(f"Could not find filename video filename named {self.filename}")
+            # Try and open the file either locally in current directory or with full path
+            self._reader_ = cv2.VideoCapture(self.filename)
 
-        # Try and open the file either locally in current directory or with full path
-        self.__reader = cv2.VideoCapture(self.filename)
+            # If the user specified None for grayscale bool, figure it out based on the
+            # the first frame of data.
+            if self._detect_grayscale is True:
+                self.grayscale = bool(np.alltrue(self.__test_frame[..., 0] == self.__test_frame[..., -1]))
 
-        # Lets grab a test frame to help us figure things out about the video
-        self.__test_frame = self.get_frame(0, grayscale=False)
+        # Return cached reader
+        return self._reader_
 
-        # If the user specified None for grayscale bool, figure it out based on the
-        # the first frame of data.
-        if self._detect_grayscale is True:
-            self.grayscale = bool(np.alltrue(self.__test_frame[..., 0] == self.__test_frame[..., -1]))
+    @property
+    def __test_frame(self):
+        # Load if not already loaded
+        if self._test_frame_ is None:
+            # Lets grab a test frame to help us figure things out about the video
+            self._test_frame_ = self.get_frame(0, grayscale=False)
+
+        # Return stored test frame
+        return self._test_frame_
 
     def matches(self, other):
         """
@@ -224,13 +238,13 @@ class MediaVideo:
         return self.__test_frame.dtype
 
     def get_frame(self, idx, grayscale=None):
-        if grayscale is None:
-            grayscale = self.grayscale
-
         if self.__reader.get(cv2.CAP_PROP_POS_FRAMES) != idx:
             self.__reader.set(cv2.CAP_PROP_POS_FRAMES, idx)
 
         ret, frame = self.__reader.read()
+
+        if grayscale is None:
+            grayscale = self.grayscale
 
         if grayscale:
             frame = frame[...,0][...,None]
@@ -763,7 +777,7 @@ class Video:
         return vid_cattr
 
     @staticmethod
-    def fixup_path(path) -> str:
+    def fixup_path(path, raise_error=False) -> str:
         """
         Given a path to a video try to find it. This is attempt to make the paths
         serialized for different video objects portabls across multiple computers.
@@ -802,5 +816,9 @@ class Video:
             if os.path.exists(img_store_dir):
                 return img_store_dir
 
-        raise FileNotFoundError(f"Cannot find a video file: {path}")
+        if raise_error:
+            raise FileNotFoundError(f"Cannot find a video file: {path}")
+        else:
+            print(f"Cannot find a video file: {path}")
+            return path
 

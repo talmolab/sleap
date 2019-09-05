@@ -4,7 +4,7 @@ main:
   label: Method
   type: stacked
   default: random
-  options: random,strides,pca,brisk
+  options: random,strides,pca,brisk,proofreading
   #removing hog for now since it's not implemented correctly
 
   strides:
@@ -72,7 +72,17 @@ main:
     label: Number of PCA components
     type: int
     default: 50
-
+  proofreading:
+  - name: score_limit
+    label: Low score (lt)
+    type: float
+    default: 3.0
+    range: 0,100
+  - name: instance_limit
+    label: Instance count (gte)
+    type: int
+    default: 2
+    range: 1,10
 
 - name: generate_button
   label: Generate Suggestions

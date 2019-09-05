@@ -542,6 +542,12 @@ class Labels(MutableSequence):
             if label.video == video:
                 self.labeled_frames.remove(label)
 
+        # Delete data that's indexed by video
+        if video in self.suggestions:
+            del self.suggestions[video]
+        if video in self.negative_anchors:
+            del self.negative_anchors[video]
+
         # Delete video
         self.videos.remove(video)
 
@@ -780,6 +786,14 @@ class Labels(MutableSequence):
                 # then replace each video with this new video
                 new_videos = labels.save_frame_data_imgstore(output_dir=tmp_dir, format=frame_data_format)
 
+                # Make video paths relative
+                for vid in new_videos:
+                    tmp_path = vid.filename
+                    # Get the parent dir of the YAML file.
+                    img_store_dir = os.path.join(os.path.basename(os.path.split(tmp_path)[0]), os.path.basename(tmp_path))
+                    # Change to relative path
+                    vid.backend.filename = img_store_dir
+
                 # Convert to a dict, not JSON yet, because we need to patch up the videos
                 d = labels.to_dict()
                 d['videos'] = Video.cattr().unstructure(new_videos)
@@ -884,6 +898,8 @@ class Labels(MutableSequence):
                   video_callback=None,
                   match_to: Optional['Labels'] = None):
 
+        tmp_dir = None
+
         # Check if the file is a zipfile for not.
         if zipfile.is_zipfile(filename):
 
@@ -937,6 +953,10 @@ class Labels(MutableSequence):
 
                 # Cache the working directory.
                 cwd = os.getcwd()
+                # Replace local video paths (for imagestore)
+                if tmp_dir:
+                    for vid in dicts["videos"]:
+                        vid["backend"]["filename"] = os.path.join(tmp_dir, vid["backend"]["filename"])
 
                 # Use the callback if given to handle missing videos
                 if callable(video_callback):
@@ -1231,6 +1251,20 @@ class Labels(MutableSequence):
 
         return labels
 
+    @classmethod
+    def load_file(cls, filename: str, *args, **kwargs):
+        if filename.endswith((".h5", ".hdf5")):
+            return cls.load_hdf5(filename, *args, **kwargs)
+        elif filename.endswith((".json", ".json.zip")):
+            return cls.load_json(filename, *args, **kwargs)
+        elif filename.endswith(".mat"):
+            return cls.load_mat(filename)
+        elif filename.endswith(".csv"):
+            # for now, the only csv we support is the DeepLabCut format
+            return cls.load_deeplabcut_csv(filename)
+        else:
+            raise ValueError(f"Cannot detect filetype for {filename}")
+
     def save_frame_data_imgstore(self, output_dir: str = './', format: str = 'png'):
         """
         Write all labeled frames from all videos to a collection of imgstore datasets.
@@ -1448,6 +1482,8 @@ class Labels(MutableSequence):
 
             has_shown_prompt = False # have we already alerted user about missing files?
 
+            basename_list = []
+
             # Check each video
             for video_item in video_list:
                 if "backend" in video_item and "filename" in video_item["backend"]:
@@ -1468,22 +1504,22 @@ class Labels(MutableSequence):
 
                         # We'll check in the current working directory, and if the user has
                         # already found any missing videos, check in the directory of those.
-                        for path_dir in new_paths:
-                            check_path = os.path.join(path_dir, current_basename)
-                            if os.path.exists(check_path):
-                                # we found the file in a different directory
-                                video_item["backend"]["filename"] = check_path
-                                is_found = True
-                                break
+                        if current_basename not in basename_list:
+                            for path_dir in new_paths:
+                                check_path = os.path.join(path_dir, current_basename)
+                                if os.path.exists(check_path):
+                                    # we found the file in a different directory
+                                    video_item["backend"]["filename"] = check_path
+                                    is_found = True
+                                    break
 
                         # if we found this file, then move on to the next file
                         if is_found: continue
 
                         # Since we couldn't find the file on our own, prompt the user.
-
-                        if not has_shown_prompt:
-                            QMessageBox(text=f"We're unable to locate one or more video files for this project. Please locate {current_filename}.").exec_()
-                            has_shown_prompt = True
+                        print(f"Unable to find: {current_filename}")
+                        QMessageBox(text=f"We're unable to locate one or more video files for this project. Please locate {current_filename}.").exec_()
+                        has_shown_prompt = True
 
                         current_root, current_ext = os.path.splitext(current_basename)
                         caption = f"Please locate {current_basename}..."
@@ -1495,6 +1531,7 @@ class Labels(MutableSequence):
                             video_item["backend"]["filename"] = new_filename
                             # keep track of the directory chosen by user
                             new_paths.append(os.path.dirname(new_filename))
+                            basename_list.append(current_basename)
         return gui_video_callback
 
 
