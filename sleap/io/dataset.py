@@ -790,7 +790,8 @@ class Labels(MutableSequence):
                 for vid in new_videos:
                     tmp_path = vid.filename
                     # Get the parent dir of the YAML file.
-                    img_store_dir = os.path.join(os.path.basename(os.path.split(tmp_path)[0]), os.path.basename(tmp_path))
+                    # Use "/" since this works on Windows and posix
+                    img_store_dir = os.path.basename(os.path.split(tmp_path)[0]) + "/" + os.path.basename(tmp_path)
                     # Change to relative path
                     vid.backend.filename = img_store_dir
 
@@ -1265,7 +1266,7 @@ class Labels(MutableSequence):
         else:
             raise ValueError(f"Cannot detect filetype for {filename}")
 
-    def save_frame_data_imgstore(self, output_dir: str = './', format: str = 'png'):
+    def save_frame_data_imgstore(self, output_dir: str = './', format: str = 'png', all_labels: bool = False):
         """
         Write all labeled frames from all videos to a collection of imgstore datasets.
         This only writes frames that have been labeled. Videos without any labeled frames
@@ -1275,6 +1276,8 @@ class Labels(MutableSequence):
             output_dir:
             format: The image format to use for the data. png for lossless, jpg for lossy.
             Other imgstore formats will probably work as well but have not been tested.
+            all_labels: Include any labeled frames, not just the frames
+                we'll use for training (i.e., those with Instances).
 
         Returns:
             A list of ImgStoreVideo objects that represent the stored frames.
@@ -1282,7 +1285,9 @@ class Labels(MutableSequence):
         # For each label
         imgstore_vids = []
         for v_idx, v in enumerate(self.videos):
-            frame_nums = [f.frame_idx for f in self.labeled_frames if v == f.video]
+            frame_nums = [lf.frame_idx for lf in self.labeled_frames
+                            if v == lf.video
+                            and (all_labels or lf.has_user_instances)]
 
             frames_filename = os.path.join(output_dir, f'frame_data_vid{v_idx}')
             vid = v.to_imgstore(path=frames_filename, frame_numbers=frame_nums, format=format)
