@@ -603,7 +603,7 @@ class Instance:
             parray = structured_to_unstructured(self._points[['x', 'y']])
 
             if invisible_as_nan:
-                parray[self._points.visible is False, :] = math.nan
+                parray[~self._points.visible] = math.nan
 
             return parray
 

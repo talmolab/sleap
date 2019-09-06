@@ -145,6 +145,15 @@ def test_points_array(skeleton):
     assert np.allclose(pts[skeleton.node_to_index('head'), :], [0, 4])
     assert np.allclose(pts[skeleton.node_to_index('thorax'), :], [1, 2])
 
+    # Make sure that invisible points are nan iff invisible_as_nan=True
+    instance1['thorax'] = Point(1, 2, visible=False)
+
+    pts = instance1.points_array()
+    assert not np.isnan(pts[skeleton.node_to_index('thorax'), :]).all()
+
+    pts = instance1.points_array(invisible_as_nan=True)
+    assert np.isnan(pts[skeleton.node_to_index('thorax'), :]).all()
+
 def test_instance_labeled_frame_ref(skeleton, centered_pair_vid):
     """
     Test whether links between labeled frames and instances are kept
