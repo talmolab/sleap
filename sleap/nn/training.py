@@ -767,6 +767,7 @@ def run(labels_filename: str, job_filename: str):
 
 if __name__ == "__main__":
     import argparse
+    from pkg_resources import Requirement, resource_filename
 
     parser = argparse.ArgumentParser()
     parser.add_argument("labels_path", help="Path to labels file")
@@ -774,7 +775,18 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    job_filename = args.profile_path
+    if not os.path.exists(job_filename):
+        profile_dir = resource_filename(Requirement.parse("sleap"), "sleap/training_profiles")
+        if os.path.exists(os.path.join(profile_dir, job_filename)):
+            job_filename = os.path.join(profile_dir, job_filename)
+        else:
+            raise FileNotFoundError(f"Could not find training profile: {job_filename}")
+
+    print(f"Training labels file: {args.labels_path}")
+    print(f"Training profile: {job_filename}")
+
     run(
         labels_filename=args.labels_path,
-        job_filename=args.profile_path)
+        job_filename=job_filename)
 
