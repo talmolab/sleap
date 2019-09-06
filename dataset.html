@@ -404,7 +404,7 @@ Raise ValueError if the value is not present.</p>
 
 <dl class="method">
 <dt id="sleap.io.dataset.Labels.save_frame_data_imgstore">
-<code class="sig-name descname">save_frame_data_imgstore</code><span class="sig-paren">(</span><em class="sig-param">output_dir: str = './'</em>, <em class="sig-param">format: str = 'png'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.save_frame_data_imgstore"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.save_frame_data_imgstore" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">save_frame_data_imgstore</code><span class="sig-paren">(</span><em class="sig-param">output_dir: str = './'</em>, <em class="sig-param">format: str = 'png'</em>, <em class="sig-param">all_labels: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.save_frame_data_imgstore"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.save_frame_data_imgstore" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write all labeled frames from all videos to a collection of imgstore datasets.
 This only writes frames that have been labeled. Videos without any labeled frames
 will be included as empty imgstores.</p>
@@ -414,6 +414,8 @@ will be included as empty imgstores.</p>
 <li><p><strong>output_dir</strong> – </p></li>
 <li><p><strong>format</strong> – The image format to use for the data. png for lossless, jpg for lossy.</p></li>
 <li><p><strong>imgstore formats will probably work as well but have not been tested.</strong> (<em>Other</em>) – </p></li>
+<li><p><strong>all_labels</strong> – Include any labeled frames, not just the frames
+we’ll use for training (i.e., those with Instances).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
