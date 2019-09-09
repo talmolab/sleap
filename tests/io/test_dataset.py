@@ -155,6 +155,23 @@ def test_label_accessors(centered_pair_labels):
     assert len(labels.find(video)) == 70
     assert labels[video] == labels.find(video)
 
+    f = labels.frames(video, from_frame_idx=1)
+    assert next(f).frame_idx == 15
+    assert next(f).frame_idx == 31
+
+    f = labels.frames(video, from_frame_idx=31, reverse=True)
+    assert next(f).frame_idx == 15
+
+    f = labels.frames(video, from_frame_idx=0, reverse=True)
+    assert next(f).frame_idx == 1092
+    next(f)
+    next(f)
+    # test that iterator now has fewer items left
+    assert len(list(f)) == 70-3
+
+    assert labels.instance_count(video, 15) == 2
+    assert labels.instance_count(video, 7) == 0
+
     assert labels[0].video == video
     assert labels[0].frame_idx == 0
 
@@ -166,6 +183,7 @@ def test_label_accessors(centered_pair_labels):
     assert labels.find(video, 954)[0] == labels[61]
     assert labels.find_first(video) == labels[0]
     assert labels.find_first(video, 954) == labels[61]
+    assert labels.find_last(video) == labels[69]
     assert labels[video, 954] == labels[61]
     assert labels[video, 0] == labels[0]
     assert labels[video] == labels.labels
