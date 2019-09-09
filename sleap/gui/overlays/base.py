@@ -21,6 +21,7 @@ class ModelData:
     model: 'keras.Model'
     video: Video
     do_rescale: bool=False
+    adjust_vals: bool=True
 
     def __getitem__(self, i):
         """Data data for frame i from predictor."""
@@ -42,17 +43,19 @@ class ModelData:
             frame_result = inference_transform.invert_scale(frame_result)
 
         # We just want the single image results
-        frame_result = frame_result[0]
+        if type(i) != slice:
+            frame_result = frame_result[0]
 
-        # If max value is below 1, amplify values so max is 1.
-        # This allows us to visualize model with small ptp value
-        # even though this model may not give us adequate predictions.
-        max_val = np.max(frame_result)
-        if max_val < 1:
-            frame_result = frame_result/np.max(frame_result)
+        if self.adjust_vals:
+            # If max value is below 1, amplify values so max is 1.
+            # This allows us to visualize model with small ptp value
+            # even though this model may not give us adequate predictions.
+            max_val = np.max(frame_result)
+            if max_val < 1:
+                frame_result = frame_result/np.max(frame_result)
 
-        # Clip values to ensure that they're within [0, 1]
-        frame_result = np.clip(frame_result, 0, 1)
+            # Clip values to ensure that they're within [0, 1]
+            frame_result = np.clip(frame_result, 0, 1)
 
         return frame_result
 
