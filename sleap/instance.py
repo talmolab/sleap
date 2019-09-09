@@ -351,7 +351,7 @@ class Instance:
 
         # If the user did not pass a points list initialize a point array for future
         # points.
-        if self._points is None:
+        if self._points is None or len(self._points) == 0:
 
             # Initialize an empty point array that is the size of the skeleton.
             self._points = self._point_array_type.make_default(len(self.skeleton.nodes))
