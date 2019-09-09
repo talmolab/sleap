@@ -6,6 +6,7 @@ from sleap.skeleton import Skeleton
 from sleap.instance import Instance, Point, LabeledFrame, PredictedInstance
 from sleap.io.video import Video, MediaVideo
 from sleap.io.dataset import Labels, load_labels_json_old
+from sleap.gui.suggestions import VideoFrameSuggestions
 
 TEST_H5_DATASET = 'tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5'
 
@@ -155,6 +156,23 @@ def test_label_accessors(centered_pair_labels):
     assert len(labels.find(video)) == 70
     assert labels[video] == labels.find(video)
 
+    f = labels.frames(video, from_frame_idx=1)
+    assert next(f).frame_idx == 15
+    assert next(f).frame_idx == 31
+
+    f = labels.frames(video, from_frame_idx=31, reverse=True)
+    assert next(f).frame_idx == 15
+
+    f = labels.frames(video, from_frame_idx=0, reverse=True)
+    assert next(f).frame_idx == 1092
+    next(f)
+    next(f)
+    # test that iterator now has fewer items left
+    assert len(list(f)) == 70-3
+
+    assert labels.instance_count(video, 15) == 2
+    assert labels.instance_count(video, 7) == 0
+
     assert labels[0].video == video
     assert labels[0].frame_idx == 0
 
@@ -166,6 +184,7 @@ def test_label_accessors(centered_pair_labels):
     assert labels.find(video, 954)[0] == labels[61]
     assert labels.find_first(video) == labels[0]
     assert labels.find_first(video, 954) == labels[61]
+    assert labels.find_last(video) == labels[69]
     assert labels[video, 954] == labels[61]
     assert labels[video, 0] == labels[0]
     assert labels[video] == labels.labels
@@ -265,6 +284,23 @@ def test_instance_access():
     assert len(labels.all_instances) == 50
     assert len(list(labels.instances(video=dummy_video))) == 20
     assert len(list(labels.instances(video=dummy_video2))) == 30
+
+def test_suggestions(small_robot_mp4_vid):
+    dummy_video = small_robot_mp4_vid
+    dummy_skeleton = Skeleton()
+    dummy_instance = Instance(dummy_skeleton)
+    dummy_frame = LabeledFrame(dummy_video, frame_idx=0, instances=[dummy_instance,])
+
+    labels = Labels()
+    labels.append(dummy_frame)
+
+    suggestions = dict()
+    suggestions[dummy_video] = VideoFrameSuggestions.suggest(
+                                dummy_video,
+                                params=dict(method="random", per_video=13))
+    labels.set_suggestions(suggestions)
+
+    assert len(labels.get_video_suggestions(dummy_video)) == 13
 
 
 def test_load_labels_mat(mat_labels):

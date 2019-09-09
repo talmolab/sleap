@@ -74,6 +74,7 @@ The version number to put in the Labels JSON format.
 """
 LABELS_JSON_FILE_VERSION = "2.0.0"
 
+
 @attr.s(auto_attribs=True)
 class Labels(MutableSequence):
     """
@@ -91,6 +92,8 @@ class Labels(MutableSequence):
         skeletons: A list of skeletons that these labels may or may not reference.
         tracks: A list of tracks that instances can belong to.
         suggestions: A dict with a list for each video of suggested frames to label.
+        negative_anchors: A dict with list of anchor coordinates
+            for negative training samples for each video.
     """
 
     labeled_frames: List[LabeledFrame] = attr.ib(default=attr.Factory(list))
@@ -182,10 +185,6 @@ class Labels(MutableSequence):
         """ Alias for labeled_frames """
         return self.labeled_frames
 
-    @property
-    def user_labeled_frames(self):
-        return [lf for lf in self.labeled_frames if lf.has_user_instances]
-
     def __len__(self):
         return len(self.labeled_frames)
 
@@ -227,6 +226,59 @@ class Labels(MutableSequence):
         else:
             raise KeyError("Invalid label indexing arguments.")
 
+    def __setitem__(self, index, value: LabeledFrame):
+        # TODO: Maybe we should remove this method altogether?
+        self.labeled_frames.__setitem__(index, value)
+        self._update_containers(value)
+
+    def _update_containers(self, new_label: LabeledFrame):
+        """ Ensure that top-level containers are kept updated with new
+        instances of objects that come along with new labels. """
+
+        if new_label.video not in self.videos:
+            self.videos.append(new_label.video)
+
+        for skeleton in {instance.skeleton for instance in new_label}:
+            if skeleton not in self.skeletons:
+                self.skeletons.append(skeleton)
+                for node in skeleton.nodes:
+                    if node not in self.nodes:
+                        self.nodes.append(node)
+
+        # Add any new Tracks as well
+        for instance in new_label.instances:
+            if instance.track and instance.track not in self.tracks:
+                self.tracks.append(instance.track)
+
+        # Sort the tracks again
+        self.tracks.sort(key=lambda t: (t.spawned_on, t.name))
+
+        # Update cache datastructures
+        if new_label.video not in self._lf_by_video:
+            self._lf_by_video[new_label.video] = []
+        if new_label.video not in self._frame_idx_map:
+            self._frame_idx_map[new_label.video] = dict()
+        self._lf_by_video[new_label.video].append(new_label)
+        self._frame_idx_map[new_label.video][new_label.frame_idx] = new_label
+
+    def insert(self, index, value: LabeledFrame):
+        if value in self or (value.video, value.frame_idx) in self:
+            return
+
+        self.labeled_frames.insert(index, value)
+        self._update_containers(value)
+
+    def append(self, value: LabeledFrame):
+        self.insert(len(self) + 1, value)
+
+    def __delitem__(self, key):
+        self.labeled_frames.remove(self.labeled_frames[key])
+
+    def remove(self, value: LabeledFrame):
+        self.labeled_frames.remove(value)
+        self._lf_by_video[new_label.video].remove(value)
+        del self._frame_idx_map[new_label.video][value.frame_idx]
+
     def find(self, video: Video, frame_idx: Union[int, range] = None, return_new: bool=False) -> List[LabeledFrame]:
         """ Search for labeled frames given video and/or frame index.
 
@@ -262,10 +314,13 @@ class Labels(MutableSequence):
         if video not in self._frame_idx_map: return None
 
         # Get sorted list of frame indexes for this video
-        frame_idxs = sorted(self._frame_idx_map[video].keys(), reverse=reverse)
+        frame_idxs = sorted(self._frame_idx_map[video].keys())
 
-        # Find the next frame index after the specified frame
-        next_frame_idx = min(filter(lambda x: x > from_frame_idx, frame_idxs), default=frame_idxs[0])
+        # Find the next frame index after (before) the specified frame
+        if not reverse:
+            next_frame_idx = min(filter(lambda x: x > from_frame_idx, frame_idxs), default=frame_idxs[0])
+        else:
+            next_frame_idx = max(filter(lambda x: x < from_frame_idx, frame_idxs), default=frame_idxs[-1])
         cut_list_idx = frame_idxs.index(next_frame_idx)
 
         # Shift list of frame indices to start with specified frame
@@ -307,12 +362,45 @@ class Labels(MutableSequence):
                 if label.video == video and (frame_idx is None or (label.frame_idx == frame_idx)):
                     return label
 
+    @property
+    def user_labeled_frames(self):
+        return [lf for lf in self.labeled_frames if lf.has_user_instances]
+
+    # Methods for instances
+
     def instance_count(self, video: Video, frame_idx: int) -> int:
         count = 0
         labeled_frame = self.find_first(video, frame_idx)
         if labeled_frame is not None:
             count = len([inst for inst in labeled_frame.instances if type(inst)==Instance])
         return count
+
+    
+    @property
+    def all_instances(self):
+        return list(self.instances())
+
+    @property
+    def user_instances(self):
+        return [inst for inst in self.all_instances if type(inst) == Instance]
+
+    def instances(self, video: Video = None, skeleton: Skeleton = None):
+        """ Iterate through all instances in the labels, optionally with filters.
+
+        Args:
+            video: Only iterate through instances in this video
+            skeleton: Only iterate through instances with this skeleton
+
+        Yields:
+            Instance: The next labeled instance
+        """
+        for label in self.labels:
+            if video is None or label.video == video:
+                for instance in label.instances:
+                    if skeleton is None or instance.skeleton == skeleton:
+                        yield instance
+
+    # Methods for tracks
 
     def get_track_occupany(self, video: Video):
         try:
@@ -437,138 +525,8 @@ class Labels(MutableSequence):
     def find_track_instances(self, *args, **kwargs) -> List[Instance]:
         return [inst for lf, inst in self.find_track_occupancy(*args, **kwargs)]
 
-    @property
-    def all_instances(self):
-        return list(self.instances())
-
-    @property
-    def user_instances(self):
-        return [inst for inst in self.all_instances if type(inst) == Instance]
-
-    def instances(self, video: Video = None, skeleton: Skeleton = None):
-        """ Iterate through all instances in the labels, optionally with filters.
-
-        Args:
-            video: Only iterate through instances in this video
-            skeleton: Only iterate through instances with this skeleton
-
-        Yields:
-            Instance: The next labeled instance
-        """
-        for label in self.labels:
-            if video is None or label.video == video:
-                for instance in label.instances:
-                    if skeleton is None or instance.skeleton == skeleton:
-                        yield instance
-
-    def _update_containers(self, new_label: LabeledFrame):
-        """ Ensure that top-level containers are kept updated with new
-        instances of objects that come along with new labels. """
-
-        if new_label.video not in self.videos:
-            self.videos.append(new_label.video)
-
-        for skeleton in {instance.skeleton for instance in new_label}:
-            if skeleton not in self.skeletons:
-                self.skeletons.append(skeleton)
-                for node in skeleton.nodes:
-                    if node not in self.nodes:
-                        self.nodes.append(node)
-
-        # Add any new Tracks as well
-        for instance in new_label.instances:
-            if instance.track and instance.track not in self.tracks:
-                self.tracks.append(instance.track)
-
-        # Sort the tracks again
-        self.tracks.sort(key=lambda t: (t.spawned_on, t.name))
-
-        # Update cache datastructures
-        if new_label.video not in self._lf_by_video:
-            self._lf_by_video[new_label.video] = []
-        if new_label.video not in self._frame_idx_map:
-            self._frame_idx_map[new_label.video] = dict()
-        self._lf_by_video[new_label.video].append(new_label)
-        self._frame_idx_map[new_label.video][new_label.frame_idx] = new_label
-
-    def __setitem__(self, index, value: LabeledFrame):
-        # TODO: Maybe we should remove this method altogether?
-        self.labeled_frames.__setitem__(index, value)
-        self._update_containers(value)
-
-    def insert(self, index, value: LabeledFrame):
-        if value in self or (value.video, value.frame_idx) in self:
-            return
-
-        self.labeled_frames.insert(index, value)
-        self._update_containers(value)
-
-    def append(self, value: LabeledFrame):
-        self.insert(len(self) + 1, value)
-
-    def __delitem__(self, key):
-        self.labeled_frames.remove(self.labeled_frames[key])
-
-    def remove(self, value: LabeledFrame):
-        self.labeled_frames.remove(value)
-        self._lf_by_video[new_label.video].remove(value)
-        del self._frame_idx_map[new_label.video][value.frame_idx]
-
-    def add_video(self, video: Video):
-        """ Add a video to the labels if it is not already in it.
-
-        Video instances are added automatically when adding labeled frames,
-        but this function allows for adding videos to the labels before any
-        labeled frames are added.
-
-        Args:
-            video: `Video` instance
-
-        """
-        if video not in self.videos:
-            self.videos.append(video)
-
-    def remove_video(self, video: Video):
-        """ Removes a video from the labels and ALL associated labeled frames.
-
-        Args:
-            video: `Video` instance to be removed
-        """
-        if video not in self.videos:
-            raise KeyError("Video is not in labels.")
-
-        # Delete all associated labeled frames
-        for label in reversed(self.labeled_frames):
-            if label.video == video:
-                self.labeled_frames.remove(label)
-
-        # Delete data that's indexed by video
-        if video in self.suggestions:
-            del self.suggestions[video]
-        if video in self.negative_anchors:
-            del self.negative_anchors[video]
-
-        # Delete video
-        self.videos.remove(video)
-
-        # Remove from caches
-        if video in self._lf_by_video:
-            del self._lf_by_video[video]
-        if video in self._frame_idx_map:
-            del self._frame_idx_map[video]
-
-    def add_negative_anchor(self, video:Video, frame_idx: int, where: tuple):
-        """Adds a location for a negative training sample.
-
-        Args:
-            video: the `Video` for this negative sample
-            frame_idx: frame index
-            where: (x, y)
-        """
-        if video not in self.negative_anchors:
-            self.negative_anchors[video] = []
-        self.negative_anchors[video].append((frame_idx, *where))
-
+    # Methods for suggestions
+    
     def get_video_suggestions(self, video:Video) -> list:
         """
         Returns the list of suggested frames for the specified video
@@ -620,6 +578,71 @@ class Labels(MutableSequence):
     def set_suggestions(self, suggestions:Dict[Video, list]):
         """Sets the suggested frames."""
         self.suggestions = suggestions
+
+    def delete_suggestions(self, video):
+        """Deletes suggestions for specified video."""
+        if video in self.suggestions:
+            del self.suggestions[video]
+
+    # Methods for videos
+
+    def add_video(self, video: Video):
+        """ Add a video to the labels if it is not already in it.
+
+        Video instances are added automatically when adding labeled frames,
+        but this function allows for adding videos to the labels before any
+        labeled frames are added.
+
+        Args:
+            video: `Video` instance
+
+        """
+        if video not in self.videos:
+            self.videos.append(video)
+
+    def remove_video(self, video: Video):
+        """ Removes a video from the labels and ALL associated labeled frames.
+
+        Args:
+            video: `Video` instance to be removed
+        """
+        if video not in self.videos:
+            raise KeyError("Video is not in labels.")
+
+        # Delete all associated labeled frames
+        for label in reversed(self.labeled_frames):
+            if label.video == video:
+                self.labeled_frames.remove(label)
+
+        # Delete data that's indexed by video
+        self.delete_suggestions(video)
+        if video in self.negative_anchors:
+            del self.negative_anchors[video]
+
+        # Delete video
+        self.videos.remove(video)
+
+        # Remove from caches
+        if video in self._lf_by_video:
+            del self._lf_by_video[video]
+        if video in self._frame_idx_map:
+            del self._frame_idx_map[video]
+
+    # Methods for negative anchors
+
+    def add_negative_anchor(self, video:Video, frame_idx: int, where: tuple):
+        """Adds a location for a negative training sample.
+
+        Args:
+            video: the `Video` for this negative sample
+            frame_idx: frame index
+            where: (x, y)
+        """
+        if video not in self.negative_anchors:
+            self.negative_anchors[video] = []
+        self.negative_anchors[video].append((frame_idx, *where))
+
+    # Methods for saving/loading
 
     def extend_from(self, new_frames):
         """Merge data from another Labels object or list of LabeledFrames into self.
@@ -907,7 +930,7 @@ class Labels(MutableSequence):
             # Make a tmpdir, located in the directory that the file exists, to unzip
             # its contents.
             tmp_dir = os.path.join(os.path.dirname(filename),
-                                   f"tmp_{os.path.basename(filename)}")
+                                   f"tmp_{os.getpid()}_{os.path.basename(filename)}")
             if os.path.exists(tmp_dir):
                 shutil.rmtree(tmp_dir, ignore_errors=True)
             try:

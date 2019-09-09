@@ -3,13 +3,17 @@ import os
 
 import numpy as np
 
-from sleap.io.video import Video
+from sleap.io.video import Video, HDF5Video, MediaVideo
 from tests.fixtures.videos import TEST_H5_FILE, TEST_SMALL_ROBOT_MP4_FILE
 
 # FIXME:
 # Parameterizing fixtures with fixtures is annoying so this leads to a lot
 # of redundant test code here.
 # See: https://github.com/pytest-dev/pytest/issues/349
+
+def test_from_filename():
+    assert type(Video.from_filename(TEST_H5_FILE).backend) == HDF5Video
+    assert type(Video.from_filename(TEST_SMALL_ROBOT_MP4_FILE).backend) == MediaVideo
 
 def test_hdf5_get_shape(hdf5_vid):
     assert(hdf5_vid.shape == (42, 512, 512, 1))

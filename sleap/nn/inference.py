@@ -149,7 +149,7 @@ class Predictor:
             if isinstance(input_video, dict):
                 vid = Video.cattr().structure(input_video, Video)
             elif isinstance(input_video, str):
-                vid = Video.from_filename(input_video)
+                vid = Video.from_filename(input_video, grayscale=False)
             else:
                 raise AttributeError(f"Unable to load input video: {input_video}")
 
