@@ -67,9 +67,11 @@ class Predictor:
         nms_min_thresh: A threshold of non-max suppression peak finding
             in confidence maps. All values below this minimum threshold
             will be set to zero before peak finding algorithm is run.
-        nms_sigma: Gaussian blur is applied to confidence maps before
-            non-max supression peak finding occurs. This is the
-            standard deviation of the kernel applied to the image.
+        nms_kernel_size: Gaussian blur is applied to confidence maps before
+            non-max supression peak finding occurs. This is size of the
+            kernel applied to the image.
+        nms_sigma: For Gassian blur applied to confidence maps, this
+            is the standard deviation of the kernel.
         min_score_to_node_ratio: FIXME
         min_score_midpts: FIXME
         min_score_integral: FIXME
@@ -77,7 +79,6 @@ class Predictor:
         with_tracking: whether to run tracking after inference
         flow_window: The number of frames that tracking should look back
             when trying to identify instances.
-        crop_iou_threshold: FIXME
         single_per_crop: FIXME
         output_path: the output path to save the results
         save_confmaps_pafs: whether to save confmaps/pafs
@@ -90,14 +91,14 @@ class Predictor:
     read_chunk_size: int = 256
     save_frequency: int = 100 # chunks
     nms_min_thresh = 0.3
-    nms_sigma = 3
+    nms_kernel_size: int = 9
+    nms_sigma: float = 3.
     min_score_to_node_ratio: float = 0.2
     min_score_midpts: float = 0.05
     min_score_integral: float = 0.6
     add_last_edge: bool = True
     with_tracking: bool = False
     flow_window: int = 15
-    crop_iou_threshold: float = .9
     single_per_crop: bool = False
     crop_padding: int = 40
     crop_growth: int = 64
@@ -140,6 +141,18 @@ class Predictor:
 
         logger.info(f"Predict is async: {is_async}")
 
+        # Find out how many channels the model was trained on
+
+        model_channels = 3 # default
+
+        if ModelOutputType.CENTROIDS in self.sleap_models:
+            centroid_model = self.fetch_model(
+                                input_size = None,
+                                output_types = [ModelOutputType.CENTROIDS])
+            model_channels = centroid_model["model"].input_shape[-1]
+
+        grayscale = (model_channels == 1)
+
         # Open the video if we need it.
 
         try:
@@ -149,7 +162,7 @@ class Predictor:
             if isinstance(input_video, dict):
                 vid = Video.cattr().structure(input_video, Video)
             elif isinstance(input_video, str):
-                vid = Video.from_filename(input_video, grayscale=False)
+                vid = Video.from_filename(input_video, grayscale=grayscale)
             else:
                 raise AttributeError(f"Unable to load input video: {input_video}")
 
@@ -214,8 +227,7 @@ class Predictor:
                 # Use centroid predictions to get subchunks of crops
 
                 subchunks_to_process = self.centroid_crop_inference(
-                                                mov_full, frames_idx,
-                                                iou_threshold=self.crop_iou_threshold)
+                                                mov_full, frames_idx)
 
             else:
                 # Scale without centroid cropping
@@ -393,7 +405,8 @@ class Predictor:
     def centroid_crop_inference(self,
                 imgs: np.ndarray,
                 frames_idx: List[int],
-                iou_threshold: float=.9) \
+                box_size: int=None,
+                do_merge: bool=True) \
                 -> List[Tuple[np.ndarray, DataTransform]]:
         """
         Takes stack of images and runs centroid inference to get crops.
@@ -441,13 +454,16 @@ class Predictor:
                                             min_thresh=self.nms_min_thresh,
                                             sigma=self.nms_sigma)
 
-        # Get training bounding box size to determine (min) centroid crop size
 
-        crop_model_package = self.fetch_model(
-                                input_size = None,
-                                output_types = [ModelOutputType.CONFIDENCE_MAP])
-        crop_size = crop_model_package["bounding_box_size"]
-        bb_half = (crop_size + self.crop_padding)//2
+        if box_size is None:
+            # Get training bounding box size to determine (min) centroid crop size
+            crop_model_package = self.fetch_model(
+                                    input_size = None,
+                                    output_types = [ModelOutputType.CONFIDENCE_MAP])
+            crop_size = crop_model_package["bounding_box_size"]
+            bb_half = (crop_size + self.crop_padding)//2
+        else:
+            bb_half = box_size//2
 
         logger.info(f"  Centroid crop box size: {bb_half*2}")
 
@@ -472,11 +488,17 @@ class Predictor:
                     boxes.append((peak_x-bb_half, peak_y-bb_half,
                                   peak_x+bb_half, peak_y+bb_half))
 
-                # Merge overlapping boxes and pad to multiple of crop size
-                merged_boxes = merge_boxes_with_overlap_and_padding(
-                                boxes=boxes,
-                                pad_factor_box=(self.crop_growth, self.crop_growth),
-                                within=crop_within)
+                if do_merge:
+                    # Merge overlapping boxes and pad to multiple of crop size
+                    merged_boxes = merge_boxes_with_overlap_and_padding(
+                                    boxes=boxes,
+                                    pad_factor_box=(self.crop_growth, self.crop_growth),
+                                    within=crop_within)
+                else:
+                    # Just return the boxes centered around each centroid.
+                    # Note that these aren't guaranteed to be within the
+                    # image bounds, so take care if using these to crop.
+                    merged_boxes = boxes
 
                 # Keep track of all boxes, grouped by size and frame idx
                 for box in merged_boxes:
@@ -590,6 +612,8 @@ class Predictor:
                     model = conf_model["model"],
                     data = imgs.astype("float32")/255,
                     min_thresh=self.nms_min_thresh,
+                    gaussian_size=self.nms_kernel_size,
+                    gaussian_sigma=self.nms_sigma,
                     downsample_factor=int(1/paf_model["multiscale"]),
                     upsample_factor=int(1/conf_model["multiscale"]),
                     return_confmaps=self.save_confmaps_pafs
