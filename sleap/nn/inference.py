@@ -79,7 +79,6 @@ class Predictor:
         with_tracking: whether to run tracking after inference
         flow_window: The number of frames that tracking should look back
             when trying to identify instances.
-        crop_iou_threshold: FIXME
         single_per_crop: FIXME
         output_path: the output path to save the results
         save_confmaps_pafs: whether to save confmaps/pafs
@@ -100,7 +99,6 @@ class Predictor:
     add_last_edge: bool = True
     with_tracking: bool = False
     flow_window: int = 15
-    crop_iou_threshold: float = .9
     single_per_crop: bool = False
     crop_padding: int = 40
     crop_growth: int = 64
@@ -229,8 +227,7 @@ class Predictor:
                 # Use centroid predictions to get subchunks of crops
 
                 subchunks_to_process = self.centroid_crop_inference(
-                                                mov_full, frames_idx,
-                                                iou_threshold=self.crop_iou_threshold)
+                                                mov_full, frames_idx)
 
             else:
                 # Scale without centroid cropping
@@ -407,8 +404,7 @@ class Predictor:
 
     def centroid_crop_inference(self,
                 imgs: np.ndarray,
-                frames_idx: List[int],
-                iou_threshold: float=.9) \
+                frames_idx: List[int]) \
                 -> List[Tuple[np.ndarray, DataTransform]]:
         """
         Takes stack of images and runs centroid inference to get crops.
