@@ -67,9 +67,11 @@ class Predictor:
         nms_min_thresh: A threshold of non-max suppression peak finding
             in confidence maps. All values below this minimum threshold
             will be set to zero before peak finding algorithm is run.
-        nms_sigma: Gaussian blur is applied to confidence maps before
-            non-max supression peak finding occurs. This is the
-            standard deviation of the kernel applied to the image.
+        nms_kernal_size: Gaussian blur is applied to confidence maps before
+            non-max supression peak finding occurs. This is size of the
+            kernel applied to the image.
+        nms_sigma: For Gassian blur applied to confidence maps, this
+            is the standard deviation of the kernel.
         min_score_to_node_ratio: FIXME
         min_score_midpts: FIXME
         min_score_integral: FIXME
@@ -90,6 +92,7 @@ class Predictor:
     read_chunk_size: int = 256
     save_frequency: int = 100 # chunks
     nms_min_thresh = 0.3
+    nms_kernal_size = 9
     nms_sigma = 3
     min_score_to_node_ratio: float = 0.2
     min_score_midpts: float = 0.05
@@ -590,6 +593,8 @@ class Predictor:
                     model = conf_model["model"],
                     data = imgs.astype("float32")/255,
                     min_thresh=self.nms_min_thresh,
+                    gaussian_size=self.nms_kernel_size,
+                    gaussian_sigma=self.nms_sigma,
                     downsample_factor=int(1/paf_model["multiscale"]),
                     upsample_factor=int(1/conf_model["multiscale"]),
                     return_confmaps=self.save_confmaps_pafs
