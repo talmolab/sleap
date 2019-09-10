@@ -1312,7 +1312,9 @@ class Labels(MutableSequence):
                             if v == lf.video
                             and (all_labels or lf.has_user_instances)]
 
-            frames_filename = os.path.join(output_dir, f'frame_data_vid{v_idx}')
+            # Join with "/" instead of os.path.join() since we want
+            # path to work on Windows and Posix systems
+            frames_filename = output_dir + f'/frame_data_vid{v_idx}'
             vid = v.to_imgstore(path=frames_filename, frame_numbers=frame_nums, format=format)
 
             # Close the video for now
