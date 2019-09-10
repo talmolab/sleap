@@ -143,6 +143,18 @@ class Predictor:
 
         logger.info(f"Predict is async: {is_async}")
 
+        # Find out how many channels the model was trained on
+
+        model_channels = 3 # default
+
+        if ModelOutputType.CENTROIDS in self.sleap_models:
+            centroid_model = self.fetch_model(
+                                input_size = None,
+                                output_types = [ModelOutputType.CENTROIDS])
+            model_channels = centroid_model["model"].input_shape[-1]
+
+        grayscale = (model_channels == 1)
+
         # Open the video if we need it.
 
         try:
@@ -152,7 +164,7 @@ class Predictor:
             if isinstance(input_video, dict):
                 vid = Video.cattr().structure(input_video, Video)
             elif isinstance(input_video, str):
-                vid = Video.from_filename(input_video, grayscale=False)
+                vid = Video.from_filename(input_video, grayscale=grayscale)
             else:
                 raise AttributeError(f"Unable to load input video: {input_video}")
 
