@@ -67,7 +67,7 @@ class Predictor:
         nms_min_thresh: A threshold of non-max suppression peak finding
             in confidence maps. All values below this minimum threshold
             will be set to zero before peak finding algorithm is run.
-        nms_kernal_size: Gaussian blur is applied to confidence maps before
+        nms_kernel_size: Gaussian blur is applied to confidence maps before
             non-max supression peak finding occurs. This is size of the
             kernel applied to the image.
         nms_sigma: For Gassian blur applied to confidence maps, this
@@ -92,8 +92,8 @@ class Predictor:
     read_chunk_size: int = 256
     save_frequency: int = 100 # chunks
     nms_min_thresh = 0.3
-    nms_kernal_size = 9
-    nms_sigma = 3
+    nms_kernel_size: int = 9
+    nms_sigma: float = 3.
     min_score_to_node_ratio: float = 0.2
     min_score_midpts: float = 0.05
     min_score_integral: float = 0.6
