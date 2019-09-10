@@ -350,7 +350,7 @@ class ImgStoreVideo:
         # assuming that this is a directory that contains the imgstore.
         if 'metadata.yaml' not in self.filename:
             # Use "/" since this works on Windows and posix
-            self.filename = self.filename '/metadata.yaml'
+            self.filename = self.filename + '/metadata.yaml'
 
         # Make relative path into absolute, ImgStores don't work properly it seems
         # without full paths if we change working directories. Video.fixup_path will
