@@ -404,7 +404,9 @@ class Predictor:
 
     def centroid_crop_inference(self,
                 imgs: np.ndarray,
-                frames_idx: List[int]) \
+                frames_idx: List[int],
+                box_size: int=None,
+                do_merge: bool=True) \
                 -> List[Tuple[np.ndarray, DataTransform]]:
         """
         Takes stack of images and runs centroid inference to get crops.
@@ -452,13 +454,16 @@ class Predictor:
                                             min_thresh=self.nms_min_thresh,
                                             sigma=self.nms_sigma)
 
-        # Get training bounding box size to determine (min) centroid crop size
 
-        crop_model_package = self.fetch_model(
-                                input_size = None,
-                                output_types = [ModelOutputType.CONFIDENCE_MAP])
-        crop_size = crop_model_package["bounding_box_size"]
-        bb_half = (crop_size + self.crop_padding)//2
+        if box_size is None:
+            # Get training bounding box size to determine (min) centroid crop size
+            crop_model_package = self.fetch_model(
+                                    input_size = None,
+                                    output_types = [ModelOutputType.CONFIDENCE_MAP])
+            crop_size = crop_model_package["bounding_box_size"]
+            bb_half = (crop_size + self.crop_padding)//2
+        else:
+            bb_half = box_size//2
 
         logger.info(f"  Centroid crop box size: {bb_half*2}")
 
@@ -483,11 +488,17 @@ class Predictor:
                     boxes.append((peak_x-bb_half, peak_y-bb_half,
                                   peak_x+bb_half, peak_y+bb_half))
 
-                # Merge overlapping boxes and pad to multiple of crop size
-                merged_boxes = merge_boxes_with_overlap_and_padding(
-                                boxes=boxes,
-                                pad_factor_box=(self.crop_growth, self.crop_growth),
-                                within=crop_within)
+                if do_merge:
+                    # Merge overlapping boxes and pad to multiple of crop size
+                    merged_boxes = merge_boxes_with_overlap_and_padding(
+                                    boxes=boxes,
+                                    pad_factor_box=(self.crop_growth, self.crop_growth),
+                                    within=crop_within)
+                else:
+                    # Just return the boxes centered around each centroid.
+                    # Note that these aren't guaranteed to be within the
+                    # image bounds, so take care if using these to crop.
+                    merged_boxes = boxes
 
                 # Keep track of all boxes, grouped by size and frame idx
                 for box in merged_boxes:
