@@ -124,7 +124,7 @@ def peak_tf_inference(model, data,
 
     n, h, w, c = confmaps.get_shape().as_list()
 
-    if gaussian_size:
+    if gaussian_size and upsample_factor == 1:
 
         # Make Gaussian Kernel with desired specs.
         gauss_kernel = gaussian_kernel(size=gaussian_size, mean=0.0, std=gaussian_sigma)
