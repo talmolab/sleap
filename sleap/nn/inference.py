@@ -185,6 +185,11 @@ class Predictor:
         # Initialize tracking
         tracker = FlowShiftTracker(window=self.flow_window, verbosity=0)
 
+        # Create output directory if it doesn't exist
+        try:
+            os.mkdir(os.path.dirname(self.output_path))
+        except FileExistsError:
+            pass
         # Delete the output file if it exists already
         if os.path.exists(self.output_path):
             os.unlink(self.output_path)
