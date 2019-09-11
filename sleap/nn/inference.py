@@ -607,6 +607,8 @@ class Predictor:
         # Find peaks
         t0 = time()
 
+        multiscale_diff = paf_model["multiscale"] / conf_model["multiscale"]
+
         peaks, peak_vals, confmaps = \
                 peak_tf_inference(
                     model = conf_model["model"],
@@ -614,12 +616,12 @@ class Predictor:
                     min_thresh=self.nms_min_thresh,
                     gaussian_size=self.nms_kernel_size,
                     gaussian_sigma=self.nms_sigma,
-                    downsample_factor=int(1/paf_model["multiscale"]),
+                    downsample_factor=int(1/multiscale_diff),
                     upsample_factor=int(1/conf_model["multiscale"]),
                     return_confmaps=self.save_confmaps_pafs
                     )
 
-        transform.scale = transform.scale * paf_model["multiscale"]
+        transform.scale = transform.scale * multiscale_diff
 
         logger.info("  Inferred confmaps and found-peaks (gpu) [%.1fs]" % (time() - t0))
         logger.info(f"    peaks: {len(peaks)}")
