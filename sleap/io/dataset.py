@@ -366,6 +366,9 @@ class Labels(MutableSequence):
     def user_labeled_frames(self):
         return [lf for lf in self.labeled_frames if lf.has_user_instances]
 
+    def get_video_user_labeled_frames(self, video: Video) -> List[LabeledFrame]:
+        return [lf for lf in self.labeled_frames if lf.has_user_instances and lf.video == video]
+
     # Methods for instances
 
     def instance_count(self, video: Video, frame_idx: int) -> int:
