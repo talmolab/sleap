@@ -66,6 +66,7 @@ expert:
   label: Negative samples (if cropping)
   type: int
   default: 0
+  range: 0,1000
 
 - name: batch_size
   label: Batch Size
@@ -110,6 +111,7 @@ learning:
   label: Negative samples
   type: int
   default: 20
+  range: 0,1000
 
 - name: batch_size
   label: Batch Size

@@ -131,7 +131,7 @@ class VideoFrameSuggestions:
         low_instances = np.nansum(scores < score_limit, axis=1)
 
         # Find all the frames with at least <instance_limit> low scoring instances
-        result = list(idxs[low_instances >= instance_limit])
+        result = idxs[low_instances >= instance_limit].tolist()
 
         return result
 

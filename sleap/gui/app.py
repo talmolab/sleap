@@ -1576,6 +1576,13 @@ class MainWindow(QMainWindow):
             if self.player.seekbar.hasSelection():
                 start, end = self.player.seekbar.getSelection()
                 message += f" (selection: {start}-{end})"
+            message += f"    Labeled Frames: "
+            if self.video is not None:
+                message += f"{len(self.labels.get_video_user_labeled_frames(self.video))}"
+                if len(self.labels.videos) > 1:
+                    message += " in video, "
+            if len(self.labels.videos) > 1:
+                message += f"{len(self.labels.user_labeled_frames)} in project"
 
         self.statusBar().showMessage(message)
 
