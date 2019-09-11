@@ -657,6 +657,8 @@ class MainWindow(QMainWindow):
             if len(sk_list):
                 self.skeleton = sk_list[0]
 
+        self.changestack_push("new skeleton")
+
         # Update data model
         self.update_data_views()
 
@@ -762,6 +764,7 @@ class MainWindow(QMainWindow):
                                             params=params)
 
         self.labels.set_suggestions(new_suggestions)
+
         self.update_data_views()
         self.updateSeekbarMarks()
 
