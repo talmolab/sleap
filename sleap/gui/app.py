@@ -423,9 +423,9 @@ class MainWindow(QMainWindow):
         has_selected_instance = (self.player.view.getSelection() is not None)
         has_unsaved_changes = self.changestack_has_changes()
         has_multiple_videos = (self.labels is not None and len(self.labels.videos) > 1)
-        has_labeled_frames = any((lf.video == self.video for lf in self.labels))
-        has_suggestions = (len(self.labels.suggestions) > 0)
-        has_tracks = (len(self.labels.tracks) > 0)
+        has_labeled_frames = self.labels is not None and any((lf.video == self.video for lf in self.labels))
+        has_suggestions = self.labels is not None and (len(self.labels.suggestions) > 0)
+        has_tracks = self.labels is not None and (len(self.labels.tracks) > 0)
         has_multiple_instances = (self.labeled_frame is not None and len(self.labeled_frame.instances) > 1)
         # todo: exclude predicted instances from count
         has_nodes_selected = (self.skeletonEdgesSrc.currentIndex() > -1 and
