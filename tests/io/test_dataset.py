@@ -268,6 +268,75 @@ def test_label_mutability():
     assert len(labels) == 1
     assert len(labels.labeled_frames[0].instances) == 10
 
+def skeleton_ids_from_label_instances(labels):
+    return list(map(id, (lf.instances[0].skeleton for lf in labels.labeled_frames)))
+
+def test_duplicate_skeletons_serializing():
+    vid = Video.from_filename("foo.mp4")
+
+    skeleton_a = Skeleton.load_json("tests/data/skeleton/fly_skeleton_legs.json")
+    skeleton_b = Skeleton.load_json("tests/data/skeleton/fly_skeleton_legs.json")
+
+    lf_a = LabeledFrame(vid, frame_idx=2, instances=[Instance(skeleton_a)])
+    lf_b = LabeledFrame(vid, frame_idx=3, instances=[Instance(skeleton_b)])
+
+    new_labels = Labels(labeled_frames=[lf_a, lf_b])
+    new_labels_json = new_labels.to_dict()
+
+def test_distinct_skeletons_serializing():
+    vid = Video.from_filename("foo.mp4")
+
+    skeleton_a = Skeleton.load_json("tests/data/skeleton/fly_skeleton_legs.json")
+    skeleton_b = Skeleton.load_json("tests/data/skeleton/fly_skeleton_legs.json")
+    skeleton_b.add_node("foo")
+
+    lf_a = LabeledFrame(vid, frame_idx=2, instances=[Instance(skeleton_a)])
+    lf_b = LabeledFrame(vid, frame_idx=3, instances=[Instance(skeleton_b)])
+
+    new_labels = Labels(labeled_frames=[lf_a, lf_b])
+
+    # Make sure we can serialize this
+    new_labels_json = new_labels.to_dict()
+
+def test_unify_skeletons():
+    vid = Video.from_filename("foo.mp4")
+
+    skeleton_a = Skeleton.load_json("tests/data/skeleton/fly_skeleton_legs.json")
+    skeleton_b = Skeleton.load_json("tests/data/skeleton/fly_skeleton_legs.json")
+
+    lf_a = LabeledFrame(vid, frame_idx=2, instances=[Instance(skeleton_a)])
+    lf_b = LabeledFrame(vid, frame_idx=3, instances=[Instance(skeleton_b)])
+
+    labels = Labels()
+    labels.extend_from([lf_a], unify=True)
+    labels.extend_from([lf_b], unify=True)
+    ids = skeleton_ids_from_label_instances(labels)
+
+    # Make sure that skeleton_b got replaced with skeleton_a when we
+    # added the frame with "unify" set
+    assert len(set(ids)) == 1
+
+    # Make sure we can serialize this
+    labels.to_dict()
+
+def test_dont_unify_skeletons():
+    vid = Video.from_filename("foo.mp4")
+
+    skeleton_a = Skeleton.load_json("tests/data/skeleton/fly_skeleton_legs.json")
+    skeleton_b = Skeleton.load_json("tests/data/skeleton/fly_skeleton_legs.json")
+
+    lf_a = LabeledFrame(vid, frame_idx=2, instances=[Instance(skeleton_a)])
+    lf_b = LabeledFrame(vid, frame_idx=3, instances=[Instance(skeleton_b)])
+
+    labels = Labels(labeled_frames=[lf_a])
+    labels.extend_from([lf_b], unify=False)
+    ids = skeleton_ids_from_label_instances(labels)
+
+    # Make sure we still have two distinct skeleton objects
+    assert len(set(ids)) == 2
+
+    # Make sure we can serialize this
+    labels.to_dict()
 
 def test_instance_access():
     labels = Labels()
