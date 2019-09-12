@@ -462,6 +462,9 @@ class MainWindow(QMainWindow):
         self._buttons["delete instance"].setEnabled(self.instancesTable.currentIndex().isValid())
 
     def update_data_views(self):
+        if len(self.skeleton.nodes) == 0 and len(self.labels.skeletons):
+             self.skeleton = self.labels.skeletons[0]
+
         self.videosTable.model().videos = self.labels.videos
 
         self.skeletonNodesTable.model().skeleton = self.skeleton
