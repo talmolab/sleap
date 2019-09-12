@@ -791,6 +791,14 @@ class LabeledFrame:
         # Modify the instance to have a reference back to this frame
         value.frame = self
 
+    def find(self, track=-1, user=False):
+        instances = self.instances
+        if user:
+            instances = list(filter(lambda inst: type(inst) == Instance, instances))
+        if track != -1: # use -1 since we want to accept None as possible value
+            instances = list(filter(lambda inst: inst.track == track, instances))
+        return instances
+
     @property
     def instances(self):
         """
