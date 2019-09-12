@@ -887,19 +887,8 @@ class Skeleton:
     def __str__(self):
         return "%s(name=%r)" % (self.__class__.__name__, self.name)
 
-    def __eq__(self, other: 'Skeleton'):
-
-        # First check names, duh!
-        if other.name != self.name:
-            return False
-
-        # Then check if the graphs match
-        return self.matches(other)
-
     def __hash__(self):
         """
-        Construct a hash from skeleton name, which we force to be immutable so hashes
-        will not change.
+        Construct a hash from skeleton id.
         """
-        return hash(self.name)
-
+        return id(self)
