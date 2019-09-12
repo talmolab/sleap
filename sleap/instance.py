@@ -565,8 +565,8 @@ class Instance:
 
             # Add points into new array
             for i, node in enumerate(self._nodes):
-                if node in self.skeleton.nodes:
-                    new_array[self.skeleton.nodes.index(node)] = self._points[i]
+                if node.name in self.skeleton.node_names:
+                    new_array[self.skeleton.node_names.index(node.name)] = self._points[i]
 
             # Update points and nodes for this instance
             self._points = new_array
@@ -691,10 +691,10 @@ def make_instance_cattr():
     converter.register_unstructure_hook(PredictedPointArray, lambda x: None)
     def unstructure_instance(x: Instance):
 
-        # Unstructure everything but the points array and frame attribute
+        # Unstructure everything but the points array, nodes, and frame attribute
         d = {field.name: converter.unstructure(x.__getattribute__(field.name))
              for field in attr.fields(x.__class__)
-             if field.name not in ['_points', 'frame']}
+             if field.name not in ['_points', '_nodes', 'frame']}
 
         # Replace the point array with a dict
         d['_points'] = converter.unstructure({k: v for k, v in x.nodes_points})

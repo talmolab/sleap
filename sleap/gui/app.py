@@ -1056,7 +1056,7 @@ class MainWindow(QMainWindow):
             in_view_rect = self.player.view.mapToScene(self.player.view.rect()).boundingRect()
 
             for node in self.skeleton.nodes:
-                if node not in instance.nodes or instance[node].isnan():
+                if node.name not in instance.node_names or instance[node].isnan():
                     # pick random points within currently zoomed view
                     x = in_view_rect.x() + (in_view_rect.width() * 0.1) \
                         + (np.random.rand() * in_view_rect.width() * 0.8)
@@ -1114,9 +1114,9 @@ class MainWindow(QMainWindow):
         in_view_rect = self.player.view.mapToScene(self.player.view.rect()).boundingRect()
 
         # go through each node in skeleton
-        for node in self.skeleton.nodes:
+        for node in self.skeleton.node_names:
             # if we're copying from a skeleton that has this node
-            if copy_instance is not None and node in copy_instance.nodes and not copy_instance[node].isnan():
+            if copy_instance is not None and node in copy_instance and not copy_instance[node].isnan():
                 # just copy x, y, and visible
                 # we don't want to copy a PredictedPoint or score attribute
                 new_instance[node] = Point(

@@ -319,36 +319,17 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         save_confmaps_pafs = form_data.get("_save_confmaps_pafs", False)
 
         # Run active learning pipeline using the TrainingJobs
-        new_lfs = run_active_learning_pipeline(
-                    labels_filename = self.labels_filename,
-                    labels = self.labels,
-                    training_jobs = training_jobs,
-                    frames_to_predict = frames_to_predict,
-                    with_tracking = with_tracking,
-                    save_confmaps_pafs = save_confmaps_pafs)
-
-        # remove labeledframes without any predicted instances
-        new_lfs = list(filter(lambda lf: len(lf.instances), new_lfs))
-        # Update labels with results of active learning
-
-        new_tracks = {inst.track for lf in new_lfs for inst in lf.instances if inst.track is not None}
-        if len(new_tracks) < 50:
-            self.labels.tracks = list(set(self.labels.tracks).union(new_tracks))
-        # if there are more than 50 predicted tracks, assume this is wrong (FIXME?)
-        elif len(new_tracks):
-            for lf in new_lfs:
-                for inst in lf.instances:
-                    inst.track = None
-
-        # Update Labels with new data
-        # add new labeled frames
-        self.labels.extend_from(new_lfs)
-        # combine instances from labeledframes with same video/frame_idx
-        self.labels.merge_matching_frames()
+        new_counts = run_active_learning_pipeline(
+                        labels_filename = self.labels_filename,
+                        labels = self.labels,
+                        training_jobs = training_jobs,
+                        frames_to_predict = frames_to_predict,
+                        with_tracking = with_tracking,
+                        save_confmaps_pafs = save_confmaps_pafs)
 
         self.learningFinished.emit()
 
-        QtWidgets.QMessageBox(text=f"Active learning has finished. Instances were predicted on {len(new_lfs)} frames.").exec_()
+        QtWidgets.QMessageBox(text=f"Active learning has finished. Instances were predicted on {new_counts} frames.").exec_()
 
     def view_datagen(self):
         from sleap.nn.datagen import generate_training_data, \
@@ -671,7 +652,7 @@ def run_active_learning_pipeline(
     # Run the Predictor for suggested frames
     # We want to predict for suggested frames that don't already have user instances
 
-    new_labeled_frames = []
+    new_labeled_frame_count = 0
     user_labeled_frames = labels.user_labeled_frames
 
     # show message while running inference
@@ -698,21 +679,26 @@ def run_active_learning_pipeline(
                     new_labels_json = result.get()
                     new_labels = Labels.from_json(new_labels_json, match_to=labels)
 
-                    video_lfs = new_labels.labeled_frames
+                    # Add new frames to labels
+                    # (we're doing this for each video as we go since there was a problem
+                    # when we tried to add frames for all videos together.)
+                    new_lfs = new_labels.labeled_frames
+                    new_lfs = list(filter(lambda lf: len(lf.instances), new_lfs))
+                    labels.extend_from(new_lfs)
+                    labels.merge_matching_frames()
+
+                    new_labeled_frame_count += len(new_lfs)
                 else:
                     QtWidgets.QMessageBox(text=f"An error occured during inference. Your command line terminal may have more information about the error.").exec_()
                     result.get()
             else:
                 import time
                 time.sleep(1)
-                video_lfs = []
-
-            new_labeled_frames.extend(video_lfs)
 
     # close message window
     win.close()
 
-    return new_labeled_frames
+    return new_labeled_frame_count
 
 if __name__ == "__main__":
     import sys
