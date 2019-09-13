@@ -423,9 +423,9 @@ class MainWindow(QMainWindow):
         has_selected_instance = (self.player.view.getSelection() is not None)
         has_unsaved_changes = self.changestack_has_changes()
         has_multiple_videos = (self.labels is not None and len(self.labels.videos) > 1)
-        has_labeled_frames = any((lf.video == self.video for lf in self.labels))
-        has_suggestions = (len(self.labels.suggestions) > 0)
-        has_tracks = (len(self.labels.tracks) > 0)
+        has_labeled_frames = self.labels is not None and any((lf.video == self.video for lf in self.labels))
+        has_suggestions = self.labels is not None and (len(self.labels.suggestions) > 0)
+        has_tracks = self.labels is not None and (len(self.labels.tracks) > 0)
         has_multiple_instances = (self.labeled_frame is not None and len(self.labeled_frame.instances) > 1)
         # todo: exclude predicted instances from count
         has_nodes_selected = (self.skeletonEdgesSrc.currentIndex() > -1 and
@@ -462,6 +462,9 @@ class MainWindow(QMainWindow):
         self._buttons["delete instance"].setEnabled(self.instancesTable.currentIndex().isValid())
 
     def update_data_views(self):
+        if len(self.skeleton.nodes) == 0 and len(self.labels.skeletons):
+             self.skeleton = self.labels.skeletons[0]
+
         self.videosTable.model().videos = self.labels.videos
 
         self.skeletonNodesTable.model().skeleton = self.skeleton
@@ -549,7 +552,8 @@ class MainWindow(QMainWindow):
                 self.update_data_views()
 
                 # Load first video
-                self.loadVideo(self.labels.videos[0], 0)
+                if len(self.labels.videos):
+                    self.loadVideo(self.labels.videos[0], 0)
 
                 # Update track menu options
                 self.updateTrackMenu()
@@ -657,6 +661,10 @@ class MainWindow(QMainWindow):
             if len(sk_list):
                 self.skeleton = sk_list[0]
 
+        if self.skeleton not in self.labels:
+            self.labels.skeletons.append(self.skeleton)
+            self.changestack_push("new skeleton")
+
         # Update data model
         self.update_data_views()
 
@@ -762,6 +770,7 @@ class MainWindow(QMainWindow):
                                             params=params)
 
         self.labels.set_suggestions(new_suggestions)
+
         self.update_data_views()
         self.updateSeekbarMarks()
 
@@ -1053,7 +1062,7 @@ class MainWindow(QMainWindow):
             in_view_rect = self.player.view.mapToScene(self.player.view.rect()).boundingRect()
 
             for node in self.skeleton.nodes:
-                if node not in instance.nodes or instance[node].isnan():
+                if node.name not in instance.node_names or instance[node].isnan():
                     # pick random points within currently zoomed view
                     x = in_view_rect.x() + (in_view_rect.width() * 0.1) \
                         + (np.random.rand() * in_view_rect.width() * 0.8)
@@ -1111,9 +1120,9 @@ class MainWindow(QMainWindow):
         in_view_rect = self.player.view.mapToScene(self.player.view.rect()).boundingRect()
 
         # go through each node in skeleton
-        for node in self.skeleton.nodes:
+        for node in self.skeleton.node_names:
             # if we're copying from a skeleton that has this node
-            if copy_instance is not None and node in copy_instance.nodes and not copy_instance[node].isnan():
+            if copy_instance is not None and node in copy_instance and not copy_instance[node].isnan():
                 # just copy x, y, and visible
                 # we don't want to copy a PredictedPoint or score attribute
                 new_instance[node] = Point(

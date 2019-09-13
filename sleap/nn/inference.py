@@ -185,6 +185,11 @@ class Predictor:
         # Initialize tracking
         tracker = FlowShiftTracker(window=self.flow_window, verbosity=0)
 
+        # Create output directory if it doesn't exist
+        try:
+            os.mkdir(os.path.dirname(self.output_path))
+        except FileExistsError:
+            pass
         # Delete the output file if it exists already
         if os.path.exists(self.output_path):
             os.unlink(self.output_path)
@@ -584,9 +589,14 @@ class Predictor:
 
         # Save confmaps
         if self.output_path is not None and self.save_confmaps_pafs:
-            save_visual_outputs(
-                    output_path = self.output_path,
-                    data = dict(confmaps=confmaps, box=imgs))
+            logger.warning("Not saving confmaps because feature currently not working.")
+            # Disable save_confmaps_pafs since not currently working.
+            # The problem is that we can't put data for different crop sizes
+            # all into a single h5 datasource. It's now possible to view live
+            # predicted confmap and paf in the gui, so this isn't high priority.
+            # save_visual_outputs(
+            #         output_path = self.output_path,
+            #         data = dict(confmaps=confmaps, box=imgs))
 
         return predicted_frames_chunk
 
@@ -664,10 +674,15 @@ class Predictor:
 
         # Save confmaps and pafs
         if self.output_path is not None and self.save_confmaps_pafs:
-            save_visual_outputs(
-                    output_path = self.output_path,
-                    data = dict(confmaps=confmaps, pafs=pafs,
-                        frame_idxs=transform.frame_idxs, bounds=transform.bounding_boxes))
+            logger.warning("Not saving confmaps/pafs because feature currently not working.")
+            # Disable save_confmaps_pafs since not currently working.
+            # The problem is that we can't put data for different crop sizes
+            # all into a single h5 datasource. It's now possible to view live
+            # predicted confmap and paf in the gui, so this isn't high priority.
+            # save_visual_outputs(
+            #         output_path = self.output_path,
+            #         data = dict(confmaps=confmaps, pafs=pafs,
+            #             frame_idxs=transform.frame_idxs, bounds=transform.bounding_boxes))
 
         return predicted_frames_chunk
 

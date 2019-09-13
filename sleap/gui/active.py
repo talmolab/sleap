@@ -316,39 +316,25 @@ class ActiveLearningDialog(QtWidgets.QDialog):
             with_tracking = True
         else:
             frames_to_predict = dict()
-        save_confmaps_pafs = form_data.get("_save_confmaps_pafs", False)
+        save_confmaps_pafs = False
+        # Disable save_confmaps_pafs since not currently working.
+        # The problem is that we can't put data for different crop sizes
+        # all into a single h5 datasource. It's now possible to view live
+        # predicted confmap and paf in the gui, so this isn't high priority.
+        # If you want to enable, uncomment this:
+        # save_confmaps_pafs = form_data.get("_save_confmaps_pafs", False)
 
         # Run active learning pipeline using the TrainingJobs
-        new_lfs = run_active_learning_pipeline(
-                    labels_filename = self.labels_filename,
-                    labels = self.labels,
-                    training_jobs = training_jobs,
-                    frames_to_predict = frames_to_predict,
-                    with_tracking = with_tracking,
-                    save_confmaps_pafs = save_confmaps_pafs)
-
-        # remove labeledframes without any predicted instances
-        new_lfs = list(filter(lambda lf: len(lf.instances), new_lfs))
-        # Update labels with results of active learning
-
-        new_tracks = {inst.track for lf in new_lfs for inst in lf.instances if inst.track is not None}
-        if len(new_tracks) < 50:
-            self.labels.tracks = list(set(self.labels.tracks).union(new_tracks))
-        # if there are more than 50 predicted tracks, assume this is wrong (FIXME?)
-        elif len(new_tracks):
-            for lf in new_lfs:
-                for inst in lf.instances:
-                    inst.track = None
-
-        # Update Labels with new data
-        # add new labeled frames
-        self.labels.extend_from(new_lfs)
-        # combine instances from labeledframes with same video/frame_idx
-        self.labels.merge_matching_frames()
+        new_counts = run_active_learning_pipeline(
+                        labels_filename = self.labels_filename,
+                        labels = self.labels,
+                        training_jobs = training_jobs,
+                        frames_to_predict = frames_to_predict,
+                        with_tracking = with_tracking)
 
         self.learningFinished.emit()
 
-        QtWidgets.QMessageBox(text=f"Active learning has finished. Instances were predicted on {len(new_lfs)} frames.").exec_()
+        QtWidgets.QMessageBox(text=f"Active learning has finished. Instances were predicted on {new_counts} frames.").exec_()
 
     def view_datagen(self):
         from sleap.nn.datagen import generate_training_data, \
@@ -480,8 +466,8 @@ class ActiveLearningDialog(QtWidgets.QDialog):
 
 
 def make_default_training_jobs():
-    from sleap.nn.model import Model, ModelOutputType
-    from sleap.nn.training import Trainer, TrainingJob
+    from sleap.nn.model import Model
+    from sleap.nn.training import Trainer
     from sleap.nn.architectures import unet, leap
 
     # Build Models (wrapper for Keras model with some metadata)
@@ -549,7 +535,6 @@ def find_saved_jobs(job_dir, jobs=None):
     Returns:
         dict of {ModelOutputType: list of (filename, TrainingJob) tuples}
     """
-    from sleap.nn.training import TrainingJob
 
     files = os.listdir(job_dir)
 
@@ -578,23 +563,39 @@ def find_saved_jobs(job_dir, jobs=None):
 
     return jobs
 
+def add_frames_from_json(labels: Labels, new_labels_json: str):
+    # Deserialize the new frames, matching to the existing videos/skeletons if possible
+    new_lfs = Labels.from_json(new_labels_json, match_to=labels).labeled_frames
+
+    # Remove any frames without instances
+    new_lfs = list(filter(lambda lf: len(lf.instances), new_lfs))
+
+    # Now add them to labels and merge labeled frames with same video/frame_idx
+    labels.extend_from(new_lfs)
+    labels.merge_matching_frames()
+
+    return len(new_lfs)
+
 def run_active_learning_pipeline(
             labels_filename: str,
-            labels: Labels=None,
-            training_jobs: Dict=None,
-            frames_to_predict: Dict=None,
-            with_tracking: bool=False,
-            save_confmaps_pafs: bool=False,
-            skip_learning: bool=False):
-    # Imports here so we don't load TensorFlow before necessary
-    from sleap.nn.monitor import LossViewer
-    from sleap.nn.training import TrainingJob
-    from sleap.nn.model import ModelOutputType
-    from sleap.nn.inference import Predictor
+            labels: Labels,
+            training_jobs: Dict['ModelOutputType', 'TrainingJob']=None,
+            frames_to_predict: Dict[Video, List[int]]=None,
+            with_tracking: bool=False) -> int:
+    """Run training (as needed) and inference.
 
-    from PySide2 import QtWidgets
+    Args:
+        labels_filename: Path to already saved current labels object.
+        labels: The current labels object; results will be added to this.
+        training_jobs: The TrainingJobs with params/hyperparams for training.
+        frames_to_predict: Dict that gives list of frame indices for each video.
+        with_tracking: Whether to run tracking code after we predict instances.
+            This should be used only when predicting on continuous set of frames.
 
-    labels = labels or Labels.load_json(labels_filename)
+    Returns:
+        Number of new frames added to labels.
+
+    """
 
     # Prepare our TrainingJobs
 
@@ -605,114 +606,170 @@ def run_active_learning_pipeline(
     # Set the parameters specific to this run
     for job in training_jobs.values():
         job.labels_filename = labels_filename
-#         job.trainer.scale = scale
 
-    # Run the TrainingJobs
+        save_dir = os.path.join(os.path.dirname(labels_filename), "models")
 
-    save_dir = os.path.join(os.path.dirname(labels_filename), "models")
+    # Train the TrainingJobs
+    trained_jobs = run_active_training(labels, training_jobs, save_dir)
 
-    # open training monitor window
-    win = LossViewer()
-    win.resize(600, 400)
-    win.show()
+    # Check that all the models were trained
+    if None in trained_jobs.values():
+        return 0
+
+    # Run the Predictor for suggested frames
+    new_labeled_frame_count = \
+        run_active_inference(labels, trained_jobs, save_dir, frames_to_predict, with_tracking)
+
+    return new_labeled_frame_count
+
+def run_active_training(
+        labels: Labels,
+        training_jobs: Dict['ModelOutputType', 'TrainingJob'],
+        save_dir:str,
+        gui:bool = True) -> Dict['ModelOutputType', 'TrainingJob']:
+    """
+    Run training for each training job.
+
+    Args:
+        labels: Labels object from which we'll get training data.
+        training_jobs: Dict of the jobs to train.
+        save_dir: Path to the directory where we'll save inference results.
+        gui: Whether to show gui windows and process gui events.
+
+    Returns:
+        Dict of trained jobs corresponding with input training jobs.
+    """
+
+    trained_jobs = dict()
+
+    if gui:
+        from sleap.nn.monitor import LossViewer
+
+        # open training monitor window
+        win = LossViewer()
+        win.resize(600, 400)
+        win.show()
 
     for model_type, job in training_jobs.items():
         if getattr(job, "use_trained_model", False):
             # set path to TrainingJob already trained from previous run
             json_name = f"{job.run_name}.json"
-            training_jobs[model_type] = os.path.join(job.save_dir, json_name)
-            print(f"Using already trained model: {training_jobs[model_type]}")
+            trained_jobs[model_type] = os.path.join(job.save_dir, json_name)
+            print(f"Using already trained model: {trained_jobs[model_type]}")
 
         else:
-            print("Resetting monitor window.")
-            win.reset(what=str(model_type))
-            win.setWindowTitle(f"Training Model - {str(model_type)}")
+            if gui:
+                print("Resetting monitor window.")
+                win.reset(what=str(model_type))
+                win.setWindowTitle(f"Training Model - {str(model_type)}")
+
             print(f"Start training {str(model_type)}...")
 
-            if not skip_learning:
-                # run training
-                pool, result = job.trainer.train_async(model=job.model, labels=labels,
-                                        save_dir=save_dir)
+            # Start training in separate process
+            # This makes it easier to ensure that tensorflow released memory when done
+            pool, result = job.trainer.train_async(model=job.model, labels=labels,
+                                    save_dir=save_dir)
 
-                while not result.ready():
+            # Wait for training results
+            while not result.ready():
+                if gui:
                     QtWidgets.QApplication.instance().processEvents()
-                    # win.check_messages()
-                    result.wait(.01)
+                result.wait(.01)
 
-                if result.successful():
-                    # get the path to the resulting TrainingJob file
-                    training_jobs[model_type] = result.get()
-                    print(f"Finished training {str(model_type)}.")
-                else:
-                    training_jobs[model_type] = None
+            if result.successful():
+                # get the path to the resulting TrainingJob file
+                trained_jobs[model_type] = result.get()
+                print(f"Finished training {str(model_type)}.")
+            else:
+                if gui:
                     win.close()
                     QtWidgets.QMessageBox(text=f"An error occured while training {str(model_type)}. Your command line terminal may have more information about the error.").exec_()
-                    result.get()
+                trained_jobs[model_type] = None
+                result.get()
 
+    # Load the jobs we just trained
+    for model_type, job in trained_jobs.items():
+        # Replace path to saved TrainingJob with the deseralized object
+        if trained_jobs[model_type] is not None:
+            trained_jobs[model_type] = TrainingJob.load_json(trained_jobs[model_type])
 
-    if not skip_learning:
-        for model_type, job in training_jobs.items():
-            # load job from json
-            training_jobs[model_type] = TrainingJob.load_json(training_jobs[model_type])
+    if gui:
+        # close training monitor window
+        win.close()
 
-    # close training monitor window
-    win.close()
+    return trained_jobs
 
-    if not skip_learning:
-        timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
-        inference_output_path = os.path.join(save_dir, f"{timestamp}.inference.h5")
+def run_active_inference(
+        labels: Labels,
+        training_jobs: Dict['ModelOutputType', 'TrainingJob'],
+        save_dir:str,
+        frames_to_predict: Dict[Video, List[int]],
+        with_tracking: bool,
+        gui: bool=True) -> int:
+    """Run inference on specified frames using models from training_jobs.
 
-        # Create Predictor from the results of training
-        predictor = Predictor(sleap_models=training_jobs,
-                                with_tracking=with_tracking,
-                                output_path=inference_output_path,
-                                save_confmaps_pafs=save_confmaps_pafs)
+    Args:
+        labels: The current labels object; results will be added to this.
+        training_jobs: The TrainingJobs with trained models to use.
+        save_dir: Path to the directory where we'll save inference results.
+        frames_to_predict: Dict that gives list of frame indices for each video.
+        with_tracking: Whether to run tracking code after we predict instances.
+            This should be used only when predicting on continuous set of frames.
+        gui: Whether to show gui windows and process gui events.
 
-    # Run the Predictor for suggested frames
-    # We want to predict for suggested frames that don't already have user instances
+    Returns:
+        Number of new frames added to labels.
+    """
+    from sleap.nn.inference import Predictor
 
-    new_labeled_frames = []
-    user_labeled_frames = labels.user_labeled_frames
+    total_new_lf_count = 0
+    timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
+    inference_output_path = os.path.join(save_dir, f"{timestamp}.inference.h5")
 
-    # show message while running inference
-    win = QtWidgets.QProgressDialog()
-    win.setLabelText("    Running inference on selected frames...    ")
-    win.show()
-    QtWidgets.QApplication.instance().processEvents()
+    # Create Predictor from the results of training
+    predictor = Predictor(sleap_models=training_jobs,
+                            with_tracking=with_tracking,
+                            output_path=inference_output_path)
+
+    if gui:
+        # show message while running inference
+        win = QtWidgets.QProgressDialog()
+        win.setLabelText("    Running inference on selected frames...    ")
+        win.show()
+        QtWidgets.QApplication.instance().processEvents()
 
     for video, frames in frames_to_predict.items():
         if len(frames):
-            if not skip_learning:
-                # run predictions for desired frames in this video
-                # video_lfs = predictor.predict(input_video=video, frames=frames, output_path=inference_output_path)
 
-                pool, result = predictor.predict_async(
-                                        input_video=video,
-                                        frames=frames)
+            # Run inference for desired frames in this video
+            pool, result = predictor.predict_async(
+                                    input_video=video,
+                                    frames=frames)
 
-                while not result.ready():
+            while not result.ready():
+                if gui:
                     QtWidgets.QApplication.instance().processEvents()
-                    result.wait(.01)
+                result.wait(.01)
 
-                if result.successful():
-                    new_labels_json = result.get()
-                    new_labels = Labels.from_json(new_labels_json, match_to=labels)
+            if result.successful():
+                new_labels_json = result.get()
 
-                    video_lfs = new_labels.labeled_frames
-                else:
-                    QtWidgets.QMessageBox(text=f"An error occured during inference. Your command line terminal may have more information about the error.").exec_()
-                    result.get()
+                # Add new frames to labels
+                # (we're doing this for each video as we go since there was a problem
+                # when we tried to add frames for all videos together.)
+                new_lf_count = add_frames_from_json(labels, new_labels_json)
+
+                total_new_lf_count += new_lf_count
             else:
-                import time
-                time.sleep(1)
-                video_lfs = []
-
-            new_labeled_frames.extend(video_lfs)
+                if gui:
+                    QtWidgets.QMessageBox(text=f"An error occured during inference. Your command line terminal may have more information about the error.").exec_()
+                result.get()
 
     # close message window
-    win.close()
+    if gui:
+        win.close()
 
-    return new_labeled_frames
+    return total_new_lf_count
 
 if __name__ == "__main__":
     import sys

@@ -30,10 +30,13 @@ def test_training_job_json(tmpdir, multi_skel_vid_labels, backbone):
     # Load the JSON back in
     loaded_run = TrainingJob.load_json(json_path)
 
-    assert loaded_run == train_run
-
-    # Make sure the skeletons match too, not sure what the difference
-    # between __eq__ and matches on skeleton is at this point.
+    # Make sure the skeletons match (even though not eq)
     for sk1, sk2 in zip(loaded_run.model.skeletons, train_run.model.skeletons):
         assert sk1.matches(sk2)
+
+    # Now remove the skeletons since we want to check eq on everything else
+    loaded_run.model.skeletons = []
+    train_run.model.skeletons = []
+
+    assert loaded_run == train_run
 

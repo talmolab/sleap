@@ -647,11 +647,14 @@ class Labels(MutableSequence):
 
     # Methods for saving/loading
 
-    def extend_from(self, new_frames):
-        """Merge data from another Labels object or list of LabeledFrames into self.
+    def extend_from(self, new_frames: Union['Labels',List[LabeledFrame]], unify:bool=False):
+        """
+        Merge data from another Labels object or list of LabeledFrames into self.
 
         Arg:
             new_frames: the object from which to copy data
+            unify: whether to replace objects in new frames with
+                corresponding objects from current `Labels` data
         Returns:
             bool, True if we added frames, False otherwise
         """
@@ -661,6 +664,14 @@ class Labels(MutableSequence):
         # return if this isn't non-empty list of labeled frames
         if not isinstance(new_frames, list) or len(new_frames) == 0: return False
         if not isinstance(new_frames[0], LabeledFrame): return False
+
+        # If unify, we want to replace objects in the frames with
+        # corresponding objects from the current labels.
+        # We do this by deserializing/serializing with match_to.
+        if unify:
+            new_json = Labels(labeled_frames=new_frames).to_dict()
+            new_labels = Labels.from_json(new_json, match_to=self)
+            new_frames = new_labels.labeled_frames
 
         # copy the labeled frames
         self.labeled_frames.extend(new_frames)

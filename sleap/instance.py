@@ -691,10 +691,10 @@ def make_instance_cattr():
     converter.register_unstructure_hook(PredictedPointArray, lambda x: None)
     def unstructure_instance(x: Instance):
 
-        # Unstructure everything but the points array and frame attribute
+        # Unstructure everything but the points array, nodes, and frame attribute
         d = {field.name: converter.unstructure(x.__getattribute__(field.name))
              for field in attr.fields(x.__class__)
-             if field.name not in ['_points', 'frame']}
+             if field.name not in ['_points', '_nodes', 'frame']}
 
         # Replace the point array with a dict
         d['_points'] = converter.unstructure({k: v for k, v in x.nodes_points})
@@ -790,6 +790,14 @@ class LabeledFrame:
 
         # Modify the instance to have a reference back to this frame
         value.frame = self
+
+    def find(self, track=-1, user=False):
+        instances = self.instances
+        if user:
+            instances = list(filter(lambda inst: type(inst) == Instance, instances))
+        if track != -1: # use -1 since we want to accept None as possible value
+            instances = list(filter(lambda inst: inst.track == track, instances))
+        return instances
 
     @property
     def instances(self):
