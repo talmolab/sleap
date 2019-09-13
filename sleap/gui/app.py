@@ -1,7 +1,7 @@
 from PySide2 import QtCore, QtWidgets
-from PySide2.QtCore import Qt
+from PySide2.QtCore import Qt, QEvent
 
-from PySide2.QtGui import QKeyEvent, QKeySequence
+from PySide2.QtGui import QKeyEvent, QKeySequence, QStatusTipEvent
 
 from PySide2.QtWidgets import QApplication, QMainWindow, QWidget, QDockWidget
 from PySide2.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QFormLayout
@@ -79,6 +79,12 @@ class MainWindow(QMainWindow):
         # TODO: auto-select video if data provided, or add it to project
         if video is not None:
             self.addVideo(video)
+
+    def event(self, e):
+        if e.type() == QEvent.StatusTip:
+            if e.tip() == '':
+                return True
+        return super().event(e)
 
     def changestack_push(self, change=None):
         """Add to stack of changes made by user."""
