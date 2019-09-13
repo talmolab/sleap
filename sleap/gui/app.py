@@ -1,7 +1,7 @@
 from PySide2 import QtCore, QtWidgets
-from PySide2.QtCore import Qt
+from PySide2.QtCore import Qt, QEvent
 
-from PySide2.QtGui import QKeyEvent, QKeySequence
+from PySide2.QtGui import QKeyEvent, QKeySequence, QStatusTipEvent
 
 from PySide2.QtWidgets import QApplication, QMainWindow, QWidget, QDockWidget
 from PySide2.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QFormLayout
@@ -79,6 +79,12 @@ class MainWindow(QMainWindow):
         # TODO: auto-select video if data provided, or add it to project
         if video is not None:
             self.addVideo(video)
+
+    def event(self, e):
+        if e.type() == QEvent.StatusTip:
+            if e.tip() == '':
+                return True
+        return super().event(e)
 
     def changestack_push(self, change=None):
         """Add to stack of changes made by user."""
@@ -461,32 +467,40 @@ class MainWindow(QMainWindow):
         self._buttons["remove video"].setEnabled(self.videosTable.currentIndex().isValid())
         self._buttons["delete instance"].setEnabled(self.instancesTable.currentIndex().isValid())
 
-    def update_data_views(self):
+    def update_data_views(self, *update):
+        update = update or ("video", "skeleton", "labels", "frame", "suggestions")
+
         if len(self.skeleton.nodes) == 0 and len(self.labels.skeletons):
              self.skeleton = self.labels.skeletons[0]
 
-        self.videosTable.model().videos = self.labels.videos
+        if "video" in update:
+            self.videosTable.model().videos = self.labels.videos
 
-        self.skeletonNodesTable.model().skeleton = self.skeleton
-        self.skeletonEdgesTable.model().skeleton = self.skeleton
-        self.skeletonEdgesSrc.model().skeleton = self.skeleton
-        self.skeletonEdgesDst.model().skeleton = self.skeleton
+        if "skeleton" in update:
+            self.skeletonNodesTable.model().skeleton = self.skeleton
+            self.skeletonEdgesTable.model().skeleton = self.skeleton
+            self.skeletonEdgesSrc.model().skeleton = self.skeleton
+            self.skeletonEdgesDst.model().skeleton = self.skeleton
 
-        self.instancesTable.model().labels = self.labels
-        self.instancesTable.model().labeled_frame = self.labeled_frame
-        self.instancesTable.model().color_manager = self._color_manager
+        if "labels" in update:
+            self.instancesTable.model().labels = self.labels
+            self.instancesTable.model().color_manager = self._color_manager
 
-        self.suggestionsTable.model().labels = self.labels
+        if "frame" in update:
+            self.instancesTable.model().labeled_frame = self.labeled_frame
 
-        # update count of suggested frames w/ labeled instances
-        suggestion_status_text = ""
-        suggestion_list = self.labels.get_suggestions()
-        if len(suggestion_list):
-            suggestion_label_counts = [self.labels.instance_count(video, frame_idx)
-                for (video, frame_idx) in suggestion_list]
-            labeled_count = len(suggestion_list) - suggestion_label_counts.count(0)
-            suggestion_status_text = f"{labeled_count}/{len(suggestion_list)} labeled"
-        self.suggested_count_label.setText(suggestion_status_text)
+        if "suggestions" in update:
+            self.suggestionsTable.model().labels = self.labels
+
+            # update count of suggested frames w/ labeled instances
+            suggestion_status_text = ""
+            suggestion_list = self.labels.get_suggestions()
+            if len(suggestion_list):
+                suggestion_label_counts = [self.labels.instance_count(video, frame_idx)
+                    for (video, frame_idx) in suggestion_list]
+                labeled_count = len(suggestion_list) - suggestion_label_counts.count(0)
+                suggestion_status_text = f"{labeled_count}/{len(suggestion_list)} labeled"
+            self.suggested_count_label.setText(suggestion_status_text)
 
     def keyPressEvent(self, event: QKeyEvent):
         if event.key() == Qt.Key_Q:
@@ -596,7 +610,7 @@ class MainWindow(QMainWindow):
             self.loadVideo(video, len(self.labels.videos)-1)
 
         # Update data model/view
-        self.update_data_views()
+        self.update_data_views("video")
 
     def removeVideo(self):
         # Get selected video
@@ -771,7 +785,7 @@ class MainWindow(QMainWindow):
 
         self.labels.set_suggestions(new_suggestions)
 
-        self.update_data_views()
+        self.update_data_views("suggestions")
         self.updateSeekbarMarks()
 
     def _frames_for_prediction(self):
@@ -1080,43 +1094,50 @@ class MainWindow(QMainWindow):
         # FIXME: filter by skeleton type
 
         from_predicted = copy_instance
-        unused_predictions = self.labeled_frame.unused_predictions
-
         from_prev_frame = False
+
         if copy_instance is None:
             selected_idx = self.player.view.getSelection()
             if selected_idx is not None:
                 # If the user has selected an instance, copy that one.
                 copy_instance = self.labeled_frame.instances[selected_idx]
                 from_predicted = copy_instance
-            elif len(unused_predictions):
+
+        if copy_instance is None:
+            unused_predictions = self.labeled_frame.unused_predictions
+            if len(unused_predictions):
                 # If there are predicted instances that don't correspond to an instance
                 # in this frame, use the first predicted instance without matching instance.
                 copy_instance = unused_predictions[0]
                 from_predicted = copy_instance
-            else:
-                # Otherwise, if there are instances in previous frames,
-                # copy the points from one of those instances.
-                prev_idx = self.previousLabeledFrameIndex()
-                if prev_idx is not None:
-                    prev_instances = self.labels.find(self.video, prev_idx, return_new=True)[0].instances
-                    if len(prev_instances) > len(self.labeled_frame.instances):
-                        # If more instances in previous frame than current, then use the
-                        # first unmatched instance.
-                        copy_instance = prev_instances[len(self.labeled_frame.instances)]
-                        from_prev_frame = True
-                    elif len(self.labeled_frame.instances):
-                        # Otherwise, if there are already instances in current frame,
-                        # copy the points from the last instance added to frame.
-                        copy_instance = self.labeled_frame.instances[-1]
-                    elif len(prev_instances):
-                        # Otherwise use the last instance added to previous frame.
-                        copy_instance = prev_instances[-1]
-                        from_prev_frame = True
+
+        if copy_instance is None:
+            # Otherwise, if there are instances in previous frames,
+            # copy the points from one of those instances.
+            prev_idx = self.previousLabeledFrameIndex()
+
+            if prev_idx is not None:
+                prev_instances = self.labels.find(self.video, prev_idx, return_new=True)[0].instances
+                if len(prev_instances) > len(self.labeled_frame.instances):
+                    # If more instances in previous frame than current, then use the
+                    # first unmatched instance.
+                    copy_instance = prev_instances[len(self.labeled_frame.instances)]
+                    from_prev_frame = True
+                elif len(self.labeled_frame.instances):
+                    # Otherwise, if there are already instances in current frame,
+                    # copy the points from the last instance added to frame.
+                    copy_instance = self.labeled_frame.instances[-1]
+                elif len(prev_instances):
+                    # Otherwise use the last instance added to previous frame.
+                    copy_instance = prev_instances[-1]
+                    from_prev_frame = True
+
         from_predicted = from_predicted if hasattr(from_predicted, "score") else None
+
+        # Now create the new instance
         new_instance = Instance(skeleton=self.skeleton, from_predicted=from_predicted)
 
-        # the rect that's currently visibile in the window view
+        # Get the rect that's currently visibile in the window view
         in_view_rect = self.player.view.mapToScene(self.player.view.rect()).boundingRect()
 
         # go through each node in skeleton
@@ -1453,6 +1474,8 @@ class MainWindow(QMainWindow):
         except:
             return
 
+        return next_idx
+
     def previousLabeledFrame(self):
         prev_idx = self.previousLabeledFrameIndex()
         if prev_idx is not None:
@@ -1574,7 +1597,7 @@ class MainWindow(QMainWindow):
 
         # Update related displays
         self.updateStatusMessage()
-        self.update_data_views()
+        self.update_data_views("frame")
 
         # Trigger event after the overlays have been added
         player.view.updatedViewer.emit()
@@ -1585,6 +1608,10 @@ class MainWindow(QMainWindow):
             if self.player.seekbar.hasSelection():
                 start, end = self.player.seekbar.getSelection()
                 message += f" (selection: {start}-{end})"
+
+            if len(self.labels.videos) > 1:
+                message += f" of video {self.labels.videos.index(self.video)}"
+
             message += f"    Labeled Frames: "
             if self.video is not None:
                 message += f"{len(self.labels.get_video_user_labeled_frames(self.video))}"

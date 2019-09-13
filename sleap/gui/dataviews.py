@@ -39,16 +39,24 @@ class VideosTableModel(QtCore.QAbstractTableModel):
 
     def __init__(self, videos: list):
         super(VideosTableModel, self).__init__()
-        self._videos = videos
+        self.videos = videos
 
     @property
     def videos(self):
-        return self._videos
+        return self._cache
 
     @videos.setter
     def videos(self, val):
         self.beginResetModel()
-        self._videos = val
+        self._cache = []
+        for video in val:
+            row_data = dict(
+                        filename=video.filename,
+                        frames=video.frames,
+                        height=video.height,
+                        width=video.width,
+                        channels=video.channels)
+            self._cache.append(row_data)
         self.endResetModel()
 
     def data(self, index: QtCore.QModelIndex, role=Qt.DisplayRole):
@@ -59,16 +67,8 @@ class VideosTableModel(QtCore.QAbstractTableModel):
             if len(self.videos) > (idx - 1):
                 video = self.videos[idx]
 
-                if prop == "filename":
-                    return video.filename
-                elif prop == "frames":
-                    return video.frames
-                elif prop == "height":
-                    return video.height
-                elif prop == "width":
-                    return video.width
-                elif prop == "channels":
-                    return video.channels
+                if prop in video:
+                    return video[prop]
 
         return None
 
