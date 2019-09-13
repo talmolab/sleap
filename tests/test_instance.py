@@ -154,6 +154,24 @@ def test_points_array(skeleton):
     pts = instance1.points_array(invisible_as_nan=True)
     assert np.isnan(pts[skeleton.node_to_index('thorax'), :]).all()
 
+def test_modifying_skeleton(skeleton):
+    node_names = ["left-wing", "head", "right-wing"]
+    points = {"head": Point(1, 4), "left-wing": Point(2, 5), "right-wing": Point(3, 6)}
+
+    instance1 = Instance(skeleton=skeleton, points=points)
+
+    assert len(instance1.points()) == 3
+
+    skeleton.add_node('new test node')
+
+    instance1.fix_array() # update with changes from skeleton
+    instance1['new test node'] = Point(7,8)
+
+    assert len(instance1.points()) == 4
+
+    skeleton.delete_node('head')
+    assert len(instance1.points()) == 3
+
 def test_instance_labeled_frame_ref(skeleton, centered_pair_vid):
     """
     Test whether links between labeled frames and instances are kept
