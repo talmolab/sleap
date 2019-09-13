@@ -1,0 +1,1 @@
+{"model": {"output_type": 0, "backbone": {"down_blocks": 3, "up_blocks": 3, "convs_per_depth": 2, "num_filters": 32, "kernel_size": 5, "upsampling_layers": true, "interp": "bilinear"}, "skeletons": null, "backbone_name": "UNet"}, "trainer": {"num_epochs": 17}}
