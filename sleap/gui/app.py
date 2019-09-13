@@ -461,32 +461,40 @@ class MainWindow(QMainWindow):
         self._buttons["remove video"].setEnabled(self.videosTable.currentIndex().isValid())
         self._buttons["delete instance"].setEnabled(self.instancesTable.currentIndex().isValid())
 
-    def update_data_views(self):
+    def update_data_views(self, *update):
+        update = update or ("video", "skeleton", "labels", "frame", "suggestions")
+
         if len(self.skeleton.nodes) == 0 and len(self.labels.skeletons):
              self.skeleton = self.labels.skeletons[0]
 
-        self.videosTable.model().videos = self.labels.videos
+        if "video" in update:
+            self.videosTable.model().videos = self.labels.videos
 
-        self.skeletonNodesTable.model().skeleton = self.skeleton
-        self.skeletonEdgesTable.model().skeleton = self.skeleton
-        self.skeletonEdgesSrc.model().skeleton = self.skeleton
-        self.skeletonEdgesDst.model().skeleton = self.skeleton
+        if "skeleton" in update:
+            self.skeletonNodesTable.model().skeleton = self.skeleton
+            self.skeletonEdgesTable.model().skeleton = self.skeleton
+            self.skeletonEdgesSrc.model().skeleton = self.skeleton
+            self.skeletonEdgesDst.model().skeleton = self.skeleton
 
-        self.instancesTable.model().labels = self.labels
-        self.instancesTable.model().labeled_frame = self.labeled_frame
-        self.instancesTable.model().color_manager = self._color_manager
+        if "labels" in update:
+            self.instancesTable.model().labels = self.labels
+            self.instancesTable.model().color_manager = self._color_manager
 
-        self.suggestionsTable.model().labels = self.labels
+        if "frame" in update:
+            self.instancesTable.model().labeled_frame = self.labeled_frame
 
-        # update count of suggested frames w/ labeled instances
-        suggestion_status_text = ""
-        suggestion_list = self.labels.get_suggestions()
-        if len(suggestion_list):
-            suggestion_label_counts = [self.labels.instance_count(video, frame_idx)
-                for (video, frame_idx) in suggestion_list]
-            labeled_count = len(suggestion_list) - suggestion_label_counts.count(0)
-            suggestion_status_text = f"{labeled_count}/{len(suggestion_list)} labeled"
-        self.suggested_count_label.setText(suggestion_status_text)
+        if "suggestions" in update:
+            self.suggestionsTable.model().labels = self.labels
+
+            # update count of suggested frames w/ labeled instances
+            suggestion_status_text = ""
+            suggestion_list = self.labels.get_suggestions()
+            if len(suggestion_list):
+                suggestion_label_counts = [self.labels.instance_count(video, frame_idx)
+                    for (video, frame_idx) in suggestion_list]
+                labeled_count = len(suggestion_list) - suggestion_label_counts.count(0)
+                suggestion_status_text = f"{labeled_count}/{len(suggestion_list)} labeled"
+            self.suggested_count_label.setText(suggestion_status_text)
 
     def keyPressEvent(self, event: QKeyEvent):
         if event.key() == Qt.Key_Q:
@@ -596,7 +604,7 @@ class MainWindow(QMainWindow):
             self.loadVideo(video, len(self.labels.videos)-1)
 
         # Update data model/view
-        self.update_data_views()
+        self.update_data_views("video")
 
     def removeVideo(self):
         # Get selected video
@@ -771,7 +779,7 @@ class MainWindow(QMainWindow):
 
         self.labels.set_suggestions(new_suggestions)
 
-        self.update_data_views()
+        self.update_data_views("suggestions")
         self.updateSeekbarMarks()
 
     def _frames_for_prediction(self):
@@ -1574,7 +1582,7 @@ class MainWindow(QMainWindow):
 
         # Update related displays
         self.updateStatusMessage()
-        self.update_data_views()
+        self.update_data_views("frame")
 
         # Trigger event after the overlays have been added
         player.view.updatedViewer.emit()
