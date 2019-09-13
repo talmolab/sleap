@@ -552,7 +552,8 @@ class MainWindow(QMainWindow):
                 self.update_data_views()
 
                 # Load first video
-                self.loadVideo(self.labels.videos[0], 0)
+                if len(self.labels.videos):
+                    self.loadVideo(self.labels.videos[0], 0)
 
                 # Update track menu options
                 self.updateTrackMenu()
@@ -660,7 +661,9 @@ class MainWindow(QMainWindow):
             if len(sk_list):
                 self.skeleton = sk_list[0]
 
-        self.changestack_push("new skeleton")
+        if self.skeleton not in self.labels:
+            self.labels.skeletons.append(self.skeleton)
+            self.changestack_push("new skeleton")
 
         # Update data model
         self.update_data_views()
