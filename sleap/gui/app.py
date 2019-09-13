@@ -1453,6 +1453,8 @@ class MainWindow(QMainWindow):
         except:
             return
 
+        return next_idx
+
     def previousLabeledFrame(self):
         prev_idx = self.previousLabeledFrameIndex()
         if prev_idx is not None:
