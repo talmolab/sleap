@@ -565,8 +565,8 @@ class Instance:
 
             # Add points into new array
             for i, node in enumerate(self._nodes):
-                if node.name in self.skeleton.node_names:
-                    new_array[self.skeleton.node_names.index(node.name)] = self._points[i]
+                if node in self.skeleton.nodes:
+                    new_array[self.skeleton.nodes.index(node)] = self._points[i]
 
             # Update points and nodes for this instance
             self._points = new_array
