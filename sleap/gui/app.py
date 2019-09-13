@@ -136,8 +136,6 @@ class MainWindow(QMainWindow):
 
         ####### Status bar #######
         self.statusBar() # Initialize status bar
-        self.statusWidget = QLabel("")
-        self.statusBar().addWidget(self.statusWidget)
 
         self.load_overlays()
 
@@ -1599,28 +1597,20 @@ class MainWindow(QMainWindow):
         player.view.updatedViewer.emit()
 
     def updateStatusMessage(self, message = None):
-        # show temporary message in status bar
-        self.statusBar().showMessage(message)
-
-        # show permanent message in status widget
-        message = f"Frame: {self.player.frame_idx+1}/{len(self.video)}"
-        if self.player.seekbar.hasSelection():
-            start, end = self.player.seekbar.getSelection()
-            message += f" (selection: {start}-{end})"
-
-        if len(self.labels.videos) > 1:
-            message += f" of video {self.labels.videos.index(self.video)}"
-
-        message += f"    Labeled Frames: "
-        if self.video is not None:
-            message += f"{len(self.labels.get_video_user_labeled_frames(self.video))}"
+        if message is None:
+            message = f"Frame: {self.player.frame_idx+1}/{len(self.video)}"
+            if self.player.seekbar.hasSelection():
+                start, end = self.player.seekbar.getSelection()
+                message += f" (selection: {start}-{end})"
+            message += f"    Labeled Frames: "
+            if self.video is not None:
+                message += f"{len(self.labels.get_video_user_labeled_frames(self.video))}"
+                if len(self.labels.videos) > 1:
+                    message += " in video, "
             if len(self.labels.videos) > 1:
-                message += " in video, "
-        if len(self.labels.videos) > 1:
-            message += f"{len(self.labels.user_labeled_frames)} in project"
+                message += f"{len(self.labels.user_labeled_frames)} in project"
 
-        self.statusWidget.setText(message)
-
+        self.statusBar().showMessage(message)
 
 def main(*args, **kwargs):
     app = QApplication([])
