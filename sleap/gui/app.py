@@ -1080,43 +1080,50 @@ class MainWindow(QMainWindow):
         # FIXME: filter by skeleton type
 
         from_predicted = copy_instance
-        unused_predictions = self.labeled_frame.unused_predictions
-
         from_prev_frame = False
+
         if copy_instance is None:
             selected_idx = self.player.view.getSelection()
             if selected_idx is not None:
                 # If the user has selected an instance, copy that one.
                 copy_instance = self.labeled_frame.instances[selected_idx]
                 from_predicted = copy_instance
-            elif len(unused_predictions):
+
+        if copy_instance is None:
+            unused_predictions = self.labeled_frame.unused_predictions
+            if len(unused_predictions):
                 # If there are predicted instances that don't correspond to an instance
                 # in this frame, use the first predicted instance without matching instance.
                 copy_instance = unused_predictions[0]
                 from_predicted = copy_instance
-            else:
-                # Otherwise, if there are instances in previous frames,
-                # copy the points from one of those instances.
-                prev_idx = self.previousLabeledFrameIndex()
-                if prev_idx is not None:
-                    prev_instances = self.labels.find(self.video, prev_idx, return_new=True)[0].instances
-                    if len(prev_instances) > len(self.labeled_frame.instances):
-                        # If more instances in previous frame than current, then use the
-                        # first unmatched instance.
-                        copy_instance = prev_instances[len(self.labeled_frame.instances)]
-                        from_prev_frame = True
-                    elif len(self.labeled_frame.instances):
-                        # Otherwise, if there are already instances in current frame,
-                        # copy the points from the last instance added to frame.
-                        copy_instance = self.labeled_frame.instances[-1]
-                    elif len(prev_instances):
-                        # Otherwise use the last instance added to previous frame.
-                        copy_instance = prev_instances[-1]
-                        from_prev_frame = True
+
+        if copy_instance is None:
+            # Otherwise, if there are instances in previous frames,
+            # copy the points from one of those instances.
+            prev_idx = self.previousLabeledFrameIndex()
+
+            if prev_idx is not None:
+                prev_instances = self.labels.find(self.video, prev_idx, return_new=True)[0].instances
+                if len(prev_instances) > len(self.labeled_frame.instances):
+                    # If more instances in previous frame than current, then use the
+                    # first unmatched instance.
+                    copy_instance = prev_instances[len(self.labeled_frame.instances)]
+                    from_prev_frame = True
+                elif len(self.labeled_frame.instances):
+                    # Otherwise, if there are already instances in current frame,
+                    # copy the points from the last instance added to frame.
+                    copy_instance = self.labeled_frame.instances[-1]
+                elif len(prev_instances):
+                    # Otherwise use the last instance added to previous frame.
+                    copy_instance = prev_instances[-1]
+                    from_prev_frame = True
+
         from_predicted = from_predicted if hasattr(from_predicted, "score") else None
+
+        # Now create the new instance
         new_instance = Instance(skeleton=self.skeleton, from_predicted=from_predicted)
 
-        # the rect that's currently visibile in the window view
+        # Get the rect that's currently visibile in the window view
         in_view_rect = self.player.view.mapToScene(self.player.view.rect()).boundingRect()
 
         # go through each node in skeleton
