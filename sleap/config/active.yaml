@@ -26,6 +26,11 @@ expert:
   type: bool
   default: False
 
+- name: _dont_use_pafs
+  label: Single-instance mode (without pafs)
+  type: bool
+  default: False
+
 - name: _view_paf
   label: View Edge Profile...
   type: button
