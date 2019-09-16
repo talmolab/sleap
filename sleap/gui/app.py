@@ -373,12 +373,18 @@ class MainWindow(QMainWindow):
         instances_layout.addWidget(hbw)
 
         def update_instance_table_selection():
-            cur_video_instance = self.player.view.getSelection()
-            if cur_video_instance is None: cur_video_instance = -1
-            table_index = self.instancesTable.model().createIndex(cur_video_instance, 0)
-            self.instancesTable.setCurrentIndex(table_index)
+            inst_selected = self.player.view.getSelectionInstance()
 
-        self.instancesTable.selectionChangedSignal.connect(lambda row: self.player.view.selectInstance(row, from_all=True, signal=False))
+            if not inst_selected: return
+
+            idx = -1
+            if inst_selected in self.labeled_frame.instances_to_show:
+                idx = self.labeled_frame.instances_to_show.index(inst_selected)
+
+            table_row_idx = self.instancesTable.model().createIndex(idx, 0)
+            self.instancesTable.setCurrentIndex(table_row_idx)
+
+        self.instancesTable.selectionChangedSignal.connect(lambda inst: self.player.view.selectInstance(inst, signal=False))
         self.player.view.updatedSelection.connect(update_instance_table_selection)
 
         # update track UI when change to track name
@@ -1581,7 +1587,7 @@ class MainWindow(QMainWindow):
     def openAbout(self):
         pass
 
-    def newFrame(self, player, frame_idx, selected_idx):
+    def newFrame(self, player, frame_idx, selected_inst):
         """Called each time a new frame is drawn."""
 
         # Store the current LabeledFrame (or make new, empty object)
@@ -1592,8 +1598,8 @@ class MainWindow(QMainWindow):
             overlay.add_to_scene(self.video, frame_idx)
 
         # Select instance if there was already selection
-        if selected_idx > -1:
-            player.view.selectInstance(selected_idx)
+        if selected_inst is not None:
+            player.view.selectInstance(selected_inst)
 
         # Update related displays
         self.updateStatusMessage()

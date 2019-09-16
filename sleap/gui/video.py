@@ -28,7 +28,7 @@ from PySide2.QtCore import QRectF, QLineF, QPointF, QMarginsF, QSizeF
 import math
 import numpy as np
 
-from typing import Callable
+from typing import Callable, Union
 
 from PySide2.QtWidgets import QGraphicsItem, QGraphicsObject
 # The PySide2.QtWidgets.QGraphicsObject class provides a base class for all graphics items that require signals, slots and properties.
@@ -54,7 +54,7 @@ class QtVideoPlayer(QWidget):
         changedData: Emitted whenever data is changed by user
     """
 
-    changedPlot = Signal(QWidget, int, int)
+    changedPlot = Signal(QWidget, int, Instance)
     changedData = Signal(Instance)
 
     def __init__(self, video: Video = None, color_manager=None, *args, **kwargs):
@@ -175,28 +175,20 @@ class QtVideoPlayer(QWidget):
         self.frame_idx = idx
         self.seekbar.setValue(self.frame_idx)
 
-        # Save index of selected instance
-        selected_idx = self.view.getSelection()
-        selected_idx = -1 if selected_idx is None else selected_idx # use -1 for no selection
+        # Store which Instance is selected
+        selected_inst = self.view.getSelectionInstance()
 
         # Clear existing objects
         self.view.clear()
 
         # Convert ndarray to QImage
-        # TODO: handle RGB and other formats
-        # https://stackoverflow.com/questions/34232632/convert-python-opencv-image-numpy-array-to-pyqt-qpixmap-image
-        # https://stackoverflow.com/questions/55063499/pyqt5-convert-cv2-image-to-qimage
-        # image = QImage(frame.copy().data, frame.shape[1], frame.shape[0], frame.shape[1], QImage.Format_Grayscale8)
-        # image = QImage(frame.copy().data, frame.shape[1], frame.shape[0], QImage.Format_Grayscale8)
-
-        # Magic bullet:
         image = qimage2ndarray.array2qimage(frame)
 
         # Display image
         self.view.setImage(image)
 
-        # Emit signal (it's better to use the signal than a callback)
-        self.changedPlot.emit(self, idx, selected_idx)
+        # Emit signal
+        self.changedPlot.emit(self, idx, selected_inst)
 
     def nextFrame(self, dt=1):
         """ Go to next frame.
@@ -531,18 +523,20 @@ class GraphicsView(QGraphicsView):
         # signal that the selection has changed (so we can update visual display)
         self.updatedSelection.emit()
 
-    def selectInstance(self, select_idx, from_all=False, signal=True):
+    def selectInstance(self, select: Union[Instance, int], signal=True):
         """
-        Select a particular skeleton instance.
+        Select a particular instance in view.
 
         Args:
-            select_idx: index of skeleton to select
+            select: either `Instance` or index of instance in view
+        Returns:
+            None
         """
-        instances = self.selectable_instances if not from_all else self.all_instances
         self.clearSelection(signal=False)
-        if select_idx < len(instances):
-            for idx, instance in enumerate(instances):
-                instance.selected = (select_idx == idx)
+
+        for idx, instance in enumerate(self.all_instances):
+            instance.selected = (select == idx or select == instance.instance)
+
         # signal that the selection has changed (so we can update visual display)
         if signal: self.updatedSelection.emit()
 
