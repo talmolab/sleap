@@ -58,6 +58,8 @@ install:
 
   # Install dev requirements too.
   - pip install -r dev_requirements.txt
+
+  # Install sleap package
   - pip install .
 
 build: off
