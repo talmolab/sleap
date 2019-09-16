@@ -15,6 +15,11 @@ class LossViewer(QtWidgets.QMainWindow):
         self.show_controller = show_controller
         self.stop_button = None
 
+        self.redraw_batch_interval = 40
+        self.batches_to_show = 200 # -1 to show all
+        self.ignore_outliers = False
+        self.log_scale = True
+
         self.reset()
         self.setup_zmq(zmq_context)
 
@@ -58,18 +63,29 @@ class LossViewer(QtWidgets.QMainWindow):
         self.chart.addSeries(self.series["epoch_loss"])
         self.chart.addSeries(self.series["val_loss"])
 
-        # self.chart.createDefaultAxes()
         axisX = QtCharts.QtCharts.QValueAxis()
         axisX.setLabelFormat("%d")
         axisX.setTitleText("Batches")
         self.chart.addAxis(axisX, QtCore.Qt.AlignBottom)
 
-        axisY = QtCharts.QtCharts.QLogValueAxis()
-        axisY.setLabelFormat("%f")
-        axisY.setLabelsVisible(True)
-        axisY.setMinorTickCount(1)
-        axisY.setTitleText("Loss")
-        axisY.setBase(10)
+        # create the different Y axes that can be used
+        self.axisY = dict()
+
+        self.axisY["log"] = QtCharts.QtCharts.QLogValueAxis()
+        self.axisY["log"].setBase(10)
+
+        self.axisY["linear"] = QtCharts.QtCharts.QValueAxis()
+
+        # settings that apply to all Y axes
+        for axisY in self.axisY.values():
+            axisY.setLabelFormat("%f")
+            axisY.setLabelsVisible(True)
+            axisY.setMinorTickCount(1)
+            axisY.setTitleText("Loss")
+
+        # use the default Y axis
+        axisY = self.axisY["log"] if self.log_scale else self.axisY["linear"]
+
         self.chart.addAxis(axisY, QtCore.Qt.AlignLeft)
 
         for series in self.chart.series():
@@ -86,17 +102,44 @@ class LossViewer(QtWidgets.QMainWindow):
         layout.addWidget(self.chartView)
 
         if self.show_controller:
+            control_layout = QtWidgets.QHBoxLayout()
+
+            field = QtWidgets.QCheckBox("Log Scale")
+            field.setChecked(self.log_scale)
+            field.stateChanged.connect(lambda x: self.toggle("log_scale"))
+            control_layout.addWidget(field)
+
+            field = QtWidgets.QCheckBox("Ignore Outliers")
+            field.setChecked(self.ignore_outliers)
+            field.stateChanged.connect(lambda x: self.toggle("ignore_outliers"))
+            control_layout.addWidget(field)
+
+            control_layout.addWidget(QtWidgets.QLabel("Batches to Show:"))
+
+            field = QtWidgets.QComboBox()
+            self.batch_options = "200,1000,5000,All".split(",")
+            for opt in self.batch_options:
+                field.addItem(opt)
+            field.currentIndexChanged.connect(lambda x: self.set_batches_to_show(self.batch_options[x]))
+            control_layout.addWidget(field)
+
+            control_layout.addStretch(1)
+
             self.stop_button = QtWidgets.QPushButton("Stop Training")
             self.stop_button.clicked.connect(self.stop)
-            layout.addWidget(self.stop_button)
+            control_layout.addWidget(self.stop_button)
+
+
+            widget = QtWidgets.QWidget()
+            widget.setLayout(control_layout)
+            layout.addWidget(widget)
 
         wid = QtWidgets.QWidget()
         wid.setLayout(layout)
         self.setCentralWidget(wid)
 
-        # Only show that last 2000 batch values
-        self.X = deque(maxlen=2000)
-        self.Y = deque(maxlen=2000)
+        self.X = []
+        self.Y = []
 
         self.t0 = None
         self.current_job_output_type = what
@@ -105,6 +148,40 @@ class LossViewer(QtWidgets.QMainWindow):
         self.last_epoch_val_loss = None
         self.last_batch_number = 0
         self.is_running = False
+
+    def toggle(self, what):
+        if what == "log_scale":
+            self.log_scale = not self.log_scale
+            self.update_y_axis()
+        elif what == "ignore_outliers":
+            self.ignore_outliers = not self.ignore_outliers
+        elif what == "entire_history":
+            if self.batches_to_show > 0:
+                self.batches_to_show = -1
+            else:
+                self.batches_to_show = 200
+
+    def set_batches_to_show(self, val):
+        if val.isdigit():
+            self.batches_to_show = int(val)
+        else:
+            self.batches_to_show = -1
+
+    def update_y_axis(self):
+        to = "log" if self.log_scale else "linear"
+        # remove other axes
+        for name, axisY in self.axisY.items():
+            if name != to:
+                if axisY in self.chart.axes():
+                    self.chart.removeAxis(axisY)
+                for series in self.chart.series():
+                    if axisY in series.attachedAxes():
+                        series.detachAxis(axisY)
+        # add axis
+        axisY = self.axisY[to]
+        self.chart.addAxis(axisY, QtCore.Qt.AlignLeft)
+        for series in self.chart.series():
+            series.attachAxis(axisY)
 
     def setup_zmq(self, zmq_context):
         # Progress monitoring
@@ -132,7 +209,6 @@ class LossViewer(QtWidgets.QMainWindow):
             self.stop_button.setText("Stopping...")
             self.stop_button.setEnabled(False)
 
-
     def add_datapoint(self, x, y, which="batch"):
 
         # Keep track of all batch points
@@ -140,28 +216,41 @@ class LossViewer(QtWidgets.QMainWindow):
             self.X.append(x)
             self.Y.append(y)
 
-            # Redraw batch ever 40 points (faster than plotting each)
-            if x % 40 == 0:
-                xs, ys = self.X, self.Y
+            # Redraw batch at intervals (faster than plotting each)
+            if x % self.redraw_batch_interval == 0:
+
+                if self.batches_to_show < 0 or len(self.X) < self.batches_to_show:
+                    xs, ys = self.X, self.Y
+                else:
+                    xs, ys = self.X[-self.batches_to_show:], self.Y[-self.batches_to_show:]
+
                 points = [QtCore.QPointF(x, y) for x, y in zip(xs, ys) if y > 0]
                 self.series["batch"].replace(points)
 
                 # Set X scale to show all points
                 dx = 0.5
-                self.chart.axisX().setRange(min(self.X) - dx, max(self.X) + dx)
+                self.chart.axisX().setRange(min(xs) - dx, max(xs) + dx)
 
-                # Set Y scale to exclude outliers
-                q1, q3 = np.quantile(self.Y, (.25, .75))
-                iqr = q3-q1 # interquartile range
-                low = q1 - iqr * 1.5
-                high = q3 + iqr * 1.5
+                if self.ignore_outliers:
+                    # Set Y scale to exclude outliers
+                    q1, q3 = np.quantile(ys, (.25, .75))
+                    iqr = q3-q1 # interquartile range
+                    low = q1 - iqr * 1.5
+                    high = q3 + iqr * 1.5
 
-                low = max(low, min(self.Y) - .2) # keep within range of data
-                low = max(low, 1e-5) # for log scale, low cannot be 0
+                    low = max(low, min(ys) - .2) # keep within range of data
+                    high = min(high, max(ys) + .2)
+                else:
+                    # Set Y scale to show all points
+                    dy = np.ptp(ys) * 0.02
+                    low = min(ys) - dy
+                    high = max(ys) + dy
 
-                high = min(high, max(self.Y) + .2)
+                if self.log_scale:
+                    low = max(low, 1e-5) # for log scale, low cannot be 0
 
                 self.chart.axisY().setRange(low, high)
+
         else:
             self.series[which].append(x, y)
 
@@ -218,7 +307,7 @@ if __name__ == "__main__":
     def test_point(x=[0]):
         x[0] += 1
         i = x[0]+1
-        win.add_datapoint(i, i%30)
+        win.add_datapoint(i, i%30+1)
 
     t = QtCore.QTimer()
     t.timeout.connect(test_point)
