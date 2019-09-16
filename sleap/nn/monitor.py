@@ -232,14 +232,15 @@ class LossViewer(QtWidgets.QMainWindow):
                 self.chart.axisX().setRange(min(xs) - dx, max(xs) + dx)
 
                 if self.ignore_outliers:
+                    dy = np.ptp(ys) * 0.02
                     # Set Y scale to exclude outliers
                     q1, q3 = np.quantile(ys, (.25, .75))
                     iqr = q3-q1 # interquartile range
                     low = q1 - iqr * 1.5
                     high = q3 + iqr * 1.5
 
-                    low = max(low, min(ys) - .2) # keep within range of data
-                    high = min(high, max(ys) + .2)
+                    low = max(low, min(ys) - dy) # keep within range of data
+                    high = min(high, max(ys) + dy)
                 else:
                     # Set Y scale to show all points
                     dy = np.ptp(ys) * 0.02
