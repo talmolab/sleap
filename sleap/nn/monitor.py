@@ -143,7 +143,7 @@ class LossViewer(QtWidgets.QMainWindow):
             # Redraw batch ever 40 points (faster than plotting each)
             if x % 40 == 0:
                 xs, ys = self.X, self.Y
-                points = [QtCore.QPointF(x, y) for x, y in zip(xs, ys)]
+                points = [QtCore.QPointF(x, y) for x, y in zip(xs, ys) if y > 0]
                 self.series["batch"].replace(points)
 
                 # Set X scale to show all points
@@ -151,10 +151,17 @@ class LossViewer(QtWidgets.QMainWindow):
                 self.chart.axisX().setRange(min(self.X) - dx, max(self.X) + dx)
 
                 # Set Y scale to exclude outliers
-                dy = np.ptp(self.Y) * 0.04
-                low, high = np.quantile(self.Y, (.02, .98))
+                q1, q3 = np.quantile(self.Y, (.25, .75))
+                iqr = q3-q1 # interquartile range
+                low = q1 - iqr * 1.5
+                high = q3 + iqr * 1.5
 
-                self.chart.axisY().setRange(low - dy, high + dy)
+                low = max(low, min(self.Y) - .2) # keep within range of data
+                low = max(low, 1e-5) # for log scale, low cannot be 0
+
+                high = min(high, max(self.Y) + .2)
+
+                self.chart.axisY().setRange(low, high)
         else:
             self.series[which].append(x, y)
 
@@ -211,7 +218,7 @@ if __name__ == "__main__":
     def test_point(x=[0]):
         x[0] += 1
         i = x[0]+1
-        win.add_datapoint(i, i%30+1)
+        win.add_datapoint(i, i%30)
 
     t = QtCore.QTimer()
     t.timeout.connect(test_point)
