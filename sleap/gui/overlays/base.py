@@ -21,6 +21,7 @@ class ModelData:
     model: 'keras.Model'
     video: Video
     do_rescale: bool=False
+    output_scale: float=1.0
     adjust_vals: bool=True
 
     def __getitem__(self, i):
@@ -30,16 +31,17 @@ class ModelData:
         # Trim to size that works for model
         frame_img = frame_img[:, :self.video.height//8*8, :self.video.width//8*8, :]
 
+        inference_transform = DataTransform()
         if self.do_rescale:
             # Scale input image if model trained on scaled images
-            inference_transform = DataTransform()
             frame_img = inference_transform.scale_to(
                         imgs=frame_img,
                         target_size=self.model.input_shape[1:3])
 
         # Get predictions
         frame_result = self.model.predict(frame_img.astype("float32") / 255)
-        if self.do_rescale:
+        if self.do_rescale or self.output_scale != 1.0:
+            inference_transform.scale *= self.output_scale
             frame_result = inference_transform.invert_scale(frame_result)
 
         # We just want the single image results
@@ -137,9 +139,18 @@ class DataOverlay:
 
         do_rescale = model_data["scale"] < 1
 
+        # Determine how the output from the model should be scaled
+        img_output_scale = 1.0 # image rescaling
+        obj_output_scale = 1.0 # scale to pass to overlay object
+
+        if model_output_type == ModelOutputType.PART_AFFINITY_FIELD:
+            obj_output_scale = model_data["multiscale"]
+        else:
+            img_output_scale = model_data["multiscale"]
+
         # Construct the ModelData object that runs inference
 
-        data_object = ModelData(model, video, do_rescale=do_rescale)
+        data_object = ModelData(model, video, do_rescale=do_rescale, output_scale=img_output_scale)
 
         # Determine whether to use confmap or paf overlay
 
@@ -157,7 +168,7 @@ class DataOverlay:
         # will be passed to the overlay object to do its own upscaling
         # (at least for pafs).
 
-        transform = DataTransform(scale=model_data["multiscale"])
+        transform = DataTransform(scale=obj_output_scale)
 
         return cls(
                 data=data_object,
