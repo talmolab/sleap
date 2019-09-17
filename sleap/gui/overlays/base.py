@@ -72,6 +72,9 @@ class DataOverlay:
     def add_to_scene(self, video, frame_idx):
         if self.data is None: return
 
+        # Make sure video matches video for ModelData object
+        if hasattr(self.data, "video") and self.data.video != video: return
+
         if self.transform is None:
             self._add(self.player.view.scene, self.overlay_class(self.data[frame_idx]))
 
