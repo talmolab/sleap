@@ -31,6 +31,7 @@ from sleap.gui.dataviews import VideosTable, SkeletonNodesTable, SkeletonEdgesTa
     LabeledFrameTable, SkeletonNodeModel, SuggestionsTable
 from sleap.gui.importvideos import ImportVideos
 from sleap.gui.formbuilder import YamlFormWidget
+from sleap.gui.shortcuts import Shortcuts, ShortcutDialog
 from sleap.gui.suggestions import VideoFrameSuggestions
 
 from sleap.gui.overlays.tracks import TrackColorManager, TrackTrailOverlay
@@ -122,15 +123,7 @@ class MainWindow(QMainWindow):
 
     def initialize_gui(self):
 
-        shortcut_yaml = resource_filename(Requirement.parse("sleap"),"sleap/config/shortcuts.yaml")
-        with open(shortcut_yaml, 'r') as f:
-            shortcuts = yaml.load(f, Loader=yaml.SafeLoader)
-
-        for action in shortcuts:
-            key_string = shortcuts.get(action, None)
-            key_string = "" if key_string is None else key_string
-            if "." in key_string:
-                shortcuts[action] = eval(key_string)
+        shortcuts = Shortcuts()
 
         ####### Video player #######
         self.player = QtVideoPlayer(color_manager=self._color_manager)
@@ -150,12 +143,12 @@ class MainWindow(QMainWindow):
         ### File Menu ###
 
         fileMenu = self.menuBar().addMenu("File")
-        self._menu_actions["new"] = fileMenu.addAction("&New Project", self.newProject, shortcuts["new"])
-        self._menu_actions["open"] = fileMenu.addAction("&Open Project...", self.openProject, shortcuts["open"])
+        self._menu_actions["new"] = fileMenu.addAction("New Project", self.newProject, shortcuts["new"])
+        self._menu_actions["open"] = fileMenu.addAction("Open Project...", self.openProject, shortcuts["open"])
         fileMenu.addSeparator()
         self._menu_actions["add videos"] = fileMenu.addAction("Add Videos...", self.addVideo, shortcuts["add videos"])
         fileMenu.addSeparator()
-        self._menu_actions["save"] = fileMenu.addAction("&Save", self.saveProject, shortcuts["save"])
+        self._menu_actions["save"] = fileMenu.addAction("Save", self.saveProject, shortcuts["save"])
         self._menu_actions["save as"] = fileMenu.addAction("Save As...", self.saveProjectAs, shortcuts["save as"])
         fileMenu.addSeparator()
         self._menu_actions["close"] = fileMenu.addAction("Quit", self.close, shortcuts["close"])
@@ -164,15 +157,15 @@ class MainWindow(QMainWindow):
 
         goMenu = self.menuBar().addMenu("Go")
 
-        self._menu_actions["goto next"] = goMenu.addAction("Next Labeled Frame", self.nextLabeledFrame, shortcuts["goto next"])
-        self._menu_actions["goto prev"] = goMenu.addAction("Previous Labeled Frame", self.previousLabeledFrame, shortcuts["goto prev"])
+        self._menu_actions["goto next labeled"] = goMenu.addAction("Next Labeled Frame", self.nextLabeledFrame, shortcuts["goto next labeled"])
+        self._menu_actions["goto prev labeled"] = goMenu.addAction("Previous Labeled Frame", self.previousLabeledFrame, shortcuts["goto prev labeled"])
 
         self._menu_actions["goto next user"] = goMenu.addAction("Next User Labeled Frame", self.nextUserLabeledFrame, shortcuts["goto next user"])
 
         self._menu_actions["goto next suggestion"] = goMenu.addAction("Next Suggestion", self.nextSuggestedFrame, shortcuts["goto next suggestion"])
         self._menu_actions["goto prev suggestion"] = goMenu.addAction("Previous Suggestion", lambda:self.nextSuggestedFrame(-1), shortcuts["goto prev suggestion"])
 
-        self._menu_actions["goto next track"] = goMenu.addAction("Next Track Spawn Frame", self.nextTrackFrame, shortcuts["goto next track"])
+        self._menu_actions["goto next track spawn"] = goMenu.addAction("Next Track Spawn Frame", self.nextTrackFrame, shortcuts["goto next track spawn"])
 
         goMenu.addSeparator()
 
@@ -457,13 +450,13 @@ class MainWindow(QMainWindow):
         self._menu_actions["next video"].setEnabled(has_multiple_videos)
         self._menu_actions["prev video"].setEnabled(has_multiple_videos)
 
-        self._menu_actions["goto next"].setEnabled(has_labeled_frames)
-        self._menu_actions["goto prev"].setEnabled(has_labeled_frames)
+        self._menu_actions["goto next labeled"].setEnabled(has_labeled_frames)
+        self._menu_actions["goto prev labeled"].setEnabled(has_labeled_frames)
 
         self._menu_actions["goto next suggestion"].setEnabled(has_suggestions)
         self._menu_actions["goto prev suggestion"].setEnabled(has_suggestions)
 
-        self._menu_actions["goto next track"].setEnabled(has_tracks)
+        self._menu_actions["goto next track spawn"].setEnabled(has_tracks)
 
         # Update buttons
         self._buttons["add edge"].setEnabled(has_nodes_selected)
@@ -1586,8 +1579,10 @@ class MainWindow(QMainWindow):
 
     def openDocumentation(self):
         pass
+
     def openKeyRef(self):
-        pass
+        ShortcutDialog().exec_()
+
     def openAbout(self):
         pass
 
