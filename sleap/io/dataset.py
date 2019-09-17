@@ -378,7 +378,7 @@ class Labels(MutableSequence):
             count = len([inst for inst in labeled_frame.instances if type(inst)==Instance])
         return count
 
-    
+
     @property
     def all_instances(self):
         return list(self.instances())
@@ -529,7 +529,7 @@ class Labels(MutableSequence):
         return [inst for lf, inst in self.find_track_occupancy(*args, **kwargs)]
 
     # Methods for suggestions
-    
+
     def get_video_suggestions(self, video:Video) -> list:
         """
         Returns the list of suggested frames for the specified video
@@ -644,6 +644,22 @@ class Labels(MutableSequence):
         if video not in self.negative_anchors:
             self.negative_anchors[video] = []
         self.negative_anchors[video].append((frame_idx, *where))
+
+    def remove_negative_anchors(self, video:Video, frame_idx: int):
+        """Removes negative training samples for given video and frame.
+
+        Args:
+            video: the `Video` for which we're removing negative samples
+            frame_idx: frame index
+        Returns:
+            None
+        """
+        if video not in self.negative_anchors: return
+
+        anchors = [(idx, x, y)
+                    for idx, x, y in self.negative_anchors[video]
+                    if idx != frame_idx]
+        self.negative_anchors[video] = anchors
 
     # Methods for saving/loading
 

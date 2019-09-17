@@ -371,6 +371,18 @@ def test_suggestions(small_robot_mp4_vid):
 
     assert len(labels.get_video_suggestions(dummy_video)) == 13
 
+def test_negative_anchors():
+    video = Video.from_filename("foo.mp4")
+    labels = Labels()
+
+    labels.add_negative_anchor(video, 1, (3, 4))
+    labels.add_negative_anchor(video, 1, (7, 8))
+    labels.add_negative_anchor(video, 2, (5, 9))
+
+    assert len(labels.negative_anchors[video]) == 3
+
+    labels.remove_negative_anchors(video, 1)
+    assert len(labels.negative_anchors[video]) == 1
 
 def test_load_labels_mat(mat_labels):
     assert len(mat_labels.nodes) == 6

@@ -36,6 +36,7 @@ from sleap.gui.suggestions import VideoFrameSuggestions
 
 from sleap.gui.overlays.tracks import TrackColorManager, TrackTrailOverlay
 from sleap.gui.overlays.instance import InstanceOverlay
+from sleap.gui.overlays.anchors import NegativeAnchorOverlay
 
 OPEN_IN_NEW = True
 
@@ -245,6 +246,7 @@ class MainWindow(QMainWindow):
         self._menu_actions["learning expert"] = predictionMenu.addAction("Expert Controls...", self.runLearningExpert)
         predictionMenu.addSeparator()
         self._menu_actions["negative sample"] = predictionMenu.addAction("Mark Negative Training Sample...", self.markNegativeAnchor)
+        self._menu_actions["clear negative samples"] = predictionMenu.addAction("Clear Current Frame Negative Samples", self.clearFrameNegativeAnchors)
         predictionMenu.addSeparator()
         self._menu_actions["visualize models"] = predictionMenu.addAction("Visualize Model Outputs...", self.visualizeOutputs)
         self._menu_actions["import predictions"] = predictionMenu.addAction("Import Predictions...", self.importPredictions)
@@ -414,6 +416,10 @@ class MainWindow(QMainWindow):
         self.update_gui_timer.start(0.1)
 
     def load_overlays(self):
+        self.overlays["negative"] = NegativeAnchorOverlay(
+                                    labels = self.labels,
+                                    scene = self.player.view.scene)
+
         self.overlays["trails"] = TrackTrailOverlay(
                                     labels = self.labels,
                                     scene = self.player.view.scene,
@@ -1029,10 +1035,16 @@ class MainWindow(QMainWindow):
             self.updateStatusMessage()
             self.labels.add_negative_anchor(self.video, self.player.frame_idx, (x, y))
             self.changestack_push("add negative anchors")
+            self.plotFrame()
 
         # Prompt the user to select area
         self.updateStatusMessage(f"Please click where you want a negative sample...")
         self.player.onPointSelection(click_callback)
+
+    def clearFrameNegativeAnchors(self):
+        self.labels.remove_negative_anchors(self.video, self.player.frame_idx)
+        self.changestack_push("remove negative anchors")
+        self.plotFrame()
 
     def importPredictions(self):
         filters = ["HDF5 dataset (*.h5 *.hdf5)", "JSON labels (*.json *.json.zip)"]
