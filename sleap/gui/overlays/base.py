@@ -72,8 +72,17 @@ class DataOverlay:
     def add_to_scene(self, video, frame_idx):
         if self.data is None: return
 
-        # Make sure video matches video for ModelData object
-        if hasattr(self.data, "video") and self.data.video != video: return
+        # Check if video matches video for ModelData object
+        if hasattr(self.data, "video") and self.data.video != video:
+            video_shape = (video.height, video.width, video.channels)
+            prior_shape = (self.data.video.height, self.data.video.width, self.data.video.channels)
+            # Check if the videos are both compatible with the loaded model
+            if video_shape == prior_shape:
+                # Shapes match so we can apply model to this video
+                self.data.video = video
+            else:
+                # Shapes don't match so don't do anything with this video
+                return
 
         if self.transform is None:
             self._add(self.player.view.scene, self.overlay_class(self.data[frame_idx]))
