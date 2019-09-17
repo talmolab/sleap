@@ -67,7 +67,7 @@ class ShiftedInstance:
         """
         return self.frame.frame_idx
 
-    def points_array(self, *args, **kwargs):
+    def get_points_array(self, *args, **kwargs):
         """
         Return the ShiftedInstance as a numpy array. ShiftedInstance stores its
         points as an array always, unlike the Instance class. This method provides
@@ -222,7 +222,7 @@ class FlowShiftTracker:
             self.last_frame_index = t
             t = frame.frame_idx
 
-            instances_pts = [i.points_array() for i in frame.instances]
+            instances_pts = [i.get_points_array() for i in frame.instances]
 
             # If we do not have any active tracks, we will spawn one for each
             # matched instance and continue to the next frame.
@@ -240,7 +240,7 @@ class FlowShiftTracker:
 
             # Get all points in reference frame
             instances_ref = self.tracks.get_frame_instances(self.last_frame_index, max_shift=self.window - 1)
-            pts_ref = [instance.points_array() for instance in instances_ref]
+            pts_ref = [instance.get_points_array() for instance in instances_ref]
 
             tmp = min([instance.frame_idx for instance in instances_ref] +
                       [instance.source.frame_idx for instance in instances_ref
@@ -305,7 +305,7 @@ class FlowShiftTracker:
             cost_matrix = np.full((len(unassigned_pts), len(shifted_tracks)), np.nan)
             for i, track in enumerate(shifted_tracks):
                 # Get shifted points for current track
-                track_pts = np.stack([instance.points_array()
+                track_pts = np.stack([instance.get_points_array()
                                       for instance in shifted_instances
                                       if instance.track == track], axis=0) # track_instances x nodes x 2
 

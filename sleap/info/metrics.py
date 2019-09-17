@@ -158,8 +158,8 @@ def point_dist(
         inst_b: Union[Instance, PredictedInstance]) -> np.ndarray:
     """Given two instances, returns array of distances for corresponding nodes."""
 
-    points_a = inst_a.points_array(invisible_as_nan=True)
-    points_b = inst_b.points_array(invisible_as_nan=True)
+    points_a = inst_a.visible_points_array
+    points_b = inst_b.visible_points_array
     point_dist = np.linalg.norm(points_a - points_b, axis=1)
     return point_dist
 
@@ -171,8 +171,8 @@ def nodeless_point_dist(inst_a: Union[Instance, PredictedInstance],
     matrix_size = (len(inst_a.skeleton.nodes), len(inst_b.skeleton.nodes))
     pairwise_distance_matrix = np.full(matrix_size, 0)
 
-    points_a = inst_a.points_array(invisible_as_nan=True)
-    points_b = inst_b.points_array(invisible_as_nan=True)
+    points_a = inst_a.visible_points_array
+    points_b = inst_b.visible_points_array
 
     # Calculate the distance between any pair of inst A and inst B points
     for idx_a in range(points_a.shape[0]):
@@ -205,7 +205,7 @@ def compare_instance_lists(
 
 def list_points_array(instances: List[Union[Instance, PredictedInstance]]) -> np.ndarray:
     """Given list of Instances, returns (instances * nodes * 2) matrix."""
-    points_arrays = list(map(lambda inst: inst.points_array(invisible_as_nan=True), instances))
+    points_arrays = list(map(lambda inst: inst.visible_points_array, instances))
     return np.stack(points_arrays)
 
 def point_match_count(dist_array: np.ndarray, thresh: float=5) -> int:

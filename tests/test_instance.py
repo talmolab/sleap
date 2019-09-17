@@ -130,7 +130,7 @@ def test_points_array(skeleton):
 
     instance1 = Instance(skeleton=skeleton, points=points)
 
-    pts = instance1.points_array()
+    pts = instance1.get_points_array()
 
     assert pts.shape == (len(skeleton.nodes), 2)
     assert np.allclose(pts[skeleton.node_to_index('left-wing'), :], [2, 5])
@@ -141,17 +141,17 @@ def test_points_array(skeleton):
     # Now change a point, make sure it is reflected
     instance1['head'].x = 0
     instance1['thorax'] = Point(1, 2)
-    pts = instance1.points_array()
+    pts = instance1.get_points_array()
     assert np.allclose(pts[skeleton.node_to_index('head'), :], [0, 4])
     assert np.allclose(pts[skeleton.node_to_index('thorax'), :], [1, 2])
 
     # Make sure that invisible points are nan iff invisible_as_nan=True
     instance1['thorax'] = Point(1, 2, visible=False)
 
-    pts = instance1.points_array()
+    pts = instance1.get_points_array()
     assert not np.isnan(pts[skeleton.node_to_index('thorax'), :]).all()
 
-    pts = instance1.points_array(invisible_as_nan=True)
+    pts = instance1.visible_points_array
     assert np.isnan(pts[skeleton.node_to_index('thorax'), :]).all()
 
 def test_modifying_skeleton(skeleton):

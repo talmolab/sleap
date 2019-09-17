@@ -142,7 +142,7 @@ def generate_points_from_list(labels:Labels, frame_list: List[Tuple], scale: flo
     def lf_points_from_singleton(lf_singleton):
         if len(lf_singleton) == 0: return []
         lf = lf_singleton[0]
-        points = [inst.points_array(invisible_as_nan=True)*scale
+        points = [inst.visible_points_array*scale
                   for inst in lf.user_instances]
         return points
 

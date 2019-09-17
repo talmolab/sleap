@@ -1169,7 +1169,7 @@ class Labels(MutableSequence):
                 frames[frame_id] = (frame_id+frame_id_offset, video_to_idx[label.video], label.frame_idx,
                                     instance_id+instance_id_offset, instance_id+instance_id_offset+len(label.instances))
                 for instance in label.instances:
-                    parray = instance.points_array(copy=False, full=True)
+                    parray = instance.get_points_array(copy=False, full=True)
                     instance_type = type(instance)
 
                     # Check whether we are working with a PredictedInstance or an Instance.

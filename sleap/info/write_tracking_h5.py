@@ -65,7 +65,7 @@ if __name__ == "__main__":
 
         occupancy_matrix[track_i, frame_i] = 1
 
-        inst_points = inst.points_array(invisible_as_nan=True)
+        inst_points = inst.visible_points_array
         prediction_matrix[frame_i, ..., track_i] = inst_points
         
     print(f"track_occupancy: {occupancy_matrix.shape}")
