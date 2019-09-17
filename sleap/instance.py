@@ -501,7 +501,7 @@ class Instance:
         if type(self) is not type(other):
             return False
 
-        if list(self.points()) != list(other.points()):
+        if list(self.points) != list(other.points):
             return False
 
         if not self.skeleton.matches(other.skeleton):
@@ -541,9 +541,10 @@ class Instance:
         Returns:
             The instance's (node, point) tuple pairs for all labelled point.
         """
-        names_to_points = dict(zip(self.nodes, self.points()))
+        names_to_points = dict(zip(self.nodes, self.points))
         return names_to_points.items()
 
+    @property
     def points(self) -> Tuple[Point]:
         """
         Return the list of labelled points, in order they were labelled.

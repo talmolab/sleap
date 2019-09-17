@@ -1396,7 +1396,7 @@ class Labels(MutableSequence):
                 x = points_[node_idx][0][i]
                 y = points_[node_idx][1][i]
                 new_inst[node] = Point(x, y)
-            if len(new_inst.points()):
+            if len(new_inst.points):
                 new_frame = LabeledFrame(video=vid, frame_idx=i)
                 new_frame.instances = new_inst,
                 labeled_frames.append(new_frame)

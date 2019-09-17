@@ -19,7 +19,7 @@ def check_labels(labels):
 
     for i in labels.all_instances:
         assert type(i) == PredictedInstance
-        assert type(i.points()[0]) == PredictedPoint
+        assert type(i.points[0]) == PredictedPoint
 
     # Make sure frames are in order
     for i, frame in enumerate(labels):

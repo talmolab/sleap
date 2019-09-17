@@ -68,8 +68,8 @@ def test_instance_point_iter(skeleton):
     instance = Instance(skeleton=skeleton, points=points)
 
     assert [node.name for node in instance.nodes] == ['head', 'left-wing', 'right-wing']
-    assert np.allclose([p.x for p in instance.points()], [1, 2, 3])
-    assert np.allclose([p.y for p in instance.points()], [4, 5, 6])
+    assert np.allclose([p.x for p in instance.points], [1, 2, 3])
+    assert np.allclose([p.y for p in instance.points], [4, 5, 6])
 
     # Make sure we can iterate over tuples
     for (node, point) in instance.nodes_points:
@@ -160,17 +160,17 @@ def test_modifying_skeleton(skeleton):
 
     instance1 = Instance(skeleton=skeleton, points=points)
 
-    assert len(instance1.points()) == 3
+    assert len(instance1.points) == 3
 
     skeleton.add_node('new test node')
 
     instance1.fix_array() # update with changes from skeleton
     instance1['new test node'] = Point(7,8)
 
-    assert len(instance1.points()) == 4
+    assert len(instance1.points) == 4
 
     skeleton.delete_node('head')
-    assert len(instance1.points()) == 3
+    assert len(instance1.points) == 3
 
 def test_instance_labeled_frame_ref(skeleton, centered_pair_vid):
     """
