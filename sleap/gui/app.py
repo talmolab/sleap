@@ -820,6 +820,10 @@ class MainWindow(QMainWindow):
     def _show_learning_window(self, mode):
         from sleap.gui.active import ActiveLearningDialog
 
+        if "inference" in self.overlays:
+             QMessageBox(text=f"In order to use this function you must first quit and re-open sLEAP to release resources used by visualizing model outputs.").exec_()
+             return
+
         if self._child_windows.get(mode, None) is None:
             self._child_windows[mode] = ActiveLearningDialog(self.filename, self.labels, mode)
             self._child_windows[mode].learningFinished.connect(self.learningFinished)
