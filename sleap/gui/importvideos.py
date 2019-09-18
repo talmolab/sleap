@@ -85,7 +85,8 @@ class ImportParamDialog(QDialog):
                     {
                         "name": "dataset",
                         "type": "function_menu",
-                        "options": "_get_h5_dataset_options"
+                        "options": "_get_h5_dataset_options",
+                        "required": True
                     },
                     {
                         "name": "input_format",
@@ -225,7 +226,7 @@ class ImportItemWidget(QFrame):
         self.setFrameStyle(QFrame.Panel)
         
         self.options_widget.changed.connect(self.update_video)
-        self.update_video()
+        self.update_video(initial=True)
 
     def is_enabled(self):
         """Am I enabled?
@@ -252,26 +253,33 @@ class ImportItemWidget(QFrame):
                      }
         return video_data
 
-    def update_video(self):
+    def update_video(self, initial=False):
         """Update preview video using current param values.
-        
+
+        Args:
+            initial: if True, then get video settings that are used by
+                the `Video` object when they aren't specified as params
         Returns:
             None.
         """
-        
-        video_params = self.options_widget.get_values()
+
+        video_params = self.options_widget.get_values(only_required=initial)
+
         try:
             if self.import_type["video_class"] is not None:
                 self.video = self.import_type["video_class"](**video_params)
             else:
                 self.video = None
-            
+
             self.preview_widget.load_video(self.video)
         except Exception as e:
-            print(e)
+            print(f"Unable to load video with these parameters. Error: {e}")
             # if we got an error showing video with those settings, clear the video preview
             self.video = None
             self.preview_widget.clear_video()
+
+        if initial and self.video is not None:
+            self.options_widget.set_values_from_video(self.video)
 
     def boundingRect(self) -> QRectF:
         """Method required by Qt."""
@@ -346,11 +354,12 @@ class ImportParamWidget(QWidget):
             self.widget_elements = widget_elements
         return widget_layout
     
-    def get_values(self):
+    def get_values(self, only_required=False):
         """Method to get current user-selected values for import parameters.
 
         Args:
-            None.
+            only_required: Only return the parameters that are required
+                for instantiating `Video` object
 
         Returns:
             Dict of param keys/values.
@@ -366,16 +375,39 @@ class ImportParamWidget(QWidget):
         for param_item in param_list:
             name = param_item["name"]
             type = param_item["type"]
-            value = None
-            if type == "radio":
-                value = self.widget_elements[name].checkedButton().text()
-            elif type == "check":
-                value = self.widget_elements[name].isChecked()
-            elif type == "function_menu":
-                value = self.widget_elements[name].currentText()
-            param_values[name] = value
+            is_required = param_item.get("required", False)
+
+            if not only_required or is_required:
+                value = None
+                if type == "radio":
+                    value = self.widget_elements[name].checkedButton().text()
+                elif type == "check":
+                    value = self.widget_elements[name].isChecked()
+                elif type == "function_menu":
+                    value = self.widget_elements[name].currentText()
+                param_values[name] = value
         return param_values
-    
+
+    def set_values_from_video(self, video):
+        """Set the form fields using attributes on video."""
+        param_list = self.import_type["params"]
+        for param in param_list:
+            name = param["name"]
+            type = param["type"]
+            print(name,type)
+            if hasattr(video, name):
+                val = getattr(video, name)
+                print(name,val)
+                widget = self.widget_elements[name]
+                if hasattr(widget, "isChecked"):
+                    widget.setChecked(val)
+                elif hasattr(widget, "value"):
+                    widget.setValue(val)
+                elif hasattr(widget, "currentText"):
+                    widget.setCurrentText(str(val))
+                elif hasattr(widget, "text"):
+                    widget.setText(str(val))
+
     def _get_h5_dataset_options(self) -> list:
         """Method to get a list of all datasets in hdf5 file.
 

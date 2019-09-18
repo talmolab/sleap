@@ -32,3 +32,10 @@ def test_gui_import(qtbot):
             assert import_item.is_enabled()
         
     assert len(importer.get_data()) == 2
+
+def test_video_import_detect_params():
+    importer = ImportParamDialog(["tests/data/videos/centered_pair_small.mp4", "tests/data/videos/small_robot.mp4"])
+    data = importer.get_data()
+
+    assert data[0]["params"]["grayscale"] == True
+    assert data[1]["params"]["grayscale"] == False
