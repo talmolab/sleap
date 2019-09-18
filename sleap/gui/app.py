@@ -416,6 +416,7 @@ class MainWindow(QMainWindow):
         self.update_gui_timer.start(0.1)
 
     def load_overlays(self):
+
         self.overlays["track_labels"] = TrackListOverlay(
                                     labels = self.labels,
                                     view = self.player.view,
