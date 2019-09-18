@@ -1175,7 +1175,6 @@ class QtInstance(QGraphicsObject):
 
         self.track_label = QtTextWithBackground(parent=self)
         self.track_label.setDefaultTextColor(QColor(*self.color))
-        self.track_label.setFlag(QGraphicsItem.ItemIgnoresTransformations)
 
         instance_label_text = ""
         if self.instance.track is not None:
@@ -1343,6 +1342,7 @@ class QtTextWithBackground(QGraphicsTextItem):
 
     def __init__(self, *args, **kwargs):
         super(QtTextWithBackground, self).__init__(*args, **kwargs)
+        self.setFlag(QGraphicsItem.ItemIgnoresTransformations)
 
     def boundingRect(self):
         """ Method required by Qt.

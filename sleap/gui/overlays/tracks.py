@@ -163,7 +163,7 @@ class TrackTrailOverlay:
     color_manager: TrackColorManager=TrackColorManager(labels)
     trail_length: int=4
     show: bool=False
-    
+
     def get_track_trails(self, frame_selection, track: Track):
         """Get data needed to draw track trail.
 
@@ -210,7 +210,7 @@ class TrackTrailOverlay:
 
     def get_tracks_in_frame(self, video: Video, frame_idx: int):
         """Return list of tracks that have instance in specified frame."""
-        
+
         tracks_in_frame = [inst.track for lf in self.labels.find(video, frame_idx) for inst in lf]
         return tracks_in_frame
 
@@ -252,3 +252,57 @@ class TrackTrailOverlay:
     def map_to_qt_polygon(point_list):
         """Converts a list of (x, y)-tuples to a `QPolygonF`."""
         return QtGui.QPolygonF(list(itertools.starmap(QtCore.QPointF, point_list)))
+
+
+@attr.s(auto_attribs=True)
+class TrackListOverlay:
+    """Class to show track number and names in overlay.
+    """
+
+    labels: Labels=None
+    view: QtWidgets.QGraphicsView=None
+    color_manager: TrackColorManager=TrackColorManager(labels)
+    text_box = None
+
+    def add_to_scene(self, video: Video, frame_idx: int):
+        from sleap.gui.video import QtTextWithBackground
+
+        html = ""
+        num_to_show = min(9, len(self.labels.tracks))
+
+        for i, track in enumerate(self.labels.tracks[:num_to_show]):
+            idx = i+1
+
+            if html: html += "<br />"
+            color = self.color_manager.get_color(track)
+            html_color = f"#{color[0]:02X}{color[1]:02X}{color[2]:02X}"
+            track_text = f"<b>{track.name}</b>"
+            if str(idx) != track.name:
+                track_text += f" ({idx})"
+            html += f"<span style='color:{html_color}'>{track_text}</span>"
+
+        text_box = QtTextWithBackground()
+        text_box.setDefaultTextColor(QtGui.QColor("white"))
+        text_box.setHtml(html)
+        text_box.setOpacity(.7)
+
+        self.text_box = text_box
+        self.visible = False
+
+        self.view.scene.addItem(self.text_box)
+
+    @property
+    def visible(self):
+        if self.text_box is None: return False
+        return self.text_box.isVisible()
+
+    @visible.setter
+    def visible(self, val):
+        if self.text_box is None: return
+        if val:
+            pos = self.view.mapToScene(10, 10)
+            if pos.x() > 0:
+                self.text_box.setPos(pos)
+            else:
+                self.text_box.setPos(10, 10)
+        self.text_box.setVisible(val)

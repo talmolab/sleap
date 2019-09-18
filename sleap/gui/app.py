@@ -34,7 +34,7 @@ from sleap.gui.formbuilder import YamlFormWidget
 from sleap.gui.shortcuts import Shortcuts, ShortcutDialog
 from sleap.gui.suggestions import VideoFrameSuggestions
 
-from sleap.gui.overlays.tracks import TrackColorManager, TrackTrailOverlay
+from sleap.gui.overlays.tracks import TrackColorManager, TrackTrailOverlay, TrackListOverlay
 from sleap.gui.overlays.instance import InstanceOverlay
 from sleap.gui.overlays.anchors import NegativeAnchorOverlay
 
@@ -416,6 +416,11 @@ class MainWindow(QMainWindow):
         self.update_gui_timer.start(0.1)
 
     def load_overlays(self):
+        self.overlays["track_labels"] = TrackListOverlay(
+                                    labels = self.labels,
+                                    view = self.player.view,
+                                    color_manager = self._color_manager)
+
         self.overlays["negative"] = NegativeAnchorOverlay(
                                     labels = self.labels,
                                     scene = self.player.view.scene)
@@ -441,6 +446,7 @@ class MainWindow(QMainWindow):
         # todo: exclude predicted instances from count
         has_nodes_selected = (self.skeletonEdgesSrc.currentIndex() > -1 and
                              self.skeletonEdgesDst.currentIndex() > -1)
+        control_key_down = QApplication.queryKeyboardModifiers() == Qt.ControlModifier
 
         # Update menus
 
@@ -471,6 +477,9 @@ class MainWindow(QMainWindow):
         self._buttons["show video"].setEnabled(self.videosTable.currentIndex().isValid())
         self._buttons["remove video"].setEnabled(self.videosTable.currentIndex().isValid())
         self._buttons["delete instance"].setEnabled(self.instancesTable.currentIndex().isValid())
+
+        # Update overlays
+        self.overlays["track_labels"].visible = control_key_down and has_selected_instance
 
     def update_data_views(self, *update):
         update = update or ("video", "skeleton", "labels", "frame", "suggestions")
@@ -506,12 +515,6 @@ class MainWindow(QMainWindow):
                 labeled_count = len(suggestion_list) - suggestion_label_counts.count(0)
                 suggestion_status_text = f"{labeled_count}/{len(suggestion_list)} labeled"
             self.suggested_count_label.setText(suggestion_status_text)
-
-    def keyPressEvent(self, event: QKeyEvent):
-        if event.key() == Qt.Key_Q:
-            self.close()
-        else:
-            event.ignore() # Kicks the event up to parent
 
     def plotFrame(self, *args, **kwargs):
         """Wrap call to player.plot so we can redraw/update things."""
