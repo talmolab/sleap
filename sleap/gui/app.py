@@ -31,10 +31,12 @@ from sleap.gui.dataviews import VideosTable, SkeletonNodesTable, SkeletonEdgesTa
     LabeledFrameTable, SkeletonNodeModel, SuggestionsTable
 from sleap.gui.importvideos import ImportVideos
 from sleap.gui.formbuilder import YamlFormWidget
+from sleap.gui.shortcuts import Shortcuts, ShortcutDialog
 from sleap.gui.suggestions import VideoFrameSuggestions
 
-from sleap.gui.overlays.tracks import TrackColorManager, TrackTrailOverlay
+from sleap.gui.overlays.tracks import TrackColorManager, TrackTrailOverlay, TrackListOverlay
 from sleap.gui.overlays.instance import InstanceOverlay
+from sleap.gui.overlays.anchors import NegativeAnchorOverlay
 
 OPEN_IN_NEW = True
 
@@ -122,15 +124,7 @@ class MainWindow(QMainWindow):
 
     def initialize_gui(self):
 
-        shortcut_yaml = resource_filename(Requirement.parse("sleap"),"sleap/config/shortcuts.yaml")
-        with open(shortcut_yaml, 'r') as f:
-            shortcuts = yaml.load(f, Loader=yaml.SafeLoader)
-
-        for action in shortcuts:
-            key_string = shortcuts.get(action, None)
-            key_string = "" if key_string is None else key_string
-            if "." in key_string:
-                shortcuts[action] = eval(key_string)
+        shortcuts = Shortcuts()
 
         ####### Video player #######
         self.player = QtVideoPlayer(color_manager=self._color_manager)
@@ -150,12 +144,12 @@ class MainWindow(QMainWindow):
         ### File Menu ###
 
         fileMenu = self.menuBar().addMenu("File")
-        self._menu_actions["new"] = fileMenu.addAction("&New Project", self.newProject, shortcuts["new"])
-        self._menu_actions["open"] = fileMenu.addAction("&Open Project...", self.openProject, shortcuts["open"])
+        self._menu_actions["new"] = fileMenu.addAction("New Project", self.newProject, shortcuts["new"])
+        self._menu_actions["open"] = fileMenu.addAction("Open Project...", self.openProject, shortcuts["open"])
         fileMenu.addSeparator()
         self._menu_actions["add videos"] = fileMenu.addAction("Add Videos...", self.addVideo, shortcuts["add videos"])
         fileMenu.addSeparator()
-        self._menu_actions["save"] = fileMenu.addAction("&Save", self.saveProject, shortcuts["save"])
+        self._menu_actions["save"] = fileMenu.addAction("Save", self.saveProject, shortcuts["save"])
         self._menu_actions["save as"] = fileMenu.addAction("Save As...", self.saveProjectAs, shortcuts["save as"])
         fileMenu.addSeparator()
         self._menu_actions["close"] = fileMenu.addAction("Quit", self.close, shortcuts["close"])
@@ -164,15 +158,15 @@ class MainWindow(QMainWindow):
 
         goMenu = self.menuBar().addMenu("Go")
 
-        self._menu_actions["goto next"] = goMenu.addAction("Next Labeled Frame", self.nextLabeledFrame, shortcuts["goto next"])
-        self._menu_actions["goto prev"] = goMenu.addAction("Previous Labeled Frame", self.previousLabeledFrame, shortcuts["goto prev"])
+        self._menu_actions["goto next labeled"] = goMenu.addAction("Next Labeled Frame", self.nextLabeledFrame, shortcuts["goto next labeled"])
+        self._menu_actions["goto prev labeled"] = goMenu.addAction("Previous Labeled Frame", self.previousLabeledFrame, shortcuts["goto prev labeled"])
 
         self._menu_actions["goto next user"] = goMenu.addAction("Next User Labeled Frame", self.nextUserLabeledFrame, shortcuts["goto next user"])
 
         self._menu_actions["goto next suggestion"] = goMenu.addAction("Next Suggestion", self.nextSuggestedFrame, shortcuts["goto next suggestion"])
         self._menu_actions["goto prev suggestion"] = goMenu.addAction("Previous Suggestion", lambda:self.nextSuggestedFrame(-1), shortcuts["goto prev suggestion"])
 
-        self._menu_actions["goto next track"] = goMenu.addAction("Next Track Spawn Frame", self.nextTrackFrame, shortcuts["goto next track"])
+        self._menu_actions["goto next track spawn"] = goMenu.addAction("Next Track Spawn Frame", self.nextTrackFrame, shortcuts["goto next track spawn"])
 
         goMenu.addSeparator()
 
@@ -252,6 +246,7 @@ class MainWindow(QMainWindow):
         self._menu_actions["learning expert"] = predictionMenu.addAction("Expert Controls...", self.runLearningExpert)
         predictionMenu.addSeparator()
         self._menu_actions["negative sample"] = predictionMenu.addAction("Mark Negative Training Sample...", self.markNegativeAnchor)
+        self._menu_actions["clear negative samples"] = predictionMenu.addAction("Clear Current Frame Negative Samples", self.clearFrameNegativeAnchors)
         predictionMenu.addSeparator()
         self._menu_actions["visualize models"] = predictionMenu.addAction("Visualize Model Outputs...", self.visualizeOutputs)
         self._menu_actions["import predictions"] = predictionMenu.addAction("Import Predictions...", self.importPredictions)
@@ -373,12 +368,18 @@ class MainWindow(QMainWindow):
         instances_layout.addWidget(hbw)
 
         def update_instance_table_selection():
-            cur_video_instance = self.player.view.getSelection()
-            if cur_video_instance is None: cur_video_instance = -1
-            table_index = self.instancesTable.model().createIndex(cur_video_instance, 0)
-            self.instancesTable.setCurrentIndex(table_index)
+            inst_selected = self.player.view.getSelectionInstance()
 
-        self.instancesTable.selectionChangedSignal.connect(lambda row: self.player.view.selectInstance(row, from_all=True, signal=False))
+            if not inst_selected: return
+
+            idx = -1
+            if inst_selected in self.labeled_frame.instances_to_show:
+                idx = self.labeled_frame.instances_to_show.index(inst_selected)
+
+            table_row_idx = self.instancesTable.model().createIndex(idx, 0)
+            self.instancesTable.setCurrentIndex(table_row_idx)
+
+        self.instancesTable.selectionChangedSignal.connect(lambda inst: self.player.view.selectInstance(inst, signal=False))
         self.player.view.updatedSelection.connect(update_instance_table_selection)
 
         # update track UI when change to track name
@@ -415,6 +416,16 @@ class MainWindow(QMainWindow):
         self.update_gui_timer.start(0.1)
 
     def load_overlays(self):
+
+        self.overlays["track_labels"] = TrackListOverlay(
+                                    labels = self.labels,
+                                    view = self.player.view,
+                                    color_manager = self._color_manager)
+
+        self.overlays["negative"] = NegativeAnchorOverlay(
+                                    labels = self.labels,
+                                    scene = self.player.view.scene)
+
         self.overlays["trails"] = TrackTrailOverlay(
                                     labels = self.labels,
                                     scene = self.player.view.scene,
@@ -436,6 +447,7 @@ class MainWindow(QMainWindow):
         # todo: exclude predicted instances from count
         has_nodes_selected = (self.skeletonEdgesSrc.currentIndex() > -1 and
                              self.skeletonEdgesDst.currentIndex() > -1)
+        control_key_down = QApplication.queryKeyboardModifiers() == Qt.ControlModifier
 
         # Update menus
 
@@ -451,13 +463,13 @@ class MainWindow(QMainWindow):
         self._menu_actions["next video"].setEnabled(has_multiple_videos)
         self._menu_actions["prev video"].setEnabled(has_multiple_videos)
 
-        self._menu_actions["goto next"].setEnabled(has_labeled_frames)
-        self._menu_actions["goto prev"].setEnabled(has_labeled_frames)
+        self._menu_actions["goto next labeled"].setEnabled(has_labeled_frames)
+        self._menu_actions["goto prev labeled"].setEnabled(has_labeled_frames)
 
         self._menu_actions["goto next suggestion"].setEnabled(has_suggestions)
         self._menu_actions["goto prev suggestion"].setEnabled(has_suggestions)
 
-        self._menu_actions["goto next track"].setEnabled(has_tracks)
+        self._menu_actions["goto next track spawn"].setEnabled(has_tracks)
 
         # Update buttons
         self._buttons["add edge"].setEnabled(has_nodes_selected)
@@ -466,6 +478,9 @@ class MainWindow(QMainWindow):
         self._buttons["show video"].setEnabled(self.videosTable.currentIndex().isValid())
         self._buttons["remove video"].setEnabled(self.videosTable.currentIndex().isValid())
         self._buttons["delete instance"].setEnabled(self.instancesTable.currentIndex().isValid())
+
+        # Update overlays
+        self.overlays["track_labels"].visible = control_key_down and has_selected_instance
 
     def update_data_views(self, *update):
         update = update or ("video", "skeleton", "labels", "frame", "suggestions")
@@ -501,12 +516,6 @@ class MainWindow(QMainWindow):
                 labeled_count = len(suggestion_list) - suggestion_label_counts.count(0)
                 suggestion_status_text = f"{labeled_count}/{len(suggestion_list)} labeled"
             self.suggested_count_label.setText(suggestion_status_text)
-
-    def keyPressEvent(self, event: QKeyEvent):
-        if event.key() == Qt.Key_Q:
-            self.close()
-        else:
-            event.ignore() # Kicks the event up to parent
 
     def plotFrame(self, *args, **kwargs):
         """Wrap call to player.plot so we can redraw/update things."""
@@ -814,6 +823,10 @@ class MainWindow(QMainWindow):
     def _show_learning_window(self, mode):
         from sleap.gui.active import ActiveLearningDialog
 
+        if "inference" in self.overlays:
+             QMessageBox(text=f"In order to use this function you must first quit and re-open sLEAP to release resources used by visualizing model outputs.").exec_()
+             return
+
         if self._child_windows.get(mode, None) is None:
             self._child_windows[mode] = ActiveLearningDialog(self.filename, self.labels, mode)
             self._child_windows[mode].learningFinished.connect(self.learningFinished)
@@ -946,7 +959,7 @@ class MainWindow(QMainWindow):
             max_corner = (x1, y1)
 
             def is_bounded(inst):
-                points_array = inst.points_array(invisible_as_nan=True)
+                points_array = inst.visible_points_array
                 valid_points = points_array[~np.isnan(points_array).any(axis=1)]
 
                 is_gt_min = np.all(valid_points >= min_corner)
@@ -1026,10 +1039,16 @@ class MainWindow(QMainWindow):
             self.updateStatusMessage()
             self.labels.add_negative_anchor(self.video, self.player.frame_idx, (x, y))
             self.changestack_push("add negative anchors")
+            self.plotFrame()
 
         # Prompt the user to select area
         self.updateStatusMessage(f"Please click where you want a negative sample...")
         self.player.onPointSelection(click_callback)
+
+    def clearFrameNegativeAnchors(self):
+        self.labels.remove_negative_anchors(self.video, self.player.frame_idx)
+        self.changestack_push("remove negative anchors")
+        self.plotFrame()
 
     def importPredictions(self):
         filters = ["HDF5 dataset (*.h5 *.hdf5)", "JSON labels (*.json *.json.zip)"]
@@ -1576,12 +1595,14 @@ class MainWindow(QMainWindow):
 
     def openDocumentation(self):
         pass
+
     def openKeyRef(self):
-        pass
+        ShortcutDialog().exec_()
+
     def openAbout(self):
         pass
 
-    def newFrame(self, player, frame_idx, selected_idx):
+    def newFrame(self, player, frame_idx, selected_inst):
         """Called each time a new frame is drawn."""
 
         # Store the current LabeledFrame (or make new, empty object)
@@ -1592,8 +1613,8 @@ class MainWindow(QMainWindow):
             overlay.add_to_scene(self.video, frame_idx)
 
         # Select instance if there was already selection
-        if selected_idx > -1:
-            player.view.selectInstance(selected_idx)
+        if selected_inst is not None:
+            player.view.selectInstance(selected_inst)
 
         # Update related displays
         self.updateStatusMessage()

@@ -501,7 +501,7 @@ class Instance:
         if type(self) is not type(other):
             return False
 
-        if list(self.points()) != list(other.points()):
+        if list(self.points) != list(other.points):
             return False
 
         if not self.skeleton.matches(other.skeleton):
@@ -541,9 +541,10 @@ class Instance:
         Returns:
             The instance's (node, point) tuple pairs for all labelled point.
         """
-        names_to_points = dict(zip(self.nodes, self.points()))
+        names_to_points = dict(zip(self.nodes, self.points))
         return names_to_points.items()
 
+    @property
     def points(self) -> Tuple[Point]:
         """
         Return the list of labelled points, in order they were labelled.
@@ -572,7 +573,7 @@ class Instance:
             self._points = new_array
             self._nodes = self.skeleton.nodes
 
-    def points_array(self, copy: bool = True,
+    def get_points_array(self, copy: bool = True,
                      invisible_as_nan: bool = False,
                      full: bool = False) -> np.ndarray:
         """
@@ -608,9 +609,13 @@ class Instance:
             return parray
 
     @property
+    def visible_points_array(self) -> np.ndarray:
+        return self.get_points_array(invisible_as_nan=True)
+
+    @property
     def centroid(self) -> np.ndarray:
         """Returns instance centroid as (x,y) numpy row vector."""
-        points = self.points_array(invisible_as_nan=True)
+        points = self.visible_points_array
         centroid = np.nanmedian(points, axis=0)
         return centroid
 

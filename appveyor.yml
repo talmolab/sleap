@@ -56,8 +56,11 @@ install:
   # We need to install this separately, what a mess.
   # - pip install PySide2 opencv-python imgaug cattrs
 
-# Install dev requirements too.
+  # Install dev requirements too.
   - pip install -r dev_requirements.txt
+
+  # Install sleap package
+  - pip install .
 
 build: off
 test_script:

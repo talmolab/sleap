@@ -256,8 +256,12 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         form_data = self.form_widget.get_form_data()
         types_to_use = []
 
+        # always include confidence maps
         types_to_use.append(ModelOutputType.CONFIDENCE_MAP)
-        types_to_use.append(ModelOutputType.PART_AFFINITY_FIELD)
+
+        # by default we want to use part affinity fields
+        if not form_data.get("_dont_use_pafs", False):
+            types_to_use.append(ModelOutputType.PART_AFFINITY_FIELD)
 
         # by default we want to use centroids
         if form_data.get("_use_centroids", True):

@@ -21,6 +21,7 @@ class ModelData:
     model: 'keras.Model'
     video: Video
     do_rescale: bool=False
+    output_scale: float=1.0
     adjust_vals: bool=True
 
     def __getitem__(self, i):
@@ -30,16 +31,17 @@ class ModelData:
         # Trim to size that works for model
         frame_img = frame_img[:, :self.video.height//8*8, :self.video.width//8*8, :]
 
+        inference_transform = DataTransform()
         if self.do_rescale:
             # Scale input image if model trained on scaled images
-            inference_transform = DataTransform()
             frame_img = inference_transform.scale_to(
                         imgs=frame_img,
                         target_size=self.model.input_shape[1:3])
 
         # Get predictions
         frame_result = self.model.predict(frame_img.astype("float32") / 255)
-        if self.do_rescale:
+        if self.do_rescale or self.output_scale != 1.0:
+            inference_transform.scale *= self.output_scale
             frame_result = inference_transform.invert_scale(frame_result)
 
         # We just want the single image results
@@ -69,6 +71,18 @@ class DataOverlay:
 
     def add_to_scene(self, video, frame_idx):
         if self.data is None: return
+
+        # Check if video matches video for ModelData object
+        if hasattr(self.data, "video") and self.data.video != video:
+            video_shape = (video.height, video.width, video.channels)
+            prior_shape = (self.data.video.height, self.data.video.width, self.data.video.channels)
+            # Check if the videos are both compatible with the loaded model
+            if video_shape == prior_shape:
+                # Shapes match so we can apply model to this video
+                self.data.video = video
+            else:
+                # Shapes don't match so don't do anything with this video
+                return
 
         if self.transform is None:
             self._add(self.player.view.scene, self.overlay_class(self.data[frame_idx]))
@@ -137,9 +151,18 @@ class DataOverlay:
 
         do_rescale = model_data["scale"] < 1
 
+        # Determine how the output from the model should be scaled
+        img_output_scale = 1.0 # image rescaling
+        obj_output_scale = 1.0 # scale to pass to overlay object
+
+        if model_output_type == ModelOutputType.PART_AFFINITY_FIELD:
+            obj_output_scale = model_data["multiscale"]
+        else:
+            img_output_scale = model_data["multiscale"]
+
         # Construct the ModelData object that runs inference
 
-        data_object = ModelData(model, video, do_rescale=do_rescale)
+        data_object = ModelData(model, video, do_rescale=do_rescale, output_scale=img_output_scale)
 
         # Determine whether to use confmap or paf overlay
 
@@ -157,7 +180,7 @@ class DataOverlay:
         # will be passed to the overlay object to do its own upscaling
         # (at least for pafs).
 
-        transform = DataTransform(scale=model_data["multiscale"])
+        transform = DataTransform(scale=obj_output_scale)
 
         return cls(
                 data=data_object,
@@ -167,9 +190,9 @@ class DataOverlay:
 
 h5_colors = [
     [204, 81, 81],
-    [127, 51, 51],
     [81, 204, 204],
     [51, 127, 127],
+    [127, 51, 51],
     [142, 204, 81],
     [89, 127, 51],
     [142, 81, 204],

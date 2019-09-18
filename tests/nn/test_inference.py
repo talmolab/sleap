@@ -19,7 +19,7 @@ def check_labels(labels):
 
     for i in labels.all_instances:
         assert type(i) == PredictedInstance
-        assert type(i.points()[0]) == PredictedPoint
+        assert type(i.points[0]) == PredictedPoint
 
     # Make sure frames are in order
     for i, frame in enumerate(labels):
@@ -92,6 +92,6 @@ def test_peaks_with_scaling():
         # make sure that each true instance has points matching one of the new instances
         for inst_a, inst_b in zip(true_labels.labeled_frames[i].instances, new_labels.labeled_frames[i].instances):
         
-            assert inst_a.points_array().shape == inst_b.points_array().shape
+            assert inst_a.get_points_array().shape == inst_b.get_points_array().shape
             # FIXME: new instances have nans, so for now just check first 5 points
-            assert np.allclose(inst_a.points_array()[0:5], inst_b.points_array()[0:5], atol=1/scale)
+            assert np.allclose(inst_a.get_points_array()[0:5], inst_b.get_points_array()[0:5], atol=1/scale)

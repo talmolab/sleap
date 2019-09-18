@@ -5,7 +5,25 @@ from sleap.instance import Instance, Point, LabeledFrame, PredictedInstance
 from sleap.io.video import Video
 from sleap.io.dataset import Labels
 from sleap.nn.model import ModelOutputType
-from sleap.gui.active import make_default_training_jobs, find_saved_jobs, add_frames_from_json
+from sleap.gui.active import ActiveLearningDialog, make_default_training_jobs, find_saved_jobs, add_frames_from_json
+
+def test_active_gui(qtbot, centered_pair_labels):
+    win = ActiveLearningDialog(
+            labels_filename="foo.json",
+            labels=centered_pair_labels,
+            mode="expert")
+    win.show()
+    qtbot.addWidget(win)
+
+    # Make sure we include pafs by default
+    jobs = win._get_current_training_jobs()
+    assert ModelOutputType.PART_AFFINITY_FIELD in jobs
+
+    # Test option to not include pafs
+    assert "_dont_use_pafs" in win.form_widget.fields
+    win.form_widget.set_form_data(dict(_dont_use_pafs=True))
+    jobs = win._get_current_training_jobs()
+    assert ModelOutputType.PART_AFFINITY_FIELD not in jobs
 
 def test_make_default_training_jobs():
     jobs = make_default_training_jobs()

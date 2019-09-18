@@ -21,7 +21,7 @@ from typing import Callable
 from sleap.gui.overlays.tracks import TrackColorManager
 from sleap.io.video import Video
 from sleap.io.dataset import Labels
-from sleap.instance import LabeledFrame
+from sleap.instance import LabeledFrame, Instance
 from sleap.skeleton import Skeleton, Node
 
 
@@ -241,7 +241,7 @@ class LabeledFrameTable(QTableView):
     """Table view widget backed by a custom data model for displaying
     lists of Video instances. """
 
-    selectionChangedSignal = QtCore.Signal(int)
+    selectionChangedSignal = QtCore.Signal(Instance)
 
     def __init__(self, labeled_frame: LabeledFrame = None, labels: Labels = None):
         super(LabeledFrameTable, self).__init__()
@@ -250,11 +250,19 @@ class LabeledFrameTable(QTableView):
         self.setSelectionMode(QAbstractItemView.SingleSelection)
 
     def selectionChanged(self, new, old):
+        """Return `Instance` selected in table."""
         super(LabeledFrameTable, self).selectionChanged(new, old)
-        row_idx = -1
+
+        instance = None
         if len(new.indexes()):
             row_idx = new.indexes()[0].row()
-        self.selectionChangedSignal.emit(row_idx)
+            try:
+                instance = self.model().labeled_frame.instances_to_show[row_idx]
+            except:
+                # Usually means that there's no labeled_frame
+                pass
+
+        self.selectionChangedSignal.emit(instance)
 
 
 class LabeledFrameTableModel(QtCore.QAbstractTableModel):
