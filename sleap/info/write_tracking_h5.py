@@ -67,7 +67,17 @@ if __name__ == "__main__":
 
         inst_points = inst.visible_points_array
         prediction_matrix[frame_i, ..., track_i] = inst_points
-        
+
+    occupied_track_mask = np.sum(occupancy_matrix, axis=1) > 0
+#     print(track_names[occupied_track_mask])
+
+    # Ignore unoccupied tracks
+    if(np.sum(~occupied_track_mask)):
+        print(f"ignoring {np.sum(~occupied_track_mask)} empty tracks")
+        occupancy_matrix = occupancy_matrix[occupied_track_mask]
+        prediction_matrix = prediction_matrix[...,occupied_track_mask]
+        track_names = [track_names[i] for i in range(len(track_names)) if occupied_track_mask[i]]
+
     print(f"track_occupancy: {occupancy_matrix.shape}")
     print(f"tracks: {prediction_matrix.shape}")
 
