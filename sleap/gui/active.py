@@ -217,16 +217,18 @@ class ActiveLearningDialog(QtWidgets.QDialog):
             conf_job, _ = self._get_current_job(ModelOutputType.CONFIDENCE_MAP)
             paf_job, _ = self._get_current_job(ModelOutputType.PART_AFFINITY_FIELD)
 
-            if conf_job.trainer.scale != paf_job.trainer.scale:
-                can_run = False
-                error_messages.append(f"training image scale for confmaps ({conf_job.trainer.scale}) does not match pafs ({paf_job.trainer.scale})")
-            if conf_job.trainer.instance_crop != paf_job.trainer.instance_crop:
-                can_run = False
-                crop_model_name = "confmaps" if conf_job.trainer.instance_crop else "pafs"
-                error_messages.append(f"exactly one model ({crop_model_name}) was trained on crops")
-            if use_centroids and not conf_job.trainer.instance_crop:
-                can_run = False
-                error_messages.append(f"models used with centroids must be trained on cropped images")
+            # only check compatible if we have both profiles
+            if conf_job is not None and paf_job is not None:
+                if conf_job.trainer.scale != paf_job.trainer.scale:
+                    can_run = False
+                    error_messages.append(f"training image scale for confmaps ({conf_job.trainer.scale}) does not match pafs ({paf_job.trainer.scale})")
+                if conf_job.trainer.instance_crop != paf_job.trainer.instance_crop:
+                    can_run = False
+                    crop_model_name = "confmaps" if conf_job.trainer.instance_crop else "pafs"
+                    error_messages.append(f"exactly one model ({crop_model_name}) was trained on crops")
+                if use_centroids and not conf_job.trainer.instance_crop:
+                    can_run = False
+                    error_messages.append(f"models used with centroids must be trained on cropped images")
 
         message = ""
         if not can_run:
@@ -242,6 +244,11 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         if model_type in self.training_profile_widgets:
             field = self.training_profile_widgets[model_type]
             idx = field.currentIndex()
+
+        # Check that selection corresponds to something we're loaded
+        # (it won't when user is adding a new profile)
+        if idx >= len(self.job_options[model_type]):
+            return None, None
 
         job_filename, job = self.job_options[model_type][idx]
 
