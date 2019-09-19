@@ -146,6 +146,7 @@ class MainWindow(QMainWindow):
         fileMenu = self.menuBar().addMenu("File")
         self._menu_actions["new"] = fileMenu.addAction("New Project", self.newProject, shortcuts["new"])
         self._menu_actions["open"] = fileMenu.addAction("Open Project...", self.openProject, shortcuts["open"])
+        self._menu_actions["import predictions"] = fileMenu.addAction("Import Labels...", self.importPredictions)
         fileMenu.addSeparator()
         self._menu_actions["add videos"] = fileMenu.addAction("Add Videos...", self.addVideo, shortcuts["add videos"])
         fileMenu.addSeparator()
@@ -249,7 +250,6 @@ class MainWindow(QMainWindow):
         self._menu_actions["clear negative samples"] = predictionMenu.addAction("Clear Current Frame Negative Samples", self.clearFrameNegativeAnchors)
         predictionMenu.addSeparator()
         self._menu_actions["visualize models"] = predictionMenu.addAction("Visualize Model Outputs...", self.visualizeOutputs)
-        self._menu_actions["import predictions"] = predictionMenu.addAction("Import Predictions...", self.importPredictions)
         predictionMenu.addSeparator()
         self._menu_actions["remove predictions"] = predictionMenu.addAction("Delete All Predictions...", self.deletePredictions)
         self._menu_actions["remove clip predictions"] = predictionMenu.addAction("Delete Predictions from Clip...", self.deleteClipPredictions, shortcuts["delete clip"])
@@ -1060,14 +1060,7 @@ class MainWindow(QMainWindow):
             gui_video_callback = Labels.make_gui_video_callback(
                                     search_paths=[os.path.dirname(filename)])
 
-            if filename.endswith((".h5", ".hdf5")):
-                new_labels = Labels.load_hdf5(
-                                filename,
-                                match_to=self.labels,
-                                video_callback=gui_video_callback)
-
-            elif filename.endswith((".json", ".json.zip")):
-                new_labels = Labels.load_json(
+            new_labels = Labels.load_file(
                                 filename,
                                 match_to=self.labels,
                                 video_callback=gui_video_callback)
