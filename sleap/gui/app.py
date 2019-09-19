@@ -1357,17 +1357,7 @@ class MainWindow(QMainWindow):
         if self.filename is not None:
             filename = self.filename
 
-            if filename.endswith((".json", ".json.zip")):
-                compress = filename.endswith(".zip")
-                Labels.save_json(labels = self.labels, filename = filename,
-                                    compress = compress)
-            elif filename.endswith(".h5"):
-                Labels.save_hdf5(labels = self.labels, filename = filename)
-
-            # Mark savepoint in change stack
-            self.changestack_savepoint()
-            # Redraw. Not sure why, but sometimes we need to do this.
-            self.plotFrame()
+            self._trySave(self.filename)
         else:
             # No filename (must be new project), so treat as "Save as"
             self.saveProjectAs()
@@ -1385,23 +1375,27 @@ class MainWindow(QMainWindow):
 
         if len(filename) == 0: return
 
-        if filename.endswith((".json", ".zip")):
-            compress = filename.endswith(".zip")
-            Labels.save_json(labels = self.labels, filename = filename, compress = compress)
+        if self._trySave(filename):
+            # If save was successful
             self.filename = filename
+
+    def _trySave(self, filename):
+        success = False
+        try:
+            Labels.save_file(labels = self.labels, filename = filename)
+            success = True
             # Mark savepoint in change stack
             self.changestack_savepoint()
-            # Redraw. Not sure why, but sometimes we need to do this.
-            self.plotFrame()
-        elif filename.endswith(".h5"):
-            Labels.save_hdf5(labels = self.labels, filename = filename)
-            self.filename = filename
-            # Mark savepoint in change stack
-            self.changestack_savepoint()
-            # Redraw. Not sure why, but sometimes we need to do this.
-            self.plotFrame()
-        else:
-            QMessageBox(text=f"File not saved. Try saving as json.").exec_()
+
+        except Exception as e:
+            message = f"An error occured when attempting to save:\n {e}\n\n"
+            message += "Try saving your project with a different filename or in a different format."
+            QtWidgets.QMessageBox(text=message).exec_()
+
+        # Redraw. Not sure why, but sometimes we need to do this.
+        self.plotFrame()
+
+        return success
 
     def closeEvent(self, event):
         if not self.changestack_has_changes():
