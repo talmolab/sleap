@@ -11,6 +11,10 @@ def test_rangelist():
 
     a.remove((5,8))
     assert a.list == [(1, 2), (3, 5), (8, 20), (50, 100)]
+
+    assert a.start == 1
+    a.remove((1,3))
+    assert a.start == 3
     
     b = RangeList()
     b.add(1)
