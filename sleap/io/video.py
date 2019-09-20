@@ -761,6 +761,11 @@ class Video:
         for frame_num in frame_numbers:
             store.add_image(self.get_frame(frame_num), frame_num, time.time())
 
+        # If there are no frames to save for this video, add a dummy frame
+        # since we can't save an empty imgstore.
+        if len(frame_numbers) == 0:
+            store.add_image(np.zeros((self.shape[1], self.shape[2], self.shape[3])), 0, time.time())
+
         store.close()
 
         # Return an ImgStoreVideo object referencing this new imgstore.
