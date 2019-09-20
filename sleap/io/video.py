@@ -429,7 +429,7 @@ class ImgStoreVideo:
         """
 
         # Check if we need to open the imgstore and do it if needed
-        if not self.imgstore:
+        if not self._store_:
             self.open()
 
         if self.index_by_original:
