@@ -40,7 +40,7 @@ from sleap.instance import Instance, Point, LabeledFrame, \
     make_instance_cattr, PointArray, PredictedPointArray
 from sleap.rangelist import RangeList
 from sleap.io.video import Video
-from sleap.util import uniquify
+from sleap.util import uniquify, weak_filename_match
 
 
 def json_loads(json_str: str):
@@ -907,8 +907,7 @@ class Labels(MutableSequence):
             for idx, vid in enumerate(videos):
                 for old_vid in match_to.videos:
                     # compare last three parts of path
-                    weak_match = vid.filename.split("/")[-3:] == old_vid.filename.split("/")[-3:]
-                    if vid.filename == old_vid.filename or weak_match:
+                    if vid.filename == old_vid.filename or weak_filename_match(vid.filename, old_vid.filename):
                         # use video from match
                         videos[idx] = old_vid
                         break
