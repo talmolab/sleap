@@ -3,6 +3,7 @@ A miscellaneous set of utility functions. Try not to put things in here
 unless they really have no other place.
 """
 import os
+import re
 
 import h5py as h5
 import numpy as np
@@ -116,3 +117,15 @@ def uniquify(seq):
     # Raymond Hettinger
     # https://twitter.com/raymondh/status/944125570534621185
     return list(dict.fromkeys(seq))
+
+def weak_filename_match(filename_a, filename_b):
+    """Check if paths probably point to same file."""
+    filename_a = filename_a.replace("\\","/")
+    filename_b = filename_b.replace("\\","/")
+
+    # remove unique pid so we can match tmp directories for same zip
+    filename_a = re.sub("/tmp_\d+_", "tmp_", filename_a)
+    filename_b = re.sub("/tmp_\d+_", "tmp_", filename_b)
+
+    # check if last three parts of path match
+    return filename_a.split("/")[-3:] == filename_b.split("/")[-3:]
