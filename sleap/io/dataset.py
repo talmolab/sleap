@@ -127,7 +127,11 @@ class Labels(MutableSequence):
         # Add any videos that are present in the labels but
         # missing from the video list
         if merge or len(self.videos) == 0:
-            self.videos = list(set(self.videos).union({label.video for label in self.labels}))
+            # find videos in labeled frames that aren't yet in top level videos
+            new_videos = {label.video for label in self.labels} - set(self.videos)
+            # just add the new videos so we don't re-order current list
+            if len(new_videos):
+                self.videos.extend(list(new_videos))
 
         # Ditto for skeletons
         if merge or len(self.skeletons) == 0:
