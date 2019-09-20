@@ -1524,7 +1524,11 @@ class MainWindow(QMainWindow):
     def nextTrackFrame(self):
         cur_idx = self.player.frame_idx
         track_ranges = self.labels.get_track_occupany(self.video)
-        next_idx = min([track_range.start for track_range in track_ranges.values() if track_range.start > cur_idx], default=-1)
+        next_idx = min([track_range.start
+                            for track_range in track_ranges.values()
+                            if track_range.start is not None
+                                and track_range.start > cur_idx],
+                        default=-1)
         if next_idx > -1:
             self.plotFrame(next_idx)
 
