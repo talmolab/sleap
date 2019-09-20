@@ -17,6 +17,8 @@ if __name__ == "__main__":
 
     print(f"Video files:")
 
+    total_user_frames = 0
+
     for vid in labels.videos:
         lfs = labels.find(vid)
 
@@ -25,9 +27,15 @@ if __name__ == "__main__":
 
         tracks = {inst.track for lf in lfs for inst in lf}
         concurrent_count = max((len(lf.instances) for lf in lfs))
+        user_frames = len(labels.get_video_user_labeled_frames(vid))
+
+        total_user_frames += user_frames
 
         print(f"  {vid.filename}")
-        print(f"    labeled from {first_idx} to {last_idx}")
+        print(f"    labeled frames from {first_idx} to {last_idx}")
+        print(f"    labeled frames: {len(lfs)}")
+        print(f"    user labeled frames: {user_frames}")
         print(f"    tracks: {len(tracks)}")
         print(f"    max instances in frame: {concurrent_count}")
 
+    print(f"Total user labeled frames: {total_user_frames}")

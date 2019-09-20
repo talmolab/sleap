@@ -146,6 +146,7 @@ class MainWindow(QMainWindow):
         fileMenu = self.menuBar().addMenu("File")
         self._menu_actions["new"] = fileMenu.addAction("New Project", self.newProject, shortcuts["new"])
         self._menu_actions["open"] = fileMenu.addAction("Open Project...", self.openProject, shortcuts["open"])
+        self._menu_actions["import predictions"] = fileMenu.addAction("Import Labels...", self.importPredictions)
         fileMenu.addSeparator()
         self._menu_actions["add videos"] = fileMenu.addAction("Add Videos...", self.addVideo, shortcuts["add videos"])
         fileMenu.addSeparator()
@@ -249,7 +250,6 @@ class MainWindow(QMainWindow):
         self._menu_actions["clear negative samples"] = predictionMenu.addAction("Clear Current Frame Negative Samples", self.clearFrameNegativeAnchors)
         predictionMenu.addSeparator()
         self._menu_actions["visualize models"] = predictionMenu.addAction("Visualize Model Outputs...", self.visualizeOutputs)
-        self._menu_actions["import predictions"] = predictionMenu.addAction("Import Predictions...", self.importPredictions)
         predictionMenu.addSeparator()
         self._menu_actions["remove predictions"] = predictionMenu.addAction("Delete All Predictions...", self.deletePredictions)
         self._menu_actions["remove clip predictions"] = predictionMenu.addAction("Delete Predictions from Clip...", self.deleteClipPredictions, shortcuts["delete clip"])
@@ -1060,14 +1060,7 @@ class MainWindow(QMainWindow):
             gui_video_callback = Labels.make_gui_video_callback(
                                     search_paths=[os.path.dirname(filename)])
 
-            if filename.endswith((".h5", ".hdf5")):
-                new_labels = Labels.load_hdf5(
-                                filename,
-                                match_to=self.labels,
-                                video_callback=gui_video_callback)
-
-            elif filename.endswith((".json", ".json.zip")):
-                new_labels = Labels.load_json(
+            new_labels = Labels.load_file(
                                 filename,
                                 match_to=self.labels,
                                 video_callback=gui_video_callback)
@@ -1357,17 +1350,7 @@ class MainWindow(QMainWindow):
         if self.filename is not None:
             filename = self.filename
 
-            if filename.endswith((".json", ".json.zip")):
-                compress = filename.endswith(".zip")
-                Labels.save_json(labels = self.labels, filename = filename,
-                                    compress = compress)
-            elif filename.endswith(".h5"):
-                Labels.save_hdf5(labels = self.labels, filename = filename)
-
-            # Mark savepoint in change stack
-            self.changestack_savepoint()
-            # Redraw. Not sure why, but sometimes we need to do this.
-            self.plotFrame()
+            self._trySave(self.filename)
         else:
             # No filename (must be new project), so treat as "Save as"
             self.saveProjectAs()
@@ -1385,23 +1368,27 @@ class MainWindow(QMainWindow):
 
         if len(filename) == 0: return
 
-        if filename.endswith((".json", ".zip")):
-            compress = filename.endswith(".zip")
-            Labels.save_json(labels = self.labels, filename = filename, compress = compress)
+        if self._trySave(filename):
+            # If save was successful
             self.filename = filename
+
+    def _trySave(self, filename):
+        success = False
+        try:
+            Labels.save_file(labels = self.labels, filename = filename)
+            success = True
             # Mark savepoint in change stack
             self.changestack_savepoint()
-            # Redraw. Not sure why, but sometimes we need to do this.
-            self.plotFrame()
-        elif filename.endswith(".h5"):
-            Labels.save_hdf5(labels = self.labels, filename = filename)
-            self.filename = filename
-            # Mark savepoint in change stack
-            self.changestack_savepoint()
-            # Redraw. Not sure why, but sometimes we need to do this.
-            self.plotFrame()
-        else:
-            QMessageBox(text=f"File not saved. Try saving as json.").exec_()
+
+        except Exception as e:
+            message = f"An error occured when attempting to save:\n {e}\n\n"
+            message += "Try saving your project with a different filename or in a different format."
+            QtWidgets.QMessageBox(text=message).exec_()
+
+        # Redraw. Not sure why, but sometimes we need to do this.
+        self.plotFrame()
+
+        return success
 
     def closeEvent(self, event):
         if not self.changestack_has_changes():
@@ -1536,8 +1523,8 @@ class MainWindow(QMainWindow):
 
     def nextTrackFrame(self):
         cur_idx = self.player.frame_idx
-        video_tracks = {inst.track for lf in self.labels.find(self.video) for inst in lf if inst.track is not None}
-        next_idx = min([track.spawned_on for track in video_tracks if track.spawned_on > cur_idx], default=-1)
+        track_ranges = self.labels.get_track_occupany(self.video)
+        next_idx = min([track_range.start for track_range in track_ranges.values() if track_range.start > cur_idx], default=-1)
         if next_idx > -1:
             self.plotFrame(next_idx)
 

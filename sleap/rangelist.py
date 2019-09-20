@@ -28,6 +28,12 @@ class RangeList():
         """Returns True if the list is empty."""
         return len(self.list) == 0
 
+    @property
+    def start(self):
+        """Returns the start value of range (or None if empty)."""
+        if self.is_empty: return None
+        return self.list[0][0]
+
     def add(self, val, tolerance=0):
         """Adds a single value, merges to last range if contiguous."""
         if len(self.list) and self.list[-1][1] + tolerance >= val:

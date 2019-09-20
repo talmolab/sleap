@@ -880,7 +880,8 @@ class LabeledFrame:
         return inst_to_show
 
     @staticmethod
-    def merge_frames(labeled_frames, video):
+    def merge_frames(labeled_frames, video, remove_redundant=True):
+        redundant_count = 0
         frames_found = dict()
         # move instances into first frame with matching frame_idx
         for idx, lf in enumerate(labeled_frames):
@@ -888,7 +889,19 @@ class LabeledFrame:
                 if lf.frame_idx in frames_found.keys():
                     # move instances
                     dst_idx = frames_found[lf.frame_idx]
-                    labeled_frames[dst_idx].instances.extend(lf.instances)
+                    if remove_redundant:
+                        for new_inst in lf.instances:
+                            redundant = False
+                            for old_inst in labeled_frames[dst_idx].instances:
+                                if new_inst.matches(old_inst):
+                                    redundant = True
+                                    if not hasattr(new_inst, "score"):
+                                        redundant_count += 1
+                                    break
+                            if not redundant:
+                                labeled_frames[dst_idx].instances.append(new_inst)
+                    else:
+                        labeled_frames[dst_idx].instances.extend(lf.instances)
                     lf.instances = []
                 else:
                     # note first lf with this frame_idx
@@ -896,5 +909,7 @@ class LabeledFrame:
         # remove labeled frames with no instances
         labeled_frames = list(filter(lambda lf: len(lf.instances),
                                      labeled_frames))
+        if redundant_count:
+            print(f"skipped {redundant_count} redundant instances")
         return labeled_frames
 

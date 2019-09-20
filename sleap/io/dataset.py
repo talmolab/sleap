@@ -1307,6 +1307,7 @@ class Labels(MutableSequence):
 
     @classmethod
     def load_file(cls, filename: str, *args, **kwargs):
+        """Load file, detecting format from filename."""
         if filename.endswith((".h5", ".hdf5")):
             return cls.load_hdf5(filename, *args, **kwargs)
         elif filename.endswith((".json", ".json.zip")):
@@ -1316,6 +1317,18 @@ class Labels(MutableSequence):
         elif filename.endswith(".csv"):
             # for now, the only csv we support is the DeepLabCut format
             return cls.load_deeplabcut_csv(filename)
+        else:
+            raise ValueError(f"Cannot detect filetype for {filename}")
+
+    @classmethod
+    def save_file(cls, labels: 'Labels', filename: str, *args, **kwargs):
+        """Save file, detecting format from filename."""
+        if filename.endswith((".json", ".zip")):
+            compress = filename.endswith(".zip")
+            cls.save_json(labels = labels, filename = filename,
+                                compress = compress)
+        elif filename.endswith(".h5"):
+            cls.save_hdf5(labels = labels, filename = filename)
         else:
             raise ValueError(f"Cannot detect filetype for {filename}")
 

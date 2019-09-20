@@ -260,7 +260,15 @@ def test_label_mutability():
     labels.remove_video(dummy_video)
     assert len(labels.find(dummy_video)) == 0
 
-    dummy_frames3 = [LabeledFrame(dummy_video, frame_idx=0, instances=[dummy_instance,]) for _ in range(10)]
+    dummy_frames3 = []
+    dummy_skeleton.add_node("node")
+
+    # Add 10 instances with different points (so they aren't "redundant")
+    for i in range(10):
+        instance = Instance(skeleton=dummy_skeleton, points=dict(node=Point(i,i)))
+        dummy_frame = LabeledFrame(dummy_video, frame_idx=0, instances=[instance,])
+        dummy_frames3.append(dummy_frame)
+
     labels.labeled_frames.extend(dummy_frames3)
     assert len(labels) == 10
     assert len(labels.labeled_frames[0].instances) == 1
