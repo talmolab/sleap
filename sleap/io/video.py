@@ -343,6 +343,8 @@ class ImgStoreVideo:
 
     filename: str = attr.ib(default=None)
     index_by_original: bool = attr.ib(default=True)
+    _store_ = None
+    _img_ = None
 
     def __attrs_post_init__(self):
 
@@ -358,7 +360,6 @@ class ImgStoreVideo:
         self.filename = os.path.abspath(self.filename)
 
         self.__store = None
-        self.open()
 
     # The properties and methods below complete our contract with the
     # higher level Video interface.
@@ -374,6 +375,22 @@ class ImgStoreVideo:
             True if attributes match, False otherwise
         """
         return self.filename == other.filename and self.index_by_original == other.index_by_original
+
+    @property
+    def __store(self):
+        if self._store_ is None:
+            self.open()
+        return self._store_
+
+    @__store.setter
+    def __store(self, val):
+        self._store_ = val
+
+    @property
+    def __img(self):
+        if self._img_ is None:
+            self.open()
+        return self._img_
 
     @property
     def frames(self):
@@ -445,12 +462,12 @@ class ImgStoreVideo:
         Returns:
             None
         """
-        if not self.imgstore:
+        if not self._store_:
             # Open the imgstore
-            self.__store = imgstore.new_for_filename(self.filename)
+            self._store_ = imgstore.new_for_filename(self.filename)
 
             # Read a frame so we can compute shape an such
-            self.__img, (frame_number, frame_timestamp) = self.__store.get_next_image()
+            self._img_, (frame_number, frame_timestamp) = self._store_.get_next_image()
 
     def close(self):
         """
