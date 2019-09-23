@@ -280,8 +280,8 @@ class Labels(MutableSequence):
 
     def remove(self, value: LabeledFrame):
         self.labeled_frames.remove(value)
-        self._lf_by_video[new_label.video].remove(value)
-        del self._frame_idx_map[new_label.video][value.frame_idx]
+        self._lf_by_video[value.video].remove(value)
+        del self._frame_idx_map[value.video][value.frame_idx]
 
     def find(self, video: Video, frame_idx: Union[int, range] = None, return_new: bool=False) -> List[LabeledFrame]:
         """ Search for labeled frames given video and/or frame index.
