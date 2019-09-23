@@ -154,17 +154,14 @@ class Predictor:
         grayscale = (model_channels == 1)
 
         # Open the video if we need it.
-
-        try:
-            input_video.get_frame(frames[0])
+        if isinstance(input_video, Video):
             vid = input_video
-        except AttributeError:
-            if isinstance(input_video, dict):
-                vid = Video.cattr().structure(input_video, Video)
-            elif isinstance(input_video, str):
-                vid = Video.from_filename(input_video, grayscale=grayscale)
-            else:
-                raise AttributeError(f"Unable to load input video: {input_video}")
+        elif isinstance(input_video, dict):
+            vid = Video.cattr().structure(input_video, Video)
+        elif isinstance(input_video, str):
+            vid = Video.from_filename(input_video, grayscale=grayscale)
+        else:
+            raise AttributeError(f"Unable to load input video: {input_video}")
 
         # List of frames to process (or entire video if not specified)
         frames = frames or list(range(vid.num_frames))
