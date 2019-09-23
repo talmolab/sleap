@@ -105,12 +105,9 @@ def get_model_skeleton(sleap_models, output_types) -> Skeleton:
 def load_model_from_job(job: TrainingJob) -> keras.Model:
     """Load keras Model from a specific TrainingJob."""
 
-    # init = tf.global_variables_initializer()
-    # keras.backend.get_session().run(init)
-    # logger.info("Initialized TF global variables.")
-
     # Load model from TrainingJob data
-    keras_model = tf.keras.models.load_model(job_model_path(job))
+    keras_model = keras.models.load_model(job_model_path(job),
+        custom_objects={"tf": tf})
 
     # Rename to prevent layer naming conflict
     name_prefix = f"{job.model.output_type}_"
