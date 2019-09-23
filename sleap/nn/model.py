@@ -67,7 +67,7 @@ class Model:
 
     """
     output_type: ModelOutputType
-    backbone: Union[LeapCNN, UNet, StackedUNet, StackedHourglass]
+    backbone: BackboneType
     skeletons: Union[None, List[Skeleton]] = None
     backbone_name: str = None
 
@@ -128,18 +128,19 @@ class Model:
     @property
     def output_scale(self):
         """Calculates output scale relative to input."""
-        
-        output_scale = 1
 
-        # TODO: Determine scale within model implementation
-        if hasattr(self.backbone, "down_blocks") and hasattr(self.backbone, "up_blocks"):
+        if hasattr(self.backbone, "output_scale"):
+            return self.backbone.output_scale
+
+        elif hasattr(self.backbone, "down_blocks") and hasattr(self.backbone, "up_blocks"):
             asym = self.backbone.down_blocks - self.backbone.up_blocks
-            output_scale = 1 / (2 ** asym)
+            return (1 / (2 ** asym))
 
         elif hasattr(self.backbone, "initial_stride"):
-            output_scale = 1 / self.backbone.initial_stride
+            return (1 / self.backbone.initial_stride)
 
-        return output_scale
+        else:
+            return 1
     
 
     @staticmethod
