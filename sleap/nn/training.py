@@ -546,27 +546,35 @@ class TrainingJob:
         """
 
         # Open and parse the JSON in filename
-        with open(filename, "r") as file:
-            json_str = file.read()
-            dicts = json.loads(json_str)
+        with open(filename, "r") as f:
+            dicts = json.load(f)
 
-            # We have some skeletons to deal with, make sure to setup a Skeleton cattr.
-            my_cattr = Skeleton.make_cattr()
+        # We have some skeletons to deal with, make sure to setup a Skeleton cattr.
+        converter = Skeleton.make_cattr()
 
-            # Setup structuring hook for unambiguous backbone class resolution.
-            my_cattr.register_structure_hook(Model, Model._structure_model)
+        # Structure the nested skeletons if we have any.
+        if ("model" in dicts) and ("skeletons" in dicts["model"]):
+            if dicts["model"]["skeletons"]:
+                dicts["model"]["skeletons"] = converter.structure(
+                    dicts["model"]["skeletons"], List[Skeleton])
+                
+            else:
+                dicts["model"]["skeletons"] = []
 
-            # Build classes.
-            run = my_cattr.structure(dicts, cls)
+        # Setup structuring hook for unambiguous backbone class resolution.
+        converter.register_structure_hook(Model, Model._structure_model)
 
-            # if we can't find save_dir for job, set it to path of json we're loading
-            if run.save_dir is not None:
-                if not os.path.exists(run.save_dir):
-                    run.save_dir = os.path.dirname(filename)
+        # Build classes.
+        run = converter.structure(dicts, cls)
 
-                    run.final_model_filename = cls._fix_path(run.final_model_filename)
-                    run.best_model_filename = cls._fix_path(run.best_model_filename)
-                    run.newest_model_filename = cls._fix_path(run.newest_model_filename)
+        # if we can't find save_dir for job, set it to path of json we're loading
+        if run.save_dir is not None:
+            if not os.path.exists(run.save_dir):
+                run.save_dir = os.path.dirname(filename)
+
+                run.final_model_filename = cls._fix_path(run.final_model_filename)
+                run.best_model_filename = cls._fix_path(run.best_model_filename)
+                run.newest_model_filename = cls._fix_path(run.newest_model_filename)
 
         return run
 

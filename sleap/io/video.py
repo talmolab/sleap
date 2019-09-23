@@ -47,7 +47,7 @@ class HDF5Video:
             self.filename = self.__file_h5.filename
         elif type(self.filename) is str:
             try:
-                self.__file_h5 = h5.File(self.filename, 'r')
+                self.__file_h5 = h5.File(self.filename, "r")
             except OSError as ex:
                 raise FileNotFoundError(f"Could not find HDF5 file {self.filename}") from ex
         else:
@@ -58,7 +58,7 @@ class HDF5Video:
             self.__dataset_h5 = self.dataset
             self.__file_h5 = self.__dataset_h5.file
             self.dataset = self.__dataset_h5.name
-        elif self.dataset is not None and type(self.dataset) is str:
+        elif (self.dataset is not None) and isinstance(self.dataset, str) and (self.__file_h5 is not None):
             self.__dataset_h5 = self.__file_h5[self.dataset]
         else:
             self.__dataset_h5 = None

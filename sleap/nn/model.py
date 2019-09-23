@@ -170,4 +170,6 @@ class Model:
         backbone_cls = available_archs[arch_idx]
 
         return Model(backbone=backbone_cls(**model_dict["backbone"]),
-                     output_type=ModelOutputType(model_dict["output_type"]))
+                     output_type=ModelOutputType(model_dict["output_type"]),
+                     skeletons=model_dict["skeletons"]
+                     )

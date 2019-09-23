@@ -175,7 +175,7 @@ class Skeleton:
 
         _cattr = cattr.Converter()
         _cattr.register_unstructure_hook(Skeleton, lambda x: Skeleton.to_dict(x, node_to_idx))
-        _cattr.register_structure_hook(Skeleton, lambda x,type: Skeleton.from_dict(x, idx_to_node))
+        _cattr.register_structure_hook(Skeleton, lambda x, cls: Skeleton.from_dict(x, idx_to_node))
         return _cattr
 
     @property
