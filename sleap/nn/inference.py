@@ -156,7 +156,7 @@ class Predictor:
         # Open the video if we need it.
 
         try:
-            input_video.get_frame(0)
+            input_video.get_frame(frames[0])
             vid = input_video
         except AttributeError:
             if isinstance(input_video, dict):
@@ -183,16 +183,17 @@ class Predictor:
             raise ValueError("Predictor has no model.")
 
         # Initialize tracking
-        tracker = FlowShiftTracker(window=self.flow_window, verbosity=0)
+        if self.with_tracking:
+            tracker = FlowShiftTracker(window=self.flow_window, verbosity=0)
 
-        # Create output directory if it doesn't exist
-        try:
-            os.mkdir(os.path.dirname(self.output_path))
-        except FileExistsError:
-            pass
-        # Delete the output file if it exists already
-        if os.path.exists(self.output_path):
-            os.unlink(self.output_path)
+        if self.output_path:
+            # Delete the output file if it exists already
+            if os.path.exists(self.output_path):
+                os.unlink(self.output_path)
+
+            # Create output directory if it doesn't exist
+            if not os.path.exists(self.output_path):
+                os.makedirs(self.output_path)
 
         # Process chunk-by-chunk!
         t0_start = time()
