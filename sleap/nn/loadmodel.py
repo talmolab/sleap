@@ -87,16 +87,10 @@ def get_model_data(
         job = sleap_models[model_type]
 
         # Model input is scaled by <multiscale> to get output
-        try:
-            asym = job.model.backbone.down_blocks - job.model.backbone.up_blocks
-            multiscale = 1/(2**asym)
-        except:
-            multiscale = 1
-
         model_properties = dict(
-            skeleton = job.model.skeletons[0],
-            scale = job.trainer.scale,
-            multiscale = multiscale)
+            skeleton=job.model.skeletons[0],
+            scale=job.trainer.scale,
+            multiscale=job.model.output_scale)
 
         return model_properties
 

@@ -84,7 +84,7 @@ class Model:
         if self.backbone_name is None:
             self.backbone_name = self.backbone.__class__.__name__
 
-    def output(self, input_tesnor, num_output_channels=None):
+    def output(self, input_tensor, num_output_channels=None):
         """
         Invoke the backbone function with current backbone_args and backbone_kwargs
         to produce the model backbone block. This is a convenience property for
@@ -112,7 +112,7 @@ class Model:
                                  "Cannot infer num output channels.")
 
 
-        return self.backbone.output(input_tesnor, num_output_channels)
+        return self.backbone.output(input_tensor, num_output_channels)
 
     @property
     def name(self):
@@ -125,3 +125,48 @@ class Model:
         """
         return self.backbone_name
 
+    @property
+    def output_scale(self):
+        """Calculates output scale relative to input."""
+        
+        output_scale = 1
+
+        # TODO: Determine scale within model implementation
+        if hasattr(self.backbone, "down_blocks") and hasattr(self.backbone, "up_blocks"):
+            asym = self.backbone.down_blocks - self.backbone.up_blocks
+            output_scale = 1 / (2 ** asym)
+
+        elif hasattr(self.backbone, "initial_stride"):
+            output_scale = 1 / self.backbone.initial_stride
+
+        return output_scale
+    
+
+    @staticmethod
+    def _structure_model(model_dict, cls):
+        """Structuring hook for instantiating Model via cattrs.
+
+        This function should be used directly with cattrs as a
+        structuring hook. It serves the purpose of instantiating
+        the appropriate backbone class from the string name.
+
+        This is required when backbone classes do not have a
+        unique attribute name from which to infer the appropriate
+        class to use.
+
+        Args:
+            model_dict: Dictionaries containing deserialized Model.
+            cls: Class to return (not used).
+
+        Returns:
+            An instantiated Model class with the correct backbone.
+
+        Example:
+            >> cattr.register_structure_hook(Model, Model.structure_model)
+        """
+
+        arch_idx = available_arch_names.index(model_dict["backbone_name"])
+        backbone_cls = available_archs[arch_idx]
+
+        return Model(backbone=backbone_cls(**model_dict["backbone"]),
+                     output_type=ModelOutputType(model_dict["output_type"]))

@@ -9,9 +9,11 @@ import imgstore
 import numpy as np
 import attr
 import cattr
+import logging
 
 from typing import Iterable, Union, List
 
+logger = logging.getLogger(__name__)
 
 @attr.s(auto_attribs=True, cmp=False)
 class HDF5Video:
@@ -774,7 +776,7 @@ class Video:
     @staticmethod
     def cattr():
         """
-        Return a cattr converter for serialiazing\deseriializing Video objects.
+        Return a cattr converter for serialiazing/deserializing Video objects.
 
         Returns:
             A cattr converter.
@@ -842,6 +844,6 @@ class Video:
         if raise_error:
             raise FileNotFoundError(f"Cannot find a video file: {path}")
         else:
-            print(f"Cannot find a video file: {path}")
+            logger.warning(f"Cannot find a video file: {path}")
             return path
 

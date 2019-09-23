@@ -4,5 +4,6 @@ from sleap.nn.architectures.hourglass import StackedHourglass
 
 # TODO: We can set this up to find all classes under sleap.nn.architectures
 available_archs = [LeapCNN, UNet, StackedUNet, StackedHourglass]
+available_arch_names = [arch.__name__ for arch in available_archs]
 
-__all__ = ['available_archs'] + [arch.__name__ for arch in available_archs]
+__all__ = ["available_archs", "available_arch_names"] + [arch.__name__ for arch in available_archs]

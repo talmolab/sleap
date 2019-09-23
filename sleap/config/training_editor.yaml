@@ -6,6 +6,13 @@ model:
   options: confmaps,pafs,centroids
   default: confmaps
 
+- name: arch # backbone_name
+  label: Architecture
+  type: list
+  default: 
+  options: LeapCNN,UNet,StackedHourglass
+  # options: LeapCNN,UNet,StackedHourglass,StackedUNet
+
 - name: down_blocks
   label: Down Blocks
   type: int
@@ -35,20 +42,35 @@ model:
   label: Upsampling Layers
   type: bool
   default: False
-  
+
 - name: interp
   label: Interpolation
   type: list
   default: bilinear
   options: bilinear
 
-# skeletons?
+# stacked model:
+- name: num_stacks
+  label: Stacks
+  type: int
+  default: 3
 
-- name: arch # backbone_name
-  label: Architecture
-  type: list
-  default: 
-  options: LeapCNN,StackedHourglass,UNet,StackedUNet
+# - name: batch_norm
+#   label: Batch norm
+#   type: bool
+#   default: True
+
+# - name: intermediate_inputs
+#   label: Intermediate inputs
+#   type: bool
+#   default: True
+
+# - name: initial_stride
+#   label: Initial stride
+#   type: int
+#   default: 1
+
+# skeletons?
 
 datagen:
 
