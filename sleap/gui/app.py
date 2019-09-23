@@ -11,6 +11,7 @@ from PySide2.QtWidgets import QMenu, QAction
 from PySide2.QtWidgets import QFileDialog, QMessageBox
 
 import copy
+import re
 import operator
 import os
 import sys
@@ -26,6 +27,7 @@ from sleap.skeleton import Skeleton, Node
 from sleap.instance import Instance, PredictedInstance, Point, LabeledFrame, Track
 from sleap.io.video import Video
 from sleap.io.dataset import Labels
+from sleap.info.summary import Summary
 from sleap.gui.video import QtVideoPlayer
 from sleap.gui.dataviews import VideosTable, SkeletonNodesTable, SkeletonEdgesTable, \
     LabeledFrameTable, SkeletonNodeModel, SuggestionsTable
@@ -194,6 +196,25 @@ class MainWindow(QMainWindow):
                             lambda x=palette_name: self.setPalette(x))
             menu_item.setCheckable(True)
         self.setPalette("standard")
+
+        viewMenu.addSeparator()
+
+        self.seekbarHeaderMenu = viewMenu.addMenu("Seekbar Header")
+        headers = (
+                    "None",
+                    "Point Displacement (sum)",
+                    "Point Displacement (max)",
+                    "Instance Score (sum)",
+                    "Instance Score (min)",
+                    "Point Score (sum)",
+                    "Point Score (min)",
+                    "Number of predicted points"
+                    )
+        for header in headers:
+            menu_item = self.seekbarHeaderMenu.addAction(header,
+                            lambda x=header: self.setSeekbarHeader(x))
+            menu_item.setCheckable(True)
+        self.setSeekbarHeader("None")
 
         viewMenu.addSeparator()
 
@@ -783,6 +804,33 @@ class MainWindow(QMainWindow):
 
     def updateSeekbarMarks(self):
         self.player.seekbar.setTracksFromLabels(self.labels, self.video)
+
+    def setSeekbarHeader(self, graph_name):
+        data_obj = Summary(self.labels)
+        header_functions = {
+            "Point Displacement (sum)": data_obj.get_point_displacement_series,
+            "Point Displacement (max)": data_obj.get_point_displacement_series,
+            "Instance Score (sum)": data_obj.get_instance_score_series,
+            "Instance Score (min)": data_obj.get_instance_score_series,
+            "Point Score (sum)": data_obj.get_point_score_series,
+            "Point Score (min)": data_obj.get_point_score_series,
+            "Number of predicted points": data_obj.get_point_count_series,
+            }
+
+        self._menu_check_single(self.seekbarHeaderMenu, graph_name)
+
+        if graph_name == "None":
+            self.player.seekbar.clearHeader()
+        else:
+            if graph_name in header_functions:
+                kwargs = dict(video=self.video)
+                reduction_name = re.search("\((sum|max|min)\)", graph_name)
+                if reduction_name is not None:
+                    kwargs["reduction"] = reduction_name.group(1)
+                series = header_functions[graph_name](**kwargs)
+                self.player.seekbar.setHeaderSeries(series)
+            else:
+                print(f"Could not find function for {header_functions}")
 
     def generateSuggestions(self, params):
         new_suggestions = dict()
