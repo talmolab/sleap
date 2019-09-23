@@ -2,14 +2,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 import numpy as np
-import keras
 
 from time import time, clock
 from typing import Dict, List, Union, Optional, Tuple
 
 import tensorflow as tf
 import keras
-# keras = tf.keras
 
 from sleap.skeleton import Skeleton
 from sleap.nn.model import ModelOutputType
