@@ -9,6 +9,7 @@ import h5py as h5
 import pandas as pd
 import cattr
 
+from copy import copy
 from typing import Dict, List, Optional, Union, Tuple
 
 from numpy.lib.recfunctions import structured_to_unstructured
@@ -913,3 +914,87 @@ class LabeledFrame:
             print(f"skipped {redundant_count} redundant instances")
         return labeled_frames
 
+    @classmethod
+    def complex_merge_between(cls, base_labels: 'Labels', new_frames: List['LabeledFrame']):
+        """Merge new_frames into base_labels cleanly when possible,
+        return conflicts if any.
+
+        Args:
+            base_labels
+            new_frames
+        Returns:
+            tuple of three items:
+            * dict with {video: list (per frame) of list of merged instances
+            * list of conflicting instances in base
+            * list of conflicting instances in new_frames
+        """
+        merged = dict()
+        extra_base = []
+        extra_new = []
+
+        for new_frame in new_frames:
+            base_lfs = base_labels.find(new_frame.video, new_frame.frame_idx)
+            merged_instances = None
+
+            if not base_lfs:
+                base_labels.labeled_frames.append(new_frame)
+                merged_instances = new_frame.instances
+            else:
+                merged_instances, extra_base_frame, extra_new_frame = \
+                    cls.complex_frame_merge(base_lfs[0], new_frame)
+                if extra_base_frame:
+                    extra_base.append(extra_base_frame)
+                if extra_new_frame:
+                    extra_new.append(extra_new_frame)
+
+            if merged_instances:
+                if new_frame.video not in merged:
+                    merged[new_frame.video] = []
+                merged[new_frame.video].append(merged_instances)
+        return merged, extra_base, extra_new
+
+    @classmethod
+    def complex_frame_merge(cls, base_frame, new_frame):
+        """Merge two frames, return conflicts if any."""
+        merged_instances = []
+        redundant_instances = []
+        extra_base_instances = copy(base_frame.instances)
+        extra_new_instances = []
+
+        for new_inst in new_frame:
+            redundant = False
+            for base_inst in base_frame.instances:
+                if new_inst.matches(base_inst):
+                    base_inst.frame = None
+                    extra_base_instances.remove(base_inst)
+                    redundant_instances.append(base_inst)
+                    redundant = True
+                    continue
+            if not redundant:
+                new_inst.frame = None
+                extra_new_instances.append(new_inst)
+
+        if extra_base_instances and extra_new_instances:
+            # Conflict, so update base to just include non-conflicting
+            # instances (perfect matches)
+            base_frame.instances.clear()
+            base_frame.instances.extend(redundant_instances)
+        else:
+            # No conflict, so include all instances in base
+            base_frame.instances.extend(extra_new_instances)
+            merged_instances = copy(extra_new_instances)
+            extra_base_instances = []
+            extra_new_instances = []
+
+        # Construct frames to hold any conflicting instances
+        extra_base = cls(
+            video=base_frame.video,
+            frame_idx=base_frame.frame_idx,
+            instances=extra_base_instances) if extra_base_instances else None
+
+        extra_new = cls(
+            video=new_frame.video,
+            frame_idx=new_frame.frame_idx,
+            instances=extra_new_instances) if extra_new_instances else None
+
+        return merged_instances, extra_base, extra_new
