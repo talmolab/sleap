@@ -48,6 +48,7 @@ class Node:
 
     @staticmethod
     def from_names(name_list: str):
+        """Convert list of node names to list of nodes objects."""
         nodes = []
         for name in name_list:
             nodes.append(Node(name))
@@ -55,6 +56,7 @@ class Node:
 
     @classmethod
     def as_node(cls, node):
+        """Convert given `node` to `Node` object (if not already)."""
         return node if isinstance(node, cls) else cls(node)
 
     def matches(self, other):
@@ -94,7 +96,7 @@ class Skeleton:
         """
 
         # If no skeleton was create, try to create a unique name for this Skeleton.
-        if name is None or type(name) is not str or len(name) == 0:
+        if name is None or not isinstance(name, str) or not name:
             name = "Skeleton-" + str(next(self._skeleton_idx))
 
 
@@ -340,7 +342,7 @@ class Skeleton:
         Returns:
             None
         """
-        if type(name) is not str:
+        if not isinstance(name, str):
             raise TypeError("Cannot add nodes to the skeleton that are not str")
 
         if name in self.node_names:
@@ -389,13 +391,16 @@ class Skeleton:
         """
         if isinstance(name, Node):
             name = name.name
+
         nodes = [node for node in self.nodes if node.name == name]
+
         if len(nodes) == 1:
             return nodes[0]
-        elif len(nodes) > 1:
+
+        if len(nodes) > 1:
             raise ValueError("Found multiple nodes named ({}).".format(name))
-        elif len(nodes) == 0:
-            return None
+
+        return None
 
     def add_edge(self, source: str, destination: str):
         """Add an edge between two nodes.
@@ -466,11 +471,11 @@ class Skeleton:
 
         self._graph.remove_edge(source_node, destination_node)
 
-    def add_symmetry(self, node1:str, node2: str):
+    def add_symmetry(self, node1: str, node2: str):
         """Specify that two parts (nodes) in the skeleton are symmetrical.
 
-        Certain parts of an animal body can be related as symmetrical parts in a pair. For example,
-        the left and right hands of a person.
+        Certain parts of an animal body can be related as symmetrical
+        parts in a pair. For example, the left and right hands of a person.
 
         Args:
             node1: The name of the first part in the symmetric pair
@@ -515,7 +520,7 @@ class Skeleton:
         edges = [(src, dst, key) for src, dst, key, edge_type in self._graph.edges([node1_node, node2_node], keys=True, data="type") if edge_type == EdgeType.SYMMETRY]
         self._graph.remove_edges_from(edges)
 
-    def get_symmetry(self, node:str):
+    def get_symmetry(self, node: str):
         """ Returns the node symmetric with the specified node.
 
         Args:
@@ -535,8 +540,8 @@ class Skeleton:
         else:
             raise ValueError(f"{node} has more than one symmetry.")
 
-    def get_symmetry_name(self, node:str):
-        """ Returns the name of the node symmetric with the specified node.
+    def get_symmetry_name(self, node: str):
+        """Returns the name of the node symmetric with the specified node.
 
         Args:
             node: The name of the node to query.
@@ -589,7 +594,7 @@ class Skeleton:
         """
         self.relabel_nodes({old_name: new_name})
 
-    def relabel_nodes(self, mapping:dict):
+    def relabel_nodes(self, mapping: Dict[str, str]):
         """
         Relabel the nodes of the skeleton.
 
@@ -600,12 +605,12 @@ class Skeleton:
             None
         """
         existing_nodes = self.nodes
-        for k, v in mapping.items():
-            if self.has_node(v):
+        for old_name, new_name in mapping.items():
+            if self.has_node(new_name):
                 raise ValueError("Cannot relabel a node to an existing name.")
-            node = self.find_node(k)
+            node = self.find_node(old_name)
             if node is not None:
-                node.name = v
+                node.name = new_name
 
         # self._graph = nx.relabel_nodes(G=self._graph, mapping=mapping)
 
@@ -760,7 +765,7 @@ class Skeleton:
         Returns:
             The skeleton instance stored in the HDF5 file.
         """
-        if type(file) is str:
+        if isinstance(file, str):
             with h5.File(file) as _file:
                 skeletons = Skeleton._load_hdf5(_file) # Load all skeletons
         else:
@@ -783,7 +788,7 @@ class Skeleton:
         Returns:
             The skeleton instances stored in the HDF5 file. Either in List or Dict form.
         """
-        if type(file) is str:
+        if isinstance(file, str):
             with h5.File(file) as _file:
                 skeletons = Skeleton._load_hdf5(_file) # Load all skeletons
         else:
@@ -791,8 +796,8 @@ class Skeleton:
 
         if return_dict:
             return skeletons
-        else:
-            return list(skeletons.values())
+
+        return list(skeletons.values())
 
     @classmethod
     def _load_hdf5(cls, file: h5.File):
@@ -804,7 +809,7 @@ class Skeleton:
         return skeletons
 
     def save_hdf5(self, file: Union[str, h5.File]):
-        if type(file) is str:
+        if isinstance(file, str):
             with h5.File(file) as _file:
                 self._save_hdf5(_file)
         else:
