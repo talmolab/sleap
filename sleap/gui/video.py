@@ -1374,26 +1374,28 @@ def video_demo(labels, standalone=False):
     if standalone: app.exec_()
 
 def plot_instances(scene, frame_idx, labels, video=None, fixed=True):
-    video = labels.videos[0]
-    color_manager = TrackColorManager(labels)
-    lfs = [label for label in labels.labels if label.video == video and label.frame_idx == frame_idx]
+    from sleap.gui.overlays.tracks import TrackColorManager
 
-    if len(lfs) == 0: return
+    video = labels.videos[0]
+    color_manager = TrackColorManager(labels=labels)
+    lfs = labels.find(video, frame_idx)
+
+    if not lfs: return
 
     labeled_frame = lfs[0]
 
     count_no_track = 0
     for i, instance in enumerate(labeled_frame.instances_to_show):
-        if instance.track in self.labels.tracks:
+        if instance.track in labels.tracks:
             pseudo_track = instance.track
         else:
             # Instance without track
-            pseudo_track = len(self.labels.tracks) + count_no_track
+            pseudo_track = len(labels.tracks) + count_no_track
             count_no_track += 1
 
         # Plot instance
         inst = QtInstance(instance=instance,
-                          color=color_manager(pseudo_track),
+                          color=color_manager.get_color(pseudo_track),
                           predicted=fixed,
                           color_predicted=True,
                           show_non_visible=False)
