@@ -153,6 +153,13 @@ def test_symmetry():
     with pytest.raises(ValueError):
         s1.add_symmetry('6', '1')
 
+    s1.delete_symmetry('1', '5')
+    assert s1.get_symmetry("1") is None
+
+    with pytest.raises(ValueError):
+        s1.delete_symmetry('1', '5')
+
+
 def test_json(skeleton, tmpdir):
     """
     Test saving and loading a Skeleton object in JSON.

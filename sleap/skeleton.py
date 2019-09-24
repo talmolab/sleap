@@ -11,7 +11,6 @@ import cattr
 import numpy as np
 import jsonpickle
 import json
-import networkx as nx
 import h5py as h5
 import copy
 
@@ -19,8 +18,9 @@ from enum import Enum
 from itertools import count
 from typing import Iterable, Union, List, Dict
 
+import networkx as nx
 from networkx.readwrite import json_graph
-from scipy.io import loadmat, savemat
+from scipy.io import loadmat
 
 
 class EdgeType(Enum):
@@ -79,8 +79,8 @@ class Skeleton:
     """
 
     """
-    A index variable used to give skeletons a default name that attemtpts to be
-    unique across all skeletons. 
+    A index variable used to give skeletons a default name that attempts
+    to be unique across all skeletons.
     """
     _skeleton_idx = count(0)
 
@@ -137,7 +137,7 @@ class Skeleton:
     def graph(self):
         edges = [(src, dst, key) for src, dst, key, edge_type in self._graph.edges(keys=True, data="type") if edge_type == EdgeType.BODY]
         # TODO: properly induce subgraph for MultiDiGraph
-        #   Currently, NetworkX will just return the nodes in the subgraph. 
+        #   Currently, NetworkX will just return the nodes in the subgraph.
         #   See: https://stackoverflow.com/questions/16150557/networkxcreating-a-subgraph-induced-from-edges
         return self._graph.edge_subgraph(edges)
 
@@ -497,7 +497,7 @@ class Skeleton:
         self._graph.add_edge(node1_node, node2_node, type=EdgeType.SYMMETRY)
         self._graph.add_edge(node2_node, node1_node, type=EdgeType.SYMMETRY)
 
-    def delete_symmetry(self, node1:str, node2: str):
+    def delete_symmetry(self, node1: str, node2: str):
         """Deletes a previously established symmetry relationship between two nodes.
 
         Args:
@@ -507,9 +507,9 @@ class Skeleton:
         Returns:
             None
         """
-        node1_node, node1_node = self.find_node(node1), self.find_node(node2)
+        node1_node, node2_node = self.find_node(node1), self.find_node(node2)
 
-        if self.get_symmetry(node1) != node2 or self.get_symmetry(node2) != node1:
+        if self.get_symmetry(node1) != node2_node or self.get_symmetry(node2) != node1_node:
             raise ValueError(f"Nodes {node1}, {node2} are not symmetric.")
 
         edges = [(src, dst, key) for src, dst, key, edge_type in self._graph.edges([node1_node, node2_node], keys=True, data="type") if edge_type == EdgeType.SYMMETRY]
@@ -652,7 +652,7 @@ class Skeleton:
             True is yes, False if no.
 
         """
-        source_node, destination_node = self.find_node(source_name), self.find_node(dest_name) 
+        source_node, destination_node = self.find_node(source_name), self.find_node(dest_name)
         return self._graph.has_edge(source_node, destination_node)
 
     @staticmethod
