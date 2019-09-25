@@ -71,7 +71,7 @@ test_script:
   - cmd: pytest --cov=sleap tests/
 
 on_success:
-  - cmd: coveralls --service appveyor
+  - cmd: coveralls --service=appveyor
 
 # here we are going to override common configuration
 for:
