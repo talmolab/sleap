@@ -68,7 +68,7 @@ build: off
 test_script:
   - cmd: activate sleap_appveyor
   - cmd: where python
-  - cmd: pytest --cov sleap
+  - cmd: pytest --cov=sleap tests/
 
 on_success:
   - cmd: coveralls
