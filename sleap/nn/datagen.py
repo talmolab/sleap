@@ -142,7 +142,7 @@ def generate_points_from_list(labels:Labels, frame_list: List[Tuple], scale: flo
     def lf_points_from_singleton(lf_singleton):
         if len(lf_singleton) == 0: return []
         lf = lf_singleton[0]
-        points = [inst.visible_points_array*scale
+        points = [inst.points_array*scale
                   for inst in lf.user_instances]
         return points
 
@@ -491,6 +491,9 @@ def _bb_pad_shape(bbs, min_crop_size, img_shape):
     Returns:
         (size, size) tuple
     """
+
+    # TODO: Holy hardcoded fuck Batman! This really needs to get cleaned up
+
     # Find a nicely sized box that's large enough to bound all instances
     max_height = max((y1 - y0 for (x0, y0, x1, y1) in bbs))
     max_width = max((x1 - x0 for (x0, y0, x1, y1) in bbs))
@@ -596,7 +599,8 @@ def pad_box_to_multiple(box, pad_factor_box, within):
     pad_h, pad_w = pad_factor_box
 
     # Find multiple of pad_factor_box that's large enough to hold box
-    multiple_h, multiple_w = ceil(box_h / pad_h), ceil(box_w / pad_w)
+    multiple_h = ceil(box_h / pad_h)
+    multiple_w = ceil(box_w / pad_w)
 
     # Maintain aspect ratio
     multiple = max(multiple_h, multiple_w)

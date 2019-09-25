@@ -177,7 +177,7 @@ class Skeleton:
 
         _cattr = cattr.Converter()
         _cattr.register_unstructure_hook(Skeleton, lambda x: Skeleton.to_dict(x, node_to_idx))
-        _cattr.register_structure_hook(Skeleton, lambda x,type: Skeleton.from_dict(x, idx_to_node))
+        _cattr.register_structure_hook(Skeleton, lambda x, cls: Skeleton.from_dict(x, idx_to_node))
         return _cattr
 
     @property
@@ -512,7 +512,8 @@ class Skeleton:
         Returns:
             None
         """
-        node1_node, node2_node = self.find_node(node1), self.find_node(node2)
+        node1_node = self.find_node(node1)
+        node2_node = self.find_node(node2)
 
         if self.get_symmetry(node1) != node2_node or self.get_symmetry(node2) != node1_node:
             raise ValueError(f"Nodes {node1}, {node2} are not symmetric.")

@@ -18,9 +18,7 @@ from multiprocessing import Process, Pool
 from multiprocessing.pool import AsyncResult, ThreadPool
 
 from time import time, clock
-from typing import Dict, List, Union, Optional, Tuple
-
-from keras.utils import multi_gpu_model
+from typing import Any, Dict, List, Union, Optional, Text, Tuple
 
 from sleap.instance import LabeledFrame
 from sleap.io.dataset import Labels
@@ -34,13 +32,230 @@ from sleap.nn.tracking import FlowShiftTracker, Track
 from sleap.nn.transform import DataTransform
 
 from sleap.nn.datagen import merge_boxes_with_overlap_and_padding
-from sleap.nn.loadmodel import load_model, get_model_data, get_model_skeleton
 from sleap.nn.peakfinding import find_all_peaks, find_all_single_peaks
 from sleap.nn.peakfinding_tf import peak_tf_inference
 from sleap.nn.peakmatching import match_single_peaks_all, match_peaks_paf, match_peaks_paf_par, instances_nms
 from sleap.nn.util import batch, batch_count, save_visual_outputs
 
-OVERLAPPING_INSTANCES_NMS = True
+
+@attr.s(auto_attribs=True)
+class InferenceModel:
+    """This class provides convenience metadata and methods for running inference from a TrainingJob."""
+
+    job: TrainingJob
+    _keras_model: keras.Model = None
+    _model_path: Text = None
+    _trained_input_shape: Tuple[int] = None
+    _output_channels: int = None
+
+    @property
+    def skeleton(self) -> Skeleton:
+        """Returns the skeleton associated with this model."""
+
+        return self.job.model.skeletons[0]
+
+
+    @property
+    def output_type(self) -> ModelOutputType:
+        """Returns the output type of this model."""
+
+        return self.job.model.output_type
+
+    @property
+    def input_scale(self) -> float:
+        """Returns the scale of the images that the model was trained on."""
+
+        return self.job.trainer.scale
+
+    @property
+    def output_scale(self) -> float:
+        """Returns the scale of the outputs of the model relative to the original data.
+        
+        For a model trained on inputs with scale = 0.5 that outputs predictions that
+        are half of the size of the inputs, the output scale is 0.25.
+        """
+        return self.input_scale * self.job.model.output_scale
+
+    @property
+    def output_relative_scale(self) -> float:
+        """Returns the scale of the outputs relative to the scaled inputs.
+
+        This differs from output_scale in that it is the scaling factor after
+        applying the input scaling.
+        """
+
+        return self.job.model.output_scale
+
+    def compute_output_shape(self, input_shape: Tuple[int], relative=True) -> Tuple[int]:
+        """Returns the output tensor shape for a given input shape.
+
+        Args:
+            input_shape: Shape of input images in the form (height, width).
+            relative: If True, input_shape specifies the shape after input scaling.
+
+        Returns:
+            A tuple of (height, width, channels) of the output of the model.
+        """
+
+        # TODO: Support multi-input/multi-output models.
+
+        scaling_factor = self.output_scale
+        if relative:
+            scaling_factor = self.output_relative_scale
+
+        output_shape = (
+            int(input_shape[0] * scaling_factor),
+            int(input_shape[1] * scaling_factor),
+            self.output_channels)
+
+        return output_shape
+    
+    
+    def load_model(self, model_path: Text = None) -> keras.Model:
+        """Loads a saved model from disk and caches it.
+
+        Args:
+            model_path: If not provided, uses the model
+                paths in the training job.
+
+        Returns:
+            The loaded Keras model. This model can accept any size
+            of inputs that are valid.
+        """
+
+        if not model_path:
+            # Try the best model first.
+            model_path = os.path.join(self.job.save_dir,
+                self.job.best_model_filename)
+
+            # Try the final model if that didn't exist.
+            if not os.path.exists(model_path):
+                model_path = os.path.join(self.job.save_dir,
+                    self.job.final_model_filename)
+
+        # Load from disk.
+        keras_model = keras.models.load_model(model_path,
+            custom_objects={"tf": tf})
+        logger.info("Loaded model: " + model_path)
+
+        # Store the loaded model path for reference.
+        self._model_path = model_path
+
+        # TODO: Multi-input/output support
+        # Find the original data shape from the input shape of the first input node.
+        self._trained_input_shape = keras_model.get_input_shape_at(0)
+
+        # Save output channels since that should be static.
+        self._output_channels = keras_model.get_output_shape_at(0)[-1]
+
+        # Create input node with undetermined height/width.
+        input_tensor = keras.layers.Input((None, None, self.input_channels))
+        keras_model = keras.Model(
+            inputs=input_tensor,
+            outputs=keras_model(input_tensor))
+
+
+        # Save the modified and loaded model.
+        self._keras_model = keras_model
+
+        return self.keras_model
+
+
+    @property
+    def keras_model(self) -> keras.Model:
+        """Returns the underlying Keras model, loading it if necessary."""
+
+        if self._keras_model is None:
+            self.load_model()
+
+        return self._keras_model
+
+
+    @property
+    def model_path(self) -> Text:
+        """Returns the path to the loaded model."""
+
+        if not self._model_path:
+            raise AttributeError("No model loaded. Call inference_model.load_model() first.")
+
+        return self._model_path
+
+
+    @property
+    def trained_input_shape(self) -> Tuple[int]:
+        """Returns the shape of the model when it was loaded."""
+
+        if not self._trained_input_shape:
+            raise AttributeError("No model loaded. Call inference_model.load_model() first.")
+
+        return self._trained_input_shape
+
+    @property
+    def output_channels(self) -> int:
+        """Returns the number of output channels of the model."""
+        if not self._trained_input_shape:
+            raise AttributeError("No model loaded. Call inference_model.load_model() first.")
+
+        return self._output_channels
+
+
+    @property
+    def input_channels(self) -> int:
+        """Returns the number of channels expected for the input data."""
+
+        # TODO: Multi-output support
+        return self.trained_input_shape[-1]
+
+
+    @property
+    def is_grayscale(self) -> bool:
+        """Returns True if the model expects grayscale images."""
+
+        return self.input_channels == 1
+
+
+    @property
+    def down_blocks(self):
+        """Returns the number of pooling steps applied during the model.
+
+        Data needs to be of a shape divisible by the number of pooling steps.
+        """
+
+        # TODO: Replace this with an explicit calculation that takes stride sizes into account.
+        return self.job.model.down_blocks
+    
+    
+    def predict(self, X: Union[np.ndarray, List[np.ndarray]],
+        batch_size: int = 32,
+        normalize: bool = True
+        ) -> Union[np.ndarray, List[np.ndarray]]:
+        """Runs inference on the input data.
+
+        This is a simple wrapper around the keras model predict function.
+
+        Args:
+            X: The inputs to provide to the model. Can be different height/width as
+                the data it was trained on.
+            batch_size: Batch size to perform inference on at a time.
+            normalize: Applies normalization to the input data if needed
+                (e.g., if casting or range normalization is required).
+
+        Returns:
+            The outputs of the model.
+        """
+
+        if normalize:
+            # TODO: Store normalization scheme in the model metadata.
+            if isinstance(X, np.ndarray):
+                if X.dtype == np.dtype("uint8"):
+                    X = X.astype("float32") / 255.
+            elif isinstance(X, list):
+                for i in range(len(X)):
+                    if X[i].dtype == np.dtype("uint8"):
+                        X[i] = X[i].astype("float32") / 255.
+
+        return self.keras_model.predict(X, batch_size=batch_size)
+
 
 @attr.s(auto_attribs=True)
 class Predictor:
@@ -85,7 +300,9 @@ class Predictor:
         resize_hack: whether to resize images to power of 2
     """
 
-    sleap_models: Dict[ModelOutputType, TrainingJob] = None
+    training_jobs: Dict[ModelOutputType, TrainingJob] = None
+    inference_models: Dict[ModelOutputType, InferenceModel] = attr.ib(default=attr.Factory(dict))
+
     skeleton: Skeleton = None
     inference_batch_size: int = 2
     read_chunk_size: int = 256
@@ -106,15 +323,26 @@ class Predictor:
     output_path: Optional[str] = None
     save_confmaps_pafs: bool = False
     resize_hack: bool = True
+    pool: multiprocessing.Pool = None
 
-    _models: Dict = attr.ib(default=attr.Factory(dict))
+    gpu_peak_finding: bool = True
+    supersample_window_size: int = 7  # must be odd
+    supersample_factor: float = 2  # factor to upsample cropped windows by
+    overlapping_instances_nms: bool = True  # suppress overlapping instances
+
+    def __attrs_post_init__(self):
+
+        # Create inference models from the TrainingJob metadata.
+        for model_output_type, training_job in self.training_jobs.items():
+            self.inference_models[model_output_type] = InferenceModel(job=training_job)
+            self.inference_models[model_output_type].load_model()
+
 
     def predict(self,
                 input_video: Union[dict, Video],
                 frames: Optional[List[int]] = None,
                 is_async: bool = False) -> List[LabeledFrame]:
-        """
-        Run the entire inference pipeline on an input video.
+        """Run the entire inference pipeline on an input video.
 
         Args:
             input_video: Either a `Video` object or dict that can be
@@ -126,13 +354,19 @@ class Predictor:
                 children.
 
         Returns:
-            list of LabeledFrame objects
+            A list of LabeledFrames with predicted instances.
         """
+
+        # Check if we have models.
+        if len(self.inference_models) == 0:
+            logger.warning("Predictor has no model.")
+            raise ValueError("Predictor has no model.")
 
         self.is_async = is_async
 
-        # Initialize parallel pool
-        self.pool = None if self.is_async else multiprocessing.Pool(processes=usable_cpu_count())
+        # Initialize parallel pool if needed.
+        if not is_async and self.pool is None:
+            self.pool = multiprocessing.Pool(processes=usable_cpu_count())
 
         # Fix the number of threads for OpenCV, not that we are using
         # anything in OpenCV that is actually multi-threaded but maybe
@@ -141,46 +375,27 @@ class Predictor:
 
         logger.info(f"Predict is async: {is_async}")
 
-        # Find out how many channels the model was trained on
+        # Find out if the images should be grayscale from the first model.
+        # TODO: Unify this with input data normalization.
+        grayscale = list(self.inference_models.values())[0].is_grayscale
 
-        model_channels = 3 # default
-
-        if ModelOutputType.CENTROIDS in self.sleap_models:
-            centroid_model = self.fetch_model(
-                                input_size = None,
-                                output_types = [ModelOutputType.CENTROIDS])
-            model_channels = centroid_model["model"].input_shape[-1]
-
-        grayscale = (model_channels == 1)
-
-        # Open the video if we need it.
-
-        try:
-            input_video.get_frame(frames[0])
+        # Open the video object if needed.
+        if isinstance(input_video, Video):
             vid = input_video
-        except AttributeError:
-            if isinstance(input_video, dict):
-                vid = Video.cattr().structure(input_video, Video)
-            elif isinstance(input_video, str):
-                vid = Video.from_filename(input_video, grayscale=grayscale)
-            else:
-                raise AttributeError(f"Unable to load input video: {input_video}")
+        elif isinstance(input_video, dict):
+            vid = Video.cattr().structure(input_video, Video)
+        elif isinstance(input_video, str):
+            vid = Video.from_filename(input_video, grayscale=grayscale)
+        else:
+            raise AttributeError(f"Unable to load input video: {input_video}")
 
         # List of frames to process (or entire video if not specified)
         frames = frames or list(range(vid.num_frames))
-
-        vid_h = vid.shape[1]
-        vid_w = vid.shape[2]
-
         logger.info("Opened video:")
         logger.info("  Source: " + str(vid.backend))
         logger.info("  Frames: %d" % len(frames))
-        logger.info("  Frame shape: %d x %d" % (vid_h, vid_w))
+        logger.info("  Frame shape (H x W): %d x %d" % (vid.height, vid.width))
 
-        # Check training models
-        if len(self.sleap_models) == 0:
-            logger.warning("Predictor has no model.")
-            raise ValueError("Predictor has no model.")
 
         # Initialize tracking
         if self.with_tracking:
@@ -190,15 +405,16 @@ class Predictor:
             # Delete the output file if it exists already
             if os.path.exists(self.output_path):
                 os.unlink(self.output_path)
+                logger.warning("Deleted existing output: " + self.output_path)
 
             # Create output directory if it doesn't exist
             if not os.path.exists(self.output_path):
-                os.makedirs(self.output_path)
+                os.makedirs(os.path.dirname(self.output_path), exist_ok=True)
+            logger.info("Output path: " + self.output_path)
 
         # Process chunk-by-chunk!
         t0_start = time()
-        predicted_frames: List[LabeledFrame] = []
-
+        predicted_frames = []
         num_chunks = batch_count(frames, self.read_chunk_size)
 
         logger.info("Number of chunks for process: %d" % (num_chunks))
@@ -223,43 +439,22 @@ class Predictor:
 
             # Read the next batch of images
             t0 = time()
-            mov_full = vid[frames_idx]
-            logger.info("  Read %d frames [%.1fs]" % (len(mov_full), time() - t0))
+            imgs_full = vid[frames_idx]
+            logger.info("  Read %d frames [%.1fs]" % (len(imgs_full), time() - t0))
 
             # Transform images (crop or scale)
             t0 = time()
 
-            if ModelOutputType.CENTROIDS in self.sleap_models:
-                # Use centroid predictions to get subchunks of crops
+            if ModelOutputType.CENTROIDS in self.inference_models:
 
+                # Use centroid predictions to get subchunks of crops.
                 subchunks_to_process = self.centroid_crop_inference(
-                                                mov_full, frames_idx)
+                    imgs_full, frames_idx)
 
             else:
-                # Scale without centroid cropping
-
-                # Get the scale that was used when training models
-                model_data = get_model_data(self.sleap_models, [ModelOutputType.CONFIDENCE_MAP])
-                scale = model_data["scale"]
-
-                # Determine scaled image size
-                scale_to = (int(vid.height//(1/scale)), int(vid.width//(1/scale)))
-
-                # FIXME: Adjust to appropriate power of 2
-                # It would be better to pad image to a usable size, since
-                # the resize could affect aspect ratio.
-                if self.resize_hack:
-                    scale_to = (scale_to[0]//8*8, scale_to[1]//8*8)
-
                 # Create transform object
-                transform = DataTransform(
-                                frame_idxs = frames_idx,
-                                scale = model_data["multiscale"])
-
-                # Scale if target doesn't match current size
-                mov = transform.scale_to(mov_full, target_size=scale_to)
-
-                subchunks_to_process = [(mov, transform)]
+                transform = DataTransform(frame_idxs=frames_idx)
+                subchunks_to_process = [(imgs_full, transform)]
 
             logger.info("  Transformed images [%.1fs]" % (time() - t0))
 
@@ -277,20 +472,20 @@ class Predictor:
 
             subchunk_results = []
 
-            for subchunk_mov, subchunk_transform in subchunks_to_process:
+            for subchunk_imgs_full, subchunk_transform in subchunks_to_process:
 
                 logger.info(f"  Running inference for subchunk:")
-                logger.info(f"    Shape: {subchunk_mov.shape}")
-                logger.info(f"    Prediction Scale: {subchunk_transform.scale}")
+                logger.info(f"    Shape: {subchunk_imgs_full.shape}")
+                logger.info(f"    Scale: {subchunk_transform.scale}")
 
-                if ModelOutputType.PART_AFFINITY_FIELD not in self.sleap_models:
+                if ModelOutputType.PART_AFFINITY_FIELD not in self.inference_models:
                     # Pipeline for predicting a single animal in a frame
                     # This uses only confidence maps
 
                     logger.warning("No PAF model! Running in SINGLE INSTANCE mode.")
 
                     subchunk_lfs = self.single_instance_inference(
-                                            subchunk_mov,
+                                            subchunk_imgs_full,
                                             subchunk_transform,
                                             vid)
 
@@ -298,7 +493,7 @@ class Predictor:
                     # Pipeline for predicting multiple animals in a frame
                     # This uses confidence maps and part affinity fields
                     subchunk_lfs = self.multi_instance_inference(
-                                            subchunk_mov,
+                                            subchunk_imgs_full,
                                             subchunk_transform,
                                             vid)
 
@@ -326,7 +521,7 @@ class Predictor:
                 predicted_frames_chunk.extend(subchunk_frames)
             predicted_frames_chunk = LabeledFrame.merge_frames(predicted_frames_chunk, video=vid)
 
-            logger.info(f"  Instances found on {len(predicted_frames_chunk)} out of {len(mov_full)} frames.")
+            logger.info(f"  Instances found on {len(predicted_frames_chunk)} out of {len(imgs_full)} frames.")
 
             if len(predicted_frames_chunk):
 
@@ -336,7 +531,7 @@ class Predictor:
                 # Track
                 if self.with_tracking and len(predicted_frames_chunk):
                     t0 = time()
-                    tracker.process(mov_full, predicted_frames_chunk)
+                    tracker.process(imgs_full, predicted_frames_chunk)
                     logger.info("  Tracked IDs via flow shift [%.1fs]" % (time() - t0))
 
                 # Save
@@ -345,11 +540,11 @@ class Predictor:
                 if chunk % self.save_frequency == 0 or chunk == (num_chunks - 1):
                     t0 = time()
 
-                    # FIXME: We are re-writing the whole output each time, this is dumb.
+                    # TODO: We are re-writing the whole output each time, this is dumb.
                     #  We should save in chunks then combine at the end.
                     labels = Labels(labeled_frames=predicted_frames)
                     if self.output_path is not None:
-                        if self.output_path.endswith('json'):
+                        if self.output_path.endswith("json"):
                             Labels.save_json(labels, filename=self.output_path, compress=True)
                         else:
                             Labels.save_hdf5(labels, filename=self.output_path)
@@ -398,15 +593,15 @@ class Predictor:
             # unstructure input_video since it won't pickle
             kwargs["input_video"] = Video.cattr().unstructure(kwargs["input_video"])
 
-        pool = Pool(processes=1)
-        result = pool.apply_async(self.predict, args=args, kwds=kwargs)
+        if self.pool is None:
+            self.pool = Pool(processes=1)
+        result = self.pool.apply_async(self.predict, args=args, kwds=kwargs)
 
         # Tell the pool to accept no new tasks
-        pool.close()
+        # pool.close()
 
-        return pool, result
+        return result
 
-    # Methods for running inferring on components of pipeline
 
     def centroid_crop_inference(self,
                 imgs: np.ndarray,
@@ -427,55 +622,53 @@ class Predictor:
         which allows us to merge overlapping crops into larger crops.
         """
 
-        crop_within = (imgs.shape[1]//8*8, imgs.shape[2]//8*8)
+        # Get inference models with metadata.
+        centroid_model = self.inference_models[ModelOutputType.CENTROIDS]
+        cm_model = self.inference_models[ModelOutputType.CONFIDENCE_MAP]
 
-        # Fetch centroid model (uses cache if already loaded)
+        logger.info("  Performing centroid cropping.")
 
-        model_package = self.fetch_model(
-                                input_size = None,
-                                output_types = [ModelOutputType.CENTROIDS])
+        # TODO: Replace this calculation when model-specific divisibility calculation implemented.
+        divisor = 2 ** centroid_model.down_blocks
+        crop_within = ((imgs.shape[1] // divisor) * divisor, (imgs.shape[2] // divisor) * divisor)
+        logger.info(f"    crop_within: {crop_within}")
 
         # Create transform
-
         # This lets us scale the images before we predict centroids,
         # and will also let us map the points on the scaled image to
         # points on the original images so we can crop original images.
-
         centroid_transform = DataTransform()
+        target_shape = (int(imgs.shape[1] * centroid_model.input_scale), int(imgs.shape[2] * centroid_model.input_scale))
 
-        # Scale to match input size of trained centroid model
-        # Usually this will be 1/4-scale of original images
+        # Scale to match input size of trained centroid model.
+        centroid_imgs_scaled = centroid_transform.scale_to(
+            imgs=imgs, target_size=target_shape)
 
-        centroid_imgs_scaled = \
-            centroid_transform.scale_to(
-                    imgs=imgs,
-                    target_size=model_package["model"].input_shape[1:3])
-
-        # Predict centroid confidence maps, then find peaks
-
-        centroid_confmaps = model_package["model"].predict(centroid_imgs_scaled.astype("float32") / 255,
-                                                batch_size=self.inference_batch_size)
+        # Predict centroid confidence maps, then find peaks.
+        t0 = time()
+        centroid_confmaps = centroid_model.predict(centroid_imgs_scaled,
+            batch_size=self.inference_batch_size)
 
         peaks, peak_vals = find_all_peaks(centroid_confmaps,
-                                            min_thresh=self.nms_min_thresh,
-                                            sigma=self.nms_sigma)
+            min_thresh=self.nms_min_thresh, sigma=self.nms_sigma)
 
+        elapsed = time() - t0
+        total_peaks = sum([len(frame_peaks[0]) for frame_peaks in peaks])
+        logger.info(f"    Found {total_peaks} centroid peaks ({total_peaks / len(peaks):.2f} centroids/frame) [{elapsed:.2f}s].")
 
         if box_size is None:
-            # Get training bounding box size to determine (min) centroid crop size
-            crop_model_package = self.fetch_model(
-                                    input_size = None,
-                                    output_types = [ModelOutputType.CONFIDENCE_MAP])
-            crop_size = crop_model_package["bounding_box_size"]
-            bb_half = (crop_size + self.crop_padding)//2
+            # Get training bounding box size to determine (min) centroid crop size.
+            # TODO: fix this to use a stored value or move this logic elsewhere
+            crop_size = int(max(cm_model.trained_input_shape[1:3]) // cm_model.input_scale)
+            bb_half = crop_size // 2
+            # bb_half = (crop_size + self.crop_padding) // 2
         else:
-            bb_half = box_size//2
+            bb_half = box_size // 2
 
-        logger.info(f"  Centroid crop box size: {bb_half*2}")
-
-        all_boxes = dict()
+        logger.info(f"    Crop box size: {bb_half * 2}")
 
         # Iterate over each frame to filter bounding boxes
+        all_boxes = dict()
         for frame_i, (frame_peaks, frame_peak_vals) in enumerate(zip(peaks, peak_vals)):
 
             # If we found centroids on this frame...
@@ -487,12 +680,13 @@ class Predictor:
 
                 boxes = []
                 for peak_i in range(frame_peaks[0].shape[0]):
-                    # Rescale peak back onto full-sized image
-                    peak_x = int(frame_peaks[0][peak_i][0] / centroid_transform.scale)
-                    peak_y = int(frame_peaks[0][peak_i][1] / centroid_transform.scale)
 
-                    boxes.append((peak_x-bb_half, peak_y-bb_half,
-                                  peak_x+bb_half, peak_y+bb_half))
+                    # Rescale peak back onto full-sized image
+                    peak_x = int(frame_peaks[0][peak_i][0] / centroid_model.output_scale)
+                    peak_y = int(frame_peaks[0][peak_i][1] / centroid_model.output_scale)
+
+                    boxes.append((peak_x - bb_half, peak_y - bb_half,
+                                  peak_x + bb_half, peak_y + bb_half))
 
                 if do_merge:
                     # Merge overlapping boxes and pad to multiple of crop size
@@ -500,6 +694,7 @@ class Predictor:
                                     boxes=boxes,
                                     pad_factor_box=(self.crop_growth, self.crop_growth),
                                     within=crop_within)
+
                 else:
                     # Just return the boxes centered around each centroid.
                     # Note that these aren't guaranteed to be within the
@@ -509,29 +704,33 @@ class Predictor:
                 # Keep track of all boxes, grouped by size and frame idx
                 for box in merged_boxes:
 
-                    box_size = (box[2]-box[0], box[3]-box[1])
+                    merged_box_size = (box[2] - box[0], box[3] - box[1])
 
-                    if box_size not in all_boxes:
-                        all_boxes[box_size] = dict()
-                    if frame_i not in all_boxes[box_size]:
-                        all_boxes[box_size][frame_i] = []
+                    if merged_box_size not in all_boxes:
+                        all_boxes[merged_box_size] = dict()
+                        logger.info(f"    Found box size: {merged_box_size}")
 
-                    all_boxes[box_size][frame_i].append(box)
+                    if frame_i not in all_boxes[merged_box_size]:
+                        all_boxes[merged_box_size][frame_i] = []
+
+                    all_boxes[merged_box_size][frame_i].append(box)
+
+        logger.info(f"    Found {len(all_boxes)} box sizes after merging.")
 
         subchunks = []
 
         # Check if we found any boxes for this chunk of frames
         if len(all_boxes):
-            model_data = get_model_data(self.sleap_models, [ModelOutputType.CONFIDENCE_MAP])
 
             # We'll make a "subchunk" for each crop size
             for crop_size in all_boxes:
 
-                if crop_size[0] >= 1024:
-                    logger.info(f"  Skipping subchunk for size {crop_size}, would have {len(all_boxes[crop_size])} crops.")
-                    for debug_frame_idx in all_boxes[crop_size].keys():
-                        print(f"    frame {frames_idx[debug_frame_idx]}: {all_boxes[crop_size][debug_frame_idx]}")
-                    continue
+                # TODO: Look into this edge case?
+                # if crop_size[0] >= 1024:
+                #     logger.info(f"  Skipping subchunk for size {crop_size}, would have {len(all_boxes[crop_size])} crops.")
+                #     for debug_frame_idx in all_boxes[crop_size].keys():
+                #         print(f"    frame {frames_idx[debug_frame_idx]}: {all_boxes[crop_size][debug_frame_idx]}")
+                #     continue
 
                 # Make list of all boxes and corresponding img index.
                 subchunk_idxs = []
@@ -539,12 +738,12 @@ class Predictor:
 
                 for frame_i, frame_boxes in all_boxes[crop_size].items():
                     subchunk_boxes.extend(frame_boxes)
-                    subchunk_idxs.extend( [frame_i] * len(frame_boxes) )
+                    subchunk_idxs.extend([frame_i] * len(frame_boxes))
 
+                # TODO: This should probably be in the main loop
                 # Create transform object
-                transform = DataTransform(
-                                frame_idxs = frames_idx,
-                                scale = model_data["multiscale"])
+                # transform = DataTransform(frame_idxs=frames_idx, scale=cm_model.output_relative_scale)
+                transform = DataTransform(frame_idxs=frames_idx)
 
                 # Do the cropping
                 imgs_cropped = transform.crop(imgs, subchunk_boxes, subchunk_idxs)
@@ -559,38 +758,60 @@ class Predictor:
 
         return subchunks
 
+
     def single_instance_inference(self, imgs, transform, video) -> List[LabeledFrame]:
-        """Run the single instance pipeline for a stack of images."""
+        """Run the single instance pipeline for a stack of images.
 
-        # Get confmap model for this image size
-        model_package = self.fetch_model(
-                            input_size = imgs.shape[1:],
-                            output_types = [ModelOutputType.CONFIDENCE_MAP])
+        Args:
+            imgs: Subchunk of images to process.
+            transform: DataTransform object tracking input transformations.
+            video: Video object for building LabeledFrames with correct reference to source.
 
-        # Run inference
+        Returns:
+            A list of LabeledFrames with predicted points.
+        """
+
+        # Get confmap inference model.
+        cm_model = self.inference_models[ModelOutputType.CONFIDENCE_MAP]
+
+        # Scale to match input size of trained model.
+        # Images are expected to be at full resolution, but may be cropped.
+        assert(transform.scale == 1.0)
+        target_shape = (int(imgs.shape[1] * cm_model.input_scale), int(imgs.shape[2] * cm_model.input_scale))
+        imgs_scaled = transform.scale_to(imgs=imgs, target_size=target_shape)
+
+        # TODO: Adjust for divisibility
+        # divisor = 2 ** cm_model.down_blocks
+        # crop_within = ((imgs.shape[1] // divisor) * divisor, (imgs.shape[2] // divisor) * divisor)
+
+        # Run inference.
         t0 = time()
-
-        confmaps = model_package["model"].predict(imgs.astype("float32") / 255, batch_size=self.inference_batch_size)
+        confmaps = cm_model.predict(imgs_scaled, batch_size=self.inference_batch_size)
         logger.info( "  Inferred confmaps [%.1fs]" % (time() - t0))
         logger.info(f"    confmaps: shape={confmaps.shape}, ptp={np.ptp(confmaps)}")
 
         t0 = time()
 
+        # TODO: Move this to GPU and add subpixel refinement.
         # Use single highest peak in channel corresponding node
         points_arrays = find_all_single_peaks(confmaps,
                                 min_thresh=self.nms_min_thresh)
 
+        # Adjust for multi-scale such that the points are at the scale of the transform.
+        points_arrays = [pts / cm_model.output_relative_scale for pts in points_arrays]
+
+        # Create labeled frames and predicted instances from the points.
         predicted_frames_chunk = match_single_peaks_all(
-                                        points_arrays = points_arrays,
-                                        skeleton = model_package["skeleton"],
-                                        transform = transform,
-                                        video = video)
+                                        points_arrays=points_arrays,
+                                        skeleton=cm_model.skeleton,
+                                        transform=transform,
+                                        video=video)
 
         logger.info("  Used highest peaks to create instances [%.1fs]" % (time() - t0))
 
         # Save confmaps
         if self.output_path is not None and self.save_confmaps_pafs:
-            logger.warning("Not saving confmaps because feature currently not working.")
+            raise NotImplementedError("Not saving confmaps/pafs because feature currently not working.")
             # Disable save_confmaps_pafs since not currently working.
             # The problem is that we can't put data for different crop sizes
             # all into a single h5 datasource. It's now possible to view live
@@ -601,48 +822,91 @@ class Predictor:
 
         return predicted_frames_chunk
 
+
     def multi_instance_inference(self, imgs, transform, video) -> List[LabeledFrame]:
-        """
-        Run the multi-instance inference pipeline for a stack of images.
+        """Run the multi-instance inference pipeline for a stack of images.
+
+        Args:
+            imgs: Subchunk of images to process.
+            transform: DataTransform object tracking input transformations.
+            video: Video object for building LabeledFrames with correct reference to source.
+
+        Returns:
+            A list of LabeledFrames with predicted points.
         """
 
         # Load appropriate models as needed
-        conf_model = self.fetch_model(
-                            input_size = imgs.shape[1:],
-                            output_types = [ModelOutputType.CONFIDENCE_MAP])
-
-        paf_model = self.fetch_model(
-                            input_size = imgs.shape[1:],
-                            output_types = [ModelOutputType.PART_AFFINITY_FIELD])
+        cm_model = self.inference_models[ModelOutputType.CONFIDENCE_MAP]
+        paf_model = self.inference_models[ModelOutputType.PART_AFFINITY_FIELD]
 
         # Find peaks
         t0 = time()
 
-        multiscale_diff = paf_model["multiscale"] / conf_model["multiscale"]
+        # Scale to match input resolution of model.
+        # Images are expected to be at full resolution, but may be cropped.
+        assert(transform.scale == 1.0)
+        cm_target_shape = (int(imgs.shape[1] * cm_model.input_scale), int(imgs.shape[2] * cm_model.input_scale))
+        imgs_scaled = transform.scale_to(imgs=imgs, target_size=cm_target_shape)
+        if imgs_scaled.dtype == np.dtype("uint8"):  # TODO: Unify normalization.
+            imgs_scaled = imgs_scaled.astype("float32") / 255.
+        
+        # TODO: Unfuck this whole workflow
+        if self.gpu_peak_finding:
+            confmaps_shape = cm_model.compute_output_shape((imgs_scaled.shape[1], imgs_scaled.shape[2]))
+            peaks, peak_vals, confmaps = peak_tf_inference(
+                model=cm_model.keras_model,
+                confmaps_shape=confmaps_shape,
+                data=imgs_scaled,
+                min_thresh=self.nms_min_thresh,
+                gaussian_size=self.nms_kernel_size,
+                gaussian_sigma=self.nms_sigma,
+                upsample_factor=int(self.supersample_factor / cm_model.output_scale),
+                win_size=self.supersample_window_size,
+                return_confmaps=self.save_confmaps_pafs,
+                batch_size=self.inference_batch_size
+                )
 
-        peaks, peak_vals, confmaps = \
-                peak_tf_inference(
-                    model = conf_model["model"],
-                    data = imgs.astype("float32")/255,
-                    min_thresh=self.nms_min_thresh,
-                    gaussian_size=self.nms_kernel_size,
-                    gaussian_sigma=self.nms_sigma,
-                    downsample_factor=int(1/multiscale_diff),
-                    upsample_factor=int(1/conf_model["multiscale"]),
-                    return_confmaps=self.save_confmaps_pafs
-                    )
+        else:
+            confmaps = cm_model.predict(imgs_scaled, batch_size=self.inference_batch_size)
+            peaks, peak_vals = find_all_peaks(confmaps, min_thresh=self.nms_min_thresh, sigma=self.nms_sigma)
 
-        transform.scale = transform.scale * multiscale_diff
+        # # Undo just the scaling so we're back to full resolution, but possibly cropped.
+        for t in range(len(peaks)):  # frames
+            for c in range(len(peaks[t])):  # channels
+                peaks[t][c] /= cm_model.output_scale
 
-        logger.info("  Inferred confmaps and found-peaks (gpu) [%.1fs]" % (time() - t0))
-        logger.info(f"    peaks: {len(peaks)}")
+        # Peaks should be at (refined) full resolution now.
+        # Keep track of scale adjustment.
+        transform.scale = 1.0
+
+        elapsed = time() - t0
+        total_peaks = sum([len(channel_peaks) for frame_peaks in peaks for channel_peaks in frame_peaks])
+        logger.info(f"    Found {total_peaks} peaks ({total_peaks / len(imgs):.2f} peaks/frame) [{elapsed:.2f}s].")
+        # logger.info(f"    peaks: {peaks}")
+
+        # Scale to match input resolution of model.
+        # Images are expected to be at full resolution, but may be cropped.
+        paf_target_shape = (int(imgs.shape[1] * paf_model.input_scale), int(imgs.shape[2] * paf_model.input_scale))
+        if (imgs_scaled.shape[1] == paf_target_shape[0]) and (imgs_scaled.shape[2] == paf_target_shape[1]):
+            # No need to scale again if we're already there, so just adjust the stored scale
+            transform.scale = paf_model.input_scale
+
+        else:
+            # Adjust scale from full resolution images (avoiding possible resizing up from confmaps input scale)
+            imgs_scaled = transform.scale_to(imgs=imgs, target_size=paf_target_shape)
 
         # Infer pafs
         t0 = time()
-        pafs = paf_model["model"].predict(imgs.astype("float32") / 255, batch_size=self.inference_batch_size)
-
+        pafs = paf_model.predict(imgs_scaled, batch_size=self.inference_batch_size)
         logger.info( "  Inferred PAFs [%.1fs]" % (time() - t0))
         logger.info(f"    pafs: shape={pafs.shape}, ptp={np.ptp(pafs)}")
+
+        # Adjust points to the paf output scale so we can invert later (should not incur loss of precision)
+        # TODO: Check precision
+        for t in range(len(peaks)):  # frames
+            for c in range(len(peaks[t])):  # channels
+                peaks[t][c] *= paf_model.output_scale
+        transform.scale = paf_model.output_scale
 
         # Determine whether to use serial or parallel version of peak-finding
         # Use the serial version is we're already running in a thread pool
@@ -650,21 +914,22 @@ class Predictor:
 
         # Match peaks via PAFs
         t0 = time()
-
         predicted_frames_chunk = match_peaks_function(
-                                        peaks, peak_vals, pafs, conf_model["skeleton"],
-                                        transform=transform, video=video,
-                                        min_score_to_node_ratio=self.min_score_to_node_ratio,
-                                        min_score_midpts=self.min_score_midpts,
-                                        min_score_integral=self.min_score_integral,
-                                        add_last_edge=self.add_last_edge,
-                                        single_per_crop=self.single_per_crop,
-                                        pool=self.pool)
+            peaks, peak_vals, pafs, paf_model.skeleton,
+            transform=transform, video=video,
+            min_score_to_node_ratio=self.min_score_to_node_ratio,
+            min_score_midpts=self.min_score_midpts,
+            min_score_integral=self.min_score_integral,
+            add_last_edge=self.add_last_edge,
+            single_per_crop=self.single_per_crop,
+            pool=self.pool)
 
+        total_instances = sum([len(labeled_frame) for labeled_frame in predicted_frames_chunk])
         logger.info("  Matched peaks via PAFs [%.1fs]" % (time() - t0))
+        logger.info(f"    Found {total_instances} instances ({total_instances / len(imgs):.2f} instances/frame)")
 
         # Remove overlapping predicted instances
-        if OVERLAPPING_INSTANCES_NMS:
+        if self.overlapping_instances_nms:
             t0 = clock()
             for lf in predicted_frames_chunk:
                 n = len(lf.instances)
@@ -675,7 +940,7 @@ class Predictor:
 
         # Save confmaps and pafs
         if self.output_path is not None and self.save_confmaps_pafs:
-            logger.warning("Not saving confmaps/pafs because feature currently not working.")
+            raise NotImplementedError("Not saving confmaps/pafs because feature currently not working.")
             # Disable save_confmaps_pafs since not currently working.
             # The problem is that we can't put data for different crop sizes
             # all into a single h5 datasource. It's now possible to view live
@@ -687,60 +952,14 @@ class Predictor:
 
         return predicted_frames_chunk
 
-    def fetch_model(self,
-            input_size: tuple,
-            output_types: List[ModelOutputType]) -> dict:
-        """Loads and returns keras Model with caching."""
-
-        key = (input_size, tuple(output_types))
-
-        if key not in self._models:
-
-            # Load model
-
-            keras_model = load_model(self.sleap_models, input_size, output_types)
-            first_sleap_model = self.sleap_models[output_types[0]]
-            model_data = get_model_data(self.sleap_models, output_types)
-            skeleton = get_model_skeleton(self.sleap_models, output_types)
-
-            # logger.info(f"Model multiscale: {model_data['multiscale']}")
-
-            # If no input size was specified, then use the input size
-            # from original trained model.
-
-            if input_size is None:
-                input_size = keras_model.input_shape[1:]
-
-            # Get the size of the bounding box from training data
-            # (or the size of crop that model was trained on if the
-            # bounding box size wasn't set).
-
-            if first_sleap_model.trainer.instance_crop:
-                bounding_box_size = \
-                    first_sleap_model.trainer.bounding_box_size or keras_model.input_shape[1]
-            else:
-                bounding_box_size = None
-
-            # Cache the model so we don't have to load it next time
-
-            self._models[key] = dict(
-                                    model=keras_model,
-                                    skeleton=model_data["skeleton"],
-                                    multiscale=model_data["multiscale"],
-                                    bounding_box_size=bounding_box_size
-                                    )
-
-        # Return the keras Model
-        return self._models[key]
-
 
 def main():
 
     def frame_list(frame_str: str):
 
         # Handle ranges of frames. Must be of the form "1-200"
-        if '-' in frame_str:
-            min_max = frame_str.split('-')
+        if "-" in frame_str:
+            min_max = frame_str.split("-")
             min_frame = int(min_max[0])
             max_frame = int(min_max[1])
             return list(range(min_frame, max_frame+1))
@@ -754,28 +973,28 @@ def main():
                         "Multiple models can be specified, each preceded by "
                         "--model. Confmap and PAF models are required.",
                         required=True)
-    parser.add_argument('--resize-input', dest='resize_input', action='store_const',
+    parser.add_argument("--resize-input", dest="resize_input", action="store_const",
                     const=True, default=False,
-                    help='resize the input layer to image size (default False)')
-    parser.add_argument('--with-tracking', dest='with_tracking', action='store_const',
+                    help="resize the input layer to image size (default False)")
+    parser.add_argument("--with-tracking", dest="with_tracking", action="store_const",
                     const=True, default=False,
-                    help='just visualize predicted confmaps/pafs (default False)')
-    parser.add_argument('--frames', type=frame_list, default="",
-                        help='list of frames to predict. Either comma separated list (e.g. 1,2,3) or '
-                             'a range separated by hyphen (e.g. 1-3). (default is entire video)')
-    parser.add_argument('-o', '--output', type=str, default=None,
-                        help='The output filename to use for the predicted data.')
-    parser.add_argument('--out_format', choices=['hdf5', 'json'], help='The format to use for'
-                    ' the output file. Either hdf5 or json. hdf5 is the default.',
-                    default='hdf5')
-    parser.add_argument('--save-confmaps-pafs', dest='save_confmaps_pafs', action='store_const',
+                    help="just visualize predicted confmaps/pafs (default False)")
+    parser.add_argument("--frames", type=frame_list, default="",
+                        help="list of frames to predict. Either comma separated list (e.g. 1,2,3) or "
+                             "a range separated by hyphen (e.g. 1-3). (default is entire video)")
+    parser.add_argument("-o", "--output", type=str, default=None,
+                        help="The output filename to use for the predicted data.")
+    parser.add_argument("--out_format", choices=["hdf5", "json"], help="The format to use for"
+                    " the output file. Either hdf5 or json. hdf5 is the default.",
+                    default="hdf5")
+    parser.add_argument("--save-confmaps-pafs", dest="save_confmaps_pafs", action="store_const",
                     const=True, default=False,
-                        help='Whether to save the confidence maps or pafs')
-    parser.add_argument('-v', '--verbose', help='Increase logging output verbosity.', action="store_true")
+                        help="Whether to save the confidence maps or pafs")
+    parser.add_argument("-v", "--verbose", help="Increase logging output verbosity.", action="store_true")
 
     args = parser.parse_args()
 
-    if args.out_format == 'json':
+    if args.out_format == "json":
         output_suffix = ".predictions.json"
     else:
         output_suffix = ".predictions.h5"
@@ -808,10 +1027,10 @@ def main():
         img_shape = None
 
     # Create a predictor to do the work.
-    predictor = Predictor(sleap_models=sleap_models,
-                    output_path=save_path,
-                    save_confmaps_pafs=args.save_confmaps_pafs,
-                    with_tracking=args.with_tracking)
+    predictor = Predictor(training_jobs=sleap_models,
+        output_path=save_path,
+        save_confmaps_pafs=args.save_confmaps_pafs,
+        with_tracking=args.with_tracking)
 
     # Run the inference pipeline
     return predictor.predict(input_video=data_path, frames=frames)

@@ -732,55 +732,82 @@ def run_active_inference(
         Number of new frames added to labels.
     """
     from sleap.nn.inference import Predictor
+    # from multiprocessing import Pool
 
-    total_new_lf_count = 0
-    timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
-    inference_output_path = os.path.join(save_dir, f"{timestamp}.inference.h5")
+    # total_new_lf_count = 0
+    # timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
+    # inference_output_path = os.path.join(save_dir, f"{timestamp}.inference.h5")
 
     # Create Predictor from the results of training
-    predictor = Predictor(sleap_models=training_jobs,
-                            with_tracking=with_tracking,
-                            output_path=inference_output_path)
+    # pool = Pool(processes=1)
+    predictor = Predictor(training_jobs=training_jobs,
+                          with_tracking=with_tracking,
+                          # output_path=inference_output_path,
+                          # pool=pool
+                          )
 
     if gui:
         # show message while running inference
-        win = QtWidgets.QProgressDialog()
-        win.setLabelText("    Running inference on selected frames...    ")
-        win.show()
+        progress = QtWidgets.QProgressDialog(
+            f"Running inference on {len(frames_to_predict)} videos...",
+            "Cancel",
+            0, len(frames_to_predict))
+        # win.setLabelText("    Running inference on selected frames...    ")
+        progress.show()
         QtWidgets.QApplication.instance().processEvents()
 
-    for video, frames in frames_to_predict.items():
+
+    new_lfs = []
+    for i, (video, frames) in enumerate(frames_to_predict.items()):
+        QtWidgets.QApplication.instance().processEvents()
         if len(frames):
-
             # Run inference for desired frames in this video
-            pool, result = predictor.predict_async(
-                                    input_video=video,
-                                    frames=frames)
+            # result = predictor.predict_async(
+            new_lfs_video = predictor.predict(
+                input_video=video, frames=frames)
+            new_lfs.extend(new_lfs_video)
 
-            while not result.ready():
-                if gui:
-                    QtWidgets.QApplication.instance().processEvents()
-                result.wait(.01)
+        if gui:
+            progress.setValue(i)
+            if progress.wasCanceled():
+                return 0
 
-            if result.successful():
-                new_labels_json = result.get()
+            # while not result.ready():
+            #     if gui:
+            #         QtWidgets.QApplication.instance().processEvents()
+            #     result.wait(.01)
+
+            # if result.successful():
+                # new_labels_json = result.get()
 
                 # Add new frames to labels
                 # (we're doing this for each video as we go since there was a problem
                 # when we tried to add frames for all videos together.)
-                new_lf_count = add_frames_from_json(labels, new_labels_json)
+                # new_lf_count = add_frames_from_json(labels, new_labels_json)
 
-                total_new_lf_count += new_lf_count
-            else:
-                if gui:
-                    QtWidgets.QMessageBox(text=f"An error occured during inference. Your command line terminal may have more information about the error.").exec_()
-                result.get()
+                # total_new_lf_count += new_lf_count
+            # else:
+                # if gui:
+                #     QtWidgets.QApplication.instance().processEvents()
+                #     QtWidgets.QMessageBox(text=f"An error occured during inference. Your command line terminal may have more information about the error.").exec_()
+                # result.get()
+
+    # predictor.pool.close()
+
+    # Remove any frames without instances
+    new_lfs = list(filter(lambda lf: len(lf.instances), new_lfs))
+
+    # Now add them to labels and merge labeled frames with same video/frame_idx
+    # labels.extend_from(new_lfs)
+    labels.extend_from(new_lfs, unify=True)
+    labels.merge_matching_frames()
 
     # close message window
     if gui:
-        win.close()
+        progress.close()
 
-    return total_new_lf_count
+    # return total_new_lf_count
+    return len(new_lfs)
 
 if __name__ == "__main__":
     import sys

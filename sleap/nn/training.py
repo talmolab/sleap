@@ -130,8 +130,8 @@ class Trainer:
     sigma: float = 5.0
     instance_crop: bool = False
     bounding_box_size: int = 0
-    min_crop_size: int = 0
-    negative_samples: int = 0
+    min_crop_size: int = 32
+    negative_samples: int = 10
 
     def train(self,
               model: Model,
@@ -223,15 +223,11 @@ class Trainer:
             num_outputs_channels = 1
 
         # Determine input and output sizes
-
         # If there are more downsampling layers than upsampling layers,
         # then the output (confidence maps or part affinity fields) will
         # be at a different scale than the input (images).
-        up_down_diff = model.backbone.down_blocks - model.backbone.up_blocks
-        output_scale = 1/(2**up_down_diff)
-
         input_img_size = (imgs_train.shape[1], imgs_train.shape[2])
-        output_img_size = (input_img_size[0]*output_scale, input_img_size[1]*output_scale)
+        output_img_size = (int(input_img_size[0] * model.output_scale), int(input_img_size[1] * model.output_scale))
 
         logger.info(f"Training set: {imgs_train.shape} -> {output_img_size}, {num_outputs_channels} channels")
         logger.info(f"Validation set: {imgs_val.shape} -> {output_img_size}, {num_outputs_channels} channels")
@@ -240,8 +236,8 @@ class Trainer:
         img_input = Input((img_height, img_width, img_channels))
 
         # Rectify image sizes not divisible by pooling factor
-        depth = getattr(model.backbone, 'depth', 0)
-        depth = depth or getattr(model.backbone, 'down_blocks', 0)
+        depth = getattr(model.backbone, "depth", 0)
+        depth = depth or getattr(model.backbone, "down_blocks", 0)
 
         if depth:
             pool_factor = 2 ** depth
@@ -258,7 +254,7 @@ class Trainer:
                 # Solution: https://www.tensorflow.org/api_docs/python/tf/pad + Lambda layer + corresponding crop at the end?
 
         # Instantiate the backbone, this builds the Tensorflow graph
-        x_outs = model.output(input_tesnor=img_input, num_output_channels=num_outputs_channels)
+        x_outs = model.output(input_tensor=img_input, num_output_channels=num_outputs_channels)
 
         # Create training model by combining the input layer and backbone graph.
         keras_model = keras.Model(inputs=img_input, outputs=x_outs)
@@ -269,7 +265,7 @@ class Trainer:
         elif self.optimizer.lower() == "rmsprop":
             _optimizer = keras.optimizers.RMSprop(lr=self.learning_rate)
         else:
-            raise ValueError(f"Unknown optimizer, value = {optimizer}!")
+            raise ValueError(f"Unknown optimizer, value = {self.optimizer}!")
 
         # Compile the Keras model
         keras_model.compile(
@@ -290,11 +286,11 @@ class Trainer:
         if model.output_type == ModelOutputType.CONFIDENCE_MAP:
             def datagen_function(points):
                 return generate_confmaps_from_points(points, skeleton, input_img_size,
-                            sigma=self.sigma, scale=output_scale)
+                            sigma=self.sigma, scale=model.output_scale)
         elif model.output_type == ModelOutputType.PART_AFFINITY_FIELD:
             def datagen_function(points):
                 return generate_pafs_from_points(points, skeleton, input_img_size,
-                            sigma=self.sigma, scale=output_scale)
+                            sigma=self.sigma, scale=model.output_scale)
         elif model.output_type == ModelOutputType.CENTROIDS:
             def datagen_function(points):
                 return generate_confmaps_from_points(points, None, input_img_size,
@@ -339,10 +335,16 @@ class Trainer:
             os.makedirs(save_path, exist_ok=True)
 
         # Setup a list of necessary callbacks to invoke while training.
+        monitor_metric_name = "val_loss"
+        if len(keras_model.output_names) > 1:
+            monitor_metric_name = "val_" + keras_model.output_names[-1] + "_loss"
         callbacks = self._setup_callbacks(
             train_run, save_path, train_datagen,
             tensorboard_dir, control_zmq_port,
-            progress_report_zmq_port, output_type=str(model.output_type))
+            progress_report_zmq_port,
+            output_type=str(model.output_type),
+            monitor_metric_name=monitor_metric_name,
+            )
 
         # Train!
         history = keras_model.fit_generator(
@@ -402,7 +404,9 @@ class Trainer:
     def _setup_callbacks(self, train_run: 'TrainingJob',
                          save_path, train_datagen,
                          tensorboard_dir, control_zmq_port,
-                         progress_report_zmq_port, output_type):
+                         progress_report_zmq_port,
+                         output_type,
+                         monitor_metric_name="val_loss"):
         """
         Setup callbacks for the call to Keras fit_generator.
 
@@ -420,14 +424,14 @@ class Trainer:
                 train_run.newest_model_filename = os.path.relpath(full_path, train_run.save_dir)
                 callbacks.append(
                     ModelCheckpoint(filepath=full_path,
-                                    monitor="val_loss", save_best_only=False,
+                                    monitor=monitor_metric_name, save_best_only=False,
                                     save_weights_only=False, period=1))
             if self.save_best_val:
                 full_path = os.path.join(save_path, "best_model.h5")
                 train_run.best_model_filename = os.path.relpath(full_path, train_run.save_dir)
                 callbacks.append(
                     ModelCheckpoint(filepath=full_path,
-                                    monitor="val_loss", save_best_only=True,
+                                    monitor=monitor_metric_name, save_best_only=True,
                                     save_weights_only=False, period=1))
             TrainingJob.save_json(train_run, f"{save_path}.json")
 
@@ -443,12 +447,12 @@ class Trainer:
                               patience=self.reduce_lr_patience,
                               cooldown=self.reduce_lr_cooldown,
                               min_lr=self.reduce_lr_min_lr,
-                              monitor="val_loss", mode="auto", verbose=1, )
+                              monitor=monitor_metric_name, mode="auto", verbose=1, )
         )
 
         # Callbacks: Early stopping
         callbacks.append(
-            EarlyStopping(monitor="val_loss",
+            EarlyStopping(monitor=monitor_metric_name,
                           min_delta=self.early_stopping_min_delta,
                           patience=self.early_stopping_patience, verbose=1))
 
@@ -542,26 +546,35 @@ class TrainingJob:
         """
 
         # Open and parse the JSON in filename
-        with open(filename, 'r') as file:
-            json_str = file.read()
-            dicts = json.loads(json_str)
+        with open(filename, "r") as f:
+            dicts = json.load(f)
 
-            # We have some skeletons to deal with, make sure to setup a Skeleton cattr.
-            my_cattr = Skeleton.make_cattr()
+        # We have some skeletons to deal with, make sure to setup a Skeleton cattr.
+        converter = Skeleton.make_cattr()
 
-            try:
-                run = my_cattr.structure(dicts, cls)
-            except:
-                raise ValueError(f"Failure deserializing {filename} to TrainingJob.")
+        # Structure the nested skeletons if we have any.
+        if ("model" in dicts) and ("skeletons" in dicts["model"]):
+            if dicts["model"]["skeletons"]:
+                dicts["model"]["skeletons"] = converter.structure(
+                    dicts["model"]["skeletons"], List[Skeleton])
+                
+            else:
+                dicts["model"]["skeletons"] = []
 
-            # if we can't find save_dir for job, set it to path of json we're loading
-            if run.save_dir is not None:
-                if not os.path.exists(run.save_dir):
-                    run.save_dir = os.path.dirname(filename)
+        # Setup structuring hook for unambiguous backbone class resolution.
+        converter.register_structure_hook(Model, Model._structure_model)
 
-                    run.final_model_filename = cls._fix_path(run.final_model_filename)
-                    run.best_model_filename = cls._fix_path(run.best_model_filename)
-                    run.newest_model_filename = cls._fix_path(run.newest_model_filename)
+        # Build classes.
+        run = converter.structure(dicts, cls)
+
+        # if we can't find save_dir for job, set it to path of json we're loading
+        if run.save_dir is not None:
+            if not os.path.exists(run.save_dir):
+                run.save_dir = os.path.dirname(filename)
+
+                run.final_model_filename = cls._fix_path(run.final_model_filename)
+                run.best_model_filename = cls._fix_path(run.best_model_filename)
+                run.newest_model_filename = cls._fix_path(run.newest_model_filename)
 
         return run
 

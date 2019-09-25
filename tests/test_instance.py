@@ -151,7 +151,7 @@ def test_points_array(skeleton):
     pts = instance1.get_points_array()
     assert not np.isnan(pts[skeleton.node_to_index('thorax'), :]).all()
 
-    pts = instance1.visible_points_array
+    pts = instance1.points_array
     assert np.isnan(pts[skeleton.node_to_index('thorax'), :]).all()
 
 def test_modifying_skeleton(skeleton):

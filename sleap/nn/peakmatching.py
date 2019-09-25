@@ -244,9 +244,9 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, transform, img_idx
     score_to_node_ratio = subset[:,-2] / subset[:,-1]
     subset = subset[score_to_node_ratio > min_score_to_node_ratio, :]
 
-    # apply inverse transform to points
+    # Apply inverse transform to points to return to full resolution, uncropped image coordinates
     if candidate.shape[0] > 0:
-        candidate[...,0:2] = transform.invert(img_idx, candidate[...,0:2])
+        candidate[..., 0:2] = transform.invert(img_idx, candidate[..., 0:2])
 
     # Done with all the matching! Gather the data
     matched_instances_t = []
@@ -267,18 +267,22 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, transform, img_idx
                                                          score=match[-2]))
 
     # For centroid crop just return instance closest to centroid
+    # if single_per_crop and len(matched_instances_t) > 1 and transform.is_cropped:
+
+        # crop_centroid = np.array(((transform.crop_size//2, transform.crop_size//2),)) # center of crop box
+        # crop_centroid = transform.invert(img_idx, crop_centroid) # relative to original image
+
+        # # sort by distance from crop centroid
+        # matched_instances_t.sort(key=lambda inst: np.linalg.norm(inst.centroid - crop_centroid))
+
+        # # logger.debug(f"SINGLE_INSTANCE_PER_CROP: crop has {len(matched_instances_t)} instances, filter to 1.")
+
+        # # just use closest
+        # matched_instances_t = matched_instances_t[0:1]
+
     if single_per_crop and len(matched_instances_t) > 1 and transform.is_cropped:
-
-        crop_centroid = np.array(((transform.crop_size//2, transform.crop_size//2),)) # center of crop box
-        crop_centroid = transform.invert(img_idx, crop_centroid) # relative to original image
-
-        # sort by distance from crop centroid
-        matched_instances_t.sort(key=lambda inst: np.linalg.norm(inst.centroid - crop_centroid))
-
-        # logger.debug(f"SINGLE_INSTANCE_PER_CROP: crop has {len(matched_instances_t)} instances, filter to 1.")
-
-        # just use closest
-        matched_instances_t = matched_instances_t[0:1]
+        # Just keep highest scoring instance
+        matched_instances_t = [matched_instances_t[0]]
 
     return matched_instances_t
 
@@ -318,6 +322,7 @@ def match_peaks_paf_par(peaks, peak_vals, pafs, skeleton,
     """ Parallel version of PAF peak matching """
 
     if pool is None:
+        import multiprocessing
         pool = multiprocessing.Pool()
 
     futures = []
