@@ -10,6 +10,11 @@ environment:
 
   BUILD_DIR: "build"
   
+  # Variables for coveralls
+  CI_NAME: "appveyor"
+  CI_BRANCH: APPVEYOR_REPO_BRANCH
+  CI_BUILD_NUMBER: APPVEYOR_BUILD_NUMBER
+
   conda_access_token:
     secure: d+v++uejbVEhIuaJSuFIOA==
   matrix:
