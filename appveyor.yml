@@ -71,7 +71,7 @@ test_script:
   - cmd: pytest --cov=sleap tests/
 
 on_success:
-  - cmd: coveralls --commitId $env:APPVEYOR_REPO_COMMIT --commitBranch $env:APPVEYOR_REPO_BRANCH --commitAuthor $env:APPVEYOR_REPO_COMMIT_AUTHOR --commitEmail $env:APPVEYOR_REPO_COMMIT_AUTHOR_EMAIL --commitMessage $env:APPVEYOR_REPO_COMMIT_MESSAGE --jobId $env:APPVEYOR_BUILD_NUMBER --serviceName appveyor
+  - cmd: coveralls --service appveyor
 
 # here we are going to override common configuration
 for:
