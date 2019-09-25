@@ -9,11 +9,6 @@ environment:
     secure: T7XuBtHDu85Tk/d1AeyfhW3CVyzaoddTWmR4xsPIdQ3di0R6x8ncWqw3KrYXkWJm
 
   BUILD_DIR: "build"
-  
-  # Variables for coveralls
-  CI_NAME: "appveyor"
-  CI_BRANCH: APPVEYOR_REPO_BRANCH
-  CI_BUILD_NUMBER: APPVEYOR_BUILD_NUMBER
 
   conda_access_token:
     secure: d+v++uejbVEhIuaJSuFIOA==
@@ -76,7 +71,7 @@ test_script:
   - cmd: pytest --cov=sleap tests/
 
 on_success:
-  - cmd: coveralls
+  - cmd: coveralls --commitId $env:APPVEYOR_REPO_COMMIT --commitBranch $env:APPVEYOR_REPO_BRANCH --commitAuthor $env:APPVEYOR_REPO_COMMIT_AUTHOR --commitEmail $env:APPVEYOR_REPO_COMMIT_AUTHOR_EMAIL --commitMessage $env:APPVEYOR_REPO_COMMIT_MESSAGE --jobId $env:APPVEYOR_BUILD_NUMBER --serviceName appveyor
 
 # here we are going to override common configuration
 for:
