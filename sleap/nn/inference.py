@@ -328,7 +328,7 @@ class Predictor:
     gpu_peak_finding: bool = True
     supersample_window_size: int = 7  # must be odd
     supersample_factor: float = 2  # factor to upsample cropped windows by
-    overlapping_instances_nms: bool = False  # suppress overlapping instances
+    overlapping_instances_nms: bool = True  # suppress overlapping instances
 
     def __attrs_post_init__(self):
 
@@ -405,10 +405,12 @@ class Predictor:
             # Delete the output file if it exists already
             if os.path.exists(self.output_path):
                 os.unlink(self.output_path)
+                logger.warning("Deleted existing output: " + self.output_path)
 
             # Create output directory if it doesn't exist
             if not os.path.exists(self.output_path):
-                os.makedirs(self.output_path)
+                os.makedirs(os.path.dirname(self.output_path), exist_ok=True)
+            logger.info("Output path: " + self.output_path)
 
         # Process chunk-by-chunk!
         t0_start = time()
@@ -450,27 +452,8 @@ class Predictor:
                     imgs_full, frames_idx)
 
             else:
-                # Scale without centroid cropping
-                # TODO: Move this into the processing below to allow for different input scales by model.
-
-                # Determine scaled image size
-                # cm_model = self.inference_models[ModelOutputType.CONFIDENCE_MAP]
-                # input_scale = cm_model.input_scale
-                # scale_to = (int(vid.height // (1 / input_scale)), int(vid.width // (1 / input_scale)))
-
-                # # if self.resize_hack:
-                #     # TODO: Replace this when model-specific divisibility calculation implemented.
-                #     divisor = 2 ** cm_model.down_blocks
-                #     crop_to = (
-                #         (scale_to[0] // divisor) * divisor,
-                #         (scale_to[1] // divisor) * divisor)
-
                 # Create transform object
                 transform = DataTransform(frame_idxs=frames_idx)
-                
-                # Scale if target doesn't match current size
-                # imgs_full = transform.scale_to(mov_full, target_size=scale_to)
-
                 subchunks_to_process = [(imgs_full, transform)]
 
             logger.info("  Transformed images [%.1fs]" % (time() - t0))
@@ -561,7 +544,7 @@ class Predictor:
                     #  We should save in chunks then combine at the end.
                     labels = Labels(labeled_frames=predicted_frames)
                     if self.output_path is not None:
-                        if self.output_path.endswith('json'):
+                        if self.output_path.endswith("json"):
                             Labels.save_json(labels, filename=self.output_path, compress=True)
                         else:
                             Labels.save_hdf5(labels, filename=self.output_path)
@@ -610,13 +593,14 @@ class Predictor:
             # unstructure input_video since it won't pickle
             kwargs["input_video"] = Video.cattr().unstructure(kwargs["input_video"])
 
-        pool = Pool(processes=1)
-        result = pool.apply_async(self.predict, args=args, kwds=kwargs)
+        if self.pool is None:
+            self.pool = Pool(processes=1)
+        result = self.pool.apply_async(self.predict, args=args, kwds=kwargs)
 
         # Tell the pool to accept no new tasks
-        pool.close()
+        # pool.close()
 
-        return pool, result
+        return result
 
 
     def centroid_crop_inference(self,
