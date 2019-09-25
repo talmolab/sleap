@@ -11,7 +11,6 @@ import cattr
 import numpy as np
 import jsonpickle
 import json
-import networkx as nx
 import h5py as h5
 import copy
 
@@ -19,8 +18,9 @@ from enum import Enum
 from itertools import count
 from typing import Iterable, Union, List, Dict
 
+import networkx as nx
 from networkx.readwrite import json_graph
-from scipy.io import loadmat, savemat
+from scipy.io import loadmat
 
 
 class EdgeType(Enum):
@@ -48,6 +48,7 @@ class Node:
 
     @staticmethod
     def from_names(name_list: str):
+        """Convert list of node names to list of nodes objects."""
         nodes = []
         for name in name_list:
             nodes.append(Node(name))
@@ -55,6 +56,7 @@ class Node:
 
     @classmethod
     def as_node(cls, node):
+        """Convert given `node` to `Node` object (if not already)."""
         return node if isinstance(node, cls) else cls(node)
 
     def matches(self, other):
@@ -79,8 +81,8 @@ class Skeleton:
     """
 
     """
-    A index variable used to give skeletons a default name that attemtpts to be
-    unique across all skeletons. 
+    A index variable used to give skeletons a default name that attempts
+    to be unique across all skeletons.
     """
     _skeleton_idx = count(0)
 
@@ -94,7 +96,7 @@ class Skeleton:
         """
 
         # If no skeleton was create, try to create a unique name for this Skeleton.
-        if name is None or type(name) is not str or len(name) == 0:
+        if name is None or not isinstance(name, str) or not name:
             name = "Skeleton-" + str(next(self._skeleton_idx))
 
 
@@ -137,7 +139,7 @@ class Skeleton:
     def graph(self):
         edges = [(src, dst, key) for src, dst, key, edge_type in self._graph.edges(keys=True, data="type") if edge_type == EdgeType.BODY]
         # TODO: properly induce subgraph for MultiDiGraph
-        #   Currently, NetworkX will just return the nodes in the subgraph. 
+        #   Currently, NetworkX will just return the nodes in the subgraph.
         #   See: https://stackoverflow.com/questions/16150557/networkxcreating-a-subgraph-induced-from-edges
         return self._graph.edge_subgraph(edges)
 
@@ -340,7 +342,7 @@ class Skeleton:
         Returns:
             None
         """
-        if type(name) is not str:
+        if not isinstance(name, str):
             raise TypeError("Cannot add nodes to the skeleton that are not str")
 
         if name in self.node_names:
@@ -389,13 +391,16 @@ class Skeleton:
         """
         if isinstance(name, Node):
             name = name.name
+
         nodes = [node for node in self.nodes if node.name == name]
+
         if len(nodes) == 1:
             return nodes[0]
-        elif len(nodes) > 1:
+
+        if len(nodes) > 1:
             raise ValueError("Found multiple nodes named ({}).".format(name))
-        elif len(nodes) == 0:
-            return None
+
+        return None
 
     def add_edge(self, source: str, destination: str):
         """Add an edge between two nodes.
@@ -466,11 +471,11 @@ class Skeleton:
 
         self._graph.remove_edge(source_node, destination_node)
 
-    def add_symmetry(self, node1:str, node2: str):
+    def add_symmetry(self, node1: str, node2: str):
         """Specify that two parts (nodes) in the skeleton are symmetrical.
 
-        Certain parts of an animal body can be related as symmetrical parts in a pair. For example,
-        the left and right hands of a person.
+        Certain parts of an animal body can be related as symmetrical
+        parts in a pair. For example, the left and right hands of a person.
 
         Args:
             node1: The name of the first part in the symmetric pair
@@ -497,7 +502,7 @@ class Skeleton:
         self._graph.add_edge(node1_node, node2_node, type=EdgeType.SYMMETRY)
         self._graph.add_edge(node2_node, node1_node, type=EdgeType.SYMMETRY)
 
-    def delete_symmetry(self, node1:str, node2: str):
+    def delete_symmetry(self, node1: str, node2: str):
         """Deletes a previously established symmetry relationship between two nodes.
 
         Args:
@@ -510,13 +515,13 @@ class Skeleton:
         node1_node = self.find_node(node1)
         node2_node = self.find_node(node2)
 
-        if self.get_symmetry(node1) != node2 or self.get_symmetry(node2) != node1:
+        if self.get_symmetry(node1) != node2_node or self.get_symmetry(node2) != node1_node:
             raise ValueError(f"Nodes {node1}, {node2} are not symmetric.")
 
         edges = [(src, dst, key) for src, dst, key, edge_type in self._graph.edges([node1_node, node2_node], keys=True, data="type") if edge_type == EdgeType.SYMMETRY]
         self._graph.remove_edges_from(edges)
 
-    def get_symmetry(self, node:str):
+    def get_symmetry(self, node: str):
         """ Returns the node symmetric with the specified node.
 
         Args:
@@ -536,8 +541,8 @@ class Skeleton:
         else:
             raise ValueError(f"{node} has more than one symmetry.")
 
-    def get_symmetry_name(self, node:str):
-        """ Returns the name of the node symmetric with the specified node.
+    def get_symmetry_name(self, node: str):
+        """Returns the name of the node symmetric with the specified node.
 
         Args:
             node: The name of the node to query.
@@ -590,7 +595,7 @@ class Skeleton:
         """
         self.relabel_nodes({old_name: new_name})
 
-    def relabel_nodes(self, mapping:dict):
+    def relabel_nodes(self, mapping: Dict[str, str]):
         """
         Relabel the nodes of the skeleton.
 
@@ -601,12 +606,12 @@ class Skeleton:
             None
         """
         existing_nodes = self.nodes
-        for k, v in mapping.items():
-            if self.has_node(v):
+        for old_name, new_name in mapping.items():
+            if self.has_node(new_name):
                 raise ValueError("Cannot relabel a node to an existing name.")
-            node = self.find_node(k)
+            node = self.find_node(old_name)
             if node is not None:
-                node.name = v
+                node.name = new_name
 
         # self._graph = nx.relabel_nodes(G=self._graph, mapping=mapping)
 
@@ -653,7 +658,7 @@ class Skeleton:
             True is yes, False if no.
 
         """
-        source_node, destination_node = self.find_node(source_name), self.find_node(dest_name) 
+        source_node, destination_node = self.find_node(source_name), self.find_node(dest_name)
         return self._graph.has_edge(source_node, destination_node)
 
     @staticmethod
@@ -761,7 +766,7 @@ class Skeleton:
         Returns:
             The skeleton instance stored in the HDF5 file.
         """
-        if type(file) is str:
+        if isinstance(file, str):
             with h5.File(file) as _file:
                 skeletons = Skeleton._load_hdf5(_file) # Load all skeletons
         else:
@@ -784,7 +789,7 @@ class Skeleton:
         Returns:
             The skeleton instances stored in the HDF5 file. Either in List or Dict form.
         """
-        if type(file) is str:
+        if isinstance(file, str):
             with h5.File(file) as _file:
                 skeletons = Skeleton._load_hdf5(_file) # Load all skeletons
         else:
@@ -792,8 +797,8 @@ class Skeleton:
 
         if return_dict:
             return skeletons
-        else:
-            return list(skeletons.values())
+
+        return list(skeletons.values())
 
     @classmethod
     def _load_hdf5(cls, file: h5.File):
@@ -805,7 +810,7 @@ class Skeleton:
         return skeletons
 
     def save_hdf5(self, file: Union[str, h5.File]):
-        if type(file) is str:
+        if isinstance(file, str):
             with h5.File(file) as _file:
                 self._save_hdf5(_file)
         else:

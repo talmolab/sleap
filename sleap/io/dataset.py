@@ -707,6 +707,110 @@ class Labels(MutableSequence):
 
         return True
 
+    @classmethod
+    def complex_merge_between(cls, base_labels: 'Labels', new_labels: 'Labels', unify:bool = True) -> tuple:
+        """
+        Merge frames and other data that can be merged cleanly,
+        and return frames that conflict.
+
+        Anything that can be merged cleanly is merged into base_labels.
+
+        Frames conflict just in case each labels object has a matching
+        frame (same video and frame idx) which instances not in the other.
+
+        Frames can be merged cleanly if
+        - the frame is in only one of the labels, or
+        - the frame is in both labels, but all instances perfectly match
+          (which means they are redundant), or
+        - the frame is in both labels, maybe there are some redundant
+          instances, but only one version of the frame has additional
+          instances not in the other.
+
+        Args:
+            base_labels: the `Labels` that we're merging into
+            new_labels: the `Labels` that we're merging from
+            unify: whether to replace objects (e.g., `Video`s) in
+                new_labels with *matching* objects from base
+
+        Returns:
+            tuple of two lists of `LabeledFrame`s
+            * data from base that conflicts
+            * data from new that conflicts
+        """
+        # If unify, we want to replace objects in the frames with
+        # corresponding objects from the current labels.
+        # We do this by deserializing/serializing with match_to.
+        if unify:
+            new_json = new_labels.to_dict()
+            new_labels = cls.from_json(new_json, match_to=base_labels)
+
+        # Merge anything that can be merged cleanly and get conflicts
+        merged, extra_base, extra_new = \
+            LabeledFrame.complex_merge_between(
+                base_labels=base_labels,
+                new_frames=new_labels.labeled_frames)
+
+        # For clean merge, finish merge now by cleaning up base object
+        if not extra_base and not extra_new:
+            # Add any new videos (etc) into top level lists in base
+            base_labels._update_from_labels(merge=True)
+            # Update caches
+            base_labels._update_lookup_cache()
+
+        # Merge suggestions and negative anchors
+        cls.merge_container_dicts(base_labels.suggestions, new_labels.suggestions)
+        cls.merge_container_dicts(base_labels.negative_anchors, new_labels.negative_anchors)
+
+        return merged, extra_base, extra_new
+
+#     @classmethod
+#     def merge_predictions_by_score(cls, extra_base: List[LabeledFrame], extra_new: List[LabeledFrame]):
+#         """
+#         Remove all predictions from input lists, return list with only
+#         the merged predictions.
+# 
+#         Args:
+#             extra_base: list of `LabeledFrame`s
+#             extra_new: list of `LabeledFrame`s
+#                 Conflicting frames should have same index in both lists.
+#         Returns:
+#             list of `LabeledFrame`s with merged predictions
+#         """
+#         pass
+
+    @staticmethod
+    def finish_complex_merge(base_labels: 'Labels', resolved_frames: List[LabeledFrame]):
+        """
+        Finish conflicted merge from complex_merge_between.
+
+        Args:
+            base_labels: the `Labels` that we're merging into
+            resolved_frames: the list of frames to add into base_labels
+        Returns:
+            None.
+        """
+        # Add all the resolved frames to base
+        base_labels.labeled_frames.extend(resolved_frames)
+
+        # Combine instances when there are two LabeledFrames for same
+        # video and frame index
+        base_labels.merge_matching_frames()
+
+        # Add any new videos (etc) into top level lists in base
+        base_labels._update_from_labels(merge=True)
+        # Update caches
+        base_labels._update_lookup_cache()
+
+    @staticmethod
+    def merge_container_dicts(dict_a, dict_b):
+        """Merge data from dict_b into dict_a."""
+        for key in dict_b.keys():
+            if key in dict_a:
+                dict_a[key].extend(dict_b[key])
+                uniquify(dict_a[key])
+            else:
+                dict_a[key] = dict_b[key]
+
     def merge_matching_frames(self, video=None):
         """
         Combine all instances from LabeledFrames that have same frame_idx.

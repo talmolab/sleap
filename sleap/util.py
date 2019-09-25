@@ -10,10 +10,14 @@ import numpy as np
 import attr
 import psutil
 
-from typing import Callable
-
-
 def attr_to_dtype(cls):
+    """Convert classes with basic types to numpy composite dtypes.
+
+    Arguments:
+        cls: class to convert
+    Returns:
+        numpy dtype.
+    """
     dtype_list = []
     for field in attr.fields(cls):
         if field.type == str:
@@ -29,14 +33,12 @@ def attr_to_dtype(cls):
 
     return np.dtype(dtype_list)
 
-
 def usable_cpu_count() -> int:
     """Get number of CPUs usable by the current process.
 
     Takes into consideration cpusets restrictions.
 
-    Returns
-    -------
+    Returns:
         The number of usable cpus
     """
     try:
@@ -89,6 +91,13 @@ def save_dict_to_hdf5(h5file: h5.File, path: str, dic: dict):
             raise ValueError('Cannot save %s type'%type(item))
 
 def frame_list(frame_str: str):
+    """Convert 'n-m' string to list of ints.
+
+    Args:
+        frame_str: string representing range
+    Returns:
+        List of ints, or None if string does not represent valid range.
+    """
 
     # Handle ranges of frames. Must be of the form "1-200"
     if '-' in frame_str:
@@ -98,7 +107,6 @@ def frame_list(frame_str: str):
         return list(range(min_frame, max_frame+1))
 
     return [int(x) for x in frame_str.split(",")] if len(frame_str) else None
-
 
 def uniquify(seq):
     """
@@ -120,8 +128,9 @@ def uniquify(seq):
 
 def weak_filename_match(filename_a, filename_b):
     """Check if paths probably point to same file."""
-    filename_a = filename_a.replace("\\","/")
-    filename_b = filename_b.replace("\\","/")
+    # convert all path separators to /
+    filename_a = filename_a.replace("\\", "/")
+    filename_b = filename_b.replace("\\", "/")
 
     # remove unique pid so we can match tmp directories for same zip
     filename_a = re.sub("/tmp_\d+_", "tmp_", filename_a)

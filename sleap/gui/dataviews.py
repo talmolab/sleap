@@ -439,9 +439,10 @@ class SuggestionsTable(QTableView):
         self.setModel(SuggestionsTableModel(labels))
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.setSortingEnabled(True)
 
 class SuggestionsTableModel(QtCore.QAbstractTableModel):
-    _props = ["video", "frame", "labeled",]
+    _props = ["video", "frame", "labeled", "mean score",]
 
     def __init__(self, labels):
         super(SuggestionsTableModel, self).__init__()
@@ -470,7 +471,7 @@ class SuggestionsTableModel(QtCore.QAbstractTableModel):
                 frame_idx = self._suggestions_list[idx][1]
 
                 if prop == "video":
-                    return os.path.basename(video.filename) # just show the name, not full path
+                    return f"{self.labels.videos.index(video)}: {os.path.basename(video.filename)}"
                 elif prop == "frame":
                     return int(frame_idx) + 1 # start at frame 1 rather than 0
                 elif prop == "labeled":
@@ -478,8 +479,29 @@ class SuggestionsTableModel(QtCore.QAbstractTableModel):
                     val = self._labels.instance_count(video, frame_idx)
                     val = str(val) if val > 0 else ""
                     return val
+                elif prop == "mean score":
+                    return self._getScore(video, frame_idx)
 
         return None
+
+    def _getScore(self, video, frame_idx):
+        scores = [inst.score for lf in self.labels.find(video, frame_idx) for inst in lf if hasattr(inst, "score")]
+        return sum(scores) / len(scores)
+
+    def sort(self, column_idx: int, order: Qt.SortOrder):
+        prop = self._props[column_idx]
+        if prop in ("video", "frame"):
+            sort_function = lambda s: s
+        elif prop == "labeled":
+            sort_function = lambda s: self._labels.instance_count(*s)
+        elif prop == "mean score":
+            sort_function = lambda s: self._getScore(*s)
+
+        reverse = (order == Qt.SortOrder.DescendingOrder)
+
+        self.beginResetModel()
+        self._suggestions_list.sort(key=sort_function, reverse=reverse)
+        self.endResetModel()
 
     def rowCount(self, *args):
         return len(self._suggestions_list)

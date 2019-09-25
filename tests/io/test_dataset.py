@@ -260,21 +260,116 @@ def test_label_mutability():
     labels.remove_video(dummy_video)
     assert len(labels.find(dummy_video)) == 0
 
-    dummy_frames3 = []
+def test_labels_merge():
+    dummy_video = Video(backend=MediaVideo)
+    dummy_skeleton = Skeleton()
     dummy_skeleton.add_node("node")
+
+    labels = Labels()
+    dummy_frames = []
 
     # Add 10 instances with different points (so they aren't "redundant")
     for i in range(10):
         instance = Instance(skeleton=dummy_skeleton, points=dict(node=Point(i,i)))
         dummy_frame = LabeledFrame(dummy_video, frame_idx=0, instances=[instance,])
-        dummy_frames3.append(dummy_frame)
+        dummy_frames.append(dummy_frame)
 
-    labels.labeled_frames.extend(dummy_frames3)
+    labels.labeled_frames.extend(dummy_frames)
     assert len(labels) == 10
     assert len(labels.labeled_frames[0].instances) == 1
+
     labels.merge_matching_frames()
     assert len(labels) == 1
     assert len(labels.labeled_frames[0].instances) == 10
+
+def test_complex_merge():
+    dummy_video_a = Video.from_filename("foo.mp4")
+    dummy_video_b = Video.from_filename("foo.mp4")
+
+    dummy_skeleton_a = Skeleton()
+    dummy_skeleton_a.add_node("node")
+
+    dummy_skeleton_b = Skeleton()
+    dummy_skeleton_b.add_node("node")
+
+    dummy_instances_a = []
+    dummy_instances_a.append(Instance(skeleton=dummy_skeleton_a, points=dict(node=Point(1,1))))
+    dummy_instances_a.append(Instance(skeleton=dummy_skeleton_a, points=dict(node=Point(2,2))))
+
+    labels_a = Labels()
+    labels_a.append(LabeledFrame(dummy_video_a, frame_idx=0, instances=dummy_instances_a))
+
+    dummy_instances_b = []
+    dummy_instances_b.append(Instance(skeleton=dummy_skeleton_b, points=dict(node=Point(1,1))))
+    dummy_instances_b.append(Instance(skeleton=dummy_skeleton_b, points=dict(node=Point(3,3))))
+
+    labels_b = Labels()
+    labels_b.append(LabeledFrame(dummy_video_b, frame_idx=0, instances=dummy_instances_b)) # conflict
+    labels_b.append(LabeledFrame(dummy_video_b, frame_idx=1, instances=dummy_instances_b)) # clean
+
+    merged, extra_a, extra_b = Labels.complex_merge_between(labels_a, labels_b)
+
+    # Check that we have the cleanly merged frame
+    assert dummy_video_a in merged
+    assert len(merged[dummy_video_a]) == 1 # one merged frame
+    assert len(merged[dummy_video_a][1]) == 2 # with two instances
+
+    # Check that labels_a includes redundant and clean
+    assert len(labels_a.labeled_frames) == 2
+    assert len(labels_a.labeled_frames[0].instances) == 1
+    assert labels_a.labeled_frames[0].instances[0].points[0].x == 1
+    assert len(labels_a.labeled_frames[1].instances) == 2
+    assert labels_a.labeled_frames[1].instances[0].points[0].x == 1
+    assert labels_a.labeled_frames[1].instances[1].points[0].x == 3
+
+    # Check that extra_a/b includes the appropriate conflicting instance
+    assert len(extra_a) == 1
+    assert len(extra_b) == 1
+    assert len(extra_a[0].instances) == 1
+    assert len(extra_b[0].instances) == 1
+    assert extra_a[0].instances[0].points[0].x == 2
+    assert extra_b[0].instances[0].points[0].x == 3
+
+    # Check that objects were unified
+    assert extra_a[0].video == extra_b[0].video
+
+    # Check resolving the conflict using new
+    Labels.finish_complex_merge(labels_a, extra_b)
+    assert len(labels_a.labeled_frames) == 2
+    assert len(labels_a.labeled_frames[0].instances) == 2
+    assert labels_a.labeled_frames[0].instances[1].points[0].x == 3
+
+def test_merge_predictions():
+    dummy_video_a = Video.from_filename("foo.mp4")
+    dummy_video_b = Video.from_filename("foo.mp4")
+
+    dummy_skeleton_a = Skeleton()
+    dummy_skeleton_a.add_node("node")
+
+    dummy_skeleton_b = Skeleton()
+    dummy_skeleton_b.add_node("node")
+
+    dummy_instances_a = []
+    dummy_instances_a.append(Instance(skeleton=dummy_skeleton_a, points=dict(node=Point(1,1))))
+    dummy_instances_a.append(Instance(skeleton=dummy_skeleton_a, points=dict(node=Point(2,2))))
+
+    labels_a = Labels()
+    labels_a.append(LabeledFrame(dummy_video_a, frame_idx=0, instances=dummy_instances_a))
+
+    dummy_instances_b = []
+    dummy_instances_b.append(Instance(skeleton=dummy_skeleton_b, points=dict(node=Point(1,1))))
+    dummy_instances_b.append(PredictedInstance(skeleton=dummy_skeleton_b, points=dict(node=Point(3,3)), score=1))
+
+    labels_b = Labels()
+    labels_b.append(LabeledFrame(dummy_video_b, frame_idx=0, instances=dummy_instances_b))
+
+    # Frames have one redundant instance (perfect match) and all the
+    # non-matching instances are different types (one predicted, one not).
+    merged, extra_a, extra_b = Labels.complex_merge_between(labels_a, labels_b)
+    assert len(merged[dummy_video_a]) == 1
+    assert len(merged[dummy_video_a][0]) == 1 # the predicted instance was merged
+    assert not extra_a
+    assert not extra_b
 
 def skeleton_ids_from_label_instances(labels):
     return list(map(id, (lf.instances[0].skeleton for lf in labels.labeled_frames)))
