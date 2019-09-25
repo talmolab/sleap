@@ -949,8 +949,8 @@ class LabeledFrame:
 
             if merged_instances:
                 if new_frame.video not in merged:
-                    merged[new_frame.video] = []
-                merged[new_frame.video].append(merged_instances)
+                    merged[new_frame.video] = dict()
+                merged[new_frame.video][new_frame.frame_idx] = merged_instances
         return merged, extra_base, extra_new
 
     @classmethod

@@ -312,7 +312,7 @@ def test_complex_merge():
     # Check that we have the cleanly merged frame
     assert dummy_video_a in merged
     assert len(merged[dummy_video_a]) == 1 # one merged frame
-    assert len(merged[dummy_video_a][0]) == 2 # with two instances
+    assert len(merged[dummy_video_a][1]) == 2 # with two instances
 
     # Check that labels_a includes redundant and clean
     assert len(labels_a.labeled_frames) == 2
