@@ -68,9 +68,9 @@ build: off
 test_script:
   - cmd: activate sleap_appveyor
   - cmd: where python
-  - cmd: python -m pytest tests/
+  - cmd: pytest --cov sleap
 
-after_test:
+on_success:
   - cmd: coveralls
 
 # here we are going to override common configuration
