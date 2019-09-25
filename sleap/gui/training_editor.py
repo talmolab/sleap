@@ -80,14 +80,6 @@ class TrainingEditor(QtWidgets.QDialog):
         for name in "datagen,trainer,output".split(","):
             self.form_widgets[name].set_form_data(job_dict["trainer"])
 
-    def _update_profile(self):
-        # update training job from params in form
-        trainer = job.trainer
-        for key, val in form_data.items():
-            # check if form field matches attribute of Trainer object
-            if key in dir(trainer):
-                setattr(trainer, key, val)
-
     def _save_as(self):
 
         # Show "Save" dialog
