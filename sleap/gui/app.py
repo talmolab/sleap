@@ -33,6 +33,7 @@ from sleap.gui.dataviews import VideosTable, SkeletonNodesTable, SkeletonEdgesTa
     LabeledFrameTable, SkeletonNodeModel, SuggestionsTable
 from sleap.gui.importvideos import ImportVideos
 from sleap.gui.formbuilder import YamlFormWidget
+from sleap.gui.merge import MergeDialog
 from sleap.gui.shortcuts import Shortcuts, ShortcutDialog
 from sleap.gui.suggestions import VideoFrameSuggestions
 
@@ -1110,14 +1111,10 @@ class MainWindow(QMainWindow):
 
             new_labels = Labels.load_file(
                                 filename,
-                                match_to=self.labels,
                                 video_callback=gui_video_callback)
 
-            self.labels.extend_from(new_labels)
-
-            for vid in new_labels.videos:
-                print(f"Labels imported for {vid.filename}")
-                print(f"  frames labeled: {len(new_labels.find(vid))}")
+            # Merging data is handled by MergeDialog
+            MergeDialog(base_labels = self.labels, new_labels = new_labels).exec_()
 
         # update display/ui
         self.plotFrame()
