@@ -70,8 +70,8 @@ test_script:
   - cmd: where python
   - cmd: python -m pytest tests/
 
-after_success:
-  - coveralls
+after_test:
+  - cmd: coveralls
 
 # here we are going to override common configuration
 for:
