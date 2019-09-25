@@ -974,7 +974,24 @@ class LabeledFrame:
                 new_inst.frame = None
                 extra_new_instances.append(new_inst)
 
+        conflict = False
         if extra_base_instances and extra_new_instances:
+            base_predictions = list(filter(lambda inst: hasattr(inst, "score"), extra_base_instances))
+            new_predictions = list(filter(lambda inst: hasattr(inst, "score"), extra_new_instances))
+
+            base_has_nonpred = len(extra_base_instances) - len(base_predictions)
+            new_has_nonpred = len(extra_new_instances) - len(new_predictions)
+
+            # If they both have some predictions or they both have some
+            # non-predictions, then there is a conflict.
+            # (Otherwise it's not a conflict since we can cleanly merge
+            # all the predicted instances with all the non-predicted.)
+            if base_predictions and new_predictions:
+                conflict = True
+            elif base_has_nonpred and new_has_nonpred:
+                conflict = True
+
+        if conflict:
             # Conflict, so update base to just include non-conflicting
             # instances (perfect matches)
             base_frame.instances.clear()

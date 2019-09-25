@@ -339,6 +339,38 @@ def test_complex_merge():
     assert len(labels_a.labeled_frames[0].instances) == 2
     assert labels_a.labeled_frames[0].instances[1].points[0].x == 3
 
+def test_merge_predictions():
+    dummy_video_a = Video.from_filename("foo.mp4")
+    dummy_video_b = Video.from_filename("foo.mp4")
+
+    dummy_skeleton_a = Skeleton()
+    dummy_skeleton_a.add_node("node")
+
+    dummy_skeleton_b = Skeleton()
+    dummy_skeleton_b.add_node("node")
+
+    dummy_instances_a = []
+    dummy_instances_a.append(Instance(skeleton=dummy_skeleton_a, points=dict(node=Point(1,1))))
+    dummy_instances_a.append(Instance(skeleton=dummy_skeleton_a, points=dict(node=Point(2,2))))
+
+    labels_a = Labels()
+    labels_a.append(LabeledFrame(dummy_video_a, frame_idx=0, instances=dummy_instances_a))
+
+    dummy_instances_b = []
+    dummy_instances_b.append(Instance(skeleton=dummy_skeleton_b, points=dict(node=Point(1,1))))
+    dummy_instances_b.append(PredictedInstance(skeleton=dummy_skeleton_b, points=dict(node=Point(3,3)), score=1))
+
+    labels_b = Labels()
+    labels_b.append(LabeledFrame(dummy_video_b, frame_idx=0, instances=dummy_instances_b))
+
+    # Frames have one redundant instance (perfect match) and all the
+    # non-matching instances are different types (one predicted, one not).
+    merged, extra_a, extra_b = Labels.complex_merge_between(labels_a, labels_b)
+    assert len(merged[dummy_video_a]) == 1
+    assert len(merged[dummy_video_a][0]) == 1 # the predicted instance was merged
+    assert not extra_a
+    assert not extra_b
+
 def skeleton_ids_from_label_instances(labels):
     return list(map(id, (lf.instances[0].skeleton for lf in labels.labeled_frames)))
 
