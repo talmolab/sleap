@@ -37,7 +37,7 @@ if __name__ == "__main__":
 
         occupancy_matrix[track_i, frame_i] = 1
 
-        inst_points = inst.visible_points_array
+        inst_points = inst.points_array
         prediction_matrix[frame_i, ..., track_i] = inst_points
 
     occupied_track_mask = np.sum(occupancy_matrix, axis=1) > 0

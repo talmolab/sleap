@@ -199,8 +199,8 @@ class VideoSlider(QGraphicsView):
                 if last_lf is not None:
                     last_inst = last_lf.find(track=inst.track)
                     if last_inst:
-                        points_a = inst.visible_points_array
-                        points_b = last_inst[0].visible_points_array
+                        points_a = inst.points_array
+                        points_b = last_inst[0].points_array
                         point_dist = np.linalg.norm(points_a - points_b, axis=1)
                         inst_dist = np.sum(point_dist) # np.nanmean(point_dist)
                         val += inst_dist if not np.isnan(inst_dist) else 0

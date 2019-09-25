@@ -79,7 +79,7 @@ class DataTransform:
         if (img_h, img_w) != target_size:
 
             # build ndarray for new size
-            scaled_imgs = np.zeros((imgs.shape[0], h, w, imgs.shape[3]))
+            scaled_imgs = np.zeros((imgs.shape[0], h, w, imgs.shape[3]), dtype=imgs.dtype)
 
             for i in range(imgs.shape[0]):
                 # resize using cv2

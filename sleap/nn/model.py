@@ -126,6 +126,22 @@ class Model:
         return self.backbone_name
 
     @property
+    def down_blocks(self):
+        """Returns the number of pooling or striding blocks in the backbone.
+
+        This is useful when computing valid dimensions of the input data.
+
+        If the backbone does not provide enough information to infer this,
+        this is set to 0.
+        """
+
+        if hasattr(self.backbone, "down_blocks"):
+            return self.backbone.down_blocks
+
+        else:
+            return 0
+    
+    @property
     def output_scale(self):
         """Calculates output scale relative to input."""
 

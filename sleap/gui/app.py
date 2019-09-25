@@ -959,7 +959,7 @@ class MainWindow(QMainWindow):
             max_corner = (x1, y1)
 
             def is_bounded(inst):
-                points_array = inst.visible_points_array
+                points_array = inst.points_array
                 valid_points = points_array[~np.isnan(points_array).any(axis=1)]
 
                 is_gt_min = np.all(valid_points >= min_corner)

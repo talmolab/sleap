@@ -609,13 +609,13 @@ class Instance:
             return parray
 
     @property
-    def visible_points_array(self) -> np.ndarray:
+    def points_array(self) -> np.ndarray:
         return self.get_points_array(invisible_as_nan=True)
 
     @property
     def centroid(self) -> np.ndarray:
         """Returns instance centroid as (x,y) numpy row vector."""
-        points = self.visible_points_array
+        points = self.points_array
         centroid = np.nanmedian(points, axis=0)
         return centroid
 
@@ -836,7 +836,11 @@ class LabeledFrame:
 
     @property
     def user_instances(self):
-        return [inst for inst in self._instances if type(inst) == Instance]
+        return [inst for inst in self._instances if not isinstance(inst, PredictedInstance)]
+
+    @property
+    def predicted_instances(self):
+        return [inst for inst in self._instances if isinstance(inst, PredictedInstance)]
 
     @property
     def has_user_instances(self):

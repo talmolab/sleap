@@ -44,11 +44,18 @@ class ResNet50:
       return resnet50(x_in, num_output_channels, **attr.asdict(self))
 
   @property
+  def down_blocks(self):
+    """Returns the number of downsampling steps in the model."""
+
+    # This is a fixed constant for ResNet50.
+    return 5
+  
+
+  @property
   def output_scale(self):
     """Returns relative scaling factor of this backbone."""
 
-    down_blocks = 5
-    return (1 / (2 ** (down_blocks - self.up_blocks)))
+    return (1 / (2 ** (self.down_blocks - self.up_blocks)))
 
 
 def preprocess_input(X):

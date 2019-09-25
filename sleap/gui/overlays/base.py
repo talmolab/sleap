@@ -18,6 +18,7 @@ class HDF5Data(HDF5Video):
 
 @attr.s(auto_attribs=True)
 class ModelData:
+    # TODO: Unify this class with inference.Predictor or InferenceModel
     model: 'keras.Model'
     video: Video
     do_rescale: bool=False

@@ -738,9 +738,9 @@ def run_active_inference(
     inference_output_path = os.path.join(save_dir, f"{timestamp}.inference.h5")
 
     # Create Predictor from the results of training
-    predictor = Predictor(sleap_models=training_jobs,
-                            with_tracking=with_tracking,
-                            output_path=inference_output_path)
+    predictor = Predictor(training_jobs=training_jobs,
+                          with_tracking=with_tracking,
+                          output_path=inference_output_path)
 
     if gui:
         # show message while running inference
