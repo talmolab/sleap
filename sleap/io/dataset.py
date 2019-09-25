@@ -146,27 +146,29 @@ class Labels(MutableSequence):
 
         # Ditto for tracks, a pattern is emerging here
         if merge or len(self.tracks) == 0:
-            tracks = set(self.tracks)
-
-            # Add tracks from any Instances or PredictedInstances
-            tracks = tracks.union({instance.track
-                       for frame in self.labels
-                       for instance in frame.instances
-                       if instance.track})
+            # Get tracks from any Instances or PredictedInstances
+            other_tracks = {instance.track
+                               for frame in self.labels
+                               for instance in frame.instances
+                               if instance.track}
 
             # Add tracks from any PredictedInstance referenced by instance
             # This fixes things when there's a referenced PredictionInstance
             # which is no longer in the frame.
-            tracks = tracks.union({instance.from_predicted.track
-                                   for frame in self.labels
-                                   for instance in frame.instances
-                                   if instance.from_predicted
-                                     and instance.from_predicted.track})
+            other_tracks = other_tracks.union(
+                {instance.from_predicted.track
+                for frame in self.labels
+                for instance in frame.instances
+                if instance.from_predicted and instance.from_predicted.track})
 
-            self.tracks = list(tracks)
+            # Get list of other tracks not already in track list
+            new_tracks = list(other_tracks - set(self.tracks))
 
-        # Sort the tracks by spawned on and then name
-        self.tracks.sort(key=lambda t:(t.spawned_on, t.name))
+            # Sort the new tracks by spawned on and then name
+            new_tracks.sort(key=lambda t:(t.spawned_on, t.name))
+
+            self.tracks.extend(new_tracks)
+
 
     def _update_lookup_cache(self):
         # Data structures for caching
