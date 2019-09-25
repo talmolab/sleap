@@ -22,7 +22,14 @@ method while passing the user-selected params as the named parameters:
 from PySide2.QtCore import Qt, QRectF, Signal
 from PySide2.QtWidgets import QApplication, QLayout, QVBoxLayout, QHBoxLayout, QFrame
 from PySide2.QtWidgets import QFileDialog, QDialog, QWidget, QLabel, QScrollArea
-from PySide2.QtWidgets import QPushButton, QButtonGroup, QRadioButton, QCheckBox, QComboBox, QStackedWidget
+from PySide2.QtWidgets import (
+    QPushButton,
+    QButtonGroup,
+    QRadioButton,
+    QCheckBox,
+    QComboBox,
+    QStackedWidget,
+)
 
 from sleap.gui.video import GraphicsView
 from sleap.io.video import Video, HDF5Video, MediaVideo
@@ -30,12 +37,13 @@ from sleap.io.video import Video, HDF5Video, MediaVideo
 import h5py
 import qimage2ndarray
 
+
 class ImportVideos:
     """Class to handle video importing UI."""
-    
+
     def __init__(self):
         self.result = []
-    
+
     def go(self):
         """Runs the import UI.
         
@@ -48,19 +56,20 @@ class ImportVideos:
             List with dict of the parameters for each file to import.
         """
         dialog = QFileDialog()
-        #dialog.setOption(QFileDialog.Option.DontUseNativeDialogs, True)
+        # dialog.setOption(QFileDialog.Option.DontUseNativeDialogs, True)
         file_names, filter = dialog.getOpenFileNames(
-                                None,
-                                "Select videos to import...", # dialogue title
-                                ".", # initial path
-                                "Any Video (*.h5 *.hd5v *.mp4 *.avi *.json);;HDF5 (*.h5 *.hd5v);;ImgStore (*.json);;Media Video (*.mp4 *.avi);;Any File (*.*)", # filters
-                                #options=QFileDialog.DontUseNativeDialog
-                                )
+            None,
+            "Select videos to import...",  # dialogue title
+            ".",  # initial path
+            "Any Video (*.h5 *.hd5v *.mp4 *.avi *.json);;HDF5 (*.h5 *.hd5v);;ImgStore (*.json);;Media Video (*.mp4 *.avi);;Any File (*.*)",  # filters
+            # options=QFileDialog.DontUseNativeDialog
+        )
         if len(file_names) > 0:
             importer = ImportParamDialog(file_names)
-            importer.accepted.connect(lambda:importer.get_data(self.result))
+            importer.accepted.connect(lambda: importer.get_data(self.result))
             importer.exec_()
         return self.result
+
 
 class ImportParamDialog(QDialog):
     """Dialog for selecting parameters with preview when importing video.
@@ -69,13 +78,13 @@ class ImportParamDialog(QDialog):
         file_names (list): List of files we want to import.
     """
 
-    def __init__(self, file_names:list, *args, **kwargs):
+    def __init__(self, file_names: list, *args, **kwargs):
         super(ImportParamDialog, self).__init__(*args, **kwargs)
-        
+
         self.import_widgets = []
-        
+
         self.setWindowTitle("Video Import Options")
-        
+
         self.import_types = [
             {
                 "video_type": "hdf5",
@@ -86,55 +95,52 @@ class ImportParamDialog(QDialog):
                         "name": "dataset",
                         "type": "function_menu",
                         "options": "_get_h5_dataset_options",
-                        "required": True
+                        "required": True,
                     },
                     {
                         "name": "input_format",
                         "type": "radio",
-                        "options": "channels_first,channels_last"
-                    }
-                ]
+                        "options": "channels_first,channels_last",
+                    },
+                ],
             },
             {
                 "video_type": "mp4",
                 "match": "mp4,avi",
                 "video_class": Video.from_media,
-                "params": [
-                    {
-                        "name": "grayscale",
-                        "type": "check"
-                    }
-                ]
+                "params": [{"name": "grayscale", "type": "check"}],
             },
             {
                 "video_type": "numpy",
                 "match": "npy",
                 "video_class": Video.from_numpy,
-                "params": []
+                "params": [],
             },
             {
                 "video_type": "imgstore",
                 "match": "json",
                 "video_class": Video.from_filename,
-                "params": []
-            }
+                "params": [],
+            },
         ]
-        
+
         outer_layout = QVBoxLayout()
-        
+
         scroll_widget = QScrollArea()
-        #scroll_widget.setWidgetResizable(False)
+        # scroll_widget.setWidgetResizable(False)
         scroll_widget.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         scroll_widget.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        
+
         scroll_items_widget = QWidget()
         scroll_layout = QVBoxLayout()
         for file_name in file_names:
             if file_name:
                 this_type = None
                 for import_type in self.import_types:
-                    if import_type.get("match",None) is not None:
-                        if file_name.lower().endswith(tuple(import_type["match"].split(","))):
+                    if import_type.get("match", None) is not None:
+                        if file_name.lower().endswith(
+                            tuple(import_type["match"].split(","))
+                        ):
                             this_type = import_type
                             break
                 if this_type is not None:
@@ -146,7 +152,7 @@ class ImportParamDialog(QDialog):
         scroll_items_widget.setLayout(scroll_layout)
         scroll_widget.setWidget(scroll_items_widget)
         outer_layout.addWidget(scroll_widget)
-        
+
         button_layout = QHBoxLayout()
         cancel_button = QPushButton("Cancel")
         import_button = QPushButton("Import")
@@ -154,15 +160,15 @@ class ImportParamDialog(QDialog):
         button_layout.addStretch()
         button_layout.addWidget(cancel_button)
         button_layout.addWidget(import_button)
-        
+
         outer_layout.addLayout(button_layout)
-        
+
         self.setLayout(outer_layout)
-        
+
         import_button.clicked.connect(self.accept)
         cancel_button.clicked.connect(self.reject)
 
-    def get_data(self, import_result = None):
+    def get_data(self, import_result=None):
         """Method to get results from import.
 
         Args:
@@ -187,6 +193,7 @@ class ImportParamDialog(QDialog):
         """Method required by Qt."""
         pass
 
+
 class ImportItemWidget(QFrame):
     """Widget for selecting parameters with preview when importing video.
 
@@ -194,37 +201,39 @@ class ImportItemWidget(QFrame):
         file_path (str): Full path to selected video file.
         import_type (dict): Data about user-selectable import parameters.
     """
-    
+
     def __init__(self, file_path: str, import_type: dict, *args, **kwargs):
         super(ImportItemWidget, self).__init__(*args, **kwargs)
-        
+
         self.file_path = file_path
         self.import_type = import_type
         self.video = None
-        
+
         import_item_layout = QVBoxLayout()
-        
+
         self.enabled_checkbox_widget = QCheckBox(self.file_path)
         self.enabled_checkbox_widget.setChecked(True)
         import_item_layout.addWidget(self.enabled_checkbox_widget)
-        
-        #import_item_layout.addWidget(QLabel(self.file_path))
+
+        # import_item_layout.addWidget(QLabel(self.file_path))
         inner_layout = QHBoxLayout()
-        self.options_widget = ImportParamWidget(parent=self, file_path = self.file_path, import_type = self.import_type)
+        self.options_widget = ImportParamWidget(
+            parent=self, file_path=self.file_path, import_type=self.import_type
+        )
         self.preview_widget = VideoPreviewWidget(parent=self)
         self.preview_widget.setFixedSize(200, 200)
-        
+
         self.enabled_checkbox_widget.stateChanged.connect(
-            lambda state:self.options_widget.setEnabled(state == Qt.Checked)
+            lambda state: self.options_widget.setEnabled(state == Qt.Checked)
         )
-        
+
         inner_layout.addWidget(self.options_widget)
         inner_layout.addWidget(self.preview_widget)
         import_item_layout.addLayout(inner_layout)
         self.setLayout(import_item_layout)
-        
+
         self.setFrameStyle(QFrame.Panel)
-        
+
         self.options_widget.changed.connect(self.update_video)
         self.update_video(initial=True)
 
@@ -245,12 +254,12 @@ class ImportItemWidget(QFrame):
         Returns:
             Dict with data for this video.
         """
-        
+
         video_data = {
-                        "params": self.options_widget.get_values(),
-                        "video_type": self.import_type["video_type"],
-                        "video_class": self.import_type["video_class"],
-                     }
+            "params": self.options_widget.get_values(),
+            "video_type": self.import_type["video_type"],
+            "video_class": self.import_type["video_class"],
+        }
         return video_data
 
     def update_video(self, initial=False):
@@ -289,6 +298,7 @@ class ImportItemWidget(QFrame):
         """Method required by Qt."""
         pass
 
+
 class ImportParamWidget(QWidget):
     """Widget for allowing user to select video parameters.
 
@@ -302,29 +312,29 @@ class ImportParamWidget(QWidget):
 
     changed = Signal()
 
-    def __init__(self, file_path:str, import_type:dict, *args, **kwargs):
+    def __init__(self, file_path: str, import_type: dict, *args, **kwargs):
         super(ImportParamWidget, self).__init__(*args, **kwargs)
-        
+
         self.file_path = file_path
         self.import_type = import_type
         self.widget_elements = {}
         self.video_params = {}
-        
+
         option_layout = self.make_layout()
-        #self.changed.connect( lambda: print(self.get_values()) )
-        
+        # self.changed.connect( lambda: print(self.get_values()) )
+
         self.setLayout(option_layout)
-    
+
     def make_layout(self) -> QLayout:
         """Builds the layout of widgets for user-selected import parameters."""
-        
+
         param_list = self.import_type["params"]
         widget_layout = QVBoxLayout()
         widget_elements = dict()
         for param_item in param_list:
             name = param_item["name"]
             type = param_item["type"]
-            options = param_item.get("options",None)
+            options = param_item.get("options", None)
             if type == "radio":
                 radio_group = QButtonGroup(parent=self)
                 option_list = options.split(",")
@@ -335,11 +345,11 @@ class ImportParamWidget(QWidget):
                         btn_widget.setChecked(True)
                     widget_layout.addWidget(btn_widget)
                     radio_group.addButton(btn_widget)
-                radio_group.buttonToggled.connect(lambda:self.changed.emit())
+                radio_group.buttonToggled.connect(lambda: self.changed.emit())
                 widget_elements[name] = radio_group
             elif type == "check":
                 check_widget = QCheckBox(name)
-                check_widget.stateChanged.connect(lambda:self.changed.emit())
+                check_widget.stateChanged.connect(lambda: self.changed.emit())
                 widget_layout.addWidget(check_widget)
                 widget_elements[name] = check_widget
             elif type == "function_menu":
@@ -348,12 +358,12 @@ class ImportParamWidget(QWidget):
                 option_list = getattr(self, options)()
                 for option in option_list:
                     list_widget.addItem(option)
-                list_widget.currentIndexChanged.connect(lambda:self.changed.emit())
+                list_widget.currentIndexChanged.connect(lambda: self.changed.emit())
                 widget_layout.addWidget(list_widget)
                 widget_elements[name] = list_widget
             self.widget_elements = widget_elements
         return widget_layout
-    
+
     def get_values(self, only_required=False):
         """Method to get current user-selected values for import parameters.
 
@@ -394,10 +404,10 @@ class ImportParamWidget(QWidget):
         for param in param_list:
             name = param["name"]
             type = param["type"]
-            print(name,type)
+            print(name, type)
             if hasattr(video, name):
                 val = getattr(video, name)
-                print(name,val)
+                print(name, val)
                 widget = self.widget_elements[name]
                 if hasattr(widget, "isChecked"):
                     widget.setChecked(val)
@@ -421,12 +431,12 @@ class ImportParamWidget(QWidget):
             This is used to populate the "function_menu"-type param.
         """
         try:
-            with h5py.File(self.file_path,"r") as f:
-                options = self._find_h5_datasets("",f)
+            with h5py.File(self.file_path, "r") as f:
+                options = self._find_h5_datasets("", f)
         except Exception as e:
             options = []
         return options
-    
+
     def _find_h5_datasets(self, data_path, data_object) -> list:
         """Recursively find datasets in hdf5 file."""
         options = []
@@ -435,7 +445,9 @@ class ImportParamWidget(QWidget):
                 if len(data_object[key].shape) == 4:
                     options.append(data_path + "/" + key)
             elif isinstance(data_object[key], h5py._hl.group.Group):
-                options.extend(self._find_h5_datasets(data_path + "/" + key, data_object[key]))
+                options.extend(
+                    self._find_h5_datasets(data_path + "/" + key, data_object[key])
+                )
         return options
 
     def boundingRect(self) -> QRectF:
@@ -471,28 +483,33 @@ class VideoPreviewWidget(QWidget):
         self.layout.addWidget(self.video_label)
         self.setLayout(self.layout)
         self.view.show()
-        
+
         if video is not None:
             self.load_video(video)
-    
+
     def clear_video(self):
         """Clear the video preview."""
         self.view.clear()
-    
+
     def load_video(self, video: Video, initial_frame=0, plot=True):
         """Load the video preview and display label text."""
         self.video = video
         self.frame_idx = initial_frame
-        label = "(%d, %d), %d f, %d c" % (self.video.width, self.video.height, self.video.frames, self.video.channels)
+        label = "(%d, %d), %d f, %d c" % (
+            self.video.width,
+            self.video.height,
+            self.video.frames,
+            self.video.channels,
+        )
         self.video_label.setText(label)
         if plot:
             self.plot(initial_frame)
-    
+
     def plot(self, idx=0):
         """Show the video preview."""
         if self.video is None:
             return
-        
+
         # Get image data
         frame = self.video.get_frame(idx)
         # Clear existing objects
@@ -514,9 +531,12 @@ class VideoPreviewWidget(QWidget):
 if __name__ == "__main__":
 
     app = QApplication([])
-    
+
     import_list = ImportVideos().go()
-    
+
     for import_item in import_list:
         vid = import_item["video_class"](**import_item["params"])
-        print("Imported video data: (%d, %d), %d f, %d c" % (vid.width, vid.height, vid.frames, vid.channels))
+        print(
+            "Imported video data: (%d, %d), %d f, %d c"
+            % (vid.width, vid.height, vid.frames, vid.channels)
+        )

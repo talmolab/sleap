@@ -13,10 +13,12 @@ from queue import Queue
 from threading import Thread
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 # Object that signals shutdown
 _sentinel = object()
+
 
 def reader(out_q: Queue, video: Video, frames: List[int]):
     """Read frame images from video and send them into queue.
@@ -32,7 +34,7 @@ def reader(out_q: Queue, video: Video, frames: List[int]):
 
     total_count = len(frames)
     chunk_size = 64
-    chunk_count = math.ceil(total_count/chunk_size)
+    chunk_count = math.ceil(total_count / chunk_size)
 
     logger.info(f"Chunks: {chunk_count}, chunk size: {chunk_size}")
 
@@ -50,7 +52,7 @@ def reader(out_q: Queue, video: Video, frames: List[int]):
         video_frame_images = video[frames_idx_chunk]
 
         elapsed = clock() - t0
-        fps = len(frames_idx_chunk)/elapsed
+        fps = len(frames_idx_chunk) / elapsed
         logger.debug(f"reading chunk {i} in {elapsed} s = {fps} fps")
         i += 1
 
@@ -58,6 +60,7 @@ def reader(out_q: Queue, video: Video, frames: List[int]):
 
     # send _sentinal object into queue to signal that we're done
     out_q.put(_sentinel)
+
 
 def marker(in_q: Queue, out_q: Queue, labels: Labels, video_idx: int):
     """Annotate frame images (draw instances).
@@ -89,14 +92,15 @@ def marker(in_q: Queue, out_q: Queue, labels: Labels, video_idx: int):
         imgs = []
         for i, frame_idx in enumerate(frames_idx_chunk):
             img = get_frame_image(
-                        video_frame=video_frame_images[i],
-                        video_idx=video_idx,
-                        frame_idx=frame_idx,
-                        labels=labels)
+                video_frame=video_frame_images[i],
+                video_idx=video_idx,
+                frame_idx=frame_idx,
+                labels=labels,
+            )
 
             imgs.append(img)
         elapsed = clock() - t0
-        fps = len(imgs)/elapsed
+        fps = len(imgs) / elapsed
         logger.debug(f"drawing chunk {chunk_i} in {elapsed} s = {fps} fps")
         chunk_i += 1
         out_q.put(imgs)
@@ -104,8 +108,8 @@ def marker(in_q: Queue, out_q: Queue, labels: Labels, video_idx: int):
     # send _sentinal object into queue to signal that we're done
     out_q.put(_sentinel)
 
-def writer(in_q: Queue, progress_queue: Queue,
-           filename: str, fps: int, img_w_h: tuple):
+
+def writer(in_q: Queue, progress_queue: Queue, filename: str, fps: int, img_w_h: tuple):
     """Write annotated images to video.
 
     Args:
@@ -123,7 +127,7 @@ def writer(in_q: Queue, progress_queue: Queue,
 
     cv2.setNumThreads(usable_cpu_count())
 
-    fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+    fourcc = cv2.VideoWriter_fourcc(*"MJPG")
     out = cv2.VideoWriter(filename, fourcc, fps, img_w_h)
 
     start_time = clock()
@@ -143,7 +147,7 @@ def writer(in_q: Queue, progress_queue: Queue,
             out.write(img)
 
         elapsed = clock() - t0
-        fps = len(data)/elapsed
+        fps = len(data) / elapsed
         logger.debug(f"writing chunk {i} in {elapsed} s = {fps} fps")
         i += 1
 
@@ -155,13 +159,15 @@ def writer(in_q: Queue, progress_queue: Queue,
     # send (-1, time) to signal done
     progress_queue.put((-1, total_elapsed))
 
+
 def save_labeled_video(
-            filename: str,
-            labels: Labels,
-            video: Video,
-            frames: List[int],
-            fps: int=15,
-            gui_progress: bool=False):
+    filename: str,
+    labels: Labels,
+    video: Video,
+    frames: List[int],
+    fps: int = 15,
+    gui_progress: bool = False,
+):
     """Function to generate and save video with annotations."""
     output_size = (video.height, video.width)
 
@@ -173,12 +179,14 @@ def save_labeled_video(
     q2 = Queue()
     progress_queue = Queue()
 
-    thread_read = Thread(target=reader, args=(q1, video, frames,))
-    thread_mark = Thread(target=marker, args=(q1, q2, labels, labels.videos.index(video)))
-    thread_write = Thread(target=writer, args=(
-                                            q2, progress_queue, filename,
-                                            fps, (video.width, video.height),
-                                            ))
+    thread_read = Thread(target=reader, args=(q1, video, frames))
+    thread_mark = Thread(
+        target=marker, args=(q1, q2, labels, labels.videos.index(video))
+    )
+    thread_write = Thread(
+        target=writer,
+        args=(q2, progress_queue, filename, fps, (video.width, video.height)),
+    )
 
     thread_read.start()
     thread_mark.start()
@@ -189,9 +197,8 @@ def save_labeled_video(
         from PySide2 import QtWidgets, QtCore
 
         progress_win = QtWidgets.QProgressDialog(
-                            f"Generating video with {len(frames)} frames...",
-                            "Cancel",
-                            0, len(frames))
+            f"Generating video with {len(frames)} frames...", "Cancel", 0, len(frames)
+        )
         progress_win.setMinimumWidth(300)
         progress_win.setWindowModality(QtCore.Qt.WindowModal)
 
@@ -201,18 +208,21 @@ def save_labeled_video(
             break
         if progress_win is not None and progress_win.wasCanceled():
             break
-        fps = frames_complete/elapsed
+        fps = frames_complete / elapsed
         remaining_frames = len(frames) - frames_complete
-        remaining_time = remaining_frames/fps
+        remaining_time = remaining_frames / fps
 
         if gui_progress:
             progress_win.setValue(frames_complete)
         else:
-            print(f"Finished {frames_complete} frames in {elapsed} s, fps = {fps}, approx {remaining_time} s remaining")
+            print(
+                f"Finished {frames_complete} frames in {elapsed} s, fps = {fps}, approx {remaining_time} s remaining"
+            )
 
     elapsed = clock() - t0
-    fps = len(frames)/elapsed
+    fps = len(frames) / elapsed
     print(f"Done in {elapsed} s, fps = {fps}.")
+
 
 def img_to_cv(img):
     # Convert RGB to BGR for OpenCV
@@ -223,27 +233,31 @@ def img_to_cv(img):
         img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
     return img
 
+
 def get_frame_image(video_frame, video_idx, frame_idx, labels):
     img = img_to_cv(video_frame)
     plot_instances_cv(img, video_idx, frame_idx, labels)
     return img
 
+
 def _point_int_tuple(point):
     return int(point.x), int(point.y)
 
+
 def plot_instances_cv(img, video_idx, frame_idx, labels):
-    cmap = ([
-        [0,   114,   189],
-        [217,  83,    25],
-        [237, 177,    32],
-        [126,  47,   142],
-        [119, 172,    48],
-        [77,  190,   238],
-        [162,  20,    47],
-        ])
+    cmap = [
+        [0, 114, 189],
+        [217, 83, 25],
+        [237, 177, 32],
+        [126, 47, 142],
+        [119, 172, 48],
+        [77, 190, 238],
+        [162, 20, 47],
+    ]
     lfs = labels.find(labels.videos[video_idx], frame_idx)
 
-    if len(lfs) == 0: return
+    if len(lfs) == 0:
+        return
 
     count_no_track = 0
     for i, instance in enumerate(lfs[0].instances_to_show):
@@ -254,9 +268,10 @@ def plot_instances_cv(img, video_idx, frame_idx, labels):
             track_idx = len(labels.tracks) + count_no_track
             count_no_track += 1
 
-        inst_color = cmap[track_idx%len(cmap)]
+        inst_color = cmap[track_idx % len(cmap)]
 
         plot_instance_cv(img, instance, inst_color)
+
 
 def plot_instance_cv(img, instance, color, marker_radius=4):
 
@@ -266,23 +281,31 @@ def plot_instance_cv(img, instance, color, marker_radius=4):
     for (node, point) in instance.nodes_points:
         # plot node at point
         if point.visible and not point.isnan():
-            cv2.circle(img,
-                    _point_int_tuple(point),
-                    marker_radius,
-                    cv_color,
-                    lineType=cv2.LINE_AA)
+            cv2.circle(
+                img,
+                _point_int_tuple(point),
+                marker_radius,
+                cv_color,
+                lineType=cv2.LINE_AA,
+            )
     for (src, dst) in instance.skeleton.edges:
         # Make sure that both nodes are present in this instance before drawing edge
         if src in instance and dst in instance:
-            if instance[src].visible and instance[dst].visible \
-                and not instance[src].isnan() and not instance[dst].isnan():
+            if (
+                instance[src].visible
+                and instance[dst].visible
+                and not instance[src].isnan()
+                and not instance[dst].isnan()
+            ):
 
                 cv2.line(
-                        img,
-                        _point_int_tuple(instance[src]),
-                        _point_int_tuple(instance[dst]),
-                        cv_color,
-                        lineType=cv2.LINE_AA)
+                    img,
+                    _point_int_tuple(instance[src]),
+                    _point_int_tuple(instance[dst]),
+                    cv_color,
+                    lineType=cv2.LINE_AA,
+                )
+
 
 if __name__ == "__main__":
 
@@ -291,13 +314,21 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("data_path", help="Path to labels json file")
-    parser.add_argument('-o', '--output', type=str, default=None,
-                        help='The output filename for the video')
-    parser.add_argument('-f', '--fps', type=int, default=15,
-                        help='Frames per second')
-    parser.add_argument('--frames', type=frame_list, default="",
-                        help='list of frames to predict. Either comma separated list (e.g. 1,2,3) or '
-                             'a range separated by hyphen (e.g. 1-3). (default is entire video)')
+    parser.add_argument(
+        "-o",
+        "--output",
+        type=str,
+        default=None,
+        help="The output filename for the video",
+    )
+    parser.add_argument("-f", "--fps", type=int, default=15, help="Frames per second")
+    parser.add_argument(
+        "--frames",
+        type=frame_list,
+        default="",
+        help="list of frames to predict. Either comma separated list (e.g. 1,2,3) or "
+        "a range separated by hyphen (e.g. 1-3). (default is entire video)",
+    )
     args = parser.parse_args()
 
     video_callback = Labels.make_video_callback([os.path.dirname(args.data_path)])
@@ -312,10 +343,12 @@ if __name__ == "__main__":
 
     filename = args.output or args.data_path + ".avi"
 
-    save_labeled_video(filename=filename,
-                       labels=labels,
-                       video=labels.videos[0],
-                       frames=frames,
-                       fps=args.fps)
+    save_labeled_video(
+        filename=filename,
+        labels=labels,
+        video=labels.videos[0],
+        frames=frames,
+        fps=args.fps,
+    )
 
     print(f"Video saved as: {filename}")

@@ -7,6 +7,7 @@ when user manipulates tracks for a range of instances.
 
 from typing import List, Tuple
 
+
 class RangeList:
     """
     Class for manipulating a list of range intervals.
@@ -37,15 +38,16 @@ class RangeList:
     @property
     def start(self):
         """Return the start value of range (or None if empty)."""
-        if self.is_empty: return None
+        if self.is_empty:
+            return None
         return self.list[0][0]
 
     def add(self, val, tolerance=0):
         """Add a single value, merges to last range if contiguous."""
         if self.list and self.list[-1][1] + tolerance >= val:
-            self.list[-1] = (self.list[-1][0], val+1)
+            self.list[-1] = (self.list[-1][0], val + 1)
         else:
-            self.list.append((val, val+1))
+            self.list.append((val, val + 1))
 
     def insert(self, new_range: tuple):
         """Add a new range, merging to adjacent/overlapping ranges as appropriate."""
@@ -72,7 +74,8 @@ class RangeList:
 
     def cut_range(self, cut: tuple):
         """Return three lists, everthing before/within/after cut range."""
-        if not self.list: return [], [], []
+        if not self.list:
+            return [], [], []
         cut = self._as_tuple(cut)
 
         a, r = self.cut_(self.list, cut[0])
@@ -83,7 +86,8 @@ class RangeList:
     @staticmethod
     def _as_tuple(x):
         """Return tuple (converting from range if necessary)."""
-        if isinstance(x, range): return x.start, x.stop
+        if isinstance(x, range):
+            return x.start, x.stop
         return x
 
     @staticmethod
@@ -120,14 +124,17 @@ class RangeList:
         Returns:
             range list that joins all of the lists in list_list
         """
-        if len(list_list) == 1: return list_list[0]
-        if len(list_list) == 2: return cls.join_pair_(list_list[0], list_list[1])
+        if len(list_list) == 1:
+            return list_list[0]
+        if len(list_list) == 2:
+            return cls.join_pair_(list_list[0], list_list[1])
         return cls.join_pair_(list_list[0], cls.join_(list_list[1:]))
 
     @staticmethod
     def join_pair_(list_a: List[Tuple[int]], list_b: List[Tuple[int]]):
         """Return a single pair of lists that joins two input lists."""
-        if not list_a or not list_b: return list_a + list_b
+        if not list_a or not list_b:
+            return list_a + list_b
 
         last_a = list_a[-1]
         first_b = list_b[0]

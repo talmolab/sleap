@@ -10,18 +10,30 @@ from PySide2 import QtWidgets
 from sleap.io.dataset import Labels
 from sleap.gui.formbuilder import YamlFormWidget
 
-class TrainingEditor(QtWidgets.QDialog):
 
-    def __init__(self, profile_filename: Optional[str]=None, saved_files: list=[], *args, **kwargs):
+class TrainingEditor(QtWidgets.QDialog):
+    def __init__(
+        self,
+        profile_filename: Optional[str] = None,
+        saved_files: list = [],
+        *args,
+        **kwargs
+    ):
         super(TrainingEditor, self).__init__()
 
-        form_yaml = resource_filename(Requirement.parse("sleap"),"sleap/config/training_editor.yaml")
+        form_yaml = resource_filename(
+            Requirement.parse("sleap"), "sleap/config/training_editor.yaml"
+        )
 
         self.form_widgets = dict()
-        self.form_widgets["model"] = YamlFormWidget(form_yaml, "model", "Network Architecture")
-        self.form_widgets["datagen"] = YamlFormWidget(form_yaml, "datagen", "Data Generation/Preprocessing")
+        self.form_widgets["model"] = YamlFormWidget(
+            form_yaml, "model", "Network Architecture"
+        )
+        self.form_widgets["datagen"] = YamlFormWidget(
+            form_yaml, "datagen", "Data Generation/Preprocessing"
+        )
         self.form_widgets["trainer"] = YamlFormWidget(form_yaml, "trainer", "Trainer")
-        self.form_widgets["output"] = YamlFormWidget(form_yaml, "output",)
+        self.form_widgets["output"] = YamlFormWidget(form_yaml, "output")
         self.form_widgets["buttons"] = YamlFormWidget(form_yaml, "buttons")
 
         self.form_widgets["buttons"].mainAction.connect(self._save_as)
@@ -64,7 +76,7 @@ class TrainingEditor(QtWidgets.QDialog):
         widget.setLayout(layout)
         return widget
 
-    def _load_profile(self, profile_filename:str):
+    def _load_profile(self, profile_filename: str):
         from sleap.nn.model import ModelOutputType
         from sleap.nn.training import TrainingJob
 
@@ -83,7 +95,9 @@ class TrainingEditor(QtWidgets.QDialog):
     def _save_as(self):
 
         # Show "Save" dialog
-        save_filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, caption="Save As...", dir=None, filter="Profile JSON (*.json)")
+        save_filename, _ = QtWidgets.QFileDialog.getSaveFileName(
+            self, caption="Save As...", dir=None, filter="Profile JSON (*.json)"
+        )
 
         if len(save_filename):
             from sleap.nn.model import Model, ModelOutputType
@@ -92,35 +106,47 @@ class TrainingEditor(QtWidgets.QDialog):
 
             # Construct Model
             model_data = self.form_widgets["model"].get_form_data()
-            arch = dict(LeapCNN=leap.LeapCNN,
-                        StackedHourglass=hourglass.StackedHourglass,
-                        UNet=unet.UNet,
-                        StackedUNet=unet.StackedUNet,
-                        )[model_data["arch"]]
+            arch = dict(
+                LeapCNN=leap.LeapCNN,
+                StackedHourglass=hourglass.StackedHourglass,
+                UNet=unet.UNet,
+                StackedUNet=unet.StackedUNet,
+            )[model_data["arch"]]
 
-            output_type = dict(confmaps=ModelOutputType.CONFIDENCE_MAP,
-                               pafs=ModelOutputType.PART_AFFINITY_FIELD,
-                               centroids=ModelOutputType.CENTROIDS
-                                )[model_data["output_type"]]
+            output_type = dict(
+                confmaps=ModelOutputType.CONFIDENCE_MAP,
+                pafs=ModelOutputType.PART_AFFINITY_FIELD,
+                centroids=ModelOutputType.CENTROIDS,
+            )[model_data["output_type"]]
 
-            backbone_kwargs = {key:val for key, val in model_data.items()
-                                if key in attr.fields_dict(arch).keys()}
+            backbone_kwargs = {
+                key: val
+                for key, val in model_data.items()
+                if key in attr.fields_dict(arch).keys()
+            }
 
             model = Model(output_type=output_type, backbone=arch(**backbone_kwargs))
 
             # Construct Trainer
-            trainer_data = {**self.form_widgets["datagen"].get_form_data(),
-                            **self.form_widgets["output"].get_form_data(),
-                            **self.form_widgets["trainer"].get_form_data(),
-                            }
+            trainer_data = {
+                **self.form_widgets["datagen"].get_form_data(),
+                **self.form_widgets["output"].get_form_data(),
+                **self.form_widgets["trainer"].get_form_data(),
+            }
 
-            trainer_kwargs = {key:val for key, val in trainer_data.items()
-                                if key in attr.fields_dict(Trainer).keys()}
+            trainer_kwargs = {
+                key: val
+                for key, val in trainer_data.items()
+                if key in attr.fields_dict(Trainer).keys()
+            }
             trainer = Trainer(**trainer_kwargs)
 
             # Construct TrainingJob
-            training_job_kwargs = {key:val for key, val in trainer_data.items()
-                                    if key in attr.fields_dict(TrainingJob).keys()}
+            training_job_kwargs = {
+                key: val
+                for key, val in trainer_data.items()
+                if key in attr.fields_dict(TrainingJob).keys()
+            }
             training_job = TrainingJob(model, trainer, **training_job_kwargs)
 
             # Write the file
@@ -131,6 +157,7 @@ class TrainingEditor(QtWidgets.QDialog):
             self.profile_filename = save_filename
 
         self.close()
+
 
 if __name__ == "__main__":
     import sys

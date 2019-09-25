@@ -32,6 +32,7 @@ class EdgeType(Enum):
         * SYMMETRY - these edges represent symmetrical relationships between
         parts (e.g. left and right arms)
     """
+
     BODY = 1
     SYMMETRY = 2
 
@@ -44,10 +45,10 @@ class Node:
     """
 
     name: str
-    weight: float = 1.
+    weight: float = 1.0
 
     @staticmethod
-    def from_names(name_list: str):
+    def from_names(name_list: str) -> List["Node"]:
         """Convert list of node names to list of nodes objects."""
         nodes = []
         for name in name_list:
@@ -55,11 +56,11 @@ class Node:
         return nodes
 
     @classmethod
-    def as_node(cls, node):
+    def as_node(cls, node: Union[str, "Node"]) -> "Node":
         """Convert given `node` to `Node` object (if not already)."""
         return node if isinstance(node, cls) else cls(node)
 
-    def matches(self, other):
+    def matches(self, other: "Node") -> bool:
         """
         Check whether all attributes match between two nodes.
 
@@ -99,14 +100,13 @@ class Skeleton:
         if name is None or not isinstance(name, str) or not name:
             name = "Skeleton-" + str(next(self._skeleton_idx))
 
-
         # Since networkx does not keep edges in the order we insert them we need
         # to keep track of how many edges have been inserted so we can number them
         # as they are inserted and sort them by this numbering when the edge list
         # is returned.
         self._graph: nx.MultiDiGraph = nx.MultiDiGraph(name=name, num_edges_inserted=0)
 
-    def matches(self, other: 'Skeleton'):
+    def matches(self, other: "Skeleton") -> bool:
         """
         Compare this `Skeleton` to another, ignoring skeleton name and
         the identities of the `Node` objects in each graph.
@@ -117,11 +117,14 @@ class Skeleton:
         Returns:
             True if match, False otherwise.
         """
+
         def dict_match(dict1, dict2):
             return dict1 == dict2
 
         # Check if the graphs are iso-morphic
-        is_isomorphic = nx.is_isomorphic(self._graph, other._graph, node_match=dict_match)
+        is_isomorphic = nx.is_isomorphic(
+            self._graph, other._graph, node_match=dict_match
+        )
 
         if not is_isomorphic:
             return False
@@ -137,7 +140,11 @@ class Skeleton:
 
     @property
     def graph(self):
-        edges = [(src, dst, key) for src, dst, key, edge_type in self._graph.edges(keys=True, data="type") if edge_type == EdgeType.BODY]
+        edges = [
+            (src, dst, key)
+            for src, dst, key, edge_type in self._graph.edges(keys=True, data="type")
+            if edge_type == EdgeType.BODY
+        ]
         # TODO: properly induce subgraph for MultiDiGraph
         #   Currently, NetworkX will just return the nodes in the subgraph.
         #   See: https://stackoverflow.com/questions/16150557/networkxcreating-a-subgraph-induced-from-edges
@@ -145,11 +152,15 @@ class Skeleton:
 
     @property
     def graph_symmetry(self):
-        edges = [(src, dst, key) for src, dst, key, edge_type in self._graph.edges(keys=True, data="type") if edge_type == EdgeType.SYMMETRY]
+        edges = [
+            (src, dst, key)
+            for src, dst, key, edge_type in self._graph.edges(keys=True, data="type")
+            if edge_type == EdgeType.SYMMETRY
+        ]
         return self._graph.edge_subgraph(edges)
 
     @staticmethod
-    def find_unique_nodes(skeletons: List['Skeleton']):
+    def find_unique_nodes(skeletons: List["Skeleton"]):
         """
         Given list of skeletons, return a list of unique node objects across all skeletons.
 
@@ -173,11 +184,19 @@ class Skeleton:
         Returns:
             A cattr.Converter() instance ready for skeleton serialization and deserialization.
         """
-        node_to_idx = {node:idx for idx,node in idx_to_node.items()} if idx_to_node is not None else None
+        node_to_idx = (
+            {node: idx for idx, node in idx_to_node.items()}
+            if idx_to_node is not None
+            else None
+        )
 
         _cattr = cattr.Converter()
-        _cattr.register_unstructure_hook(Skeleton, lambda x: Skeleton.to_dict(x, node_to_idx))
-        _cattr.register_structure_hook(Skeleton, lambda x, cls: Skeleton.from_dict(x, idx_to_node))
+        _cattr.register_unstructure_hook(
+            Skeleton, lambda x: Skeleton.to_dict(x, node_to_idx)
+        )
+        _cattr.register_structure_hook(
+            Skeleton, lambda x, cls: Skeleton.from_dict(x, idx_to_node)
+        )
         return _cattr
 
     @property
@@ -204,13 +223,15 @@ class Skeleton:
         Raises:
             NotImplementedError
         """
-        raise NotImplementedError("Cannot change Skeleton name, it is immutable since " +
-                                  "it is used for hashing. Create a copy of the skeleton " +
-                                  "with new name using " +
-                                  f"new_skeleton = Skeleton.rename(skeleton, '{name}'))")
+        raise NotImplementedError(
+            "Cannot change Skeleton name, it is immutable since "
+            + "it is used for hashing. Create a copy of the skeleton "
+            + "with new name using "
+            + f"new_skeleton = Skeleton.rename(skeleton, '{name}'))"
+        )
 
     @classmethod
-    def rename_skeleton(cls, skeleton: 'Skeleton', name: str) -> 'Skeleton':
+    def rename_skeleton(cls, skeleton: "Skeleton", name: str) -> "Skeleton":
         """
         A skeleton object cannot change its name. This property is immutable because it is
         used to hash skeletons. If you want to rename a Skeleton you must use this classmethod.
@@ -254,9 +275,11 @@ class Skeleton:
         Returns:
             list of (src_node, dst_node)
         """
-        edge_list = [(d['edge_insert_idx'], src, dst)
-                     for src, dst, key, d in self._graph.edges(keys=True, data=True)
-                     if d['type'] == EdgeType.BODY]
+        edge_list = [
+            (d["edge_insert_idx"], src, dst)
+            for src, dst, key, d in self._graph.edges(keys=True, data=True)
+            if d["type"] == EdgeType.BODY
+        ]
 
         # We don't want to return the edge list in the order it is stored. We
         # want to use the insertion order. Sort by the insertion index for each
@@ -272,9 +295,11 @@ class Skeleton:
         Returns:
             list of (src_node.name, dst_node.name)
         """
-        edge_list = [(d['edge_insert_idx'], src.name, dst.name)
-                     for src, dst, key, d in self._graph.edges(keys=True, data=True)
-                     if d['type'] == EdgeType.BODY]
+        edge_list = [
+            (d["edge_insert_idx"], src.name, dst.name)
+            for src, dst, key, d in self._graph.edges(keys=True, data=True)
+            if d["type"] == EdgeType.BODY
+        ]
 
         # We don't want to return the edge list in the order it is stored. We
         # want to use the insertion order. Sort by the insertion index for each
@@ -290,7 +315,11 @@ class Skeleton:
         Returns:
             list of (src_node, dst_node, key, attributes)
         """
-        return [(src, dst, key, attr) for src, dst, key, attr in self._graph.edges(keys=True, data=True) if attr["type"] == EdgeType.BODY]
+        return [
+            (src, dst, key, attr)
+            for src, dst, key, attr in self._graph.edges(keys=True, data=True)
+            if attr["type"] == EdgeType.BODY
+        ]
 
     @property
     def symmetries(self):
@@ -300,7 +329,11 @@ class Skeleton:
             list of (node1, node2)
         """
         # Find all symmetric edges
-        symmetries = [(src, dst) for src, dst, key, edge_type in self._graph.edges(keys=True, data="type") if edge_type == EdgeType.SYMMETRY]
+        symmetries = [
+            (src, dst)
+            for src, dst, key, edge_type in self._graph.edges(keys=True, data="type")
+            if edge_type == EdgeType.SYMMETRY
+        ]
         # Get rid of duplicates
         symmetries = list(set([tuple(set(e)) for e in symmetries]))
         return symmetries
@@ -315,7 +348,11 @@ class Skeleton:
             list of (node1, node2, key, attr)
         """
         # Find all symmetric edges
-        return [(src, dst, key, attr) for src, dst, key, attr in self._graph.edges(keys=True, data=True) if attr["type"] == EdgeType.SYMMETRY]
+        return [
+            (src, dst, key, attr)
+            for src, dst, key, attr in self._graph.edges(keys=True, data=True)
+            if attr["type"] == EdgeType.SYMMETRY
+        ]
 
     def node_to_index(self, node: Union[str, Node]):
         """
@@ -378,7 +415,9 @@ class Skeleton:
             node = self.find_node(name)
             self._graph.remove_node(node)
         except nx.NetworkXError:
-            raise ValueError("The node named ({}) does not exist, cannot remove it.".format(name))
+            raise ValueError(
+                "The node named ({}) does not exist, cannot remove it.".format(name)
+            )
 
     def find_node(self, name: str):
         """Find node in skeleton by name of node.
@@ -426,17 +465,31 @@ class Skeleton:
             destination_node = self.find_node(destination)
 
         if source_node is None:
-            raise ValueError("Skeleton does not have source node named ({})".format(source))
+            raise ValueError(
+                "Skeleton does not have source node named ({})".format(source)
+            )
 
         if destination_node is None:
-            raise ValueError("Skeleton does not have destination node named ({})".format(destination))
+            raise ValueError(
+                "Skeleton does not have destination node named ({})".format(destination)
+            )
 
         if self._graph.has_edge(source_node, destination_node):
-            raise ValueError("Skeleton already has an edge between ({}) and ({}).".format(source, destination))
+            raise ValueError(
+                "Skeleton already has an edge between ({}) and ({}).".format(
+                    source, destination
+                )
+            )
 
-        self._graph.add_edge(source_node, destination_node, type = EdgeType.BODY,
-                             edge_insert_idx = self._graph.graph['num_edges_inserted'])
-        self._graph.graph['num_edges_inserted'] = self._graph.graph['num_edges_inserted'] + 1
+        self._graph.add_edge(
+            source_node,
+            destination_node,
+            type=EdgeType.BODY,
+            edge_insert_idx=self._graph.graph["num_edges_inserted"],
+        )
+        self._graph.graph["num_edges_inserted"] = (
+            self._graph.graph["num_edges_inserted"] + 1
+        )
 
     def delete_edge(self, source: str, destination: str):
         """Delete an edge between two nodes.
@@ -461,13 +514,21 @@ class Skeleton:
             destination_node = self.find_node(destination)
 
         if source_node is None:
-            raise ValueError("Skeleton does not have source node named ({})".format(source))
+            raise ValueError(
+                "Skeleton does not have source node named ({})".format(source)
+            )
 
         if destination_node is None:
-            raise ValueError("Skeleton does not have destination node named ({})".format(destination))
+            raise ValueError(
+                "Skeleton does not have destination node named ({})".format(destination)
+            )
 
         if not self._graph.has_edge(source_node, destination_node):
-            raise ValueError("Skeleton has no edge between ({}) and ({}).".format(source, destination))
+            raise ValueError(
+                "Skeleton has no edge between ({}) and ({}).".format(
+                    source, destination
+                )
+            )
 
         self._graph.remove_edge(source_node, destination_node)
 
@@ -494,10 +555,14 @@ class Skeleton:
             raise ValueError("Cannot add symmetry to the same node.")
 
         if self.get_symmetry(node1) is not None:
-            raise ValueError(f"{node1} is already symmetric with {self.get_symmetry(node1)}.")
+            raise ValueError(
+                f"{node1} is already symmetric with {self.get_symmetry(node1)}."
+            )
 
         if self.get_symmetry(node2) is not None:
-            raise ValueError(f"{node2} is already symmetric with {self.get_symmetry(node2)}.")
+            raise ValueError(
+                f"{node2} is already symmetric with {self.get_symmetry(node2)}."
+            )
 
         self._graph.add_edge(node1_node, node2_node, type=EdgeType.SYMMETRY)
         self._graph.add_edge(node2_node, node1_node, type=EdgeType.SYMMETRY)
@@ -515,10 +580,19 @@ class Skeleton:
         node1_node = self.find_node(node1)
         node2_node = self.find_node(node2)
 
-        if self.get_symmetry(node1) != node2_node or self.get_symmetry(node2) != node1_node:
+        if (
+            self.get_symmetry(node1) != node2_node
+            or self.get_symmetry(node2) != node1_node
+        ):
             raise ValueError(f"Nodes {node1}, {node2} are not symmetric.")
 
-        edges = [(src, dst, key) for src, dst, key, edge_type in self._graph.edges([node1_node, node2_node], keys=True, data="type") if edge_type == EdgeType.SYMMETRY]
+        edges = [
+            (src, dst, key)
+            for src, dst, key, edge_type in self._graph.edges(
+                [node1_node, node2_node], keys=True, data="type"
+            )
+            if edge_type == EdgeType.SYMMETRY
+        ]
         self._graph.remove_edges_from(edges)
 
     def get_symmetry(self, node: str):
@@ -532,7 +606,11 @@ class Skeleton:
         """
         node_node = self.find_node(node)
 
-        symmetry = [dst for src, dst, edge_type in self._graph.edges(node_node, data="type") if edge_type == EdgeType.SYMMETRY]
+        symmetry = [
+            dst
+            for src, dst, edge_type in self._graph.edges(node_node, data="type")
+            if edge_type == EdgeType.SYMMETRY
+        ]
 
         if len(symmetry) == 0:
             return None
@@ -658,11 +736,14 @@ class Skeleton:
             True is yes, False if no.
 
         """
-        source_node, destination_node = self.find_node(source_name), self.find_node(dest_name)
+        source_node, destination_node = (
+            self.find_node(source_name),
+            self.find_node(dest_name),
+        )
         return self._graph.has_edge(source_node, destination_node)
 
     @staticmethod
-    def to_dict(obj: 'Skeleton', node_to_idx: Dict[Node, int] = None):
+    def to_dict(obj: "Skeleton", node_to_idx: Dict[Node, int] = None):
 
         # This is a weird hack to serialize the whole _graph into a dict.
         # I use the underlying to_json and parse it.
@@ -682,9 +763,11 @@ class Skeleton:
         Returns:
             A string containing the JSON representation of the Skeleton.
         """
-        jsonpickle.set_encoder_options('simplejson', sort_keys=True, indent=4)
+        jsonpickle.set_encoder_options("simplejson", sort_keys=True, indent=4)
         if node_to_idx is not None:
-            indexed_node_graph = nx.relabel_nodes(G=self._graph, mapping=node_to_idx) # map nodes to int
+            indexed_node_graph = nx.relabel_nodes(
+                G=self._graph, mapping=node_to_idx
+            )  # map nodes to int
         else:
             indexed_node_graph = self._graph
 
@@ -708,7 +791,7 @@ class Skeleton:
 
         json_str = self.to_json(node_to_idx)
 
-        with open(filename, 'w') as file:
+        with open(filename, "w") as file:
             file.write(json_str)
 
     @classmethod
@@ -749,7 +832,7 @@ class Skeleton:
 
         """
 
-        with open(filename, 'r') as file:
+        with open(filename, "r") as file:
             skeleton = Skeleton.from_json(file.read(), idx_to_node)
 
         return skeleton
@@ -768,15 +851,16 @@ class Skeleton:
         """
         if isinstance(file, str):
             with h5.File(file) as _file:
-                skeletons = Skeleton._load_hdf5(_file) # Load all skeletons
+                skeletons = Skeleton._load_hdf5(_file)  # Load all skeletons
         else:
             skeletons = Skeleton._load_hdf5(file)
 
         return skeletons[name]
 
     @classmethod
-    def load_all_hdf5(cls, file: Union[str, h5.File],
-                      return_dict: bool = False) -> Union[List['Skeleton'], Dict[str, 'Skeleton']]:
+    def load_all_hdf5(
+        cls, file: Union[str, h5.File], return_dict: bool = False
+    ) -> Union[List["Skeleton"], Dict[str, "Skeleton"]]:
         """
         Load all skeletons found in the HDF5 file.
 
@@ -791,7 +875,7 @@ class Skeleton:
         """
         if isinstance(file, str):
             with h5.File(file) as _file:
-                skeletons = Skeleton._load_hdf5(_file) # Load all skeletons
+                skeletons = Skeleton._load_hdf5(_file)  # Load all skeletons
         else:
             skeletons = Skeleton._load_hdf5(file)
 
@@ -804,7 +888,7 @@ class Skeleton:
     def _load_hdf5(cls, file: h5.File):
 
         skeletons = {}
-        for name, json_str in file['skeleton'].attrs.items():
+        for name, json_str in file["skeleton"].attrs.items():
             skeletons[name] = Skeleton.from_json(json_str)
 
         return skeletons
@@ -817,7 +901,7 @@ class Skeleton:
             self._save_hdf5(file)
 
     @classmethod
-    def save_all_hdf5(self, file: Union[str, h5.File], skeletons: List['Skeleton']):
+    def save_all_hdf5(self, file: Union[str, h5.File], skeletons: List["Skeleton"]):
         """
         Convenience method to save a list of skeletons to HDF5 file. Skeletons are saved
         as attributes of a /skeleton group in the file.
@@ -851,10 +935,10 @@ class Skeleton:
         """
 
         # All skeleton will be put as sub-groups in the skeleton group
-        if 'skeleton' not in file:
-            all_sk_group = file.create_group('skeleton', track_order=True)
+        if "skeleton" not in file:
+            all_sk_group = file.create_group("skeleton", track_order=True)
         else:
-            all_sk_group = file.require_group('skeleton')
+            all_sk_group = file.require_group("skeleton")
 
         # Write the dataset to JSON string, then store it in a string
         # attribute
@@ -879,14 +963,16 @@ class Skeleton:
 
         skel_mat = loadmat(filename)
         skel_mat["nodes"] = skel_mat["nodes"][0][0]  # convert to scalar
-        skel_mat["edges"] = skel_mat["edges"] - 1    # convert to 0-based indexing
+        skel_mat["edges"] = skel_mat["edges"] - 1  # convert to 0-based indexing
 
-        node_names = skel_mat['nodeNames']
+        node_names = skel_mat["nodeNames"]
         node_names = [str(n[0][0]) for n in node_names]
         skeleton.add_nodes(node_names)
         for k in range(len(skel_mat["edges"])):
             edge = skel_mat["edges"][k]
-            skeleton.add_edge(source=node_names[edge[0]], destination=node_names[edge[1]])
+            skeleton.add_edge(
+                source=node_names[edge[0]], destination=node_names[edge[1]]
+            )
 
         return skeleton
 

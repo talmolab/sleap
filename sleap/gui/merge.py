@@ -16,20 +16,18 @@ USE_NEW_STRING = "Use new, discard conflicting base instances"
 USE_NEITHER_STRING = "Discard all conflicting instances"
 CLEAN_STRING = "Accept clean merge"
 
-class MergeDialog(QtWidgets.QDialog):
 
-    def __init__(self,
-                 base_labels: Labels,
-                 new_labels: Labels,
-                 *args, **kwargs):
+class MergeDialog(QtWidgets.QDialog):
+    def __init__(self, base_labels: Labels, new_labels: Labels, *args, **kwargs):
 
         super(MergeDialog, self).__init__(*args, **kwargs)
 
         self.base_labels = base_labels
         self.new_labels = new_labels
 
-        merged, self.extra_base, self.extra_new = \
-            Labels.complex_merge_between(self.base_labels, self.new_labels)
+        merged, self.extra_base, self.extra_new = Labels.complex_merge_between(
+            self.base_labels, self.new_labels
+        )
 
         merge_total = 0
         merge_frames = 0
@@ -52,12 +50,16 @@ class MergeDialog(QtWidgets.QDialog):
             merge_table = MergeTable(merged)
             layout.addWidget(merge_table)
 
-        conflict_text = "There are no conflicts." if not self.extra_base else "Merge conflicts:"
+        conflict_text = (
+            "There are no conflicts." if not self.extra_base else "Merge conflicts:"
+        )
         conflict_label = QtWidgets.QLabel(conflict_text)
         layout.addWidget(conflict_label)
 
         if self.extra_base:
-            conflict_table = ConflictTable(self.base_labels, self.extra_base, self.extra_new)
+            conflict_table = ConflictTable(
+                self.base_labels, self.extra_base, self.extra_new
+            )
             layout.addWidget(conflict_table)
 
         self.merge_method = QtWidgets.QComboBox()
@@ -90,18 +92,22 @@ class MergeDialog(QtWidgets.QDialog):
 
         self.accept()
 
+
 class ConflictTable(QtWidgets.QTableView):
     def __init__(self, *args, **kwargs):
         super(ConflictTable, self).__init__()
         self.setModel(ConflictTableModel(*args, **kwargs))
 
+
 class ConflictTableModel(QtCore.QAbstractTableModel):
     _props = ["video", "frame", "base", "new"]
 
-    def __init__(self,
-                 base_labels: Labels,
-                 extra_base: List[LabeledFrame],
-                 extra_new: List[LabeledFrame]):
+    def __init__(
+        self,
+        base_labels: Labels,
+        extra_base: List[LabeledFrame],
+        extra_new: List[LabeledFrame],
+    ):
         super(ConflictTableModel, self).__init__()
         self.base_labels = base_labels
         self.extra_base = extra_base
@@ -130,7 +136,9 @@ class ConflictTableModel(QtCore.QAbstractTableModel):
     def columnCount(self, *args):
         return len(self._props)
 
-    def headerData(self, section, orientation: QtCore.Qt.Orientation, role=QtCore.Qt.DisplayRole):
+    def headerData(
+        self, section, orientation: QtCore.Qt.Orientation, role=QtCore.Qt.DisplayRole
+    ):
         if role == QtCore.Qt.DisplayRole:
             if orientation == QtCore.Qt.Horizontal:
                 return self._props[section]
@@ -138,25 +146,30 @@ class ConflictTableModel(QtCore.QAbstractTableModel):
                 return section
         return None
 
+
 class MergeTable(QtWidgets.QTableView):
     def __init__(self, *args, **kwargs):
         super(MergeTable, self).__init__()
         self.setModel(MergeTableModel(*args, **kwargs))
 
+
 class MergeTableModel(QtCore.QAbstractTableModel):
     _props = ["video", "frame", "merged instances"]
 
-    def __init__(self, merged: List[List['Instance']]):
+    def __init__(self, merged: List[List["Instance"]]):
         super(MergeTableModel, self).__init__()
         self.merged = merged
 
         self.data_table = []
         for video in self.merged.keys():
             for frame_idx, frame_instance_list in self.merged[video].items():
-                self.data_table.append(dict(
-                    filename=video.filename,
-                    frame_idx=frame_idx,
-                    instances=frame_instance_list))
+                self.data_table.append(
+                    dict(
+                        filename=video.filename,
+                        frame_idx=frame_idx,
+                        instances=frame_instance_list,
+                    )
+                )
 
     def data(self, index: QtCore.QModelIndex, role=QtCore.Qt.DisplayRole):
         if role == QtCore.Qt.DisplayRole and index.isValid():
@@ -179,7 +192,9 @@ class MergeTableModel(QtCore.QAbstractTableModel):
     def columnCount(self, *args):
         return len(self._props)
 
-    def headerData(self, section, orientation: QtCore.Qt.Orientation, role=QtCore.Qt.DisplayRole):
+    def headerData(
+        self, section, orientation: QtCore.Qt.Orientation, role=QtCore.Qt.DisplayRole
+    ):
         if role == QtCore.Qt.DisplayRole:
             if orientation == QtCore.Qt.Horizontal:
                 return self._props[section]
@@ -187,15 +202,19 @@ class MergeTableModel(QtCore.QAbstractTableModel):
                 return section
         return None
 
+
 def show_instance_type_counts(instance_list):
-    prediction_count = len(list(filter(lambda inst: hasattr(inst, "score"), instance_list)))
+    prediction_count = len(
+        list(filter(lambda inst: hasattr(inst, "score"), instance_list))
+    )
     user_count = len(instance_list) - prediction_count
     return f"{prediction_count}/{user_count}"
 
+
 if __name__ == "__main__":
 
-#     file_a = "tests/data/json_format_v1/centered_pair.json"
-#     file_b = "tests/data/json_format_v2/centered_pair_predictions.json"
+    #     file_a = "tests/data/json_format_v1/centered_pair.json"
+    #     file_b = "tests/data/json_format_v2/centered_pair_predictions.json"
     file_a = "files/merge/a.h5"
     file_b = "files/merge/b.h5"
 

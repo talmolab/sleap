@@ -39,14 +39,15 @@ class Point(np.record):
     # Define the dtype from the point class attributes plus some
     # additional fields we will use to relate point to instances and
     # nodes.
-    dtype = np.dtype(
-        [('x', 'f8'),
-         ('y', 'f8'),
-         ('visible', '?'),
-         ('complete', '?')])
+    dtype = np.dtype([("x", "f8"), ("y", "f8"), ("visible", "?"), ("complete", "?")])
 
-    def __new__(cls, x: float = math.nan, y: float = math.nan,
-                visible: bool = True, complete: bool = False):
+    def __new__(
+        cls,
+        x: float = math.nan,
+        y: float = math.nan,
+        visible: bool = True,
+        complete: bool = False,
+    ):
 
         # HACK: This is a crazy way to instantiate at new Point but I can't figure
         # out how recarray does it. So I just use it to make matrix of size 1 and
@@ -78,9 +79,7 @@ class Point(np.record):
 
 # This turns PredictedPoint into an attrs class. Defines comparators for
 # us and generaly makes it behave better. Crazy that this works!
-Point = attr.s(these={name: attr.ib()
-                               for name in Point.dtype.names},
-                        init=False)(Point)
+Point = attr.s(these={name: attr.ib() for name in Point.dtype.names}, init=False)(Point)
 
 
 class PredictedPoint(Point):
@@ -100,15 +99,17 @@ class PredictedPoint(Point):
     # additional fields we will use to relate point to instances and
     # nodes.
     dtype = np.dtype(
-        [('x', 'f8'),
-         ('y', 'f8'),
-         ('visible', '?'),
-         ('complete', '?'),
-         ('score', 'f8')])
+        [("x", "f8"), ("y", "f8"), ("visible", "?"), ("complete", "?"), ("score", "f8")]
+    )
 
-    def __new__(cls, x: float = math.nan, y: float = math.nan,
-                visible: bool = True, complete: bool = False,
-                score: float = 0.0):
+    def __new__(
+        cls,
+        x: float = math.nan,
+        y: float = math.nan,
+        visible: bool = True,
+        complete: bool = False,
+        score: float = 0.0,
+    ):
 
         # HACK: This is a crazy way to instantiate at new Point but I can't figure
         # out how recarray does it. So I just use it to make matrix of size 1 and
@@ -138,14 +139,14 @@ class PredictedPoint(Point):
         Returns:
             A scored point based on the point passed in.
         """
-        return cls(**{**Point.asdict(point), 'score': score})
+        return cls(**{**Point.asdict(point), "score": score})
 
 
 # This turns PredictedPoint into an attrs class. Defines comparators for
 # us and generaly makes it behave better. Crazy that this works!
-PredictedPoint = attr.s(these={name: attr.ib()
-                               for name in PredictedPoint.dtype.names},
-                        init=False)(PredictedPoint)
+PredictedPoint = attr.s(
+    these={name: attr.ib() for name in PredictedPoint.dtype.names}, init=False
+)(PredictedPoint)
 
 
 class PointArray(np.recarray):
@@ -156,9 +157,19 @@ class PointArray(np.recarray):
 
     _record_type = Point
 
-    def __new__(subtype, shape, buf=None, offset=0, strides=None,
-                formats=None, names=None, titles=None,
-                byteorder=None, aligned=False, order='C'):
+    def __new__(
+        subtype,
+        shape,
+        buf=None,
+        offset=0,
+        strides=None,
+        formats=None,
+        names=None,
+        titles=None,
+        byteorder=None,
+        aligned=False,
+        order="C",
+    ):
 
         dtype = subtype._record_type.dtype
 
@@ -168,11 +179,19 @@ class PointArray(np.recarray):
             descr = np.format_parser(formats, names, titles, aligned, byteorder)._descr
 
         if buf is None:
-            self = np.ndarray.__new__(subtype, shape, (subtype._record_type, descr), order=order)
+            self = np.ndarray.__new__(
+                subtype, shape, (subtype._record_type, descr), order=order
+            )
         else:
-            self = np.ndarray.__new__(subtype, shape, (subtype._record_type, descr),
-                                      buffer=buf, offset=offset,
-                                      strides=strides, order=order)
+            self = np.ndarray.__new__(
+                subtype,
+                shape,
+                (subtype._record_type, descr),
+                buffer=buf,
+                offset=offset,
+                strides=strides,
+                order=order,
+            )
         return self
 
     def __array_finalize__(self, obj):
@@ -206,7 +225,7 @@ class PointArray(np.recarray):
         if isinstance(obj, np.ndarray):
             if obj.dtype.fields:
                 obj = obj.view(type(self))
-                #if issubclass(obj.dtype.type, numpy.void):
+                # if issubclass(obj.dtype.type, numpy.void):
                 #    return obj.view(dtype=(self.dtype.type, obj.dtype))
                 return obj
             else:
@@ -216,7 +235,7 @@ class PointArray(np.recarray):
             return obj
 
     @classmethod
-    def from_array(cls, a: 'PointArray'):
+    def from_array(cls, a: "PointArray"):
         """
         Convert a PointArray to a new PointArray
         (or child class, i.e., PredictedPointArray),
@@ -235,15 +254,17 @@ class PointArray(np.recarray):
 
         return v
 
+
 class PredictedPointArray(PointArray):
     """
     PredictedPointArray is analogous to PointArray except for predicted
     points.
     """
+
     _record_type = PredictedPoint
 
     @classmethod
-    def to_array(cls, a: 'PredictedPointArray'):
+    def to_array(cls, a: "PredictedPointArray"):
         """
         Convert a PredictedPointArray to a normal PointArray.
 
@@ -272,10 +293,11 @@ class Track:
         spawned_on: The frame of the video that this track was spawned on.
         name: A name given to this track for identifying purposes.
     """
+
     spawned_on: int = attr.ib(converter=int)
     name: str = attr.ib(default="", converter=str)
 
-    def matches(self, other: 'Track'):
+    def matches(self, other: "Track"):
         """
         Check if two tracks match by value.
 
@@ -292,6 +314,7 @@ class Track:
 # Instance cannot be a slotted class at the moment. This is because it creates
 # attributes _frame and _point_array_cache after init. These are private variables
 # that are created in post init so they are not serialized.
+
 
 @attr.s(cmp=False, slots=True)
 class Instance:
@@ -311,10 +334,10 @@ class Instance:
 
     skeleton: Skeleton = attr.ib()
     track: Track = attr.ib(default=None)
-    from_predicted: Optional['PredictedInstance'] = attr.ib(default=None)
+    from_predicted: Optional["PredictedInstance"] = attr.ib(default=None)
     _points: PointArray = attr.ib(default=None)
     _nodes: List = attr.ib(default=None)
-    frame: Union['LabeledFrame', None] = attr.ib(default=None)
+    frame: Union["LabeledFrame", None] = attr.ib(default=None)
 
     # The underlying Point array type that this instances point array should be.
     _point_array_type = PointArray
@@ -322,7 +345,9 @@ class Instance:
     @from_predicted.validator
     def _validate_from_predicted_(self, attribute, from_predicted):
         if from_predicted is not None and type(from_predicted) != PredictedInstance:
-            raise TypeError(f"Instance.from_predicted type must be PredictedInstance (not {type(from_predicted)})")
+            raise TypeError(
+                f"Instance.from_predicted type must be PredictedInstance (not {type(from_predicted)})"
+            )
 
     @_points.validator
     def _validate_all_points(self, attribute, points):
@@ -340,10 +365,14 @@ class Instance:
             if is_string_dict:
                 for node_name in points.keys():
                     if not self.skeleton.has_node(node_name):
-                        raise KeyError(f"There is no node named {node_name} in {self.skeleton}")
+                        raise KeyError(
+                            f"There is no node named {node_name} in {self.skeleton}"
+                        )
         elif isinstance(points, PointArray):
             if len(points) != len(self.skeleton.nodes):
-                raise ValueError("PointArray does not have the same number of rows as skeleton nodes.")
+                raise ValueError(
+                    "PointArray does not have the same number of rows as skeleton nodes."
+                )
 
     def __attrs_post_init__(self):
 
@@ -385,14 +414,18 @@ class Instance:
             points = {skeleton.find_node(name): point for name, point in points.items()}
 
         if not is_string_dict and not is_node_dict:
-            raise ValueError("points dictionary must be keyed by either strings " +
-                             "(node names) or Nodes.")
+            raise ValueError(
+                "points dictionary must be keyed by either strings "
+                + "(node names) or Nodes."
+            )
 
         # Get rid of the points dict and replace with equivalent point array.
         for node, point in points.items():
             # Convert PredictedPoint to Point if Instance
             if type(parray) == PointArray and type(point) == PredictedPoint:
-                point = Point(x=point.x, y=point.y, visible=point.visible, complete=point.complete)
+                point = Point(
+                    x=point.x, y=point.y, visible=point.visible, complete=point.complete
+                )
             try:
                 parray[skeleton.node_to_index(node)] = point
                 # parray[skeleton.node_to_index(node.name)] = point
@@ -435,7 +468,9 @@ class Instance:
             node = self._node_to_index(node)
             return self._points[node]
         except ValueError:
-            raise KeyError(f"The underlying skeleton ({self.skeleton}) has no node '{node}'")
+            raise KeyError(
+                f"The underlying skeleton ({self.skeleton}) has no node '{node}'"
+            )
 
     def __contains__(self, node):
         """
@@ -463,10 +498,14 @@ class Instance:
 
         # Make sure node and value, if either are lists, are of compatible size
         if type(node) is not list and type(value) is list and len(value) != 1:
-            raise IndexError("Node list for indexing must be same length and value list.")
+            raise IndexError(
+                "Node list for indexing must be same length and value list."
+            )
 
         if type(node) is list and type(value) is not list and len(node) != 1:
-            raise IndexError("Node list for indexing must be same length and value list.")
+            raise IndexError(
+                "Node list for indexing must be same length and value list."
+            )
 
         # If we are dealing with lists, do multiple assignment recursively, this should be ok because
         # skeletons and instances are small.
@@ -478,7 +517,9 @@ class Instance:
                 node_idx = self._node_to_index(node)
                 self._points[node_idx] = value
             except ValueError:
-                raise KeyError(f"The underlying skeleton ({self.skeleton}) has no node '{node}'")
+                raise KeyError(
+                    f"The underlying skeleton ({self.skeleton}) has no node '{node}'"
+                )
 
     def __delitem__(self, node):
         """ Delete node key and points associated with that node. """
@@ -487,7 +528,9 @@ class Instance:
             self._points[node_idx].x = math.nan
             self._points[node_idx].y = math.nan
         except ValueError:
-            raise KeyError(f"The underlying skeleton ({self.skeleton}) has no node '{node}'")
+            raise KeyError(
+                f"The underlying skeleton ({self.skeleton}) has no node '{node}'"
+            )
 
     def matches(self, other):
         """
@@ -530,8 +573,11 @@ class Instance:
 
         """
         self.fix_array()
-        return tuple(self._nodes[i] for i, point in enumerate(self._points)
-            if not point.isnan() and self._nodes[i] in self.skeleton.nodes)
+        return tuple(
+            self._nodes[i]
+            for i, point in enumerate(self._points)
+            if not point.isnan() and self._nodes[i] in self.skeleton.nodes
+        )
 
     @property
     def nodes_points(self):
@@ -574,9 +620,9 @@ class Instance:
             self._points = new_array
             self._nodes = self.skeleton.nodes
 
-    def get_points_array(self, copy: bool = True,
-                     invisible_as_nan: bool = False,
-                     full: bool = False) -> np.ndarray:
+    def get_points_array(
+        self, copy: bool = True, invisible_as_nan: bool = False, full: bool = False
+    ) -> np.ndarray:
         """
         Return the instance's points in array form.
 
@@ -600,9 +646,9 @@ class Instance:
             return self._points
 
         if not copy and not invisible_as_nan:
-            return self._points[['x', 'y']]
+            return self._points[["x", "y"]]
         else:
-            parray = structured_to_unstructured(self._points[['x', 'y']])
+            parray = structured_to_unstructured(self._points[["x", "y"]])
 
             if invisible_as_nan:
                 parray[~self._points.visible] = math.nan
@@ -644,6 +690,7 @@ class PredictedInstance(Instance):
     Args:
         score: The instance level prediction score.
     """
+
     score: float = attr.ib(default=0.0, converter=float)
 
     # The underlying Point array type that this instances point array should be.
@@ -670,9 +717,13 @@ class PredictedInstance(Instance):
         Returns:
             A PredictedInstance for the given Instance.
         """
-        kw_args = attr.asdict(instance, recurse=False, filter=lambda attr, value: attr.name not in ("_points", "_nodes"))
-        kw_args['points'] = PredictedPointArray.from_array(instance._points)
-        kw_args['score'] = score
+        kw_args = attr.asdict(
+            instance,
+            recurse=False,
+            filter=lambda attr, value: attr.name not in ("_points", "_nodes"),
+        )
+        kw_args["points"] = PredictedPointArray.from_array(instance._points)
+        kw_args["score"] = score
         return cls(**kw_args)
 
 
@@ -695,15 +746,18 @@ def make_instance_cattr():
 
     converter.register_unstructure_hook(PointArray, lambda x: None)
     converter.register_unstructure_hook(PredictedPointArray, lambda x: None)
+
     def unstructure_instance(x: Instance):
 
         # Unstructure everything but the points array, nodes, and frame attribute
-        d = {field.name: converter.unstructure(x.__getattribute__(field.name))
-             for field in attr.fields(x.__class__)
-             if field.name not in ['_points', '_nodes', 'frame']}
+        d = {
+            field.name: converter.unstructure(x.__getattribute__(field.name))
+            for field in attr.fields(x.__class__)
+            if field.name not in ["_points", "_nodes", "frame"]
+        }
 
         # Replace the point array with a dict
-        d['_points'] = converter.unstructure({k: v for k, v in x.nodes_points})
+        d["_points"] = converter.unstructure({k: v for k, v in x.nodes_points})
 
         return d
 
@@ -713,7 +767,7 @@ def make_instance_cattr():
     ## STRUCTURE HOOKS
 
     def structure_points(x, type):
-        if 'score' in x.keys():
+        if "score" in x.keys():
             return cattr.structure(x, PredictedPoint)
         else:
             return cattr.structure(x, Point)
@@ -723,7 +777,7 @@ def make_instance_cattr():
     def structure_instances_list(x, type):
         inst_list = []
         for inst_data in x:
-            if 'score' in inst_data.keys():
+            if "score" in inst_data.keys():
                 inst = converter.structure(inst_data, PredictedInstance)
             else:
                 inst = converter.structure(inst_data, Instance)
@@ -731,11 +785,14 @@ def make_instance_cattr():
 
         return inst_list
 
-    converter.register_structure_hook(Union[List[Instance], List[PredictedInstance]],
-                                            structure_instances_list)
+    converter.register_structure_hook(
+        Union[List[Instance], List[PredictedInstance]], structure_instances_list
+    )
 
-    converter.register_structure_hook(ForwardRef('PredictedInstance'),
-                                      lambda x, type: converter.structure(x, PredictedInstance))
+    converter.register_structure_hook(
+        ForwardRef("PredictedInstance"),
+        lambda x, type: converter.structure(x, PredictedInstance),
+    )
 
     # We can register structure hooks for point arrays that do nothing
     # because Instance can have a dict of points passed to it in place of
@@ -743,7 +800,7 @@ def make_instance_cattr():
     def structure_point_array(x, t):
         if x:
             point1 = x[list(x.keys())[0]]
-            if 'score' in point1.keys():
+            if "score" in point1.keys():
                 return converter.structure(x, Dict[Node, PredictedPoint])
             else:
                 return converter.structure(x, Dict[Node, Point])
@@ -760,7 +817,9 @@ def make_instance_cattr():
 class LabeledFrame:
     video: Video = attr.ib()
     frame_idx: int = attr.ib(converter=int)
-    _instances: Union[List[Instance], List[PredictedInstance]] = attr.ib(default=attr.Factory(list))
+    _instances: Union[List[Instance], List[PredictedInstance]] = attr.ib(
+        default=attr.Factory(list)
+    )
 
     def __attrs_post_init__(self):
 
@@ -801,7 +860,7 @@ class LabeledFrame:
         instances = self.instances
         if user:
             instances = list(filter(lambda inst: type(inst) == Instance, instances))
-        if track != -1: # use -1 since we want to accept None as possible value
+        if track != -1:  # use -1 since we want to accept None as possible value
             instances = list(filter(lambda inst: inst.track == track, instances))
         return instances
 
@@ -837,7 +896,9 @@ class LabeledFrame:
 
     @property
     def user_instances(self):
-        return [inst for inst in self._instances if not isinstance(inst, PredictedInstance)]
+        return [
+            inst for inst in self._instances if not isinstance(inst, PredictedInstance)
+        ]
 
     @property
     def predicted_instances(self):
@@ -845,7 +906,7 @@ class LabeledFrame:
 
     @property
     def has_user_instances(self):
-        return (len(self.user_instances) > 0)
+        return len(self.user_instances) > 0
 
     @property
     def unused_predictions(self):
@@ -853,22 +914,30 @@ class LabeledFrame:
         any_tracks = [inst.track for inst in self._instances if inst.track is not None]
         if len(any_tracks):
             # use tracks to determine which predicted instances have been used
-            used_tracks = [inst.track for inst in self._instances
-                           if type(inst) == Instance and inst.track is not None
-                           ]
-            unused_predictions = [inst for inst in self._instances
-                                  if inst.track not in used_tracks
-                                  and type(inst) == PredictedInstance
-                                  ]
+            used_tracks = [
+                inst.track
+                for inst in self._instances
+                if type(inst) == Instance and inst.track is not None
+            ]
+            unused_predictions = [
+                inst
+                for inst in self._instances
+                if inst.track not in used_tracks and type(inst) == PredictedInstance
+            ]
 
         else:
             # use from_predicted to determine which predicted instances have been used
             # TODO: should we always do this instead of using tracks?
-            used_instances = [inst.from_predicted for inst in self._instances
-                              if inst.from_predicted is not None]
-            unused_predictions = [inst for inst in self._instances
-                                  if type(inst) == PredictedInstance
-                                  and inst not in used_instances]
+            used_instances = [
+                inst.from_predicted
+                for inst in self._instances
+                if inst.from_predicted is not None
+            ]
+            unused_predictions = [
+                inst
+                for inst in self._instances
+                if type(inst) == PredictedInstance and inst not in used_instances
+            ]
 
         return unused_predictions
 
@@ -879,9 +948,16 @@ class LabeledFrame:
         predicted instances for which there's a corresponding regular instance.
         """
         unused_predictions = self.unused_predictions
-        inst_to_show = [inst for inst in self._instances
-                        if type(inst) == Instance or inst in unused_predictions]
-        inst_to_show.sort(key=lambda inst: inst.track.spawned_on if inst.track is not None else math.inf)
+        inst_to_show = [
+            inst
+            for inst in self._instances
+            if type(inst) == Instance or inst in unused_predictions
+        ]
+        inst_to_show.sort(
+            key=lambda inst: inst.track.spawned_on
+            if inst.track is not None
+            else math.inf
+        )
         return inst_to_show
 
     @staticmethod
@@ -912,14 +988,15 @@ class LabeledFrame:
                     # note first lf with this frame_idx
                     frames_found[lf.frame_idx] = idx
         # remove labeled frames with no instances
-        labeled_frames = list(filter(lambda lf: len(lf.instances),
-                                     labeled_frames))
+        labeled_frames = list(filter(lambda lf: len(lf.instances), labeled_frames))
         if redundant_count:
             print(f"skipped {redundant_count} redundant instances")
         return labeled_frames
 
     @classmethod
-    def complex_merge_between(cls, base_labels: 'Labels', new_frames: List['LabeledFrame']):
+    def complex_merge_between(
+        cls, base_labels: "Labels", new_frames: List["LabeledFrame"]
+    ):
         """Merge new_frames into base_labels cleanly when possible,
         return conflicts if any.
 
@@ -944,8 +1021,9 @@ class LabeledFrame:
                 base_labels.labeled_frames.append(new_frame)
                 merged_instances = new_frame.instances
             else:
-                merged_instances, extra_base_frame, extra_new_frame = \
-                    cls.complex_frame_merge(base_lfs[0], new_frame)
+                merged_instances, extra_base_frame, extra_new_frame = cls.complex_frame_merge(
+                    base_lfs[0], new_frame
+                )
                 if extra_base_frame:
                     extra_base.append(extra_base_frame)
                 if extra_new_frame:
@@ -980,8 +1058,12 @@ class LabeledFrame:
 
         conflict = False
         if extra_base_instances and extra_new_instances:
-            base_predictions = list(filter(lambda inst: hasattr(inst, "score"), extra_base_instances))
-            new_predictions = list(filter(lambda inst: hasattr(inst, "score"), extra_new_instances))
+            base_predictions = list(
+                filter(lambda inst: hasattr(inst, "score"), extra_base_instances)
+            )
+            new_predictions = list(
+                filter(lambda inst: hasattr(inst, "score"), extra_new_instances)
+            )
 
             base_has_nonpred = len(extra_base_instances) - len(base_predictions)
             new_has_nonpred = len(extra_new_instances) - len(new_predictions)
@@ -1008,14 +1090,24 @@ class LabeledFrame:
             extra_new_instances = []
 
         # Construct frames to hold any conflicting instances
-        extra_base = cls(
-            video=base_frame.video,
-            frame_idx=base_frame.frame_idx,
-            instances=extra_base_instances) if extra_base_instances else None
+        extra_base = (
+            cls(
+                video=base_frame.video,
+                frame_idx=base_frame.frame_idx,
+                instances=extra_base_instances,
+            )
+            if extra_base_instances
+            else None
+        )
 
-        extra_new = cls(
-            video=new_frame.video,
-            frame_idx=new_frame.frame_idx,
-            instances=extra_new_instances) if extra_new_instances else None
+        extra_new = (
+            cls(
+                video=new_frame.video,
+                frame_idx=new_frame.frame_idx,
+                instances=extra_new_instances,
+            )
+            if extra_new_instances
+            else None
+        )
 
         return merged_instances, extra_base, extra_new

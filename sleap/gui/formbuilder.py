@@ -13,6 +13,7 @@ import yaml
 
 from PySide2 import QtWidgets, QtCore
 
+
 class YamlFormWidget(QtWidgets.QGroupBox):
     """
     Custom QWidget which creates form based on yaml file.
@@ -25,10 +26,10 @@ class YamlFormWidget(QtWidgets.QGroupBox):
     mainAction = QtCore.Signal(dict)
     valueChanged = QtCore.Signal()
 
-    def __init__(self, yaml_file, which_form: str="main", *args, **kwargs):
+    def __init__(self, yaml_file, which_form: str = "main", *args, **kwargs):
         super(YamlFormWidget, self).__init__(*args, **kwargs)
 
-        with open(yaml_file, 'r') as form_yaml:
+        with open(yaml_file, "r") as form_yaml:
             items_to_create = yaml.load(form_yaml, Loader=yaml.SafeLoader)
 
         self.which_form = which_form
@@ -71,6 +72,7 @@ class YamlFormWidget(QtWidgets.QGroupBox):
         """Emit mainAction signal with form data."""
         self.mainAction.emit(self.get_form_data())
 
+
 class FormBuilderLayout(QtWidgets.QFormLayout):
     """
     Custom QFormLayout which populates itself from list of form fields.
@@ -96,10 +98,12 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
             Dict with key:value for each user-editable widget in layout
         """
         widgets = self.fields.values()
-        data = {w.objectName(): self.get_widget_value(w)
-                for w in widgets
-                if len(w.objectName())
-                   and type(w) not in (QtWidgets.QLabel, QtWidgets.QPushButton)}
+        data = {
+            w.objectName(): self.get_widget_value(w)
+            for w in widgets
+            if len(w.objectName())
+            and type(w) not in (QtWidgets.QLabel, QtWidgets.QPushButton)
+        }
         stacked_data = [w.get_data() for w in widgets if type(w) == StackBuilderWidget]
         for stack in stacked_data:
             data.update(stack)
@@ -118,7 +122,8 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
                 self.set_widget_value(widgets[name], val)
             else:
                 pass
-#                 print(f"no {name} widget found")
+
+    #                 print(f"no {name} widget found")
 
     @staticmethod
     def set_widget_value(widget, val):
@@ -260,21 +265,27 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
                 self.addRow("", self._make_file_button(item, field))
 
     def _make_file_button(self, item, field):
-        file_button = QtWidgets.QPushButton("Select "+item["label"])
+        file_button = QtWidgets.QPushButton("Select " + item["label"])
 
         if item["type"].split("_")[-1] == "open":
             # Define function for button to trigger
             def select_file(*args, x=field):
                 filter = item.get("filter", "Any File (*.*)")
-                filename, _ = QtWidgets.QFileDialog.getOpenFileName(None, directory=None, caption="Open File", filter=filter)
-                if len(filename): x.setText(filename)
+                filename, _ = QtWidgets.QFileDialog.getOpenFileName(
+                    None, directory=None, caption="Open File", filter=filter
+                )
+                if len(filename):
+                    x.setText(filename)
                 self.valueChanged.emit()
 
         elif item["type"].split("_")[-1] == "dir":
             # Define function for button to trigger
             def select_file(*args, x=field):
-                filename = QtWidgets.QFileDialog.getExistingDirectory(None, directory=None, caption="Open File")
-                if len(filename): x.setText(filename)
+                filename = QtWidgets.QFileDialog.getExistingDirectory(
+                    None, directory=None, caption="Open File"
+                )
+                if len(filename):
+                    x.setText(filename)
                 self.valueChanged.emit()
 
         else:
@@ -282,6 +293,7 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
 
         file_button.clicked.connect(select_file)
         return file_button
+
 
 class StackBuilderWidget(QtWidgets.QWidget):
     def __init__(self, stack_data, *args, **kwargs):
@@ -291,7 +303,9 @@ class StackBuilderWidget(QtWidgets.QWidget):
         self.combo_box = QtWidgets.QComboBox()
         self.stacked_widget = ResizingStackedWidget()
 
-        self.combo_box.activated.connect(lambda x: self.stacked_widget.setCurrentIndex(x))
+        self.combo_box.activated.connect(
+            lambda x: self.stacked_widget.setCurrentIndex(x)
+        )
 
         self.page_layouts = dict()
 

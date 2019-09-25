@@ -7,12 +7,13 @@ from typing import Callable, List, Optional, Union, Tuple
 from sleap.instance import Instance, PredictedInstance
 from sleap.io.dataset import Labels
 
+
 def matched_instance_distances(
-        labels_gt: Labels,
-        labels_pr: Labels,
-        match_lists_function: Callable,
-        frame_range: Optional[range]=None) -> Tuple[
-                List[int], np.ndarray, np.ndarray, np.ndarray]:
+    labels_gt: Labels,
+    labels_pr: Labels,
+    match_lists_function: Callable,
+    frame_range: Optional[range] = None,
+) -> Tuple[List[int], np.ndarray, np.ndarray, np.ndarray]:
 
     """
     Distances between ground truth and predicted nodes over a set of frames.
@@ -62,7 +63,7 @@ def matched_instance_distances(
 
         points_gt.append(sorted_gt)
         points_pr.append(sorted_pr)
-        frame_idxs.extend([frame_idx]*len(sorted_gt))
+        frame_idxs.extend([frame_idx] * len(sorted_gt))
 
     # Convert arrays to numpy matrixes
     # instances * nodes * (x,y)
@@ -75,26 +76,32 @@ def matched_instance_distances(
 
     return frame_idxs, D, points_gt, points_pr
 
+
 def match_instance_lists(
-        instances_a: List[Union[Instance, PredictedInstance]],
-        instances_b: List[Union[Instance, PredictedInstance]],
-        cost_function: Callable) -> Tuple[
-                    List[Union[Instance, PredictedInstance]],
-                    List[Union[Instance, PredictedInstance]]]:
+    instances_a: List[Union[Instance, PredictedInstance]],
+    instances_b: List[Union[Instance, PredictedInstance]],
+    cost_function: Callable,
+) -> Tuple[
+    List[Union[Instance, PredictedInstance]], List[Union[Instance, PredictedInstance]]
+]:
     """Sorts two lists of Instances to find best overall correspondence
     for a given cost function (e.g., total distance between points)."""
 
-    pairwise_distance_matrix = calculate_pairwise_cost(instances_a, instances_b, cost_function)
+    pairwise_distance_matrix = calculate_pairwise_cost(
+        instances_a, instances_b, cost_function
+    )
     match_a, match_b = linear_sum_assignment(pairwise_distance_matrix)
 
     sorted_a = list(map(lambda idx: instances_a[idx], match_a))
     sorted_b = list(map(lambda idx: instances_b[idx], match_b))
     return sorted_a, sorted_b
 
+
 def calculate_pairwise_cost(
-        instances_a: List[Union[Instance, PredictedInstance]],
-        instances_b: List[Union[Instance, PredictedInstance]],
-        cost_function: Callable) -> np.ndarray:
+    instances_a: List[Union[Instance, PredictedInstance]],
+    instances_b: List[Union[Instance, PredictedInstance]],
+    cost_function: Callable,
+) -> np.ndarray:
     """Calculate (a * b) matrix of pairwise costs using cost function."""
 
     matrix_size = (len(instances_a), len(instances_b))
@@ -114,12 +121,14 @@ def calculate_pairwise_cost(
             pairwise_cost_matrix[idx_a, idx_b] = cost
     return pairwise_cost_matrix
 
+
 def match_instance_lists_nodewise(
-        instances_a: List[Union[Instance, PredictedInstance]],
-        instances_b: List[Union[Instance, PredictedInstance]],
-        thresh: float=5) -> Tuple[
-                    List[Union[Instance, PredictedInstance]],
-                    List[Union[Instance, PredictedInstance]]]:
+    instances_a: List[Union[Instance, PredictedInstance]],
+    instances_b: List[Union[Instance, PredictedInstance]],
+    thresh: float = 5,
+) -> Tuple[
+    List[Union[Instance, PredictedInstance]], List[Union[Instance, PredictedInstance]]
+]:
     """For each node for each instance in the first list, pairs it with the
     closest corresponding node from *any* instance in the second list."""
 
@@ -141,8 +150,8 @@ def match_instance_lists_nodewise(
         for node_idx in range(node_count):
 
             # Make sure there's some prediction for this node
-            if any(~np.isnan(dist_array[:,node_idx])):
-                best_idx = np.nanargmin(dist_array[:,node_idx])
+            if any(~np.isnan(dist_array[:, node_idx])):
+                best_idx = np.nanargmin(dist_array[:, node_idx])
 
                 # Ignore closest point if distance is beyond threshold
                 if dist_array[best_idx, node_idx] <= thresh:
@@ -153,9 +162,11 @@ def match_instance_lists_nodewise(
 
     return instances_a, best_points_array
 
+
 def point_dist(
-        inst_a: Union[Instance, PredictedInstance],
-        inst_b: Union[Instance, PredictedInstance]) -> np.ndarray:
+    inst_a: Union[Instance, PredictedInstance],
+    inst_b: Union[Instance, PredictedInstance],
+) -> np.ndarray:
     """Given two instances, returns array of distances for corresponding nodes."""
 
     points_a = inst_a.points_array
@@ -163,8 +174,11 @@ def point_dist(
     point_dist = np.linalg.norm(points_a - points_b, axis=1)
     return point_dist
 
-def nodeless_point_dist(inst_a: Union[Instance, PredictedInstance],
-        inst_b: Union[Instance, PredictedInstance]) -> np.ndarray:
+
+def nodeless_point_dist(
+    inst_a: Union[Instance, PredictedInstance],
+    inst_b: Union[Instance, PredictedInstance],
+) -> np.ndarray:
     """Given two instances, returns array of distances for closest points
     ignoring node identities."""
 
@@ -185,15 +199,17 @@ def nodeless_point_dist(inst_a: Union[Instance, PredictedInstance],
     match_a, match_b = linear_sum_assignment(pairwise_distance_matrix)
 
     # Sort points by this match and calculate overall distance
-    sorted_points_a = points_a[match_a,:]
-    sorted_points_b = points_b[match_b,:]
+    sorted_points_a = points_a[match_a, :]
+    sorted_points_b = points_b[match_b, :]
     point_dist = np.linalg.norm(points_a - points_b, axis=1)
 
     return point_dist
 
+
 def compare_instance_lists(
-        instances_a: List[Union[Instance, PredictedInstance]],
-        instances_b: List[Union[Instance, PredictedInstance]]) -> np.ndarray:
+    instances_a: List[Union[Instance, PredictedInstance]],
+    instances_b: List[Union[Instance, PredictedInstance]],
+) -> np.ndarray:
     """Given two lists of corresponding Instances, returns
      (instances * nodes) matrix of distances between corresponding nodes."""
 
@@ -203,18 +219,24 @@ def compare_instance_lists(
 
     return np.stack(paired_points_array_distances)
 
-def list_points_array(instances: List[Union[Instance, PredictedInstance]]) -> np.ndarray:
+
+def list_points_array(
+    instances: List[Union[Instance, PredictedInstance]]
+) -> np.ndarray:
     """Given list of Instances, returns (instances * nodes * 2) matrix."""
     points_arrays = list(map(lambda inst: inst.points_array, instances))
     return np.stack(points_arrays)
 
-def point_match_count(dist_array: np.ndarray, thresh: float=5) -> int:
+
+def point_match_count(dist_array: np.ndarray, thresh: float = 5) -> int:
     """Given an array of distances, returns number which are <= threshold."""
     return np.sum(dist_array[~np.isnan(dist_array)] <= thresh)
 
-def point_nonmatch_count(dist_array: np.ndarray, thresh: float=5) -> int:
+
+def point_nonmatch_count(dist_array: np.ndarray, thresh: float = 5) -> int:
     """Given an array of distances, returns number which are not <= threshold."""
     return dist_array.shape[0] - point_match_count(dist_array, thresh)
+
 
 def foo(labels_gt, labels_pr, frame_idx=1092):
     list_a = labels_gt.find(labels_gt.videos[0], frame_idx=frame_idx)[0].instances
@@ -222,10 +244,13 @@ def foo(labels_gt, labels_pr, frame_idx=1092):
 
     match_instance_lists_nodewise(list_a, list_b)
 
+
 if __name__ == "__main__":
 
     labels_gt = Labels.load_json("tests/data/json_format_v1/centered_pair.json")
-    labels_pr = Labels.load_json("tests/data/json_format_v2/centered_pair_predictions.json")
+    labels_pr = Labels.load_json(
+        "tests/data/json_format_v2/centered_pair_predictions.json"
+    )
 
     # OPTION 1
 
@@ -241,7 +266,9 @@ if __name__ == "__main__":
     # where "match" means the points are within some threshold distance.
     # Note that each sorted list will be as long as the shorted input list.
 
-    instwise_matching_func = lambda gt_list, pr_list: match_instance_lists(gt_list, pr_list, point_nonmatch_count)
+    instwise_matching_func = lambda gt_list, pr_list: match_instance_lists(
+        gt_list, pr_list, point_nonmatch_count
+    )
 
     # PICK THE FUNCTION
 
@@ -249,7 +276,9 @@ if __name__ == "__main__":
     # inst_matching_func = instwise_matching_func
 
     # Calculate distances
-    frame_idxs, D, points_gt, points_pr = matched_instance_distances(labels_gt, labels_pr, inst_matching_func)
+    frame_idxs, D, points_gt, points_pr = matched_instance_distances(
+        labels_gt, labels_pr, inst_matching_func
+    )
 
     # Show mean difference for each node
     node_names = labels_gt.skeletons[0].node_names

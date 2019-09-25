@@ -14,6 +14,7 @@ import keras
 from keras import backend, layers, models
 import keras.utils as keras_utils
 
+
 def dense_block(x, blocks, name):
     """A dense block.
     # Arguments
@@ -24,7 +25,7 @@ def dense_block(x, blocks, name):
         output tensor for the block.
     """
     for i in range(blocks):
-        x = conv_block(x, 32, name=name + '_block' + str(i + 1))
+        x = conv_block(x, 32, name=name + "_block" + str(i + 1))
     return x
 
 
@@ -37,14 +38,16 @@ def transition_block(x, reduction, name):
     # Returns
         output tensor for the block.
     """
-    bn_axis = 3 if backend.image_data_format() == 'channels_last' else 1
-    x = layers.BatchNormalization(axis=bn_axis, epsilon=1.001e-5,
-                                  name=name + '_bn')(x)
-    x = layers.Activation('relu', name=name + '_relu')(x)
-    x = layers.Conv2D(int(backend.int_shape(x)[bn_axis] * reduction), 1,
-                      use_bias=False,
-                      name=name + '_conv')(x)
-    x = layers.AveragePooling2D(2, strides=2, name=name + '_pool')(x)
+    bn_axis = 3 if backend.image_data_format() == "channels_last" else 1
+    x = layers.BatchNormalization(axis=bn_axis, epsilon=1.001e-5, name=name + "_bn")(x)
+    x = layers.Activation("relu", name=name + "_relu")(x)
+    x = layers.Conv2D(
+        int(backend.int_shape(x)[bn_axis] * reduction),
+        1,
+        use_bias=False,
+        name=name + "_conv",
+    )(x)
+    x = layers.AveragePooling2D(2, strides=2, name=name + "_pool")(x)
     return x
 
 
@@ -57,30 +60,24 @@ def conv_block(x, growth_rate, name):
     # Returns
         Output tensor for the block.
     """
-    bn_axis = 3 if backend.image_data_format() == 'channels_last' else 1
-    x1 = layers.BatchNormalization(axis=bn_axis,
-                                   epsilon=1.001e-5,
-                                   name=name + '_0_bn')(x)
-    x1 = layers.Activation('relu', name=name + '_0_relu')(x1)
-    x1 = layers.Conv2D(4 * growth_rate, 1,
-                       use_bias=False,
-                       name=name + '_1_conv')(x1)
-    x1 = layers.BatchNormalization(axis=bn_axis, epsilon=1.001e-5,
-                                   name=name + '_1_bn')(x1)
-    x1 = layers.Activation('relu', name=name + '_1_relu')(x1)
-    x1 = layers.Conv2D(growth_rate, 3,
-                       padding='same',
-                       use_bias=False,
-                       name=name + '_2_conv')(x1)
-    x = layers.Concatenate(axis=bn_axis, name=name + '_concat')([x, x1])
+    bn_axis = 3 if backend.image_data_format() == "channels_last" else 1
+    x1 = layers.BatchNormalization(axis=bn_axis, epsilon=1.001e-5, name=name + "_0_bn")(
+        x
+    )
+    x1 = layers.Activation("relu", name=name + "_0_relu")(x1)
+    x1 = layers.Conv2D(4 * growth_rate, 1, use_bias=False, name=name + "_1_conv")(x1)
+    x1 = layers.BatchNormalization(axis=bn_axis, epsilon=1.001e-5, name=name + "_1_bn")(
+        x1
+    )
+    x1 = layers.Activation("relu", name=name + "_1_relu")(x1)
+    x1 = layers.Conv2D(
+        growth_rate, 3, padding="same", use_bias=False, name=name + "_2_conv"
+    )(x1)
+    x = layers.Concatenate(axis=bn_axis, name=name + "_concat")([x, x1])
     return x
 
 
-def DenseNet(blocks,
-             output_channels,
-             input_tensor=None,
-             input_shape=None,
-             **kwargs):
+def DenseNet(blocks, output_channels, input_tensor=None, input_shape=None, **kwargs):
     """Instantiates the DenseNet architecture.
     Optionally loads weights pre-trained on ImageNet.
     Note that the data format convention used by the model is
@@ -123,7 +120,6 @@ def DenseNet(blocks,
             or invalid input shape.
     """
 
-
     if input_tensor is None:
         img_input = layers.Input(shape=input_shape)
     else:
@@ -132,29 +128,29 @@ def DenseNet(blocks,
         else:
             img_input = input_tensor
 
-    bn_axis = 3 if backend.image_data_format() == 'channels_last' else 1
+    bn_axis = 3 if backend.image_data_format() == "channels_last" else 1
 
     x = layers.ZeroPadding2D(padding=((3, 3), (3, 3)))(img_input)
-    x = layers.Conv2D(64, 7, strides=2, use_bias=False, name='conv1/conv')(x)
-    x = layers.BatchNormalization(
-        axis=bn_axis, epsilon=1.001e-5, name='conv1/bn')(x)
-    x = layers.Activation('relu', name='conv1/relu')(x)
+    x = layers.Conv2D(64, 7, strides=2, use_bias=False, name="conv1/conv")(x)
+    x = layers.BatchNormalization(axis=bn_axis, epsilon=1.001e-5, name="conv1/bn")(x)
+    x = layers.Activation("relu", name="conv1/relu")(x)
     x = layers.ZeroPadding2D(padding=((1, 1), (1, 1)))(x)
-    x = layers.MaxPooling2D(3, strides=2, name='pool1')(x)
+    x = layers.MaxPooling2D(3, strides=2, name="pool1")(x)
 
-    x = dense_block(x, blocks[0], name='conv2')
-    x = transition_block(x, 0.5, name='pool2')
-    x = dense_block(x, blocks[1], name='conv3')
-    x = transition_block(x, 0.5, name='pool3')
-    x = dense_block(x, blocks[2], name='conv4')
-    x = transition_block(x, 0.5, name='pool4')
-    x = dense_block(x, blocks[3], name='conv5')
+    x = dense_block(x, blocks[0], name="conv2")
+    x = transition_block(x, 0.5, name="pool2")
+    x = dense_block(x, blocks[1], name="conv3")
+    x = transition_block(x, 0.5, name="pool3")
+    x = dense_block(x, blocks[2], name="conv4")
+    x = transition_block(x, 0.5, name="pool4")
+    x = dense_block(x, blocks[3], name="conv5")
 
-    x = layers.BatchNormalization(
-        axis=bn_axis, epsilon=1.001e-5, name='bn')(x)
-    x = layers.Activation('relu', name='relu')(x)
+    x = layers.BatchNormalization(axis=bn_axis, epsilon=1.001e-5, name="bn")(x)
+    x = layers.Activation("relu", name="relu")(x)
 
-    x = layers.Conv2D(filters=output_channels, kernel_size=(3, 3), padding="same", name="output")(x)
+    x = layers.Conv2D(
+        filters=output_channels, kernel_size=(3, 3), padding="same", name="output"
+    )(x)
 
     # Ensure that the model takes into account
     # any potential predecessors of `input_tensor`.
@@ -165,13 +161,13 @@ def DenseNet(blocks,
 
     # Create model.
     if blocks == [6, 12, 24, 16]:
-        model = models.Model(inputs, x, name='densenet121')
+        model = models.Model(inputs, x, name="densenet121")
     elif blocks == [6, 12, 32, 32]:
-        model = models.Model(inputs, x, name='densenet169')
+        model = models.Model(inputs, x, name="densenet169")
     elif blocks == [6, 12, 48, 32]:
-        model = models.Model(inputs, x, name='densenet201')
+        model = models.Model(inputs, x, name="densenet201")
     else:
-        model = models.Model(inputs, x, name='densenet')
+        model = models.Model(inputs, x, name="densenet")
 
     return model
 

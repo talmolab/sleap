@@ -9,13 +9,14 @@ import cv2
 
 from sleap.io.video import Video
 
+
 class VideoFrameSuggestions:
 
-    rescale=True
-    rescale_below=512
+    rescale = True
+    rescale_below = 512
 
     @classmethod
-    def suggest(cls, video:Video, params:dict, labels: 'Labels'=None) -> list:
+    def suggest(cls, video: Video, params: dict, labels: "Labels" = None) -> list:
         """
         This is the main entry point.
 
@@ -31,13 +32,13 @@ class VideoFrameSuggestions:
 
         # map from method param value to corresponding class method
         method_functions = dict(
-                                strides=cls.strides,
-                                random=cls.random,
-                                pca=cls.pca_cluster,
-                                hog=cls.hog,
-                                brisk=cls.brisk,
-                                proofreading=cls.proofreading
-                                )
+            strides=cls.strides,
+            random=cls.random,
+            pca=cls.pca_cluster,
+            hog=cls.hog,
+            brisk=cls.brisk,
+            proofreading=cls.proofreading,
+        )
 
         method = params["method"]
         if method_functions.get(method, None) is not None:
@@ -49,7 +50,7 @@ class VideoFrameSuggestions:
 
     @classmethod
     def strides(cls, video, per_video=20, **kwargs):
-        suggestions = list(range(0, video.frames, video.frames//per_video))
+        suggestions = list(range(0, video.frames, video.frames // per_video))
         suggestions = suggestions[:per_video]
         return suggestions
 
@@ -63,49 +64,57 @@ class VideoFrameSuggestions:
     @classmethod
     def pca_cluster(cls, video, initial_samples, **kwargs):
 
-        sample_step = video.frames//initial_samples
+        sample_step = video.frames // initial_samples
         feature_stack, frame_idx_map = cls.frame_feature_stack(video, sample_step)
 
         result = cls.feature_stack_to_suggestions(
-                    feature_stack, frame_idx_map, **kwargs)
+            feature_stack, frame_idx_map, **kwargs
+        )
 
         return result
 
     @classmethod
     def brisk(cls, video, initial_samples, **kwargs):
 
-        sample_step = video.frames//initial_samples
+        sample_step = video.frames // initial_samples
         feature_stack, frame_idx_map = cls.brisk_feature_stack(video, sample_step)
 
         result = cls.feature_stack_to_suggestions(
-                    feature_stack, frame_idx_map, **kwargs)
+            feature_stack, frame_idx_map, **kwargs
+        )
 
         return result
 
     @classmethod
     def hog(
-            cls, video,
-            clusters=5,
-            per_cluster=5,
-            sample_step=5,
-            pca_components=50,
-            interleave=True,
-            **kwargs):
+        cls,
+        video,
+        clusters=5,
+        per_cluster=5,
+        sample_step=5,
+        pca_components=50,
+        interleave=True,
+        **kwargs,
+    ):
 
         feature_stack, frame_idx_map = cls.hog_feature_stack(video, sample_step)
 
         result = cls.feature_stack_to_suggestions(
-                    feature_stack, frame_idx_map,
-                    clusters=clusters, per_cluster=per_cluster,
-                    pca_components=pca_components,
-                    interleave=interleave,
-                    **kwargs)
+            feature_stack,
+            frame_idx_map,
+            clusters=clusters,
+            per_cluster=per_cluster,
+            pca_components=pca_components,
+            interleave=interleave,
+            **kwargs,
+        )
 
         return result
 
     @classmethod
     def proofreading(
-            cls, video: Video, labels: 'Labels', score_limit, instance_limit, **kwargs):
+        cls, video: Video, labels: "Labels", score_limit, instance_limit, **kwargs
+    ):
 
         score_limit = float(score_limit)
         instance_limit = int(instance_limit)
@@ -124,7 +133,7 @@ class VideoFrameSuggestions:
             if len(frame_scores) > instance_limit:
                 frame_scores = sorted(frame_scores)[:instance_limit]
             # Add to matrix
-            scores[i,:len(frame_scores)] = frame_scores
+            scores[i, : len(frame_scores)] = frame_scores
             idxs[i] = lf.frame_idx
 
         # Find instances below score of <score_limit>
@@ -139,8 +148,8 @@ class VideoFrameSuggestions:
     # These are specific to the suggestion method
 
     @classmethod
-    def frame_feature_stack(cls, video:Video, sample_step:int = 5) -> tuple:
-        sample_count = video.frames//sample_step
+    def frame_feature_stack(cls, video: Video, sample_step: int = 5) -> tuple:
+        sample_count = video.frames // sample_step
 
         factor = cls.get_scale_factor(video)
 
@@ -151,8 +160,8 @@ class VideoFrameSuggestions:
             frame_idx = i * sample_step
 
             img = video[frame_idx].squeeze()
-            multichannel = (video.channels > 1)
-            img = rescale(img, scale=.5, anti_aliasing=True, multichannel=multichannel)
+            multichannel = video.channels > 1
+            img = rescale(img, scale=0.5, anti_aliasing=True, multichannel=multichannel)
 
             flat_img = img.flatten()
 
@@ -163,7 +172,7 @@ class VideoFrameSuggestions:
         return (flat_stack, frame_idx_map)
 
     @classmethod
-    def brisk_feature_stack(cls, video:Video, sample_step:int = 5) -> tuple:
+    def brisk_feature_stack(cls, video: Video, sample_step: int = 5) -> tuple:
         brisk = cv2.BRISK_create()
 
         factor = cls.get_scale_factor(video)
@@ -186,8 +195,8 @@ class VideoFrameSuggestions:
         return (feature_stack, frame_idx_map)
 
     @classmethod
-    def hog_feature_stack(cls, video:Video, sample_step:int = 5) -> tuple:
-        sample_count = video.frames//sample_step
+    def hog_feature_stack(cls, video: Video, sample_step: int = 5) -> tuple:
+        sample_count = video.frames // sample_step
 
         hog = cv2.HOGDescriptor()
 
@@ -211,16 +220,14 @@ class VideoFrameSuggestions:
     # These are common for all suggestion methods
 
     @staticmethod
-    def to_frame_idx_list(selected_list:list, frame_idx_map:dict) -> list:
+    def to_frame_idx_list(selected_list: list, frame_idx_map: dict) -> list:
         """Convert list of row indexes to list of frame indexes."""
         return list(map(lambda x: frame_idx_map[x], selected_list))
 
     @classmethod
     def feature_stack_to_suggestions(
-            cls,
-            feature_stack, frame_idx_map,
-            return_clusters=False,
-            **kwargs):
+        cls, feature_stack, frame_idx_map, return_clusters=False, **kwargs
+    ):
         """
         Turns a feature stack matrix into a list of suggested frames.
 
@@ -232,27 +239,28 @@ class VideoFrameSuggestions:
         """
 
         selected_by_cluster = cls.feature_stack_to_clusters(
-                feature_stack=feature_stack,
-                frame_idx_map=frame_idx_map,
-                **kwargs)
+            feature_stack=feature_stack, frame_idx_map=frame_idx_map, **kwargs
+        )
 
-        if return_clusters: return selected_by_cluster
+        if return_clusters:
+            return selected_by_cluster
 
         selected_list = cls.clusters_to_list(
-                selected_by_cluster=selected_by_cluster,
-                **kwargs)
+            selected_by_cluster=selected_by_cluster, **kwargs
+        )
 
         return selected_list
 
     @classmethod
     def feature_stack_to_clusters(
-            cls,
-            feature_stack,
-            frame_idx_map,
-            clusters=5,
-            per_cluster=5,
-            pca_components=50,
-            **kwargs):
+        cls,
+        feature_stack,
+        frame_idx_map,
+        clusters=5,
+        per_cluster=5,
+        pca_components=50,
+        **kwargs,
+    ):
         """
         Turns feature stack matrix into list (per cluster) of list of frame indexes.
 
@@ -284,7 +292,7 @@ class VideoFrameSuggestions:
         selected_by_cluster = []
         selected_set = set()
         for i in range(clusters):
-            cluster_items,  = np.where(row_labels==i)
+            cluster_items, = np.where(row_labels == i)
 
             # convert from row indexes to frame indexes
             cluster_items = cls.to_frame_idx_list(cluster_items, frame_idx_map)
@@ -294,15 +302,19 @@ class VideoFrameSuggestions:
             cluster_items = list(set(cluster_items) - selected_set)
 
             # pick [per_cluster] items from this cluster
-            samples_from_bin = np.random.choice(cluster_items, min(len(cluster_items), per_cluster), False)
+            samples_from_bin = np.random.choice(
+                cluster_items, min(len(cluster_items), per_cluster), False
+            )
             samples_from_bin.sort()
             selected_by_cluster.append(samples_from_bin)
-            selected_set = selected_set.union( set(samples_from_bin) )
+            selected_set = selected_set.union(set(samples_from_bin))
 
         return selected_by_cluster
 
     @classmethod
-    def clusters_to_list(cls, selected_by_cluster, interleave:bool = True, **kwargs) -> list:
+    def clusters_to_list(
+        cls, selected_by_cluster, interleave: bool = True, **kwargs
+    ) -> list:
         """
         Turns list (per cluster) of lists of frame index into single list of frame indexes.
 
@@ -317,9 +329,11 @@ class VideoFrameSuggestions:
 
         if interleave:
             # cycle clusters
-            all_selected = itertools.chain.from_iterable(itertools.zip_longest(*selected_by_cluster))
+            all_selected = itertools.chain.from_iterable(
+                itertools.zip_longest(*selected_by_cluster)
+            )
             # remove Nones and convert back to list
-            all_selected = list(filter(lambda x:x is not None, all_selected))
+            all_selected = list(filter(lambda x: x is not None, all_selected))
         else:
             all_selected = list(itertools.chain.from_iterable(selected_by_cluster))
             all_selected.sort()
@@ -336,7 +350,7 @@ class VideoFrameSuggestions:
         if cls.rescale:
             largest_dim = max(video.height, video.width)
             factor = 1
-            while largest_dim/factor > cls.rescale_below:
+            while largest_dim / factor > cls.rescale_below:
                 factor += 1
         return factor
 
@@ -344,9 +358,10 @@ class VideoFrameSuggestions:
     def resize(cls, img, factor) -> np.ndarray:
         h, w, _ = img.shape
         if factor != 1:
-            return cv2.resize(img, (h//factor, w//factor))
+            return cv2.resize(img, (h // factor, w // factor))
         else:
             return img
+
 
 if __name__ == "__main__":
     # load some images
@@ -354,11 +369,11 @@ if __name__ == "__main__":
     filename = "files/190605_1509_frame23000_24000.sf.mp4"
     video = Video.from_filename(filename)
 
-    debug=False
+    debug = False
 
-    x = VideoFrameSuggestions.hog(video=video, sample_step=20,
-                clusters=5, per_cluster=5,
-                return_clusters=debug)
+    x = VideoFrameSuggestions.hog(
+        video=video, sample_step=20, clusters=5, per_cluster=5, return_clusters=debug
+    )
     print(x)
 
     if debug:
