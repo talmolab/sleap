@@ -11,6 +11,11 @@ from sleap.io.dataset import Labels
 
 from PySide2 import QtWidgets, QtCore
 
+USE_BASE_STRING = "Use base, discard conflicting new instances"
+USE_NEW_STRING = "Use new, discard conflicting base instances"
+USE_NEITHER_STRING = "Discard all conflicting instances"
+CLEAN_STRING = "Accept clean merge"
+
 class MergeDialog(QtWidgets.QDialog):
 
     def __init__(self,
@@ -34,9 +39,6 @@ class MergeDialog(QtWidgets.QDialog):
             # number of instances across frames for this video
             merge_total += sum((map(len, vid_frame_list.values())))
 
-        buttons = self._make_buttons(conflict=self.extra_base)
-
-
         layout = QtWidgets.QVBoxLayout()
 
         merged_text = f"Cleanly merged {merge_total} instances"
@@ -58,33 +60,33 @@ class MergeDialog(QtWidgets.QDialog):
             conflict_table = ConflictTable(self.base_labels, self.extra_base, self.extra_new)
             layout.addWidget(conflict_table)
 
+        self.merge_method = QtWidgets.QComboBox()
+        if self.extra_base:
+            self.merge_method.addItem(USE_NEW_STRING)
+            self.merge_method.addItem(USE_BASE_STRING)
+            self.merge_method.addItem(USE_NEITHER_STRING)
+        else:
+            self.merge_method.addItem(CLEAN_STRING)
+        layout.addWidget(self.merge_method)
+
+        buttons = QtWidgets.QDialogButtonBox()
+        buttons.addButton("Finish Merge", QtWidgets.QDialogButtonBox.AcceptRole)
+        buttons.accepted.connect(self.finishMerge)
+
         layout.addWidget(buttons)
 
         self.setLayout(layout)
 
-    def _make_buttons(self, conflict: bool):
-        self.use_base_button = None
-        self.use_new_button = None
-        self.okay_button = None
-
-        buttons = QtWidgets.QDialogButtonBox()
-        if conflict:
-            self.use_base_button = buttons.addButton("Use Base", QtWidgets.QDialogButtonBox.YesRole)
-            self.use_new_button = buttons.addButton("Use New", QtWidgets.QDialogButtonBox.NoRole)
-        else:
-            self.okay_button = buttons.addButton(QtWidgets.QDialogButtonBox.Ok)
-
-        buttons.clicked.connect(self.finishMerge)
-
-        return buttons
-
-    def finishMerge(self, button):
-        if button == self.use_base_button:
+    def finishMerge(self):
+        merge_method = self.merge_method.currentText()
+        if merge_method == USE_BASE_STRING:
             Labels.finish_complex_merge(self.base_labels, self.extra_base)
-        elif button == self.use_new_button:
+        elif merge_method == USE_NEW_STRING:
             Labels.finish_complex_merge(self.base_labels, self.extra_new)
-        elif button == self.okay_button:
+        elif merge_method in (USE_NEITHER_STRING, CLEAN_STRING):
             Labels.finish_complex_merge(self.base_labels, [])
+        else:
+            raise ValueError("No valid merge method selected.")
 
         self.accept()
 
