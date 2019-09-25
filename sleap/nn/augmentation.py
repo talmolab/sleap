@@ -213,13 +213,8 @@ def demo_augmentation():
     from sleap.nn.datagen import generate_training_data
     from sleap.nn.datagen import generate_confmaps_from_points, generate_pafs_from_points
 
-    data_path = "tests/data/json_format_v2/centered_pair_predictions.json"
-    # data_path = "tests/data/json_format_v2/minimal_instance.json"
-#     data_path = "tests/data/json_format_v1/test.json"
-
+    data_path = "tests/data/json_format_v1/centered_pair.json"
     labels = Labels.load_json(data_path)
-
-#     labels.labeled_frames = labels.labeled_frames[123:323:10]
 
     # Generate raw training data
     skeleton = labels.skeletons[0]
