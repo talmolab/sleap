@@ -3,6 +3,8 @@ version: '{build}'
 clone_depth: 5
 
 environment:
+  COVERALLS_REPO_TOKEN:
+    secure: VsCyKmdi8x0OFK+Jbzk7ZRAW3EtojWP85TWqWKi+vuGmdiQFX7rLPnuaw3kt++a8
   access_token:
     secure: T7XuBtHDu85Tk/d1AeyfhW3CVyzaoddTWmR4xsPIdQ3di0R6x8ncWqw3KrYXkWJm
 
@@ -67,6 +69,9 @@ test_script:
   - cmd: activate sleap_appveyor
   - cmd: where python
   - cmd: python -m pytest tests/
+
+after_success:
+  - coveralls
 
 # here we are going to override common configuration
 for:
