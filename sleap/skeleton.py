@@ -1,9 +1,9 @@
-"""Implementation of skeleton data structure and API.
+"""
+Implementation of skeleton data structure and API.
 
-This module implements and API for creating animal skeleton's in LEAP. The goal
-is to provide a common interface for defining the parts of the animal, their
-connection to each other, and needed meta-data.
-
+This module implements and API for creating animal skeletons. The goal
+is to provide a common interface for defining the parts of the animal,
+their connection to each other, and needed meta-data.
 """
 
 import attr
@@ -16,7 +16,7 @@ import copy
 
 from enum import Enum
 from itertools import count
-from typing import Iterable, Union, List, Dict
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 import networkx as nx
 from networkx.readwrite import json_graph
@@ -65,7 +65,7 @@ class Node:
         Check whether all attributes match between two nodes.
 
         Args:
-            other: The node to compare to this one.
+            other: The `Node` to compare to this one.
 
         Returns:
             True if all attributes match, False otherwise.
@@ -74,17 +74,15 @@ class Node:
 
 
 class Skeleton:
-    """The main object for representing animal skeletons in LEAP.
+    """The main object for representing animal skeletons.
 
     The skeleton represents the constituent parts of the animal whose pose
     is being estimated.
 
-    """
-
-    """
-    A index variable used to give skeletons a default name that attempts
+    An index variable used to give skeletons a default name that attempts
     to be unique across all skeletons.
     """
+
     _skeleton_idx = count(0)
 
     def __init__(self, name: str = None):
@@ -160,29 +158,31 @@ class Skeleton:
         return self._graph.edge_subgraph(edges)
 
     @staticmethod
-    def find_unique_nodes(skeletons: List["Skeleton"]):
+    def find_unique_nodes(skeletons: List["Skeleton"]) -> List[Node]:
         """
-        Given list of skeletons, return a list of unique node objects across all skeletons.
+        Find all unique nodes from a list of skeletons.
 
         Args:
             skeletons: The list of skeletons.
 
         Returns:
-            A list of unique node objects.
+            A list of unique `Node` objects.
         """
         return list({node for skeleton in skeletons for node in skeleton.nodes})
 
     @staticmethod
-    def make_cattr(idx_to_node: Dict[int, Node] = None):
+    def make_cattr(idx_to_node: Dict[int, Node] = None) -> Callable:
         """
-        Create a cattr.Converter() that registers structure and unstructure hooks for
-        Skeleton objects that handle serialization of skeletons objects.
+        Make cattr.Convert() for `Skeleton`.
+
+        Make a cattr.Converter() that registers structure and unstructure
+        hooks for Skeleton objects to handle serialization of skeletons.
 
         Args:
             idx_to_node: A dict that maps node index to Node objects.
 
         Returns:
-            A cattr.Converter() instance ready for skeleton serialization and deserialization.
+            A cattr.Converter() instance for skeleton serialization and deserialization.
         """
         node_to_idx = (
             {node: idx for idx, node in idx_to_node.items()}
@@ -200,7 +200,7 @@ class Skeleton:
         return _cattr
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Get the name of the skeleton.
 
         Returns:
@@ -211,8 +211,10 @@ class Skeleton:
     @name.setter
     def name(self, name: str):
         """
-        A skeleton object cannot change its name. This property is immutable because it is
-        used to hash skeletons. If you want to rename a Skeleton you must use the class
+        A skeleton object cannot change its name.
+
+        This property is immutable because it is used to hash skeletons.
+        If you want to rename a Skeleton you must use the class
         method :code:`rename_skeleton`:
 
         >>> new_skeleton = Skeleton.rename_skeleton(skeleton=old_skeleton, name="New Name")
@@ -221,7 +223,7 @@ class Skeleton:
             name: The name of the Skeleton.
 
         Raises:
-            NotImplementedError
+            NotImplementedError: Error is always raised.
         """
         raise NotImplementedError(
             "Cannot change Skeleton name, it is immutable since "
@@ -233,8 +235,10 @@ class Skeleton:
     @classmethod
     def rename_skeleton(cls, skeleton: "Skeleton", name: str) -> "Skeleton":
         """
-        A skeleton object cannot change its name. This property is immutable because it is
-        used to hash skeletons. If you want to rename a Skeleton you must use this classmethod.
+        Make copy of skeleton with new name.
+
+        This property is immutable because it is used to hash skeletons.
+        If you want to rename a Skeleton you must use this class method.
 
         >>> new_skeleton = Skeleton.rename_skeleton(skeleton=old_skeleton, name="New Name")
 
@@ -251,7 +255,7 @@ class Skeleton:
         return new_skeleton
 
     @property
-    def nodes(self):
+    def nodes(self) -> List[Node]:
         """Get a list of :class:`Node`s.
 
         Returns:
@@ -260,7 +264,7 @@ class Skeleton:
         return list(self._graph.nodes)
 
     @property
-    def node_names(self):
+    def node_names(self) -> List[str]:
         """Get a list of node names.
 
         Returns:
@@ -269,7 +273,7 @@ class Skeleton:
         return [node.name for node in self.nodes]
 
     @property
-    def edges(self):
+    def edges(self) -> List[Tuple[Node, Node]]:
         """Get a list of edge tuples.
 
         Returns:
@@ -289,7 +293,7 @@ class Skeleton:
         return edge_list
 
     @property
-    def edge_names(self):
+    def edge_names(self) -> List[Tuple[str, str]]:
         """Get a list of edge name tuples.
 
         Returns:
@@ -309,7 +313,7 @@ class Skeleton:
         return [(src.name, dst.name) for src, dst in self.edges]
 
     @property
-    def edges_full(self):
+    def edges_full(self) -> List[Tuple[Node, Node, Any, Any]]:
         """Get a list of edge tuples with keys and attributes.
 
         Returns:
@@ -322,7 +326,7 @@ class Skeleton:
         ]
 
     @property
-    def symmetries(self):
+    def symmetries(self) -> List[Tuple[Node, Node]]:
         """Get a list of all symmetries without duplicates.
 
         Returns:
@@ -339,10 +343,11 @@ class Skeleton:
         return symmetries
 
     @property
-    def symmetries_full(self):
+    def symmetries_full(self) -> List[Tuple[Node, Node, Any, Any]]:
         """Get a list of all symmetries with keys and attributes.
 
-        Note: The returned list will contain duplicates (node1, node2) and (node2, node1).
+        Note: The returned list will contain duplicates (node1, node2)
+        and (node2, node1).
 
         Returns:
             list of (node1, node2, key, attr)
@@ -354,12 +359,15 @@ class Skeleton:
             if attr["type"] == EdgeType.SYMMETRY
         ]
 
-    def node_to_index(self, node: Union[str, Node]):
+    def node_to_index(self, node: Union[str, Node]) -> int:
         """
-        Return the index of the node, accepts either a node or string name of a Node.
+        Return the index of the node, accepts either `Node` or name.
 
         Args:
             node: The name of the node or the Node object.
+
+        Raises:
+            ValueError if node cannot be found in skeleton.
 
         Returns:
             The index of the node in the graph.
@@ -374,7 +382,11 @@ class Skeleton:
         """Add a node representing an animal part to the skeleton.
 
         Args:
-            name: The name of the node to add to the skeleton. This name must be unique within the skeleton.
+            name: The name of the node to add to the skeleton.
+                This name must be unique within the skeleton.
+
+        Raises:
+            ValueError: If name is not unique.
 
         Returns:
             None
@@ -387,7 +399,7 @@ class Skeleton:
 
         self._graph.add_node(Node(name))
 
-    def add_nodes(self, name_list: list):
+    def add_nodes(self, name_list: List[str]):
         """
         Add a list of nodes representing animal parts to the skeleton.
 
@@ -406,7 +418,10 @@ class Skeleton:
         The method removes a node from the skeleton and any edge that is connected to it.
 
         Args:
-            name: The name of the edge to remove
+            name: The name of the node to remove
+
+        Raises:
+            ValueError: If node cannot be found.
 
         Returns:
             None
@@ -419,14 +434,14 @@ class Skeleton:
                 "The node named ({}) does not exist, cannot remove it.".format(name)
             )
 
-    def find_node(self, name: str):
+    def find_node(self, name: str) -> Node:
         """Find node in skeleton by name of node.
 
         Args:
             name: The name of the :class:`Node` (or a :class:`Node`)
 
         Returns:
-            Node, or None if no match found
+            `Node`, or None if no match found
         """
         if isinstance(name, Node):
             name = name.name
@@ -447,10 +462,12 @@ class Skeleton:
         Args:
             source: The name of the source node.
             destination: The name of the destination node.
+        Raises:
+            ValueError: If source or destination nodes cannot be found,
+                or if edge already exists between those nodes.
 
         Returns:
-            None
-
+            None.
         """
         if isinstance(source, Node):
             source_node = source
@@ -498,6 +515,10 @@ class Skeleton:
             source: The name of the source node.
             destination: The name of the destination node.
 
+        Raises:
+            ValueError: If skeleton does not have either source node,
+                destination node, or edge between them.
+
         Returns:
             None
         """
@@ -542,6 +563,10 @@ class Skeleton:
             node1: The name of the first part in the symmetric pair
             node2: The name of the second part in the symmetric pair
 
+        Raises:
+            ValueError: If node1 and node2 match, or if there is already
+                a symmetry between them.
+
         Returns:
             None
 
@@ -574,6 +599,9 @@ class Skeleton:
             node1: The name of the first part in the symmetric pair
             node2: The name of the second part in the symmetric pair
 
+        Raises:
+            ValueError: If there's no symmetry between node1 and node2.
+
         Returns:
             None
         """
@@ -595,11 +623,14 @@ class Skeleton:
         ]
         self._graph.remove_edges_from(edges)
 
-    def get_symmetry(self, node: str):
+    def get_symmetry(self, node: str) -> Optional[Node]:
         """ Returns the node symmetric with the specified node.
 
         Args:
             node: The name of the node to query.
+
+        Raises:
+            ValueError: If node has more than one symmetry.
 
         Returns:
             The symmetric :class:`Node`, None if no symmetry
@@ -619,7 +650,7 @@ class Skeleton:
         else:
             raise ValueError(f"{node} has more than one symmetry.")
 
-    def get_symmetry_name(self, node: str):
+    def get_symmetry_name(self, node: str) -> Optional[str]:
         """Returns the name of the node symmetric with the specified node.
 
         Args:
@@ -637,6 +668,9 @@ class Skeleton:
 
         Args:
             node_name: The name from which to retrieve data.
+
+        Raises:
+            ValueError: If node cannot be found.
 
         Returns:
             A dictionary of data associated with this node.
@@ -678,7 +712,11 @@ class Skeleton:
         Relabel the nodes of the skeleton.
 
         Args:
-            mapping: A dictionary with the old labels as keys and new labels as values. A partial mapping is allowed.
+            mapping: A dictionary with the old labels as keys and new
+                labels as values. A partial mapping is allowed.
+
+        Raises:
+            ValueError: If node already present with one of the new names.
 
         Returns:
             None
@@ -743,22 +781,60 @@ class Skeleton:
         return self._graph.has_edge(source_node, destination_node)
 
     @staticmethod
-    def to_dict(obj: "Skeleton", node_to_idx: Dict[Node, int] = None):
+    def to_dict(obj: "Skeleton", node_to_idx: Optional[Dict[Node, int]] = None) -> Dict:
+        """
+        Convert `Skeleton` to dict; used for saving as JSON.
+
+        Args:
+            obj: the `Skeleton`
+            node_to_idx: optional dict which maps `Node` objects
+                to index in some list. This is used when saving `Labels`
+                where we want to serialize the `Nodes` outside the
+                `Skeleton` object.
+                If given, then we replace each `Node` with specified
+                index before converting `Skeleton`. Otherwise, we
+                convert `Node`s with the rest of the `Skeleton`.
+        Returns:
+            dict with data from `Skeleton`
+        """
 
         # This is a weird hack to serialize the whole _graph into a dict.
         # I use the underlying to_json and parse it.
         return json.loads(obj.to_json(node_to_idx))
 
     @classmethod
-    def from_dict(cls, d: Dict, node_to_idx: Dict[Node, int] = None):
+    def from_dict(cls, d: Dict, node_to_idx: Dict[Node, int] = None) -> "Skeleton":
+        """
+        Create `Skeleton` from dict; used for loading from JSON.
+
+        Args:
+            d: the `dict` from which to deserialize
+            node_to_idx: optional dict which maps `Node` objects
+                to index in some list. This is used when saving `Labels`
+                where we want to serialize the `Nodes` outside the
+                `Skeleton` object.
+                If given, then we can replace the int graph nodes
+                with appropriate `Node` objects. Otherwise, we'll
+                leave the nodes as is.
+
+        Returns:
+            `Skeleton`.
+
+        """
         return Skeleton.from_json(json.dumps(d), node_to_idx)
 
-    def to_json(self, node_to_idx: Dict[Node, int] = None) -> str:
+    def to_json(self, node_to_idx: Optional[Dict[Node, int]] = None) -> str:
         """
         Convert the skeleton to a JSON representation.
 
         Args:
-            node_to_idx (optional): Map for converting `Node` nodes to int
+            node_to_idx: optional dict which maps `Node` objects
+                to index in some list. This is used when saving `Labels`
+                where we want to serialize the `Nodes` outside the
+                `Skeleton` object.
+                If given, then we replace each `Node` with specified
+                index before converting `Skeleton`. Otherwise, we
+                convert `Node`s with the rest of the `Skeleton`.
 
         Returns:
             A string containing the JSON representation of the Skeleton.
@@ -776,18 +852,25 @@ class Skeleton:
 
         return json_str
 
-    def save_json(self, filename: str, node_to_idx: Dict[Node, int] = None):
-        """Save the skeleton as JSON file.
+    def save_json(self, filename: str, node_to_idx: Optional[Dict[Node, int]] = None):
+        """
+        Save the skeleton as JSON file.
 
-           Output the complete skeleton to a file in JSON format.
+        Output the complete skeleton to a file in JSON format.
 
-           Args:
-               filename: The filename to save the JSON to.
-               node_to_idx (optional): Map for converting `Node` nodes to int
+        Args:
+            filename: The filename to save the JSON to.
+            node_to_idx: optional dict which maps `Node` objects
+                to index in some list. This is used when saving `Labels`
+                where we want to serialize the `Nodes` outside the
+                `Skeleton` object.
+                If given, then we can replace the int graph nodes
+                with appropriate `Node` objects. Otherwise, we'll
+                leave the nodes as is.
 
-            Returns:
-                None
-           """
+        Returns:
+            None
+        """
 
         json_str = self.to_json(node_to_idx)
 
@@ -795,16 +878,22 @@ class Skeleton:
             file.write(json_str)
 
     @classmethod
-    def from_json(cls, json_str: str, idx_to_node: Dict[int, Node] = None):
+    def from_json(
+        cls, json_str: str, idx_to_node: Dict[int, Node] = None
+    ) -> "Skeleton":
         """
-        Parse a JSON string containing the Skeleton object and create an instance from it.
+        Instantiate `Skeleton` from JSON string.
 
         Args:
             json_str: The JSON encoded Skeleton.
-            idx_to_node (optional): Map for converting int node in json back to corresponding `Node`.
+            idx_to_node: optional dict which maps an int (indexing a
+                list of `Node`s) to the already deserialized `Node`.
+                This should invert `node_to_idx` we used when saving.
+                If not given, then we'll assume each `Node` was left
+                in the `Skeleton` when it was saved.
 
         Returns:
-            An instance of the Skeleton object decoded from the JSON.
+            An instance of the `Skeleton` object decoded from the JSON.
         """
         graph = json_graph.node_link_graph(jsonpickle.decode(json_str))
 
@@ -818,7 +907,9 @@ class Skeleton:
         return skeleton
 
     @classmethod
-    def load_json(cls, filename: str, idx_to_node: Dict[int, Node] = None):
+    def load_json(
+        cls, filename: str, idx_to_node: Dict[int, Node] = None
+    ) -> "Skeleton":
         """Load a skeleton from a JSON file.
 
         This method will load the Skeleton from JSON file saved with; :meth:`~Skeleton.save_json`
@@ -828,17 +919,17 @@ class Skeleton:
             idx_to_node (optional): Map for converting int node in json back to corresponding `Node`.
 
         Returns:
-            The Skeleton object stored in the JSON filename.
+            The `Skeleton` object stored in the JSON filename.
 
         """
 
         with open(filename, "r") as file:
-            skeleton = Skeleton.from_json(file.read(), idx_to_node)
+            skeleton = cls.from_json(file.read(), idx_to_node)
 
         return skeleton
 
     @classmethod
-    def load_hdf5(cls, file: Union[str, h5.File], name: str):
+    def load_hdf5(cls, file: Union[str, h5.File], name: str) -> List["Skeleton"]:
         """
         Load a specific skeleton (by name) from the HDF5 file.
 
@@ -847,13 +938,13 @@ class Skeleton:
             name: The name of the skeleton.
 
         Returns:
-            The skeleton instance stored in the HDF5 file.
+            The specified `Skeleton` instance stored in the HDF5 file.
         """
         if isinstance(file, str):
             with h5.File(file) as _file:
-                skeletons = Skeleton._load_hdf5(_file)  # Load all skeletons
+                skeletons = cls._load_hdf5(_file)  # Load all skeletons
         else:
-            skeletons = Skeleton._load_hdf5(file)
+            skeletons = cls._load_hdf5(file)
 
         return skeletons[name]
 
@@ -866,18 +957,20 @@ class Skeleton:
 
         Args:
             file: The file name or open h5.File
-            return_dict: True if the the return value should be a dict where the
-            keys are skeleton names and values the corresponding skeleton. False
-            if the return should just be a list of the skeletons.
+            return_dict: Whether the the return value should be a dict
+                where the keys are skeleton names and values the
+                corresponding skeleton. If False, then method will
+                return just a list of the skeletons.
 
         Returns:
-            The skeleton instances stored in the HDF5 file. Either in List or Dict form.
+            The skeleton instances stored in the HDF5 file.
+            Either in List or Dict form.
         """
         if isinstance(file, str):
             with h5.File(file) as _file:
-                skeletons = Skeleton._load_hdf5(_file)  # Load all skeletons
+                skeletons = cls._load_hdf5(_file)  # Load all skeletons
         else:
-            skeletons = Skeleton._load_hdf5(file)
+            skeletons = cls._load_hdf5(file)
 
         if return_dict:
             return skeletons
@@ -889,26 +982,23 @@ class Skeleton:
 
         skeletons = {}
         for name, json_str in file["skeleton"].attrs.items():
-            skeletons[name] = Skeleton.from_json(json_str)
+            skeletons[name] = cls.from_json(json_str)
 
         return skeletons
-
-    def save_hdf5(self, file: Union[str, h5.File]):
-        if isinstance(file, str):
-            with h5.File(file) as _file:
-                self._save_hdf5(_file)
-        else:
-            self._save_hdf5(file)
 
     @classmethod
     def save_all_hdf5(self, file: Union[str, h5.File], skeletons: List["Skeleton"]):
         """
-        Convenience method to save a list of skeletons to HDF5 file. Skeletons are saved
-        as attributes of a /skeleton group in the file.
+        Convenience method to save a list of skeletons to HDF5 file.
+
+        Skeletons are saved as attributes of a /skeleton group in the file.
 
         Args:
             file: The filename or the open h5.File object.
             skeletons: The list of skeletons to save.
+
+        Raises:
+            ValueError: If multiple skeletons have the same name.
 
         Returns:
             None
@@ -923,12 +1013,29 @@ class Skeleton:
         for skeleton in skeletons:
             skeleton.save_hdf5(file)
 
+    def save_hdf5(self, file: Union[str, h5.File]):
+        """
+        Wrapper for HDF5 saving which takes either filename or h5.File.
+
+        Args:
+            file: can be filename (string) or `h5.File` object
+
+        Returns:
+            None
+        """
+
+        if isinstance(file, str):
+            with h5.File(file) as _file:
+                self._save_hdf5(_file)
+        else:
+            self._save_hdf5(file)
+
     def _save_hdf5(self, file: h5.File):
         """
         Actual implementation of HDF5 saving.
 
         Args:
-            file: The open h5.File to write the skeleton data too.
+            file: The open h5.File to write the skeleton data to.
 
         Returns:
             None
@@ -945,10 +1052,12 @@ class Skeleton:
         all_sk_group.attrs[self.name] = np.string_(self.to_json())
 
     @classmethod
-    def load_mat(cls, filename: str):
+    def load_mat(cls, filename: str) -> "Skeleton":
         """
-        Load the skeleton from a Matlab MAT file. This is to support backwards
-        compatibility with old LEAP MATLAB code and datasets.
+        Load the skeleton from a Matlab MAT file.
+
+        This is to support backwards compatibility with old LEAP
+        MATLAB code and datasets.
 
         Args:
             filename: The name of the skeleton file
