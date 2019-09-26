@@ -150,7 +150,7 @@ class Skeleton:
         return list({node for skeleton in skeletons for node in skeleton.nodes})
 
     @staticmethod
-    def make_cattr(idx_to_node: Dict[int, Node] = None) -> Callable:
+    def make_cattr(idx_to_node: Dict[int, Node] = None) -> cattr.Converter:
         """
         Make cattr.Convert() for `Skeleton`.
 
