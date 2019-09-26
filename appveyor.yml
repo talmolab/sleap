@@ -71,7 +71,8 @@ test_script:
   - cmd: pytest --cov=sleap tests/
 
 on_success:
-  - coveralls
+  - cmd: set
+  - cmd: coveralls
 
 # here we are going to override common configuration
 for:
