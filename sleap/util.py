@@ -10,14 +10,16 @@ import numpy as np
 import attr
 import psutil
 
-from typing import Hashable, Iterable, List, Optional
+from typing import Any, Hashable, Iterable, List, Optional
 
 
-def attr_to_dtype(cls):
-    """Convert classes with basic types to numpy composite dtypes.
+def attr_to_dtype(cls: Any):
+    """
+    Converts classes with basic types to numpy composite dtypes.
 
     Arguments:
         cls: class to convert
+
     Returns:
         numpy dtype.
     """
@@ -42,7 +44,8 @@ def attr_to_dtype(cls):
 
 
 def usable_cpu_count() -> int:
-    """Get number of CPUs usable by the current process.
+    """
+    Gets number of CPUs usable by the current process.
 
     Takes into consideration cpusets restrictions.
 
@@ -61,16 +64,22 @@ def usable_cpu_count() -> int:
 
 def save_dict_to_hdf5(h5file: h5.File, path: str, dic: dict):
     """
-    Saves dictionary to an HDF5 file, calls itself recursively if items in
-    dictionary are not np.ndarray, np.int64, np.float64, str, bytes. Objects
-    must be iterable.
+    Saves dictionary to an HDF5 file.
+
+    Calls itself recursively if items in dictionary are not
+    `np.ndarray`, `np.int64`, `np.float64`, `str`, or bytes.
+    Objects must be iterable.
 
     Args:
-        h5file: The HDF5 filename object to save the data to. Assume it is open.
+        h5file: The HDF5 filename object to save the data to.
+            Assume it is open.
         path: The path to group save the dict under.
         dic: The dict to save.
+
     Raises:
         ValueError: If type for item in dict cannot be saved.
+
+
     Returns:
         None
     """
@@ -102,10 +111,12 @@ def save_dict_to_hdf5(h5file: h5.File, path: str, dic: dict):
 
 
 def frame_list(frame_str: str) -> Optional[List[int]]:
-    """Convert 'n-m' string to list of ints.
+    """
+    Converts 'n-m' string to list of ints.
 
     Args:
         frame_str: string representing range
+
     Returns:
         List of ints, or None if string does not represent valid range.
     """
@@ -122,7 +133,7 @@ def frame_list(frame_str: str) -> Optional[List[int]]:
 
 def uniquify(seq: Iterable[Hashable]) -> List:
     """
-    Given a list, return unique elements but preserve order.
+    Returns unique elements from list, preserving order.
 
     Note: This will not work on Python 3.5 or lower since dicts don't
     preserve order.
@@ -131,7 +142,8 @@ def uniquify(seq: Iterable[Hashable]) -> List:
         seq: The list to remove duplicates from.
 
     Returns:
-        The unique elements from the input list extracted in original order.
+        The unique elements from the input list extracted in original
+        order.
     """
 
     # Raymond Hettinger
@@ -148,6 +160,7 @@ def weak_filename_match(filename_a: str, filename_b: str) -> bool:
     Args:
         filename_a: first path to check
         filename_b: path to check against first path
+
     Returns:
         True if the paths probably match.
     """
