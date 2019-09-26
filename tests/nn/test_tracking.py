@@ -1,6 +1,7 @@
 from sleap.nn.tracking import FlowShiftTracker
 from sleap.io.dataset import Labels
 
+
 def test_flow_tracker(centered_pair_vid, centered_pair_predictions):
 
     # We are going to test tracking. The dataset we have loaded
@@ -23,6 +24,7 @@ def test_flow_tracker(centered_pair_vid, centered_pair_predictions):
     # FIXME: Old tracking results seems to produce a few more tracks. This number probably
     # shouldn't be hard coded.
     assert len(tracks) == 24
+
 
 # def test_tracking_optflow_fail(centered_pair_vid, centered_pair_predictions):
 #     frame_nums = range(0, len(centered_pair_predictions), 2)

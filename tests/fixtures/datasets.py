@@ -9,6 +9,7 @@ TEST_JSON_PREDICTIONS = "tests/data/json_format_v2/centered_pair_predictions.jso
 TEST_JSON_MIN_LABELS = "tests/data/json_format_v2/minimal_instance.json"
 TEST_MAT_LABELS = "tests/data/mat/labels.mat"
 
+
 @pytest.fixture
 def centered_pair_labels():
     return Labels.load_json(TEST_JSON_LABELS)
@@ -18,13 +19,16 @@ def centered_pair_labels():
 def centered_pair_predictions():
     return Labels.load_json(TEST_JSON_PREDICTIONS)
 
+
 @pytest.fixture
 def min_labels():
     return Labels.load_json(TEST_JSON_MIN_LABELS)
 
+
 @pytest.fixture
 def mat_labels():
     return Labels.load_mat(TEST_MAT_LABELS)
+
 
 @pytest.fixture
 def multi_skel_vid_labels(hdf5_vid, small_robot_mp4_vid, skeleton, stickman):
@@ -60,7 +64,9 @@ def multi_skel_vid_labels(hdf5_vid, small_robot_mp4_vid, skeleton, stickman):
 
         stickman_instances = []
         for i in range(6):
-            stickman_instances.append(Instance(skeleton=stickman, track=stick_tracks[i]))
+            stickman_instances.append(
+                Instance(skeleton=stickman, track=stick_tracks[i])
+            )
             for node in stickman.nodes:
                 stickman_instances[i][node] = Point(x=i % vid.width, y=i % vid.height)
 
@@ -70,4 +76,3 @@ def multi_skel_vid_labels(hdf5_vid, small_robot_mp4_vid, skeleton, stickman):
     labels = Labels(labels)
 
     return labels
-

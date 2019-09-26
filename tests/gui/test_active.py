@@ -5,13 +5,18 @@ from sleap.instance import Instance, Point, LabeledFrame, PredictedInstance
 from sleap.io.video import Video
 from sleap.io.dataset import Labels
 from sleap.nn.model import ModelOutputType
-from sleap.gui.active import ActiveLearningDialog, make_default_training_jobs, find_saved_jobs, add_frames_from_json
+from sleap.gui.active import (
+    ActiveLearningDialog,
+    make_default_training_jobs,
+    find_saved_jobs,
+    add_frames_from_json,
+)
+
 
 def test_active_gui(qtbot, centered_pair_labels):
     win = ActiveLearningDialog(
-            labels_filename="foo.json",
-            labels=centered_pair_labels,
-            mode="expert")
+        labels_filename="foo.json", labels=centered_pair_labels, mode="expert"
+    )
     win.show()
     qtbot.addWidget(win)
 
@@ -25,6 +30,7 @@ def test_active_gui(qtbot, centered_pair_labels):
     jobs = win._get_current_training_jobs()
     assert ModelOutputType.PART_AFFINITY_FIELD not in jobs
 
+
 def test_make_default_training_jobs():
     jobs = make_default_training_jobs()
 
@@ -34,6 +40,7 @@ def test_make_default_training_jobs():
     for output_type in jobs:
         assert jobs[output_type].model.output_type == output_type
         assert jobs[output_type].best_model_filename is None
+
 
 def test_find_saved_jobs():
     jobs_a = find_saved_jobs("tests/data/training_profiles/set_a")
@@ -58,6 +65,7 @@ def test_find_saved_jobs():
     paths = [name for (name, job) in jobs_c[ModelOutputType.CONFIDENCE_MAP]]
     assert os.path.basename(paths[0]) == "test_confmaps.json"
     assert os.path.basename(paths[1]) == "default_confmaps.json"
+
 
 def test_add_frames_from_json():
     vid_a = Video.from_filename("foo.mp4")

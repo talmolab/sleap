@@ -2,6 +2,7 @@ from PySide2.QtGui import QKeySequence
 
 from sleap.gui.shortcuts import Shortcuts
 
+
 def test_shortcuts():
     shortcuts = Shortcuts()
 

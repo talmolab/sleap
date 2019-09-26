@@ -12,6 +12,7 @@ from sleap.io.video import Video
 
 from sleap.io.dataset import Labels
 
+
 def check_labels(labels):
 
     # Make sure there are 1100 frames
@@ -33,15 +34,19 @@ def check_labels(labels):
 
     # FIXME: We need more checks here.
 
+
 def test_load_old_json():
-    labels = load_predicted_labels_json_old("tests/data/json_format_v1/centered_pair.json")
+    labels = load_predicted_labels_json_old(
+        "tests/data/json_format_v1/centered_pair.json"
+    )
 
     check_labels(labels)
 
-    #Labels.save_json(labels, 'tests/data/json_format_v2/centered_pair_predictions.json')
+    # Labels.save_json(labels, 'tests/data/json_format_v2/centered_pair_predictions.json')
+
 
 def test_save_load_json(centered_pair_predictions, tmpdir):
-    test_out_file = os.path.join(tmpdir, 'test_tmp.json')
+    test_out_file = os.path.join(tmpdir, "test_tmp.json")
 
     # Check the labels
     check_labels(centered_pair_predictions)
@@ -54,20 +59,21 @@ def test_save_load_json(centered_pair_predictions, tmpdir):
 
     check_labels(new_labels)
 
+
 def test_peaks_with_scaling():
 
     # load from scratch so we won't change centered_pair_predictions
-    true_labels = Labels.load_json('tests/data/json_format_v1/centered_pair.json')
+    true_labels = Labels.load_json("tests/data/json_format_v1/centered_pair.json")
     # only use a few frames
     true_labels.labeled_frames = true_labels.labeled_frames[13:23:2]
     skeleton = true_labels.skeletons[0]
 
     imgs = generate_images(true_labels)
     # scaling
-    scale = .5
+    scale = 0.5
     transform = DataTransform()
     img_size = imgs.shape[1], imgs.shape[2]
-    scaled_size = int(imgs.shape[1]//(1/scale)), int(imgs.shape[2]//(1/scale))
+    scaled_size = int(imgs.shape[1] // (1 / scale)), int(imgs.shape[2] // (1 / scale))
     imgs = transform.scale_to(imgs, scaled_size)
     assert transform.scale == scale
     assert imgs.shape[1], imgs.shape[2] == scaled_size
@@ -83,15 +89,24 @@ def test_peaks_with_scaling():
 
     # make sure what we got from interence matches what we started with
     for i in range(len(new_labels.labeled_frames)):
-        assert len(true_labels.labeled_frames[i].instances) <= len(new_labels.labeled_frames[i].instances)
+        assert len(true_labels.labeled_frames[i].instances) <= len(
+            new_labels.labeled_frames[i].instances
+        )
 
         # sort instances by location of thorax
         true_labels.labeled_frames[i].instances.sort(key=lambda inst: inst["thorax"])
         new_labels.labeled_frames[i].instances.sort(key=lambda inst: inst["thorax"])
 
         # make sure that each true instance has points matching one of the new instances
-        for inst_a, inst_b in zip(true_labels.labeled_frames[i].instances, new_labels.labeled_frames[i].instances):
-        
+        for inst_a, inst_b in zip(
+            true_labels.labeled_frames[i].instances,
+            new_labels.labeled_frames[i].instances,
+        ):
+
             assert inst_a.get_points_array().shape == inst_b.get_points_array().shape
             # FIXME: new instances have nans, so for now just check first 5 points
-            assert np.allclose(inst_a.get_points_array()[0:5], inst_b.get_points_array()[0:5], atol=1/scale)
+            assert np.allclose(
+                inst_a.get_points_array()[0:5],
+                inst_b.get_points_array()[0:5],
+                atol=1 / scale,
+            )
