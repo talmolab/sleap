@@ -9,6 +9,8 @@ The relationships between objects in this module:
 * `Instance`s (and `PredictedInstance`s) have `PointArray`
   (or `PredictedPointArray`).
 
+* `Instance` (`PredictedInstance`) can be associated with a `Track`
+
 * A `PointArray` (or `PredictedPointArray`) contains zero or more
   `Point`s (or `PredictedPoint`s), ideally as many as there are in the
   associated :class:`Skeleton` although these can get out of sync if the
