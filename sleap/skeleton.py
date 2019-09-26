@@ -26,11 +26,13 @@ from scipy.io import loadmat
 class EdgeType(Enum):
     """
     The skeleton graph can store different types of edges to represent
-    different things. All edges must specify one or more of the following types.
+    different things. All edges must specify one or more of the
+    following types:
 
-        * BODY - these edges represent connections between parts or landmarks.
-        * SYMMETRY - these edges represent symmetrical relationships between
-        parts (e.g. left and right arms)
+        * BODY - these edges represent connections between parts or
+          landmarks.
+        * SYMMETRY - these edges represent symmetrical relationships
+          between parts (e.g. left and right arms)
     """
 
     BODY = 1
@@ -74,21 +76,24 @@ class Node:
 
 
 class Skeleton:
-    """The main object for representing animal skeletons.
+    """
+    The main object for representing animal skeletons.
 
-    The skeleton represents the constituent parts of the animal whose pose
-    is being estimated.
+    The skeleton represents the constituent parts of the animal whose
+    pose is being estimated.
 
-    An index variable used to give skeletons a default name that attempts
-    to be unique across all skeletons.
+    An index variable used to give skeletons a default name that should
+    be unique across all skeletons.
     """
 
     _skeleton_idx = count(0)
 
     def __init__(self, name: str = None):
-        """Initialize an empty skeleton object.
+        """
+        Initialize an empty skeleton object.
 
-        Skeleton objects, once they are created can be modified by adding nodes and edges.
+        Skeleton objects, once created, can be modified by adding nodes
+        and edges.
 
         Args:
             name: A name for this skeleton.
@@ -175,14 +180,15 @@ class Skeleton:
         """
         Make cattr.Convert() for `Skeleton`.
 
-        Make a cattr.Converter() that registers structure and unstructure
+        Make a cattr.Converter() that registers structure/unstructure
         hooks for Skeleton objects to handle serialization of skeletons.
 
         Args:
             idx_to_node: A dict that maps node index to Node objects.
 
         Returns:
-            A cattr.Converter() instance for skeleton serialization and deserialization.
+            A cattr.Converter() instance for skeleton serialization
+            and deserialization.
         """
         node_to_idx = (
             {node: idx for idx, node in idx_to_node.items()}
@@ -217,7 +223,8 @@ class Skeleton:
         If you want to rename a Skeleton you must use the class
         method :code:`rename_skeleton`:
 
-        >>> new_skeleton = Skeleton.rename_skeleton(skeleton=old_skeleton, name="New Name")
+        >>> new_skeleton = Skeleton.rename_skeleton(
+        >>>     skeleton=old_skeleton, name="New Name")
 
         Args:
             name: The name of the Skeleton.
@@ -240,7 +247,8 @@ class Skeleton:
         This property is immutable because it is used to hash skeletons.
         If you want to rename a Skeleton you must use this class method.
 
-        >>> new_skeleton = Skeleton.rename_skeleton(skeleton=old_skeleton, name="New Name")
+        >>> new_skeleton = Skeleton.rename_skeleton(
+        >>>     skeleton=old_skeleton, name="New Name")
 
         Args:
             skeleton: The skeleton to copy.
@@ -415,7 +423,8 @@ class Skeleton:
     def delete_node(self, name: str):
         """Remove a node from the skeleton.
 
-        The method removes a node from the skeleton and any edge that is connected to it.
+        The method removes a node from the skeleton and any edge that is
+        connected to it.
 
         Args:
             name: The name of the node to remove
@@ -554,10 +563,10 @@ class Skeleton:
         self._graph.remove_edge(source_node, destination_node)
 
     def add_symmetry(self, node1: str, node2: str):
-        """Specify that two parts (nodes) in the skeleton are symmetrical.
+        """Specify that two parts (nodes) in skeleton are symmetrical.
 
         Certain parts of an animal body can be related as symmetrical
-        parts in a pair. For example, the left and right hands of a person.
+        parts in a pair. For example, left and right hands of a person.
 
         Args:
             node1: The name of the first part in the symmetric pair
@@ -593,11 +602,12 @@ class Skeleton:
         self._graph.add_edge(node2_node, node1_node, type=EdgeType.SYMMETRY)
 
     def delete_symmetry(self, node1: str, node2: str):
-        """Deletes a previously established symmetry relationship between two nodes.
+        """
+        Deletes a previously established symmetry between two nodes.
 
         Args:
-            node1: The name of the first part in the symmetric pair
-            node2: The name of the second part in the symmetric pair
+            node1: The name of the first part in the symmetric pair.
+            node2: The name of the second part in the symmetric pair.
 
         Raises:
             ValueError: If there's no symmetry between node1 and node2.
@@ -624,7 +634,8 @@ class Skeleton:
         self._graph.remove_edges_from(edges)
 
     def get_symmetry(self, node: str) -> Optional[Node]:
-        """ Returns the node symmetric with the specified node.
+        """
+        Returns the node symmetric with the specified node.
 
         Args:
             node: The name of the node to query.
@@ -651,7 +662,8 @@ class Skeleton:
             raise ValueError(f"{node} has more than one symmetry.")
 
     def get_symmetry_name(self, node: str) -> Optional[str]:
-        """Returns the name of the node symmetric with the specified node.
+        """
+        Returns the name of the node symmetric with the specified node.
 
         Args:
             node: The name of the node to query.
@@ -664,7 +676,7 @@ class Skeleton:
 
     def __getitem__(self, node_name: str) -> dict:
         """
-        Retrieves the node data associated with Skeleton node.
+        Retrieves the node data associated with skeleton node.
 
         Args:
             node_name: The name from which to retrieve data.
@@ -783,19 +795,20 @@ class Skeleton:
     @staticmethod
     def to_dict(obj: "Skeleton", node_to_idx: Optional[Dict[Node, int]] = None) -> Dict:
         """
-        Convert `Skeleton` to dict; used for saving as JSON.
+        Convert skeleton to dict; used for saving as JSON.
 
         Args:
-            obj: the `Skeleton`
-            node_to_idx: optional dict which maps `Node` objects
-                to index in some list. This is used when saving `Labels`
-                where we want to serialize the `Nodes` outside the
-                `Skeleton` object.
-                If given, then we replace each `Node` with specified
-                index before converting `Skeleton`. Otherwise, we
-                convert `Node`s with the rest of the `Skeleton`.
+            obj: the :object:`Skeleton` to convert
+            node_to_idx: optional dict which maps :class:`Node`sto index
+                in some list. This is used when saving
+                :class:`Labels`where we want to serialize the
+                :class:`Nodes` outside the :class:`Skeleton` object.
+                If given, then we replace each :class:`Node` with
+                specified index before converting :class:`Skeleton`.
+                Otherwise, we convert :class:`Node`s with the rest of
+                the :class:`Skeleton`.
         Returns:
-            dict with data from `Skeleton`
+            dict with data from skeleton
         """
 
         # This is a weird hack to serialize the whole _graph into a dict.
@@ -805,39 +818,41 @@ class Skeleton:
     @classmethod
     def from_dict(cls, d: Dict, node_to_idx: Dict[Node, int] = None) -> "Skeleton":
         """
-        Create `Skeleton` from dict; used for loading from JSON.
+        Create skeleton from dict; used for loading from JSON.
 
         Args:
-            d: the `dict` from which to deserialize
-            node_to_idx: optional dict which maps `Node` objects
-                to index in some list. This is used when saving `Labels`
-                where we want to serialize the `Nodes` outside the
-                `Skeleton` object.
-                If given, then we can replace the int graph nodes
-                with appropriate `Node` objects. Otherwise, we'll
-                leave the nodes as is.
+            d: the dict from which to deserialize
+            node_to_idx: optional dict which maps :class:`Node`sto index
+                in some list. This is used when saving
+                :class:`Labels`where we want to serialize the
+                :class:`Nodes` outside the :class:`Skeleton` object.
+                If given, then we replace each :class:`Node` with
+                specified index before converting :class:`Skeleton`.
+                Otherwise, we convert :class:`Node`s with the rest of
+                the :class:`Skeleton`.
 
         Returns:
-            `Skeleton`.
+            :class:`Skeleton`.
 
         """
         return Skeleton.from_json(json.dumps(d), node_to_idx)
 
     def to_json(self, node_to_idx: Optional[Dict[Node, int]] = None) -> str:
         """
-        Convert the skeleton to a JSON representation.
+        Convert the :class:`Skeleton` to a JSON representation.
 
         Args:
-            node_to_idx: optional dict which maps `Node` objects
-                to index in some list. This is used when saving `Labels`
-                where we want to serialize the `Nodes` outside the
-                `Skeleton` object.
-                If given, then we replace each `Node` with specified
-                index before converting `Skeleton`. Otherwise, we
-                convert `Node`s with the rest of the `Skeleton`.
+            node_to_idx: optional dict which maps :class:`Node`sto index
+                in some list. This is used when saving
+                :class:`Labels`where we want to serialize the
+                :class:`Nodes` outside the :class:`Skeleton` object.
+                If given, then we replace each :class:`Node` with
+                specified index before converting :class:`Skeleton`.
+                Otherwise, we convert :class:`Node`s with the rest of
+                the :class:`Skeleton`.
 
         Returns:
-            A string containing the JSON representation of the Skeleton.
+            A string containing the JSON representation of the skeleton.
         """
         jsonpickle.set_encoder_options("simplejson", sort_keys=True, indent=4)
         if node_to_idx is not None:
@@ -854,19 +869,20 @@ class Skeleton:
 
     def save_json(self, filename: str, node_to_idx: Optional[Dict[Node, int]] = None):
         """
-        Save the skeleton as JSON file.
+        Save the :class:`Skeleton` as JSON file.
 
         Output the complete skeleton to a file in JSON format.
 
         Args:
             filename: The filename to save the JSON to.
-            node_to_idx: optional dict which maps `Node` objects
-                to index in some list. This is used when saving `Labels`
-                where we want to serialize the `Nodes` outside the
-                `Skeleton` object.
-                If given, then we can replace the int graph nodes
-                with appropriate `Node` objects. Otherwise, we'll
-                leave the nodes as is.
+            node_to_idx: optional dict which maps :class:`Node`sto index
+                in some list. This is used when saving
+                :class:`Labels`where we want to serialize the
+                :class:`Nodes` outside the :class:`Skeleton` object.
+                If given, then we replace each :class:`Node` with
+                specified index before converting :class:`Skeleton`.
+                Otherwise, we convert :class:`Node`s with the rest of
+                the :class:`Skeleton`.
 
         Returns:
             None
@@ -882,15 +898,16 @@ class Skeleton:
         cls, json_str: str, idx_to_node: Dict[int, Node] = None
     ) -> "Skeleton":
         """
-        Instantiate `Skeleton` from JSON string.
+        Instantiate :class:`Skeleton` from JSON string.
 
         Args:
             json_str: The JSON encoded Skeleton.
             idx_to_node: optional dict which maps an int (indexing a
-                list of `Node`s) to the already deserialized `Node`.
+                list of :class:`Node`s) to the already deserialized
+                :class:`Node`.
                 This should invert `node_to_idx` we used when saving.
-                If not given, then we'll assume each `Node` was left
-                in the `Skeleton` when it was saved.
+                If not given, then we'll assume each :class:`Node` was
+                left in the :class:`Skeleton` when it was saved.
 
         Returns:
             An instance of the `Skeleton` object decoded from the JSON.
@@ -910,13 +927,20 @@ class Skeleton:
     def load_json(
         cls, filename: str, idx_to_node: Dict[int, Node] = None
     ) -> "Skeleton":
-        """Load a skeleton from a JSON file.
+        """
+        Load a skeleton from a JSON file.
 
-        This method will load the Skeleton from JSON file saved with; :meth:`~Skeleton.save_json`
+        This method will load the Skeleton from JSON file saved
+        with; :meth:`~Skeleton.save_json`
 
         Args:
-            filename: The file that contains the JSON specifying the skeleton.
-            idx_to_node (optional): Map for converting int node in json back to corresponding `Node`.
+            filename: The file that contains the JSON.
+            idx_to_node: optional dict which maps an int (indexing a
+                list of :class:`Node`s) to the already deserialized
+                :class:`Node`.
+                This should invert `node_to_idx` we used when saving.
+                If not given, then we'll assume each :class:`Node` was
+                left in the :class:`Skeleton` when it was saved.
 
         Returns:
             The `Skeleton` object stored in the JSON filename.
@@ -991,7 +1015,8 @@ class Skeleton:
         """
         Convenience method to save a list of skeletons to HDF5 file.
 
-        Skeletons are saved as attributes of a /skeleton group in the file.
+        Skeletons are saved as attributes of a /skeleton group in the
+        file.
 
         Args:
             file: The filename or the open h5.File object.
