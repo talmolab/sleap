@@ -1,15 +1,16 @@
+"""
+Module for legacy LEAP dataset.
+"""
 import json
 import os
 import numpy as np
 import pandas as pd
 
-from .dataset import Labels
-from .video import Video
+from sleap.io.dataset import Labels
+from sleap.io.video import Video
 
-from ..instance import LabeledFrame, PredictedPoint, PredictedInstance
-from ..skeleton import Skeleton
-
-from ..nn.tracking import Track
+from sleap.instance import LabeledFrame, PredictedPoint, PredictedInstance, Track
+from sleap.skeleton import Skeleton
 
 
 def load_predicted_labels_json_old(
@@ -24,9 +25,10 @@ def load_predicted_labels_json_old(
 
     Args:
         data_path: The path to the JSON file.
-        parsed_json: The parsed json if already loaded. Save some time if already parsed.
-        adjust_matlab_indexing: Do we need to adjust indexing from MATLAB.
-        fix_rel_paths: Fix paths to videos to absolute paths.
+        parsed_json: The parsed json if already loaded, so we can save
+            some time if already parsed.
+        adjust_matlab_indexing: Whether to adjust indexing from MATLAB.
+        fix_rel_paths: Whether to fix paths to videos to absolute paths.
 
     Returns:
         A newly constructed Labels object.
