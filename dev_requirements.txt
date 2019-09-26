@@ -4,4 +4,4 @@ pytest-cov
 ipython
 sphinx
 sphinx_rtd_theme
-python-coveralls
+coveralls
