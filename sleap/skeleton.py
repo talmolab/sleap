@@ -136,6 +136,27 @@ class Skeleton:
         # Check if the two graphs are equal
         return True
 
+    @property
+    def graph(self):
+        edges = [
+            (src, dst, key)
+            for src, dst, key, edge_type in self._graph.edges(keys=True, data="type")
+            if edge_type == EdgeType.BODY
+        ]
+        # TODO: properly induce subgraph for MultiDiGraph
+        #   Currently, NetworkX will just return the nodes in the subgraph.
+        #   See: https://stackoverflow.com/questions/16150557/networkxcreating-a-subgraph-induced-from-edges
+        return self._graph.edge_subgraph(edges)
+
+    @property
+    def graph_symmetry(self):
+        edges = [
+            (src, dst, key)
+            for src, dst, key, edge_type in self._graph.edges(keys=True, data="type")
+            if edge_type == EdgeType.SYMMETRY
+        ]
+        return self._graph.edge_subgraph(edges)
+
     @staticmethod
     def find_unique_nodes(skeletons: List["Skeleton"]) -> List[Node]:
         """
