@@ -35,7 +35,7 @@ from sleap.skeleton import Skeleton, Node
 from sleap.instance import Instance, PredictedInstance, Point, LabeledFrame, Track
 from sleap.io.video import Video
 from sleap.io.dataset import Labels
-from sleap.info.summary import Summary
+from sleap.info.summary import StatisticSeries
 from sleap.gui.video import QtVideoPlayer
 from sleap.gui.dataviews import (
     VideosTable,
@@ -1029,7 +1029,7 @@ class MainWindow(QMainWindow):
         self.player.seekbar.setTracksFromLabels(self.labels, self.video)
 
     def setSeekbarHeader(self, graph_name):
-        data_obj = Summary(self.labels)
+        data_obj = StatisticSeries(self.labels)
         header_functions = {
             "Point Displacement (sum)": data_obj.get_point_displacement_series,
             "Point Displacement (max)": data_obj.get_point_displacement_series,

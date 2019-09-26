@@ -1,8 +1,17 @@
 import os
 import pytest
 
-from sleap.instance import Instance, Point, LabeledFrame, Track
+from sleap.instance import (
+    Instance,
+    PredictedInstance,
+    Point,
+    PredictedPoint,
+    LabeledFrame,
+    Track,
+)
+from sleap.skeleton import Skeleton
 from sleap.io.dataset import Labels
+from sleap.io.video import Video
 
 TEST_JSON_LABELS = "tests/data/json_format_v1/centered_pair.json"
 TEST_JSON_PREDICTIONS = "tests/data/json_format_v2/centered_pair_predictions.json"
@@ -28,6 +37,73 @@ def min_labels():
 @pytest.fixture
 def mat_labels():
     return Labels.load_mat(TEST_MAT_LABELS)
+
+
+@pytest.fixture
+def simple_predictions():
+
+    video = Video.from_filename("video.mp4")
+
+    skeleton = Skeleton()
+    skeleton.add_node("a")
+    skeleton.add_node("b")
+
+    track_a = Track(0, "a")
+    track_b = Track(0, "b")
+
+    labels = Labels()
+
+    instances = []
+    instances.append(
+        PredictedInstance(
+            skeleton=skeleton,
+            score=2,
+            track=track_a,
+            points=dict(
+                a=PredictedPoint(1, 1, score=0.5), b=PredictedPoint(1, 1, score=0.5)
+            ),
+        )
+    )
+    instances.append(
+        PredictedInstance(
+            skeleton=skeleton,
+            score=5,
+            track=track_b,
+            points=dict(
+                a=PredictedPoint(1, 1, score=0.7), b=PredictedPoint(1, 1, score=0.7)
+            ),
+        )
+    )
+
+    labeled_frame = LabeledFrame(video, frame_idx=0, instances=instances)
+    labels.append(labeled_frame)
+
+    instances = []
+    instances.append(
+        PredictedInstance(
+            skeleton=skeleton,
+            score=3,
+            track=track_a,
+            points=dict(
+                a=PredictedPoint(4, 5, score=1.5), b=PredictedPoint(1, 1, score=1.0)
+            ),
+        )
+    )
+    instances.append(
+        PredictedInstance(
+            skeleton=skeleton,
+            score=6,
+            track=track_b,
+            points=dict(
+                a=PredictedPoint(6, 13, score=1.7), b=PredictedPoint(1, 1, score=1.0)
+            ),
+        )
+    )
+
+    labeled_frame = LabeledFrame(video, frame_idx=1, instances=instances)
+    labels.append(labeled_frame)
+
+    return labels
 
 
 @pytest.fixture
