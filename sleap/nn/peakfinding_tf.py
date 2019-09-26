@@ -11,6 +11,7 @@ from typing import Generator, Tuple
 
 from sleap.nn.util import batch
 
+
 def find_maxima_tf(x):
 
     col_max = tf.reduce_max(x, axis=1)
@@ -24,7 +25,8 @@ def find_maxima_tf(x):
     maxima = tf.concat([rows, cols], -1)
     # max_val = tf.reduce_max(col_max, axis=1) # should match tf.reduce_max(x, axis=[1,2])
 
-    return maxima #, max_val
+    return maxima  # , max_val
+
 
 def impeaksnms_tf(I, min_thresh=0.3):
 
@@ -32,9 +34,7 @@ def impeaksnms_tf(I, min_thresh=0.3):
     # less than min_thresh are set to 0.
     It = tf.cast(I > min_thresh, I.dtype) * I
 
-    kernel = np.array([[0, 0, 0],
-                       [0, -1, 0],
-                       [0, 0, 0]])[..., None]
+    kernel = np.array([[0, 0, 0], [0, -1, 0], [0, 0, 0]])[..., None]
     # kernel = np.array([[1, 1, 1],
     #                    [1, 0, 1],
     #                    [1, 1, 1]])[..., None]
@@ -46,12 +46,20 @@ def impeaksnms_tf(I, min_thresh=0.3):
     return inds, peak_vals
 
 
-def find_peaks_tf(confmaps, confmaps_shape, min_thresh=0.3, upsample_factor: int = 1, win_size: int = 5):
+def find_peaks_tf(
+    confmaps,
+    confmaps_shape,
+    min_thresh=0.3,
+    upsample_factor: int = 1,
+    win_size: int = 5,
+):
     # n, h, w, c = confmaps.get_shape().as_list()
 
     h, w, c = confmaps_shape
 
-    unrolled_confmaps = tf.reshape(tf.transpose(confmaps, perm=[0, 3, 1, 2]), [-1, h, w, 1])  # (nc, h, w, 1)
+    unrolled_confmaps = tf.reshape(
+        tf.transpose(confmaps, perm=[0, 3, 1, 2]), [-1, h, w, 1]
+    )  # (nc, h, w, 1)
     peak_inds, peak_vals = impeaksnms_tf(unrolled_confmaps, min_thresh=min_thresh)
 
     channel_sample_ind, y, x, _ = tf.split(peak_inds, 4, axis=1)
@@ -71,21 +79,24 @@ def find_peaks_tf(confmaps, confmaps_shape, min_thresh=0.3, upsample_factor: int
         # Get the boxes coordinates centered on the peaks, normalized to image
         # coordinates
         box_ind = tf.squeeze(tf.cast(channel_sample_ind, tf.int32))
-        top_left = (tf.cast(peaks[:, 1:3], tf.float32) +
-                    tf.constant([-offset, -offset], dtype="float32")) / (h - 1.0)
-        bottom_right = (tf.cast(peaks[:, 1:3], tf.float32) + tf.constant([offset, offset], dtype="float32")) / (w - 1.0)
+        top_left = (
+            tf.cast(peaks[:, 1:3], tf.float32)
+            + tf.constant([-offset, -offset], dtype="float32")
+        ) / (h - 1.0)
+        bottom_right = (
+            tf.cast(peaks[:, 1:3], tf.float32)
+            + tf.constant([offset, offset], dtype="float32")
+        ) / (w - 1.0)
         boxes = tf.concat([top_left, bottom_right], axis=1)
 
         small_windows = tf.image.crop_and_resize(
-            unrolled_confmaps,
-            boxes,
-            box_ind,
-            crop_size=[win_size, win_size])
+            unrolled_confmaps, boxes, box_ind, crop_size=[win_size, win_size]
+        )
 
         # Upsample cropped windows
         windows = tf.image.resize_bicubic(
-            small_windows,
-            [upsample_factor * win_size, upsample_factor * win_size])
+            small_windows, [upsample_factor * win_size, upsample_factor * win_size]
+        )
 
         windows = tf.squeeze(windows)
 
@@ -93,34 +104,37 @@ def find_peaks_tf(confmaps, confmaps_shape, min_thresh=0.3, upsample_factor: int
         windows_peaks = find_maxima_tf(windows)  # [row_ind, col_ind] ==> (nc, 2)
 
         # Adjust back to resolution before upsampling
-        windows_peaks = tf.cast(windows_peaks, tf.float32) / tf.cast(upsample_factor, tf.float32)
+        windows_peaks = tf.cast(windows_peaks, tf.float32) / tf.cast(
+            upsample_factor, tf.float32
+        )
 
         # Convert to offsets relative to the original peaks (center of cropped windows)
         windows_offsets = windows_peaks - tf.cast(offset, tf.float32)  # (nc, 2)
-        windows_offsets = tf.pad(windows_offsets, [[0, 0], [1, 1]], mode="CONSTANT", constant_values=0)  # (nc, 4)
+        windows_offsets = tf.pad(
+            windows_offsets, [[0, 0], [1, 1]], mode="CONSTANT", constant_values=0
+        )  # (nc, 4)
 
         # Apply offsets
         peaks = tf.cast(peaks, tf.float32) + windows_offsets
 
     return peaks, peak_vals
 
+
 # Blurring:
 # Ref: https://stackoverflow.com/questions/52012657/how-to-make-a-2d-gaussian-filter-in-tensorflow
-def gaussian_kernel(size: int,
-                    mean: float,
-                    std: float,
-                   ):
+def gaussian_kernel(size: int, mean: float, std: float):
     """Makes 2D gaussian Kernel for convolution."""
 
     d = tf.distributions.Normal(mean, std)
-    vals = d.prob(tf.range(start = -size, limit = size + 1, dtype = tf.float32))
-    gauss_kernel = tf.einsum("i,j->ij",
-                                  vals,
-                                  vals)
+    vals = d.prob(tf.range(start=-size, limit=size + 1, dtype=tf.float32))
+    gauss_kernel = tf.einsum("i,j->ij", vals, vals)
 
     return gauss_kernel / tf.reduce_sum(gauss_kernel)
 
-def peak_tf_inference(model, data,
+
+def peak_tf_inference(
+    model,
+    data,
     confmaps_shape: Tuple[int],
     min_thresh: float = 0.3,
     gaussian_size: int = 9,
@@ -128,14 +142,15 @@ def peak_tf_inference(model, data,
     upsample_factor: int = 1,
     return_confmaps: bool = False,
     batch_size: int = 4,
-    win_size: int = 7):
+    win_size: int = 7,
+):
 
     sess = keras.backend.get_session()
 
     # TODO: Unfuck this.
     confmaps = model.outputs[-1]
     h, w, c = confmaps_shape
-    
+
     if gaussian_size > 0 and gaussian_sigma > 0:
 
         # Make Gaussian Kernel with desired specs.
@@ -149,14 +164,22 @@ def peak_tf_inference(model, data,
         pointwise_filter = tf.eye(c, batch_shape=[1, 1])
 
         # Convolve.
-        confmaps = tf.nn.separable_conv2d(confmaps, gauss_kernel, pointwise_filter,
-                                       strides=[1, 1, 1, 1], padding="SAME")
+        confmaps = tf.nn.separable_conv2d(
+            confmaps,
+            gauss_kernel,
+            pointwise_filter,
+            strides=[1, 1, 1, 1],
+            padding="SAME",
+        )
 
-        
     # Setup peak finding computations.
-    peaks, peak_vals = find_peaks_tf(confmaps,
-        confmaps_shape=confmaps_shape, min_thresh=min_thresh,
-        upsample_factor=upsample_factor, win_size=win_size)
+    peaks, peak_vals = find_peaks_tf(
+        confmaps,
+        confmaps_shape=confmaps_shape,
+        min_thresh=min_thresh,
+        upsample_factor=upsample_factor,
+        win_size=win_size,
+    )
 
     # We definitely want to capture the peaks in the output
     # We will map the tensorflow outputs onto a dict to return
@@ -166,7 +189,10 @@ def peak_tf_inference(model, data,
         outputs_dict["confmaps"] = confmaps
 
     # Convert dict to list of keys and list of tensors (to evaluate)
-    outputs_keys, output_tensors = list(outputs_dict.keys()), list(outputs_dict.values())
+    outputs_keys, output_tensors = (
+        list(outputs_dict.keys()),
+        list(outputs_dict.values()),
+    )
 
     # Run the graph and retrieve output arrays.
     peaks_arr = []
@@ -204,16 +230,23 @@ def peak_tf_inference(model, data,
 
     # Use indices to convert matrices to lists of lists
     # (this matches the format of cpu-based peak-finding)
-    peak_list, peak_val_list = split_matrices_by_double_index(sample_channel_ind, peak_points, peak_vals_arr,
-        n_samples=len(data), n_channels=c) 
+    peak_list, peak_val_list = split_matrices_by_double_index(
+        sample_channel_ind,
+        peak_points,
+        peak_vals_arr,
+        n_samples=len(data),
+        n_channels=c,
+    )
 
     return peak_list, peak_val_list, confmaps
+
 
 def split_matrices_by_double_index(idxs, *data_list, n_samples=None, n_channels=None):
     """Convert data matrices to lists of lists expected by other functions."""
 
     # Return empty array if there are no idxs
-    if len(idxs) == 0: return [], []
+    if len(idxs) == 0:
+        return [], []
 
     # Determine the list length for major and minor indices
     if n_samples is None:

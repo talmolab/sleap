@@ -35,9 +35,17 @@ except:
 import pandas as pd
 
 from sleap.skeleton import Skeleton, Node
-from sleap.instance import Instance, Point, LabeledFrame, \
-    Track, PredictedPoint, PredictedInstance, \
-    make_instance_cattr, PointArray, PredictedPointArray
+from sleap.instance import (
+    Instance,
+    Point,
+    LabeledFrame,
+    Track,
+    PredictedPoint,
+    PredictedInstance,
+    make_instance_cattr,
+    PointArray,
+    PredictedPointArray,
+)
 from sleap.rangelist import RangeList
 from sleap.io.video import Video
 from sleap.util import uniquify, weak_filename_match
@@ -48,6 +56,7 @@ def json_loads(json_str: str):
         return rapidjson.loads(json_str)
     except:
         return json.loads(json_str)
+
 
 def json_dumps(d: Dict, filename: str = None):
     """
@@ -61,13 +70,15 @@ def json_dumps(d: Dict, filename: str = None):
         None
     """
     import codecs
+
     encoder = rapidjson
 
     if filename:
-        with open(filename, 'w') as f:
+        with open(filename, "w") as f:
             encoder.dump(d, f, ensure_ascii=False)
     else:
         return encoder.dumps(d)
+
 
 """
 The version number to put in the Labels JSON format.
@@ -135,40 +146,53 @@ class Labels(MutableSequence):
 
         # Ditto for skeletons
         if merge or len(self.skeletons) == 0:
-            self.skeletons = list(set(self.skeletons).union(
-                                {instance.skeleton
-                                   for label in self.labels
-                                   for instance in label.instances}))
+            self.skeletons = list(
+                set(self.skeletons).union(
+                    {
+                        instance.skeleton
+                        for label in self.labels
+                        for instance in label.instances
+                    }
+                )
+            )
 
         # Ditto for nodes
         if merge or len(self.nodes) == 0:
-            self.nodes = list(set(self.nodes).union({node for skeleton in self.skeletons for node in skeleton.nodes}))
+            self.nodes = list(
+                set(self.nodes).union(
+                    {node for skeleton in self.skeletons for node in skeleton.nodes}
+                )
+            )
 
         # Ditto for tracks, a pattern is emerging here
         if merge or len(self.tracks) == 0:
             # Get tracks from any Instances or PredictedInstances
-            other_tracks = {instance.track
-                               for frame in self.labels
-                               for instance in frame.instances
-                               if instance.track}
+            other_tracks = {
+                instance.track
+                for frame in self.labels
+                for instance in frame.instances
+                if instance.track
+            }
 
             # Add tracks from any PredictedInstance referenced by instance
             # This fixes things when there's a referenced PredictionInstance
             # which is no longer in the frame.
             other_tracks = other_tracks.union(
-                {instance.from_predicted.track
-                for frame in self.labels
-                for instance in frame.instances
-                if instance.from_predicted and instance.from_predicted.track})
+                {
+                    instance.from_predicted.track
+                    for frame in self.labels
+                    for instance in frame.instances
+                    if instance.from_predicted and instance.from_predicted.track
+                }
+            )
 
             # Get list of other tracks not already in track list
             new_tracks = list(other_tracks - set(self.tracks))
 
             # Sort the new tracks by spawned on and then name
-            new_tracks.sort(key=lambda t:(t.spawned_on, t.name))
+            new_tracks.sort(key=lambda t: (t.spawned_on, t.name))
 
             self.tracks.extend(new_tracks)
-
 
     def _update_lookup_cache(self):
         # Data structures for caching
@@ -177,7 +201,9 @@ class Labels(MutableSequence):
         self._track_occupancy = dict()
         for video in self.videos:
             self._lf_by_video[video] = [lf for lf in self.labels if lf.video == video]
-            self._frame_idx_map[video] = {lf.frame_idx: lf for lf in self._lf_by_video[video]}
+            self._frame_idx_map[video] = {
+                lf.frame_idx: lf for lf in self._lf_by_video[video]
+            }
             self._track_occupancy[video] = self._make_track_occupany(video)
 
     # Below are convenience methods for working with Labels as list.
@@ -206,7 +232,12 @@ class Labels(MutableSequence):
             return item in self.skeletons
         elif isinstance(item, Node):
             return item in self.nodes
-        elif isinstance(item, tuple) and len(item) == 2 and isinstance(item[0], Video) and isinstance(item[1], int):
+        elif (
+            isinstance(item, tuple)
+            and len(item) == 2
+            and isinstance(item[0], Video)
+            and isinstance(item[1], int)
+        ):
             return self.find_first(*item) is not None
 
     def __getitem__(self, key):
@@ -218,7 +249,12 @@ class Labels(MutableSequence):
                 raise KeyError("Video not found in labels.")
             return self.find(video=key)
 
-        elif isinstance(key, tuple) and len(key) == 2 and isinstance(key[0], Video) and isinstance(key[1], int):
+        elif (
+            isinstance(key, tuple)
+            and len(key) == 2
+            and isinstance(key[0], Video)
+            and isinstance(key[1], int)
+        ):
             if key[0] not in self.videos:
                 raise KeyError("Video not found in labels.")
 
@@ -285,7 +321,12 @@ class Labels(MutableSequence):
         self._lf_by_video[value.video].remove(value)
         del self._frame_idx_map[value.video][value.frame_idx]
 
-    def find(self, video: Video, frame_idx: Union[int, range] = None, return_new: bool=False) -> List[LabeledFrame]:
+    def find(
+        self,
+        video: Video,
+        frame_idx: Union[int, range] = None,
+        return_new: bool = False,
+    ) -> List[LabeledFrame]:
         """ Search for labeled frames given video and/or frame index.
 
         Args:
@@ -297,19 +338,28 @@ class Labels(MutableSequence):
             List of `LabeledFrame`s that match the criteria. Empty if no matches found.
 
         """
-        null_result = [LabeledFrame(video=video, frame_idx=frame_idx)] if return_new else []
+        null_result = (
+            [LabeledFrame(video=video, frame_idx=frame_idx)] if return_new else []
+        )
 
         if frame_idx is not None:
-            if video not in self._frame_idx_map: return null_result
+            if video not in self._frame_idx_map:
+                return null_result
 
             if type(frame_idx) == range:
-                return [self._frame_idx_map[video][idx] for idx in frame_idx if idx in self._frame_idx_map[video]]
+                return [
+                    self._frame_idx_map[video][idx]
+                    for idx in frame_idx
+                    if idx in self._frame_idx_map[video]
+                ]
 
-            if frame_idx not in self._frame_idx_map[video]: return null_result
+            if frame_idx not in self._frame_idx_map[video]:
+                return null_result
 
             return [self._frame_idx_map[video][frame_idx]]
         else:
-            if video not in self._lf_by_video: return null_result
+            if video not in self._lf_by_video:
+                return null_result
             return self._lf_by_video[video]
 
     def frames(self, video: Video, from_frame_idx: int = -1, reverse=False):
@@ -317,16 +367,21 @@ class Labels(MutableSequence):
         Iterator over all frames in a video, starting with first frame
         after specified frame_idx (or first frame in video if none specified).
         """
-        if video not in self._frame_idx_map: return None
+        if video not in self._frame_idx_map:
+            return None
 
         # Get sorted list of frame indexes for this video
         frame_idxs = sorted(self._frame_idx_map[video].keys())
 
         # Find the next frame index after (before) the specified frame
         if not reverse:
-            next_frame_idx = min(filter(lambda x: x > from_frame_idx, frame_idxs), default=frame_idxs[0])
+            next_frame_idx = min(
+                filter(lambda x: x > from_frame_idx, frame_idxs), default=frame_idxs[0]
+            )
         else:
-            next_frame_idx = max(filter(lambda x: x < from_frame_idx, frame_idxs), default=frame_idxs[-1])
+            next_frame_idx = max(
+                filter(lambda x: x < from_frame_idx, frame_idxs), default=frame_idxs[-1]
+            )
         cut_list_idx = frame_idxs.index(next_frame_idx)
 
         # Shift list of frame indices to start with specified frame
@@ -349,7 +404,9 @@ class Labels(MutableSequence):
 
         if video in self.videos:
             for label in self.labels:
-                if label.video == video and (frame_idx is None or (label.frame_idx == frame_idx)):
+                if label.video == video and (
+                    frame_idx is None or (label.frame_idx == frame_idx)
+                ):
                     return label
 
     def find_last(self, video: Video, frame_idx: int = None) -> LabeledFrame:
@@ -365,7 +422,9 @@ class Labels(MutableSequence):
 
         if video in self.videos:
             for label in reversed(self.labels):
-                if label.video == video and (frame_idx is None or (label.frame_idx == frame_idx)):
+                if label.video == video and (
+                    frame_idx is None or (label.frame_idx == frame_idx)
+                ):
                     return label
 
     @property
@@ -373,7 +432,11 @@ class Labels(MutableSequence):
         return [lf for lf in self.labeled_frames if lf.has_user_instances]
 
     def get_video_user_labeled_frames(self, video: Video) -> List[LabeledFrame]:
-        return [lf for lf in self.labeled_frames if lf.has_user_instances and lf.video == video]
+        return [
+            lf
+            for lf in self.labeled_frames
+            if lf.has_user_instances and lf.video == video
+        ]
 
     # Methods for instances
 
@@ -381,9 +444,10 @@ class Labels(MutableSequence):
         count = 0
         labeled_frame = self.find_first(video, frame_idx)
         if labeled_frame is not None:
-            count = len([inst for inst in labeled_frame.instances if type(inst)==Instance])
+            count = len(
+                [inst for inst in labeled_frame.instances if type(inst) == Instance]
+            )
         return count
-
 
     @property
     def all_instances(self):
@@ -421,17 +485,30 @@ class Labels(MutableSequence):
         self.tracks.append(track)
         self._track_occupancy[video][track] = RangeList()
 
-    def track_set_instance(self, frame: LabeledFrame, instance: Instance, new_track: Track):
-        self.track_swap(frame.video, new_track, instance.track, (frame.frame_idx, frame.frame_idx+1))
+    def track_set_instance(
+        self, frame: LabeledFrame, instance: Instance, new_track: Track
+    ):
+        self.track_swap(
+            frame.video,
+            new_track,
+            instance.track,
+            (frame.frame_idx, frame.frame_idx + 1),
+        )
         if instance.track is None:
             self._track_remove_instance(frame, instance)
         instance.track = new_track
 
-    def track_swap(self, video: Video, new_track: Track, old_track: Track, frame_range: tuple):
+    def track_swap(
+        self, video: Video, new_track: Track, old_track: Track, frame_range: tuple
+    ):
 
         # Get ranges in track occupancy cache
-        _, within_old, _ = self._track_occupancy[video][old_track].cut_range(frame_range)
-        _, within_new, _ = self._track_occupancy[video][new_track].cut_range(frame_range)
+        _, within_old, _ = self._track_occupancy[video][old_track].cut_range(
+            frame_range
+        )
+        _, within_new, _ = self._track_occupancy[video][new_track].cut_range(
+            frame_range
+        )
 
         if old_track is not None:
             # Instances that didn't already have track can't be handled here.
@@ -459,11 +536,19 @@ class Labels(MutableSequence):
                 instance.track = old_track
 
     def _track_remove_instance(self, frame: LabeledFrame, instance: Instance):
-        if instance.track not in self._track_occupancy[frame.video]: return
+        if instance.track not in self._track_occupancy[frame.video]:
+            return
 
         # If this is only instance in track in frame, then remove frame from track.
-        if len(list(filter(lambda inst: inst.track == instance.track, frame.instances))) == 1:
-            self._track_occupancy[frame.video][instance.track].remove((frame.frame_idx, frame.frame_idx+1))
+        if (
+            len(
+                list(filter(lambda inst: inst.track == instance.track, frame.instances))
+            )
+            == 1
+        ):
+            self._track_occupancy[frame.video][instance.track].remove(
+                (frame.frame_idx, frame.frame_idx + 1)
+            )
 
     def remove_instance(self, frame: LabeledFrame, instance: Instance):
         self._track_remove_instance(frame, instance)
@@ -474,8 +559,11 @@ class Labels(MutableSequence):
             self._track_occupancy[frame.video] = dict()
 
         # Ensure that there isn't already an Instance with this track
-        tracks_in_frame = [inst.track for inst in frame
-                           if type(inst) == Instance and inst.track is not None]
+        tracks_in_frame = [
+            inst.track
+            for inst in frame
+            if type(inst) == Instance and inst.track is not None
+        ]
         if instance.track in tracks_in_frame:
             instance.track = None
 
@@ -483,7 +571,9 @@ class Labels(MutableSequence):
         if instance.track not in self._track_occupancy[frame.video]:
             self._track_occupancy[frame.video][instance.track] = RangeList()
 
-        self._track_occupancy[frame.video][instance.track].insert((frame.frame_idx, frame.frame_idx+1))
+        self._track_occupancy[frame.video][instance.track].insert(
+            (frame.frame_idx, frame.frame_idx + 1)
+        )
         frame.instances.append(instance)
 
     def _make_track_occupany(self, video):
@@ -499,7 +589,9 @@ class Labels(MutableSequence):
                 tracks[instance.track].add(frame_idx)
         return tracks
 
-    def find_track_occupancy(self, video: Video, track: Union[Track, int], frame_range=None) -> List[Tuple[LabeledFrame, Instance]]:
+    def find_track_occupancy(
+        self, video: Video, track: Union[Track, int], frame_range=None
+    ) -> List[Tuple[LabeledFrame, Instance]]:
         """Get instances for a given track.
 
         Args:
@@ -518,25 +610,29 @@ class Labels(MutableSequence):
             match = False
             if type(tr) == Track and inst.track is tr:
                 match = True
-            elif (type(tr) == int and labeled_frame.instances.index(inst) == tr
-                    and inst.track is None):
+            elif (
+                type(tr) == int
+                and labeled_frame.instances.index(inst) == tr
+                and inst.track is None
+            ):
                 match = True
             return match
 
-        track_frame_inst = [(lf, instance)
-                            for lf in self.find(video)
-                            for instance in lf.instances
-                            if does_track_match(instance, track, lf)
-                                and (frame_range is None or lf.frame_idx in frame_range)]
+        track_frame_inst = [
+            (lf, instance)
+            for lf in self.find(video)
+            for instance in lf.instances
+            if does_track_match(instance, track, lf)
+            and (frame_range is None or lf.frame_idx in frame_range)
+        ]
         return track_frame_inst
-
 
     def find_track_instances(self, *args, **kwargs) -> List[Instance]:
         return [inst for lf, inst in self.find_track_occupancy(*args, **kwargs)]
 
     # Methods for suggestions
 
-    def get_video_suggestions(self, video:Video) -> list:
+    def get_video_suggestions(self, video: Video) -> list:
         """
         Returns the list of suggested frames for the specified video
         or suggestions for all videos (if no video specified).
@@ -545,46 +641,62 @@ class Labels(MutableSequence):
 
     def get_suggestions(self) -> list:
         """Return all suggestions as a list of (video, frame) tuples."""
-        suggestion_list = [(video, frame_idx)
+        suggestion_list = [
+            (video, frame_idx)
             for video in self.videos
             for frame_idx in self.get_video_suggestions(video)
-            ]
+        ]
         return suggestion_list
 
     def get_next_suggestion(self, video, frame_idx, seek_direction=1) -> list:
         """Returns a (video, frame_idx) tuple."""
         # make sure we have valid seek_direction
-        if seek_direction not in (-1, 1): return (None, None)
+        if seek_direction not in (-1, 1):
+            return (None, None)
         # make sure the video belongs to this Labels object
-        if video not in self.videos: return (None, None)
+        if video not in self.videos:
+            return (None, None)
 
         all_suggestions = self.get_suggestions()
 
         # If we're currently on a suggestion, then follow order of list
         if (video, frame_idx) in all_suggestions:
             suggestion_idx = all_suggestions.index((video, frame_idx))
-            new_idx = (suggestion_idx+seek_direction)%len(all_suggestions)
+            new_idx = (suggestion_idx + seek_direction) % len(all_suggestions)
             video, frame_suggestion = all_suggestions[new_idx]
 
         # Otherwise, find the prev/next suggestion sorted by frame order
         else:
             # look for next (or previous) suggestion in current video
             if seek_direction == 1:
-                frame_suggestion = min((i for i in self.get_video_suggestions(video) if i > frame_idx), default=None)
+                frame_suggestion = min(
+                    (i for i in self.get_video_suggestions(video) if i > frame_idx),
+                    default=None,
+                )
             else:
-                frame_suggestion = max((i for i in self.get_video_suggestions(video) if i < frame_idx), default=None)
-            if frame_suggestion is not None: return (video, frame_suggestion)
+                frame_suggestion = max(
+                    (i for i in self.get_video_suggestions(video) if i < frame_idx),
+                    default=None,
+                )
+            if frame_suggestion is not None:
+                return (video, frame_suggestion)
             # if we didn't find suggestion in current video,
             # then we want earliest frame in next video with suggestions
-            next_video_idx = (self.videos.index(video) + seek_direction) % len(self.videos)
+            next_video_idx = (self.videos.index(video) + seek_direction) % len(
+                self.videos
+            )
             video = self.videos[next_video_idx]
             if seek_direction == 1:
-                frame_suggestion = min((i for i in self.get_video_suggestions(video)), default=None)
+                frame_suggestion = min(
+                    (i for i in self.get_video_suggestions(video)), default=None
+                )
             else:
-                frame_suggestion = max((i for i in self.get_video_suggestions(video)), default=None)
+                frame_suggestion = max(
+                    (i for i in self.get_video_suggestions(video)), default=None
+                )
         return (video, frame_suggestion)
 
-    def set_suggestions(self, suggestions:Dict[Video, list]):
+    def set_suggestions(self, suggestions: Dict[Video, list]):
         """Sets the suggested frames."""
         self.suggestions = suggestions
 
@@ -639,7 +751,7 @@ class Labels(MutableSequence):
 
     # Methods for negative anchors
 
-    def add_negative_anchor(self, video:Video, frame_idx: int, where: tuple):
+    def add_negative_anchor(self, video: Video, frame_idx: int, where: tuple):
         """Adds a location for a negative training sample.
 
         Args:
@@ -651,7 +763,7 @@ class Labels(MutableSequence):
             self.negative_anchors[video] = []
         self.negative_anchors[video].append((frame_idx, *where))
 
-    def remove_negative_anchors(self, video:Video, frame_idx: int):
+    def remove_negative_anchors(self, video: Video, frame_idx: int):
         """Removes negative training samples for given video and frame.
 
         Args:
@@ -660,16 +772,21 @@ class Labels(MutableSequence):
         Returns:
             None
         """
-        if video not in self.negative_anchors: return
+        if video not in self.negative_anchors:
+            return
 
-        anchors = [(idx, x, y)
-                    for idx, x, y in self.negative_anchors[video]
-                    if idx != frame_idx]
+        anchors = [
+            (idx, x, y)
+            for idx, x, y in self.negative_anchors[video]
+            if idx != frame_idx
+        ]
         self.negative_anchors[video] = anchors
 
     # Methods for saving/loading
 
-    def extend_from(self, new_frames: Union['Labels',List[LabeledFrame]], unify:bool=False):
+    def extend_from(
+        self, new_frames: Union["Labels", List[LabeledFrame]], unify: bool = False
+    ):
         """
         Merge data from another Labels object or list of LabeledFrames into self.
 
@@ -681,11 +798,14 @@ class Labels(MutableSequence):
             bool, True if we added frames, False otherwise
         """
         # allow either Labels or list of LabeledFrames
-        if isinstance(new_frames, Labels): new_frames = new_frames.labeled_frames
+        if isinstance(new_frames, Labels):
+            new_frames = new_frames.labeled_frames
 
         # return if this isn't non-empty list of labeled frames
-        if not isinstance(new_frames, list) or len(new_frames) == 0: return False
-        if not isinstance(new_frames[0], LabeledFrame): return False
+        if not isinstance(new_frames, list) or len(new_frames) == 0:
+            return False
+        if not isinstance(new_frames[0], LabeledFrame):
+            return False
 
         # If unify, we want to replace objects in the frames with
         # corresponding objects from the current labels.
@@ -708,7 +828,9 @@ class Labels(MutableSequence):
         return True
 
     @classmethod
-    def complex_merge_between(cls, base_labels: 'Labels', new_labels: 'Labels', unify:bool = True) -> tuple:
+    def complex_merge_between(
+        cls, base_labels: "Labels", new_labels: "Labels", unify: bool = True
+    ) -> tuple:
         """
         Merge frames and other data that can be merged cleanly,
         and return frames that conflict.
@@ -745,10 +867,9 @@ class Labels(MutableSequence):
             new_labels = cls.from_json(new_json, match_to=base_labels)
 
         # Merge anything that can be merged cleanly and get conflicts
-        merged, extra_base, extra_new = \
-            LabeledFrame.complex_merge_between(
-                base_labels=base_labels,
-                new_frames=new_labels.labeled_frames)
+        merged, extra_base, extra_new = LabeledFrame.complex_merge_between(
+            base_labels=base_labels, new_frames=new_labels.labeled_frames
+        )
 
         # For clean merge, finish merge now by cleaning up base object
         if not extra_base and not extra_new:
@@ -759,27 +880,31 @@ class Labels(MutableSequence):
 
         # Merge suggestions and negative anchors
         cls.merge_container_dicts(base_labels.suggestions, new_labels.suggestions)
-        cls.merge_container_dicts(base_labels.negative_anchors, new_labels.negative_anchors)
+        cls.merge_container_dicts(
+            base_labels.negative_anchors, new_labels.negative_anchors
+        )
 
         return merged, extra_base, extra_new
 
-#     @classmethod
-#     def merge_predictions_by_score(cls, extra_base: List[LabeledFrame], extra_new: List[LabeledFrame]):
-#         """
-#         Remove all predictions from input lists, return list with only
-#         the merged predictions.
-# 
-#         Args:
-#             extra_base: list of `LabeledFrame`s
-#             extra_new: list of `LabeledFrame`s
-#                 Conflicting frames should have same index in both lists.
-#         Returns:
-#             list of `LabeledFrame`s with merged predictions
-#         """
-#         pass
+    #     @classmethod
+    #     def merge_predictions_by_score(cls, extra_base: List[LabeledFrame], extra_new: List[LabeledFrame]):
+    #         """
+    #         Remove all predictions from input lists, return list with only
+    #         the merged predictions.
+    #
+    #         Args:
+    #             extra_base: list of `LabeledFrame`s
+    #             extra_new: list of `LabeledFrame`s
+    #                 Conflicting frames should have same index in both lists.
+    #         Returns:
+    #             list of `LabeledFrame`s with merged predictions
+    #         """
+    #         pass
 
     @staticmethod
-    def finish_complex_merge(base_labels: 'Labels', resolved_frames: List[LabeledFrame]):
+    def finish_complex_merge(
+        base_labels: "Labels", resolved_frames: List[LabeledFrame]
+    ):
         """
         Finish conflicted merge from complex_merge_between.
 
@@ -824,7 +949,9 @@ class Labels(MutableSequence):
             for vid in {lf.video for lf in self.labeled_frames}:
                 self.merge_matching_frames(video=vid)
         else:
-            self.labeled_frames = LabeledFrame.merge_frames(self.labeled_frames, video=video)
+            self.labeled_frames = LabeledFrame.merge_frames(
+                self.labeled_frames, video=video
+            )
 
     def to_dict(self, skip_labels: bool = False):
         """
@@ -851,17 +978,27 @@ class Labels(MutableSequence):
         # FIXME: Update list of nodes
         # We shouldn't have to do this here, but for some reason we're missing nodes
         # which are in the skeleton but don't have points (in the first instance?).
-        self.nodes = list(set(self.nodes).union({node for skeleton in self.skeletons for node in skeleton.nodes}))
+        self.nodes = list(
+            set(self.nodes).union(
+                {node for skeleton in self.skeletons for node in skeleton.nodes}
+            )
+        )
 
         # Register some unstructure hooks since we don't want complete deserialization
         # of video and skeleton objects present in the labels. We will serialize these
         # as references to the above constructed lists to limit redundant data in the
         # json
         label_cattr = make_instance_cattr()
-        label_cattr.register_unstructure_hook(Skeleton, lambda x: str(self.skeletons.index(x)))
-        label_cattr.register_unstructure_hook(Video, lambda x: str(self.videos.index(x)))
+        label_cattr.register_unstructure_hook(
+            Skeleton, lambda x: str(self.skeletons.index(x))
+        )
+        label_cattr.register_unstructure_hook(
+            Video, lambda x: str(self.videos.index(x))
+        )
         label_cattr.register_unstructure_hook(Node, lambda x: str(self.nodes.index(x)))
-        label_cattr.register_unstructure_hook(Track, lambda x: str(self.tracks.index(x)))
+        label_cattr.register_unstructure_hook(
+            Track, lambda x: str(self.tracks.index(x))
+        )
 
         # Make a converter for the top level skeletons list.
         idx_to_node = {i: self.nodes[i] for i in range(len(self.nodes))}
@@ -870,17 +1007,17 @@ class Labels(MutableSequence):
 
         # Serialize the skeletons, videos, and labels
         dicts = {
-            'version': LABELS_JSON_FILE_VERSION,
-            'skeletons': skeleton_cattr.unstructure(self.skeletons),
-            'nodes': cattr.unstructure(self.nodes),
-            'videos': Video.cattr().unstructure(self.videos),
-            'tracks': cattr.unstructure(self.tracks),
-            'suggestions': label_cattr.unstructure(self.suggestions),
-            'negative_anchors': label_cattr.unstructure(self.negative_anchors)
-         }
+            "version": LABELS_JSON_FILE_VERSION,
+            "skeletons": skeleton_cattr.unstructure(self.skeletons),
+            "nodes": cattr.unstructure(self.nodes),
+            "videos": Video.cattr().unstructure(self.videos),
+            "tracks": cattr.unstructure(self.tracks),
+            "suggestions": label_cattr.unstructure(self.suggestions),
+            "negative_anchors": label_cattr.unstructure(self.negative_anchors),
+        }
 
         if not skip_labels:
-            dicts['labels'] = label_cattr.unstructure(self.labeled_frames)
+            dicts["labels"] = label_cattr.unstructure(self.labeled_frames)
 
         return dicts
 
@@ -897,10 +1034,13 @@ class Labels(MutableSequence):
         return json_dumps(self.to_dict())
 
     @staticmethod
-    def save_json(labels: 'Labels', filename: str,
-                  compress: bool = False,
-                  save_frame_data: bool = False,
-                  frame_data_format: str = 'png'):
+    def save_json(
+        labels: "Labels",
+        filename: str,
+        compress: bool = False,
+        save_frame_data: bool = False,
+        frame_data_format: str = "png",
+    ):
         """
         Save a Labels instance to a JSON format.
 
@@ -947,20 +1087,26 @@ class Labels(MutableSequence):
                 # Create a set of new Video objects with imgstore backends. One for each
                 # of the videos. We will only include the labeled frames though. We will
                 # then replace each video with this new video
-                new_videos = labels.save_frame_data_imgstore(output_dir=tmp_dir, format=frame_data_format)
+                new_videos = labels.save_frame_data_imgstore(
+                    output_dir=tmp_dir, format=frame_data_format
+                )
 
                 # Make video paths relative
                 for vid in new_videos:
                     tmp_path = vid.filename
                     # Get the parent dir of the YAML file.
                     # Use "/" since this works on Windows and posix
-                    img_store_dir = os.path.basename(os.path.split(tmp_path)[0]) + "/" + os.path.basename(tmp_path)
+                    img_store_dir = (
+                        os.path.basename(os.path.split(tmp_path)[0])
+                        + "/"
+                        + os.path.basename(tmp_path)
+                    )
                     # Change to relative path
                     vid.backend.filename = img_store_dir
 
                 # Convert to a dict, not JSON yet, because we need to patch up the videos
                 d = labels.to_dict()
-                d['videos'] = Video.cattr().unstructure(new_videos)
+                d["videos"] = Video.cattr().unstructure(new_videos)
 
             else:
                 d = labels.to_dict()
@@ -976,14 +1122,16 @@ class Labels(MutableSequence):
                 json_dumps(d, full_out_filename)
 
                 # Create the archive
-                shutil.make_archive(base_name=filename, root_dir=tmp_dir, format='zip')
+                shutil.make_archive(base_name=filename, root_dir=tmp_dir, format="zip")
 
             # If the user doesn't want to compress, then just write the json to the filename
             else:
                 json_dumps(d, filename)
 
     @classmethod
-    def from_json(cls, data: Union[str, dict], match_to: Optional['Labels'] = None) -> 'Labels':
+    def from_json(
+        cls, data: Union[str, dict], match_to: Optional["Labels"] = None
+    ) -> "Labels":
 
         # Parse the json string if needed.
         if type(data) is str:
@@ -991,16 +1139,20 @@ class Labels(MutableSequence):
         else:
             dicts = data
 
-        dicts['tracks'] = dicts.get('tracks', []) # don't break if json doesn't include tracks
+        dicts["tracks"] = dicts.get(
+            "tracks", []
+        )  # don't break if json doesn't include tracks
 
         # First, deserialize the skeletons, videos, and nodes lists.
         # The labels reference these so we will need them while deserializing.
-        nodes = cattr.structure(dicts['nodes'], List[Node])
+        nodes = cattr.structure(dicts["nodes"], List[Node])
 
-        idx_to_node = {i:nodes[i] for i in range(len(nodes))}
-        skeletons = Skeleton.make_cattr(idx_to_node).structure(dicts['skeletons'], List[Skeleton])
-        videos = Video.cattr().structure(dicts['videos'], List[Video])
-        tracks = cattr.structure(dicts['tracks'], List[Track])
+        idx_to_node = {i: nodes[i] for i in range(len(nodes))}
+        skeletons = Skeleton.make_cattr(idx_to_node).structure(
+            dicts["skeletons"], List[Skeleton]
+        )
+        videos = Video.cattr().structure(dicts["videos"], List[Video])
+        tracks = cattr.structure(dicts["tracks"], List[Track])
 
         # if we're given a Labels object to match, use its objects when they match
         if match_to is not None:
@@ -1017,49 +1169,67 @@ class Labels(MutableSequence):
             for idx, vid in enumerate(videos):
                 for old_vid in match_to.videos:
                     # compare last three parts of path
-                    if vid.filename == old_vid.filename or weak_filename_match(vid.filename, old_vid.filename):
+                    if vid.filename == old_vid.filename or weak_filename_match(
+                        vid.filename, old_vid.filename
+                    ):
                         # use video from match
                         videos[idx] = old_vid
                         break
 
         if "suggestions" in dicts:
             suggestions_cattr = cattr.Converter()
-            suggestions_cattr.register_structure_hook(Video, lambda x,type: videos[int(x)])
-            suggestions = suggestions_cattr.structure(dicts['suggestions'], Dict[Video, List])
+            suggestions_cattr.register_structure_hook(
+                Video, lambda x, type: videos[int(x)]
+            )
+            suggestions = suggestions_cattr.structure(
+                dicts["suggestions"], Dict[Video, List]
+            )
         else:
             suggestions = dict()
 
         if "negative_anchors" in dicts:
             negative_anchors_cattr = cattr.Converter()
-            negative_anchors_cattr.register_structure_hook(Video, lambda x,type: videos[int(x)])
-            negative_anchors = negative_anchors_cattr.structure(dicts['negative_anchors'], Dict[Video, List])
+            negative_anchors_cattr.register_structure_hook(
+                Video, lambda x, type: videos[int(x)]
+            )
+            negative_anchors = negative_anchors_cattr.structure(
+                dicts["negative_anchors"], Dict[Video, List]
+            )
         else:
             negative_anchors = dict()
 
         # If there is actual labels data, get it.
-        if 'labels' in dicts:
+        if "labels" in dicts:
             label_cattr = make_instance_cattr()
-            label_cattr.register_structure_hook(Skeleton, lambda x,type: skeletons[int(x)])
-            label_cattr.register_structure_hook(Video, lambda x,type: videos[int(x)])
-            label_cattr.register_structure_hook(Node, lambda x,type: x if isinstance(x,Node) else nodes[int(x)])
-            label_cattr.register_structure_hook(Track, lambda x, type: None if x is None else tracks[int(x)])
+            label_cattr.register_structure_hook(
+                Skeleton, lambda x, type: skeletons[int(x)]
+            )
+            label_cattr.register_structure_hook(Video, lambda x, type: videos[int(x)])
+            label_cattr.register_structure_hook(
+                Node, lambda x, type: x if isinstance(x, Node) else nodes[int(x)]
+            )
+            label_cattr.register_structure_hook(
+                Track, lambda x, type: None if x is None else tracks[int(x)]
+            )
 
-            labels = label_cattr.structure(dicts['labels'], List[LabeledFrame])
+            labels = label_cattr.structure(dicts["labels"], List[LabeledFrame])
         else:
             labels = []
 
-        return cls(labeled_frames=labels,
-                    videos=videos,
-                    skeletons=skeletons,
-                    nodes=nodes,
-                    suggestions=suggestions,
-                    negative_anchors=negative_anchors,
-                    tracks=tracks)
+        return cls(
+            labeled_frames=labels,
+            videos=videos,
+            skeletons=skeletons,
+            nodes=nodes,
+            suggestions=suggestions,
+            negative_anchors=negative_anchors,
+            tracks=tracks,
+        )
 
     @classmethod
-    def load_json(cls, filename: str,
-                  video_callback=None,
-                  match_to: Optional['Labels'] = None):
+    def load_json(
+        cls, filename: str, video_callback=None, match_to: Optional["Labels"] = None
+    ):
 
         tmp_dir = None
 
@@ -1068,8 +1238,10 @@ class Labels(MutableSequence):
 
             # Make a tmpdir, located in the directory that the file exists, to unzip
             # its contents.
-            tmp_dir = os.path.join(os.path.dirname(filename),
-                                   f"tmp_{os.getpid()}_{os.path.basename(filename)}")
+            tmp_dir = os.path.join(
+                os.path.dirname(filename),
+                f"tmp_{os.getpid()}_{os.path.basename(filename)}",
+            )
             if os.path.exists(tmp_dir):
                 shutil.rmtree(tmp_dir, ignore_errors=True)
             try:
@@ -1077,7 +1249,7 @@ class Labels(MutableSequence):
             except FileExistsError:
                 pass
 
-            #tmp_dir = tempfile.mkdtemp(dir=os.path.dirname(filename))
+            # tmp_dir = tempfile.mkdtemp(dir=os.path.dirname(filename))
 
             try:
 
@@ -1090,10 +1262,16 @@ class Labels(MutableSequence):
 
                 # We can now open the JSON file, save the zip file and
                 # replace file with the first JSON file we find in the archive.
-                json_files = [os.path.join(tmp_dir, file) for file in os.listdir(tmp_dir) if file.endswith(".json")]
+                json_files = [
+                    os.path.join(tmp_dir, file)
+                    for file in os.listdir(tmp_dir)
+                    if file.endswith(".json")
+                ]
 
                 if len(json_files) == 0:
-                    raise ValueError(f"No JSON file found inside {filename}. Are you sure this is a valid sLEAP dataset.")
+                    raise ValueError(
+                        f"No JSON file found inside {filename}. Are you sure this is a valid sLEAP dataset."
+                    )
 
                 filename = json_files[0]
 
@@ -1103,7 +1281,7 @@ class Labels(MutableSequence):
                 raise
 
         # Open and parse the JSON in filename
-        with open(filename, 'r') as file:
+        with open(filename, "r") as file:
 
             # FIXME: Peek into the json to see if there is version string.
             # We do this to tell apart old JSON data from leap_dev vs the
@@ -1119,7 +1297,9 @@ class Labels(MutableSequence):
                 # Replace local video paths (for imagestore)
                 if tmp_dir:
                     for vid in dicts["videos"]:
-                        vid["backend"]["filename"] = os.path.join(tmp_dir, vid["backend"]["filename"])
+                        vid["backend"]["filename"] = os.path.join(
+                            tmp_dir, vid["backend"]["filename"]
+                        )
 
                 # Use the callback if given to handle missing videos
                 if callable(video_callback):
@@ -1145,7 +1325,7 @@ class Labels(MutableSequence):
 
                 except Exception as ex:
                     # Ok, we give up, where the hell are these videos!
-                    raise # Re-raise.
+                    raise  # Re-raise.
                 finally:
                     os.chdir(cwd)  # Make sure to change back if we have problems.
 
@@ -1155,9 +1335,12 @@ class Labels(MutableSequence):
                 return load_labels_json_old(data_path=filename, parsed_json=dicts)
 
     @staticmethod
-    def save_hdf5(labels: 'Labels', filename: str,
-                  append: bool = False,
-                  save_frame_data: bool = False):
+    def save_hdf5(
+        labels: "Labels",
+        filename: str,
+        append: bool = False,
+        save_frame_data: bool = False,
+    ):
         """
         Serialize the labels dataset to an HDF5 file.
 
@@ -1177,7 +1360,9 @@ class Labels(MutableSequence):
 
         # FIXME: Need to implement this.
         if save_frame_data:
-            raise NotImplementedError('Saving frame data is not implemented yet with HDF5 Labels datasets.')
+            raise NotImplementedError(
+                "Saving frame data is not implemented yet with HDF5 Labels datasets."
+            )
 
         # Delete the file if it exists, we want to start from scratch since
         # h5py truncates the file which seems to not actually delete data
@@ -1188,16 +1373,18 @@ class Labels(MutableSequence):
         # Serialize all the meta-data to JSON.
         d = labels.to_dict(skip_labels=True)
 
-        with h5.File(filename, 'a') as f:
+        with h5.File(filename, "a") as f:
 
             # Add all the JSON metadata
-            meta_group = f.require_group('metadata')
+            meta_group = f.require_group("metadata")
 
             # If we are appending and there already exists JSON metadata
-            if append and 'json' in meta_group.attrs:
+            if append and "json" in meta_group.attrs:
 
                 # Otherwise, we need to read the JSON and append to the lists
-                old_labels = Labels.from_json(meta_group.attrs['json'].tostring().decode())
+                old_labels = Labels.from_json(
+                    meta_group.attrs["json"].tostring().decode()
+                )
 
                 # A function to join to list but only include new non-dupe entries
                 # from the right hand list.
@@ -1234,50 +1421,67 @@ class Labels(MutableSequence):
                 d = labels.to_dict(skip_labels=True)
 
             # Output the dict to JSON
-            meta_group.attrs['json'] = np.string_(json_dumps(d))
+            meta_group.attrs["json"] = np.string_(json_dumps(d))
 
             # FIXME: We can probably construct these from attrs fields
             # We will store Instances and PredcitedInstances in the same
             # table. instance_type=0 or Instance and instance_type=1 for
             # PredictedInstance, score will be ignored for Instances.
-            instance_dtype = np.dtype([('instance_id', 'i8'),
-                                       ('instance_type', 'u1'),
-                                       ('frame_id', 'u8'),
-                                       ('skeleton', 'u4'),
-                                       ('track', 'i4'),
-                                       ('from_predicted', 'i8'),
-                                       ('score', 'f4'),
-                                       ('point_id_start', 'u8'),
-                                       ('point_id_end', 'u8')])
-            frame_dtype = np.dtype([('frame_id', 'u8'),
-                                    ('video', 'u4'),
-                                    ('frame_idx', 'u8'),
-                                    ('instance_id_start', 'u8'),
-                                    ('instance_id_end', 'u8')])
+            instance_dtype = np.dtype(
+                [
+                    ("instance_id", "i8"),
+                    ("instance_type", "u1"),
+                    ("frame_id", "u8"),
+                    ("skeleton", "u4"),
+                    ("track", "i4"),
+                    ("from_predicted", "i8"),
+                    ("score", "f4"),
+                    ("point_id_start", "u8"),
+                    ("point_id_end", "u8"),
+                ]
+            )
+            frame_dtype = np.dtype(
+                [
+                    ("frame_id", "u8"),
+                    ("video", "u4"),
+                    ("frame_idx", "u8"),
+                    ("instance_id_start", "u8"),
+                    ("instance_id_end", "u8"),
+                ]
+            )
 
             num_instances = len(labels.all_instances)
             max_skeleton_size = max([len(s.nodes) for s in labels.skeletons])
 
             # Initialize data arrays for serialization
             points = np.zeros(num_instances * max_skeleton_size, dtype=Point.dtype)
-            pred_points = np.zeros(num_instances * max_skeleton_size, dtype=PredictedPoint.dtype)
+            pred_points = np.zeros(
+                num_instances * max_skeleton_size, dtype=PredictedPoint.dtype
+            )
             instances = np.zeros(num_instances, dtype=instance_dtype)
             frames = np.zeros(len(labels), dtype=frame_dtype)
 
             # Pre compute some structures to make serialization faster
-            skeleton_to_idx = {skeleton: labels.skeletons.index(skeleton) for skeleton in labels.skeletons}
-            track_to_idx = {track: labels.tracks.index(track) for track in labels.tracks}
+            skeleton_to_idx = {
+                skeleton: labels.skeletons.index(skeleton)
+                for skeleton in labels.skeletons
+            }
+            track_to_idx = {
+                track: labels.tracks.index(track) for track in labels.tracks
+            }
             track_to_idx[None] = -1
-            video_to_idx = {video: labels.videos.index(video) for video in labels.videos}
+            video_to_idx = {
+                video: labels.videos.index(video) for video in labels.videos
+            }
             instance_type_to_idx = {Instance: 0, PredictedInstance: 1}
 
             # If we are appending, we need look inside to see what frame, instance, and point
             # ids we need to start from. This gives us offsets to use.
-            if append and 'points' in f:
-                point_id_offset = f['points'].shape[0]
-                pred_point_id_offset = f['pred_points'].shape[0]
-                instance_id_offset = f['instances'][-1]['instance_id'] + 1
-                frame_id_offset = int(f['frames'][-1]['frame_id']) + 1
+            if append and "points" in f:
+                point_id_offset = f["points"].shape[0]
+                pred_point_id_offset = f["pred_points"].shape[0]
+                instance_id_offset = f["instances"][-1]["instance_id"] + 1
+                frame_id_offset = int(f["frames"][-1]["frame_id"]) + 1
             else:
                 point_id_offset = 0
                 pred_point_id_offset = 0
@@ -1291,8 +1495,13 @@ class Labels(MutableSequence):
             all_from_predicted = []
             from_predicted_id = 0
             for frame_id, label in enumerate(labels):
-                frames[frame_id] = (frame_id+frame_id_offset, video_to_idx[label.video], label.frame_idx,
-                                    instance_id+instance_id_offset, instance_id+instance_id_offset+len(label.instances))
+                frames[frame_id] = (
+                    frame_id + frame_id_offset,
+                    video_to_idx[label.video],
+                    label.frame_idx,
+                    instance_id + instance_id_offset,
+                    instance_id + instance_id_offset + len(label.instances),
+                )
                 for instance in label.instances:
                     parray = instance.get_points_array(copy=False, full=True)
                     instance_type = type(instance)
@@ -1312,22 +1521,27 @@ class Labels(MutableSequence):
                             from_predicted_id = from_predicted_id + 1
 
                     # Copy all the data
-                    instances[instance_id] = (instance_id+instance_id_offset,
-                                              instance_type_to_idx[instance_type],
-                                              frame_id,
-                                              skeleton_to_idx[instance.skeleton],
-                                              track_to_idx[instance.track],
-                                              -1,
-                                              score,
-                                              pid, pid + len(parray))
+                    instances[instance_id] = (
+                        instance_id + instance_id_offset,
+                        instance_type_to_idx[instance_type],
+                        frame_id,
+                        skeleton_to_idx[instance.skeleton],
+                        track_to_idx[instance.track],
+                        -1,
+                        score,
+                        pid,
+                        pid + len(parray),
+                    )
 
                     # If these are predicted points, copy them to the predicted point array
                     # otherwise, use the normal point array
                     if type(parray) is PredictedPointArray:
-                        pred_points[pred_point_id:pred_point_id + len(parray)] = parray
+                        pred_points[
+                            pred_point_id : pred_point_id + len(parray)
+                        ] = parray
                         pred_point_id = pred_point_id + len(parray)
                     else:
-                        points[point_id:point_id + len(parray)] = parray
+                        points[point_id : point_id + len(parray)] = parray
                         point_id = point_id + len(parray)
 
                     instance_id = instance_id + 1
@@ -1338,31 +1552,48 @@ class Labels(MutableSequence):
             pred_points = pred_points[0:pred_point_id]
 
             # Create datasets if we need to
-            if append and 'points' in f:
-                f['points'].resize((f["points"].shape[0] + points.shape[0]), axis = 0)
-                f['points'][-points.shape[0]:] = points
-                f['pred_points'].resize((f["pred_points"].shape[0] + pred_points.shape[0]), axis=0)
-                f['pred_points'][-pred_points.shape[0]:] = pred_points
-                f['instances'].resize((f["instances"].shape[0] + instances.shape[0]), axis=0)
-                f['instances'][-instances.shape[0]:] = instances
-                f['frames'].resize((f["frames"].shape[0] + frames.shape[0]), axis=0)
-                f['frames'][-frames.shape[0]:] = frames
+            if append and "points" in f:
+                f["points"].resize((f["points"].shape[0] + points.shape[0]), axis=0)
+                f["points"][-points.shape[0] :] = points
+                f["pred_points"].resize(
+                    (f["pred_points"].shape[0] + pred_points.shape[0]), axis=0
+                )
+                f["pred_points"][-pred_points.shape[0] :] = pred_points
+                f["instances"].resize(
+                    (f["instances"].shape[0] + instances.shape[0]), axis=0
+                )
+                f["instances"][-instances.shape[0] :] = instances
+                f["frames"].resize((f["frames"].shape[0] + frames.shape[0]), axis=0)
+                f["frames"][-frames.shape[0] :] = frames
             else:
-                f.create_dataset("points", data=points, maxshape=(None,), dtype=Point.dtype)
-                f.create_dataset("pred_points", data=pred_points, maxshape=(None,), dtype=PredictedPoint.dtype)
-                f.create_dataset("instances", data=instances, maxshape=(None,), dtype=instance_dtype)
-                f.create_dataset("frames", data=frames, maxshape=(None,), dtype=frame_dtype)
+                f.create_dataset(
+                    "points", data=points, maxshape=(None,), dtype=Point.dtype
+                )
+                f.create_dataset(
+                    "pred_points",
+                    data=pred_points,
+                    maxshape=(None,),
+                    dtype=PredictedPoint.dtype,
+                )
+                f.create_dataset(
+                    "instances", data=instances, maxshape=(None,), dtype=instance_dtype
+                )
+                f.create_dataset(
+                    "frames", data=frames, maxshape=(None,), dtype=frame_dtype
+                )
 
     @classmethod
-    def load_hdf5(cls, filename: str,
-            video_callback=None,
-            match_to: Optional['Labels'] = None):
+    def load_hdf5(
+        cls, filename: str, video_callback=None, match_to: Optional["Labels"] = None
+    ):
 
-        with h5.File(filename, 'r') as f:
+        with h5.File(filename, "r") as f:
 
             # Extract the Labels JSON metadata and create Labels object with just
             # this metadata.
-            dicts = json_loads(f.require_group('metadata').attrs['json'].tostring().decode())
+            dicts = json_loads(
+                f.require_group("metadata").attrs["json"].tostring().decode()
+            )
 
             # Use the callback if given to handle missing videos
             if callable(video_callback):
@@ -1370,16 +1601,18 @@ class Labels(MutableSequence):
 
             labels = cls.from_json(dicts, match_to=match_to)
 
-            frames_dset = f['frames'][:]
-            instances_dset = f['instances'][:]
-            points_dset = f['points'][:]
-            pred_points_dset = f['pred_points'][:]
+            frames_dset = f["frames"][:]
+            instances_dset = f["instances"][:]
+            points_dset = f["points"][:]
+            pred_points_dset = f["pred_points"][:]
 
             # Rather than instantiate a bunch of Point\PredictedPoint objects, we will
             # use inplace numpy recarrays. This will save a lot of time and memory
             # when reading things in.
             points = PointArray(buf=points_dset, shape=len(points_dset))
-            pred_points = PredictedPointArray(buf=pred_points_dset, shape=len(pred_points_dset))
+            pred_points = PredictedPointArray(
+                buf=pred_points_dset, shape=len(pred_points_dset)
+            )
 
             # Extend the tracks list with a None track. We will signify this with a -1 in the
             # data which will map to last element of tracks
@@ -1389,23 +1622,35 @@ class Labels(MutableSequence):
             # Create the instances
             instances = []
             for i in instances_dset:
-                track = tracks[i['track']]
-                skeleton = labels.skeletons[i['skeleton']]
+                track = tracks[i["track"]]
+                skeleton = labels.skeletons[i["skeleton"]]
 
-                if i['instance_type'] == 0: # Instance
-                    instance = Instance(skeleton=skeleton, track=track,
-                                        points=points[i['point_id_start']:i['point_id_end']])
-                else: # PredictedInstance
-                    instance = PredictedInstance(skeleton=skeleton, track=track,
-                                                 points=pred_points[i['point_id_start']:i['point_id_end']],
-                                                 score=i['score'])
+                if i["instance_type"] == 0:  # Instance
+                    instance = Instance(
+                        skeleton=skeleton,
+                        track=track,
+                        points=points[i["point_id_start"] : i["point_id_end"]],
+                    )
+                else:  # PredictedInstance
+                    instance = PredictedInstance(
+                        skeleton=skeleton,
+                        track=track,
+                        points=pred_points[i["point_id_start"] : i["point_id_end"]],
+                        score=i["score"],
+                    )
                 instances.append(instance)
 
             # Create the labeled frames
-            frames = [LabeledFrame(video=labels.videos[frame['video']],
-                                   frame_idx=frame['frame_idx'],
-                                   instances=instances[frame['instance_id_start']:frame['instance_id_end']])
-                      for i, frame in enumerate(frames_dset)]
+            frames = [
+                LabeledFrame(
+                    video=labels.videos[frame["video"]],
+                    frame_idx=frame["frame_idx"],
+                    instances=instances[
+                        frame["instance_id_start"] : frame["instance_id_end"]
+                    ],
+                )
+                for i, frame in enumerate(frames_dset)
+            ]
 
             labels.labeled_frames = frames
 
@@ -1430,18 +1675,19 @@ class Labels(MutableSequence):
             raise ValueError(f"Cannot detect filetype for {filename}")
 
     @classmethod
-    def save_file(cls, labels: 'Labels', filename: str, *args, **kwargs):
+    def save_file(cls, labels: "Labels", filename: str, *args, **kwargs):
         """Save file, detecting format from filename."""
         if filename.endswith((".json", ".zip")):
             compress = filename.endswith(".zip")
-            cls.save_json(labels = labels, filename = filename,
-                                compress = compress)
+            cls.save_json(labels=labels, filename=filename, compress=compress)
         elif filename.endswith(".h5"):
-            cls.save_hdf5(labels = labels, filename = filename)
+            cls.save_hdf5(labels=labels, filename=filename)
         else:
             raise ValueError(f"Cannot detect filetype for {filename}")
 
-    def save_frame_data_imgstore(self, output_dir: str = './', format: str = 'png', all_labels: bool = False):
+    def save_frame_data_imgstore(
+        self, output_dir: str = "./", format: str = "png", all_labels: bool = False
+    ):
         """
         Write all labeled frames from all videos to a collection of imgstore datasets.
         This only writes frames that have been labeled. Videos without any labeled frames
@@ -1460,14 +1706,18 @@ class Labels(MutableSequence):
         # For each label
         imgstore_vids = []
         for v_idx, v in enumerate(self.videos):
-            frame_nums = [lf.frame_idx for lf in self.labeled_frames
-                            if v == lf.video
-                            and (all_labels or lf.has_user_instances)]
+            frame_nums = [
+                lf.frame_idx
+                for lf in self.labeled_frames
+                if v == lf.video and (all_labels or lf.has_user_instances)
+            ]
 
             # Join with "/" instead of os.path.join() since we want
             # path to work on Windows and Posix systems
-            frames_filename = output_dir + f'/frame_data_vid{v_idx}'
-            vid = v.to_imgstore(path=frames_filename, frame_numbers=frame_nums, format=format)
+            frames_filename = output_dir + f"/frame_data_vid{v_idx}"
+            vid = v.to_imgstore(
+                path=frames_filename, frame_numbers=frame_nums, format=format
+            )
 
             # Close the video for now
             vid.close()
@@ -1475,7 +1725,6 @@ class Labels(MutableSequence):
             imgstore_vids.append(vid)
 
         return imgstore_vids
-
 
     @staticmethod
     def _unwrap_mat_scalar(a):
@@ -1499,11 +1748,13 @@ class Labels(MutableSequence):
         # If the video file isn't found, try in the same dir as the mat file
         if not os.path.exists(box_path):
             file_dir = os.path.dirname(filename)
-            box_path_name = box_path.split("\\")[-1] # assume windows path
+            box_path_name = box_path.split("\\")[-1]  # assume windows path
             box_path = os.path.join(file_dir, box_path_name)
 
         if os.path.exists(box_path):
-            vid = Video.from_hdf5(dataset="box", filename=box_path, input_format="channels_first")
+            vid = Video.from_hdf5(
+                dataset="box", filename=box_path, input_format="channels_first"
+            )
         else:
             vid = None
 
@@ -1513,12 +1764,12 @@ class Labels(MutableSequence):
         edges_ = mat_contents["skeleton"]["edges"]
         points_ = mat_contents["positions"]
 
-        edges_ = edges_ - 1 # convert matlab 1-indexing to python 0-indexing
+        edges_ = edges_ - 1  # convert matlab 1-indexing to python 0-indexing
 
         nodes = Labels._unwrap_mat_array(nodes_)
         edges = Labels._unwrap_mat_array(edges_)
 
-        nodes = list(map(str, nodes)) # convert np._str to str
+        nodes = list(map(str, nodes))  # convert np._str to str
 
         sk = Skeleton(name=filename)
         sk.add_nodes(nodes)
@@ -1529,14 +1780,14 @@ class Labels(MutableSequence):
         node_count, _, frame_count = points_.shape
 
         for i in range(frame_count):
-            new_inst = Instance(skeleton = sk)
+            new_inst = Instance(skeleton=sk)
             for node_idx, node in enumerate(nodes):
                 x = points_[node_idx][0][i]
                 y = points_[node_idx][1][i]
                 new_inst[node] = Point(x, y)
             if len(new_inst.points):
                 new_frame = LabeledFrame(video=vid, frame_idx=i)
-                new_frame.instances = new_inst,
+                new_frame.instances = (new_inst,)
                 labeled_frames.append(new_frame)
 
         labels = cls(labeled_frames=labeled_frames, videos=[vid], skeletons=[sk])
@@ -1572,7 +1823,7 @@ class Labels(MutableSequence):
         # x2 = config['x2']
         # y2 = config['y2']
 
-        data = pd.read_csv(filename, header=[1,2])
+        data = pd.read_csv(filename, header=[1, 2])
 
         # Create the skeleton from the list of nodes in the csv file
         # Note that DeepLabCut doesn't have edges, so these will have to be added by user later
@@ -1585,7 +1836,7 @@ class Labels(MutableSequence):
         # This may not be ideal for large projects, since we're reading in
         # each image and then writing it out in a new directory.
 
-        img_files = data.ix[:,0] # get list of all images
+        img_files = data.ix[:, 0]  # get list of all images
 
         # the image filenames in the csv may not match where the user has them
         # so we'll change the directory to match where the user has the csv
@@ -1612,7 +1863,7 @@ class Labels(MutableSequence):
             # get points for each node
             instance_points = dict()
             for node in node_names:
-                x, y = data[(node, 'x')][i], data[(node, 'y')][i]
+                x, y = data[(node, "x")][i], data[(node, "y")][i]
                 instance_points[node] = Point(x, y)
             # create instance with points (we can assume there's only one instance per frame)
             instance = Instance(skeleton=skeleton, points=instance_points)
@@ -1625,6 +1876,7 @@ class Labels(MutableSequence):
     @classmethod
     def make_video_callback(cls, search_paths=None):
         search_paths = search_paths or []
+
         def video_callback(video_list, new_paths=search_paths):
             # Check each video
             for video_item in video_list:
@@ -1653,16 +1905,20 @@ class Labels(MutableSequence):
                                 video_item["backend"]["filename"] = check_path
                                 is_found = True
                                 break
+
         return video_callback
 
     @classmethod
     def make_gui_video_callback(cls, search_paths):
         search_paths = search_paths or []
+
         def gui_video_callback(video_list, new_paths=search_paths):
             import os
             from PySide2.QtWidgets import QFileDialog, QMessageBox
 
-            has_shown_prompt = False # have we already alerted user about missing files?
+            has_shown_prompt = (
+                False
+            )  # have we already alerted user about missing files?
 
             basename_list = []
 
@@ -1696,30 +1952,42 @@ class Labels(MutableSequence):
                                     break
 
                         # if we found this file, then move on to the next file
-                        if is_found: continue
+                        if is_found:
+                            continue
 
                         # Since we couldn't find the file on our own, prompt the user.
                         print(f"Unable to find: {current_filename}")
-                        QMessageBox(text=f"We're unable to locate one or more video files for this project. Please locate {current_filename}.").exec_()
+                        QMessageBox(
+                            text=f"We're unable to locate one or more video files for this project. Please locate {current_filename}."
+                        ).exec_()
                         has_shown_prompt = True
 
                         current_root, current_ext = os.path.splitext(current_basename)
                         caption = f"Please locate {current_basename}..."
-                        filters = [f"{current_root} file (*{current_ext})", "Any File (*.*)"]
+                        filters = [
+                            f"{current_root} file (*{current_ext})",
+                            "Any File (*.*)",
+                        ]
                         dir = None if len(new_paths) == 0 else new_paths[-1]
-                        new_filename, _ = QFileDialog.getOpenFileName(None, dir=dir, caption=caption, filter=";;".join(filters))
+                        new_filename, _ = QFileDialog.getOpenFileName(
+                            None, dir=dir, caption=caption, filter=";;".join(filters)
+                        )
                         # if we got an answer, then update filename for video
                         if len(new_filename):
                             video_item["backend"]["filename"] = new_filename
                             # keep track of the directory chosen by user
                             new_paths.append(os.path.dirname(new_filename))
                             basename_list.append(current_basename)
+
         return gui_video_callback
 
 
-def load_labels_json_old(data_path: str, parsed_json: dict = None,
-                         adjust_matlab_indexing: bool = True,
-                         fix_rel_paths: bool = True) -> Labels:
+def load_labels_json_old(
+    data_path: str,
+    parsed_json: dict = None,
+    adjust_matlab_indexing: bool = True,
+    fix_rel_paths: bool = True,
+) -> Labels:
     """
     Simple utitlity code to load data from Talmo's old JSON format into newer
     Labels object.
@@ -1765,7 +2033,10 @@ def load_labels_json_old(data_path: str, parsed_json: dict = None,
     if adjust_matlab_indexing:
         edges = np.array(edges) - 1
     for (src_idx, dst_idx) in edges:
-        skeleton.add_edge(data["skeleton"]["nodeNames"][src_idx], data["skeleton"]["nodeNames"][dst_idx])
+        skeleton.add_edge(
+            data["skeleton"]["nodeNames"][src_idx],
+            data["skeleton"]["nodeNames"][dst_idx],
+        )
 
     if fix_rel_paths:
         for i, row in videos.iterrows():
@@ -1781,13 +2052,17 @@ def load_labels_json_old(data_path: str, parsed_json: dict = None,
         if videos.at[i, "format"] == "media":
             vid = Video.from_media(videos.at[i, "filepath"])
         else:
-            vid = Video.from_hdf5(filename=videos.at[i, "filepath"], dataset=videos.at[i, "dataset"])
+            vid = Video.from_hdf5(
+                filename=videos.at[i, "filepath"], dataset=videos.at[i, "dataset"]
+            )
 
         video_objects[videos.at[i, "id"]] = vid
 
     # A function to get all the instances for a particular video frame
     def get_frame_instances(video_id, frame_idx):
-        is_in_frame = (points["videoId"] == video_id) & (points["frameIdx"] == frame_idx)
+        is_in_frame = (points["videoId"] == video_id) & (
+            points["frameIdx"] == frame_idx
+        )
         if not is_in_frame.any():
             return []
 
@@ -1795,8 +2070,12 @@ def load_labels_json_old(data_path: str, parsed_json: dict = None,
         frame_instance_ids = np.unique(points["instanceId"][is_in_frame])
         for i, instance_id in enumerate(frame_instance_ids):
             is_instance = is_in_frame & (points["instanceId"] == instance_id)
-            instance_points = {data["skeleton"]["nodeNames"][n]: Point(x, y, visible=v) for x, y, n, v in
-                               zip(*[points[k][is_instance] for k in ["x", "y", "node", "visible"]])}
+            instance_points = {
+                data["skeleton"]["nodeNames"][n]: Point(x, y, visible=v)
+                for x, y, n, v in zip(
+                    *[points[k][is_instance] for k in ["x", "y", "node", "visible"]]
+                )
+            }
 
             instance = Instance(skeleton=skeleton, points=instance_points)
             instances.append(instance)
@@ -1804,12 +2083,20 @@ def load_labels_json_old(data_path: str, parsed_json: dict = None,
         return instances
 
     # Get the unique labeled frames and construct a list of LabeledFrame objects for them.
-    frame_keys = list({(videoId, frameIdx) for videoId, frameIdx in zip(points["videoId"], points["frameIdx"])})
+    frame_keys = list(
+        {
+            (videoId, frameIdx)
+            for videoId, frameIdx in zip(points["videoId"], points["frameIdx"])
+        }
+    )
     frame_keys.sort()
     labels = []
     for videoId, frameIdx in frame_keys:
-        label = LabeledFrame(video=video_objects[videoId], frame_idx=frameIdx,
-                             instances = get_frame_instances(videoId, frameIdx))
+        label = LabeledFrame(
+            video=video_objects[videoId],
+            frame_idx=frameIdx,
+            instances=get_frame_instances(videoId, frameIdx),
+        )
         labels.append(label)
 
     return Labels(labels)

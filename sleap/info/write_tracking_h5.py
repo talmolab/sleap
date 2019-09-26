@@ -31,9 +31,14 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("data_path", help="Path to labels json file")
-    parser.add_argument('--all-frames', dest='all_frames', action='store_const',
-                        const=True, default=False,
-                        help='include all frames without predictions')
+    parser.add_argument(
+        "--all-frames",
+        dest="all_frames",
+        action="store_const",
+        const=True,
+        default=False,
+        help="include all frames without predictions",
+    )
     args = parser.parse_args()
 
     video_callback = Labels.make_video_callback([os.path.dirname(args.data_path)])
@@ -48,7 +53,9 @@ if __name__ == "__main__":
 
     first_frame_idx = 0 if args.all_frames else frame_idxs[0]
 
-    frame_count = frame_idxs[-1] - first_frame_idx + 1 # count should include unlabeled frames
+    frame_count = (
+        frame_idxs[-1] - first_frame_idx + 1
+    )  # count should include unlabeled frames
 
     # Desired MATLAB format:
     # "track_occupancy"     tracks * frames
@@ -56,7 +63,9 @@ if __name__ == "__main__":
     # "track_names"         tracks
 
     occupancy_matrix = np.zeros((track_count, frame_count), dtype=np.uint8)
-    prediction_matrix = np.full((frame_count, node_count, 2, track_count), np.nan, dtype=float)
+    prediction_matrix = np.full(
+        (frame_count, node_count, 2, track_count), np.nan, dtype=float
+    )
 
     for lf, inst in [(lf, inst) for lf in labels for inst in lf.instances]:
         frame_i = lf.frame_idx - first_frame_idx
@@ -74,7 +83,9 @@ if __name__ == "__main__":
         print(f"ignoring {np.sum(~occupied_track_mask)} empty tracks")
         occupancy_matrix = occupancy_matrix[occupied_track_mask]
         prediction_matrix = prediction_matrix[..., occupied_track_mask]
-        track_names = [track_names[i] for i in range(len(track_names)) if occupied_track_mask[i]]
+        track_names = [
+            track_names[i] for i in range(len(track_names)) if occupied_track_mask[i]
+        ]
 
     print(f"track_occupancy: {occupancy_matrix.shape}")
     print(f"tracks: {prediction_matrix.shape}")
@@ -86,10 +97,16 @@ if __name__ == "__main__":
         # We have to transpose the arrays since MATLAB expects column-major
         ds = f.create_dataset("track_names", data=track_names)
         ds = f.create_dataset(
-            "track_occupancy", data=np.transpose(occupancy_matrix),
-            compression="gzip", compression_opts=9)
+            "track_occupancy",
+            data=np.transpose(occupancy_matrix),
+            compression="gzip",
+            compression_opts=9,
+        )
         ds = f.create_dataset(
-            "tracks", data=np.transpose(prediction_matrix),
-            compression="gzip", compression_opts=9)
+            "tracks",
+            data=np.transpose(prediction_matrix),
+            compression="gzip",
+            compression_opts=9,
+        )
 
     print(f"Saved as {output_filename}")

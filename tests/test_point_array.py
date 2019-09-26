@@ -3,8 +3,16 @@ import pytest
 
 from sleap.instance import Point, PredictedPoint, PointArray, PredictedPointArray
 
-@pytest.mark.parametrize("p1", [Point(0.0, 0.0), PredictedPoint(0.0, 0.0, 0.0),
-                                PointArray(3)[0], PredictedPointArray(3)[0]])
+
+@pytest.mark.parametrize(
+    "p1",
+    [
+        Point(0.0, 0.0),
+        PredictedPoint(0.0, 0.0, 0.0),
+        PointArray(3)[0],
+        PredictedPointArray(3)[0],
+    ],
+)
 def test_point(p1):
     """
     Test the Point and PredictedPoint API. This is mainly a safety
@@ -40,15 +48,15 @@ def test_constructor():
     assert p.score == 0.3
 
 
-@pytest.mark.parametrize('parray_cls', [PointArray, PredictedPointArray])
+@pytest.mark.parametrize("parray_cls", [PointArray, PredictedPointArray])
 def test_point_array(parray_cls):
 
     p = parray_cls(5)
 
     # Make sure length works
     assert len(p) == 5
-    assert len(p['x']) == 5
-    assert len(p[['x', 'y']]) == 5
+    assert len(p["x"]) == 5
+    assert len(p[["x", "y"]]) == 5
 
     # Check that single point getitem returns a Point class
     if parray_cls is PredictedPointArray:
@@ -69,7 +77,10 @@ def test_point_array(parray_cls):
     # I have to convert from structured to unstructured to get this comparison
     # to work.
     from numpy.lib.recfunctions import structured_to_unstructured
-    np.testing.assert_array_equal(structured_to_unstructured(d1), structured_to_unstructured(d2))
+
+    np.testing.assert_array_equal(
+        structured_to_unstructured(d1), structured_to_unstructured(d2)
+    )
 
 
 def test_from_and_to_array():
@@ -79,9 +90,11 @@ def test_from_and_to_array():
     r = PredictedPointArray.to_array(PredictedPointArray.from_array(p))
 
     from numpy.lib.recfunctions import structured_to_unstructured
-    np.testing.assert_array_equal(structured_to_unstructured(p), structured_to_unstructured(r))
+
+    np.testing.assert_array_equal(
+        structured_to_unstructured(p), structured_to_unstructured(r)
+    )
 
     # Make sure conversion uses default score
     r = PredictedPointArray.from_array(p)
     assert r.score[0] == PredictedPointArray.make_default(1)[0].score
-

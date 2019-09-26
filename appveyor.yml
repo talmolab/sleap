@@ -9,7 +9,7 @@ environment:
     secure: T7XuBtHDu85Tk/d1AeyfhW3CVyzaoddTWmR4xsPIdQ3di0R6x8ncWqw3KrYXkWJm
 
   BUILD_DIR: "build"
-  
+
   conda_access_token:
     secure: d+v++uejbVEhIuaJSuFIOA==
   matrix:

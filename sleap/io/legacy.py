@@ -11,10 +11,13 @@ from ..skeleton import Skeleton
 
 from ..nn.tracking import Track
 
+
 def load_predicted_labels_json_old(
-        data_path: str, parsed_json: dict = None,
-        adjust_matlab_indexing: bool = True,
-        fix_rel_paths: bool = True) -> Labels:
+    data_path: str,
+    parsed_json: dict = None,
+    adjust_matlab_indexing: bool = True,
+    fix_rel_paths: bool = True,
+) -> Labels:
     """
     Simple utitlity code to load data from Talmo's old JSON format into newer
     Labels object. This loads the prediced instances
@@ -53,7 +56,10 @@ def load_predicted_labels_json_old(
     if adjust_matlab_indexing:
         edges = np.array(edges) - 1
     for (src_idx, dst_idx) in edges:
-        skeleton.add_edge(data["skeleton"]["nodeNames"][src_idx], data["skeleton"]["nodeNames"][dst_idx])
+        skeleton.add_edge(
+            data["skeleton"]["nodeNames"][src_idx],
+            data["skeleton"]["nodeNames"][dst_idx],
+        )
 
     if fix_rel_paths:
         for i, row in videos.iterrows():
@@ -69,22 +75,32 @@ def load_predicted_labels_json_old(
         if videos.at[i, "format"] == "media":
             vid = Video.from_media(videos.at[i, "filepath"])
         else:
-            vid = Video.from_hdf5(filename=videos.at[i, "filepath"], dataset=videos.at[i, "dataset"])
+            vid = Video.from_hdf5(
+                filename=videos.at[i, "filepath"], dataset=videos.at[i, "dataset"]
+            )
 
         video_objects[videos.at[i, "id"]] = vid
 
-    track_ids = predicted_instances['trackId'].values
+    track_ids = predicted_instances["trackId"].values
     unique_track_ids = np.unique(track_ids)
 
-    spawned_on = {track_id: predicted_instances.loc[predicted_instances['trackId'] == track_id]['frameIdx'].values[0]
-                  for track_id in unique_track_ids}
-    tracks = {i: Track(name=str(i), spawned_on=spawned_on[i])
-              for i in np.unique(predicted_instances['trackId'].values).tolist()}
+    spawned_on = {
+        track_id: predicted_instances.loc[predicted_instances["trackId"] == track_id][
+            "frameIdx"
+        ].values[0]
+        for track_id in unique_track_ids
+    }
+    tracks = {
+        i: Track(name=str(i), spawned_on=spawned_on[i])
+        for i in np.unique(predicted_instances["trackId"].values).tolist()
+    }
 
     # A function to get all the instances for a particular video frame
     def get_frame_predicted_instances(video_id, frame_idx):
         points = predicted_points
-        is_in_frame = (points["videoId"] == video_id) & (points["frameIdx"] == frame_idx)
+        is_in_frame = (points["videoId"] == video_id) & (
+            points["frameIdx"] == frame_idx
+        )
         if not is_in_frame.any():
             return []
 
@@ -92,28 +108,54 @@ def load_predicted_labels_json_old(
         frame_instance_ids = np.unique(points["instanceId"][is_in_frame])
         for i, instance_id in enumerate(frame_instance_ids):
             is_instance = is_in_frame & (points["instanceId"] == instance_id)
-            track_id = predicted_instances.loc[predicted_instances['id'] == instance_id]['trackId'].values[0]
-            match_score = predicted_instances.loc[predicted_instances['id'] == instance_id]['matching_score'].values[0]
-            track_score = predicted_instances.loc[predicted_instances['id'] == instance_id]['tracking_score'].values[0]
-            instance_points = {data["skeleton"]["nodeNames"][n]: PredictedPoint(x, y, visible=v, score=confidence)
-                               for x, y, n, v, confidence in
-                               zip(*[points[k][is_instance] for k in ["x", "y", "node", "visible", "confidence"]])}
+            track_id = predicted_instances.loc[
+                predicted_instances["id"] == instance_id
+            ]["trackId"].values[0]
+            match_score = predicted_instances.loc[
+                predicted_instances["id"] == instance_id
+            ]["matching_score"].values[0]
+            track_score = predicted_instances.loc[
+                predicted_instances["id"] == instance_id
+            ]["tracking_score"].values[0]
+            instance_points = {
+                data["skeleton"]["nodeNames"][n]: PredictedPoint(
+                    x, y, visible=v, score=confidence
+                )
+                for x, y, n, v, confidence in zip(
+                    *[
+                        points[k][is_instance]
+                        for k in ["x", "y", "node", "visible", "confidence"]
+                    ]
+                )
+            }
 
-            instance = PredictedInstance(skeleton=skeleton,
-                                         points=instance_points,
-                                         track=tracks[track_id],
-                                         score=match_score)
+            instance = PredictedInstance(
+                skeleton=skeleton,
+                points=instance_points,
+                track=tracks[track_id],
+                score=match_score,
+            )
             instances.append(instance)
 
         return instances
 
     # Get the unique labeled frames and construct a list of LabeledFrame objects for them.
-    frame_keys = list({(videoId, frameIdx) for videoId, frameIdx in zip(predicted_points["videoId"], predicted_points["frameIdx"])})
+    frame_keys = list(
+        {
+            (videoId, frameIdx)
+            for videoId, frameIdx in zip(
+                predicted_points["videoId"], predicted_points["frameIdx"]
+            )
+        }
+    )
     frame_keys.sort()
     labels = []
     for videoId, frameIdx in frame_keys:
-        label = LabeledFrame(video=video_objects[videoId], frame_idx=frameIdx,
-                             instances = get_frame_predicted_instances(videoId, frameIdx))
+        label = LabeledFrame(
+            video=video_objects[videoId],
+            frame_idx=frameIdx,
+            instances=get_frame_predicted_instances(videoId, frameIdx),
+        )
         labels.append(label)
 
     return Labels(labels)

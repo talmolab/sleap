@@ -2,22 +2,26 @@ import pytest
 
 from sleap.skeleton import Skeleton
 
+
 @pytest.fixture
 def stickman():
 
     # Make a skeleton with a space in its name to test things.
     stickman = Skeleton("Stick man")
-    stickman.add_nodes(['head', 'neck', 'body', 'right-arm', 'left-arm', 'right-leg', 'left-leg'])
-    stickman.add_edge('neck', 'head')
-    stickman.add_edge('body', 'neck')
-    stickman.add_edge('body', 'right-arm')
-    stickman.add_edge('body', 'left-arm')
-    stickman.add_edge('body', 'right-leg')
-    stickman.add_edge('body', 'left-leg')
+    stickman.add_nodes(
+        ["head", "neck", "body", "right-arm", "left-arm", "right-leg", "left-leg"]
+    )
+    stickman.add_edge("neck", "head")
+    stickman.add_edge("body", "neck")
+    stickman.add_edge("body", "right-arm")
+    stickman.add_edge("body", "left-arm")
+    stickman.add_edge("body", "right-leg")
+    stickman.add_edge("body", "left-leg")
     stickman.add_symmetry(node1="left-arm", node2="right-arm")
     stickman.add_symmetry(node1="left-leg", node2="right-leg")
 
     return stickman
+
 
 @pytest.fixture
 def skeleton():
@@ -36,4 +40,3 @@ def skeleton():
     skeleton.add_symmetry(node1="left-wing", node2="right-wing")
 
     return skeleton
-

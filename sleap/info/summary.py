@@ -4,7 +4,7 @@ import numpy as np
 
 @attr.s(auto_attribs=True)
 class Summary:
-    labels: 'Labels'
+    labels: "Labels"
 
     def get_point_count_series(self, video):
         series = dict()
@@ -20,7 +20,12 @@ class Summary:
         series = dict()
 
         for lf in self.labels.find(video):
-            val = reduce_funct(point.score for inst in lf for point in inst.points if hasattr(inst, "score"))
+            val = reduce_funct(
+                point.score
+                for inst in lf
+                for point in inst.points
+                if hasattr(inst, "score")
+            )
             series[lf.frame_idx] = val
         return series
 
@@ -44,7 +49,7 @@ class Summary:
             val = self._calculate_frame_velocity(lf, last_lf, reduce_funct)
             last_lf = lf
             if not np.isnan(val):
-                series[lf.frame_idx] = val #len(lf.instances)
+                series[lf.frame_idx] = val  # len(lf.instances)
         return series
 
     @staticmethod

@@ -9,4 +9,6 @@ available_archs = [LeapCNN, UNet, StackedUNet, StackedHourglass, ResNet50]
 available_arch_names = [arch.__name__ for arch in available_archs]
 BackboneType = TypeVar("BackboneType", *available_archs)
 
-__all__ = ["available_archs", "available_arch_names", "BackboneType"] + [arch.__name__ for arch in available_archs]
+__all__ = ["available_archs", "available_arch_names", "BackboneType"] + [
+    arch.__name__ for arch in available_archs
+]

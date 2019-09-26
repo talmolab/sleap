@@ -9,6 +9,7 @@ Example:
 from PySide2.QtCore import QRectF, Signal
 from PySide2.QtWidgets import QGridLayout, QGroupBox, QButtonGroup, QCheckBox
 
+
 class MultiCheckWidget(QGroupBox):
     """Qt Widget to show multiple checkboxes for selecting from a sequence of numbers.
 
@@ -25,7 +26,7 @@ class MultiCheckWidget(QGroupBox):
         # QButtonGroup is the logical container
         # it allows us to get list of checked boxes more easily
         self.check_group = QButtonGroup()
-        self.check_group.setExclusive(False) # more than one can be checked
+        self.check_group.setExclusive(False)  # more than one can be checked
 
         if title != "":
             self.setTitle(title)
@@ -39,11 +40,11 @@ class MultiCheckWidget(QGroupBox):
         check_layout = QGridLayout()
         self.setLayout(check_layout)
         for i in range(count):
-            check = QCheckBox("%d"%(i))
+            check = QCheckBox("%d" % (i))
             # call signal/slot on self when one of the checkboxes is changed
             check.stateChanged.connect(lambda e: self.selectionChanged.emit())
             self.check_group.addButton(check, i)
-            check_layout.addWidget(check, i//8, i%8)
+            check_layout.addWidget(check, i // 8, i % 8)
         self.setSelected(selected)
 
     """

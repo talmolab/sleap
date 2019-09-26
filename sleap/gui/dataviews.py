@@ -5,8 +5,21 @@ from PySide2.QtGui import QKeyEvent, QColor
 
 from PySide2.QtWidgets import QApplication, QMainWindow, QWidget, QDockWidget
 from PySide2.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QFormLayout
-from PySide2.QtWidgets import QLabel, QPushButton, QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox, QCheckBox
-from PySide2.QtWidgets import QTableWidget, QTableView, QTableWidgetItem, QAbstractItemView
+from PySide2.QtWidgets import (
+    QLabel,
+    QPushButton,
+    QLineEdit,
+    QSpinBox,
+    QDoubleSpinBox,
+    QComboBox,
+    QCheckBox,
+)
+from PySide2.QtWidgets import (
+    QTableWidget,
+    QTableView,
+    QTableWidgetItem,
+    QAbstractItemView,
+)
 from PySide2.QtWidgets import QTreeView, QTreeWidget, QTreeWidgetItem
 from PySide2.QtWidgets import QMenu, QAction
 from PySide2.QtWidgets import QFileDialog, QMessageBox
@@ -28,14 +41,16 @@ from sleap.skeleton import Skeleton, Node
 class VideosTable(QTableView):
     """Table view widget backed by a custom data model for displaying
     lists of Video instances. """
+
     def __init__(self, videos: list = []):
         super(VideosTable, self).__init__()
         self.setModel(VideosTableModel(videos))
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setSelectionMode(QAbstractItemView.SingleSelection)
 
+
 class VideosTableModel(QtCore.QAbstractTableModel):
-    _props = ["filename", "frames", "height", "width", "channels",]
+    _props = ["filename", "frames", "height", "width", "channels"]
 
     def __init__(self, videos: list):
         super(VideosTableModel, self).__init__()
@@ -51,11 +66,12 @@ class VideosTableModel(QtCore.QAbstractTableModel):
         self._cache = []
         for video in val:
             row_data = dict(
-                        filename=video.filename,
-                        frames=video.frames,
-                        height=video.height,
-                        width=video.width,
-                        channels=video.channels)
+                filename=video.filename,
+                frames=video.frames,
+                height=video.height,
+                width=video.width,
+                channels=video.channels,
+            )
             self._cache.append(row_data)
         self.endResetModel()
 
@@ -78,7 +94,9 @@ class VideosTableModel(QtCore.QAbstractTableModel):
     def columnCount(self, parent):
         return len(VideosTableModel._props)
 
-    def headerData(self, section, orientation: QtCore.Qt.Orientation, role=Qt.DisplayRole):
+    def headerData(
+        self, section, orientation: QtCore.Qt.Orientation, role=Qt.DisplayRole
+    ):
         if role == Qt.DisplayRole:
             if orientation == QtCore.Qt.Horizontal:
                 return self._props[section]
@@ -94,11 +112,13 @@ class VideosTableModel(QtCore.QAbstractTableModel):
 class SkeletonNodesTable(QTableView):
     """Table view widget backed by a custom data model for displaying and
     editing Skeleton nodes. """
+
     def __init__(self, skeleton: Skeleton):
         super(SkeletonNodesTable, self).__init__()
         self.setModel(SkeletonNodesTableModel(skeleton))
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setSelectionMode(QAbstractItemView.SingleSelection)
+
 
 class SkeletonNodesTableModel(QtCore.QAbstractTableModel):
     _props = ["name", "symmetry"]
@@ -121,7 +141,9 @@ class SkeletonNodesTableModel(QtCore.QAbstractTableModel):
         if role == Qt.DisplayRole and index.isValid():
             node_idx = index.row()
             prop = self._props[index.column()]
-            node = self.skeleton.nodes[node_idx] # FIXME? can we assume order is stable?
+            node = self.skeleton.nodes[
+                node_idx
+            ]  # FIXME? can we assume order is stable?
             node_name = node.name
 
             if prop == "name":
@@ -137,7 +159,9 @@ class SkeletonNodesTableModel(QtCore.QAbstractTableModel):
     def columnCount(self, parent):
         return len(SkeletonNodesTableModel._props)
 
-    def headerData(self, section, orientation: QtCore.Qt.Orientation, role=Qt.DisplayRole):
+    def headerData(
+        self, section, orientation: QtCore.Qt.Orientation, role=Qt.DisplayRole
+    ):
         if role == Qt.DisplayRole:
             if orientation == QtCore.Qt.Horizontal:
                 return self._props[section]
@@ -156,12 +180,14 @@ class SkeletonNodesTableModel(QtCore.QAbstractTableModel):
                     if len(value) > 0:
                         self._skeleton.relabel_node(node_name, value)
                     # else:
-                        # self._skeleton.delete_node(node_name)
+                    # self._skeleton.delete_node(node_name)
                 elif prop == "symmetry":
                     if len(value) > 0:
                         self._skeleton.add_symmetry(node_name, value)
                     else:
-                        self._skeleton.delete_symmetry(node_name, self._skeleton.get_symmetry(node_name))
+                        self._skeleton.delete_symmetry(
+                            node_name, self._skeleton.get_symmetry(node_name)
+                        )
 
                 # send signal that data has changed
                 self.dataChanged.emit(index, index)
@@ -180,11 +206,13 @@ class SkeletonNodesTableModel(QtCore.QAbstractTableModel):
 class SkeletonEdgesTable(QTableView):
     """Table view widget backed by a custom data model for displaying and
     editing Skeleton edges. """
+
     def __init__(self, skeleton: Skeleton):
         super(SkeletonEdgesTable, self).__init__()
         self.setModel(SkeletonEdgesTableModel(skeleton))
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setSelectionMode(QAbstractItemView.SingleSelection)
+
 
 class SkeletonEdgesTableModel(QtCore.QAbstractTableModel):
     _props = ["source", "destination"]
@@ -222,7 +250,9 @@ class SkeletonEdgesTableModel(QtCore.QAbstractTableModel):
     def columnCount(self, parent):
         return len(SkeletonNodesTableModel._props)
 
-    def headerData(self, section, orientation: QtCore.Qt.Orientation, role=Qt.DisplayRole):
+    def headerData(
+        self, section, orientation: QtCore.Qt.Orientation, role=Qt.DisplayRole
+    ):
         if role == Qt.DisplayRole:
             if orientation == QtCore.Qt.Horizontal:
                 return self._props[section]
@@ -233,8 +263,6 @@ class SkeletonEdgesTableModel(QtCore.QAbstractTableModel):
 
     def flags(self, index: QtCore.QModelIndex):
         return Qt.ItemIsEnabled | Qt.ItemIsSelectable
-
-
 
 
 class LabeledFrameTable(QTableView):
@@ -330,12 +358,18 @@ class LabeledFrameTableModel(QtCore.QAbstractTableModel):
         return None
 
     def rowCount(self, parent):
-        return len(self.labeled_frame.instances_to_show) if self.labeled_frame is not None else 0
+        return (
+            len(self.labeled_frame.instances_to_show)
+            if self.labeled_frame is not None
+            else 0
+        )
 
     def columnCount(self, parent):
         return len(LabeledFrameTableModel._props)
 
-    def headerData(self, section, orientation: QtCore.Qt.Orientation, role=Qt.DisplayRole):
+    def headerData(
+        self, section, orientation: QtCore.Qt.Orientation, role=Qt.DisplayRole
+    ):
         if role == Qt.DisplayRole:
             if orientation == QtCore.Qt.Horizontal:
                 return self._props[section]
@@ -372,7 +406,6 @@ class LabeledFrameTableModel(QtCore.QAbstractTableModel):
 
 
 class SkeletonNodeModel(QtCore.QStringListModel):
-
     def __init__(self, skeleton: Skeleton, src_node: Callable = None):
         super(SkeletonNodeModel, self).__init__()
         self._src_node = src_node
@@ -434,6 +467,7 @@ class SkeletonNodeModel(QtCore.QStringListModel):
 class SuggestionsTable(QTableView):
     """Table view widget backed by a custom data model for displaying
     lists of Video instances. """
+
     def __init__(self, labels):
         super(SuggestionsTable, self).__init__()
         self.setModel(SuggestionsTableModel(labels))
@@ -441,8 +475,9 @@ class SuggestionsTable(QTableView):
         self.setSelectionMode(QAbstractItemView.SingleSelection)
         self.setSortingEnabled(True)
 
+
 class SuggestionsTableModel(QtCore.QAbstractTableModel):
-    _props = ["video", "frame", "labeled", "mean score",]
+    _props = ["video", "frame", "labeled", "mean score"]
 
     def __init__(self, labels):
         super(SuggestionsTableModel, self).__init__()
@@ -473,7 +508,7 @@ class SuggestionsTableModel(QtCore.QAbstractTableModel):
                 if prop == "video":
                     return f"{self.labels.videos.index(video)}: {os.path.basename(video.filename)}"
                 elif prop == "frame":
-                    return int(frame_idx) + 1 # start at frame 1 rather than 0
+                    return int(frame_idx) + 1  # start at frame 1 rather than 0
                 elif prop == "labeled":
                     # show how many labeled instances are in this frame
                     val = self._labels.instance_count(video, frame_idx)
@@ -485,7 +520,12 @@ class SuggestionsTableModel(QtCore.QAbstractTableModel):
         return None
 
     def _getScore(self, video, frame_idx):
-        scores = [inst.score for lf in self.labels.find(video, frame_idx) for inst in lf if hasattr(inst, "score")]
+        scores = [
+            inst.score
+            for lf in self.labels.find(video, frame_idx)
+            for inst in lf
+            if hasattr(inst, "score")
+        ]
         return sum(scores) / len(scores)
 
     def sort(self, column_idx: int, order: Qt.SortOrder):
@@ -497,7 +537,7 @@ class SuggestionsTableModel(QtCore.QAbstractTableModel):
         elif prop == "mean score":
             sort_function = lambda s: self._getScore(*s)
 
-        reverse = (order == Qt.SortOrder.DescendingOrder)
+        reverse = order == Qt.SortOrder.DescendingOrder
 
         self.beginResetModel()
         self._suggestions_list.sort(key=sort_function, reverse=reverse)
@@ -509,7 +549,9 @@ class SuggestionsTableModel(QtCore.QAbstractTableModel):
     def columnCount(self, *args):
         return len(self._props)
 
-    def headerData(self, section, orientation: QtCore.Qt.Orientation, role=Qt.DisplayRole):
+    def headerData(
+        self, section, orientation: QtCore.Qt.Orientation, role=Qt.DisplayRole
+    ):
         if role == Qt.DisplayRole:
             if orientation == QtCore.Qt.Horizontal:
                 return self._props[section]
@@ -524,7 +566,9 @@ class SuggestionsTableModel(QtCore.QAbstractTableModel):
 
 if __name__ == "__main__":
 
-    labels = Labels.load_json("tests/data/json_format_v2/centered_pair_predictions.json")
+    labels = Labels.load_json(
+        "tests/data/json_format_v2/centered_pair_predictions.json"
+    )
     skeleton = labels.labels[0].instances[0].skeleton
 
     Labels.save_json(labels, "test.json")

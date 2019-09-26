@@ -2,6 +2,7 @@ from sleap.gui.video import QtVideoPlayer
 
 import PySide2.QtCore as QtCore
 
+
 def test_gui_video(qtbot):
     vp = QtVideoPlayer()
     vp.show()
@@ -13,6 +14,7 @@ def test_gui_video(qtbot):
     # for i in range(20):
     #     qtbot.mouseClick(vp.btn, QtCore.Qt.LeftButton)
 
+
 def test_gui_video_instances(qtbot, small_robot_mp4_vid, centered_pair_labels):
     vp = QtVideoPlayer(small_robot_mp4_vid)
     qtbot.addWidget(vp)
@@ -22,7 +24,7 @@ def test_gui_video_instances(qtbot, small_robot_mp4_vid, centered_pair_labels):
 
     def plot_instances(vp, idx):
         for instance in labeled_frames[test_frame_idx].instances:
-            vp.addInstance(instance=instance, color=(0,0,128))
+            vp.addInstance(instance=instance, color=(0, 0, 128))
 
     vp.changedPlot.connect(plot_instances)
     vp.view.updatedViewer.emit()
@@ -36,7 +38,7 @@ def test_gui_video_instances(qtbot, small_robot_mp4_vid, centered_pair_labels):
     vp.zoomToFit()
 
     # Check that we zoomed correctly
-    assert(vp.view.zoomFactor > 1)
+    assert vp.view.zoomFactor > 1
 
     vp.instances[0].updatePoints(complete=True)
 
