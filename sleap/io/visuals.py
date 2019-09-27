@@ -7,7 +7,7 @@ import os
 import numpy as np
 import math
 from time import time, clock
-from typing import List
+from typing import List, Tuple
 
 from queue import Queue
 from threading import Thread
@@ -26,8 +26,11 @@ def reader(out_q: Queue, video: Video, frames: List[int]):
     Args:
         out_q: Queue to send (list of frame indexes, ndarray of frame images)
             for chunks of video.
-        video: the `Video` object to read
-        frames: full list frame indexes we want to read
+        video: The `Video` object to read.
+        frames: Full list frame indexes we want to read.
+
+    Returns:
+        None.
     """
 
     cv2.setNumThreads(usable_cpu_count())
@@ -66,10 +69,11 @@ def marker(in_q: Queue, out_q: Queue, labels: Labels, video_idx: int):
     """Annotate frame images (draw instances).
 
     Args:
-        in_q: Queue with (list of frame indexes, ndarray of frame images)
-        out_q: Queue to send annotated images as (images, h, w, channels) ndarray
+        in_q: Queue with (list of frame indexes, ndarray of frame images).
+        out_q: Queue to send annotated images as
+            (images, h, w, channels) ndarray.
         labels: the `Labels` object from which to get data for annotating.
-        video_idx: index of `Video` in `labels.videos` list
+        video_idx: index of `Video` in `labels.videos` list.
 
     Returns:
         None.
@@ -109,7 +113,13 @@ def marker(in_q: Queue, out_q: Queue, labels: Labels, video_idx: int):
     out_q.put(_sentinel)
 
 
-def writer(in_q: Queue, progress_queue: Queue, filename: str, fps: int, img_w_h: tuple):
+def writer(
+    in_q: Queue,
+    progress_queue: Queue,
+    filename: str,
+    fps: float,
+    img_w_h: Tuple[int, int],
+):
     """Write annotated images to video.
 
     Args:
@@ -168,7 +178,19 @@ def save_labeled_video(
     fps: int = 15,
     gui_progress: bool = False,
 ):
-    """Function to generate and save video with annotations."""
+    """Function to generate and save video with annotations.
+
+    Args:
+        filename: Output filename.
+        labels: The dataset from which to get data.
+        video: The source :class:`Video` we want to annotate.
+        frames: List of frames to include in output video.
+        fps: Frames per second for output video.
+        gui_progress: Whether to show Qt GUI progress dialog.
+
+    Returns:
+        None.
+    """
     output_size = (video.height, video.width)
 
     print(f"Writing video with {len(frames)} frame images...")
@@ -224,7 +246,8 @@ def save_labeled_video(
     print(f"Done in {elapsed} s, fps = {fps}.")
 
 
-def img_to_cv(img):
+def img_to_cv(img: np.ndarray) -> np.ndarray:
+    """Prepares frame image as needed for opencv."""
     # Convert RGB to BGR for OpenCV
     if img.shape[-1] == 3:
         img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
@@ -234,17 +257,44 @@ def img_to_cv(img):
     return img
 
 
-def get_frame_image(video_frame, video_idx, frame_idx, labels):
+def get_frame_image(
+    video_frame: np.ndarray, video_idx: int, frame_idx: int, labels: Labels
+) -> np.ndarray:
+    """Returns single annotated frame image.
+
+    Args:
+        video_frame: The ndarray of the frame image.
+        video_idx: Index of video in :attribute:`Labels.videos` list.
+        frame_idx: Index of frame in video.
+        labels: The dataset from which to get data.
+
+    Returns:
+        ndarray of frame image with visual annotations added.
+    """
     img = img_to_cv(video_frame)
     plot_instances_cv(img, video_idx, frame_idx, labels)
     return img
 
 
 def _point_int_tuple(point):
+    """Returns (x, y) tuple from :class:`Point`."""
     return int(point.x), int(point.y)
 
 
-def plot_instances_cv(img, video_idx, frame_idx, labels):
+def plot_instances_cv(
+    img: np.ndarray, video_idx: int, frame_idx: int, labels: Labels
+) -> np.ndarray:
+    """Adds visuals annotations to single frame image.
+
+    Args:
+        img: The ndarray of the frame image.
+        video_idx: Index of video in :attribute:`Labels.videos` list.
+        frame_idx: Index of frame in video.
+        labels: The dataset from which to get data.
+
+    Returns:
+        ndarray of frame image with visual annotations added.
+    """
     cmap = [
         [0, 114, 189],
         [217, 83, 25],
@@ -273,7 +323,24 @@ def plot_instances_cv(img, video_idx, frame_idx, labels):
         plot_instance_cv(img, instance, inst_color)
 
 
-def plot_instance_cv(img, instance, color, marker_radius=4):
+def plot_instance_cv(
+    img: np.ndarray,
+    instance: "Instance",
+    color: Tuple[int, int, int],
+    marker_radius: float = 4,
+) -> np.ndarray:
+    """
+    Add visual annotations for single instance.
+
+    Args:
+        img: The ndarray of the frame image.
+        instance: The :class:`Instance` to add to frame image.
+        color: (r, g, b) color for this instance.
+        marker_radius: Radius of marker for instance points (nodes).
+
+    Returns:
+        ndarray of frame image with visual annotations for instance added.
+    """
 
     # RGB -> BGR for cv2
     cv_color = color[::-1]
