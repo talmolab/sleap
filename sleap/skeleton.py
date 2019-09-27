@@ -761,7 +761,7 @@ class Skeleton:
         Check whether the skeleton has a list of nodes.
 
         Args:
-            name: The list names of the nodes to check for.
+            names: The list names of the nodes to check for.
 
         Returns:
             True for yes, False for no.
