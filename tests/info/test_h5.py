@@ -48,9 +48,9 @@ def test_output_matrices(centered_pair_predictions):
     # Remove all instances from track 13
     vid = centered_pair_predictions.videos[0]
     track = centered_pair_predictions.tracks[13]
-    lfs_insts = centered_pair_predictions.find_track_occupancy(vid, track)
-    for lf, instance in lfs_insts:
-        centered_pair_predictions.remove_instance(lf, instance)
+    instances = centered_pair_predictions.find_track_occupancy(vid, track)
+    for instance in instances:
+        centered_pair_predictions.remove_instance(instance.frame, instance)
 
     # Make sure that this now remove empty track
     occupancy, points = get_occupancy_and_points_matrices(

@@ -36,9 +36,8 @@ def check_labels(labels):
 
 
 def test_load_old_json():
-    labels = load_predicted_labels_json_old(
-        "tests/data/json_format_v1/centered_pair.json"
-    )
+    old_json_filename = "tests/data/json_format_v1/centered_pair.json"
+    labels = Labels(load_predicted_labels_json_old(old_json_filename))
 
     check_labels(labels)
 
