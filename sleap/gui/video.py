@@ -80,7 +80,7 @@ class QtVideoPlayer(QWidget):
         self.splitter = QtWidgets.QSplitter(Qt.Vertical)
         self.splitter.addWidget(self.view)
         self.splitter.addWidget(self.seekbar)
-        self.seekbar.updatedTracks.connect(lambda: self.splitter.refresh())
+        self.seekbar.heightUpdated.connect(lambda: self.splitter.refresh())
 
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.splitter)

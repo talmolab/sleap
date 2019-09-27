@@ -28,11 +28,10 @@ from PySide2.QtWidgets import (
     QRadioButton,
     QCheckBox,
     QComboBox,
-    QStackedWidget,
 )
 
 from sleap.gui.video import GraphicsView
-from sleap.io.video import Video, HDF5Video, MediaVideo
+from sleap.io.video import Video
 
 import h5py
 import qimage2ndarray

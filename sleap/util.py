@@ -214,3 +214,20 @@ def weak_filename_match(filename_a: str, filename_b: str) -> bool:
 
     # check if last three parts of path match
     return filename_a.split("/")[-3:] == filename_b.split("/")[-3:]
+
+
+def dict_cut(d: Dict, a: int, b: int) -> Dict:
+    """
+    Helper function for creating subdictionary by numeric indexing of items.
+
+    Assumes that `dict.items()` will have a fixed order.
+
+    Args:
+        d: The dictionary to "split"
+        a: Start index of range of items to include in result.
+        b: End index of range of items to include in result.
+
+    Returns:
+        A dictionary that contains a subset of the items in the original dict.
+    """
+    return dict(list(d.items())[a:b])

@@ -2,30 +2,36 @@
 Drop-in replacement for QSlider with additional features.
 """
 
-from PySide2.QtWidgets import QApplication, QWidget, QLayout, QAbstractSlider
-from PySide2.QtWidgets import QGraphicsView, QGraphicsScene, QGraphicsItem
-from PySide2.QtWidgets import QSizePolicy, QLabel, QGraphicsRectItem
-from PySide2.QtGui import (
-    QPainter,
-    QPen,
-    QBrush,
-    QColor,
-    QKeyEvent,
-    QPolygonF,
-    QPainterPath,
-)
-from PySide2.QtCore import Qt, Signal, QRect, QRectF, QPointF
+from PySide2 import QtCore, QtWidgets
+from PySide2.QtGui import QPen, QBrush, QColor, QKeyEvent, QPolygonF, QPainterPath
 
 from sleap.gui.overlays.tracks import TrackColorManager
 
 import attr
 import itertools
 import numpy as np
-from typing import Dict, Optional, Union
+from typing import Dict, Iterable, List, Optional, Union
 
 
 @attr.s(auto_attribs=True, cmp=False)
 class SliderMark:
+    """
+    Class to hold data for an individual mark on the slider.
+
+    Attributes:
+        type: Type of the mark, options are:
+            * "simple" (single value)
+            * "filled" (single value)
+            * "open" (single value)
+            * "predicted" (single value)
+            * "track" (range of values)
+        val: Beginning of mark range
+        end_val: End of mark range (for "track" marks)
+        row: The row that the mark goes in; used for tracks.
+        color: Color of mark, can be string or (r, g, b) tuple.
+        filled: Whether the mark is shown filled (solid color).
+    """
+
     type: str
     val: float
     end_val: float = None
@@ -62,7 +68,7 @@ class SliderMark:
             return True
 
 
-class VideoSlider(QGraphicsView):
+class VideoSlider(QtWidgets.QGraphicsView):
     """Drop-in replacement for QSlider with additional features.
 
     Args:
@@ -74,38 +80,51 @@ class VideoSlider(QGraphicsView):
             this can be either
             * list of values to mark
             * list of (track, value)-tuples to mark
+        color_manager: A :class:`TrackColorManager` which determines the
+            color to use for "track"-type marks
+
+    Signals:
+        mousePressed: triggered on Qt event
+        mouseMoved: triggered on Qt event
+        mouseReleased: triggered on Qt event
+        keyPress: triggered on Qt event
+        keyReleased: triggered on Qt event
+        valueChanged: triggered when value of slider changes
+        selectionChanged: triggered when slider range selection changes
+        heightUpdated: triggered when the height of slider changes
     """
 
-    mousePressed = Signal(float, float)
-    mouseMoved = Signal(float, float)
-    mouseReleased = Signal(float, float)
-    keyPress = Signal(QKeyEvent)
-    keyRelease = Signal(QKeyEvent)
-    valueChanged = Signal(int)
-    selectionChanged = Signal(int, int)
-    updatedTracks = Signal()
+    mousePressed = QtCore.Signal(float, float)
+    mouseMoved = QtCore.Signal(float, float)
+    mouseReleased = QtCore.Signal(float, float)
+    keyPress = QtCore.Signal(QKeyEvent)
+    keyRelease = QtCore.Signal(QKeyEvent)
+    valueChanged = QtCore.Signal(int)
+    selectionChanged = QtCore.Signal(int, int)
+    heightUpdated = QtCore.Signal()
 
     def __init__(
         self,
-        orientation=-1,
+        orientation=-1,  # for compatibility with QSlider
         min=0,
         max=100,
         val=0,
         marks=None,
-        tracks=0,
-        color_manager=None,
+        color_manager: Optional[TrackColorManager] = None,
         *args,
         **kwargs
     ):
         super(VideoSlider, self).__init__(*args, **kwargs)
 
-        self.scene = QGraphicsScene()
+        self.scene = QtWidgets.QGraphicsScene()
         self.setScene(self.scene)
-        self.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        self.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
 
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)  # ScrollBarAsNeeded
+        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(
+            QtCore.Qt.ScrollBarAlwaysOff
+        )  # ScrollBarAsNeeded
 
         self._color_manager = color_manager
 
@@ -115,13 +134,15 @@ class VideoSlider(QGraphicsView):
         self._min_height = 19 + self._header_height
 
         # Add border rect
-        outline_rect = QRect(0, 0, 200, self._min_height - 3)
+        outline_rect = QtCore.QRect(0, 0, 200, self._min_height - 3)
         self.outlineBox = self.scene.addRect(outline_rect)
         self.outlineBox.setPen(QPen(QColor("black")))
 
         # Add drag handle rect
         handle_width = 6
-        handle_rect = QRect(0, self._handleTop(), handle_width, self._handleHeight())
+        handle_rect = QtCore.QRect(
+            0, self._handleTop(), handle_width, self._handleHeight()
+        )
         self.setMinimumHeight(self._min_height)
         self.setMaximumHeight(self._min_height)
         self.handle = self.scene.addRect(handle_rect)
@@ -129,7 +150,9 @@ class VideoSlider(QGraphicsView):
         self.handle.setBrush(QColor(128, 128, 128, 128))
 
         # Add (hidden) rect to highlight selection
-        self.select_box = self.scene.addRect(QRect(0, 1, 0, outline_rect.height() - 2))
+        self.select_box = self.scene.addRect(
+            QtCore.QRect(0, 1, 0, outline_rect.height() - 2)
+        )
         self.select_box.setPen(QPen(QColor(80, 80, 255)))
         self.select_box.setBrush(QColor(80, 80, 255, 128))
         self.select_box.hide()
@@ -149,19 +172,23 @@ class VideoSlider(QGraphicsView):
         self.headerSeries = dict()
         self.drawHeader()
 
-    def _pointsToPath(self, points):
+    def _pointsToPath(self, points: List[QtCore.QPointF]) -> QPainterPath:
+        """Converts list of `QtCore.QPointF`s to a `QPainterPath`."""
         path = QPainterPath()
         path.addPolygon(QPolygonF(points))
         return path
 
-    def setTracksFromLabels(self, labels, video):
+    def setTracksFromLabels(self, labels: "Labels", video: "Video"):
         """Set slider marks using track information from `Labels` object.
 
         Note that this is the only method coupled to a SLEAP object.
 
         Args:
-            labels: the `labels` with tracks and labeled_frames
+            labels: the dataset with tracks and labeled frames
             video: the video for which to show marks
+
+        Returns:
+            None
         """
 
         if self._color_manager is None:
@@ -267,10 +294,20 @@ class VideoSlider(QGraphicsView):
         self.setMarks(marks)
 
         self.resizeEvent()
-        self.updatedTracks.emit()
+        self.heightUpdated.emit()
 
-    def _toPos(self, val, center=False):
-        """Convert value to x position on slider."""
+    def _toPos(self, val: float, center=False) -> float:
+        """
+        Converts slider value to x position on slider.
+
+        Args:
+            val: The slider value.
+            center: Whether to offset by half the width of drag handle,
+                so that plotted location will light up with center of handle.
+
+        Returns:
+            x position.
+        """
         x = val
         x -= self._val_min
         x /= max(1, self._val_max - self._val_min)
@@ -279,8 +316,8 @@ class VideoSlider(QGraphicsView):
             x += self.handle.rect().width() / 2.0
         return x
 
-    def _toVal(self, x, center=False):
-        """Convert x position to value."""
+    def _toVal(self, x: float, center=False) -> float:
+        """Converts x position to slider value."""
         val = x
         val /= self._sliderWidth()
         val *= max(1, self._val_max - self._val_min)
@@ -288,28 +325,29 @@ class VideoSlider(QGraphicsView):
         val = round(val)
         return val
 
-    def _sliderWidth(self):
+    def _sliderWidth(self) -> float:
+        """Returns visual width of slider."""
         return self.outlineBox.rect().width() - self.handle.rect().width()
 
-    def value(self):
-        """Get value of slider."""
+    def value(self) -> float:
+        """Returns value of slider."""
         return self._val_main
 
-    def setValue(self, val):
-        """Set value of slider."""
+    def setValue(self, val: float) -> float:
+        """Sets value of slider."""
         self._val_main = val
         x = self._toPos(val)
         self.handle.setPos(x, 0)
 
-    def setMinimum(self, min):
-        """Set minimum value for slider."""
+    def setMinimum(self, min: float) -> float:
+        """Sets minimum value for slider."""
         self._val_min = min
 
-    def setMaximum(self, max):
-        """Set maximum value for slider."""
+    def setMaximum(self, max: float) -> float:
+        """Sets maximum value for slider."""
         self._val_max = max
 
-    def setEnabled(self, val):
+    def setEnabled(self, val: float) -> float:
         """Set whether the slider is enabled."""
         self._enabled = val
 
@@ -318,23 +356,28 @@ class VideoSlider(QGraphicsView):
         return self._enabled
 
     def clearSelection(self):
-        """Clear selection endpoints."""
+        """Clears selection endpoints."""
         self._selection = []
         self.select_box.hide()
 
     def startSelection(self, val):
-        """Add initial selection endpoint.
+        """Adds initial selection endpoint.
+
+        Called when user starts dragging to select range in slider.
 
         Args:
             val: value of endpoint
         """
         self._selection.append(val)
 
-    def endSelection(self, val, update=False):
+    def endSelection(self, val, update: bool = False):
         """Add final selection endpoint.
+
+        Called during or after the user is dragging to select range.
 
         Args:
             val: value of endpoint
+            update:
         """
         # If we want to update endpoint and there's already one, remove it
         if update and len(self._selection) % 2 == 0:
@@ -350,12 +393,12 @@ class VideoSlider(QGraphicsView):
         self.selectionChanged.emit(*self.getSelection())
 
     def hasSelection(self) -> bool:
-        """Return True if a clip is selected, False otherwise."""
+        """Returns True if a clip is selected, False otherwise."""
         a, b = self.getSelection()
         return a < b
 
     def getSelection(self):
-        """Return start and end value of current selection endpoints."""
+        """Returns start and end value of current selection endpoints."""
         a, b = 0, 0
         if len(self._selection) % 2 == 0 and len(self._selection) > 0:
             a, b = self._selection[-2:]
@@ -363,30 +406,37 @@ class VideoSlider(QGraphicsView):
         end = max(a, b)
         return start, end
 
-    def drawSelection(self, a, b):
-        """Draw selection box on slider.
+    def drawSelection(self, a: float, b: float):
+        """Draws selection box on slider.
 
         Args:
             a: one endpoint value
             b: other endpoint value
+
+        Returns:
+            None.
         """
         start = min(a, b)
         end = max(a, b)
         start_pos = self._toPos(start, center=True)
         end_pos = self._toPos(end, center=True)
-        selection_rect = QRect(
+        selection_rect = QtCore.QRect(
             start_pos, 1, end_pos - start_pos, self.outlineBox.rect().height() - 2
         )
 
         self.select_box.setRect(selection_rect)
         self.select_box.show()
 
-    def moveSelectionAnchor(self, x, y):
-        """Move selection anchor in response to mouse position.
+    def moveSelectionAnchor(self, x: float, y: float):
+        """
+        Moves selection anchor in response to mouse position.
 
         Args:
             x: x position of mouse
             y: y position of mouse
+
+        Returns:
+            None.
         """
         x = max(x, 0)
         x = min(x, self.outlineBox.rect().width())
@@ -398,11 +448,15 @@ class VideoSlider(QGraphicsView):
         self.drawSelection(anchor_val, self._selection[-1])
 
     def releaseSelectionAnchor(self, x, y):
-        """Finish selection in response to mouse release.
+        """
+        Finishes selection in response to mouse release.
 
         Args:
             x: x position of mouse
             y: y position of mouse
+
+        Returns:
+            None.
         """
         x = max(x, 0)
         x = min(x, self.outlineBox.rect().width())
@@ -410,18 +464,21 @@ class VideoSlider(QGraphicsView):
         self.endSelection(anchor_val)
 
     def clearMarks(self):
-        """Clear all marked values for slider."""
+        """Clears all marked values for slider."""
         if hasattr(self, "_mark_items"):
             for item in self._mark_items.values():
                 self.scene.removeItem(item)
         self._marks = set()  # holds mark position
         self._mark_items = dict()  # holds visual Qt object for plotting mark
 
-    def setMarks(self, marks):
-        """Set all marked values for the slider.
+    def setMarks(self, marks: Iterable[Union[SliderMark, int]]):
+        """Sets all marked values for the slider.
 
         Args:
             marks: iterable with all values to mark
+
+        Returns:
+            None.
         """
         self.clearMarks()
         if marks is not None:
@@ -432,17 +489,18 @@ class VideoSlider(QGraphicsView):
         self.updatePos()
 
     def getMarks(self):
-        """Return list of marks.
-
-        Each mark is either val or (track, val)-tuple.
-        """
+        """Returns list of marks."""
         return self._marks
 
-    def addMark(self, new_mark, update=True):
-        """Add a marked value to the slider.
+    def addMark(self, new_mark: SliderMark, update: bool = True):
+        """Adds a marked value to the slider.
 
         Args:
             new_mark: value to mark
+            update: Whether to redraw slider with new mark.
+
+        Returns:
+            None.
         """
         # check if mark is within slider range
         if new_mark.val > self._val_max:
@@ -475,9 +533,6 @@ class VideoSlider(QGraphicsView):
         self._mark_items[new_mark] = line
         if update:
             self.updatePos()
-
-    def _mark_val(self, mark):
-        return mark.val
 
     def updatePos(self):
         """Update the visual x position of handle and slider annotations."""
@@ -538,8 +593,8 @@ class VideoSlider(QGraphicsView):
             (self._toPos(max(series.keys()) + 1, center=True), toYPos(series_min))
         )
 
-        # Convert to list of QPointF objects
-        points = list(itertools.starmap(QPointF, points))
+        # Convert to list of QtCore.QPointF objects
+        points = list(itertools.starmap(QtCore.QPointF, points))
         self.poly.setPath(self._pointsToPath(points))
 
     def moveHandle(self, x, y):
@@ -558,7 +613,7 @@ class VideoSlider(QGraphicsView):
         val = self._toVal(x)
 
         # snap to nearby mark within handle
-        mark_vals = [self._mark_val(mark) for mark in self._marks]
+        mark_vals = [mark.val for mark in self._marks]
         handle_left = self._toVal(x - self.handle.rect().width() / 2)
         handle_right = self._toVal(x + self.handle.rect().width() / 2)
         marks_in_handle = [
@@ -602,10 +657,22 @@ class VideoSlider(QGraphicsView):
         self.drawHeader()
         super(VideoSlider, self).resizeEvent(event)
 
-    def _handleTop(self):
+    def _handleTop(self) -> float:
+        """Returns y position of top of handle (i.e., header height)."""
         return 1 + self._header_height
 
-    def _handleHeight(self, outline_rect=None):
+    def _handleHeight(self, outline_rect=None) -> float:
+        """
+        Returns visual height of handle.
+
+        Args:
+            outline_rect: The rect of the outline box for the slider. This
+                is only required when calling during initialization (when the
+                outline box doesn't yet exist).
+
+        Returns:
+            Height of handle in pixels.
+        """
         if outline_rect is None:
             outline_rect = self.outlineBox.rect()
 
@@ -633,13 +700,13 @@ class VideoSlider(QGraphicsView):
         move_function = None
         release_function = None
 
-        if event.modifiers() == Qt.ShiftModifier:
+        if event.modifiers() == QtCore.Qt.ShiftModifier:
             move_function = self.moveSelectionAnchor
             release_function = self.releaseSelectionAnchor
 
             self.clearSelection()
 
-        elif event.modifiers() == Qt.NoModifier:
+        elif event.modifiers() == QtCore.Qt.NoModifier:
             move_function = self.moveHandle
             release_function = None
 
@@ -679,7 +746,7 @@ class VideoSlider(QGraphicsView):
         self.keyRelease.emit(event)
         event.accept()
 
-    def boundingRect(self) -> QRectF:
+    def boundingRect(self) -> QtCore.QRectF:
         """Method required by Qt."""
         return self.outlineBox.rect()
 
@@ -689,7 +756,7 @@ class VideoSlider(QGraphicsView):
 
 
 if __name__ == "__main__":
-    app = QApplication([])
+    app = QtWidgets.QApplication([])
 
     window = VideoSlider(
         min=0,
