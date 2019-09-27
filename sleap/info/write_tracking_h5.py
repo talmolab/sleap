@@ -140,7 +140,7 @@ def write_occupancy_file(
     with h5.File(output_path, "w") as f:
         for key, val in data_dict.items():
             if isinstance(val, np.ndarray):
-                print(f"key: {val.shape}")
+                print(f"{key}: {val.shape}")
 
                 if transpose:
                     # Transpose since MATLAB expects column-major
@@ -155,6 +155,7 @@ def write_occupancy_file(
                         key, data=val, compression="gzip", compression_opts=9
                     )
             else:
+                print(f"{key}: {len(val)}")
                 f.create_dataset(key, data=val)
 
     print(f"Saved as {output_path}")
@@ -177,7 +178,7 @@ def main(labels: Labels, output_path: str, all_frames: bool = True):
     """
     track_names = get_tracks_as_np_strings(labels)
 
-    occupancy_matrix, locations_matrix = get_occupancy_and_predictions_matrices(
+    occupancy_matrix, locations_matrix = get_occupancy_and_points_matrices(
         labels, all_frames
     )
 
