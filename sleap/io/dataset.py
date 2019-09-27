@@ -932,9 +932,12 @@ class Labels(MutableSequence):
                 new_labels with *matching* objects from base
 
         Returns:
-            tuple of two lists of `LabeledFrame`s
-            * data from base that conflicts
-            * data from new that conflicts
+            tuple of three items:
+            * Dictionary, keys are :class:`Video`, values are
+                dictionary in which keys are frame index (int)
+                and value is list of :class:`Instance`s
+            * list of conflicting :class:`Instance`s from base
+            * list of conflicting :class:`Instance`s from new frames
         """
         # If unify, we want to replace objects in the frames with
         # corresponding objects from the current labels.
