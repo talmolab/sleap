@@ -292,13 +292,13 @@ def show_instance_type_counts(instance_list: List["Instance"]) -> str:
         instance_list: The list of instances to count.
 
     Returns:
-        String with number of predicted instances and number of user instances.
+        String with numbers of user/predicted instances.
     """
     prediction_count = len(
         list(filter(lambda inst: hasattr(inst, "score"), instance_list))
     )
     user_count = len(instance_list) - prediction_count
-    return f"{prediction_count}/{user_count}"
+    return f"{user_count}/{prediction_count}"
 
 
 if __name__ == "__main__":
