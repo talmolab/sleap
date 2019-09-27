@@ -11,7 +11,7 @@ import attr
 import cattr
 import logging
 
-from typing import Iterable, Union, List
+from typing import Iterable, Union, List, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -19,15 +19,16 @@ logger = logging.getLogger(__name__)
 @attr.s(auto_attribs=True, cmp=False)
 class HDF5Video:
     """
-    Video data stored as 4D datasets in HDF5 files can be imported into
-    the sLEAP system with this class.
+    Video data stored as 4D datasets in HDF5 files.
 
     Args:
-        filename: The name of the HDF5 file where the dataset with video data is stored.
+        filename: The name of the HDF5 file where the dataset with video data
+            is stored.
         dataset: The name of the HDF5 dataset where the video data is stored.
         file_h5: The h5.File object that the underlying dataset is stored.
         dataset_h5: The h5.Dataset object that the underlying data is stored.
-        input_format: A string value equal to either "channels_last" or "channels_first".
+        input_format: A string value equal to either "channels_last" or
+            "channels_first".
             This specifies whether the underlying video data is stored as:
 
                 * "channels_first": shape = (frames, channels, width, height)
@@ -41,6 +42,7 @@ class HDF5Video:
     convert_range: bool = attr.ib(default=True)
 
     def __attrs_post_init__(self):
+        """Called by attrs after __init__()."""
 
         # Handle cases where the user feeds in h5.File objects instead of filename
         if isinstance(self.filename, h5.File):
@@ -72,6 +74,7 @@ class HDF5Video:
 
     @input_format.validator
     def check(self, attribute, value):
+        """Called by attrs to validates input format."""
         if value not in ["channels_first", "channels_last"]:
             raise ValueError(f"HDF5Video input_format={value} invalid.")
 
@@ -84,15 +87,15 @@ class HDF5Video:
             self.__width_idx = 2
             self.__height_idx = 1
 
-    def matches(self, other):
+    def matches(self, other: "HDF5Video") -> bool:
         """
-        Check if attributes match.
+        Check if attributes match those of another video.
 
         Args:
-            other: The instance to compare with.
+            other: The other video to compare with.
 
         Returns:
-            True if attributes match, False otherwise
+            True if attributes match, False otherwise.
         """
         return (
             self.filename == other.filename
@@ -106,25 +109,30 @@ class HDF5Video:
 
     @property
     def frames(self):
+        """See :class:`Video`."""
         return self.__dataset_h5.shape[0]
 
     @property
     def channels(self):
+        """See :class:`Video`."""
         return self.__dataset_h5.shape[self.__channel_idx]
 
     @property
     def width(self):
+        """See :class:`Video`."""
         return self.__dataset_h5.shape[self.__width_idx]
 
     @property
     def height(self):
+        """See :class:`Video`."""
         return self.__dataset_h5.shape[self.__height_idx]
 
     @property
     def dtype(self):
+        """See :class:`Video`."""
         return self.__dataset_h5.dtype
 
-    def get_frame(self, idx):  # -> np.ndarray:
+    def get_frame(self, idx) -> np.ndarray:
         """
         Get a frame from the underlying HDF5 video data.
 
@@ -148,18 +156,19 @@ class HDF5Video:
 @attr.s(auto_attribs=True, cmp=False)
 class MediaVideo:
     """
-    Video data stored in traditional media formats readable by FFMPEG can be loaded
-    with this class. This class provides bare minimum read only interface on top of
+    Video data stored in traditional media formats readable by FFMPEG
+
+    This class provides bare minimum read only interface on top of
     OpenCV's VideoCapture class.
 
     Args:
         filename: The name of the file (.mp4, .avi, etc)
         grayscale: Whether the video is grayscale or not. "auto" means detect
-        based on first frame.
+            based on first frame.
+        bgr: Whether color channels ordered as (blue, green, red).
     """
 
     filename: str = attr.ib()
-    # grayscale: bool = attr.ib(default=None, converter=bool)
     grayscale: bool = attr.ib()
     bgr: bool = attr.ib(default=True)
     _detect_grayscale = False
@@ -203,15 +212,15 @@ class MediaVideo:
         # Return stored test frame
         return self._test_frame_
 
-    def matches(self, other):
+    def matches(self, other: "MediaVideo") -> bool:
         """
-        Check if attributes match.
+        Check if attributes match those of another video.
 
         Args:
-            other: The instance to compare with.
+            other: The other video to compare with.
 
         Returns:
-            True if attributes match, False otherwise
+            True if attributes match, False otherwise.
         """
         return (
             self.filename == other.filename
@@ -220,7 +229,8 @@ class MediaVideo:
         )
 
     @property
-    def fps(self):
+    def fps(self) -> float:
+        """Returns frames per second of video."""
         return self.__reader.get(cv2.CAP_PROP_FPS)
 
     # The properties and methods below complete our contract with the
@@ -228,14 +238,17 @@ class MediaVideo:
 
     @property
     def frames(self):
+        """See :class:`Video`."""
         return int(self.__reader.get(cv2.CAP_PROP_FRAME_COUNT))
 
     @property
     def frames_float(self):
+        """See :class:`Video`."""
         return self.__reader.get(cv2.CAP_PROP_FRAME_COUNT)
 
     @property
     def channels(self):
+        """See :class:`Video`."""
         if self.grayscale:
             return 1
         else:
@@ -243,17 +256,21 @@ class MediaVideo:
 
     @property
     def width(self):
+        """See :class:`Video`."""
         return self.__test_frame.shape[1]
 
     @property
     def height(self):
+        """See :class:`Video`."""
         return self.__test_frame.shape[0]
 
     @property
     def dtype(self):
+        """See :class:`Video`."""
         return self.__test_frame.dtype
 
-    def get_frame(self, idx, grayscale=None):
+    def get_frame(self, idx: int, grayscale: bool = None) -> np.ndarray:
+        """See :class:`Video`."""
         if self.__reader.get(cv2.CAP_PROP_POS_FRAMES) != idx:
             self.__reader.set(cv2.CAP_PROP_POS_FRAMES, idx)
 
@@ -308,15 +325,15 @@ class NumpyVideo:
     # The properties and methods below complete our contract with the
     # higher level Video interface.
 
-    def matches(self, other):
+    def matches(self, other: "NumpyVideo") -> np.ndarray:
         """
-        Check if attributes match.
+        Check if attributes match those of another video.
 
         Args:
-            other: The instance to comapare with.
+            other: The other video to compare with.
 
         Returns:
-            True if attributes match, False otherwise
+            True if attributes match, False otherwise.
         """
         return np.all(self.__data == other.__data)
 
@@ -347,17 +364,22 @@ class NumpyVideo:
 @attr.s(auto_attribs=True, cmp=False)
 class ImgStoreVideo:
     """
-    Video data stored as an ImgStore dataset. See: https://github.com/loopbio/imgstore
-    This class is just a lightweight wrapper for reading such datasets as videos sources
-    for sLEAP.
+    Video data stored as an ImgStore dataset.
+
+    See: https://github.com/loopbio/imgstore
+    This class is just a lightweight wrapper for reading such datasets as
+    video sources for SLEAP.
 
     Args:
         filename: The name of the file or directory to the imgstore.
-        index_by_original: ImgStores are great for storing a collection of frame
-        selected frames from an larger video. If the index_by_original is set to
-        True than the get_frame function will accept the original frame numbers of
-        from original video. If False, then it will accept the frame index from the
-        store directly.
+        index_by_original: ImgStores are great for storing a collection of
+            selected frames from an larger video. If the index_by_original is
+            set to True then the get_frame function will accept the original
+            frame numbers of from original video. If False, then it will
+            accept the frame index from the store directly.
+            Default to True so that we can use an ImgStoreVideo in a dataset
+            to replace another video without having to update all the frame
+            indices on :class:`LabeledFrame`s in the dataset.
     """
 
     filename: str = attr.ib(default=None)
@@ -437,14 +459,16 @@ class ImgStoreVideo:
     def dtype(self):
         return self.__img.dtype
 
-    def get_frame(self, frame_number) -> np.ndarray:
+    def get_frame(self, frame_number: int) -> np.ndarray:
         """
         Get a frame from the underlying ImgStore video data.
 
         Args:
-            frame_num: The number of the frame to get. If index_by_original is set to True,
-            then this number should actually be a frame index withing the imgstore. That is,
-            if there are 4 frames in the imgstore, this number shoulde be from 0 to 3.
+            frame_number: The number of the frame to get. If
+                index_by_original is set to True, then this number should
+                actually be a frame index within the imgstore. That is,
+                if there are 4 frames in the imgstore, this number should be
+                be from 0 to 3.
 
         Returns:
             The numpy.ndarray representing the video frame data.
@@ -508,37 +532,40 @@ class ImgStoreVideo:
 @attr.s(auto_attribs=True, cmp=False)
 class Video:
     """
-    The top-level interface to any Video data used by sLEAP is represented by
-    the :class:`.Video` class. This class provides a common interface for
-    various supported video data backends. It provides the bare minimum of
-    properties and methods that any video data needs to support in order to
-    function with other sLEAP components. This interface currently only supports
-    reading of video data, there is no write support. Unless one is creating a new video
+    The top-level interface to any Video data used by SLEAP.
+
+    This class provides a common interface for various supported video data
+    backends. It provides the bare minimum of properties and methods that
+    any video data needs to support in order to function with other SLEAP
+    components. This interface currently only supports reading of video
+    data, there is no write support. Unless one is creating a new video
     backend, this class should be instantiated from its various class methods
     for different formats. For example:
 
-    >>> video = Video.from_hdf5(filename='test.h5', dataset='box')
-    >>> video = Video.from_media(filename='test.mp4')
+    >>> video = Video.from_hdf5(filename="test.h5", dataset="box")
+    >>> video = Video.from_media(filename="test.mp4")
 
     Or we can use auto-detection based on filename:
 
-    >>> video = Video.from_filename(filename='test.mp4')
+    >>> video = Video.from_filename(filename="test.mp4")
 
     Args:
-        backend: A backend is and object that implements the following basic
-        required methods and properties
+        backend: A backend is an object that implements the following basic
+            required methods and properties
 
         * Properties
 
             * :code:`frames`: The number of frames in the video
-            * :code:`channels`: The number of channels in the video (e.g. 1 for grayscale, 3 for RGB)
+            * :code:`channels`: The number of channels in the video
+              (e.g. 1 for grayscale, 3 for RGB)
             * :code:`width`: The width of each frame in pixels
             * :code:`height`: The height of each frame in pixels
 
         * Methods
 
-            * :code:`get_frame(frame_index: int) -> np.ndarray(shape=(width, height, channels)`:
-            Get a single frame from the underlying video data
+            * :code:`get_frame(frame_index: int) -> np.ndarray`:
+              Get a single frame from the underlying video data with
+              output shape=(width, height, channels).
 
     """
 
@@ -550,11 +577,14 @@ class Video:
 
     @property
     def num_frames(self) -> int:
-        """The number of frames in the video. Just an alias for frames property."""
+        """
+        The number of frames in the video. Just an alias for frames property.
+        """
         return self.frames
 
     @property
-    def shape(self):
+    def shape(self) -> Tuple[int, int, int, int]:
+        """ Returns (frame count, height, width, channels)."""
         return (self.frames, self.height, self.width, self.channels)
 
     def __str__(self):
@@ -590,7 +620,8 @@ class Video:
             idxs: An iterable object that contains the indices of frames.
 
         Returns:
-            The requested video frames with shape (len(idxs), width, height, channels)
+            The requested video frames with shape
+            (len(idxs), width, height, channels)
         """
         if np.isscalar(idxs):
             idxs = [idxs]
@@ -609,16 +640,18 @@ class Video:
         filename: Union[str, h5.File] = None,
         input_format: str = "channels_last",
         convert_range: bool = True,
-    ):
+    ) -> "Video":
         """
-        Create an instance of a video object from an HDF5 file and dataset. This
-        is a helper method that invokes the HDF5Video backend.
+        Create an instance of a video object from an HDF5 file and dataset.
+
+        This is a helper method that invokes the HDF5Video backend.
 
         Args:
-            dataset: The name of the dataset or and h5.Dataset object. If filename is
-            h5.File, dataset must be a str of the dataset name.
+            dataset: The name of the dataset or and h5.Dataset object. If
+                filename is h5.File, dataset must be a str of the dataset name.
             filename: The name of the HDF5 file or and open h5.File object.
-            input_format: Whether the data is oriented with "channels_first" or "channels_last"
+            input_format: Whether the data is oriented with "channels_first"
+                or "channels_last"
             convert_range: Whether we should convert data to [0, 255]-range
 
         Returns:
@@ -634,12 +667,14 @@ class Video:
         return cls(backend=backend)
 
     @classmethod
-    def from_numpy(cls, filename, *args, **kwargs):
+    def from_numpy(cls, filename: str, *args, **kwargs) -> "Video":
         """
         Create an instance of a video object from a numpy array.
 
         Args:
             filename: The numpy array or the name of the file
+            args: Arguments to pass to :class:`NumpyVideo`
+            kwargs: Arguments to pass to :class:`NumpyVideo`
 
         Returns:
             A Video object with a NumpyVideo backend
@@ -649,12 +684,16 @@ class Video:
         return cls(backend=backend)
 
     @classmethod
-    def from_media(cls, filename: str, *args, **kwargs):
+    def from_media(cls, filename: str, *args, **kwargs) -> "Video":
         """
-        Create an instance of a video object from a typical media file (e.g. .mp4, .avi).
+        Create an instance of a video object from a typical media file.
+
+        For example, mp4, avi, or other types readable by FFMPEG.
 
         Args:
             filename: The name of the file
+            args: Arguments to pass to :class:`MediaVideo`
+            kwargs: Arguments to pass to :class:`MediaVideo`
 
         Returns:
             A Video object with a MediaVideo backend
@@ -664,20 +703,25 @@ class Video:
         return cls(backend=backend)
 
     @classmethod
-    def from_filename(cls, filename: str, *args, **kwargs):
+    def from_filename(cls, filename: str, *args, **kwargs) -> "Video":
         """
-        Create an instance of a video object from a filename, auto-detecting the backend.
+        Create an instance of a video object, auto-detecting the backend.
 
         Args:
-            filename: The path to the video filename. Currently supported types are:
+            filename: The path to the video filename.
+                Currently supported types are:
 
-            * Media Videos - AVI, MP4, etc. handled by OpenCV directly
-            * HDF5 Datasets - .h5 files
-            * Numpy Arrays - npy files
-            * imgstore datasets - produced by loopbio's Motif recording system. See: https://github.com/loopbio/imgstore.
+                * Media Videos - AVI, MP4, etc. handled by OpenCV directly
+                * HDF5 Datasets - .h5 files
+                * Numpy Arrays - npy files
+                * imgstore datasets - produced by loopbio's Motif recording
+                    system. See: https://github.com/loopbio/imgstore.
+
+            args: Arguments to pass to :class:`NumpyVideo`
+            kwargs: Arguments to pass to :class:`NumpyVideo`
 
         Returns:
-            A Video object with the detected backend
+            A Video object with the detected backend.
         """
 
         filename = Video.fixup_path(filename)
@@ -696,27 +740,27 @@ class Video:
     @classmethod
     def imgstore_from_filenames(
         cls, filenames: list, output_filename: str, *args, **kwargs
-    ):
-        """Create an imagestore from a list of image files.
+    ) -> "Video":
+        """Create an imgstore from a list of image files.
 
         Args:
             filenames: List of filenames for the image files.
-            output_filename: Filename for the imagestore to create.
+            output_filename: Filename for the imgstore to create.
 
         Returns:
-            A `Video` object for the new imagestore.
+            A `Video` object for the new imgstore.
         """
 
         # get the image size from the first file
         first_img = cv2.imread(filenames[0], flags=cv2.IMREAD_COLOR)
         img_shape = first_img.shape
 
-        # create the imagestore
+        # create the imgstore
         store = imgstore.new_for_format(
             "png", mode="w", basedir=output_filename, imgshape=img_shape
         )
 
-        # read each frame and write it to the imagestore
+        # read each frame and write it to the imgstore
         # unfortunately imgstore doesn't let us just add the file
         for i, img_filename in enumerate(filenames):
             img = cv2.imread(img_filename, flags=cv2.IMREAD_COLOR)
@@ -727,33 +771,33 @@ class Video:
         # Return an ImgStoreVideo object referencing this new imgstore.
         return cls(backend=ImgStoreVideo(filename=output_filename))
 
-    @classmethod
-    def to_numpy(cls, frame_data: np.array, file_name: str):
-        np.save(file_name, frame_data, "w")
-
     def to_imgstore(
         self,
-        path,
+        path: str,
         frame_numbers: List[int] = None,
         format: str = "png",
         index_by_original: bool = True,
-    ):
+    ) -> "Video":
         """
-        Read frames from an arbitrary video backend and store them in a loopbio imgstore.
+        Converts frames from arbitrary video backend to ImgStoreVideo.
+
         This should facilitate conversion of any video to a loopbio imgstore.
 
         Args:
             path: Filename or directory name to store imgstore.
-            frame_numbers: A list of frame numbers from the video to save. If None save
-            the entire video.
-            format: By default it will create a DirectoryImgStore with lossless PNG format.
-            Unless the frame_indices = None, in which case, it will default to 'mjpeg/avi'
-            format for video.
+            frame_numbers: A list of frame numbers from the video to save.
+                If None save the entire video.
+            format: By default it will create a DirectoryImgStore with lossless
+                PNG format unless the frame_indices = None, in which case,
+                it will default to 'mjpeg/avi' format for video.
             index_by_original: ImgStores are great for storing a collection of
-            selected frames from an larger video. If the index_by_original is set to
-            True than the get_frame function will accept the original frame numbers of
-            from original video. If False, then it will accept the frame index from the
-            store directly.
+                selected frames from an larger video. If the index_by_original
+                is set to True then the get_frame function will accept the
+                original frame numbers of from original video. If False,
+                then it will accept the frame index from the store directly.
+                Default to True so that we can use an ImgStoreVideo in a
+                dataset to replace another video without having to update
+                all the frame indices on :class:`LabeledFrame`s in the dataset.
 
         Returns:
             A new Video object that references the imgstore.
@@ -813,7 +857,7 @@ class Video:
     @staticmethod
     def cattr():
         """
-        Return a cattr converter for serialiazing/deserializing Video objects.
+        Returns a cattr converter for serialiazing/deserializing Video objects.
 
         Returns:
             A cattr converter.
@@ -839,17 +883,28 @@ class Video:
         return vid_cattr
 
     @staticmethod
-    def fixup_path(path, raise_error=False) -> str:
+    def fixup_path(path: str, raise_error: bool = False) -> str:
         """
-        Given a path to a video try to find it. This is attempt to make the paths
-        serialized for different video objects portabls across multiple computers.
-        The default behaviour is to store whatever path is stored on the backend
-        object. If this is an absolute path it is almost certainly wrong when
-        transfered when the object is created on another computer. We try to
-        find the video by looking in the current working directory as well.
+        Tries to locate video if the given path doesn't work.
+
+        Given a path to a video try to find it. This is attempt to make the
+        paths serialized for different video objects portable across multiple
+        computers. The default behavior is to store whatever path is stored
+        on the backend object. If this is an absolute path it is almost
+        certainly wrong when transferred when the object is created on
+        another computer. We try to find the video by looking in the current
+        working directory as well.
+
+        Note that when loading videos during the process of deserializing a
+        saved :class:`Labels` dataset, it's usually preferable to fix video
+        paths using a `video_callback`.
 
         Args:
             path: The path the video asset.
+
+        Raises:
+            FileNotFoundError: If file still cannot be found and raise_error
+                is True.
 
         Returns:
             The fixed up path
