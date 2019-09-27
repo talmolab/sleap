@@ -901,6 +901,7 @@ class Video:
 
         Args:
             path: The path the video asset.
+            raise_error: Whether to raise error if we cannot find video.
 
         Raises:
             FileNotFoundError: If file still cannot be found and raise_error
