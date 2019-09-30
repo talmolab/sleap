@@ -4,17 +4,17 @@ Data structures for all labeled data contained with a SLEAP project.
 The relationships between objects in this module:
 
 * A `LabeledFrame` can contain zero or more `Instance`s
-  (and `PredictedInstance`s).
+  (and `PredictedInstance` objects).
 
-* `Instance` objects (and `PredictedInstance`s) have `PointArray`
+* `Instance` objects (and `PredictedInstance` objects) have `PointArray`
   (or `PredictedPointArray`).
 
 * `Instance` (`PredictedInstance`) can be associated with a `Track`
 
 * A `PointArray` (or `PredictedPointArray`) contains zero or more
-  `Point` objects (or `PredictedPoint`s), ideally as many as there are in the
-  associated :class:`Skeleton` although these can get out of sync if the
-  skeleton is manipulated.
+  `Point` objects (or `PredictedPoint` objectss), ideally as many as
+  there are in the associated :class:`Skeleton` although these can get
+  out of sync if the skeleton is manipulated.
 """
 
 import math

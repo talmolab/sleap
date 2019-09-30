@@ -908,8 +908,8 @@ class Skeleton:
         Args:
             json_str: The JSON encoded Skeleton.
             idx_to_node: optional dict which maps an int (indexing a
-                list of :class:`Node`s) to the already deserialized
-                :class:`Node`.
+                list of :class:`Node` objects) to the already
+                deserialized :class:`Node`.
                 This should invert `node_to_idx` we used when saving.
                 If not given, then we'll assume each :class:`Node` was
                 left in the :class:`Skeleton` when it was saved.
@@ -941,8 +941,8 @@ class Skeleton:
         Args:
             filename: The file that contains the JSON.
             idx_to_node: optional dict which maps an int (indexing a
-                list of :class:`Node`s) to the already deserialized
-                :class:`Node`.
+                list of :class:`Node` objects) to the already
+                deserialized :class:`Node`.
                 This should invert `node_to_idx` we used when saving.
                 If not given, then we'll assume each :class:`Node` was
                 left in the :class:`Skeleton` when it was saved.
