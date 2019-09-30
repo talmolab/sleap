@@ -1,4 +1,4 @@
-"""Base class for overlays."""
+"""Base class for overlays that use datasource (hdf5, model)."""
 
 from PySide2 import QtWidgets
 
@@ -12,6 +12,8 @@ from sleap.nn.transform import DataTransform
 
 
 class HDF5Data(HDF5Video):
+    """Class to wrap HDF5Video so we can use it as overlay datasource."""
+
     def __getitem__(self, i):
         """Get data for frame i from `HDF5Video` object."""
         x = self.get_frame(i)
@@ -20,6 +22,8 @@ class HDF5Data(HDF5Video):
 
 @attr.s(auto_attribs=True)
 class ModelData:
+    """Class to wrap model so we can use it as overlay datasource."""
+
     # TODO: Unify this class with inference.Predictor or InferenceModel
     model: "keras.Model"
     video: Video
@@ -69,6 +73,7 @@ class ModelData:
 
 @attr.s(auto_attribs=True)
 class DataOverlay:
+    """Base class for overlays which use datasources."""
 
     data: Sequence = None
     player: QtVideoPlayer = None
@@ -76,6 +81,7 @@ class DataOverlay:
     transform: DataTransform = None
 
     def add_to_scene(self, video, frame_idx):
+        """Add overlay to scene."""
         if self.data is None:
             return
 
@@ -131,6 +137,7 @@ class DataOverlay:
 
     @classmethod
     def from_h5(cls, filename, dataset, input_format="channels_last", **kwargs):
+        """Creates instance of class with HDF5 datasource."""
         import h5py as h5
 
         with h5.File(filename, "r") as f:
@@ -147,6 +154,7 @@ class DataOverlay:
 
     @classmethod
     def from_model(cls, filename, video, **kwargs):
+        """Creates instance of class with model datasource."""
         from sleap.nn.model import ModelOutputType
         from sleap.nn.loadmodel import load_model, get_model_data
         from sleap.nn.training import TrainingJob

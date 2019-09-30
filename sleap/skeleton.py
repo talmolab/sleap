@@ -16,11 +16,14 @@ import copy
 
 from enum import Enum
 from itertools import count
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 import networkx as nx
 from networkx.readwrite import json_graph
 from scipy.io import loadmat
+
+NodeRef = Union[str, "Node"]
+H5FileRef = Union[str, h5.File]
 
 
 class EdgeType(Enum):
@@ -58,7 +61,7 @@ class Node:
         return nodes
 
     @classmethod
-    def as_node(cls, node: Union[str, "Node"]) -> "Node":
+    def as_node(cls, node: NodeRef) -> "Node":
         """Convert given `node` to `Node` object (if not already)."""
         return node if isinstance(node, cls) else cls(node)
 
@@ -143,6 +146,7 @@ class Skeleton:
 
     @property
     def graph(self):
+        """Returns subgraph of BODY edges for skeleton."""
         edges = [
             (src, dst, key)
             for src, dst, key, edge_type in self._graph.edges(keys=True, data="type")
@@ -155,6 +159,7 @@ class Skeleton:
 
     @property
     def graph_symmetry(self):
+        """Returns subgraph of symmetric edges for skeleton."""
         edges = [
             (src, dst, key)
             for src, dst, key, edge_type in self._graph.edges(keys=True, data="type")
@@ -367,7 +372,7 @@ class Skeleton:
             if attr["type"] == EdgeType.SYMMETRY
         ]
 
-    def node_to_index(self, node: Union[str, Node]) -> int:
+    def node_to_index(self, node: NodeRef) -> int:
         """
         Return the index of the node, accepts either `Node` or name.
 
@@ -443,7 +448,7 @@ class Skeleton:
                 "The node named ({}) does not exist, cannot remove it.".format(name)
             )
 
-    def find_node(self, name: str) -> Node:
+    def find_node(self, name: NodeRef) -> Node:
         """Find node in skeleton by name of node.
 
         Args:
@@ -601,13 +606,13 @@ class Skeleton:
         self._graph.add_edge(node1_node, node2_node, type=EdgeType.SYMMETRY)
         self._graph.add_edge(node2_node, node1_node, type=EdgeType.SYMMETRY)
 
-    def delete_symmetry(self, node1: str, node2: str):
+    def delete_symmetry(self, node1: NodeRef, node2: NodeRef):
         """
         Deletes a previously established symmetry between two nodes.
 
         Args:
-            node1: The name of the first part in the symmetric pair.
-            node2: The name of the second part in the symmetric pair.
+            node1: One node (by `Node` object or name) in symmetric pair.
+            node2: Other node in symmetric pair.
 
         Raises:
             ValueError: If there's no symmetry between node1 and node2.
@@ -633,18 +638,18 @@ class Skeleton:
         ]
         self._graph.remove_edges_from(edges)
 
-    def get_symmetry(self, node: str) -> Optional[Node]:
+    def get_symmetry(self, node: NodeRef) -> Optional[Node]:
         """
         Returns the node symmetric with the specified node.
 
         Args:
-            node: The name of the node to query.
+            node: Node (by `Node` object or name) to query.
 
         Raises:
             ValueError: If node has more than one symmetry.
 
         Returns:
-            The symmetric :class:`Node`, None if no symmetry
+            The symmetric :class:`Node`, None if no symmetry.
         """
         node_node = self.find_node(node)
 
@@ -661,15 +666,15 @@ class Skeleton:
         else:
             raise ValueError(f"{node} has more than one symmetry.")
 
-    def get_symmetry_name(self, node: str) -> Optional[str]:
+    def get_symmetry_name(self, node: NodeRef) -> Optional[str]:
         """
         Returns the name of the node symmetric with the specified node.
 
         Args:
-            node: The name of the node to query.
+            node: Node (by `Node` object or name) to query.
 
         Returns:
-            name of symmetric node, None if no symmetry
+            Name of symmetric node, None if no symmetry.
         """
         symmetric_node = self.get_symmetry(node)
         return None if symmetric_node is None else symmetric_node.name
@@ -953,7 +958,7 @@ class Skeleton:
         return skeleton
 
     @classmethod
-    def load_hdf5(cls, file: Union[str, h5.File], name: str) -> List["Skeleton"]:
+    def load_hdf5(cls, file: H5FileRef, name: str) -> List["Skeleton"]:
         """
         Load a specific skeleton (by name) from the HDF5 file.
 
@@ -974,7 +979,7 @@ class Skeleton:
 
     @classmethod
     def load_all_hdf5(
-        cls, file: Union[str, h5.File], return_dict: bool = False
+        cls, file: H5FileRef, return_dict: bool = False
     ) -> Union[List["Skeleton"], Dict[str, "Skeleton"]]:
         """
         Load all skeletons found in the HDF5 file.
@@ -1011,7 +1016,7 @@ class Skeleton:
         return skeletons
 
     @classmethod
-    def save_all_hdf5(self, file: Union[str, h5.File], skeletons: List["Skeleton"]):
+    def save_all_hdf5(self, file: H5FileRef, skeletons: List["Skeleton"]):
         """
         Convenience method to save a list of skeletons to HDF5 file.
 
@@ -1038,7 +1043,7 @@ class Skeleton:
         for skeleton in skeletons:
             skeleton.save_hdf5(file)
 
-    def save_hdf5(self, file: Union[str, h5.File]):
+    def save_hdf5(self, file: H5FileRef):
         """
         Wrapper for HDF5 saving which takes either filename or h5.File.
 

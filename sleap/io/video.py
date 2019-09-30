@@ -339,25 +339,31 @@ class NumpyVideo:
 
     @property
     def frames(self):
+        """See :class:`Video`."""
         return self.__data.shape[self.__frame_idx]
 
     @property
     def channels(self):
+        """See :class:`Video`."""
         return self.__data.shape[self.__channel_idx]
 
     @property
     def width(self):
+        """See :class:`Video`."""
         return self.__data.shape[self.__width_idx]
 
     @property
     def height(self):
+        """See :class:`Video`."""
         return self.__data.shape[self.__height_idx]
 
     @property
     def dtype(self):
+        """See :class:`Video`."""
         return self.__data.dtype
 
     def get_frame(self, idx):
+        """See :class:`Video`."""
         return self.__data[idx]
 
 
@@ -438,10 +444,12 @@ class ImgStoreVideo:
 
     @property
     def frames(self):
+        """See :class:`Video`."""
         return self.__store.frame_count
 
     @property
     def channels(self):
+        """See :class:`Video`."""
         if len(self.__img.shape) < 3:
             return 1
         else:
@@ -449,14 +457,17 @@ class ImgStoreVideo:
 
     @property
     def width(self):
+        """See :class:`Video`."""
         return self.__img.shape[1]
 
     @property
     def height(self):
+        """See :class:`Video`."""
         return self.__img.shape[0]
 
     @property
     def dtype(self):
+        """See :class:`Video`."""
         return self.__img.dtype
 
     def get_frame(self, frame_number: int) -> np.ndarray:

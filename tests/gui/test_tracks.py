@@ -5,7 +5,7 @@ from sleap.io.video import Video
 def test_track_trails(centered_pair_predictions):
 
     labels = centered_pair_predictions
-    trail_manager = TrackTrailOverlay(labels, scene=None, trail_length=6)
+    trail_manager = TrackTrailOverlay(labels, player=None, trail_length=6)
 
     frames = trail_manager.get_frame_selection(labels.videos[0], 27)
     assert len(frames) == 6

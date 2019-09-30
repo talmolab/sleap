@@ -1171,7 +1171,22 @@ class LabeledFrame:
         return inst_to_show
 
     @staticmethod
-    def merge_frames(labeled_frames, video, remove_redundant=True):
+    def merge_frames(
+        labeled_frames: List["LabeledFrame"], video: "Video", remove_redundant=True
+    ) -> List["LabeledFrame"]:
+        """Merged LabeledFrames for same video and frame index.
+
+        Args:
+            labeled_frames: List of :class:`LabeledFrame`s to merge.
+            video: The :class:`Video` for which to merge.
+                This is specified so we don't have to check all frames when we
+                already know which video has new labeled frames.
+            remove_redundant: Whether to drop instances in the merged frames
+                where there's a perfect match.
+
+        Returns:
+            The merged list of :class:`LabeledFrame`s.
+        """
         redundant_count = 0
         frames_found = dict()
         # move instances into first frame with matching frame_idx

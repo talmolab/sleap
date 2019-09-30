@@ -1,11 +1,13 @@
+"""
+Module for running active learning (or just inference) from GUI.
+"""
+
 import os
 import cattr
 
-from datetime import datetime
-import multiprocessing
 from functools import reduce
 from pkg_resources import Requirement, resource_filename
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from sleap.io.dataset import Labels
 from sleap.io.video import Video
@@ -18,6 +20,18 @@ from PySide2 import QtWidgets, QtCore
 
 
 class ActiveLearningDialog(QtWidgets.QDialog):
+    """Active learning dialog.
+
+    The dialog can be used in different modes:
+    * simplified active learning (fewer controls)
+    * expert active learning (full controls)
+    * inference only
+
+    Arguments:
+        labels_filename: Path to the dataset where we'll get training data.
+        labels: The dataset where we'll get training data and add predictions.
+        mode: String which specified mode ("active", "expert", or "inference").
+    """
 
     learningFinished = QtCore.Signal()
 
@@ -26,7 +40,6 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         labels_filename: str,
         labels: Labels,
         mode: str = "expert",
-        only_predict: bool = False,
         *args,
         **kwargs,
     ):
@@ -36,7 +49,6 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         self.labels_filename = labels_filename
         self.labels = labels
         self.mode = mode
-        self.only_predict = only_predict
 
         print(f"Number of frames to train on: {len(labels.user_labeled_frames)}")
 
@@ -99,18 +111,18 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         # connect actions to buttons
 
         def edit_conf_profile():
-            self.view_profile(
+            self._view_profile(
                 self.form_widget["conf_job"], model_type=ModelOutputType.CONFIDENCE_MAP
             )
 
         def edit_paf_profile():
-            self.view_profile(
+            self._view_profile(
                 self.form_widget["paf_job"],
                 model_type=ModelOutputType.PART_AFFINITY_FIELD,
             )
 
         def edit_cent_profile():
-            self.view_profile(
+            self._view_profile(
                 self.form_widget["centroid_job"], model_type=ModelOutputType.CENTROIDS
             )
 
@@ -133,6 +145,9 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         self.update_gui()
 
     def _rebuild_job_options(self):
+        """
+        Rebuilds list of profile options (checking for new profile files).
+        """
         # load list of job profiles from directory
         profile_dir = resource_filename(
             Requirement.parse("sleap"), "sleap/training_profiles"
@@ -147,28 +162,41 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         # list default profiles
         find_saved_jobs(profile_dir, self.job_options)
 
-    def _update_job_menus(self, init=False):
+    def _update_job_menus(self, init: bool = False):
+        """Updates the menus with training profile options.
+
+        Args:
+            init: Whether this is first time calling (so we should connect
+                signals), or we're just updating menus.
+
+        Returns:
+            None.
+        """
         for model_type, field in self.training_profile_widgets.items():
             if model_type not in self.job_options:
                 self.job_options[model_type] = []
             if init:
                 field.currentIndexChanged.connect(
-                    lambda idx, mt=model_type: self.select_job(mt, idx)
+                    lambda idx, mt=model_type: self._update_from_selected_job(mt, idx)
                 )
             else:
                 # block signals so we can update combobox without overwriting
                 # any user data with the defaults from the profile
                 field.blockSignals(True)
-            field.set_options(self.option_list_from_jobs(model_type))
+            field.set_options(self._option_list_from_jobs(model_type))
             # enable signals again so that choice of profile will update params
             field.blockSignals(False)
 
     @property
-    def frame_selection(self):
+    def frame_selection(self) -> Dict[Video, List[int]]:
+        """
+        Returns dictionary with frames that user has selected for inference.
+        """
         return self._frame_selection
 
     @frame_selection.setter
-    def frame_selection(self, frame_selection):
+    def frame_selection(self, frame_selection: Dict[str, Dict[Video, List[int]]]):
+        """Sets options of frames on which to run inference."""
         self._frame_selection = frame_selection
 
         if "_predict_frames" in self.form_widget.fields.keys():
@@ -209,6 +237,7 @@ class ActiveLearningDialog(QtWidgets.QDialog):
             )
 
     def show(self):
+        """Shows dialog (we hide rather than close to maintain settings)."""
         super(ActiveLearningDialog, self).show()
 
         # TODO: keep selection and any items added from training editor
@@ -217,6 +246,7 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         self._update_job_menus()
 
     def update_gui(self):
+        """Updates gui state after user changes to options."""
         form_data = self.form_widget.get_form_data()
 
         can_run = True
@@ -279,7 +309,14 @@ class ActiveLearningDialog(QtWidgets.QDialog):
 
         self.run_button.setEnabled(can_run)
 
-    def _get_current_job(self, model_type):
+    def _get_current_job(self, model_type: ModelOutputType) -> Tuple[TrainingJob, str]:
+        """Returns training job currently selected for given model type.
+
+        Args:
+            model_type: The type of model for which we want data.
+
+        Returns: Tuple of (TrainingJob, path to job profile).
+        """
         # by default use the first model for a given type
         idx = 0
         if model_type in self.training_profile_widgets:
@@ -301,6 +338,7 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         return job, job_filename
 
     def _get_model_types_to_use(self):
+        """Returns lists of model types which user has enabled."""
         form_data = self.form_widget.get_form_data()
         types_to_use = []
 
@@ -317,7 +355,8 @@ class ActiveLearningDialog(QtWidgets.QDialog):
 
         return types_to_use
 
-    def _get_current_training_jobs(self):
+    def _get_current_training_jobs(self) -> Dict[ModelOutputType, TrainingJob]:
+        """Returns all currently selected training jobs."""
         form_data = self.form_widget.get_form_data()
         training_jobs = dict()
 
@@ -345,6 +384,7 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         return training_jobs
 
     def run(self):
+        """Run active learning (or inference) with current dialog settings."""
         # Collect TrainingJobs and params from form
         form_data = self.form_widget.get_form_data()
         training_jobs = self._get_current_training_jobs()
@@ -392,6 +432,7 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         ).exec_()
 
     def view_datagen(self):
+        """Shows windows with sample visual data that will be used training."""
         from sleap.nn.datagen import (
             generate_training_data,
             generate_confmaps_from_points,
@@ -444,8 +485,8 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         # can we show these windows without closing dialog?
         self.hide()
 
-    # open profile editor in new dialog window
-    def view_profile(self, filename, model_type, windows=[]):
+    def _view_profile(self, filename: str, model_type: ModelOutputType, windows=[]):
+        """Opens profile editor in new dialog window."""
         saved_files = []
         win = TrainingEditor(filename, saved_files=saved_files, parent=self)
         windows.append(win)
@@ -454,14 +495,16 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         for new_filename in saved_files:
             self._add_job_file_to_list(new_filename, model_type)
 
-    def option_list_from_jobs(self, model_type):
+    def _option_list_from_jobs(self, model_type: ModelOutputType):
+        """Returns list of menu options for given model type."""
         jobs = self.job_options[model_type]
         option_list = [name for (name, job) in jobs]
         option_list.append("---")
         option_list.append("Select a training profile file...")
         return option_list
 
-    def add_job_file(self, model_type):
+    def _add_job_file(self, model_type):
+        """Allow user to add training profile for given model type."""
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(
             None,
             dir=None,
@@ -475,7 +518,8 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         if field.currentIndex() == field.count() - 1:  # subtract 1 for separator
             field.setCurrentIndex(-1)
 
-    def _add_job_file_to_list(self, filename, model_type):
+    def _add_job_file_to_list(self, filename: str, model_type: ModelOutputType):
+        """Adds selected training profile for given model type."""
         if len(filename):
             try:
                 # try to load json as TrainingJob
@@ -497,14 +541,15 @@ class ActiveLearningDialog(QtWidgets.QDialog):
                     if model_type in self.training_profile_widgets:
                         field = self.training_profile_widgets[model_type]
                         field.set_options(
-                            self.option_list_from_jobs(model_type), filename
+                            self._option_list_from_jobs(model_type), filename
                         )
                 else:
                     QtWidgets.QMessageBox(
                         text=f"Profile selected is for training {str(file_model_type)} instead of {str(model_type)}."
                     ).exec_()
 
-    def select_job(self, model_type, idx):
+    def _update_from_selected_job(self, model_type: ModelOutputType, idx: int):
+        """Updates dialog settings after user selects a training profile."""
         jobs = self.job_options[model_type]
         if idx == -1:
             return
@@ -535,10 +580,11 @@ class ActiveLearningDialog(QtWidgets.QDialog):
             self.form_widget[field_name] = has_trained
         else:
             # last item is "select file..."
-            self.add_job_file(model_type)
+            self._add_job_file(model_type)
 
 
-def make_default_training_jobs():
+def make_default_training_jobs() -> Dict[ModelOutputType, TrainingJob]:
+    """Creates TrainingJobs with some default settings."""
     from sleap.nn.model import Model
     from sleap.nn.training import Trainer
     from sleap.nn.architectures import unet, leap
@@ -595,12 +641,15 @@ def make_default_training_jobs():
     return training_jobs
 
 
-def find_saved_jobs(job_dir, jobs=None):
+def find_saved_jobs(
+    job_dir: str, jobs=None
+) -> Dict[ModelOutputType, List[Tuple[str, TrainingJob]]]:
     """Find all the TrainingJob json files in a given directory.
 
     Args:
         job_dir: the directory in which to look for json files
-        jobs (optional): append to jobs, rather than creating new dict
+        jobs: If given, then the found jobs will be added to this object,
+            rather than creating new dict.
     Returns:
         dict of {ModelOutputType: list of (filename, TrainingJob) tuples}
     """
@@ -633,7 +682,15 @@ def find_saved_jobs(job_dir, jobs=None):
     return jobs
 
 
-def add_frames_from_json(labels: Labels, new_labels_json: str):
+def add_frames_from_json(labels: Labels, new_labels_json: str) -> int:
+    """Merges new predictions (given as json string) into dataset.
+
+    Args:
+        labels: The dataset to which we're adding the predictions.
+        new_labels_json: A JSON string which can be deserialized into `Labels`.
+    Returns:
+        Number of labeled frames with new predictions.
+    """
     # Deserialize the new frames, matching to the existing videos/skeletons if possible
     new_lfs = Labels.from_json(new_labels_json, match_to=labels).labeled_frames
 

@@ -1,3 +1,7 @@
+"""
+Module for generating videos with visual annotation overlays.
+"""
+
 from sleap.io.video import Video
 from sleap.io.dataset import Labels
 from sleap.util import usable_cpu_count

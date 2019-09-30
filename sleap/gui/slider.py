@@ -41,6 +41,7 @@ class SliderMark:
 
     @property
     def color(self):
+        """Returns color of mark."""
         colors = dict(simple="black", filled="blue", open="blue", predicted="red")
 
         if self.type in colors:
@@ -50,10 +51,12 @@ class SliderMark:
 
     @color.setter
     def color(self, val):
+        """Sets color of mark."""
         self._color = val
 
     @property
     def QColor(self):
+        """Returns color of mark as `QColor`."""
         c = self.color
         if type(c) == str:
             return QColor(c)
@@ -62,6 +65,7 @@ class SliderMark:
 
     @property
     def filled(self):
+        """Returns whether mark is filled or open."""
         if self.type == "open":
             return False
         else:

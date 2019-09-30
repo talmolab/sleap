@@ -1713,7 +1713,25 @@ class Labels(MutableSequence):
     def load_hdf5(
         cls, filename: str, video_callback=None, match_to: Optional["Labels"] = None
     ):
+        """
+        Deserialize HDF5 file as new :class:`Labels` instance.
 
+        Args:
+            filename: Path to HDF5 file.
+            video_callback: A callback function that which can modify
+                video paths before we try to create the corresponding
+                :class:`Video` objects. Usually you'll want to pass
+                a callback created by :method:`Labels.make_video_callback`
+                or :method:`Labels.make_gui_video_callback`.
+            match_to: If given, we'll replace particular objects in the
+                data dictionary with *matching* objects in the match_to
+                :class:`Labels` object. This ensures that the newly
+                instantiated :class:`Labels` can be merged without
+                duplicate matching objects (e.g., :class:`Video`s).
+
+        Returns:
+            A new :class:`Labels` object.
+        """
         with h5.File(filename, "r") as f:
 
             # Extract the Labels JSON metadata and create Labels object with just
