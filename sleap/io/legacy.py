@@ -39,7 +39,7 @@ def load_predicted_labels_json_old(
         fix_rel_paths: Whether to fix paths to videos to absolute paths.
 
     Returns:
-        List of :class:`LabeledFrame`s.
+        List of :class:`LabeledFrame` objects.
     """
     if parsed_json is None:
         data = json.loads(open(data_path).read())

@@ -167,7 +167,7 @@ class TrackTrailOverlay:
         trail_length: The maximum number of frames to include in trail.
 
     Usage:
-        After class is instantiated, call :method:`add_to_scene(frame_idx)`
+        After class is instantiated, call :meth:`add_to_scene(frame_idx)`
         to plot the trails in scene.
     """
 

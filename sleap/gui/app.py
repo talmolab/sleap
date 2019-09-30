@@ -57,11 +57,11 @@ class MainWindow(QMainWindow):
     """The SLEAP GUI application.
 
     Each project (`Labels` dataset) that you have loaded in the GUI will
-    have it's own `MainWindow` object.
+    have its own `MainWindow` object.
 
     Attributes:
         labels: The :class:`Labels` dataset. If None, a new, empty project
-            (i.e., :class:`Labels' object) will be created.
+            (i.e., :class:`Labels` object) will be created.
         skeleton: The active :class:`Skeleton` for the project in the gui
         video: The active :class:`Video` in view in the gui
     """

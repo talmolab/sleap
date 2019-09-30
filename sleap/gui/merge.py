@@ -217,7 +217,7 @@ class MergeTable(QtWidgets.QTableView):
 
     Args:
         merged: The frames that were cleanly merged.
-            See :method:`Labels.complex_merge_between` for details.
+            See :meth:`Labels.complex_merge_between` for details.
     """
 
     def __init__(self, merged, *args, **kwargs):

@@ -17,6 +17,7 @@ For each `item` in `import_list`, we can load the video by calling this
 method while passing the user-selected params as the named parameters:
 
 >>> vid = item["video_class"](**item["params"])
+
 """
 
 from PySide2.QtCore import Qt, QRectF, Signal

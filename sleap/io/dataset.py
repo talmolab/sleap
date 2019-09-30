@@ -67,7 +67,7 @@ class Labels(MutableSequence):
         labeled_frames: A list of :class:`LabeledFrame` objects
         videos: A list of :class:`Video` objects that these labels may or may
             not reference. The video for every `LabeledFrame` will be
-            stored in :attribute:`videos`, but some videos in
+            stored in `videos` attribute, but some videos in
             this list may not have any associated labeled frames.
         skeletons: A list of :class:`Skeleton` objects (again, that may or may
             not be referenced by an :class:`Instance` in labeled frame).
@@ -568,7 +568,7 @@ class Labels(MutableSequence):
         Swaps track assignment for instances in two tracks.
 
         If you need to change the track to or from None, you'll need
-        to use :method:`Labels.track_set_instance()` for each specific
+        to use :meth:`track_set_instance` for each specific
         instance you want to modify.
 
         Args:
@@ -865,12 +865,13 @@ class Labels(MutableSequence):
         self, new_frames: Union["Labels", List[LabeledFrame]], unify: bool = False
     ):
         """
-        Merge in data from another Labels object or list of LabeledFrames.
+        Merge data from another `Labels` object or `LabeledFrame` list.
 
         Arg:
             new_frames: the object from which to copy data
             unify: whether to replace objects in new frames with
                 corresponding objects from current `Labels` data
+
         Returns:
             bool, True if we added frames, False otherwise
         """
@@ -909,19 +910,19 @@ class Labels(MutableSequence):
         cls, base_labels: "Labels", new_labels: "Labels", unify: bool = True
     ) -> tuple:
         """
-        Merge frames and other data that can be merged cleanly,
-        and return frames that conflict.
+        Merge frames and other data from one dataset into another.
 
         Anything that can be merged cleanly is merged into base_labels.
 
         Frames conflict just in case each labels object has a matching
-        frame (same video and frame idx) which instances not in the other.
+        frame (same video and frame idx) with instances not in other.
 
-        Frames can be merged cleanly if
-        - the frame is in only one of the labels, or
-        - the frame is in both labels, but all instances perfectly match
+        Frames can be merged cleanly if:
+
+        * the frame is in only one of the labels, or
+        * the frame is in both labels, but all instances perfectly match
           (which means they are redundant), or
-        - the frame is in both labels, maybe there are some redundant
+        * the frame is in both labels, maybe there are some redundant
           instances, but only one version of the frame has additional
           instances not in the other.
 
@@ -933,11 +934,13 @@ class Labels(MutableSequence):
 
         Returns:
             tuple of three items:
+
             * Dictionary, keys are :class:`Video`, values are
                 dictionary in which keys are frame index (int)
                 and value is list of :class:`Instance` objects
             * list of conflicting :class:`Instance` objects from base
-            * list of conflicting :class:`Instance` objects from new frames
+            * list of conflicting :class:`Instance` objects from new
+
         """
         # If unify, we want to replace objects in the frames with
         # corresponding objects from the current labels.
@@ -1342,8 +1345,8 @@ class Labels(MutableSequence):
             video_callback: A callback function that which can modify
                 video paths before we try to create the corresponding
                 :class:`Video` objects. Usually you'll want to pass
-                a callback created by :method:`Labels.make_video_callback`
-                or :method:`Labels.make_gui_video_callback`.
+                a callback created by :meth:`make_video_callback`
+                or :meth:`make_gui_video_callback`.
             match_to: If given, we'll replace particular objects in the
                 data dictionary with *matching* objects in the match_to
                 :class:`Labels` object. This ensures that the newly
@@ -1721,8 +1724,8 @@ class Labels(MutableSequence):
             video_callback: A callback function that which can modify
                 video paths before we try to create the corresponding
                 :class:`Video` objects. Usually you'll want to pass
-                a callback created by :method:`Labels.make_video_callback`
-                or :method:`Labels.make_gui_video_callback`.
+                a callback created by :meth:`make_video_callback`
+                or :meth:`make_gui_video_callback`.
             match_to: If given, we'll replace particular objects in the
                 data dictionary with *matching* objects in the match_to
                 :class:`Labels` object. This ensures that the newly

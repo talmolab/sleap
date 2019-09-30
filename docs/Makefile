@@ -5,7 +5,7 @@
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 SOURCEDIR     = .
-BUILDDIR      = ..\..\sleap-docs
+BUILDDIR      = ../../sleap-docs
 
 # Export the BUILDDIR so we can pick it up in conf.py. We need this to
 # be able to copy some the files in _static to an alternative location

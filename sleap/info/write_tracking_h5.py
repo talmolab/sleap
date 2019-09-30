@@ -7,14 +7,15 @@ empty frames from the beginning and end of video, although
 of video.
 
 Call from command line as:
-> python -m sleap.io.write_tracking_h5 <labels_filename>
+
+>>> python -m sleap.io.write_tracking_h5 <labels_filename>
 
 Will write file to `<labels_filename>.tracking.h5`.
 
 The HDF5 file has these datasets:
-    "track_occupancy"     shape: tracks * frames
-    "tracks"              shape: frames * nodes * 2 * tracks
-    "track_names"         shape: tracks
+* "track_occupancy"     shape: tracks * frames
+* "tracks"              shape: frames * nodes * 2 * tracks
+* "track_names"         shape: tracks
 
 Note: the datasets are stored column-major as expected by MATLAB.
 """
@@ -30,7 +31,7 @@ from sleap.io.dataset import Labels
 
 
 def get_tracks_as_np_strings(labels: Labels) -> List[np.string_]:
-    """Get list of track names as `np.string_`s."""
+    """Get list of track names as `np.string_`."""
     return [np.string_(track.name) for track in labels.tracks]
 
 
@@ -49,6 +50,7 @@ def get_occupancy_and_points_matrices(
 
     Returns:
         tuple of two matrices:
+
         * occupancy matrix with shape (tracks, frames)
         * point location matrix with shape (frames, nodes, 2, tracks)
     """

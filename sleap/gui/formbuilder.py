@@ -2,6 +2,7 @@
 Module for creating a form from a yaml file.
 
 Example:
+
 >>> widget = YamlFormWidget(yaml_file="example.yaml")
 >>> widget.mainAction.connect(my_function)
 
@@ -81,7 +82,7 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
     Custom QFormLayout which populates itself from list of form fields.
 
     Args:
-        items_to_create: list which gets passed to :method:`get_form_data`
+        items_to_create: list which gets passed to :meth:`get_form_data`
                          (see there for details about format)
     """
 
@@ -183,7 +184,8 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
         """Adds widgets to form layout for each item in items_to_create.
 
         Args:
-            items_to_create: list of dictionaries with fields:
+            items_to_create: list of dictionaries with keys
+
               * name: used as key when we return form data as dict
               * label: string to show in form
               * type: supports double, int, bool, list, button, stack
@@ -311,7 +313,7 @@ class StackBuilderWidget(QtWidgets.QWidget):
             The "options" key will give the list of options to show in
             menu. Each of the "options" will also be the key of a dictionary
             within stack_data that has the same structure as the dictionary
-            passed to :method:`FormBuilderLayout.build_form()`.
+            passed to :meth:`FormBuilderLayout.build_form()`.
     """
 
     def __init__(self, stack_data, *args, **kwargs):

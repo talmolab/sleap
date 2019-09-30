@@ -9,6 +9,7 @@ Example usage:
 
     >>> vp = QtVideoPlayer(video=my_video)
     >>> vp.addInstance(instance=my_instance, color=(r, g, b))
+
 """
 
 from PySide2 import QtWidgets
@@ -52,14 +53,15 @@ class QtVideoPlayer(QWidget):
     """
     Main QWidget for displaying video with skeleton instances.
 
+    Signals:
+        * changedPlot: Emitted whenever the plot is redrawn
+        * changedData: Emitted whenever data is changed by user
+
     Attributes:
         video: The :class:`Video` to display
         color_manager: A :class:`TrackColorManager` object which determines
             which color to show the instances.
 
-    Signals:
-        changedPlot: Emitted whenever the plot is redrawn
-        changedData: Emitted whenever data is changed by user
     """
 
     changedPlot = Signal(QWidget, int, Instance)
@@ -268,6 +270,10 @@ class QtVideoPlayer(QWidget):
         (if given). If the user cancels (by unselecting without new
         selection), the `on_failure` callback is called (if given).
 
+        Note:
+            If successful, we call
+            >>> on_success(sequence_of_selected_instance_indexes)
+
         Args:
             seq_len: Number of instances we want to collect in sequence.
             on_success: Callback for when user has selected desired number of
@@ -276,9 +282,6 @@ class QtVideoPlayer(QWidget):
             on_failure: Callback if user cancels process before selecting
                 enough instances.
 
-        Note:
-            If successful, we call
-            >>> on_success(sequence_of_selected_instance_indexes)
         """
 
         indexes = []
@@ -430,22 +433,22 @@ class GraphicsView(QGraphicsView):
     and selection of instances in view.
 
     Signals:
-        updatedViewer: Emitted after update to view (e.g., zoom).
+        * updatedViewer: Emitted after update to view (e.g., zoom).
             Used internally so we know when to update points for each instance.
-        updatedSelection: Emitted after the user has (un)selected  an instance.
-        instanceDoubleClicked: Emitted after an instance is double-clicked.
+        * updatedSelection: Emitted after the user has (un)selected an instance.
+        * instanceDoubleClicked: Emitted after an instance is double-clicked.
             Passes the :class:`Instance` that was double-clicked.
-        areaSelected: Emitted after user selects an area when in "area"
+        * areaSelected: Emitted after user selects an area when in "area"
             click mode. Passes x0, y0, x1, y1 for selected box coordinates.
-        pointSelected: Emitted after user clicks a point (in "point" click
+        * pointSelected: Emitted after user clicks a point (in "point" click
             mode.) Passes x, y coordinates of point.
+        * leftMouseButtonPressed: Emitted by event handler.
+        * rightMouseButtonPressed: Emitted by event handler.
+        * leftMouseButtonReleased: Emitted by event handler.
+        * rightMouseButtonReleased: Emitted by event handler.
+        * leftMouseButtonDoubleClicked: Emitted by event handler.
+        * rightMouseButtonDoubleClicked: Emitted by event handler.
 
-        leftMouseButtonPressed
-        rightMouseButtonPressed
-        leftMouseButtonReleased
-        rightMouseButtonReleased
-        leftMouseButtonDoubleClicked
-        rightMouseButtonDoubleClicked
     """
 
     updatedViewer = Signal()

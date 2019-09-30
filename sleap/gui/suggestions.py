@@ -28,7 +28,7 @@ class VideoFrameSuggestions:
     * proofreading
 
     Each of algorithm method should accept `video`; other parameters will be
-    passed from the `params` dict given to :method:`suggest()`.
+    passed from the `params` dict given to :meth:`suggest`.
 
     """
 
@@ -343,9 +343,10 @@ class VideoFrameSuggestions:
 
     @classmethod
     def get_scale_factor(cls, video: "Video") -> int:
-        """Determines how much we need to scale to get video within size.
+        """
+        Determines how much we need to scale to get video within size.
 
-        Size is specified by :attribute:`rescale_below`.
+        Size is specified by :attr:`rescale_below`.
         """
         factor = 1
         if cls.rescale:
