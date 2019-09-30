@@ -4,7 +4,7 @@ Gui for merging two labels files with options to resolve conflicts.
 
 import attr
 
-from typing import List
+from typing import Dict, List
 
 from sleap.instance import LabeledFrame
 from sleap.io.dataset import Labels
@@ -18,7 +18,25 @@ CLEAN_STRING = "Accept clean merge"
 
 
 class MergeDialog(QtWidgets.QDialog):
+    """
+    Dialog window for complex merging of two SLEAP datasets.
+
+    This will immediately merge any labeled frames that can be cleanly merged,
+    show summary of merge and prompt user about how to handle merge conflict,
+    and then finish merge (resolving conflicts as the user requested).
+    """
+
     def __init__(self, base_labels: Labels, new_labels: Labels, *args, **kwargs):
+        """
+        Creates merge dialog and begins merging.
+
+        Args:
+            base_labels: The base dataset into which we're inserting data.
+            new_labels: New dataset from which we're getting data to insert.
+
+        Returns:
+            None.
+        """
 
         super(MergeDialog, self).__init__(*args, **kwargs)
 
@@ -50,9 +68,11 @@ class MergeDialog(QtWidgets.QDialog):
             merge_table = MergeTable(merged)
             layout.addWidget(merge_table)
 
-        conflict_text = (
-            "There are no conflicts." if not self.extra_base else "Merge conflicts:"
-        )
+        if not self.extra_base:
+            conflict_text = "There are no conflicts."
+        else:
+            conflict_text = "Merge conflicts:"
+
         conflict_label = QtWidgets.QLabel(conflict_text)
         layout.addWidget(conflict_label)
 
@@ -80,6 +100,20 @@ class MergeDialog(QtWidgets.QDialog):
         self.setLayout(layout)
 
     def finishMerge(self):
+        """
+        Finishes merge process, possibly resolving conflicts.
+
+        This is connected to `accepted` signal.
+
+        Args:
+            None.
+
+        Raises:
+            ValueError: If no valid merge method was selected in dialog.
+
+        Returns:
+            None.
+        """
         merge_method = self.merge_method.currentText()
         if merge_method == USE_BASE_STRING:
             Labels.finish_complex_merge(self.base_labels, self.extra_base)
@@ -94,12 +128,36 @@ class MergeDialog(QtWidgets.QDialog):
 
 
 class ConflictTable(QtWidgets.QTableView):
-    def __init__(self, *args, **kwargs):
+    """
+    Qt table view for summarizing merge conflicts.
+
+    Arguments are passed through to the table view object.
+
+    The two lists of `LabeledFrame` objects should be correlated (idx in one will
+    match idx of the conflicting frame in other).
+
+    Args:
+        base_labels: The base dataset.
+        extra_base: `LabeledFrame` objects from base that conflicted.
+        extra_new: `LabeledFrame` objects from new dataset that conflicts.
+    """
+
+    def __init__(
+        self,
+        base_labels: Labels,
+        extra_base: List[LabeledFrame],
+        extra_new: List[LabeledFrame],
+    ):
         super(ConflictTable, self).__init__()
-        self.setModel(ConflictTableModel(*args, **kwargs))
+        self.setModel(ConflictTableModel(base_labels, extra_base, extra_new))
 
 
 class ConflictTableModel(QtCore.QAbstractTableModel):
+    """Qt table model for summarizing merge conflicts.
+
+    See :class:`ConflictTable`.
+    """
+
     _props = ["video", "frame", "base", "new"]
 
     def __init__(
@@ -114,6 +172,7 @@ class ConflictTableModel(QtCore.QAbstractTableModel):
         self.extra_new = extra_new
 
     def data(self, index: QtCore.QModelIndex, role=QtCore.Qt.DisplayRole):
+        """Required by Qt."""
         if role == QtCore.Qt.DisplayRole and index.isValid():
             idx = index.row()
             prop = self._props[index.column()]
@@ -131,14 +190,17 @@ class ConflictTableModel(QtCore.QAbstractTableModel):
         return None
 
     def rowCount(self, *args):
+        """Required by Qt."""
         return len(self.extra_base)
 
     def columnCount(self, *args):
+        """Required by Qt."""
         return len(self._props)
 
     def headerData(
         self, section, orientation: QtCore.Qt.Orientation, role=QtCore.Qt.DisplayRole
     ):
+        """Required by Qt."""
         if role == QtCore.Qt.DisplayRole:
             if orientation == QtCore.Qt.Horizontal:
                 return self._props[section]
@@ -148,15 +210,30 @@ class ConflictTableModel(QtCore.QAbstractTableModel):
 
 
 class MergeTable(QtWidgets.QTableView):
-    def __init__(self, *args, **kwargs):
+    """
+    Qt table view for summarizing cleanly merged frames.
+
+    Arguments are passed through to the table view object.
+
+    Args:
+        merged: The frames that were cleanly merged.
+            See :meth:`Labels.complex_merge_between` for details.
+    """
+
+    def __init__(self, merged, *args, **kwargs):
         super(MergeTable, self).__init__()
-        self.setModel(MergeTableModel(*args, **kwargs))
+        self.setModel(MergeTableModel(merged))
 
 
 class MergeTableModel(QtCore.QAbstractTableModel):
+    """Qt table model for summarizing merge conflicts.
+
+    See :class:`MergeTable`.
+    """
+
     _props = ["video", "frame", "merged instances"]
 
-    def __init__(self, merged: List[List["Instance"]]):
+    def __init__(self, merged: Dict["Video", Dict[int, List["Instance"]]]):
         super(MergeTableModel, self).__init__()
         self.merged = merged
 
@@ -172,6 +249,7 @@ class MergeTableModel(QtCore.QAbstractTableModel):
                 )
 
     def data(self, index: QtCore.QModelIndex, role=QtCore.Qt.DisplayRole):
+        """Required by Qt."""
         if role == QtCore.Qt.DisplayRole and index.isValid():
             idx = index.row()
             prop = self._props[index.column()]
@@ -187,14 +265,17 @@ class MergeTableModel(QtCore.QAbstractTableModel):
         return None
 
     def rowCount(self, *args):
+        """Required by Qt."""
         return len(self.data_table)
 
     def columnCount(self, *args):
+        """Required by Qt."""
         return len(self._props)
 
     def headerData(
         self, section, orientation: QtCore.Qt.Orientation, role=QtCore.Qt.DisplayRole
     ):
+        """Required by Qt."""
         if role == QtCore.Qt.DisplayRole:
             if orientation == QtCore.Qt.Horizontal:
                 return self._props[section]
@@ -203,12 +284,21 @@ class MergeTableModel(QtCore.QAbstractTableModel):
         return None
 
 
-def show_instance_type_counts(instance_list):
+def show_instance_type_counts(instance_list: List["Instance"]) -> str:
+    """
+    Returns string of instance counts to show in table.
+
+    Args:
+        instance_list: The list of instances to count.
+
+    Returns:
+        String with numbers of user/predicted instances.
+    """
     prediction_count = len(
         list(filter(lambda inst: hasattr(inst, "score"), instance_list))
     )
     user_count = len(instance_list) - prediction_count
-    return f"{prediction_count}/{user_count}"
+    return f"{user_count}/{prediction_count}"
 
 
 if __name__ == "__main__":

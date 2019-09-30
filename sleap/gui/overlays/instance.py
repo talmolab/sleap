@@ -1,21 +1,29 @@
+"""
+Module with overlay for showing instances.
+"""
 import attr
-
-from PySide2 import QtWidgets
 
 from sleap.gui.video import QtVideoPlayer
 from sleap.io.dataset import Labels
-from sleap.gui.overlays.tracks import TrackColorManager
 
 
 @attr.s(auto_attribs=True)
 class InstanceOverlay:
+    """Class for adding instances as overlays on video frames.
+
+    Attributes:
+        labels: The :class:`Labels` dataset from which to get overlay data.
+        player: The video player in which to show overlay.
+        color_predicted: Whether to show predicted instances in color (
+            rather than all in gray/yellow).
+    """
 
     labels: Labels = None
     player: QtVideoPlayer = None
-    color_manager: TrackColorManager = TrackColorManager(labels)
     color_predicted: bool = False
 
     def add_to_scene(self, video, frame_idx):
+        """Adds overlay for frame to player scene."""
         if self.labels is None:
             return
 
@@ -35,7 +43,7 @@ class InstanceOverlay:
 
             self.player.addInstance(
                 instance=instance,
-                color=self.color_manager.get_color(pseudo_track),
+                color=self.player.color_manager.get_color(pseudo_track),
                 predicted=is_predicted,
                 color_predicted=self.color_predicted,
             )

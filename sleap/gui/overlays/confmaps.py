@@ -8,25 +8,25 @@ Example:
 
 from PySide2 import QtWidgets, QtCore, QtGui
 
-import attr
 import numpy as np
 import qimage2ndarray
-from typing import Sequence
 
-from sleap.io.video import Video, HDF5Video
-from sleap.gui.video import QtVideoPlayer
 from sleap.gui.overlays.base import DataOverlay, h5_colors
 
 
 class ConfmapOverlay(DataOverlay):
+    """Overlay to show confidence maps."""
+
     @classmethod
     def from_h5(cls, filename, input_format="channels_last", **kwargs):
+        """Create object with hdf5 as datasource."""
         return DataOverlay.from_h5(
             filename, "/confmaps", input_format, overlay_class=ConfMapsPlot, **kwargs
         )
 
     @classmethod
     def from_model(cls, filename, video, **kwargs):
+        """Create object with live predictions from model as datasource."""
         return DataOverlay.from_model(
             filename, video, overlay_class=ConfMapsPlot, **kwargs
         )
@@ -140,6 +140,9 @@ class ConfMapPlot(QtWidgets.QGraphicsPixmapItem):
 
 
 def show_confmaps_from_h5(filename, input_format="channels_last", standalone=False):
+    """Demo function."""
+    from sleap.io.video import HDF5Video
+
     video = HDF5Video(filename, "/box", input_format=input_format)
     conf_data = HDF5Video(
         filename, "/confmaps", input_format=input_format, convert_range=False
@@ -152,6 +155,7 @@ def show_confmaps_from_h5(filename, input_format="channels_last", standalone=Fal
 
 
 def demo_confmaps(confmaps, video, standalone=False, callback=None):
+    """Demo function."""
     from PySide2 import QtWidgets
     from sleap.gui.video import QtVideoPlayer
 
@@ -182,6 +186,3 @@ if __name__ == "__main__":
 
     data_path = "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"
     show_confmaps_from_h5(data_path, input_format="channels_first", standalone=True)
-
-#     data_path = "/Users/tabris/Documents/predictions.h5"
-#     show_confmaps_from_h5(data_path, input_format="channels_last", standalone=True)

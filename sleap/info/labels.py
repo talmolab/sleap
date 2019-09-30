@@ -1,3 +1,6 @@
+"""
+Command line utility which prints data about labels file.
+"""
 import os
 
 from sleap.io.dataset import Labels

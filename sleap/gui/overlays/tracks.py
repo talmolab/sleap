@@ -1,5 +1,8 @@
-from sleap.skeleton import Skeleton, Node
-from sleap.instance import Instance, PredictedInstance, Point, LabeledFrame, Track
+"""
+Module that handles track-related overlays (including track color).
+"""
+
+from sleap.instance import Track
 from sleap.io.dataset import Labels
 from sleap.io.video import Video
 
@@ -7,18 +10,22 @@ import attr
 import itertools
 from typing import Union
 
-from PySide2 import QtCore, QtWidgets, QtGui
+from PySide2 import QtCore, QtGui
 
 
-class TrackColorManager:
-    """Class to determine color to use for track. The color depends on the order of
-    the tracks in `Labels` object, so we need to initialize with `Labels`.
+class TrackColorManager(object):
+    """Class to determine color to use for track.
+
+    The color depends on the order of the tracks in `Labels` object,
+    so we need to initialize with `Labels`.
 
     Args:
-        labels: `Labels` object which contains the tracks for which we want colors
+        labels: The :class:`Labels` dataset which contains the tracks for
+            which we want colors.
+        palette: String with the color palette name to use.
     """
 
-    def __init__(self, labels: Labels = None, palette="standard"):
+    def __init__(self, labels: Labels = None, palette: str = "standard"):
         self.labels = labels
 
         # alphabet
@@ -106,6 +113,7 @@ class TrackColorManager:
 
     @property
     def labels(self):
+        """Gets or sets labels dataset for which we are coloring tracks."""
         return self._labels
 
     @labels.setter
@@ -114,9 +122,11 @@ class TrackColorManager:
 
     @property
     def palette_names(self):
+        """Gets list of palette names."""
         return self._palettes.keys()
 
     def set_palette(self, palette):
+        """Sets palette (by name)."""
         if isinstance(palette, str):
             self.mode = "clip" if palette.endswith("+") else "cycle"
 
@@ -145,23 +155,24 @@ class TrackColorManager:
 
 @attr.s(auto_attribs=True)
 class TrackTrailOverlay:
-    """Class to show track trails. You initialize this object with both its data source
-    and its visual output scene, and it handles both extracting the relevant data for a
-    given frame and plotting it in the output.
+    """Class to show track trails as overlay on video frame.
 
-    Args:
-        labels: `Labels` object from which to get data
-        scene: `QGraphicsScene` in which to plot trails
-        trail_length (optional): maximum number of frames to include in trail
+    Initialize this object with both its data source and its visual output
+    scene, and it handles both extracting the relevant data for a given
+    frame and plotting it in the output.
+
+    Attributes:
+        labels: The :class:`Labels` dataset from which to get overlay data.
+        player: The video player in which to show overlay.
+        trail_length: The maximum number of frames to include in trail.
 
     Usage:
-        After class is instatiated, call add_trails_to_scene(frame_idx)
+        After class is instantiated, call :meth:`add_to_scene(frame_idx)`
         to plot the trails in scene.
     """
 
     labels: Labels = None
-    scene: QtWidgets.QGraphicsScene = None
-    color_manager: TrackColorManager = TrackColorManager(labels)
+    player: "QtVideoPlayer" = None
     trail_length: int = 4
     show: bool = False
 
@@ -169,8 +180,9 @@ class TrackTrailOverlay:
         """Get data needed to draw track trail.
 
         Args:
-            frame_selection: an interable with the `LabeledFrame`s to include in trail
-            track: the `Track` for which to get trail
+            frame_selection: an interable with the :class:`LabeledFrame`
+                objects to include in trail.
+            track: the :class:`Track` for which to get trail
 
         Returns:
             list of lists of (x, y) tuples
@@ -202,7 +214,9 @@ class TrackTrailOverlay:
         return all_trails
 
     def get_frame_selection(self, video: Video, frame_idx: int):
-        """Return list of `LabeledFrame`s to include in trail for specified frame."""
+        """
+        Return `LabeledFrame` objects to include in trail for specified frame.
+        """
 
         frame_selection = self.labels.find(video, range(0, frame_idx + 1))
         frame_selection.sort(key=lambda x: x.frame_idx)
@@ -235,7 +249,7 @@ class TrackTrailOverlay:
 
             trails = self.get_track_trails(frame_selection, track)
 
-            color = QtGui.QColor(*self.color_manager.get_color(track))
+            color = QtGui.QColor(*self.player.color_manager.get_color(track))
             pen = QtGui.QPen()
             pen.setCosmetic(True)
 
@@ -245,12 +259,12 @@ class TrackTrailOverlay:
                 color.setAlphaF(1)
                 pen.setColor(color)
                 polygon = self.map_to_qt_polygon(trail[:half])
-                self.scene.addPolygon(polygon, pen)
+                self.player.scene.addPolygon(polygon, pen)
 
                 color.setAlphaF(0.5)
                 pen.setColor(color)
                 polygon = self.map_to_qt_polygon(trail[half:])
-                self.scene.addPolygon(polygon, pen)
+                self.player.scene.addPolygon(polygon, pen)
 
     @staticmethod
     def map_to_qt_polygon(point_list):
@@ -260,15 +274,16 @@ class TrackTrailOverlay:
 
 @attr.s(auto_attribs=True)
 class TrackListOverlay:
-    """Class to show track number and names in overlay.
+    """
+    Class to show track number and names in overlay.
     """
 
     labels: Labels = None
-    view: QtWidgets.QGraphicsView = None
-    color_manager: TrackColorManager = TrackColorManager(labels)
+    player: "QtVideoPlayer" = None
     text_box = None
 
     def add_to_scene(self, video: Video, frame_idx: int):
+        """Adds track list as overlay on video."""
         from sleap.gui.video import QtTextWithBackground
 
         html = ""
@@ -279,7 +294,7 @@ class TrackListOverlay:
 
             if html:
                 html += "<br />"
-            color = self.color_manager.get_color(track)
+            color = self.player.color_manager.get_color(track)
             html_color = f"#{color[0]:02X}{color[1]:02X}{color[2]:02X}"
             track_text = f"<b>{track.name}</b>"
             if str(idx) != track.name:
@@ -294,10 +309,11 @@ class TrackListOverlay:
         self.text_box = text_box
         self.visible = False
 
-        self.view.scene.addItem(self.text_box)
+        self.player.scene.addItem(self.text_box)
 
     @property
     def visible(self):
+        """Gets or set whether overlay is visible."""
         if self.text_box is None:
             return False
         return self.text_box.isVisible()

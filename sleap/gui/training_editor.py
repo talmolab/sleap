@@ -1,4 +1,7 @@
-import os
+"""
+Module for viewing and modifying training profiles.
+"""
+
 import attr
 import cattr
 from typing import Optional
@@ -7,11 +10,19 @@ from pkg_resources import Requirement, resource_filename
 
 from PySide2 import QtWidgets
 
-from sleap.io.dataset import Labels
 from sleap.gui.formbuilder import YamlFormWidget
 
 
 class TrainingEditor(QtWidgets.QDialog):
+    """
+    Dialog for viewing and modifying training profiles.
+
+    Args:
+        profile_filename: Path to saved training profile to view.
+        saved_files: When user saved profile, it's path is added to this
+            list (which will be updated in code that created TrainingEditor).
+    """
+
     def __init__(
         self,
         profile_filename: Optional[str] = None,
@@ -59,10 +70,12 @@ class TrainingEditor(QtWidgets.QDialog):
 
     @property
     def profile_filename(self):
+        """Returns path to currently loaded training profile."""
         return self._profile_filename
 
     @profile_filename.setter
     def profile_filename(self, val):
+        """Sets path to (and loads) training profile."""
         self._profile_filename = val
         # set window title
         self.setWindowTitle(self.profile_filename)
@@ -77,6 +90,7 @@ class TrainingEditor(QtWidgets.QDialog):
         return widget
 
     def _load_profile(self, profile_filename: str):
+        """Loads training profile settings from file."""
         from sleap.nn.model import ModelOutputType
         from sleap.nn.training import TrainingJob
 
@@ -93,6 +107,7 @@ class TrainingEditor(QtWidgets.QDialog):
             self.form_widgets[name].set_form_data(job_dict["trainer"])
 
     def _save_as(self):
+        """Shows dialog to save training profile."""
 
         # Show "Save" dialog
         save_filename, _ = QtWidgets.QFileDialog.getSaveFileName(

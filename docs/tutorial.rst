@@ -1,11 +1,11 @@
 Tutorial
 ========
 
-Before you can use sLEAP, you’ll need to install it. Follow the
-instructions at :ref:`Installation` to install sLEAP and
+Before you can use SLEAP, you’ll need to install it. Follow the
+instructions at :ref:`Installation` to install SLEAP and
 start the GUI app.
 
-There are three main stages of using sLEAP:
+There are three main stages of using SLEAP:
 
 1. Creating a project, opening a movie and defining the skeleton;
 
@@ -18,7 +18,7 @@ There are three main stages of using sLEAP:
 Stage 1: Creating a project
 ---------------------------
 
-When you first start sLEAP you’ll see an open dialog. Since you don’t
+When you first start SLEAP you’ll see an open dialog. Since you don’t
 yet have a project to open, click “Cancel” and you’ll be left with a
 new, empty project.
 
@@ -32,7 +32,7 @@ on the right side of the main window, the “Add Video” command in the
 |image0|
 
 You’ll then be able to select one or more video files and click “Open”.
-sLEAP currently supports mp4, avi, and h5 files. For mp4 and avi files,
+SLEAP currently supports mp4, avi, and h5 files. For mp4 and avi files,
 you’ll be asked whether to import the video as grayscale. For h5 files,
 you’ll be asked the dataset and whether the video is stored with
 channels first or last.
@@ -65,7 +65,7 @@ Stage 2: Labeling and learning
 
 We start by assembling a candidate group of images to label. You can
 either pick your own frames or let the system suggest a set of frames
-using the “Generate Suggestions” panel. sLEAP can choose these frames
+using the “Generate Suggestions” panel. SLEAP can choose these frames
 (i) randomly, or using (ii) Strides (evenly spaced samples), (iii) PCA
 (runs Principle Component Analysis on the images, clusters the images
 into groups, and uses sample frames from each cluster), or (iv) BRISK
@@ -102,9 +102,9 @@ Saving
 ~~~~~~
 
 Since this is a new project, you’ll need to select a location and name
-the first time you save. sLEAP will ask you to save before closing any
+the first time you save. SLEAP will ask you to save before closing any
 project that has been changed to avoid losing any work. Note: There is
-not yet an “undo” feature built into sLEAP. If you want to make
+not yet an “undo” feature built into SLEAP. If you want to make
 temporary changes to a project, use the “Save As…” command first to save
 a copy of your project.
 
@@ -197,7 +197,7 @@ model doesn’t improve for a certain number of epochs (15 by default)
 First we train a model for confidence maps, part affinity fields, and
 centroids, and then we run inference. The GUI doesn’t yet give you a way
 to monitor the progress during inference, although you can get more
-information in the console window from which you started sLEAP.
+information in the console window from which you started SLEAP.
 
 When active learning finishes, you’ll be told how many instances were
 predicted. Suggested frames with predicted instances will be marked in
@@ -265,7 +265,7 @@ Running inference remotely (optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 It’s also possible to run inference using the command line interface, which is
-useful if you’re going to run on a cluster). The command to run inference on
+useful if you’re going to run on a cluster. The command to run inference on
 an entire video is:
 
 ::
@@ -276,7 +276,7 @@ an entire video is:
       -m path/to/models/your_paf_model.json \
       -m path/to/models/your_centroid_model.json
 
-The predictions will be saved in path/to/video.mp4.predictions.json.zip,
+The predictions will be saved in path/to/video.mp4.predictions.h5,
 which you can open from the GUI app. You can also import these predictions into
 your project by opening your project and then using the "Import Predictions..."
 command in the "Predict" menu.

@@ -17,6 +17,7 @@ For each `item` in `import_list`, we can load the video by calling this
 method while passing the user-selected params as the named parameters:
 
 >>> vid = item["video_class"](**item["params"])
+
 """
 
 from PySide2.QtCore import Qt, QRectF, Signal
@@ -28,11 +29,10 @@ from PySide2.QtWidgets import (
     QRadioButton,
     QCheckBox,
     QComboBox,
-    QStackedWidget,
 )
 
 from sleap.gui.video import GraphicsView
-from sleap.io.video import Video, HDF5Video, MediaVideo
+from sleap.io.video import Video
 
 import h5py
 import qimage2ndarray

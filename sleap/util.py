@@ -2,6 +2,7 @@
 A miscellaneous set of utility functions. Try not to put things in here
 unless they really have no other place.
 """
+
 import os
 import re
 
@@ -9,8 +10,47 @@ import h5py as h5
 import numpy as np
 import attr
 import psutil
+import json
+import rapidjson
 
-from typing import Any, Hashable, Iterable, List, Optional
+from typing import Any, Dict, Hashable, Iterable, List, Optional
+
+
+def json_loads(json_str: str) -> Dict:
+    """
+    A simple wrapper around the JSON decoder we are using.
+
+    Args:
+        json_str: JSON string to decode.
+
+    Returns:
+        Result of decoding JSON string.
+    """
+    try:
+        return rapidjson.loads(json_str)
+    except:
+        return json.loads(json_str)
+
+
+def json_dumps(d: Dict, filename: str = None):
+    """
+    A simple wrapper around the JSON encoder we are using.
+
+    Args:
+        d: The dict to write.
+        filename: The filename to write to.
+
+    Returns:
+        None
+    """
+
+    encoder = rapidjson
+
+    if filename:
+        with open(filename, "w") as f:
+            encoder.dump(d, f, ensure_ascii=False)
+    else:
+        return encoder.dumps(d)
 
 
 def attr_to_dtype(cls: Any):
@@ -174,3 +214,20 @@ def weak_filename_match(filename_a: str, filename_b: str) -> bool:
 
     # check if last three parts of path match
     return filename_a.split("/")[-3:] == filename_b.split("/")[-3:]
+
+
+def dict_cut(d: Dict, a: int, b: int) -> Dict:
+    """
+    Helper function for creating subdictionary by numeric indexing of items.
+
+    Assumes that `dict.items()` will have a fixed order.
+
+    Args:
+        d: The dictionary to "split"
+        a: Start index of range of items to include in result.
+        b: End index of range of items to include in result.
+
+    Returns:
+        A dictionary that contains a subset of the items in the original dict.
+    """
+    return dict(list(d.items())[a:b])

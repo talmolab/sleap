@@ -5,7 +5,8 @@ import numpy as np
 from sleap.skeleton import Skeleton
 from sleap.instance import Instance, Point, LabeledFrame, PredictedInstance
 from sleap.io.video import Video, MediaVideo
-from sleap.io.dataset import Labels, load_labels_json_old
+from sleap.io.dataset import Labels
+from sleap.io.legacy import load_labels_json_old
 from sleap.gui.suggestions import VideoFrameSuggestions
 
 TEST_H5_DATASET = "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"

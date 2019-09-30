@@ -1,5 +1,7 @@
+"""
+Module for producing prediction metrics for SLEAP datasets.
+"""
 from inspect import signature
-import itertools
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 from typing import Callable, List, Optional, Union, Tuple
@@ -236,13 +238,6 @@ def point_match_count(dist_array: np.ndarray, thresh: float = 5) -> int:
 def point_nonmatch_count(dist_array: np.ndarray, thresh: float = 5) -> int:
     """Given an array of distances, returns number which are not <= threshold."""
     return dist_array.shape[0] - point_match_count(dist_array, thresh)
-
-
-def foo(labels_gt, labels_pr, frame_idx=1092):
-    list_a = labels_gt.find(labels_gt.videos[0], frame_idx=frame_idx)[0].instances
-    list_b = labels_pr.find(labels_pr.videos[0], frame_idx=frame_idx)[0].instances
-
-    match_instance_lists_nodewise(list_a, list_b)
 
 
 if __name__ == "__main__":

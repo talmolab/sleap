@@ -4,7 +4,18 @@ import pytest
 
 from typing import List, Dict
 
-from sleap.util import attr_to_dtype, frame_list, weak_filename_match
+from sleap.util import (
+    json_dumps,
+    json_loads,
+    attr_to_dtype,
+    frame_list,
+    weak_filename_match,
+)
+
+
+def test_json():
+    original_dict = dict(key=123)
+    assert original_dict == json_loads(json_dumps(original_dict))
 
 
 def test_attr_to_dtype():
