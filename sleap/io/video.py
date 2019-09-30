@@ -385,7 +385,7 @@ class ImgStoreVideo:
             accept the frame index from the store directly.
             Default to True so that we can use an ImgStoreVideo in a dataset
             to replace another video without having to update all the frame
-            indices on :class:`LabeledFrame`s in the dataset.
+            indices on :class:`LabeledFrame` objects in the dataset.
     """
 
     filename: str = attr.ib(default=None)
@@ -808,7 +808,7 @@ class Video:
                 then it will accept the frame index from the store directly.
                 Default to True so that we can use an ImgStoreVideo in a
                 dataset to replace another video without having to update
-                all the frame indices on :class:`LabeledFrame`s in the dataset.
+                all the frame indices on :class:`LabeledFrame` objects in the dataset.
 
         Returns:
             A new Video object that references the imgstore.

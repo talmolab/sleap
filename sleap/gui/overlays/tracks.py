@@ -180,8 +180,9 @@ class TrackTrailOverlay:
         """Get data needed to draw track trail.
 
         Args:
-            frame_selection: an interable with the `LabeledFrame`s to include in trail
-            track: the `Track` for which to get trail
+            frame_selection: an interable with the :class:`LabeledFrame`
+                objects to include in trail.
+            track: the :class:`Track` for which to get trail
 
         Returns:
             list of lists of (x, y) tuples
@@ -214,7 +215,7 @@ class TrackTrailOverlay:
 
     def get_frame_selection(self, video: Video, frame_idx: int):
         """
-        Return list of `LabeledFrame`s to include in trail for specified frame.
+        Return `LabeledFrame` objects to include in trail for specified frame.
         """
 
         frame_selection = self.labels.find(video, range(0, frame_idx + 1))

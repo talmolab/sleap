@@ -810,7 +810,7 @@ class Skeleton:
                 :class:`Nodes` outside the :class:`Skeleton` object.
                 If given, then we replace each :class:`Node` with
                 specified index before converting :class:`Skeleton`.
-                Otherwise, we convert :class:`Node`s with the rest of
+                Otherwise, we convert :class:`Node` objects with the rest of
                 the :class:`Skeleton`.
         Returns:
             dict with data from skeleton
@@ -833,7 +833,7 @@ class Skeleton:
                 :class:`Nodes` outside the :class:`Skeleton` object.
                 If given, then we replace each :class:`Node` with
                 specified index before converting :class:`Skeleton`.
-                Otherwise, we convert :class:`Node`s with the rest of
+                Otherwise, we convert :class:`Node` objects with the rest of
                 the :class:`Skeleton`.
 
         Returns:
@@ -853,7 +853,7 @@ class Skeleton:
                 :class:`Nodes` outside the :class:`Skeleton` object.
                 If given, then we replace each :class:`Node` with
                 specified index before converting :class:`Skeleton`.
-                Otherwise, we convert :class:`Node`s with the rest of
+                Otherwise, we convert :class:`Node` objects with the rest of
                 the :class:`Skeleton`.
 
         Returns:
@@ -886,7 +886,7 @@ class Skeleton:
                 :class:`Nodes` outside the :class:`Skeleton` object.
                 If given, then we replace each :class:`Node` with
                 specified index before converting :class:`Skeleton`.
-                Otherwise, we convert :class:`Node`s with the rest of
+                Otherwise, we convert :class:`Node` objects with the rest of
                 the :class:`Skeleton`.
 
         Returns:

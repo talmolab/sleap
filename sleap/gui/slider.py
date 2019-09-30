@@ -177,7 +177,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
         self.drawHeader()
 
     def _pointsToPath(self, points: List[QtCore.QPointF]) -> QPainterPath:
-        """Converts list of `QtCore.QPointF`s to a `QPainterPath`."""
+        """Converts list of `QtCore.QPointF` objects to a `QPainterPath`."""
         path = QPainterPath()
         path.addPolygon(QPolygonF(points))
         return path

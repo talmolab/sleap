@@ -6,13 +6,13 @@ The relationships between objects in this module:
 * A `LabeledFrame` can contain zero or more `Instance`s
   (and `PredictedInstance`s).
 
-* `Instance`s (and `PredictedInstance`s) have `PointArray`
+* `Instance` objects (and `PredictedInstance`s) have `PointArray`
   (or `PredictedPointArray`).
 
 * `Instance` (`PredictedInstance`) can be associated with a `Track`
 
 * A `PointArray` (or `PredictedPointArray`) contains zero or more
-  `Point`s (or `PredictedPoint`s), ideally as many as there are in the
+  `Point` objects (or `PredictedPoint`s), ideally as many as there are in the
   associated :class:`Skeleton` although these can get out of sync if the
   skeleton is manipulated.
 """
@@ -876,7 +876,7 @@ def make_instance_cattr() -> cattr.Converter:
 
     Returns:
         A cattr converter with hooks registered for structuring and
-            unstructuring :class:`Instance`s and
+            unstructuring :class:`Instance` objects and
             :class:`PredictedInstance`s.
     """
 
@@ -1110,9 +1110,9 @@ class LabeledFrame:
     @property
     def unused_predictions(self) -> List[Instance]:
         """
-        Returns list of "unused" :class:`PredictedInstance`s in frame.
+        Returns list of "unused" :class:`PredictedInstance` objects in frame.
 
-        This is all the :class:`PredictedInstance`s which do not have
+        This is all the :class:`PredictedInstance` objects which do not have
         a corresponding :class:`Instance` in the same track in frame.
         """
         unused_predictions = []
@@ -1177,7 +1177,7 @@ class LabeledFrame:
         """Merged LabeledFrames for same video and frame index.
 
         Args:
-            labeled_frames: List of :class:`LabeledFrame`s to merge.
+            labeled_frames: List of :class:`LabeledFrame` objects to merge.
             video: The :class:`Video` for which to merge.
                 This is specified so we don't have to check all frames when we
                 already know which video has new labeled frames.
@@ -1230,15 +1230,15 @@ class LabeledFrame:
 
         Args:
             base_labels: The :class:`Labels` into which we are merging.
-            new_frames: The list of :class:`LabeledFrame`s from
+            new_frames: The list of :class:`LabeledFrame` objects from
                 which we are merging.
         Returns:
             tuple of three items:
             * Dictionary, keys are :class:`Video`, values are
                 dictionary in which keys are frame index (int)
                 and value is list of :class:`Instance`s
-            * list of conflicting :class:`Instance`s from base
-            * list of conflicting :class:`Instance`s from new frames
+            * list of conflicting :class:`Instance` objects from base
+            * list of conflicting :class:`Instance` objects from new frames
         """
         merged = dict()
         extra_base = []

@@ -129,17 +129,17 @@ class QtVideoPlayer(QWidget):
 
     @property
     def instances(self):
-        """Returns list of all `QtInstance`s in view."""
+        """Returns list of all `QtInstance` objects in view."""
         return self.view.instances
 
     @property
     def selectable_instances(self):
-        """Returns list of selectable `QtInstance`s in view."""
+        """Returns list of selectable `QtInstance` objects in view."""
         return self.view.selectable_instances
 
     @property
     def predicted_instances(self):
-        """Returns list of predicted `QtInstance`s in view."""
+        """Returns list of predicted `QtInstance` objects in view."""
         return self.view.predicted_instances
 
     @property
@@ -567,7 +567,7 @@ class GraphicsView(QGraphicsView):
     @property
     def all_instances(self) -> List["QtInstance"]:
         """
-        Returns a list of all `QtInstance`s in scene.
+        Returns a list of all `QtInstance` objects in scene.
 
         Order should match the order in which instances were added to scene.
         """

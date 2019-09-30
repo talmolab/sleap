@@ -64,14 +64,14 @@ class Labels(MutableSequence):
     is mostly abstracted away from the main interface.
 
     Attributes:
-        labeled_frames: A list of :class:`LabeledFrame`s
-        videos: A list of :class:`Video`s that these labels may or may
+        labeled_frames: A list of :class:`LabeledFrame` objects
+        videos: A list of :class:`Video` objects that these labels may or may
             not reference. The video for every `LabeledFrame` will be
-            stored in :attribute:`Labels.videos`, but some videos in
+            stored in :attribute:`videos`, but some videos in
             this list may not have any associated labeled frames.
-        skeletons: A list of :class:`Skeleton`s (again, that may or may
+        skeletons: A list of :class:`Skeleton` objects (again, that may or may
             not be referenced by an :class:`Instance` in labeled frame).
-        tracks: A list of :class:`Track`s that instances can belong to.
+        tracks: A list of :class:`Track` that instances can belong to.
         suggestions: Dictionary that stores "suggested" frames for
             videos in project. These can be suggested frames for user
             to label or suggested frames for user to review.
@@ -355,7 +355,7 @@ class Labels(MutableSequence):
                 :class:`LabeledFrame` if none is found in project.
 
         Returns:
-            List of `LabeledFrame`s that match the criteria.
+            List of `LabeledFrame` objects that match the criteria.
             Empty if no matches found, unless return_new is True,
             in which case it contains a new `LabeledFrame` with
             `video` and `frame_index` set.
@@ -928,16 +928,16 @@ class Labels(MutableSequence):
         Args:
             base_labels: the `Labels` that we're merging into
             new_labels: the `Labels` that we're merging from
-            unify: whether to replace objects (e.g., `Video`s) in
+            unify: whether to replace objects (e.g., `Video`) in
                 new_labels with *matching* objects from base
 
         Returns:
             tuple of three items:
             * Dictionary, keys are :class:`Video`, values are
                 dictionary in which keys are frame index (int)
-                and value is list of :class:`Instance`s
-            * list of conflicting :class:`Instance`s from base
-            * list of conflicting :class:`Instance`s from new frames
+                and value is list of :class:`Instance` objects
+            * list of conflicting :class:`Instance` objects from base
+            * list of conflicting :class:`Instance` objects from new frames
         """
         # If unify, we want to replace objects in the frames with
         # corresponding objects from the current labels.
@@ -973,11 +973,11 @@ class Labels(MutableSequence):
     #         the merged predictions.
     #
     #         Args:
-    #             extra_base: list of `LabeledFrame`s
-    #             extra_new: list of `LabeledFrame`s
+    #             extra_base: list of `LabeledFrame` objects
+    #             extra_new: list of `LabeledFrame` objects
     #                 Conflicting frames should have same index in both lists.
     #         Returns:
-    #             list of `LabeledFrame`s with merged predictions
+    #             list of `LabeledFrame` objects with merged predictions
     #         """
     #         pass
 
@@ -1018,7 +1018,7 @@ class Labels(MutableSequence):
 
     def merge_matching_frames(self, video: Optional[Video] = None):
         """
-        Merge `LabeledFrame`s that are for the same video frame.
+        Merge `LabeledFrame` objects that are for the same video frame.
 
         Args:
             video: combine for this video; if None, do all videos
@@ -1229,7 +1229,7 @@ class Labels(MutableSequence):
                 data dictionary with *matching* objects in the match_to
                 :class:`Labels` object. This ensures that the newly
                 instantiated :class:`Labels` can be merged without
-                duplicate matching objects (e.g., :class:`Video`s).
+                duplicate matching objects (e.g., :class:`Video` objects ).
         Returns:
             A new :class:`Labels` object.
         """
@@ -1348,7 +1348,7 @@ class Labels(MutableSequence):
                 data dictionary with *matching* objects in the match_to
                 :class:`Labels` object. This ensures that the newly
                 instantiated :class:`Labels` can be merged without
-                duplicate matching objects (e.g., :class:`Video`s).
+                duplicate matching objects (e.g., :class:`Video` objects ).
         Returns:
             A new :class:`Labels` object.
         """
@@ -1727,7 +1727,7 @@ class Labels(MutableSequence):
                 data dictionary with *matching* objects in the match_to
                 :class:`Labels` object. This ensures that the newly
                 instantiated :class:`Labels` can be merged without
-                duplicate matching objects (e.g., :class:`Video`s).
+                duplicate matching objects (e.g., :class:`Video` objects ).
 
         Returns:
             A new :class:`Labels` object.
@@ -1846,7 +1846,7 @@ class Labels(MutableSequence):
                 Other imgstore formats will probably work as well but
                 have not been tested.
             all_labels: Include any labeled frames, not just the frames
-                we'll use for training (i.e., those with `Instance`s).
+                we'll use for training (i.e., those with `Instance` objects ).
 
         Returns:
             A list of :class:`ImgStoreVideo` objects with the stored

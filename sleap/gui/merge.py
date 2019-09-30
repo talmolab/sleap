@@ -133,13 +133,13 @@ class ConflictTable(QtWidgets.QTableView):
 
     Arguments are passed through to the table view object.
 
-    The two lists of `LabeledFrame`s should be correlated (idx in one will
+    The two lists of `LabeledFrame` objects should be correlated (idx in one will
     match idx of the conflicting frame in other).
 
     Args:
         base_labels: The base dataset.
-        extra_base: `LabeledFrame`s from base that conflicted.
-        extra_new: `LabeledFrame`s from new dataset that conflicts.
+        extra_base: `LabeledFrame` objects from base that conflicted.
+        extra_new: `LabeledFrame` objects from new dataset that conflicts.
     """
 
     def __init__(
