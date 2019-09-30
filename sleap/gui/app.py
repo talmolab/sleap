@@ -70,15 +70,24 @@ class MainWindow(QMainWindow):
     skeleton: Skeleton
     video: Video
 
-    def __init__(self, labels_path: Optional[str] = None, *args, **kwargs):
+    def __init__(
+        self,
+        labels_path: Optional[str] = None,
+        nonnative: bool = False,
+        *args,
+        **kwargs,
+    ):
         """Initialize the app.
 
         Args:
             labels_path: Path to saved :class:`Labels` dataset.
+            nonnative: Whether to use native or Qt file dialog.
         Returns:
             None.
         """
         super(MainWindow, self).__init__(*args, **kwargs)
+
+        self.nonnative = nonnative
 
         self.labels = Labels()
         self.skeleton = Skeleton()
@@ -102,7 +111,11 @@ class MainWindow(QMainWindow):
         self.changestack_clear()
         self._initialize_gui()
 
-        if labels_path is not None:
+        self._file_dialog_options = 0
+        if self.nonnative:
+            self._file_dialog_options = QFileDialog.DontUseNativeDialog
+
+        if labels_path:
             self.loadProject(labels_path)
 
     def event(self, e: QEvent) -> bool:
@@ -1009,7 +1022,11 @@ class MainWindow(QMainWindow):
         """Shows gui for loading saved skeleton into project."""
         filters = ["JSON skeleton (*.json)", "HDF5 skeleton (*.h5 *.hdf5)"]
         filename, selected_filter = QFileDialog.getOpenFileName(
-            self, dir=None, caption="Open skeleton...", filter=";;".join(filters)
+            self,
+            dir=None,
+            caption="Open skeleton...",
+            filter=";;".join(filters),
+            options=self._file_dialog_options,
         )
 
         if len(filename) == 0:
@@ -1034,7 +1051,11 @@ class MainWindow(QMainWindow):
         default_name = "skeleton.json"
         filters = ["JSON skeleton (*.json)", "HDF5 skeleton (*.h5 *.hdf5)"]
         filename, selected_filter = QFileDialog.getSaveFileName(
-            self, caption="Save As...", dir=default_name, filter=";;".join(filters)
+            self,
+            caption="Save As...",
+            dir=default_name,
+            filter=";;".join(filters),
+            options=self._file_dialog_options,
         )
 
         if len(filename) == 0:
@@ -1264,6 +1285,7 @@ class MainWindow(QMainWindow):
             dir=models_dir,
             caption="Import model outputs...",
             filter=";;".join(filters),
+            options=self._file_dialog_options,
         )
 
         if len(filename) == 0:
@@ -1474,7 +1496,11 @@ class MainWindow(QMainWindow):
         """Starts gui for importing another dataset into currently one."""
         filters = ["HDF5 dataset (*.h5 *.hdf5)", "JSON labels (*.json *.json.zip)"]
         filenames, selected_filter = QFileDialog.getOpenFileNames(
-            self, dir=None, caption="Import labeled data...", filter=";;".join(filters)
+            self,
+            dir=None,
+            caption="Import labeled data...",
+            filter=";;".join(filters),
+            options=self._file_dialog_options,
         )
 
         if len(filenames) == 0:
@@ -1834,7 +1860,11 @@ class MainWindow(QMainWindow):
         ]
 
         filename, selected_filter = QFileDialog.getOpenFileName(
-            self, dir=None, caption="Import labeled data...", filter=";;".join(filters)
+            self,
+            dir=None,
+            caption="Import labeled data...",
+            filter=";;".join(filters),
+            options=self._file_dialog_options,
         )
 
         if len(filename) == 0:
@@ -1857,7 +1887,7 @@ class MainWindow(QMainWindow):
 
     def saveProjectAs(self):
         """Show gui to save project as a new file."""
-        default_name = self.filename if self.filename is not None else "untitled.json"
+        default_name = self.filename if self.filename is not None else "untitled"
         p = PurePath(default_name)
         default_name = str(p.with_name(f"{p.stem} copy{p.suffix}"))
 
@@ -1867,7 +1897,11 @@ class MainWindow(QMainWindow):
             "Compressed JSON (*.zip)",
         ]
         filename, selected_filter = QFileDialog.getSaveFileName(
-            self, caption="Save As...", dir=default_name, filter=";;".join(filters)
+            self,
+            caption="Save As...",
+            dir=default_name,
+            filter=";;".join(filters),
+            options=self._file_dialog_options,
         )
 
         if len(filename) == 0:
@@ -1971,6 +2005,7 @@ class MainWindow(QMainWindow):
                 caption="Save Video As...",
                 dir=self.filename + ".avi",
                 filter="AVI Video (*.avi)",
+                options=self._file_dialog_options,
             )
 
             if len(filename) == 0:
@@ -1988,7 +2023,10 @@ class MainWindow(QMainWindow):
     def exportLabeledFrames(self):
         """Gui for exporting the training dataset of labels/frame images."""
         filename, _ = QFileDialog.getSaveFileName(
-            self, caption="Save Labeled Frames As...", dir=self.filename
+            self,
+            caption="Save Labeled Frames As...",
+            dir=self.filename,
+            options=self._file_dialog_options,
         )
         if len(filename) == 0:
             return
@@ -2138,16 +2176,27 @@ def main(*args, **kwargs):
     window = MainWindow(*args, **kwargs)
     window.showMaximized()
 
-    if "labels_path" not in kwargs:
+    if not kwargs.get("labels_path", None):
         window.openProject(first_open=True)
 
     app.exec_()
 
 
 if __name__ == "__main__":
+    import argparse
 
-    kwargs = dict()
-    if len(sys.argv) > 1:
-        kwargs["labels_path"] = sys.argv[1]
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "labels_path", help="Path to labels file", type=str, default=None, nargs="?"
+    )
+    parser.add_argument(
+        "--nonnative",
+        help="Don't use native file dialogs",
+        action="store_const",
+        const=True,
+        default=False,
+    )
 
-    main(**kwargs)
+    args = parser.parse_args()
+
+    main(**vars(args))
