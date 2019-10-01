@@ -2022,15 +2022,21 @@ class MainWindow(QMainWindow):
 
     def exportLabeledFrames(self):
         """Gui for exporting the training dataset of labels/frame images."""
+        filters = [
+            "HDF5 dataset (*.h5 *.hdf5)",
+            "Compressed JSON dataset (*.json *.json.zip)",
+        ]
         filename, _ = QFileDialog.getSaveFileName(
             self,
             caption="Save Labeled Frames As...",
-            dir=self.filename,
+            dir=self.filename + ".h5",
+            filters=";;".join(filters),
             options=self._file_dialog_options,
         )
         if len(filename) == 0:
             return
-        Labels.save_json(self.labels, filename, save_frame_data=True)
+
+        Labels.save_file(self.labels, filename, save_frame_data=True)
 
     def _plot_if_next(self, frame_iterator: Iterator) -> bool:
         """Plots next frame (if there is one) from iterator.

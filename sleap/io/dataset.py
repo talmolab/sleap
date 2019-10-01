@@ -1822,9 +1822,9 @@ class Labels(MutableSequence):
         """Save file, detecting format from filename."""
         if filename.endswith((".json", ".zip")):
             compress = filename.endswith(".zip")
-            cls.save_json(labels=labels, filename=filename, compress=compress)
+            cls.save_json(labels=labels, filename=filename, compress=compress, **kwargs)
         elif filename.endswith(".h5"):
-            cls.save_hdf5(labels=labels, filename=filename)
+            cls.save_hdf5(labels=labels, filename=filename, **kwargs)
         else:
             raise ValueError(f"Cannot detect filetype for {filename}")
 
