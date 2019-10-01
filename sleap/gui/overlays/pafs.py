@@ -36,7 +36,7 @@ class MultiQuiverPlot(QtWidgets.QGraphicsObject):
     def __init__(self,
             frame: np.array = None,
             show: list = None,
-            decimation: int = 5,
+            decimation: int = 2,
             scale: float = 1.0,
             *args, **kwargs):
         super(MultiQuiverPlot, self).__init__(*args, **kwargs)
