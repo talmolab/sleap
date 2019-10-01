@@ -168,6 +168,11 @@ def test_imgstore_indexing(small_robot_mp4_vid, tmpdir):
         imgstore_vid.get_frames([0, 1, 2])
 
 
+def test_empty_hdf5_video(small_robot_mp4_vid, tmpdir):
+    path = os.path.join(tmpdir, "test_to_hdf5")
+    hdf5_vid = small_robot_mp4_vid.to_hdf5(path, "testvid", frame_numbers=[])
+
+
 def test_hdf5_inline_video(small_robot_mp4_vid, tmpdir):
 
     path = os.path.join(tmpdir, "test_to_hdf5")
