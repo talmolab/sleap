@@ -606,7 +606,10 @@ def test_save_labels_with_frame_data(multi_skel_vid_labels, tmpdir, format):
 
 
 def test_save_labels_and_frames_hdf5(multi_skel_vid_labels, tmpdir):
+    # Lets take a subset of the labels so this doesn't take too long
     labels = multi_skel_vid_labels
+    labels.labeled_frames = labels.labeled_frames[5:30]
+
     filename = os.path.join(tmpdir, "test.h5")
 
     Labels.save_hdf5(filename=filename, labels=labels, save_frame_data=True)
