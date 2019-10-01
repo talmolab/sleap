@@ -1496,6 +1496,14 @@ class Labels(MutableSequence):
 
         if save_frame_data:
             new_videos = labels.save_frame_data_hdf5(filename)
+
+            # Replace path to video file with "." (which indicates that the
+            # video is in the same file as the HDF5 labels dataset).
+            # Otherwise, the video paths will break if the HDF5 labels
+            # dataset file is moved.
+            for vid in new_videos:
+                vid.backend.filename = "."
+
             d["videos"] = Video.cattr().unstructure(new_videos)
 
         with h5.File(filename, "a") as f:
@@ -1737,6 +1745,12 @@ class Labels(MutableSequence):
             dicts = json_loads(
                 f.require_group("metadata").attrs["json"].tostring().decode()
             )
+
+            # Video path "." means the video is saved in same file as labels,
+            # so replace these paths.
+            for video_item in dicts["videos"]:
+                if video_item["backend"]["filename"] == ".":
+                    video_item["backend"]["filename"] = filename
 
             # Use the callback if given to handle missing videos
             if callable(video_callback):

@@ -115,6 +115,16 @@ class HDF5Video:
             and self.input_format == other.input_format
         )
 
+    def close(self):
+        """Closes the HDF5 file object (if it's open)."""
+        if self.__file_h5:
+            self.__file_h5.close()
+            self.__file_h5 = None
+
+    def __del__(self):
+        """Releases file object."""
+        self.close()
+
     # The properties and methods below complete our contract with the
     # higher level Video interface.
 
@@ -169,12 +179,6 @@ class HDF5Video:
             frame = (frame * 255).astype(int)
 
         return frame
-
-    def close(self):
-        """Closes the HDF5 file object (if it's open)."""
-        if self.__file_h5:
-            self.__file_h5.close()
-            self.__file_h5 = None
 
 
 @attr.s(auto_attribs=True, cmp=False)
