@@ -10,7 +10,7 @@
 .. |GitHub release| image:: https://img.shields.io/github/release/murthylab/sleap.js.svg
    :target: https://GitHub.com/murthylab/sleap/releases/
 
-Social LEAP Estimates Animal Pose (sLEAP)
+Social LEAP Estimates Animal Pose (SLEAP)
 =========================================
 
 .. image:: docs/_static/supp_mov1-long_clip.gif
@@ -18,8 +18,8 @@ Social LEAP Estimates Animal Pose (sLEAP)
 
 |
 
-**S**\ ocial **L**\ EAP **E**\ stimates **A**\ nimal **P**\ ose (**sLEAP**) is a framework for multi-animal
-body part position estimation via deep learning. It is the successor to LEAP_. **sLEAP** is written entirely in
+**S**\ ocial **L**\ EAP **E**\ stimates **A**\ nimal **P**\ ose (**SLEAP**) is a framework for multi-animal
+body part position estimation via deep learning. It is the successor to LEAP_. **SLEAP** is written entirely in
 Python, supports multi-animal pose estimation, animal instance tracking, and a labeling/training GUI that
 supports active learning.
 
@@ -30,19 +30,19 @@ supports active learning.
 Installation
 ------------
 
-**sLEAP** is compatible with Python versions 3.6 and above, with support for Windows and Linux. Mac OS X works but without GPU support.
+**SLEAP** is compatible with Python versions 3.6 and above, with support for Windows and Linux. Mac OS X works but without GPU support.
 
 Windows
 -------
 
-Since **sLEAP** has a number of complex binary dependencies (TensorFlow, Keras, OpenCV), it is recommended to use the
+Since **SLEAP** has a number of complex binary dependencies (TensorFlow, Keras, OpenCV), it is recommended to use the
 Anaconda_ Python distribution to simplify installation.
 
 Once Anaconda_ has been installed, go to start menu and type in *Anaconda*, which should bring up a menu entry
 **Anaconda Prompt** which opens a command line with the base anaconda environment activated. One of the key
 advantages to using `Anaconda Environments`_ is the ability to create separate Python installations (environments) for
 different projects, mitigating issues of managing complex dependencies. To create a new conda environment for
-**sLEAP** related development and use:
+**SLEAP** related development and use:
 
 ::
 
@@ -59,7 +59,7 @@ Any Python installation commands (:code:`conda install` or :code:`pip install`) 
 environment will only effect the environment. Thus it is important to make sure the environment is active when issuing
 any commands that deal with Python on the command line.
 
-**sLEAP** is now installed in the :code:`sleap_env` conda environment. With the environment active,
+**SLEAP** is now installed in the :code:`sleap_env` conda environment. With the environment active,
 you can run the labeling GUI by entering the following command:
 
 ::
@@ -72,10 +72,10 @@ you can run the labeling GUI by entering the following command:
 Linux
 -----
 
-No Linux conda packages are currently provided by the **sLEAP** channel. However, installing via :code:`pip` should not
+No Linux conda packages are currently provided by the **SLEAP** channel. However, installing via :code:`pip` should not
 be difficult on most Linux systems. The first step is to get a working version of TensorFlow installed in your Python
 environment. Follow official directions for installing TensorFlow_ with GPU support. Once TensorFlow is installed, simple
-issue the following command to install **sLEAP**
+issue the following command to install **SLEAP**
 
 .. _TensorFlow: https://www.tensorflow.org/install/gpu
 
@@ -83,7 +83,7 @@ issue the following command to install **sLEAP**
 
     pip install git+https://github.com/murthylab/sleap.git
 
-**sLEAP** is now installed you can run the labeling GUI by entering the following command:
+**SLEAP** is now installed you can run the labeling GUI by entering the following command:
 
 ::
 
@@ -93,7 +93,7 @@ Mac OS
 ------
 
 The installation for Mac OS X is the same as for Linux, although there's no TensorFlow GPU support for Mac OS.
-You can install TensorFlow and **sLEAP** together by running
+You can install TensorFlow and **SLEAP** together by running
 
 ::
 
@@ -102,6 +102,6 @@ You can install TensorFlow and **sLEAP** together by running
 
 Research
 --------
-If you use **sLEAP** in your research please acknowledge ... 
+If you use **SLEAP** in your research please acknowledge ... 
 
 
