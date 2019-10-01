@@ -1832,8 +1832,27 @@ class Labels(MutableSequence):
             raise ValueError(f"Cannot detect filetype for {filename}")
 
     @classmethod
-    def save_file(cls, labels: "Labels", filename: str, *args, **kwargs):
-        """Save file, detecting format from filename."""
+    def save_file(
+        cls, labels: "Labels", filename: str, default_suffix: str = "", *args, **kwargs
+    ):
+        """Save file, detecting format from filename.
+
+        Args:
+            labels: The dataset to save.
+            filename: Path where we'll save it. We attempt to detect format
+                from the suffix (e.g., ".json").
+            default_suffix: If we can't detect valid suffix on filename,
+                we can add default suffix to filename (and use corresponding
+                format). Doesn't need to have "." before file extension.
+
+        Raises:
+            ValueError: If cannot detect valid filetype.
+
+        Returns:
+            None.
+        """
+        if not filename.endswith((".json", ".zip", ".h5")) and default_suffix:
+            filename += f".{default_suffix}"
         if filename.endswith((".json", ".zip")):
             compress = filename.endswith(".zip")
             cls.save_json(labels=labels, filename=filename, compress=compress, **kwargs)

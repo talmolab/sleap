@@ -768,6 +768,7 @@ def negative_anchor_crops(
 
     Args:
         labels: the `Labels` object
+        negative_anchors: The anchors for negative training samples.
         scale: scale, should match scale given to generate_images()
         crop_size: the size of the crops returned by instance_crops()
     Returns:
@@ -778,10 +779,14 @@ def negative_anchor_crops(
 
     # negative_anchors[video]: (frame_idx, x, y) for center of crop
 
+    # Filter negative anchors so we only include frames with labeled data
+    training_frames = [(lf.video, lf.frame_idx) for lf in labels.user_labeled_frames]
+
     neg_anchor_tuples = [
         (video, frame_idx, x, y)
         for video in negative_anchors
         for (frame_idx, x, y) in negative_anchors[video]
+        if (video, frame_idx) in training_frames
     ]
 
     if len(neg_anchor_tuples) == 0:
@@ -945,19 +950,11 @@ def demo_datagen_time():
 
 
 def demo_datagen():
-    import os
 
-    data_path = (
-        "C:/Users/tdp/OneDrive/code/sandbox/leap_wt_gold_pilot/centered_pair.json"
-    )
-    if not os.path.exists(data_path):
-        data_path = "tests/data/json_format_v1/centered_pair.json"
-        # data_path = "tests/data/json_format_v2/minimal_instance.json"
+    data_path = "tests/data/json_format_v1/centered_pair.json"
+    data_path = "/Users/tabris/Desktop/macpaths.json.h5"
 
-    labels = Labels.load_json(data_path)
-    # testing
-    labels.negative_anchors = {labels.videos[0]: [(0, 125, 125), (0, 150, 150)]}
-    # labels.labeled_frames = labels.labeled_frames[123:423:10]
+    labels = Labels.load_file(data_path)
 
     scale = 1
 

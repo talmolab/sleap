@@ -926,7 +926,11 @@ class Video:
         if frame_numbers is None:
             frame_numbers = range(self.num_frames)
 
-        frame_data = self.get_frames(frame_numbers)
+        if frame_numbers:
+            frame_data = self.get_frames(frame_numbers)
+        else:
+            frame_data = np.zeros((1, 1, 1, 1))
+
         frame_numbers_data = np.array(list(frame_numbers), dtype=int)
 
         with h5.File(path, "a") as f:
