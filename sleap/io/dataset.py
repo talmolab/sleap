@@ -1479,20 +1479,11 @@ class Labels(MutableSequence):
                 any labeled frame as well. This is useful for uploading
                 the HDF5 for model training when video files are to
                 large to move. This will only save video frames that
-                have some labeled instances. NOT YET IMPLENTED.
-
-        Raises:
-            NotImplementedError: If save_frame_data is True.
+                have some labeled instances.
 
         Returns:
             None
         """
-
-        # FIXME: Need to implement this.
-        if save_frame_data:
-            raise NotImplementedError(
-                "Saving frame data is not implemented yet with HDF5 Labels datasets."
-            )
 
         # Delete the file if it exists, we want to start from scratch since
         # h5py truncates the file which seems to not actually delete data
@@ -1502,6 +1493,10 @@ class Labels(MutableSequence):
 
         # Serialize all the meta-data to JSON.
         d = labels.to_dict(skip_labels=True)
+
+        if save_frame_data:
+            new_videos = labels.save_frame_data_hdf5(filename)
+            d["videos"] = Video.cattr().unstructure(new_videos)
 
         with h5.File(filename, "a") as f:
 
@@ -1877,6 +1872,34 @@ class Labels(MutableSequence):
             imgstore_vids.append(vid)
 
         return imgstore_vids
+
+    def save_frame_data_hdf5(self, output_path: str, all_labels: bool = False):
+        """
+        Write labeled frames from all videos to hdf5 file.
+
+        Args:
+            output_path: Path to HDF5 file.
+            all_labels: Include any labeled frames, not just the frames
+                we'll use for training (i.e., those with Instances).
+
+        Returns:
+            A list of :class:`HDF5Video` objects with the stored frames.
+        """
+        new_vids = []
+        for v_idx, v in enumerate(self.videos):
+            frame_nums = [
+                lf.frame_idx
+                for lf in self.labeled_frames
+                if v == lf.video and (all_labels or lf.has_user_instances)
+            ]
+
+            vid = v.to_hdf5(
+                path=output_path, dataset=f"video{v_idx}", frame_numbers=frame_nums
+            )
+            vid.close()
+            new_vids.append(vid)
+
+        return new_vids
 
     @staticmethod
     def _unwrap_mat_scalar(a):
