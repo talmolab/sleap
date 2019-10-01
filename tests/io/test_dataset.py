@@ -616,6 +616,7 @@ def test_save_labels_and_frames_hdf5(multi_skel_vid_labels, tmpdir):
     _check_labels_match(labels, loaded_labels)
 
     # Make sure we can after rename
+    loaded_labels = None
     filerename = os.path.join(tmpdir, "test_rename.h5")
     os.rename(filename, filerename)
     loaded_labels = Labels.load_hdf5(filename=filerename)
