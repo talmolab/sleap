@@ -166,3 +166,62 @@ def test_imgstore_indexing(small_robot_mp4_vid, tmpdir):
 
     with pytest.raises(ValueError):
         imgstore_vid.get_frames([0, 1, 2])
+
+
+def test_hdf5_inline_video(small_robot_mp4_vid, tmpdir):
+
+    path = os.path.join(tmpdir, "test_to_hdf5")
+    frame_indices = [0, 1, 5]
+
+    # Save hdf5 version of the first few frames of this video.
+    hdf5_vid = small_robot_mp4_vid.to_hdf5(path, "testvid", frame_numbers=frame_indices)
+
+    assert hdf5_vid.num_frames == len(frame_indices)
+
+    # Make sure we can read arbitrary frames by imgstore frame number
+    for i in frame_indices:
+        assert type(hdf5_vid.get_frame(i)) == np.ndarray
+
+    assert hdf5_vid.channels == 3
+    assert hdf5_vid.height == 320
+    assert hdf5_vid.width == 560
+
+    # Check the image data is exactly the same when lossless is used.
+    assert np.allclose(
+        hdf5_vid.get_frame(0), small_robot_mp4_vid.get_frame(0), rtol=0.91
+    )
+
+
+def test_imgstore_indexing(small_robot_mp4_vid, tmpdir):
+    """
+    Test different types of indexing (by frame number or index).
+    """
+    path = os.path.join(tmpdir, "test_to_hdf5")
+
+    frame_indices = [20, 40, 15]
+
+    hdf5_vid = small_robot_mp4_vid.to_hdf5(
+        path, dataset="testvid2", frame_numbers=frame_indices, index_by_original=False
+    )
+
+    # Index by frame index in imgstore
+    frames = hdf5_vid.get_frames([0, 1, 2])
+    assert frames.shape == (3, 320, 560, 3)
+
+    with pytest.raises(ValueError):
+        hdf5_vid.get_frames(frame_indices)
+
+    # We have to close file before we can add another video dataset.
+    hdf5_vid.close()
+
+    # Now re-create the imgstore with frame number indexing, (the default)
+    hdf5_vid2 = small_robot_mp4_vid.to_hdf5(
+        path, dataset="testvid3", frame_numbers=frame_indices
+    )
+
+    # Index by frame index in imgstore
+    frames = hdf5_vid2.get_frames(frame_indices)
+    assert frames.shape == (3, 320, 560, 3)
+
+    with pytest.raises(ValueError):
+        hdf5_vid2.get_frames([0, 1, 2])

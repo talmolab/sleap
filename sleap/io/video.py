@@ -44,6 +44,8 @@ class HDF5Video:
     def __attrs_post_init__(self):
         """Called by attrs after __init__()."""
 
+        self.__original_to_current_frame_idx = dict()
+
         # Handle cases where the user feeds in h5.File objects instead of filename
         if isinstance(self.filename, h5.File):
             self.__file_h5 = self.filename
@@ -63,12 +65,21 @@ class HDF5Video:
             self.__dataset_h5 = self.dataset
             self.__file_h5 = self.__dataset_h5.file
             self.dataset = self.__dataset_h5.name
-        elif (
-            (self.dataset is not None)
-            and isinstance(self.dataset, str)
-            and (self.__file_h5 is not None)
-        ):
+
+        # File loaded and dataset name given, so load dataset
+        elif isinstance(self.dataset, str) and (self.__file_h5 is not None):
             self.__dataset_h5 = self.__file_h5[self.dataset]
+
+            # Check for frame_numbers dataset corresponding to video
+            base_dataset_path = "/".join(self.dataset.split("/")[:-1])
+            framenum_dataset = f"{base_dataset_path}/frame_numbers"
+            if framenum_dataset in self.__file_h5:
+                original_idx_lists = self.__file_h5[framenum_dataset]
+                # Create map from idx in original video to idx in current
+                for current_idx in range(len(original_idx_lists)):
+                    original_idx = original_idx_lists[current_idx]
+                    self.__original_to_current_frame_idx[original_idx] = current_idx
+
         else:
             self.__dataset_h5 = None
 
@@ -103,6 +114,16 @@ class HDF5Video:
             and self.convert_range == other.convert_range
             and self.input_format == other.input_format
         )
+
+    def close(self):
+        """Closes the HDF5 file object (if it's open)."""
+        if self.__file_h5:
+            self.__file_h5.close()
+            self.__file_h5 = None
+
+    def __del__(self):
+        """Releases file object."""
+        self.close()
 
     # The properties and methods below complete our contract with the
     # higher level Video interface.
@@ -142,6 +163,13 @@ class HDF5Video:
         Returns:
             The numpy.ndarray representing the video frame data.
         """
+        # If we only saved some frames from a video, map to idx in dataset.
+        if self.__original_to_current_frame_idx:
+            if idx in self.__original_to_current_frame_idx:
+                idx = self.__original_to_current_frame_idx[idx]
+            else:
+                raise ValueError(f"Frame index {idx} not in original index.")
+
         frame = self.__dataset_h5[idx]
 
         if self.input_format == "channels_first":
@@ -863,6 +891,62 @@ class Video:
         # Return an ImgStoreVideo object referencing this new imgstore.
         return self.__class__(
             backend=ImgStoreVideo(filename=path, index_by_original=index_by_original)
+        )
+
+    def to_hdf5(
+        self,
+        path: str,
+        dataset: str,
+        frame_numbers: List[int] = None,
+        index_by_original: bool = True,
+    ):
+        """
+        Converts frames from arbitrary video backend to HDF5Video.
+
+        Used for building an HDF5 that holds all data needed for training.
+
+        Args:
+            path: Filename to HDF5 (which could already exist).
+            dataset: The HDF5 dataset in which to store video frames.
+            frame_numbers: A list of frame numbers from the video to save.
+                If None save the entire video.
+            index_by_original: If the index_by_original is set to True then
+                the get_frame function will accept the original frame
+                numbers of from original video.
+                If False, then it will accept the frame index directly.
+                Default to True so that we can use resulting video in a
+                dataset to replace another video without having to update
+                all the frame indices in the dataset.
+
+        Returns:
+            A new Video object that references the HDF5 dataset.
+        """
+
+        # If the user has not provided a list of frames to store, store them all.
+        if frame_numbers is None:
+            frame_numbers = range(self.num_frames)
+
+        frame_data = self.get_frames(frame_numbers)
+        frame_numbers_data = np.array(list(frame_numbers), dtype=int)
+
+        with h5.File(path, "a") as f:
+            f.create_dataset(
+                dataset + "/video",
+                data=frame_data,
+                compression="gzip",
+                compression_opts=9,
+            )
+
+            if index_by_original:
+                f.create_dataset(dataset + "/frame_numbers", data=frame_numbers_data)
+
+        return self.__class__(
+            backend=HDF5Video(
+                filename=path,
+                dataset=dataset + "/video",
+                input_format="channels_last",
+                convert_range=False,
+            )
         )
 
     @staticmethod

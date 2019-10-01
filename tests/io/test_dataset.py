@@ -14,7 +14,7 @@ TEST_H5_DATASET = "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"
 
 def _check_labels_match(expected_labels, other_labels, format="png"):
     """
-    A utitlity function to check whether to sets of labels match.
+    A utility function to check whether to sets of labels match.
     This doesn't directly compares some things (like video objects).
 
     Args:
@@ -603,6 +603,29 @@ def test_save_labels_with_frame_data(multi_skel_vid_labels, tmpdir, format):
 
     # Make sure we can load twice
     loaded_labels = Labels.load_json(f"{filename}.zip")
+
+
+def test_save_labels_and_frames_hdf5(multi_skel_vid_labels, tmpdir):
+    # Lets take a subset of the labels so this doesn't take too long
+    labels = multi_skel_vid_labels
+    labels.labeled_frames = labels.labeled_frames[5:30]
+
+    filename = os.path.join(tmpdir, "test.h5")
+
+    Labels.save_hdf5(filename=filename, labels=labels, save_frame_data=True)
+
+    loaded_labels = Labels.load_hdf5(filename=filename)
+
+    _check_labels_match(labels, loaded_labels)
+
+    # Rename file (after closing videos)
+    for vid in loaded_labels.videos:
+        vid.close()
+    filerename = os.path.join(tmpdir, "test_rename.h5")
+    os.rename(filename, filerename)
+
+    # Make sure we open can after rename
+    loaded_labels = Labels.load_hdf5(filename=filerename)
 
 
 def test_labels_hdf5(multi_skel_vid_labels, tmpdir):
