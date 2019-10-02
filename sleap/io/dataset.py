@@ -1923,6 +1923,7 @@ class Labels(MutableSequence):
 
         Args:
             output_path: Path to HDF5 file.
+            format: The image format to use for the data. Defaults to png.
             all_labels: Include any labeled frames, not just the frames
                 we'll use for training (i.e., those with Instances).
 
