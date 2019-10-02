@@ -52,6 +52,10 @@ def test_mp4_get_shape(small_robot_mp4_vid):
     assert small_robot_mp4_vid.shape == (166, 320, 560, 3)
 
 
+def test_mp4_fps(small_robot_mp4_vid):
+    assert small_robot_mp4_vid.fps == 30.0
+
+
 def test_mp4_len(small_robot_mp4_vid):
     assert len(small_robot_mp4_vid) == 166
 
@@ -154,6 +158,8 @@ def test_imgstore_indexing(small_robot_mp4_vid, tmpdir):
     frames = imgstore_vid.get_frames([0, 1, 2])
     assert frames.shape == (3, 320, 560, 3)
 
+    assert imgstore_vid.last_frame_idx == len(frame_indices) - 1
+
     with pytest.raises(ValueError):
         imgstore_vid.get_frames(frame_indices)
 
@@ -164,8 +170,28 @@ def test_imgstore_indexing(small_robot_mp4_vid, tmpdir):
     frames = imgstore_vid.get_frames(frame_indices)
     assert frames.shape == (3, 320, 560, 3)
 
+    assert imgstore_vid.last_frame_idx == max(frame_indices)
+
     with pytest.raises(ValueError):
         imgstore_vid.get_frames([0, 1, 2])
+
+
+def test_imgstore_deferred_loading(small_robot_mp4_vid, tmpdir):
+    path = os.path.join(tmpdir, "test_imgstore")
+    frame_indices = [20, 40, 15]
+    vid = small_robot_mp4_vid.to_imgstore(path, frame_numbers=frame_indices)
+
+    # This is actually testing that the __img will be loaded when needed,
+    # since we use __img to get dtype.
+    assert vid.dtype == np.dtype("uint8")
+
+
+def test_imgstore_single_channel(centered_pair_vid, tmpdir):
+    path = os.path.join(tmpdir, "test_imgstore")
+    frame_indices = [20, 40, 15]
+    vid = centered_pair_vid.to_imgstore(path, frame_numbers=frame_indices)
+
+    assert vid.channels == 1
 
 
 def test_empty_hdf5_video(small_robot_mp4_vid, tmpdir):
@@ -217,6 +243,8 @@ def test_hdf5_indexing(small_robot_mp4_vid, tmpdir):
     frames = hdf5_vid.get_frames([0, 1, 2])
     assert frames.shape == (3, 320, 560, 3)
 
+    assert hdf5_vid.last_frame_idx == len(frame_indices) - 1
+
     with pytest.raises(ValueError):
         hdf5_vid.get_frames(frame_indices)
 
@@ -231,6 +259,8 @@ def test_hdf5_indexing(small_robot_mp4_vid, tmpdir):
     # Index by frame index in imgstore
     frames = hdf5_vid2.get_frames(frame_indices)
     assert frames.shape == (3, 320, 560, 3)
+
+    assert hdf5_vid2.last_frame_idx == max(frame_indices)
 
     with pytest.raises(ValueError):
         hdf5_vid2.get_frames([0, 1, 2])

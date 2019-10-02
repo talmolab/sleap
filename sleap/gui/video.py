@@ -114,7 +114,7 @@ class QtVideoPlayer(QWidget):
         # self.seekbar.setTickInterval(1)
         self.seekbar.setValue(self.frame_idx)
         self.seekbar.setMinimum(0)
-        self.seekbar.setMaximum(self.video.frames - 1)
+        self.seekbar.setMaximum(self.video.last_frame_idx)
         self.seekbar.setEnabled(True)
 
         if plot:

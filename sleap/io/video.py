@@ -140,27 +140,41 @@ class HDF5Video:
     def channels(self):
         """See :class:`Video`."""
         if "channels" in self.__dataset_h5.attrs:
-            return self.__dataset_h5.attrs["channels"]
+            return int(self.__dataset_h5.attrs["channels"])
         return self.__dataset_h5.shape[self.__channel_idx]
 
     @property
     def width(self):
         """See :class:`Video`."""
         if "width" in self.__dataset_h5.attrs:
-            return self.__dataset_h5.attrs["width"]
+            return int(self.__dataset_h5.attrs["width"])
         return self.__dataset_h5.shape[self.__width_idx]
 
     @property
     def height(self):
         """See :class:`Video`."""
         if "height" in self.__dataset_h5.attrs:
-            return self.__dataset_h5.attrs["height"]
+            return int(self.__dataset_h5.attrs["height"])
         return self.__dataset_h5.shape[self.__height_idx]
 
     @property
     def dtype(self):
         """See :class:`Video`."""
         return self.__dataset_h5.dtype
+
+    @property
+    def last_frame_idx(self) -> int:
+        """
+        The idx number of the last frame.
+
+        Overrides method of base :class:`Video` class for videos with
+        select frames indexed by number from original video, since the last
+        frame index here will not match the number of frames in video.
+        """
+        if self.__original_to_current_frame_idx:
+            last_key = sorted(self.__original_to_current_frame_idx.keys())[-1]
+            return last_key
+        return self.frames - 1
 
     def get_frame(self, idx) -> np.ndarray:
         """
@@ -514,6 +528,19 @@ class ImgStoreVideo:
         """See :class:`Video`."""
         return self.__img.dtype
 
+    @property
+    def last_frame_idx(self) -> int:
+        """
+        The idx number of the last frame.
+
+        Overrides method of base :class:`Video` class for videos with
+        select frames indexed by number from original video, since the last
+        frame index here will not match the number of frames in video.
+        """
+        if self.index_by_original:
+            return self.__store.frame_max
+        return self.frames - 1
+
     def get_frame(self, frame_number: int) -> np.ndarray:
         """
         Get a frame from the underlying ImgStore video data.
@@ -636,6 +663,15 @@ class Video:
         The number of frames in the video. Just an alias for frames property.
         """
         return self.frames
+
+    @property
+    def last_frame_idx(self) -> int:
+        """
+        The idx number of the last frame. Usually `numframes - 1`.
+        """
+        if hasattr(self.backend, "last_frame_idx"):
+            return self.backend.last_frame_idx
+        return self.frames - 1
 
     @property
     def shape(self) -> Tuple[int, int, int, int]:
@@ -882,7 +918,7 @@ class Video:
             format,
             mode="w",
             basedir=path,
-            imgshape=(self.shape[1], self.shape[2], self.shape[3]),
+            imgshape=(self.height, self.width, self.channels),
             chunksize=1000,
         )
 
@@ -899,7 +935,7 @@ class Video:
         # since we can't save an empty imgstore.
         if len(frame_numbers) == 0:
             store.add_image(
-                np.zeros((self.shape[1], self.shape[2], self.shape[3])), 0, time.time()
+                np.zeros((self.height, self.width, self.channels)), 0, time.time()
             )
 
         store.close()
