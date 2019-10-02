@@ -52,6 +52,10 @@ def test_mp4_get_shape(small_robot_mp4_vid):
     assert small_robot_mp4_vid.shape == (166, 320, 560, 3)
 
 
+def test_mp4_fps(small_robot_mp4_vid):
+    assert small_robot_mp4_vid.fps == 30.0
+
+
 def test_mp4_len(small_robot_mp4_vid):
     assert len(small_robot_mp4_vid) == 166
 
@@ -170,6 +174,24 @@ def test_imgstore_indexing(small_robot_mp4_vid, tmpdir):
 
     with pytest.raises(ValueError):
         imgstore_vid.get_frames([0, 1, 2])
+
+
+def test_imgstore_deferred_loading(small_robot_mp4_vid, tmpdir):
+    path = os.path.join(tmpdir, "test_imgstore")
+    frame_indices = [20, 40, 15]
+    vid = small_robot_mp4_vid.to_imgstore(path, frame_numbers=frame_indices)
+
+    # This is actually testing that the __img will be loaded when needed,
+    # since we use __img to get dtype.
+    assert vid.dtype == np.dtype("uint8")
+
+
+def test_imgstore_single_channel(centered_pair_vid, tmpdir):
+    path = os.path.join(tmpdir, "test_imgstore")
+    frame_indices = [20, 40, 15]
+    vid = centered_pair_vid.to_imgstore(path, frame_numbers=frame_indices)
+
+    assert vid.channels == 1
 
 
 def test_empty_hdf5_video(small_robot_mp4_vid, tmpdir):
