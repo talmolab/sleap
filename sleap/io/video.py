@@ -140,21 +140,21 @@ class HDF5Video:
     def channels(self):
         """See :class:`Video`."""
         if "channels" in self.__dataset_h5.attrs:
-            return self.__dataset_h5.attrs["channels"]
+            return int(self.__dataset_h5.attrs["channels"])
         return self.__dataset_h5.shape[self.__channel_idx]
 
     @property
     def width(self):
         """See :class:`Video`."""
         if "width" in self.__dataset_h5.attrs:
-            return self.__dataset_h5.attrs["width"]
+            return int(self.__dataset_h5.attrs["width"])
         return self.__dataset_h5.shape[self.__width_idx]
 
     @property
     def height(self):
         """See :class:`Video`."""
         if "height" in self.__dataset_h5.attrs:
-            return self.__dataset_h5.attrs["height"]
+            return int(self.__dataset_h5.attrs["height"])
         return self.__dataset_h5.shape[self.__height_idx]
 
     @property
@@ -918,7 +918,7 @@ class Video:
             format,
             mode="w",
             basedir=path,
-            imgshape=(self.shape[1], self.shape[2], self.shape[3]),
+            imgshape=(self.height, self.width, self.channels),
             chunksize=1000,
         )
 
@@ -935,7 +935,7 @@ class Video:
         # since we can't save an empty imgstore.
         if len(frame_numbers) == 0:
             store.add_image(
-                np.zeros((self.shape[1], self.shape[2], self.shape[3])), 0, time.time()
+                np.zeros((self.height, self.width, self.channels)), 0, time.time()
             )
 
         store.close()
