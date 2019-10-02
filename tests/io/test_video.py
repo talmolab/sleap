@@ -173,13 +173,16 @@ def test_empty_hdf5_video(small_robot_mp4_vid, tmpdir):
     hdf5_vid = small_robot_mp4_vid.to_hdf5(path, "testvid", frame_numbers=[])
 
 
-def test_hdf5_inline_video(small_robot_mp4_vid, tmpdir):
+@pytest.mark.parametrize("format", ["", "png", "jpg"])
+def test_hdf5_inline_video(small_robot_mp4_vid, tmpdir, format):
 
-    path = os.path.join(tmpdir, "test_to_hdf5")
+    path = os.path.join(tmpdir, f"test_to_hdf5_{format}")
     frame_indices = [0, 1, 5]
 
     # Save hdf5 version of the first few frames of this video.
-    hdf5_vid = small_robot_mp4_vid.to_hdf5(path, "testvid", frame_numbers=frame_indices)
+    hdf5_vid = small_robot_mp4_vid.to_hdf5(
+        path, "testvid", format=format, frame_numbers=frame_indices
+    )
 
     assert hdf5_vid.num_frames == len(frame_indices)
 
@@ -192,12 +195,13 @@ def test_hdf5_inline_video(small_robot_mp4_vid, tmpdir):
     assert hdf5_vid.width == 560
 
     # Check the image data is exactly the same when lossless is used.
-    assert np.allclose(
-        hdf5_vid.get_frame(0), small_robot_mp4_vid.get_frame(0), rtol=0.91
-    )
+    if format in ("", "png"):
+        assert np.allclose(
+            hdf5_vid.get_frame(0), small_robot_mp4_vid.get_frame(0), rtol=0.91
+        )
 
 
-def test_imgstore_indexing(small_robot_mp4_vid, tmpdir):
+def test_hdf5_indexing(small_robot_mp4_vid, tmpdir):
     """
     Test different types of indexing (by frame number or index).
     """

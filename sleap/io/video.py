@@ -118,7 +118,10 @@ class HDF5Video:
     def close(self):
         """Closes the HDF5 file object (if it's open)."""
         if self.__file_h5:
-            self.__file_h5.close()
+            try:
+                self.__file_h5.close()
+            except:
+                pass
             self.__file_h5 = None
 
     def __del__(self):
@@ -136,16 +139,22 @@ class HDF5Video:
     @property
     def channels(self):
         """See :class:`Video`."""
+        if "channels" in self.__dataset_h5.attrs:
+            return self.__dataset_h5.attrs["channels"]
         return self.__dataset_h5.shape[self.__channel_idx]
 
     @property
     def width(self):
         """See :class:`Video`."""
+        if "width" in self.__dataset_h5.attrs:
+            return self.__dataset_h5.attrs["width"]
         return self.__dataset_h5.shape[self.__width_idx]
 
     @property
     def height(self):
         """See :class:`Video`."""
+        if "height" in self.__dataset_h5.attrs:
+            return self.__dataset_h5.attrs["height"]
         return self.__dataset_h5.shape[self.__height_idx]
 
     @property
@@ -171,6 +180,13 @@ class HDF5Video:
                 raise ValueError(f"Frame index {idx} not in original index.")
 
         frame = self.__dataset_h5[idx]
+
+        if self.__dataset_h5.attrs.get("format", ""):
+            frame = cv2.imdecode(frame, cv2.IMREAD_UNCHANGED)
+
+            # Add dimension for single channel (dropped by opencv).
+            if frame.ndim == 2:
+                frame = frame[..., np.newaxis]
 
         if self.input_format == "channels_first":
             frame = np.transpose(frame, (2, 1, 0))
@@ -898,6 +914,7 @@ class Video:
         path: str,
         dataset: str,
         frame_numbers: List[int] = None,
+        format: str = "",
         index_by_original: bool = True,
     ):
         """
@@ -910,6 +927,8 @@ class Video:
             dataset: The HDF5 dataset in which to store video frames.
             frame_numbers: A list of frame numbers from the video to save.
                 If None save the entire video.
+            format: If non-empty, then encode images in format before saving.
+                Otherwise, save numpy matrix of frames.
             index_by_original: If the index_by_original is set to True then
                 the get_frame function will accept the original frame
                 numbers of from original video.
@@ -934,12 +953,31 @@ class Video:
         frame_numbers_data = np.array(list(frame_numbers), dtype=int)
 
         with h5.File(path, "a") as f:
-            f.create_dataset(
-                dataset + "/video",
-                data=frame_data,
-                compression="gzip",
-                compression_opts=9,
-            )
+
+            if format:
+
+                def encode(img):
+                    _, encoded = cv2.imencode("." + format, img)
+                    return np.squeeze(encoded)
+
+                dtype = h5.special_dtype(vlen=np.dtype("int8"))
+                dset = f.create_dataset(
+                    dataset + "/video", (len(frame_numbers),), dtype=dtype
+                )
+                dset.attrs["format"] = format
+                dset.attrs["channels"] = self.channels
+                dset.attrs["height"] = self.height
+                dset.attrs["width"] = self.width
+
+                for i in range(len(frame_numbers)):
+                    dset[i] = encode(frame_data[i])
+            else:
+                f.create_dataset(
+                    dataset + "/video",
+                    data=frame_data,
+                    compression="gzip",
+                    compression_opts=9,
+                )
 
             if index_by_original:
                 f.create_dataset(dataset + "/frame_numbers", data=frame_numbers_data)
