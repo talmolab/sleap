@@ -154,6 +154,8 @@ def test_imgstore_indexing(small_robot_mp4_vid, tmpdir):
     frames = imgstore_vid.get_frames([0, 1, 2])
     assert frames.shape == (3, 320, 560, 3)
 
+    assert imgstore_vid.last_frame_idx == len(frame_indices) - 1
+
     with pytest.raises(ValueError):
         imgstore_vid.get_frames(frame_indices)
 
@@ -163,6 +165,8 @@ def test_imgstore_indexing(small_robot_mp4_vid, tmpdir):
     # Index by frame index in imgstore
     frames = imgstore_vid.get_frames(frame_indices)
     assert frames.shape == (3, 320, 560, 3)
+
+    assert imgstore_vid.last_frame_idx == max(frame_indices)
 
     with pytest.raises(ValueError):
         imgstore_vid.get_frames([0, 1, 2])
@@ -217,6 +221,8 @@ def test_hdf5_indexing(small_robot_mp4_vid, tmpdir):
     frames = hdf5_vid.get_frames([0, 1, 2])
     assert frames.shape == (3, 320, 560, 3)
 
+    assert hdf5_vid.last_frame_idx == len(frame_indices) - 1
+
     with pytest.raises(ValueError):
         hdf5_vid.get_frames(frame_indices)
 
@@ -231,6 +237,8 @@ def test_hdf5_indexing(small_robot_mp4_vid, tmpdir):
     # Index by frame index in imgstore
     frames = hdf5_vid2.get_frames(frame_indices)
     assert frames.shape == (3, 320, 560, 3)
+
+    assert hdf5_vid2.last_frame_idx == max(frame_indices)
 
     with pytest.raises(ValueError):
         hdf5_vid2.get_frames([0, 1, 2])

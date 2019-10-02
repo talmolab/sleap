@@ -162,6 +162,20 @@ class HDF5Video:
         """See :class:`Video`."""
         return self.__dataset_h5.dtype
 
+    @property
+    def last_frame_idx(self) -> int:
+        """
+        The idx number of the last frame.
+
+        Overrides method of base :class:`Video` class for videos with
+        select frames indexed by number from original video, since the last
+        frame index here will not match the number of frames in video.
+        """
+        if self.__original_to_current_frame_idx:
+            last_key = sorted(self.__original_to_current_frame_idx.keys())[-1]
+            return last_key
+        return self.frames - 1
+
     def get_frame(self, idx) -> np.ndarray:
         """
         Get a frame from the underlying HDF5 video data.
@@ -514,6 +528,19 @@ class ImgStoreVideo:
         """See :class:`Video`."""
         return self.__img.dtype
 
+    @property
+    def last_frame_idx(self) -> int:
+        """
+        The idx number of the last frame.
+
+        Overrides method of base :class:`Video` class for videos with
+        select frames indexed by number from original video, since the last
+        frame index here will not match the number of frames in video.
+        """
+        if self.index_by_original:
+            return self.__store.frame_max
+        return self.frames - 1
+
     def get_frame(self, frame_number: int) -> np.ndarray:
         """
         Get a frame from the underlying ImgStore video data.
@@ -636,6 +663,15 @@ class Video:
         The number of frames in the video. Just an alias for frames property.
         """
         return self.frames
+
+    @property
+    def last_frame_idx(self) -> int:
+        """
+        The idx number of the last frame. Usually `numframes - 1`.
+        """
+        if hasattr(self.backend, "last_frame_idx"):
+            return self.backend.last_frame_idx
+        return self.frames - 1
 
     @property
     def shape(self) -> Tuple[int, int, int, int]:
