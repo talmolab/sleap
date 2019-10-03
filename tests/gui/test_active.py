@@ -31,6 +31,19 @@ def test_active_gui(qtbot, centered_pair_labels):
     assert ModelOutputType.PART_AFFINITY_FIELD not in jobs
 
 
+def test_inference_gui(qtbot, centered_pair_labels):
+    win = ActiveLearningDialog(
+        labels_filename="foo.json", labels=centered_pair_labels, mode="inference"
+    )
+    win.show()
+    qtbot.addWidget(win)
+
+    # There aren't any trained models, so there should be no options shown for
+    # inference
+    jobs = win._get_current_training_jobs()
+    assert len(jobs) == 0
+
+
 def test_make_default_training_jobs():
     jobs = make_default_training_jobs()
 

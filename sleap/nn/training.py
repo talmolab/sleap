@@ -625,6 +625,14 @@ class TrainingJob:
     newest_model_filename: Union[str, None] = None
     final_model_filename: Union[str, None] = None
 
+    @property
+    def is_trained(self):
+        if self.final_model_filename is not None:
+            path = os.path.join(self.save_dir, self.final_model_filename)
+            if os.path.exists(path):
+                return True
+        return False
+
     @staticmethod
     def save_json(training_job: "TrainingJob", filename: str):
         """
