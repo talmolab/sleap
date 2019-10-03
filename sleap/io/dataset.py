@@ -1617,6 +1617,12 @@ class Labels(MutableSequence):
             }
             instance_type_to_idx = {Instance: 0, PredictedInstance: 1}
 
+            # Each instance we create will have and index in the dataset, keep track of
+            # these so we can quickly add from_predicted links on a second pass.
+            instance_to_idx = {}
+            instances_with_from_predicted = []
+            instances_from_predicted = []
+
             # If we are appending, we need look inside to see what frame, instance, and point
             # ids we need to start from. This gives us offsets to use.
             if append and "points" in f:
@@ -1633,9 +1639,7 @@ class Labels(MutableSequence):
             point_id = 0
             pred_point_id = 0
             instance_id = 0
-            frame_id = 0
-            all_from_predicted = []
-            from_predicted_id = 0
+
             for frame_id, label in enumerate(labels):
                 frames[frame_id] = (
                     frame_id + frame_id_offset,
@@ -1645,6 +1649,11 @@ class Labels(MutableSequence):
                     instance_id + instance_id_offset + len(label.instances),
                 )
                 for instance in label.instances:
+
+                    # Add this instance to our lookup structure we will need for from_predicted
+                    # links
+                    instance_to_idx[instance] = instance_id
+
                     parray = instance.get_points_array(copy=False, full=True)
                     instance_type = type(instance)
 
@@ -1659,8 +1668,8 @@ class Labels(MutableSequence):
                         # Keep track of any from_predicted instance links, we will insert the
                         # correct instance_id in the dataset after we are done.
                         if instance.from_predicted:
-                            all_from_predicted.append(instance.from_predicted)
-                            from_predicted_id = from_predicted_id + 1
+                            instances_with_from_predicted.append(instance_id)
+                            instances_from_predicted.append(instance.from_predicted)
 
                     # Copy all the data
                     instances[instance_id] = (
@@ -1687,6 +1696,21 @@ class Labels(MutableSequence):
                         point_id = point_id + len(parray)
 
                     instance_id = instance_id + 1
+
+            # Add from_predicted links
+            for instance_id, from_predicted in zip(
+                instances_with_from_predicted, instances_from_predicted
+            ):
+                try:
+                    instances[instance_id]["from_predicted"] = instance_to_idx[
+                        from_predicted
+                    ]
+                except KeyError:
+                    # If we haven't encountered the from_predicted instance yet then don't save the link.
+                    # It’s possible for a user to create a regular instance from a predicted instance and then
+                    # delete all predicted instances from the file, but in this case I don’t think there’s any reason
+                    # to remember which predicted instance the regular instance came from.
+                    pass
 
             # We pre-allocated our points array with max possible size considering the max
             # skeleton size, drop any unused points.
@@ -1785,6 +1809,10 @@ class Labels(MutableSequence):
             tracks = labels.tracks.copy()
             tracks.extend([None])
 
+            # A dict to keep track of instances that have a from_predicted link. The key is the
+            # instance and the value is the index of the instance.
+            from_predicted_lookup = {}
+
             # Create the instances
             instances = []
             for i in instances_dset:
@@ -1805,6 +1833,13 @@ class Labels(MutableSequence):
                         score=i["score"],
                     )
                 instances.append(instance)
+
+                if i["from_predicted"] != -1:
+                    from_predicted_lookup[instance] = i["from_predicted"]
+
+            # Make a second pass to add any from_predicted links
+            for instance, from_predicted_idx in from_predicted_lookup.items():
+                instance.from_predicted = instances[from_predicted_idx]
 
             # Create the labeled frames
             frames = [
