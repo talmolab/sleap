@@ -1146,20 +1146,20 @@ class Labels(MutableSequence):
                 is used to set the data format to use when writing frame
                 data to ImgStore objects. Supported formats should be:
 
-             * 'pgm',
-             * 'bmp',
-             * 'ppm',
-             * 'tif',
-             * 'png',
-             * 'jpg',
-             * 'npy',
-             * 'mjpeg/avi',
-             * 'h264/mkv',
-             * 'avc1/mp4'
+                 * 'pgm',
+                 * 'bmp',
+                 * 'ppm',
+                 * 'tif',
+                 * 'png',
+                 * 'jpg',
+                 * 'npy',
+                 * 'mjpeg/avi',
+                 * 'h264/mkv',
+                 * 'avc1/mp4'
 
-             Note: 'h264/mkv' and 'avc1/mp4' require separate installation of
-             these codecs on your system. They are excluded from SLEAP
-             because of their GPL license.
+                 Note: 'h264/mkv' and 'avc1/mp4' require separate installation
+                 of these codecs on your system. They are excluded from SLEAP
+                 because of their GPL license.
 
         Returns:
             None
@@ -1466,6 +1466,7 @@ class Labels(MutableSequence):
         filename: str,
         append: bool = False,
         save_frame_data: bool = False,
+        frame_data_format: str = "png",
     ):
         """
         Serialize the labels dataset to an HDF5 file.
@@ -1480,6 +1481,14 @@ class Labels(MutableSequence):
                 the HDF5 for model training when video files are to
                 large to move. This will only save video frames that
                 have some labeled instances.
+            frame_data_format: If save_frame_data is True, then this argument
+                is used to set the data format to use when encoding images
+                saved in HDF5. Supported formats include:
+
+                * "" for no encoding (ndarray)
+                * "png"
+                * "jpg"
+                * anything else supported by `cv2.imencode`
 
         Returns:
             None
@@ -1495,7 +1504,7 @@ class Labels(MutableSequence):
         d = labels.to_dict(skip_labels=True)
 
         if save_frame_data:
-            new_videos = labels.save_frame_data_hdf5(filename)
+            new_videos = labels.save_frame_data_hdf5(filename, frame_data_format)
 
             # Replace path to video file with "." (which indicates that the
             # video is in the same file as the HDF5 labels dataset).
@@ -1867,8 +1876,27 @@ class Labels(MutableSequence):
             raise ValueError(f"Cannot detect filetype for {filename}")
 
     @classmethod
-    def save_file(cls, labels: "Labels", filename: str, *args, **kwargs):
-        """Save file, detecting format from filename."""
+    def save_file(
+        cls, labels: "Labels", filename: str, default_suffix: str = "", *args, **kwargs
+    ):
+        """Save file, detecting format from filename.
+
+        Args:
+            labels: The dataset to save.
+            filename: Path where we'll save it. We attempt to detect format
+                from the suffix (e.g., ".json").
+            default_suffix: If we can't detect valid suffix on filename,
+                we can add default suffix to filename (and use corresponding
+                format). Doesn't need to have "." before file extension.
+
+        Raises:
+            ValueError: If cannot detect valid filetype.
+
+        Returns:
+            None.
+        """
+        if not filename.endswith((".json", ".zip", ".h5")) and default_suffix:
+            filename += f".{default_suffix}"
         if filename.endswith((".json", ".zip")):
             compress = filename.endswith(".zip")
             cls.save_json(labels=labels, filename=filename, compress=compress, **kwargs)
@@ -1922,12 +1950,15 @@ class Labels(MutableSequence):
 
         return imgstore_vids
 
-    def save_frame_data_hdf5(self, output_path: str, all_labels: bool = False):
+    def save_frame_data_hdf5(
+        self, output_path: str, format: str = "png", all_labels: bool = False
+    ):
         """
         Write labeled frames from all videos to hdf5 file.
 
         Args:
             output_path: Path to HDF5 file.
+            format: The image format to use for the data. Defaults to png.
             all_labels: Include any labeled frames, not just the frames
                 we'll use for training (i.e., those with Instances).
 
@@ -1943,7 +1974,10 @@ class Labels(MutableSequence):
             ]
 
             vid = v.to_hdf5(
-                path=output_path, dataset=f"video{v_idx}", frame_numbers=frame_nums
+                path=output_path,
+                dataset=f"video{v_idx}",
+                format=format,
+                frame_numbers=frame_nums,
             )
             vid.close()
             new_vids.append(vid)

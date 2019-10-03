@@ -26,18 +26,27 @@ class LossViewer(QtWidgets.QMainWindow):
         self.setup_zmq(zmq_context)
 
     def __del__(self):
+        self.unbind()
+
+    def close(self):
+        self.unbind()
+        super(LossViewer, self).close()
+
+    def unbind(self):
         # close the zmq socket
-        self.sub.unbind(self.sub.LAST_ENDPOINT)
-        self.sub.close()
-        self.sub = None
+        if self.sub is not None:
+            self.sub.unbind(self.sub.LAST_ENDPOINT)
+            self.sub.close()
+            self.sub = None
         if self.zmq_ctrl is not None:
             url = self.zmq_ctrl.LAST_ENDPOINT
             self.zmq_ctrl.unbind(url)
             self.zmq_ctrl.close()
             self.zmq_ctrl = None
         # if we started out own zmq context, terminate it
-        if not self.ctx_given:
+        if not self.ctx_given and self.ctx is not None:
             self.ctx.term()
+            self.ctx = None
 
     def reset(self, what=""):
         self.chart = QtCharts.QtCharts.QChart()

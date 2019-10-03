@@ -323,7 +323,7 @@ class TrackListOverlay:
         if self.text_box is None:
             return
         if val:
-            pos = self.view.mapToScene(10, 10)
+            pos = self.player.view.mapToScene(10, 10)
             if pos.x() > 0:
                 self.text_box.setPos(pos)
             else:
