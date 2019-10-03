@@ -692,3 +692,24 @@ def test_labels_append_hdf5(multi_skel_vid_labels, tmpdir):
     loaded_labels = Labels.load_hdf5(filename=filename)
 
     _check_labels_match(labels, loaded_labels)
+
+
+def test_hdf5_from_predicted(multi_skel_vid_labels, tmpdir):
+    labels = multi_skel_vid_labels
+    filename = os.path.join(tmpdir, "test.h5")
+
+    # Add some predicted instances to create from_predicted links
+    for frame_num, frame in enumerate(labels):
+        if frame_num % 20 == 0:
+            frame.instances[0].from_predicted = PredictedInstance.from_instance(
+                frame.instances[0], float(frame_num)
+            )
+            frame.instances.append(frame.instances[0].from_predicted)
+
+    # Save and load, compare the results
+    Labels.save_hdf5(filename=filename, labels=labels)
+    loaded_labels = Labels.load_hdf5(filename=filename)
+
+    for frame_num, frame in enumerate(loaded_labels):
+        if frame_num % 20 == 0:
+            assert frame.instances[0].from_predicted.score == float(frame_num)
