@@ -32,7 +32,7 @@ install:
   - conda info -a
 
   # If this is a tag build, we will need to upload a deployment, set up login
-  - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (conda install conda-build anaconda-client conda-verify)
+  - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (conda install conda-build=3.17 anaconda-client conda-verify)
   
   # Look at this craziness, anaconda keeps a token based on hostname around and it
   # prompts you to say yes to remove it. This holds up CI, no way to disable.
