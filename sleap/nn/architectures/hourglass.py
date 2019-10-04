@@ -1,7 +1,21 @@
 import attr
 
-from sleap.nn.architectures.common import residual_block, expand_to_n, conv, conv1, conv3
-from keras.layers import Conv2D, BatchNormalization, Add, MaxPool2D, UpSampling2D, Concatenate, Conv2DTranspose
+from sleap.nn.architectures.common import (
+    residual_block,
+    expand_to_n,
+    conv,
+    conv1,
+    conv3,
+)
+from keras.layers import (
+    Conv2D,
+    BatchNormalization,
+    Add,
+    MaxPool2D,
+    UpSampling2D,
+    Concatenate,
+    Conv2DTranspose,
+)
 
 
 @attr.s(auto_attribs=True)
@@ -33,16 +47,18 @@ class StackedHourglass:
            by concatenating with intermediate outputs
        upsampling_layers: Use upsampling instead of transposed convolutions.
        interp: Method to use for interpolation when upsampling smaller features.
+       initial_stride: Stride of first convolution to use for reducing input resolution.
 
     """
-    num_hourglass_blocks: int = 3
+
+    num_stacks: int = 3
     num_filters: int = 32
     depth: int = 3
     batch_norm: bool = True
     intermediate_inputs: bool = True
     upsampling_layers: bool = True
     interp: str = "bilinear"
-
+    initial_stride: int = 1
 
     def output(self, x_in, num_output_channels):
         """
@@ -60,7 +76,15 @@ class StackedHourglass:
         return stacked_hourglass(x_in, num_output_channels, **attr.asdict(self))
 
 
-def hourglass_block(x_in, num_output_channels, num_filters, depth=3, batch_norm=True, upsampling_layers=True, interp="bilinear"):
+def hourglass_block(
+    x_in,
+    num_output_channels,
+    num_filters,
+    depth=3,
+    batch_norm=True,
+    upsampling_layers=True,
+    interp="bilinear",
+):
     """Creates a single hourglass block.
 
     This function builds an hourglass block from residual blocks and max pooling.
@@ -94,15 +118,21 @@ def hourglass_block(x_in, num_output_channels, num_filters, depth=3, batch_norm=
         x_out: tf.Tensor of the output of the block of the same width and height
             as the input with `num_output_channels` channels.
     """
-    
+
     # Check if input tensor has the right number of channels
     if x_in.shape[-1] != num_filters:
-        raise ValueError("Input tensor must have the same number of channels as the intermediate output of the hourglass (%d)." % num_filters)
-    
+        raise ValueError(
+            "Input tensor must have the same number of channels as the intermediate output of the hourglass (%d)."
+            % num_filters
+        )
+
     # Check if input tensor has the right height/width for pooling given depth
-    if x_in.shape[-2] % (2**depth) != 0 or x_in.shape[-2] % (2**depth) != 0:
-        raise ValueError("Input tensor must have width and height dimensions divisible by %d." % (2**depth))
-    
+    if x_in.shape[-2] % (2 ** depth) != 0 or x_in.shape[-2] % (2 ** depth) != 0:
+        raise ValueError(
+            "Input tensor must have width and height dimensions divisible by %d."
+            % (2 ** depth)
+        )
+
     # Down
     x = x_in
     blocks_down = []
@@ -110,41 +140,59 @@ def hourglass_block(x_in, num_output_channels, num_filters, depth=3, batch_norm=
         x = residual_block(x, num_filters, batch_norm)
         blocks_down.append(x)
         x = MaxPool2D(pool_size=(2, 2), strides=(2, 2))(x)
-        
+
     x = residual_block(x, num_filters, batch_norm)
-    
+
     # Middle
     x_identity = residual_block(x, num_filters, batch_norm)
     x = residual_block(x, num_filters, batch_norm)
     x = residual_block(x, num_filters, batch_norm)
     x = residual_block(x, num_filters, batch_norm)
     x = Add()([x_identity, x])
-    
+
     # Up
     for x_down in blocks_down[::-1]:
         x_down = residual_block(x_down, num_filters, batch_norm)
         if upsampling_layers:
-            x = UpSampling2D(size=(2,2), interpolation=interp)(x)
+            x = UpSampling2D(size=(2, 2), interpolation=interp)(x)
         else:
-            x = Conv2DTranspose(num_filters, kernel_size=3, strides=2, padding="same", activation="relu", kernel_initializer="glorot_normal")(x)
+            x = Conv2DTranspose(
+                num_filters,
+                kernel_size=3,
+                strides=2,
+                padding="same",
+                activation="relu",
+                kernel_initializer="glorot_normal",
+            )(x)
         x = Add()([x_down, x])
         x = residual_block(x, num_filters, batch_norm)
-        
+
     # Head
     x = conv1(num_filters)(x)
-    if batch_norm: x = BatchNormalization()(x)
-    
+    if batch_norm:
+        x = BatchNormalization()(x)
+
     x_out = conv1(num_output_channels, activation="linear")(x)
-    
+
     x = conv1(num_filters, activation="linear")(x)
     x_ = conv1(num_filters, activation="linear")(x_out)
     x = Add()([x_in, x, x_])
-    
+
     return x, x_out
 
 
-def stacked_hourglass(x_in, num_output_channels, num_hourglass_blocks=3, num_filters=32, depth=3, batch_norm=True,
-                      intermediate_inputs=True, upsampling_layers=True, interp="bilinear"):
+def stacked_hourglass(
+    x_in,
+    num_output_channels,
+    num_stacks=3,
+    num_filters=32,
+    depth=3,
+    batch_norm=True,
+    intermediate_inputs=True,
+    upsampling_layers=True,
+    interp="bilinear",
+    initial_stride=1,
+):
     """Stacked hourglass block.
 
     This function builds and connects multiple hourglass blocks. See `hourglass` for
@@ -172,40 +220,49 @@ def stacked_hourglass(x_in, num_output_channels, num_hourglass_blocks=3, num_fil
             by concatenating with intermediate outputs
         upsampling_layers: Use upsampling instead of transposed convolutions.
         interp: Method to use for interpolation when upsampling smaller features.
+        initial_stride: Stride of first convolution to use for reducing input resolution.
 
     Returns:
         x_outs: List of tf.Tensors of the output of the block of the same width and height
             as the input with `num_output_channels` channels.
     """
 
+    # Expand block-specific parameters if scalars provided
+    num_filters = expand_to_n(num_filters, num_stacks)
+    depth = expand_to_n(depth, num_stacks)
+    batch_norm = expand_to_n(batch_norm, num_stacks)
+    upsampling_layers = expand_to_n(upsampling_layers, num_stacks)
+    interp = expand_to_n(interp, num_stacks)
+
     # Initial downsampling
-    x = conv(num_filters, kernel_size=(7, 7))(x_in)
+    x = conv(num_filters[0], kernel_size=(7, 7), strides=initial_stride)(x_in)
 
     # Batchnorm after the intial down sampling
-    if batch_norm:
+    if batch_norm[0]:
         x = BatchNormalization()(x)
 
-    # Expand block-specific parameters if scalars provided
-    num_filters = expand_to_n(num_filters, num_hourglass_blocks)
-    depth = expand_to_n(depth, num_hourglass_blocks)
-    batch_norm = expand_to_n(batch_norm, num_hourglass_blocks)
-    upsampling_layers = expand_to_n(upsampling_layers, num_hourglass_blocks)
-    interp = expand_to_n(interp, num_hourglass_blocks)
-    
     # Make sure first block gets the right number of channels
-    x = x_in
+    # x = x_in
     if x.shape[-1] != num_filters[0]:
         x = residual_block(x, num_filters[0], batch_norm[0])
-    
+
     # Create individual hourglasses and collect intermediate outputs
+    x_in = x
     x_outs = []
-    for i in range(num_hourglass_blocks):
+    for i in range(num_stacks):
         if i > 0 and intermediate_inputs:
             x = Concatenate()([x, x_in])
             x = residual_block(x, num_filters[i], batch_norm[i])
 
-        x, x_out = hourglass_block(x, num_output_channels, num_filters[i], depth=depth[i], batch_norm=batch_norm[i], upsampling_layers=upsampling_layers[i], interp=interp[i])
+        x, x_out = hourglass_block(
+            x,
+            num_output_channels,
+            num_filters[i],
+            depth=depth[i],
+            batch_norm=batch_norm[i],
+            upsampling_layers=upsampling_layers[i],
+            interp=interp[i],
+        )
         x_outs.append(x_out)
-        
-    return x_outs
 
+    return x_outs

@@ -6,55 +6,70 @@ import attr
 import numpy as np
 from typing import Sequence
 
+import sleap
 from sleap.io.video import Video, HDF5Video
 from sleap.gui.video import QtVideoPlayer
 from sleap.nn.transform import DataTransform
+
 
 class HDF5Data(HDF5Video):
     def __getitem__(self, i):
         """Get data for frame i from `HDF5Video` object."""
         x = self.get_frame(i)
-        return np.clip(x,0,1)
+        return np.clip(x, 0, 1)
+
 
 @attr.s(auto_attribs=True)
 class ModelData:
-    model: 'keras.Model'
+    inference_model: "sleap.nn.inference.InferenceModel"
     video: Video
-    do_rescale: bool=False
+    do_rescale: bool = False
+    output_scale: float = 1.0
+    adjust_vals: bool = True
 
     def __getitem__(self, i):
         """Data data for frame i from predictor."""
         frame_img = self.video[i]
 
         # Trim to size that works for model
-        frame_img = frame_img[:, :self.video.height//8*8, :self.video.width//8*8, :]
+        size_reduction = 2 ** (self.inference_model.down_blocks)
+        input_size = (
+            (self.video.height // size_reduction) * size_reduction,
+            (self.video.width // size_reduction) * size_reduction,
+            self.video.channels,
+        )
+        frame_img = frame_img[:, : input_size[0], : input_size[1], :]
 
+        inference_transform = DataTransform()
         if self.do_rescale:
             # Scale input image if model trained on scaled images
-            inference_transform = DataTransform()
             frame_img = inference_transform.scale_to(
-                        imgs=frame_img,
-                        target_size=self.model.input_shape[1:3])
+                imgs=frame_img, target_size=self.inference_model.input_shape[1:3]
+            )
 
         # Get predictions
-        frame_result = self.model.predict(frame_img.astype("float32") / 255)
-        if self.do_rescale:
+        frame_result = self.inference_model.predict(frame_img)
+        if self.do_rescale or self.output_scale != 1.0:
+            inference_transform.scale *= self.output_scale
             frame_result = inference_transform.invert_scale(frame_result)
 
         # We just want the single image results
-        frame_result = frame_result[0]
+        if type(i) != slice:
+            frame_result = frame_result[0]
 
-        # If max value is below 1, amplify values so max is 1.
-        # This allows us to visualize model with small ptp value
-        # even though this model may not give us adequate predictions.
-        max_val = np.max(frame_result)
-        if max_val < 1:
-            frame_result = frame_result/np.max(frame_result)
+        if self.adjust_vals:
+            # If max value is below 1, amplify values so max is 1.
+            # This allows us to visualize model with small ptp value
+            # even though this model may not give us adequate predictions.
+            max_val = np.max(frame_result)
+            if max_val < 1:
+                frame_result = frame_result / np.max(frame_result)
 
-        # Clip values to ensure that they're within [0, 1]
-        frame_result = np.clip(frame_result, 0, 1)
+            # Clip values to ensure that they're within [0, 1]
+            frame_result = np.clip(frame_result, 0, 1)
 
         return frame_result
+
 
 @attr.s(auto_attribs=True)
 class DataOverlay:
@@ -65,7 +80,24 @@ class DataOverlay:
     transform: DataTransform = None
 
     def add_to_scene(self, video, frame_idx):
-        if self.data is None: return
+        if self.data is None:
+            return
+
+        # Check if video matches video for ModelData object
+        if hasattr(self.data, "video") and self.data.video != video:
+            video_shape = (video.height, video.width, video.channels)
+            prior_shape = (
+                self.data.video.height,
+                self.data.video.width,
+                self.data.video.channels,
+            )
+            # Check if the videos are both compatible with the loaded model
+            if video_shape == prior_shape:
+                # Shapes match so we can apply model to this video
+                self.data.video = video
+            else:
+                # Shapes don't match so don't do anything with this video
+                return
 
         if self.transform is None:
             self._add(self.player.view.scene, self.overlay_class(self.data[frame_idx]))
@@ -73,8 +105,11 @@ class DataOverlay:
         else:
             # If data indices are different than frame indices, use data
             # index; otherwise just use frame index.
-            idxs = self.transform.get_data_idxs(frame_idx) \
-                    if self.transform.frame_idxs else [frame_idx]
+            idxs = (
+                self.transform.get_data_idxs(frame_idx)
+                if self.transform.frame_idxs
+                else [frame_idx]
+            )
 
             # Loop over indices, in case there's more than one for frame
             for idx in idxs:
@@ -84,12 +119,17 @@ class DataOverlay:
                     x, y = 0, 0
 
                 overlay_object = self.overlay_class(
-                                    self.data[idx],
-                                    scale=self.transform.scale)
+                    self.data[idx], scale=self.transform.scale
+                )
 
-                self._add(self.player.view.scene, overlay_object, (x,y))
+                self._add(self.player.view.scene, overlay_object, (x, y))
 
-    def _add(self, to: QtWidgets.QGraphicsScene, what: QtWidgets.QGraphicsObject, where: tuple=(0,0)):
+    def _add(
+        self,
+        to: QtWidgets.QGraphicsScene,
+        what: QtWidgets.QGraphicsObject,
+        where: tuple = (0, 0),
+    ):
         to.addItem(what)
         what.setPos(*where)
 
@@ -97,49 +137,56 @@ class DataOverlay:
     def from_h5(cls, filename, dataset, input_format="channels_last", **kwargs):
         import h5py as h5
 
-        with h5.File(filename, 'r') as f:
+        with h5.File(filename, "r") as f:
             frame_idxs = np.asarray(f["frame_idxs"], dtype="int")
             bounding_boxes = np.asarray(f["bounds"])
 
         transform = DataTransform(frame_idxs=frame_idxs, bounding_boxes=bounding_boxes)
 
-        data_object = HDF5Data(filename, dataset, input_format=input_format, convert_range=False)
+        data_object = HDF5Data(
+            filename, dataset, input_format=input_format, convert_range=False
+        )
 
         return cls(data=data_object, transform=transform, **kwargs)
 
     @classmethod
     def from_model(cls, filename, video, **kwargs):
         from sleap.nn.model import ModelOutputType
-        from sleap.nn.loadmodel import load_model, get_model_data
+        from sleap.nn.inference import InferenceModel
         from sleap.nn.training import TrainingJob
 
         # Load the trained model
+        training_job = TrainingJob.load_json(filename)
+        inference_model = InferenceModel(training_job)
 
-        trainingjob = TrainingJob.load_json(filename)
-
-        input_size = (video.height//8*8, video.width//8*8, video.channels)
-        model_output_type = trainingjob.model.output_type
-
-        model = load_model(
-                    sleap_models={model_output_type:trainingjob},
-                    input_size=input_size,
-                    output_types=[model_output_type])
-
-        model_data = get_model_data(
-                    sleap_models={model_output_type:trainingjob},
-                    output_types=[model_output_type])
+        size_reduction = 2 ** (inference_model.down_blocks)
+        input_size = (
+            (video.height // size_reduction) * size_reduction,
+            (video.width // size_reduction) * size_reduction,
+            video.channels,
+        )
+        model_output_type = training_job.model.output_type
 
         # Here we determine if the input should be scaled. If so, then
         # the output of the model will also be rescaled accordingly.
+        do_rescale = inference_model.input_scale != 1.0
 
-        do_rescale = model_data["scale"] < 1
+        # Determine how the output from the model should be scaled
+        img_output_scale = 1.0  # image rescaling
+        obj_output_scale = 1.0  # scale to pass to overlay object
+
+        if model_output_type == ModelOutputType.PART_AFFINITY_FIELD:
+            obj_output_scale = inference_model.output_relative_scale
+
+        else:
+            img_output_scale = inference_model.output_relative_scale
 
         # Construct the ModelData object that runs inference
-
-        data_object = ModelData(model, video, do_rescale=do_rescale)
+        data_object = ModelData(
+            inference_model, video, do_rescale=do_rescale, output_scale=img_output_scale
+        )
 
         # Determine whether to use confmap or paf overlay
-
         from sleap.gui.overlays.confmaps import ConfMapsPlot
         from sleap.gui.overlays.pafs import MultiQuiverPlot
 
@@ -153,20 +200,18 @@ class DataOverlay:
         # This doesn't require rescaling the input, and the "scale"
         # will be passed to the overlay object to do its own upscaling
         # (at least for pafs).
-
-        transform = DataTransform(scale=model_data["multiscale"])
+        transform = DataTransform(scale=obj_output_scale)
 
         return cls(
-                data=data_object,
-                transform=transform,
-                overlay_class=overlay_class,
-                **kwargs)
+            data=data_object, transform=transform, overlay_class=overlay_class, **kwargs
+        )
+
 
 h5_colors = [
     [204, 81, 81],
-    [127, 51, 51],
     [81, 204, 204],
     [51, 127, 127],
+    [127, 51, 51],
     [142, 204, 81],
     [89, 127, 51],
     [142, 81, 204],
@@ -212,5 +257,5 @@ h5_colors = [
     [81, 204, 181],
     [51, 127, 113],
     [81, 181, 204],
-    [51, 113, 127]
+    [51, 113, 127],
 ]

@@ -5,6 +5,7 @@ from typing import List, Optional, Tuple
 
 from sleap.nn.datagen import _bbs_from_points, _pad_bbs, _crop
 
+
 @attr.s(auto_attribs=True, slots=True)
 class DataTransform:
     """
@@ -23,7 +24,9 @@ class DataTransform:
             self.frame_idxs = list(range(frame_count))
 
     def get_data_idxs(self, frame_idx):
-        return [i for i in range(len(self.frame_idxs)) if self.frame_idxs[i] == frame_idx]
+        return [
+            i for i in range(len(self.frame_idxs)) if self.frame_idxs[i] == frame_idx
+        ]
 
     def get_frame_idxs(self, idxs):
         if type(idxs) == int:
@@ -51,7 +54,7 @@ class DataTransform:
         self._init_frame_idxs(img_count)
 
         # update object state (so we can invert)
-        self.scale = self.scale * (h/img_h)
+        self.scale = self.scale * (h / img_h)
 
         # return the scaled images
         return self._scale(imgs, target_size)
@@ -67,7 +70,7 @@ class DataTransform:
         """
         # determine target size for inverting scale
         img_count, img_h, img_w, img_channels = imgs.shape
-        target_size = (img_h * int(1/self.scale), img_w * int(1/self.scale))
+        target_size = (img_h * int(1 / self.scale), img_w * int(1 / self.scale))
 
         return self.scale_to(imgs, target_size)
 
@@ -79,12 +82,14 @@ class DataTransform:
         if (img_h, img_w) != target_size:
 
             # build ndarray for new size
-            scaled_imgs = np.zeros((imgs.shape[0], h, w, imgs.shape[3]))
+            scaled_imgs = np.zeros(
+                (imgs.shape[0], h, w, imgs.shape[3]), dtype=imgs.dtype
+            )
 
             for i in range(imgs.shape[0]):
                 # resize using cv2
                 img = cv2.resize(imgs[i, :, :], (w, h))
-                 # add back singleton channel (removed by cv2)
+                # add back singleton channel (removed by cv2)
                 if img_channels == 1:
                     img = img[..., None]
                 else:
@@ -99,7 +104,7 @@ class DataTransform:
 
         return scaled_imgs
 
-    def centroid_crop(self, imgs: np.ndarray, centroids: list, crop_size: int=0):
+    def centroid_crop(self, imgs: np.ndarray, centroids: list, crop_size: int = 0):
         """
         Crop images around centroid points.
         Updates state of DataTransform object so we can later invert on points.
@@ -122,7 +127,7 @@ class DataTransform:
         # Crop images
         return self.crop(imgs, bbs, idxs)
 
-    def crop(self, imgs:np.ndarray, boxes: list, idxs: list) -> np.ndarray:
+    def crop(self, imgs: np.ndarray, boxes: list, idxs: list) -> np.ndarray:
         """
         Crop images to given boxes.
 
@@ -172,7 +177,7 @@ class DataTransform:
             # translate point_array using corresponding bounding_box
             bb = self.bounding_boxes[idx]
 
-            top_left_point = ((bb[0], bb[1]),) # for (x, y) row vector
+            top_left_point = ((bb[0], bb[1]),)  # for (x, y) row vector
             new_point_array += np.array(top_left_point)
 
         return new_point_array

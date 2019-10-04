@@ -8,6 +8,7 @@ import numpy as np
 from sleap.skeleton import Skeleton
 from sleap.instance import Instance, Point, LabeledFrame
 
+
 def test_instance_node_get_set_item(skeleton):
     """
     Test basic get item and set item functionality of instances.
@@ -32,7 +33,7 @@ def test_instance_node_multi_get_set_item(skeleton):
     Test basic get item and set item functionality of instances.
     """
     node_names = ["left-wing", "head", "right-wing"]
-    points = {"head": Point(1, 4), "left-wing": Point(2, 5), "right-wing": Point(3,6)}
+    points = {"head": Point(1, 4), "left-wing": Point(2, 5), "right-wing": Point(3, 6)}
 
     instance1 = Instance(skeleton=skeleton, points=points)
 
@@ -55,7 +56,7 @@ def test_non_exist_node(skeleton):
         instance["non-existent-node"].x = 1
 
     with pytest.raises(KeyError):
-        instance = Instance(skeleton=skeleton, points = {"non-exist": Point()})
+        instance = Instance(skeleton=skeleton, points={"non-exist": Point()})
 
 
 def test_instance_point_iter(skeleton):
@@ -67,9 +68,9 @@ def test_instance_point_iter(skeleton):
 
     instance = Instance(skeleton=skeleton, points=points)
 
-    assert [node.name for node in instance.nodes] == ['head', 'left-wing', 'right-wing']
-    assert np.allclose([p.x for p in instance.points()], [1, 2, 3])
-    assert np.allclose([p.y for p in instance.points()], [4, 5, 6])
+    assert [node.name for node in instance.nodes] == ["head", "left-wing", "right-wing"]
+    assert np.allclose([p.x for p in instance.points], [1, 2, 3])
+    assert np.allclose([p.y for p in instance.points], [4, 5, 6])
 
     # Make sure we can iterate over tuples
     for (node, point) in instance.nodes_points:
@@ -83,28 +84,29 @@ def test_skeleton_node_name_change():
     """
 
     s = Skeleton("Test")
-    s.add_nodes(['a', 'b', 'c', 'd', 'e'])
-    s.add_edge('a', 'b')
+    s.add_nodes(["a", "b", "c", "d", "e"])
+    s.add_edge("a", "b")
 
     instance = Instance(s)
-    instance['a'] = Point(1,2)
-    instance['b'] = Point(3,4)
+    instance["a"] = Point(1, 2)
+    instance["b"] = Point(3, 4)
 
     # Rename the node
-    s.relabel_nodes({'a': 'A'})
+    s.relabel_nodes({"a": "A"})
 
     # Reference to the old node name should raise a KeyError
     with pytest.raises(KeyError):
-        instance['a'].x = 2
+        instance["a"].x = 2
 
     # Make sure the A now references the same point on the instance
-    assert instance['A'] == Point(1, 2)
-    assert instance['b'] == Point(3, 4)
+    assert instance["A"] == Point(1, 2)
+    assert instance["b"] == Point(3, 4)
+
 
 def test_instance_comparison(skeleton):
 
     node_names = ["left-wing", "head", "right-wing"]
-    points = {"head": Point(1, 4), "left-wing": Point(2, 5), "right-wing": Point(3,6)}
+    points = {"head": Point(1, 4), "left-wing": Point(2, 5), "right-wing": Point(3, 6)}
 
     instance1 = Instance(skeleton=skeleton, points=points)
     instance2 = copy.deepcopy(instance1)
@@ -119,8 +121,9 @@ def test_instance_comparison(skeleton):
     assert not instance1.matches(instance2)
 
     instance2 = copy.deepcopy(instance1)
-    instance2.skeleton.add_node('extra_node')
+    instance2.skeleton.add_node("extra_node")
     assert not instance1.matches(instance2)
+
 
 def test_points_array(skeleton):
     """ Test conversion of instances to points array"""
@@ -130,29 +133,49 @@ def test_points_array(skeleton):
 
     instance1 = Instance(skeleton=skeleton, points=points)
 
-    pts = instance1.points_array()
+    pts = instance1.get_points_array()
 
     assert pts.shape == (len(skeleton.nodes), 2)
-    assert np.allclose(pts[skeleton.node_to_index('left-wing'), :], [2, 5])
-    assert np.allclose(pts[skeleton.node_to_index('head'), :], [1, 4])
-    assert np.allclose(pts[skeleton.node_to_index('right-wing'), :], [3, 6])
-    assert np.isnan(pts[skeleton.node_to_index('thorax'), :]).all()
+    assert np.allclose(pts[skeleton.node_to_index("left-wing"), :], [2, 5])
+    assert np.allclose(pts[skeleton.node_to_index("head"), :], [1, 4])
+    assert np.allclose(pts[skeleton.node_to_index("right-wing"), :], [3, 6])
+    assert np.isnan(pts[skeleton.node_to_index("thorax"), :]).all()
 
     # Now change a point, make sure it is reflected
-    instance1['head'].x = 0
-    instance1['thorax'] = Point(1, 2)
-    pts = instance1.points_array()
-    assert np.allclose(pts[skeleton.node_to_index('head'), :], [0, 4])
-    assert np.allclose(pts[skeleton.node_to_index('thorax'), :], [1, 2])
+    instance1["head"].x = 0
+    instance1["thorax"] = Point(1, 2)
+    pts = instance1.get_points_array()
+    assert np.allclose(pts[skeleton.node_to_index("head"), :], [0, 4])
+    assert np.allclose(pts[skeleton.node_to_index("thorax"), :], [1, 2])
 
     # Make sure that invisible points are nan iff invisible_as_nan=True
-    instance1['thorax'] = Point(1, 2, visible=False)
+    instance1["thorax"] = Point(1, 2, visible=False)
 
-    pts = instance1.points_array()
-    assert not np.isnan(pts[skeleton.node_to_index('thorax'), :]).all()
+    pts = instance1.get_points_array()
+    assert not np.isnan(pts[skeleton.node_to_index("thorax"), :]).all()
 
-    pts = instance1.points_array(invisible_as_nan=True)
-    assert np.isnan(pts[skeleton.node_to_index('thorax'), :]).all()
+    pts = instance1.points_array
+    assert np.isnan(pts[skeleton.node_to_index("thorax"), :]).all()
+
+
+def test_modifying_skeleton(skeleton):
+    node_names = ["left-wing", "head", "right-wing"]
+    points = {"head": Point(1, 4), "left-wing": Point(2, 5), "right-wing": Point(3, 6)}
+
+    instance1 = Instance(skeleton=skeleton, points=points)
+
+    assert len(instance1.points) == 3
+
+    skeleton.add_node("new test node")
+
+    instance1.points  # this updates instance with changes from skeleton
+    instance1["new test node"] = Point(7, 8)
+
+    assert len(instance1.points) == 4
+
+    skeleton.delete_node("head")
+    assert len(instance1.points) == 3
+
 
 def test_instance_labeled_frame_ref(skeleton, centered_pair_vid):
     """
@@ -165,4 +188,3 @@ def test_instance_labeled_frame_ref(skeleton, centered_pair_vid):
     assert frame.instances[0].frame == frame
     assert frame[0].frame == frame
     assert frame[0].frame_idx == 0
-

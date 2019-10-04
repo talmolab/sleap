@@ -6,7 +6,7 @@ tensorflow
 keras
 h5py
 python-rapidjson
-opencv-python==3.4.2.17
+opencv-python-headless==3.4.1.15
 pandas
 psutil
 PySide2

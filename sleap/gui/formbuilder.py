@@ -1,6 +1,8 @@
-"""Module for creating a form from a yaml file.
+"""
+Module for creating a form from a yaml file.
 
 Example:
+
 >>> widget = YamlFormWidget(yaml_file="example.yaml")
 >>> widget.mainAction.connect(my_function)
 
@@ -11,7 +13,10 @@ my_function will get called with form data when user clicks the main button
 
 import yaml
 
+from typing import Any, Dict, List, Optional
+
 from PySide2 import QtWidgets, QtCore
+
 
 class YamlFormWidget(QtWidgets.QGroupBox):
     """
@@ -25,10 +30,10 @@ class YamlFormWidget(QtWidgets.QGroupBox):
     mainAction = QtCore.Signal(dict)
     valueChanged = QtCore.Signal()
 
-    def __init__(self, yaml_file, which_form: str="main", *args, **kwargs):
+    def __init__(self, yaml_file, which_form: str = "main", *args, **kwargs):
         super(YamlFormWidget, self).__init__(*args, **kwargs)
 
-        with open(yaml_file, 'r') as form_yaml:
+        with open(yaml_file, "r") as form_yaml:
             items_to_create = yaml.load(form_yaml, Loader=yaml.SafeLoader)
 
         self.which_form = which_form
@@ -71,12 +76,13 @@ class YamlFormWidget(QtWidgets.QGroupBox):
         """Emit mainAction signal with form data."""
         self.mainAction.emit(self.get_form_data())
 
+
 class FormBuilderLayout(QtWidgets.QFormLayout):
     """
     Custom QFormLayout which populates itself from list of form fields.
 
     Args:
-        items_to_create: list which gets passed to get_form_data()
+        items_to_create: list which gets passed to :meth:`get_form_data`
                          (see there for details about format)
     """
 
@@ -96,10 +102,12 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
             Dict with key:value for each user-editable widget in layout
         """
         widgets = self.fields.values()
-        data = {w.objectName(): self.get_widget_value(w)
-                for w in widgets
-                if len(w.objectName())
-                   and type(w) not in (QtWidgets.QLabel, QtWidgets.QPushButton)}
+        data = {
+            w.objectName(): self.get_widget_value(w)
+            for w in widgets
+            if len(w.objectName())
+            and type(w) not in (QtWidgets.QLabel, QtWidgets.QPushButton)
+        }
         stacked_data = [w.get_data() for w in widgets if type(w) == StackBuilderWidget]
         for stack in stacked_data:
             data.update(stack)
@@ -109,7 +117,7 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
         """Set specified user-editable data.
 
         Args:
-            data (dict): key should match field name
+            data: dictionary of datay, key should match field name
         """
         widgets = self.fields
         for name, val in data.items():
@@ -118,10 +126,11 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
                 self.set_widget_value(widgets[name], val)
             else:
                 pass
-#                 print(f"no {name} widget found")
+
+    #                 print(f"no {name} widget found")
 
     @staticmethod
-    def set_widget_value(widget, val):
+    def set_widget_value(widget: QtWidgets.QWidget, val):
         """Set value for specific widget."""
         # if widget.property("field_data_type") == "sci":
         #     val = str(val)
@@ -140,11 +149,13 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
         widget.repaint()
 
     @staticmethod
-    def get_widget_value(widget):
-        """Get value of form field (using whichever method appropriate for widget).
+    def get_widget_value(widget: QtWidgets.QWidget) -> Any:
+        """Returns value of form field.
+
+        This determines the method appropriate for the type of widget.
 
         Args:
-            widget: subclass of QtWidget
+            widget: The widget for which to return value.
         Returns:
             value (can be bool, numeric, string, or None)
         """
@@ -169,26 +180,26 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
             val = None if val == "None" else val
         return val
 
-    def build_form(self, items_to_create):
-        """Add widgets to form layout for each item in items_to_create.
+    def build_form(self, items_to_create: List[Dict[str, Any]]):
+        """Adds widgets to form layout for each item in items_to_create.
 
         Args:
-            items_to_create: list of dicts with fields
+            items_to_create: list of dictionaries with keys
+
               * name: used as key when we return form data as dict
               * label: string to show in form
               * type: supports double, int, bool, list, button, stack
               * default: default value for form field
-              * [options]: comma separated list of options, used for list or stack
+              * [options]: comma separated list of options,
+                used for list or stack field-types
               * for stack, array of dicts w/ form data for each stack page
 
-        Note: a "stack" has a dropdown menu that determines which stack page to show
+        A "stack" has a dropdown menu that determines which stack page to show.
 
         Returns:
             None.
         """
         for item in items_to_create:
-            field = None
-
             # double: show spinbox (number w/ up/down controls)
             if item["type"] == "double":
                 field = QtWidgets.QDoubleSpinBox()
@@ -259,22 +270,31 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
             if item["type"].split("_")[0] == "file":
                 self.addRow("", self._make_file_button(item, field))
 
-    def _make_file_button(self, item, field):
-        file_button = QtWidgets.QPushButton("Select "+item["label"])
+    def _make_file_button(
+        self, item: Dict, field: QtWidgets.QWidget
+    ) -> QtWidgets.QPushButton:
+        """Creates the button for a file_* field-type."""
+        file_button = QtWidgets.QPushButton("Select " + item["label"])
 
         if item["type"].split("_")[-1] == "open":
             # Define function for button to trigger
             def select_file(*args, x=field):
                 filter = item.get("filter", "Any File (*.*)")
-                filename, _ = QtWidgets.QFileDialog.getOpenFileName(None, directory=None, caption="Open File", filter=filter)
-                if len(filename): x.setText(filename)
+                filename, _ = QtWidgets.QFileDialog.getOpenFileName(
+                    None, directory=None, caption="Open File", filter=filter
+                )
+                if len(filename):
+                    x.setText(filename)
                 self.valueChanged.emit()
 
         elif item["type"].split("_")[-1] == "dir":
             # Define function for button to trigger
             def select_file(*args, x=field):
-                filename = QtWidgets.QFileDialog.getExistingDirectory(None, directory=None, caption="Open File")
-                if len(filename): x.setText(filename)
+                filename = QtWidgets.QFileDialog.getExistingDirectory(
+                    None, directory=None, caption="Open File"
+                )
+                if len(filename):
+                    x.setText(filename)
                 self.valueChanged.emit()
 
         else:
@@ -283,7 +303,19 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
         file_button.clicked.connect(select_file)
         return file_button
 
+
 class StackBuilderWidget(QtWidgets.QWidget):
+    """
+    A custom widget that shows different subforms depending on menu selection.
+
+    Args:
+        stack_data: Dictionary for field from `items_to_create`.
+            The "options" key will give the list of options to show in
+            menu. Each of the "options" will also be the key of a dictionary
+            within stack_data that has the same structure as the dictionary
+            passed to :meth:`FormBuilderLayout.build_form()`.
+    """
+
     def __init__(self, stack_data, *args, **kwargs):
         super(StackBuilderWidget, self).__init__(*args, **kwargs)
 
@@ -291,7 +323,9 @@ class StackBuilderWidget(QtWidgets.QWidget):
         self.combo_box = QtWidgets.QComboBox()
         self.stacked_widget = ResizingStackedWidget()
 
-        self.combo_box.activated.connect(lambda x: self.stacked_widget.setCurrentIndex(x))
+        self.combo_box.activated.connect(
+            lambda x: self.stacked_widget.setCurrentIndex(x)
+        )
 
         self.page_layouts = dict()
 
@@ -323,19 +357,35 @@ class StackBuilderWidget(QtWidgets.QWidget):
         self.setLayout(multi_layout)
 
     def value(self):
+        """Returns value of menu."""
         return self.combo_box.currentText()
 
     def get_data(self):
+        """Returns value from currently shown subform."""
         return self.page_layouts[self.value()].get_form_data()
 
 
 class FieldComboWidget(QtWidgets.QComboBox):
+    """
+    A custom ComboBox widget with method to easily add set of options.
+    """
+
     def __init__(self, *args, **kwargs):
         super(FieldComboWidget, self).__init__(*args, **kwargs)
         self.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToContents)
         self.setMinimumContentsLength(3)
 
-    def set_options(self, options_list, select_item=None):
+    def set_options(self, options_list: List[str], select_item: Optional[str] = None):
+        """
+        Sets list of menu options.
+
+        Args:
+            options_list: List of items (strings) to show in menu.
+            select_item: Item to select initially.
+
+        Returns:
+            None.
+        """
         self.clear()
         for item in options_list:
             if item == "---":
@@ -348,11 +398,17 @@ class FieldComboWidget(QtWidgets.QComboBox):
 
 
 class ResizingStackedWidget(QtWidgets.QStackedWidget):
+    """
+    QStackedWidget that updates its sizeHint and minimumSizeHint as needed.
+    """
+
     def __init__(self, *args, **kwargs):
         super(ResizingStackedWidget, self).__init__(*args, **kwargs)
 
     def sizeHint(self):
+        """Qt method."""
         return self.currentWidget().sizeHint()
 
     def minimumSizeHint(self):
+        """Qt method."""
         return self.currentWidget().minimumSizeHint()

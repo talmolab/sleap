@@ -30,6 +30,7 @@ class ModelOutputType(Enum):
     by Cao et al.
 
     """
+
     CONFIDENCE_MAP = 0
     PART_AFFINITY_FIELD = 1
     CENTROIDS = 2
@@ -43,7 +44,9 @@ class ModelOutputType(Enum):
             return "centroids"
         else:
             # This shouldn't ever happen I don't think.
-            raise NotImplementedError(f"__str__ not implemented for ModelOutputType={self}")
+            raise NotImplementedError(
+                f"__str__ not implemented for ModelOutputType={self}"
+            )
 
 
 @attr.s(auto_attribs=True)
@@ -66,25 +69,30 @@ class Model:
             not set this value.
 
     """
+
     output_type: ModelOutputType
-    backbone: Union[LeapCNN, UNet, StackedUNet, StackedHourglass]
+    backbone: BackboneType
     skeletons: Union[None, List[Skeleton]] = None
     backbone_name: str = None
 
     def __attrs_post_init__(self):
 
         if not isinstance(self.backbone, tuple(available_archs)):
-            raise ValueError(f"backbone ({self.backbone}) is not "
-                             f"in available architectures ({available_archs})")
+            raise ValueError(
+                f"backbone ({self.backbone}) is not "
+                f"in available architectures ({available_archs})"
+            )
 
-        if not hasattr(self.backbone, 'output'):
-            raise ValueError(f"backbone ({self.backbone}) has now output method! "
-                             f"Not a valid backbone architecture!")
+        if not hasattr(self.backbone, "output"):
+            raise ValueError(
+                f"backbone ({self.backbone}) has now output method! "
+                f"Not a valid backbone architecture!"
+            )
 
         if self.backbone_name is None:
             self.backbone_name = self.backbone.__class__.__name__
 
-    def output(self, input_tesnor, num_output_channels=None):
+    def output(self, input_tensor, num_output_channels=None):
         """
         Invoke the backbone function with current backbone_args and backbone_kwargs
         to produce the model backbone block. This is a convenience property for
@@ -108,11 +116,12 @@ class Model:
                 elif self.output_type == ModelOutputType.PART_AFFINITY_FIELD:
                     num_outputs_channels = len(self.skeleton[0].edges) * 2
             else:
-                raise ValueError("Model.skeletons has not been set. "
-                                 "Cannot infer num output channels.")
+                raise ValueError(
+                    "Model.skeletons has not been set. "
+                    "Cannot infer num output channels."
+                )
 
-
-        return self.backbone.output(input_tesnor, num_output_channels)
+        return self.backbone.output(input_tensor, num_output_channels)
 
     @property
     def name(self):
@@ -125,3 +134,69 @@ class Model:
         """
         return self.backbone_name
 
+    @property
+    def down_blocks(self):
+        """Returns the number of pooling or striding blocks in the backbone.
+
+        This is useful when computing valid dimensions of the input data.
+
+        If the backbone does not provide enough information to infer this,
+        this is set to 0.
+        """
+
+        if hasattr(self.backbone, "down_blocks"):
+            return self.backbone.down_blocks
+
+        else:
+            return 0
+
+    @property
+    def output_scale(self):
+        """Calculates output scale relative to input."""
+
+        if hasattr(self.backbone, "output_scale"):
+            return self.backbone.output_scale
+
+        elif hasattr(self.backbone, "down_blocks") and hasattr(
+            self.backbone, "up_blocks"
+        ):
+            asym = self.backbone.down_blocks - self.backbone.up_blocks
+            return 1 / (2 ** asym)
+
+        elif hasattr(self.backbone, "initial_stride"):
+            return 1 / self.backbone.initial_stride
+
+        else:
+            return 1
+
+    @staticmethod
+    def _structure_model(model_dict, cls):
+        """Structuring hook for instantiating Model via cattrs.
+
+        This function should be used directly with cattrs as a
+        structuring hook. It serves the purpose of instantiating
+        the appropriate backbone class from the string name.
+
+        This is required when backbone classes do not have a
+        unique attribute name from which to infer the appropriate
+        class to use.
+
+        Args:
+            model_dict: Dictionaries containing deserialized Model.
+            cls: Class to return (not used).
+
+        Returns:
+            An instantiated Model class with the correct backbone.
+
+        Example:
+            >> cattr.register_structure_hook(Model, Model.structure_model)
+        """
+
+        arch_idx = available_arch_names.index(model_dict["backbone_name"])
+        backbone_cls = available_archs[arch_idx]
+
+        return Model(
+            backbone=backbone_cls(**model_dict["backbone"]),
+            output_type=ModelOutputType(model_dict["output_type"]),
+            skeletons=model_dict["skeletons"],
+        )

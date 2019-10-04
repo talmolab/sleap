@@ -17,7 +17,7 @@ dependencies:
 - python-rapidjson
 - pip
 - pip:
-    - opencv-python==3.4.2.17
+    - opencv-python-headless==3.4.1.15
     - PySide2==5.12.0
     - imgaug
     - cattrs==1.0.0rc0

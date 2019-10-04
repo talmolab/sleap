@@ -4,6 +4,7 @@ from typing import Dict, List, Union, Optional, Tuple
 from sleap.instance import LabeledFrame, PredictedPoint, PredictedInstance
 from sleap.info.metrics import calculate_pairwise_cost
 
+
 def match_single_peaks_frame(points_array, skeleton, transform, img_idx):
     """
     Make instance from points array returned by single peak finding.
@@ -13,10 +14,11 @@ def match_single_peaks_frame(points_array, skeleton, transform, img_idx):
     Returns:
         PredictedInstance, or None if no points.
     """
-    if points_array.shape[0] == 0: return None
+    if points_array.shape[0] == 0:
+        return None
 
     # apply inverse transform to points
-    points_array[...,0:2] = transform.invert(img_idx, points_array[...,0:2])
+    points_array[..., 0:2] = transform.invert(img_idx, points_array[..., 0:2])
 
     pts = dict()
     for i, node in enumerate(skeleton.nodes):
@@ -29,10 +31,13 @@ def match_single_peaks_frame(points_array, skeleton, transform, img_idx):
     matched_instance = None
     if len(pts) > 0:
         # FIXME: how should we calculate score for instance?
-        inst_score = np.sum(points_array[...,2]) / len(pts)
-        matched_instance = PredictedInstance(skeleton=skeleton, points=pts, score=inst_score)
+        inst_score = np.sum(points_array[..., 2]) / len(pts)
+        matched_instance = PredictedInstance(
+            skeleton=skeleton, points=pts, score=inst_score
+        )
 
     return matched_instance
+
 
 def match_single_peaks_all(points_arrays, skeleton, video, transform):
     """
@@ -51,6 +56,7 @@ def match_single_peaks_all(points_arrays, skeleton, video, transform):
             new_lf = LabeledFrame(video=video, frame_idx=frame_idx, instances=[inst])
             predicted_frames.append(new_lf)
     return predicted_frames
+
 
 def improfile(I, p0, p1, max_points=None):
     """
@@ -73,7 +79,7 @@ def improfile(I, p0, p1, max_points=None):
     I = np.squeeze(I)
 
     # Find number of points to extract
-    n = np.sqrt((p0[0] - p1[0])**2 + (p0[1] - p1[1])**2)
+    n = np.sqrt((p0[0] - p1[0]) ** 2 + (p0[1] - p1[1]) ** 2)
     n = max(n, 1)
     if max_points is not None:
         n = min(n, max_points)
@@ -84,15 +90,23 @@ def improfile(I, p0, p1, max_points=None):
     y = np.round(np.linspace(p0[1], p1[1], n)).astype("int32")
 
     # Extract values and concatenate into vector
-    vals = np.stack([I[yi,xi] for xi, yi in zip(x,y)])
+    vals = np.stack([I[yi, xi] for xi, yi in zip(x, y)])
     return vals
 
-def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, transform, img_idx,
-                      min_score_to_node_ratio=0.4,
-                      min_score_midpts=0.05,
-                      min_score_integral=0.8,
-                      add_last_edge=False,
-                      single_per_crop=True):
+
+def match_peaks_frame(
+    peaks_t,
+    peak_vals_t,
+    pafs_t,
+    skeleton,
+    transform,
+    img_idx,
+    min_score_to_node_ratio=0.4,
+    min_score_midpts=0.05,
+    min_score_integral=0.8,
+    add_last_edge=False,
+    single_per_crop=True,
+):
     """
     Matches single frame
     """
@@ -116,8 +130,8 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, transform, img_idx
     for k, edge in enumerate(skeleton.edge_names):
         src_node_idx = skeleton.node_to_index(edge[0])
         dst_node_idx = skeleton.node_to_index(edge[1])
-        paf_x = pafs_t[...,2*k]
-        paf_y = pafs_t[...,2*k+1]
+        paf_x = pafs_t[..., 2 * k]
+        paf_y = pafs_t[..., 2 * k + 1]
 
         # Make sure matrix has rows for these nodes
         if len(peaks_t) <= src_node_idx or len(peaks_t) <= dst_node_idx:
@@ -156,16 +170,23 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, transform, img_idx
 
                     # Compute score
                     score_midpts = vec_x * vec[0] + vec_y * vec[1]
-                    score_with_dist_prior = np.mean(score_midpts) + min(0.5 * paf_x.shape[0] / norm - 1, 0)
+                    score_with_dist_prior = np.mean(score_midpts) + min(
+                        0.5 * paf_x.shape[0] / norm - 1, 0
+                    )
                     score_integral = np.mean(score_midpts > min_score_midpts)
-                    if score_with_dist_prior > 0 and score_integral > min_score_integral:
+                    if (
+                        score_with_dist_prior > 0
+                        and score_integral > min_score_integral
+                    ):
                         connection_candidates.append([i, j, score_with_dist_prior])
 
             # Sort candidates for current edge by descending score
-            connection_candidates = sorted(connection_candidates, key=lambda x: x[2], reverse=True)
+            connection_candidates = sorted(
+                connection_candidates, key=lambda x: x[2], reverse=True
+            )
 
             # Add to list of candidates for next step
-            connection = np.zeros((0,5)) # src_id, dst_id, paf_score, i, j
+            connection = np.zeros((0, 5))  # src_id, dst_id, paf_score, i, j
             for candidate in connection_candidates:
                 i, j, score = candidate
                 # Add to connections if node is not already included
@@ -180,20 +201,27 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, transform, img_idx
             connection_all.append(connection)
 
     # Greedy matching of each edge candidate set
-    subset = -1 * np.ones((0, len(skeleton.nodes)+2)) # ids, overall score, number of parts
-    candidate = np.array([y for x in peaks_t for y in x]) # flattened set of all points
-    candidate_scores = np.array([y for x in peak_vals_t for y in x]) # flattened set of all peak scores
+    subset = -1 * np.ones(
+        (0, len(skeleton.nodes) + 2)
+    )  # ids, overall score, number of parts
+    candidate = np.array([y for x in peaks_t for y in x])  # flattened set of all points
+    candidate_scores = np.array(
+        [y for x in peak_vals_t for y in x]
+    )  # flattened set of all peak scores
     for k, edge in enumerate(skeleton.edge_names):
         # No matches for this edge
         if k in special_k:
             continue
 
         # Get IDs for current connection
-        partAs = connection_all[k][:,0]
-        partBs = connection_all[k][:,1]
+        partAs = connection_all[k][:, 0]
+        partBs = connection_all[k][:, 1]
 
         # Get edge
-        indexA, indexB = (skeleton.node_to_index(edge[0]), skeleton.node_to_index(edge[1]))
+        indexA, indexB = (
+            skeleton.node_to_index(edge[0]),
+            skeleton.node_to_index(edge[1]),
+        )
 
         # Loop through all candidates for current edge
         for i in range(len(connection_all[k])):
@@ -209,18 +237,24 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, transform, img_idx
             # One of the two candidate points found in matched subset
             if found == 1:
                 j = subset_idx[0]
-                if subset[j][indexB] != partBs[i]: # did we already assign this part?
-                    subset[j][indexB] = partBs[i] # assign part
-                    subset[j][-1] += 1 # increment instance part counter
-                    subset[j][-2] += candidate_scores[int(partBs[i])] + connection_all[k][i][2] # add peak + edge score
+                if subset[j][indexB] != partBs[i]:  # did we already assign this part?
+                    subset[j][indexB] = partBs[i]  # assign part
+                    subset[j][-1] += 1  # increment instance part counter
+                    subset[j][-2] += (
+                        candidate_scores[int(partBs[i])] + connection_all[k][i][2]
+                    )  # add peak + edge score
 
             # Both candidate points found in matched subset
             elif found == 2:
-                j1, j2 = subset_idx # get indices in matched subset
-                membership = ((subset[j1] >= 0).astype(int) + (subset[j2] >= 0).astype(int))[:-2] # count number of instances per body parts
+                j1, j2 = subset_idx  # get indices in matched subset
+                membership = (
+                    (subset[j1] >= 0).astype(int) + (subset[j2] >= 0).astype(int)
+                )[
+                    :-2
+                ]  # count number of instances per body parts
                 # All body parts are disjoint, merge them
                 if np.all(membership < 2):
-                    subset[j1][:-2] += (subset[j2][:-2] + 1)
+                    subset[j1][:-2] += subset[j2][:-2] + 1
                     subset[j1][-2:] += subset[j2][-2:]
                     subset[j1][-2] += connection_all[k][i][2]
                     subset = np.delete(subset, j2, axis=0)
@@ -229,24 +263,30 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, transform, img_idx
                 else:
                     subset[j1][indexB] = partBs[i]
                     subset[j1][-1] += 1
-                    subset[j1][-2] += candidate_scores[partBs[i].astype(int)] + connection_all[k][i][2]
+                    subset[j1][-2] += (
+                        candidate_scores[partBs[i].astype(int)]
+                        + connection_all[k][i][2]
+                    )
 
             # Neither point found, create a new subset (if not the last edge)
-            elif found == 0 and (add_last_edge or (k < (len(skeleton.edges)-1))):
-                row = -1 * np.ones(len(skeleton.nodes)+2)
-                row[indexA] = partAs[i] # ID
-                row[indexB] = partBs[i] # ID
-                row[-1] = 2 # initial count
-                row[-2] = sum(candidate_scores[connection_all[k][i, :2].astype(int)]) + connection_all[k][i][2] # score
-                subset = np.vstack([subset, row]) # add to matched subset
+            elif found == 0 and (add_last_edge or (k < (len(skeleton.edges) - 1))):
+                row = -1 * np.ones(len(skeleton.nodes) + 2)
+                row[indexA] = partAs[i]  # ID
+                row[indexB] = partBs[i]  # ID
+                row[-1] = 2  # initial count
+                row[-2] = (
+                    sum(candidate_scores[connection_all[k][i, :2].astype(int)])
+                    + connection_all[k][i][2]
+                )  # score
+                subset = np.vstack([subset, row])  # add to matched subset
 
     # Filter small instances
-    score_to_node_ratio = subset[:,-2] / subset[:,-1]
+    score_to_node_ratio = subset[:, -2] / subset[:, -1]
     subset = subset[score_to_node_ratio > min_score_to_node_ratio, :]
 
-    # apply inverse transform to points
+    # Apply inverse transform to points to return to full resolution, uncropped image coordinates
     if candidate.shape[0] > 0:
-        candidate[...,0:2] = transform.invert(img_idx, candidate[...,0:2])
+        candidate[..., 0:2] = transform.invert(img_idx, candidate[..., 0:2])
 
     # Done with all the matching! Gather the data
     matched_instances_t = []
@@ -257,79 +297,123 @@ def match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton, transform, img_idx
         for i, node_name in enumerate(skeleton.node_names):
             if match[i] >= 0:
                 match_idx = int(match[i])
-                pt = PredictedPoint(x=candidate[match_idx, 0], y=candidate[match_idx, 1],
-                                    score=candidate_scores[match_idx])
+                pt = PredictedPoint(
+                    x=candidate[match_idx, 0],
+                    y=candidate[match_idx, 1],
+                    score=candidate_scores[match_idx],
+                )
                 pts[node_name] = pt
 
         if len(pts):
-            matched_instances_t.append(PredictedInstance(skeleton=skeleton,
-                                                         points=pts,
-                                                         score=match[-2]))
+            matched_instances_t.append(
+                PredictedInstance(skeleton=skeleton, points=pts, score=match[-2])
+            )
 
     # For centroid crop just return instance closest to centroid
+    # if single_per_crop and len(matched_instances_t) > 1 and transform.is_cropped:
+
+    # crop_centroid = np.array(((transform.crop_size//2, transform.crop_size//2),)) # center of crop box
+    # crop_centroid = transform.invert(img_idx, crop_centroid) # relative to original image
+
+    # # sort by distance from crop centroid
+    # matched_instances_t.sort(key=lambda inst: np.linalg.norm(inst.centroid - crop_centroid))
+
+    # # logger.debug(f"SINGLE_INSTANCE_PER_CROP: crop has {len(matched_instances_t)} instances, filter to 1.")
+
+    # # just use closest
+    # matched_instances_t = matched_instances_t[0:1]
+
     if single_per_crop and len(matched_instances_t) > 1 and transform.is_cropped:
-
-        crop_centroid = np.array(((transform.crop_size//2, transform.crop_size//2),)) # center of crop box
-        crop_centroid = transform.invert(img_idx, crop_centroid) # relative to original image
-
-        # sort by distance from crop centroid
-        matched_instances_t.sort(key=lambda inst: np.linalg.norm(inst.centroid - crop_centroid))
-
-        # logger.debug(f"SINGLE_INSTANCE_PER_CROP: crop has {len(matched_instances_t)} instances, filter to 1.")
-
-        # just use closest
-        matched_instances_t = matched_instances_t[0:1]
+        # Just keep highest scoring instance
+        matched_instances_t = [matched_instances_t[0]]
 
     return matched_instances_t
 
-def match_peaks_paf(peaks, peak_vals, pafs, skeleton,
-                    video, transform,
-                    min_score_to_node_ratio=0.4, min_score_midpts=0.05,
-                    min_score_integral=0.8, add_last_edge=False, single_per_crop=True,
-                    **kwargs):
+
+def match_peaks_paf(
+    peaks,
+    peak_vals,
+    pafs,
+    skeleton,
+    video,
+    transform,
+    min_score_to_node_ratio=0.4,
+    min_score_midpts=0.05,
+    min_score_integral=0.8,
+    add_last_edge=False,
+    single_per_crop=True,
+    **kwargs
+):
     """ Computes PAF-based peak matching via greedy assignment """
 
     # Process each frame
     predicted_frames = []
-    for img_idx, (peaks_t, peak_vals_t, pafs_t) in enumerate(zip(peaks, peak_vals, pafs)):
-        instances = match_peaks_frame(peaks_t, peak_vals_t, pafs_t, skeleton,
-                                   transform, img_idx,
-                                   min_score_to_node_ratio=min_score_to_node_ratio,
-                                   min_score_midpts=min_score_midpts,
-                                   min_score_integral=min_score_integral,
-                                   add_last_edge=add_last_edge,
-                                   single_per_crop=single_per_crop)
+    for img_idx, (peaks_t, peak_vals_t, pafs_t) in enumerate(
+        zip(peaks, peak_vals, pafs)
+    ):
+        instances = match_peaks_frame(
+            peaks_t,
+            peak_vals_t,
+            pafs_t,
+            skeleton,
+            transform,
+            img_idx,
+            min_score_to_node_ratio=min_score_to_node_ratio,
+            min_score_midpts=min_score_midpts,
+            min_score_integral=min_score_integral,
+            add_last_edge=add_last_edge,
+            single_per_crop=single_per_crop,
+        )
         frame_idx = transform.get_frame_idxs(img_idx)
-        predicted_frames.append(LabeledFrame(video=video, frame_idx=frame_idx, instances=instances))
+        predicted_frames.append(
+            LabeledFrame(video=video, frame_idx=frame_idx, instances=instances)
+        )
 
     # Combine LabeledFrame objects for the same video frame
     predicted_frames = LabeledFrame.merge_frames(predicted_frames, video=video)
 
     return predicted_frames
 
-def match_peaks_paf_par(peaks, peak_vals, pafs, skeleton,
-                        video, transform,
-                        min_score_to_node_ratio=0.4,
-                        min_score_midpts=0.05,
-                        min_score_integral=0.8,
-                        add_last_edge=False,
-                        single_per_crop=True,
-                        pool=None, **kwargs):
+
+def match_peaks_paf_par(
+    peaks,
+    peak_vals,
+    pafs,
+    skeleton,
+    video,
+    transform,
+    min_score_to_node_ratio=0.4,
+    min_score_midpts=0.05,
+    min_score_integral=0.8,
+    add_last_edge=False,
+    single_per_crop=True,
+    pool=None,
+    **kwargs
+):
     """ Parallel version of PAF peak matching """
 
     if pool is None:
+        import multiprocessing
+
         pool = multiprocessing.Pool()
 
     futures = []
-    for img_idx, (peaks_t, peak_vals_t, pafs_t) in enumerate(zip(peaks, peak_vals, pafs)):
-        future = pool.apply_async(match_peaks_frame,
-                                  [peaks_t, peak_vals_t, pafs_t, skeleton],
-                                  dict(transform=transform, img_idx=img_idx,
-                                       min_score_to_node_ratio=min_score_to_node_ratio,
-                                       min_score_midpts=min_score_midpts,
-                                       min_score_integral=min_score_integral,
-                                       add_last_edge=add_last_edge,
-                                       single_per_crop=single_per_crop,))
+    for img_idx, (peaks_t, peak_vals_t, pafs_t) in enumerate(
+        zip(peaks, peak_vals, pafs)
+    ):
+        future = pool.apply_async(
+            match_peaks_frame,
+            [peaks_t, peak_vals_t, pafs_t, skeleton],
+            dict(
+                transform=transform,
+                img_idx=img_idx,
+                min_score_to_node_ratio=min_score_to_node_ratio,
+                min_score_midpts=min_score_midpts,
+                min_score_integral=min_score_integral,
+                add_last_edge=add_last_edge,
+                single_per_crop=single_per_crop,
+            ),
+        )
         futures.append(future)
 
     predicted_frames = []
@@ -342,32 +426,46 @@ def match_peaks_paf_par(peaks, peak_vals, pafs, skeleton,
         # an expensive operation.
         for i in range(len(instances)):
             points = {node.name: point for node, point in instances[i].nodes_points}
-            instances[i] = PredictedInstance(skeleton=skeleton, points=points, score=instances[i].score)
+            instances[i] = PredictedInstance(
+                skeleton=skeleton, points=points, score=instances[i].score
+            )
 
-        predicted_frames.append(LabeledFrame(video=video, frame_idx=frame_idx, instances=instances))
+        predicted_frames.append(
+            LabeledFrame(video=video, frame_idx=frame_idx, instances=instances)
+        )
 
     # Combine LabeledFrame objects for the same video frame
     predicted_frames = LabeledFrame.merge_frames(predicted_frames, video=video)
 
     return predicted_frames
 
-def instances_nms(instances: List[PredictedInstance], thresh: float=4) -> List[PredictedInstance]:
+
+def instances_nms(
+    instances: List[PredictedInstance], thresh: float = 4
+) -> List[PredictedInstance]:
     """Remove overlapping instances from list."""
-    if len(instances) <= 1: return
+    if len(instances) <= 1:
+        return
 
     # Look for overlapping instances
-    overlap_matrix = calculate_pairwise_cost(instances, instances,
-        cost_function = lambda x: np.nan if all(np.isnan(x)) else np.nanmean(x))
+    overlap_matrix = calculate_pairwise_cost(
+        instances,
+        instances,
+        cost_function=lambda x: np.nan if all(np.isnan(x)) else np.nanmean(x),
+    )
 
     # Set diagonals over threshold since an instance doesn't overlap with itself
-    np.fill_diagonal(overlap_matrix, thresh+1)
-    overlap_matrix[np.isnan(overlap_matrix)] = thresh+1
+    np.fill_diagonal(overlap_matrix, thresh + 1)
+    overlap_matrix[np.isnan(overlap_matrix)] = thresh + 1
 
     instances_to_remove = []
 
     def sort_funct(inst_idx):
         # sort by number of points in instance, then by prediction score (desc)
-        return (len(instances[inst_idx].nodes), -getattr(instances[inst_idx], "score", 0))
+        return (
+            len(instances[inst_idx].nodes),
+            -getattr(instances[inst_idx], "score", 0),
+        )
 
     while np.nanmin(overlap_matrix) < thresh:
         # Find the pair of instances with greatest overlap
@@ -379,8 +477,8 @@ def instances_nms(instances: List[PredictedInstance], thresh: float=4) -> List[P
         keep_idx = idxs[-1]
 
         # Remove this instance from overlap matrix
-        overlap_matrix[pick_idx, :] = thresh+1
-        overlap_matrix[:, pick_idx] = thresh+1
+        overlap_matrix[pick_idx, :] = thresh + 1
+        overlap_matrix[:, pick_idx] = thresh + 1
 
         # Add to list of instances that we'll remove.
         # We'll remove these later so list index doesn't change now.

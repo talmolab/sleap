@@ -26,6 +26,11 @@ expert:
   type: bool
   default: False
 
+- name: _dont_use_pafs
+  label: Single-instance mode (without pafs)
+  type: bool
+  default: False
+
 - name: _view_paf
   label: View Edge Profile...
   type: button
@@ -66,6 +71,7 @@ expert:
   label: Negative samples (if cropping)
   type: int
   default: 0
+  range: 0,1000
 
 - name: batch_size
   label: Batch Size
@@ -110,6 +116,7 @@ learning:
   label: Negative samples
   type: int
   default: 20
+  range: 0,1000
 
 - name: batch_size
   label: Batch Size

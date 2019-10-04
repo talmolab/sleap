@@ -1,32 +1,32 @@
-"new": QKeySequence.New
-"open": QKeySequence.Open
-"save": QKeySequence.Save
-"save as": QKeySequence.SaveAs
-"close": QKeySequence.Close
-"add videos": Qt.CTRL + Qt.Key_A
-"next video": QKeySequence.Forward
-"prev video": QKeySequence.Back
-"goto frame": Qt.CTRL + Qt.Key_J
-"mark frame": Qt.CTRL + Qt.Key_M
-"goto marked": Qt.CTRL + Qt.SHIFT + Qt.Key_M
-"add instance": Qt.CTRL + Qt.Key_I
-"delete instance": Qt.CTRL + Qt.Key_Backspace
-"delete track": Qt.CTRL + Qt.SHIFT + Qt.Key_Backspace
-"transpose": Qt.CTRL + Qt.Key_T
-"select next": QKeySequence(Qt.Key.Key_QuoteLeft)
-"clear selection": QKeySequence(Qt.Key.Key_Escape)
-"goto next": Qt.CTRL + Qt.Key_Period
-"goto prev": 
-"goto next user": Qt.CTRL + Qt.Key_Greater
-"goto next suggestion": QKeySequence.FindNext
-"goto prev suggestion": QKeySequence.FindPrevious
-"goto next track": Qt.CTRL + Qt.Key_E
-"show labels": Qt.CTRL + Qt.Key_Tab
-"show edges": Qt.CTRL + Qt.SHIFT + Qt.Key_Tab
-"show trails": 
-"color predicted": 
-"fit": Qt.CTRL + Qt.Key_Equal
-"learning": Qt.CTRL + Qt.Key_L
-"export clip":
-"delete clip":
-"delete area": Qt.CTRL + Qt.Key_K
+add instance: Ctrl+I
+add videos: Ctrl+A
+clear selection: Esc
+close: QKeySequence.Close
+color predicted: 
+delete area: Ctrl+K
+delete clip:
+delete instance: Ctrl+Backspace
+delete track: Ctrl+Shift+Backspace
+export clip:
+fit: Ctrl+=
+goto frame: Ctrl+J
+goto marked: Ctrl+Shift+M
+goto next suggestion: QKeySequence.FindNext
+goto next track spawn: Ctrl+E
+goto next user: Ctrl+>
+goto next labeled: Ctrl+.
+goto prev suggestion: QKeySequence.FindPrevious
+goto prev labeled: 
+learning: Ctrl+L
+mark frame: Ctrl+M
+new: Ctrl+N
+next video: QKeySequence.Forward
+open: Ctrl+O
+prev video: QKeySequence.Back
+save as: QKeySequence.SaveAs
+save: Ctrl+S
+select next: '`'
+show edges: Ctrl+Shift+Tab
+show labels: Ctrl+Tab
+show trails: 
+transpose: Ctrl+T
