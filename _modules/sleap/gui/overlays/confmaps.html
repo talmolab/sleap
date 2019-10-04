@@ -1,0 +1,384 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>sleap.gui.overlays.confmaps &mdash; SLEAP  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> SLEAP
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">SLEAP Package</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../skeleton.html">Skeleton</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../video.html">Video</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../instance.html">Instance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dataset.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../training.html">Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../gui.html">GUI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../misc.html">Misc</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">SLEAP</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>sleap.gui.overlays.confmaps</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for sleap.gui.overlays.confmaps</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Module for showing confidence maps as an overlay within a QtVideoPlayer.</span>
+
+<span class="sd">Example:</span>
+<span class="sd">    &gt;&gt;&gt; cm = ConfMapsPlot(conf_data.get_frame(0))</span>
+<span class="sd">    &gt;&gt;&gt; window.view.scene.addItem(cm)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">PySide2</span> <span class="k">import</span> <span class="n">QtWidgets</span><span class="p">,</span> <span class="n">QtCore</span><span class="p">,</span> <span class="n">QtGui</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">qimage2ndarray</span>
+
+<span class="kn">from</span> <span class="nn">sleap.gui.overlays.base</span> <span class="k">import</span> <span class="n">DataOverlay</span><span class="p">,</span> <span class="n">h5_colors</span>
+
+
+<div class="viewcode-block" id="ConfmapOverlay"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.confmaps.ConfmapOverlay">[docs]</a><span class="k">class</span> <span class="nc">ConfmapOverlay</span><span class="p">(</span><span class="n">DataOverlay</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Overlay to show confidence maps.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ConfmapOverlay.from_h5"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.confmaps.ConfmapOverlay.from_h5">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_h5</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">input_format</span><span class="o">=</span><span class="s2">&quot;channels_last&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create object with hdf5 as datasource.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">DataOverlay</span><span class="o">.</span><span class="n">from_h5</span><span class="p">(</span>
+            <span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;/confmaps&quot;</span><span class="p">,</span> <span class="n">input_format</span><span class="p">,</span> <span class="n">overlay_class</span><span class="o">=</span><span class="n">ConfMapsPlot</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="ConfmapOverlay.from_model"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.confmaps.ConfmapOverlay.from_model">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_model</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create object with live predictions from model as datasource.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">DataOverlay</span><span class="o">.</span><span class="n">from_model</span><span class="p">(</span>
+            <span class="n">filename</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">overlay_class</span><span class="o">=</span><span class="n">ConfMapsPlot</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="ConfMapsPlot"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.confmaps.ConfMapsPlot">[docs]</a><span class="k">class</span> <span class="nc">ConfMapsPlot</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QGraphicsObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;QGraphicsObject to display multiple confidence maps in a QGraphicsView.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        frame (numpy.array): Data for one frame of confidence map data.</span>
+<span class="sd">            Shape of array should be (channels, height, width).</span>
+<span class="sd">        show (list, optional): List of channels to show. If None, show all channels.</span>
+<span class="sd">        show_box (bool, optional): Draw bounding box around confidence maps.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None.</span>
+
+<span class="sd">    When initialized, creates one child ConfMapPlot item for each channel.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">show_box</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ConfMapsPlot</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span> <span class="o">=</span> <span class="n">frame</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">show_box</span> <span class="o">=</span> <span class="n">show_box</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">rect</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QRectF</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">show_box</span><span class="p">:</span>
+            <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QGraphicsRectItem</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rect</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">setPen</span><span class="p">(</span>
+                <span class="n">QtGui</span><span class="o">.</span><span class="n">QPen</span><span class="p">(</span><span class="s2">&quot;yellow&quot;</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">channel</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]):</span>
+            <span class="k">if</span> <span class="n">show</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">channel</span> <span class="ow">in</span> <span class="n">show</span><span class="p">:</span>
+                <span class="n">color_map</span> <span class="o">=</span> <span class="n">h5_colors</span><span class="p">[</span><span class="n">channel</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">h5_colors</span><span class="p">)]</span>
+
+                <span class="c1"># Add QGraphicsPixmapItem as child object</span>
+                <span class="n">ConfMapPlot</span><span class="p">(</span>
+                    <span class="n">confmap</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">channel</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">color_map</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">self</span>
+                <span class="p">)</span>
+
+<div class="viewcode-block" id="ConfMapsPlot.boundingRect"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.confmaps.ConfMapsPlot.boundingRect">[docs]</a>    <span class="k">def</span> <span class="nf">boundingRect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QRectF</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Method required by Qt.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rect</span></div>
+
+<div class="viewcode-block" id="ConfMapsPlot.paint"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.confmaps.ConfMapsPlot.paint">[docs]</a>    <span class="k">def</span> <span class="nf">paint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">painter</span><span class="p">,</span> <span class="n">option</span><span class="p">,</span> <span class="n">widget</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Method required by Qt.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div></div>
+
+
+<div class="viewcode-block" id="ConfMapPlot"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.confmaps.ConfMapPlot">[docs]</a><span class="k">class</span> <span class="nc">ConfMapPlot</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QGraphicsPixmapItem</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;QGraphicsPixmapItem object for drawing single channel of confidence map.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        confmap (numpy.array): (h, w) array of one confidence map channel.</span>
+<span class="sd">        color (list): optional (r, g, b) array for channel color.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None.</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        In most cases this should only be called by ConfMapsPlot.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">confmap</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ConfMapPlot</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">color_map</span> <span class="o">=</span> <span class="n">color</span>
+
+        <span class="k">if</span> <span class="n">confmap</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">confmap</span> <span class="o">=</span> <span class="n">confmap</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_conf_image</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setPixmap</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QPixmap</span><span class="p">(</span><span class="n">image</span><span class="p">))</span>
+
+<div class="viewcode-block" id="ConfMapPlot.get_conf_image"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.confmaps.ConfMapPlot.get_conf_image">[docs]</a>    <span class="k">def</span> <span class="nf">get_conf_image</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QImage</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Converts array data stored in object to QImage.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            QImage.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">confmap</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Get image data</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">confmap</span>
+
+        <span class="c1"># Colorize single-channel overlap</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">ptp</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mf">1.0</span><span class="p">:</span>
+            <span class="n">frame_a</span> <span class="o">=</span> <span class="p">(</span><span class="n">frame</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+            <span class="n">frame_r</span> <span class="o">=</span> <span class="p">(</span><span class="n">frame</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">color_map</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+            <span class="n">frame_g</span> <span class="o">=</span> <span class="p">(</span><span class="n">frame</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">color_map</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+            <span class="n">frame_b</span> <span class="o">=</span> <span class="p">(</span><span class="n">frame</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">color_map</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">frame_a</span> <span class="o">=</span> <span class="p">(</span><span class="n">frame</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+            <span class="n">frame_r</span> <span class="o">=</span> <span class="p">(</span><span class="n">frame</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">color_map</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mf">255.0</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+            <span class="n">frame_g</span> <span class="o">=</span> <span class="p">(</span><span class="n">frame</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">color_map</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mf">255.0</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+            <span class="n">frame_b</span> <span class="o">=</span> <span class="p">(</span><span class="n">frame</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">color_map</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="mf">255.0</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+
+        <span class="n">frame_composite</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dstack</span><span class="p">((</span><span class="n">frame_r</span><span class="p">,</span> <span class="n">frame_g</span><span class="p">,</span> <span class="n">frame_b</span><span class="p">,</span> <span class="n">frame_a</span><span class="p">))</span>
+
+        <span class="c1"># Convert ndarray to QImage</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">qimage2ndarray</span><span class="o">.</span><span class="n">array2qimage</span><span class="p">(</span><span class="n">frame_composite</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">image</span></div></div>
+
+
+<div class="viewcode-block" id="show_confmaps_from_h5"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.confmaps.show_confmaps_from_h5">[docs]</a><span class="k">def</span> <span class="nf">show_confmaps_from_h5</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">input_format</span><span class="o">=</span><span class="s2">&quot;channels_last&quot;</span><span class="p">,</span> <span class="n">standalone</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Demo function.&quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">sleap.io.video</span> <span class="k">import</span> <span class="n">HDF5Video</span>
+
+    <span class="n">video</span> <span class="o">=</span> <span class="n">HDF5Video</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;/box&quot;</span><span class="p">,</span> <span class="n">input_format</span><span class="o">=</span><span class="n">input_format</span><span class="p">)</span>
+    <span class="n">conf_data</span> <span class="o">=</span> <span class="n">HDF5Video</span><span class="p">(</span>
+        <span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;/confmaps&quot;</span><span class="p">,</span> <span class="n">input_format</span><span class="o">=</span><span class="n">input_format</span><span class="p">,</span> <span class="n">convert_range</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>
+
+    <span class="n">confmaps_</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">conf_data</span><span class="o">.</span><span class="n">get_frame</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">conf_data</span><span class="o">.</span><span class="n">frames</span><span class="p">)]</span>
+    <span class="n">confmaps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">confmaps_</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">demo_confmaps</span><span class="p">(</span><span class="n">confmaps</span><span class="o">=</span><span class="n">confmaps</span><span class="p">,</span> <span class="n">video</span><span class="o">=</span><span class="n">video</span><span class="p">,</span> <span class="n">standalone</span><span class="o">=</span><span class="n">standalone</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="demo_confmaps"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.confmaps.demo_confmaps">[docs]</a><span class="k">def</span> <span class="nf">demo_confmaps</span><span class="p">(</span><span class="n">confmaps</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">standalone</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Demo function.&quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">PySide2</span> <span class="k">import</span> <span class="n">QtWidgets</span>
+    <span class="kn">from</span> <span class="nn">sleap.gui.video</span> <span class="k">import</span> <span class="n">QtVideoPlayer</span>
+
+    <span class="k">if</span> <span class="n">standalone</span><span class="p">:</span>
+        <span class="n">app</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QApplication</span><span class="p">([])</span>
+
+    <span class="n">win</span> <span class="o">=</span> <span class="n">QtVideoPlayer</span><span class="p">(</span><span class="n">video</span><span class="o">=</span><span class="n">video</span><span class="p">)</span>
+    <span class="n">win</span><span class="o">.</span><span class="n">setWindowTitle</span><span class="p">(</span><span class="s2">&quot;confmaps&quot;</span><span class="p">)</span>
+    <span class="n">win</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">plot_confmaps</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">item_idx</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">parent</span><span class="o">.</span><span class="n">frame_idx</span> <span class="o">&lt;</span> <span class="n">confmaps</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">frame_conf_map</span> <span class="o">=</span> <span class="n">ConfMapsPlot</span><span class="p">(</span><span class="n">confmaps</span><span class="p">[</span><span class="n">parent</span><span class="o">.</span><span class="n">frame_idx</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span>
+            <span class="n">win</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">frame_conf_map</span><span class="p">)</span>
+
+    <span class="n">win</span><span class="o">.</span><span class="n">changedPlot</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">plot_confmaps</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">callback</span><span class="p">:</span>
+        <span class="n">win</span><span class="o">.</span><span class="n">changedPlot</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">callback</span><span class="p">)</span>
+    <span class="n">win</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">standalone</span><span class="p">:</span>
+        <span class="n">app</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">win</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+
+    <span class="n">data_path</span> <span class="o">=</span> <span class="s2">&quot;tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5&quot;</span>
+    <span class="n">show_confmaps_from_h5</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">input_format</span><span class="o">=</span><span class="s2">&quot;channels_first&quot;</span><span class="p">,</span> <span class="n">standalone</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Murthy Lab @ Princeton
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

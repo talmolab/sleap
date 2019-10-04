@@ -1,0 +1,527 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>sleap.gui.overlays.tracks &mdash; SLEAP  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> SLEAP
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">SLEAP Package</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../skeleton.html">Skeleton</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../video.html">Video</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../instance.html">Instance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dataset.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../training.html">Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../gui.html">GUI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../misc.html">Misc</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">SLEAP</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>sleap.gui.overlays.tracks</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for sleap.gui.overlays.tracks</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Module that handles track-related overlays (including track color).</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">sleap.instance</span> <span class="k">import</span> <span class="n">Track</span>
+<span class="kn">from</span> <span class="nn">sleap.io.dataset</span> <span class="k">import</span> <span class="n">Labels</span>
+<span class="kn">from</span> <span class="nn">sleap.io.video</span> <span class="k">import</span> <span class="n">Video</span>
+
+<span class="kn">import</span> <span class="nn">attr</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Union</span>
+
+<span class="kn">from</span> <span class="nn">PySide2</span> <span class="k">import</span> <span class="n">QtCore</span><span class="p">,</span> <span class="n">QtGui</span>
+
+
+<div class="viewcode-block" id="TrackColorManager"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.tracks.TrackColorManager">[docs]</a><span class="k">class</span> <span class="nc">TrackColorManager</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class to determine color to use for track.</span>
+
+<span class="sd">    The color depends on the order of the tracks in `Labels` object,</span>
+<span class="sd">    so we need to initialize with `Labels`.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        labels: The :class:`Labels` dataset which contains the tracks for</span>
+<span class="sd">            which we want colors.</span>
+<span class="sd">        palette: String with the color palette name to use.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">palette</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;standard&quot;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span>
+
+        <span class="c1"># alphabet</span>
+        <span class="c1"># &quot;A Colour Alphabet and the Limits of Colour Coding&quot;, Paul Green-Armytage</span>
+        <span class="c1"># https://graphicdesign.stackexchange.com/questions/3682/where-can-i-find-a-large-palette-set-of-contrasting-colors-for-coloring-many-d</span>
+
+        <span class="c1"># twelve</span>
+        <span class="c1"># http://colorbrewer2.org/#type=qualitative&amp;scheme=Paired&amp;n=12</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_palettes</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;standard&quot;</span><span class="p">:</span> <span class="p">[</span>
+                <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">114</span><span class="p">,</span> <span class="mi">189</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">217</span><span class="p">,</span> <span class="mi">83</span><span class="p">,</span> <span class="mi">25</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">237</span><span class="p">,</span> <span class="mi">177</span><span class="p">,</span> <span class="mi">32</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">126</span><span class="p">,</span> <span class="mi">47</span><span class="p">,</span> <span class="mi">142</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">119</span><span class="p">,</span> <span class="mi">172</span><span class="p">,</span> <span class="mi">48</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">77</span><span class="p">,</span> <span class="mi">190</span><span class="p">,</span> <span class="mi">238</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">162</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">47</span><span class="p">],</span>
+            <span class="p">],</span>
+            <span class="s2">&quot;five+&quot;</span><span class="p">:</span> <span class="p">[</span>
+                <span class="p">[</span><span class="mi">228</span><span class="p">,</span> <span class="mi">26</span><span class="p">,</span> <span class="mi">28</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">55</span><span class="p">,</span> <span class="mi">126</span><span class="p">,</span> <span class="mi">184</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">77</span><span class="p">,</span> <span class="mi">175</span><span class="p">,</span> <span class="mi">74</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">152</span><span class="p">,</span> <span class="mi">78</span><span class="p">,</span> <span class="mi">163</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">255</span><span class="p">,</span> <span class="mi">127</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="p">],</span>
+            <span class="s2">&quot;solarized&quot;</span><span class="p">:</span> <span class="p">[</span>
+                <span class="p">[</span><span class="mi">181</span><span class="p">,</span> <span class="mi">137</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">203</span><span class="p">,</span> <span class="mi">75</span><span class="p">,</span> <span class="mi">22</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">220</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">47</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">211</span><span class="p">,</span> <span class="mi">54</span><span class="p">,</span> <span class="mi">130</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">108</span><span class="p">,</span> <span class="mi">113</span><span class="p">,</span> <span class="mi">196</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">38</span><span class="p">,</span> <span class="mi">139</span><span class="p">,</span> <span class="mi">210</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">42</span><span class="p">,</span> <span class="mi">161</span><span class="p">,</span> <span class="mi">152</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">133</span><span class="p">,</span> <span class="mi">153</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="p">],</span>
+            <span class="s2">&quot;alphabet&quot;</span><span class="p">:</span> <span class="p">[</span>
+                <span class="p">[</span><span class="mi">240</span><span class="p">,</span> <span class="mi">163</span><span class="p">,</span> <span class="mi">255</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">117</span><span class="p">,</span> <span class="mi">220</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">153</span><span class="p">,</span> <span class="mi">63</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">76</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">92</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">25</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">25</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">92</span><span class="p">,</span> <span class="mi">49</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">43</span><span class="p">,</span> <span class="mi">206</span><span class="p">,</span> <span class="mi">72</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">255</span><span class="p">,</span> <span class="mi">204</span><span class="p">,</span> <span class="mi">153</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">148</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">181</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">143</span><span class="p">,</span> <span class="mi">124</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">157</span><span class="p">,</span> <span class="mi">204</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">194</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">136</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">51</span><span class="p">,</span> <span class="mi">128</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">255</span><span class="p">,</span> <span class="mi">164</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">255</span><span class="p">,</span> <span class="mi">168</span><span class="p">,</span> <span class="mi">187</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">66</span><span class="p">,</span> <span class="mi">102</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">16</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">94</span><span class="p">,</span> <span class="mi">241</span><span class="p">,</span> <span class="mi">242</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">153</span><span class="p">,</span> <span class="mi">143</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">224</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">102</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">116</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">255</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">153</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">128</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">255</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span>
+            <span class="p">],</span>
+            <span class="s2">&quot;twelve&quot;</span><span class="p">:</span> <span class="p">[</span>
+                <span class="p">[</span><span class="mi">31</span><span class="p">,</span> <span class="mi">120</span><span class="p">,</span> <span class="mi">180</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">51</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">44</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">227</span><span class="p">,</span> <span class="mi">26</span><span class="p">,</span> <span class="mi">28</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">255</span><span class="p">,</span> <span class="mi">127</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">106</span><span class="p">,</span> <span class="mi">61</span><span class="p">,</span> <span class="mi">154</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">177</span><span class="p">,</span> <span class="mi">89</span><span class="p">,</span> <span class="mi">40</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">166</span><span class="p">,</span> <span class="mi">206</span><span class="p">,</span> <span class="mi">227</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">178</span><span class="p">,</span> <span class="mi">223</span><span class="p">,</span> <span class="mi">138</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">251</span><span class="p">,</span> <span class="mi">154</span><span class="p">,</span> <span class="mi">153</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">253</span><span class="p">,</span> <span class="mi">191</span><span class="p">,</span> <span class="mi">111</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">202</span><span class="p">,</span> <span class="mi">178</span><span class="p">,</span> <span class="mi">214</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">153</span><span class="p">],</span>
+            <span class="p">],</span>
+        <span class="p">}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="s2">&quot;cycle&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_modes</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">cycle</span><span class="o">=</span><span class="k">lambda</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span><span class="p">:</span> <span class="n">i</span> <span class="o">%</span> <span class="n">c</span><span class="p">,</span> <span class="n">clip</span><span class="o">=</span><span class="k">lambda</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span><span class="p">:</span> <span class="nb">min</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">c</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_palette</span><span class="p">(</span><span class="n">palette</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">labels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets or sets labels dataset for which we are coloring tracks.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span>
+
+    <span class="nd">@labels</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span> <span class="o">=</span> <span class="n">val</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">palette_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets list of palette names.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_palettes</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+
+<div class="viewcode-block" id="TrackColorManager.set_palette"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.tracks.TrackColorManager.set_palette">[docs]</a>    <span class="k">def</span> <span class="nf">set_palette</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">palette</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sets palette (by name).&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">palette</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="s2">&quot;clip&quot;</span> <span class="k">if</span> <span class="n">palette</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;+&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="s2">&quot;cycle&quot;</span>
+
+            <span class="k">if</span> <span class="n">palette</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_palettes</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_color_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_palettes</span><span class="p">[</span><span class="n">palette</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_color_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_palettes</span><span class="p">[</span><span class="s2">&quot;standard&quot;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_color_map</span> <span class="o">=</span> <span class="n">palette</span></div>
+
+<div class="viewcode-block" id="TrackColorManager.get_color"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.tracks.TrackColorManager.get_color">[docs]</a>    <span class="k">def</span> <span class="nf">get_color</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">track</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Track</span><span class="p">,</span> <span class="nb">int</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;Return the color to use for a given track.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            track: `Track` object or an int</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            (r, g, b)-tuple</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">track_idx</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">tracks</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">track</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">track</span><span class="p">,</span> <span class="n">Track</span><span class="p">)</span> <span class="k">else</span> <span class="n">track</span>
+        <span class="p">)</span>
+        <span class="n">color_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">](</span><span class="n">track_idx</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_color_map</span><span class="p">))</span>
+        <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_color_map</span><span class="p">[</span><span class="n">color_idx</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">color</span></div></div>
+
+
+<div class="viewcode-block" id="TrackTrailOverlay"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.tracks.TrackTrailOverlay">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">TrackTrailOverlay</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Class to show track trails as overlay on video frame.</span>
+
+<span class="sd">    Initialize this object with both its data source and its visual output</span>
+<span class="sd">    scene, and it handles both extracting the relevant data for a given</span>
+<span class="sd">    frame and plotting it in the output.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        labels: The :class:`Labels` dataset from which to get overlay data.</span>
+<span class="sd">        player: The video player in which to show overlay.</span>
+<span class="sd">        trail_length: The maximum number of frames to include in trail.</span>
+
+<span class="sd">    Usage:</span>
+<span class="sd">        After class is instantiated, call :meth:`add_to_scene(frame_idx)`</span>
+<span class="sd">        to plot the trails in scene.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">player</span><span class="p">:</span> <span class="s2">&quot;QtVideoPlayer&quot;</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">trail_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="TrackTrailOverlay.get_track_trails"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.tracks.TrackTrailOverlay.get_track_trails">[docs]</a>    <span class="k">def</span> <span class="nf">get_track_trails</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame_selection</span><span class="p">,</span> <span class="n">track</span><span class="p">:</span> <span class="n">Track</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get data needed to draw track trail.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            frame_selection: an interable with the :class:`LabeledFrame`</span>
+<span class="sd">                objects to include in trail.</span>
+<span class="sd">            track: the :class:`Track` for which to get trail</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list of lists of (x, y) tuples</span>
+<span class="sd">                i.e., for every node in instance, we get a list of positions</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">all_trails</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">nodes</span><span class="p">))]</span>
+
+        <span class="k">for</span> <span class="n">frame</span> <span class="ow">in</span> <span class="n">frame_selection</span><span class="p">:</span>
+            <span class="n">frame_idx</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">frame_idx</span>
+
+            <span class="n">inst_on_track</span> <span class="o">=</span> <span class="p">[</span><span class="n">instance</span> <span class="k">for</span> <span class="n">instance</span> <span class="ow">in</span> <span class="n">frame</span> <span class="k">if</span> <span class="n">instance</span><span class="o">.</span><span class="n">track</span> <span class="o">==</span> <span class="n">track</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">inst_on_track</span><span class="p">:</span>
+                <span class="c1"># just use the first instance from this track in this frame</span>
+                <span class="n">inst</span> <span class="o">=</span> <span class="n">inst_on_track</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="c1"># loop through all nodes</span>
+                <span class="k">for</span> <span class="n">node_i</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">nodes</span><span class="p">):</span>
+
+                    <span class="k">if</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">inst</span><span class="o">.</span><span class="n">nodes</span> <span class="ow">and</span> <span class="n">inst</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">.</span><span class="n">visible</span><span class="p">:</span>
+                        <span class="n">point</span> <span class="o">=</span> <span class="p">(</span><span class="n">inst</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">inst</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_trails</span><span class="p">[</span><span class="n">node_i</span><span class="p">]):</span>
+                        <span class="n">point</span> <span class="o">=</span> <span class="n">all_trails</span><span class="p">[</span><span class="n">node_i</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">point</span> <span class="o">=</span> <span class="kc">None</span>
+
+                    <span class="k">if</span> <span class="n">point</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">all_trails</span><span class="p">[</span><span class="n">node_i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">point</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">all_trails</span></div>
+
+<div class="viewcode-block" id="TrackTrailOverlay.get_frame_selection"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.tracks.TrackTrailOverlay.get_frame_selection">[docs]</a>    <span class="k">def</span> <span class="nf">get_frame_selection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return `LabeledFrame` objects to include in trail for specified frame.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">frame_selection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">frame_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">frame_selection</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">frame_idx</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">frame_selection</span><span class="p">[</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">trail_length</span> <span class="p">:]</span></div>
+
+<div class="viewcode-block" id="TrackTrailOverlay.get_tracks_in_frame"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.tracks.TrackTrailOverlay.get_tracks_in_frame">[docs]</a>    <span class="k">def</span> <span class="nf">get_tracks_in_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return list of tracks that have instance in specified frame.&quot;&quot;&quot;</span>
+
+        <span class="n">tracks_in_frame</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">inst</span><span class="o">.</span><span class="n">track</span> <span class="k">for</span> <span class="n">lf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">)</span> <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">lf</span>
+        <span class="p">]</span>
+        <span class="k">return</span> <span class="n">tracks_in_frame</span></div>
+
+<div class="viewcode-block" id="TrackTrailOverlay.add_to_scene"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.tracks.TrackTrailOverlay.add_to_scene">[docs]</a>    <span class="k">def</span> <span class="nf">add_to_scene</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Plot the trail on a given frame.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            video: current video</span>
+<span class="sd">            frame_idx: index of the frame to which the trail is attached</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">show</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">frame_selection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_frame_selection</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">)</span>
+        <span class="n">tracks_in_frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_tracks_in_frame</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">track</span> <span class="ow">in</span> <span class="n">tracks_in_frame</span><span class="p">:</span>
+
+            <span class="n">trails</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_track_trails</span><span class="p">(</span><span class="n">frame_selection</span><span class="p">,</span> <span class="n">track</span><span class="p">)</span>
+
+            <span class="n">color</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QColor</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">color_manager</span><span class="o">.</span><span class="n">get_color</span><span class="p">(</span><span class="n">track</span><span class="p">))</span>
+            <span class="n">pen</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QPen</span><span class="p">()</span>
+            <span class="n">pen</span><span class="o">.</span><span class="n">setCosmetic</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">trail</span> <span class="ow">in</span> <span class="n">trails</span><span class="p">:</span>
+                <span class="n">half</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">trail</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+
+                <span class="n">color</span><span class="o">.</span><span class="n">setAlphaF</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">pen</span><span class="o">.</span><span class="n">setColor</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
+                <span class="n">polygon</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">map_to_qt_polygon</span><span class="p">(</span><span class="n">trail</span><span class="p">[:</span><span class="n">half</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">addPolygon</span><span class="p">(</span><span class="n">polygon</span><span class="p">,</span> <span class="n">pen</span><span class="p">)</span>
+
+                <span class="n">color</span><span class="o">.</span><span class="n">setAlphaF</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+                <span class="n">pen</span><span class="o">.</span><span class="n">setColor</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
+                <span class="n">polygon</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">map_to_qt_polygon</span><span class="p">(</span><span class="n">trail</span><span class="p">[</span><span class="n">half</span><span class="p">:])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">addPolygon</span><span class="p">(</span><span class="n">polygon</span><span class="p">,</span> <span class="n">pen</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TrackTrailOverlay.map_to_qt_polygon"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.tracks.TrackTrailOverlay.map_to_qt_polygon">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">map_to_qt_polygon</span><span class="p">(</span><span class="n">point_list</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Converts a list of (x, y)-tuples to a `QPolygonF`.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QPolygonF</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">starmap</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">QPointF</span><span class="p">,</span> <span class="n">point_list</span><span class="p">)))</span></div></div>
+
+
+<div class="viewcode-block" id="TrackListOverlay"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.tracks.TrackListOverlay">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">TrackListOverlay</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class to show track number and names in overlay.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">player</span><span class="p">:</span> <span class="s2">&quot;QtVideoPlayer&quot;</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">text_box</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="TrackListOverlay.add_to_scene"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.tracks.TrackListOverlay.add_to_scene">[docs]</a>    <span class="k">def</span> <span class="nf">add_to_scene</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Adds track list as overlay on video.&quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">sleap.gui.video</span> <span class="k">import</span> <span class="n">QtTextWithBackground</span>
+
+        <span class="n">html</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">num_to_show</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">tracks</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">track</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">tracks</span><span class="p">[:</span><span class="n">num_to_show</span><span class="p">]):</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+
+            <span class="k">if</span> <span class="n">html</span><span class="p">:</span>
+                <span class="n">html</span> <span class="o">+=</span> <span class="s2">&quot;&lt;br /&gt;&quot;</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">color_manager</span><span class="o">.</span><span class="n">get_color</span><span class="p">(</span><span class="n">track</span><span class="p">)</span>
+            <span class="n">html_color</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;#</span><span class="si">{color[0]:02X}{color[1]:02X}{color[2]:02X}</span><span class="s2">&quot;</span>
+            <span class="n">track_text</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;&lt;b&gt;</span><span class="si">{track.name}</span><span class="s2">&lt;/b&gt;&quot;</span>
+            <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="o">!=</span> <span class="n">track</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+                <span class="n">track_text</span> <span class="o">+=</span> <span class="n">f</span><span class="s2">&quot; (</span><span class="si">{idx}</span><span class="s2">)&quot;</span>
+            <span class="n">html</span> <span class="o">+=</span> <span class="n">f</span><span class="s2">&quot;&lt;span style=&#39;color:</span><span class="si">{html_color}</span><span class="s2">&#39;&gt;</span><span class="si">{track_text}</span><span class="s2">&lt;/span&gt;&quot;</span>
+
+        <span class="n">text_box</span> <span class="o">=</span> <span class="n">QtTextWithBackground</span><span class="p">()</span>
+        <span class="n">text_box</span><span class="o">.</span><span class="n">setDefaultTextColor</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QColor</span><span class="p">(</span><span class="s2">&quot;white&quot;</span><span class="p">))</span>
+        <span class="n">text_box</span><span class="o">.</span><span class="n">setHtml</span><span class="p">(</span><span class="n">html</span><span class="p">)</span>
+        <span class="n">text_box</span><span class="o">.</span><span class="n">setOpacity</span><span class="p">(</span><span class="mf">0.7</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">text_box</span> <span class="o">=</span> <span class="n">text_box</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visible</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">text_box</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">visible</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets or set whether overlay is visible.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">text_box</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">text_box</span><span class="o">.</span><span class="n">isVisible</span><span class="p">()</span>
+
+    <span class="nd">@visible</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">visible</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">text_box</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="n">val</span><span class="p">:</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">mapToScene</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">pos</span><span class="o">.</span><span class="n">x</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">text_box</span><span class="o">.</span><span class="n">setPos</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">text_box</span><span class="o">.</span><span class="n">setPos</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">text_box</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="n">val</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Murthy Lab @ Princeton
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

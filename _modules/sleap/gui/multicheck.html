@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>sleap.gui.multicheck &mdash; LEAP  documentation</title>
+  <title>sleap.gui.multicheck &mdash; SLEAP  documentation</title>
   
 
   
@@ -48,7 +48,7 @@
           
 
           
-            <a href="../../../index.html" class="icon icon-home"> LEAP
+            <a href="../../../index.html" class="icon icon-home"> SLEAP
           
 
           
@@ -78,7 +78,7 @@
               
             
             
-              <p class="caption"><span class="caption-text">sLEAP Package</span></p>
+              <p class="caption"><span class="caption-text">SLEAP Package</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../skeleton.html">Skeleton</a></li>
@@ -88,6 +88,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../training.html">Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../inference.html">Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../gui.html">GUI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc.html">Misc</a></li>
 </ul>
 
             
@@ -102,7 +103,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../../../index.html">LEAP</a>
+          <a href="../../../index.html">SLEAP</a>
         
       </nav>
 
@@ -152,33 +153,45 @@
             
   <h1>Source code for sleap.gui.multicheck</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Module for Qt Widget to show multiple checkboxes for selecting from a sequence of numbers.</span>
+<span class="sd">Module for Qt Widget to show multiple checkboxes for selecting.</span>
 
 <span class="sd">Example:</span>
 <span class="sd">    &gt;&gt;&gt; mc = MultiCheckWidget(count=5, selected=[0,1],title=&quot;My Items&quot;)</span>
-<span class="sd">    &gt;&gt;&gt; me.selectionChanged.connect(window.plot)</span>
+<span class="sd">    &gt;&gt;&gt; mc.selectionChanged.connect(window.plot)</span>
 <span class="sd">    &gt;&gt;&gt; window.layout.addWidget(mc)</span>
 <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+
 <span class="kn">from</span> <span class="nn">PySide2.QtCore</span> <span class="k">import</span> <span class="n">QRectF</span><span class="p">,</span> <span class="n">Signal</span>
 <span class="kn">from</span> <span class="nn">PySide2.QtWidgets</span> <span class="k">import</span> <span class="n">QGridLayout</span><span class="p">,</span> <span class="n">QGroupBox</span><span class="p">,</span> <span class="n">QButtonGroup</span><span class="p">,</span> <span class="n">QCheckBox</span>
 
+
 <div class="viewcode-block" id="MultiCheckWidget"><a class="viewcode-back" href="../../../gui.html#sleap.gui.multicheck.MultiCheckWidget">[docs]</a><span class="k">class</span> <span class="nc">MultiCheckWidget</span><span class="p">(</span><span class="n">QGroupBox</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Qt Widget to show multiple checkboxes for selecting from a sequence of numbers.</span>
+    <span class="sd">&quot;&quot;&quot;Qt Widget to show multiple checkboxes for a sequence of numbers.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        count (int): The number of checkboxes to show.</span>
-<span class="sd">        title (str, optional): Display title for group of checkboxes.</span>
-<span class="sd">        selected (list, optional): List of checkbox numbers to initially have checked.</span>
-<span class="sd">        default (bool, optional): Default to checked/unchecked (ignored if selected arg given).</span>
+<span class="sd">        count: The number of checkboxes to show.</span>
+<span class="sd">        title: Display title for group of checkboxes.</span>
+<span class="sd">        selected: List of checkbox numbers to initially check.</span>
+<span class="sd">        default: Whether to default boxes as checked.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">count</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">selected</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+        <span class="n">count</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">title</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="n">selected</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">default</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">MultiCheckWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="c1"># QButtonGroup is the logical container</span>
         <span class="c1"># it allows us to get list of checked boxes more easily</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">check_group</span> <span class="o">=</span> <span class="n">QButtonGroup</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">check_group</span><span class="o">.</span><span class="n">setExclusive</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span> <span class="c1"># more than one can be checked</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_group</span><span class="o">.</span><span class="n">setExclusive</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># more than one can be checked</span>
 
         <span class="k">if</span> <span class="n">title</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">setTitle</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
@@ -192,15 +205,15 @@
         <span class="n">check_layout</span> <span class="o">=</span> <span class="n">QGridLayout</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">check_layout</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">count</span><span class="p">):</span>
-            <span class="n">check</span> <span class="o">=</span> <span class="n">QCheckBox</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+            <span class="n">check</span> <span class="o">=</span> <span class="n">QCheckBox</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span><span class="p">))</span>
             <span class="c1"># call signal/slot on self when one of the checkboxes is changed</span>
             <span class="n">check</span><span class="o">.</span><span class="n">stateChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">selectionChanged</span><span class="o">.</span><span class="n">emit</span><span class="p">())</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">check_group</span><span class="o">.</span><span class="n">addButton</span><span class="p">(</span><span class="n">check</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
-            <span class="n">check_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">check</span><span class="p">,</span> <span class="n">i</span><span class="o">//</span><span class="mi">8</span><span class="p">,</span> <span class="n">i</span><span class="o">%</span><span class="mi">8</span><span class="p">)</span>
+            <span class="n">check_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">check</span><span class="p">,</span> <span class="n">i</span> <span class="o">//</span> <span class="mi">8</span><span class="p">,</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">8</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">setSelected</span><span class="p">(</span><span class="n">selected</span><span class="p">)</span>
 
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    selectionChanged signal is sent whenever one of the checkboxes gets a stateChanged signal.</span>
+<span class="sd">    selectionChanged signal sent when a checkbox gets a stateChanged signal</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">selectionChanged</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>
 
@@ -220,7 +233,7 @@
         <span class="sd">&quot;&quot;&quot;Method to set some checkboxes as checked.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            selected (list): List of checkboxes to check.</span>
+<span class="sd">            selected: List of checkboxes to check.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            None</span>

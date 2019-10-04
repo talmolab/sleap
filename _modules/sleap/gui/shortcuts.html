@@ -1,0 +1,406 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>sleap.gui.shortcuts &mdash; SLEAP  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> SLEAP
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">SLEAP Package</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../skeleton.html">Skeleton</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../video.html">Video</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instance.html">Instance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dataset.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../training.html">Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../gui.html">GUI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc.html">Misc</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">SLEAP</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>sleap.gui.shortcuts</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for sleap.gui.shortcuts</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Gui for keyboard shortcuts.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">PySide2</span> <span class="k">import</span> <span class="n">QtWidgets</span>
+<span class="kn">from</span> <span class="nn">PySide2.QtGui</span> <span class="k">import</span> <span class="n">QKeySequence</span>
+
+<span class="kn">import</span> <span class="nn">yaml</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">pkg_resources</span> <span class="k">import</span> <span class="n">Requirement</span><span class="p">,</span> <span class="n">resource_filename</span>
+
+
+<div class="viewcode-block" id="ShortcutDialog"><a class="viewcode-back" href="../../../gui.html#sleap.gui.shortcuts.ShortcutDialog">[docs]</a><span class="k">class</span> <span class="nc">ShortcutDialog</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDialog</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dialog window for reviewing and modifying the keyboard shortcuts.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_column_len</span> <span class="o">=</span> <span class="mi">13</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ShortcutDialog</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setWindowTitle</span><span class="p">(</span><span class="s2">&quot;Keyboard Shortcuts&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_shortcuts</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">make_form</span><span class="p">()</span>
+
+<div class="viewcode-block" id="ShortcutDialog.accept"><a class="viewcode-back" href="../../../gui.html#sleap.gui.shortcuts.ShortcutDialog.accept">[docs]</a>    <span class="k">def</span> <span class="nf">accept</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Triggered when form is accepted; saves the shortcuts.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">action</span><span class="p">,</span> <span class="n">widget</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">key_widgets</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">shortcuts</span><span class="p">[</span><span class="n">action</span><span class="p">]</span> <span class="o">=</span> <span class="n">widget</span><span class="o">.</span><span class="n">keySequence</span><span class="p">()</span><span class="o">.</span><span class="n">toString</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shortcuts</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">ShortcutDialog</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ShortcutDialog.load_shortcuts"><a class="viewcode-back" href="../../../gui.html#sleap.gui.shortcuts.ShortcutDialog.load_shortcuts">[docs]</a>    <span class="k">def</span> <span class="nf">load_shortcuts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Loads shortcuts object.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shortcuts</span> <span class="o">=</span> <span class="n">Shortcuts</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ShortcutDialog.make_form"><a class="viewcode-back" href="../../../gui.html#sleap.gui.shortcuts.ShortcutDialog.make_form">[docs]</a>    <span class="k">def</span> <span class="nf">make_form</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates the form with fields for all shortcuts.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">key_widgets</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>  <span class="c1"># dict to store QKeySequenceEdit widgets</span>
+
+        <span class="n">layout</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QVBoxLayout</span><span class="p">()</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">make_shortcuts_widget</span><span class="p">())</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span>
+            <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QLabel</span><span class="p">(</span>
+                <span class="s2">&quot;Any changes to keyboard shortcuts will not take effect &quot;</span>
+                <span class="s2">&quot;until you quit and re-open the application.&quot;</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">make_buttons_widget</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">layout</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ShortcutDialog.make_buttons_widget"><a class="viewcode-back" href="../../../gui.html#sleap.gui.shortcuts.ShortcutDialog.make_buttons_widget">[docs]</a>    <span class="k">def</span> <span class="nf">make_buttons_widget</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDialogButtonBox</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Makes the form buttons.&quot;&quot;&quot;</span>
+        <span class="n">buttons</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDialogButtonBox</span><span class="p">(</span>
+            <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDialogButtonBox</span><span class="o">.</span><span class="n">Ok</span> <span class="o">|</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDialogButtonBox</span><span class="o">.</span><span class="n">Cancel</span>
+        <span class="p">)</span>
+        <span class="n">buttons</span><span class="o">.</span><span class="n">accepted</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">accept</span><span class="p">)</span>
+        <span class="n">buttons</span><span class="o">.</span><span class="n">rejected</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reject</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">buttons</span></div>
+
+<div class="viewcode-block" id="ShortcutDialog.make_shortcuts_widget"><a class="viewcode-back" href="../../../gui.html#sleap.gui.shortcuts.ShortcutDialog.make_shortcuts_widget">[docs]</a>    <span class="k">def</span> <span class="nf">make_shortcuts_widget</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QWidget</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Makes the widget will fields for all shortcuts.&quot;&quot;&quot;</span>
+        <span class="n">shortcuts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shortcuts</span>
+
+        <span class="n">widget</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QWidget</span><span class="p">()</span>
+        <span class="n">layout</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QHBoxLayout</span><span class="p">()</span>
+
+        <span class="c1"># show shortcuts in columns</span>
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">shortcuts</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_column_len</span><span class="p">):</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">shortcuts</span><span class="p">),</span> <span class="n">a</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_column_len</span><span class="p">)</span>
+            <span class="n">column_widget</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_column_widget</span><span class="p">(</span><span class="n">shortcuts</span><span class="p">[</span><span class="n">a</span><span class="p">:</span><span class="n">b</span><span class="p">])</span>
+            <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">column_widget</span><span class="p">)</span>
+        <span class="n">widget</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">layout</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">widget</span></div>
+
+<div class="viewcode-block" id="ShortcutDialog.make_column_widget"><a class="viewcode-back" href="../../../gui.html#sleap.gui.shortcuts.ShortcutDialog.make_column_widget">[docs]</a>    <span class="k">def</span> <span class="nf">make_column_widget</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shortcuts</span><span class="p">:</span> <span class="n">List</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QWidget</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Makes a single column of shortcut fields.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            shortcuts: The list of shortcuts to include in this column.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The widget.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">column_widget</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QWidget</span><span class="p">()</span>
+        <span class="n">column_layout</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QFormLayout</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">shortcuts</span><span class="p">:</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QKeySequenceEdit</span><span class="p">(</span><span class="n">shortcuts</span><span class="p">[</span><span class="n">action</span><span class="p">])</span>
+            <span class="n">column_layout</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="n">action</span><span class="o">.</span><span class="n">title</span><span class="p">(),</span> <span class="n">item</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">key_widgets</span><span class="p">[</span><span class="n">action</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span>
+        <span class="n">column_widget</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">column_layout</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">column_widget</span></div></div>
+
+
+<div class="viewcode-block" id="Shortcuts"><a class="viewcode-back" href="../../../gui.html#sleap.gui.shortcuts.Shortcuts">[docs]</a><span class="k">class</span> <span class="nc">Shortcuts</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for accessing keyboard shortcuts.</span>
+
+<span class="sd">    Shortcuts are saved in `sleap/config/shortcuts.yaml`</span>
+
+<span class="sd">    When instantiated, this reads in the shortcuts from the file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_shortcuts</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">_names</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">&quot;new&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;open&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;save&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;save as&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;close&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;add videos&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;next video&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;prev video&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;goto frame&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;mark frame&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;goto marked&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;add instance&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;delete instance&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;delete track&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;transpose&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;select next&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;clear selection&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;goto next labeled&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;goto prev labeled&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;goto next user&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;goto next suggestion&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;goto prev suggestion&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;goto next track spawn&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;show labels&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;show edges&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;show trails&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;color predicted&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;fit&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;learning&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;export clip&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;delete clip&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;delete area&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">shortcut_yaml</span> <span class="o">=</span> <span class="n">resource_filename</span><span class="p">(</span>
+            <span class="n">Requirement</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;sleap&quot;</span><span class="p">),</span> <span class="s2">&quot;sleap/config/shortcuts.yaml&quot;</span>
+        <span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">shortcut_yaml</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">shortcuts</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">SafeLoader</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">shortcuts</span><span class="p">:</span>
+            <span class="n">key_string</span> <span class="o">=</span> <span class="n">shortcuts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">key_string</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span> <span class="k">if</span> <span class="n">key_string</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">key_string</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">shortcuts</span><span class="p">[</span><span class="n">action</span><span class="p">]</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">key_string</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="n">shortcuts</span><span class="p">[</span><span class="n">action</span><span class="p">]</span> <span class="o">=</span> <span class="n">QKeySequence</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">key_string</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shortcuts</span> <span class="o">=</span> <span class="n">shortcuts</span>
+
+<div class="viewcode-block" id="Shortcuts.save"><a class="viewcode-back" href="../../../gui.html#sleap.gui.shortcuts.Shortcuts.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Saves all shortcuts to shortcut file.&quot;&quot;&quot;</span>
+        <span class="n">shortcut_yaml</span> <span class="o">=</span> <span class="n">resource_filename</span><span class="p">(</span>
+            <span class="n">Requirement</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;sleap&quot;</span><span class="p">),</span> <span class="s2">&quot;sleap/config/shortcuts.yaml&quot;</span>
+        <span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">shortcut_yaml</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">yaml</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_shortcuts</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">slice</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns shortcut value, accessed by range, index, or key.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            idx: Index (range, int, or str) of shortcut to access.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            If idx is int or string, then return value is the shortcut string.</span>
+<span class="sd">            If idx is range, then return value is dictionary in which keys</span>
+<span class="sd">            are shortcut name and value are shortcut strings.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="nb">slice</span><span class="p">):</span>
+            <span class="c1"># dict with names and values</span>
+            <span class="k">return</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span> <span class="bp">self</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="o">*</span><span class="n">idx</span><span class="o">.</span><span class="n">indices</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)))}</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="c1"># value</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># value</span>
+            <span class="k">if</span> <span class="n">idx</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shortcuts</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shortcuts</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">val</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sets shortcut by index.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="o">==</span> <span class="nb">int</span><span class="p">:</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="bp">self</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_shortcuts</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns number of shortcuts.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">app</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QApplication</span><span class="p">()</span>
+    <span class="n">win</span> <span class="o">=</span> <span class="n">ShortcutDialog</span><span class="p">()</span>
+    <span class="n">win</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Murthy Lab @ Princeton
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

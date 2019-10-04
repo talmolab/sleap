@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>sleap.nn.architectures.common &mdash; LEAP  documentation</title>
+  <title>sleap.nn.architectures.common &mdash; SLEAP  documentation</title>
   
 
   
@@ -48,7 +48,7 @@
           
 
           
-            <a href="../../../../index.html" class="icon icon-home"> LEAP
+            <a href="../../../../index.html" class="icon icon-home"> SLEAP
           
 
           
@@ -78,7 +78,7 @@
               
             
             
-              <p class="caption"><span class="caption-text">sLEAP Package</span></p>
+              <p class="caption"><span class="caption-text">SLEAP Package</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../skeleton.html">Skeleton</a></li>
@@ -88,6 +88,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../training.html">Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../inference.html">Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../gui.html">GUI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../misc.html">Misc</a></li>
 </ul>
 
             
@@ -102,7 +103,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../../../../index.html">LEAP</a>
+          <a href="../../../../index.html">SLEAP</a>
         
       </nav>
 
@@ -157,6 +158,7 @@
 
 <span class="kn">from</span> <span class="nn">keras.layers</span> <span class="k">import</span> <span class="n">Conv2D</span><span class="p">,</span> <span class="n">BatchNormalization</span><span class="p">,</span> <span class="n">Add</span>
 
+
 <div class="viewcode-block" id="expand_to_n"><a class="viewcode-back" href="../../../../training.html#sleap.nn.architectures.common.expand_to_n">[docs]</a><span class="k">def</span> <span class="nf">expand_to_n</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Expands an object `x` to `n` elements if scalar.</span>
 
@@ -171,15 +173,14 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">collections</span><span class="o">.</span><span class="n">Sequence</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">,]</span>
-        
+        <span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">]</span>
+
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">!=</span> <span class="n">n</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Variable to expand must be scalar.&quot;</span><span class="p">)</span>
-        
-    <span class="k">return</span> <span class="n">x</span></div>
 
+    <span class="k">return</span> <span class="n">x</span></div>
 
 
 <div class="viewcode-block" id="conv"><a class="viewcode-back" href="../../../../training.html#sleap.nn.architectures.common.conv">[docs]</a><span class="k">def</span> <span class="nf">conv</span><span class="p">(</span><span class="n">num_filters</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;relu&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -194,7 +195,14 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.layers.Conv2D instance built with presets</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">Conv2D</span><span class="p">(</span><span class="n">num_filters</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="n">activation</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">Conv2D</span><span class="p">(</span>
+        <span class="n">num_filters</span><span class="p">,</span>
+        <span class="n">kernel_size</span><span class="o">=</span><span class="n">kernel_size</span><span class="p">,</span>
+        <span class="n">activation</span><span class="o">=</span><span class="n">activation</span><span class="p">,</span>
+        <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="conv1"><a class="viewcode-back" href="../../../../training.html#sleap.nn.architectures.common.conv1">[docs]</a><span class="k">def</span> <span class="nf">conv1</span><span class="p">(</span><span class="n">num_filters</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Convenience presets for 1x1 Conv2D.</span>
@@ -208,6 +216,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">conv</span><span class="p">(</span><span class="n">num_filters</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
+
 <div class="viewcode-block" id="conv3"><a class="viewcode-back" href="../../../../training.html#sleap.nn.architectures.common.conv3">[docs]</a><span class="k">def</span> <span class="nf">conv3</span><span class="p">(</span><span class="n">num_filters</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Convenience presets for 3x3 Conv2D.</span>
 
@@ -219,6 +228,7 @@
 <span class="sd">        keras.layers.Conv2D instance built with presets</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">conv</span><span class="p">(</span><span class="n">num_filters</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="residual_block"><a class="viewcode-back" href="../../../../training.html#sleap.nn.architectures.common.residual_block">[docs]</a><span class="k">def</span> <span class="nf">residual_block</span><span class="p">(</span><span class="n">x_in</span><span class="p">,</span> <span class="n">num_filters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">batch_norm</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Residual bottleneck block.</span>
@@ -252,29 +262,34 @@
     <span class="c1"># Default to output the same number of channels as input</span>
     <span class="k">if</span> <span class="n">num_filters</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">num_filters</span> <span class="o">=</span> <span class="n">x_in</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-        
+
     <span class="c1"># Number of output channels must be divisible by 2</span>
     <span class="k">if</span> <span class="n">num_filters</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Number of output filters must be divisible by 2 in residual blocks.&quot;</span><span class="p">)</span>
-    
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Number of output filters must be divisible by 2 in residual blocks.&quot;</span>
+        <span class="p">)</span>
+
     <span class="c1"># If number of input and output channels are different, add a 1x1 conv to use as the</span>
     <span class="c1"># identity tensor to which we add the residual at the end</span>
     <span class="n">x_identity</span> <span class="o">=</span> <span class="n">x_in</span>
     <span class="k">if</span> <span class="n">x_in</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">num_filters</span><span class="p">:</span>
         <span class="n">x_identity</span> <span class="o">=</span> <span class="n">conv1</span><span class="p">(</span><span class="n">num_filters</span><span class="p">)(</span><span class="n">x_in</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">batch_norm</span><span class="p">:</span> <span class="n">x_identity</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">()(</span><span class="n">x_identity</span><span class="p">)</span>
-    
+        <span class="k">if</span> <span class="n">batch_norm</span><span class="p">:</span>
+            <span class="n">x_identity</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">()(</span><span class="n">x_identity</span><span class="p">)</span>
+
     <span class="c1"># Bottleneck: 1x1 -&gt; 3x3 -&gt; 1x1 -&gt; Add residual to identity</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">conv1</span><span class="p">(</span><span class="n">num_filters</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)(</span><span class="n">x_in</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">batch_norm</span><span class="p">:</span> <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">()(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">batch_norm</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">()(</span><span class="n">x</span><span class="p">)</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">conv3</span><span class="p">(</span><span class="n">num_filters</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">batch_norm</span><span class="p">:</span> <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">()(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">batch_norm</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">()(</span><span class="n">x</span><span class="p">)</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">conv1</span><span class="p">(</span><span class="n">num_filters</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">batch_norm</span><span class="p">:</span> <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">()(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">batch_norm</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">()(</span><span class="n">x</span><span class="p">)</span>
     <span class="n">x_out</span> <span class="o">=</span> <span class="n">Add</span><span class="p">()([</span><span class="n">x_identity</span><span class="p">,</span> <span class="n">x</span><span class="p">])</span>
 
     <span class="k">return</span> <span class="n">x_out</span></div>
-
 </pre></div>
 
            </div>

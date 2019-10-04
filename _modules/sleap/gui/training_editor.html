@@ -1,0 +1,383 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>sleap.gui.training_editor &mdash; SLEAP  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> SLEAP
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">SLEAP Package</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../skeleton.html">Skeleton</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../video.html">Video</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instance.html">Instance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dataset.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../training.html">Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../gui.html">GUI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc.html">Misc</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">SLEAP</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>sleap.gui.training_editor</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for sleap.gui.training_editor</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Module for viewing and modifying training profiles.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">attr</span>
+<span class="kn">import</span> <span class="nn">cattr</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Optional</span>
+
+<span class="kn">from</span> <span class="nn">pkg_resources</span> <span class="k">import</span> <span class="n">Requirement</span><span class="p">,</span> <span class="n">resource_filename</span>
+
+<span class="kn">from</span> <span class="nn">PySide2</span> <span class="k">import</span> <span class="n">QtWidgets</span>
+
+<span class="kn">from</span> <span class="nn">sleap.gui.formbuilder</span> <span class="k">import</span> <span class="n">YamlFormWidget</span>
+
+
+<div class="viewcode-block" id="TrainingEditor"><a class="viewcode-back" href="../../../gui.html#sleap.gui.training_editor.TrainingEditor">[docs]</a><span class="k">class</span> <span class="nc">TrainingEditor</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDialog</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dialog for viewing and modifying training profiles.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        profile_filename: Path to saved training profile to view.</span>
+<span class="sd">        saved_files: When user saved profile, it&#39;s path is added to this</span>
+<span class="sd">            list (which will be updated in code that created TrainingEditor).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">profile_filename</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">saved_files</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[],</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">TrainingEditor</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="n">form_yaml</span> <span class="o">=</span> <span class="n">resource_filename</span><span class="p">(</span>
+            <span class="n">Requirement</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;sleap&quot;</span><span class="p">),</span> <span class="s2">&quot;sleap/config/training_editor.yaml&quot;</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">YamlFormWidget</span><span class="p">(</span>
+            <span class="n">form_yaml</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="p">,</span> <span class="s2">&quot;Network Architecture&quot;</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;datagen&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">YamlFormWidget</span><span class="p">(</span>
+            <span class="n">form_yaml</span><span class="p">,</span> <span class="s2">&quot;datagen&quot;</span><span class="p">,</span> <span class="s2">&quot;Data Generation/Preprocessing&quot;</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;trainer&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">YamlFormWidget</span><span class="p">(</span><span class="n">form_yaml</span><span class="p">,</span> <span class="s2">&quot;trainer&quot;</span><span class="p">,</span> <span class="s2">&quot;Trainer&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;output&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">YamlFormWidget</span><span class="p">(</span><span class="n">form_yaml</span><span class="p">,</span> <span class="s2">&quot;output&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;buttons&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">YamlFormWidget</span><span class="p">(</span><span class="n">form_yaml</span><span class="p">,</span> <span class="s2">&quot;buttons&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;buttons&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">mainAction</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_save_as</span><span class="p">)</span>
+
+        <span class="n">col1_layout</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QVBoxLayout</span><span class="p">()</span>
+        <span class="n">col2_layout</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QVBoxLayout</span><span class="p">()</span>
+
+        <span class="n">col1_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">])</span>
+        <span class="n">col1_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;datagen&quot;</span><span class="p">])</span>
+        <span class="n">col1_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;output&quot;</span><span class="p">])</span>
+
+        <span class="n">col2_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;trainer&quot;</span><span class="p">])</span>
+        <span class="n">col2_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;buttons&quot;</span><span class="p">])</span>
+
+        <span class="n">col_layout</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QHBoxLayout</span><span class="p">()</span>
+        <span class="n">col_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_layout_widget</span><span class="p">(</span><span class="n">col1_layout</span><span class="p">))</span>
+        <span class="n">col_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_layout_widget</span><span class="p">(</span><span class="n">col2_layout</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">col_layout</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">profile_filename</span> <span class="o">=</span> <span class="n">profile_filename</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">saved_files</span> <span class="o">=</span> <span class="n">saved_files</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">profile_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns path to currently loaded training profile.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile_filename</span>
+
+    <span class="nd">@profile_filename</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">profile_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sets path to (and loads) training profile.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_profile_filename</span> <span class="o">=</span> <span class="n">val</span>
+        <span class="c1"># set window title</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setWindowTitle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">profile_filename</span><span class="p">)</span>
+        <span class="c1"># load file</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">profile_filename</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_load_profile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">profile_filename</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_layout_widget</span><span class="p">(</span><span class="n">layout</span><span class="p">):</span>
+        <span class="n">widget</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QWidget</span><span class="p">()</span>
+        <span class="n">widget</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">layout</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">widget</span>
+
+    <span class="k">def</span> <span class="nf">_load_profile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">profile_filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Loads training profile settings from file.&quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">sleap.nn.model</span> <span class="k">import</span> <span class="n">ModelOutputType</span>
+        <span class="kn">from</span> <span class="nn">sleap.nn.training</span> <span class="k">import</span> <span class="n">TrainingJob</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">training_job</span> <span class="o">=</span> <span class="n">TrainingJob</span><span class="o">.</span><span class="n">load_json</span><span class="p">(</span><span class="n">profile_filename</span><span class="p">)</span>
+
+        <span class="n">job_dict</span> <span class="o">=</span> <span class="n">cattr</span><span class="o">.</span><span class="n">unstructure</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">training_job</span><span class="p">)</span>
+
+        <span class="n">job_dict</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">][</span><span class="s2">&quot;arch&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">job_dict</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">][</span><span class="s2">&quot;backbone_name&quot;</span><span class="p">]</span>
+        <span class="n">job_dict</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">][</span><span class="s2">&quot;output_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">training_job</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">output_type</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_form_data</span><span class="p">(</span><span class="n">job_dict</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_form_data</span><span class="p">(</span><span class="n">job_dict</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">][</span><span class="s2">&quot;backbone&quot;</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="s2">&quot;datagen,trainer,output&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">set_form_data</span><span class="p">(</span><span class="n">job_dict</span><span class="p">[</span><span class="s2">&quot;trainer&quot;</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_save_as</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Shows dialog to save training profile.&quot;&quot;&quot;</span>
+
+        <span class="c1"># Show &quot;Save&quot; dialog</span>
+        <span class="n">save_filename</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QFileDialog</span><span class="o">.</span><span class="n">getSaveFileName</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">caption</span><span class="o">=</span><span class="s2">&quot;Save As...&quot;</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="s2">&quot;Profile JSON (*.json)&quot;</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">save_filename</span><span class="p">):</span>
+            <span class="kn">from</span> <span class="nn">sleap.nn.model</span> <span class="k">import</span> <span class="n">Model</span><span class="p">,</span> <span class="n">ModelOutputType</span>
+            <span class="kn">from</span> <span class="nn">sleap.nn.training</span> <span class="k">import</span> <span class="n">Trainer</span><span class="p">,</span> <span class="n">TrainingJob</span>
+            <span class="kn">from</span> <span class="nn">sleap.nn.architectures</span> <span class="k">import</span> <span class="n">unet</span><span class="p">,</span> <span class="n">leap</span><span class="p">,</span> <span class="n">hourglass</span>
+
+            <span class="c1"># Construct Model</span>
+            <span class="n">model_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get_form_data</span><span class="p">()</span>
+            <span class="n">arch</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+                <span class="n">LeapCNN</span><span class="o">=</span><span class="n">leap</span><span class="o">.</span><span class="n">LeapCNN</span><span class="p">,</span>
+                <span class="n">StackedHourglass</span><span class="o">=</span><span class="n">hourglass</span><span class="o">.</span><span class="n">StackedHourglass</span><span class="p">,</span>
+                <span class="n">UNet</span><span class="o">=</span><span class="n">unet</span><span class="o">.</span><span class="n">UNet</span><span class="p">,</span>
+                <span class="n">StackedUNet</span><span class="o">=</span><span class="n">unet</span><span class="o">.</span><span class="n">StackedUNet</span><span class="p">,</span>
+            <span class="p">)[</span><span class="n">model_data</span><span class="p">[</span><span class="s2">&quot;arch&quot;</span><span class="p">]]</span>
+
+            <span class="n">output_type</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+                <span class="n">confmaps</span><span class="o">=</span><span class="n">ModelOutputType</span><span class="o">.</span><span class="n">CONFIDENCE_MAP</span><span class="p">,</span>
+                <span class="n">pafs</span><span class="o">=</span><span class="n">ModelOutputType</span><span class="o">.</span><span class="n">PART_AFFINITY_FIELD</span><span class="p">,</span>
+                <span class="n">centroids</span><span class="o">=</span><span class="n">ModelOutputType</span><span class="o">.</span><span class="n">CENTROIDS</span><span class="p">,</span>
+            <span class="p">)[</span><span class="n">model_data</span><span class="p">[</span><span class="s2">&quot;output_type&quot;</span><span class="p">]]</span>
+
+            <span class="n">backbone_kwargs</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">key</span><span class="p">:</span> <span class="n">val</span>
+                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">model_data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">attr</span><span class="o">.</span><span class="n">fields_dict</span><span class="p">(</span><span class="n">arch</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+            <span class="p">}</span>
+
+            <span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">output_type</span><span class="o">=</span><span class="n">output_type</span><span class="p">,</span> <span class="n">backbone</span><span class="o">=</span><span class="n">arch</span><span class="p">(</span><span class="o">**</span><span class="n">backbone_kwargs</span><span class="p">))</span>
+
+            <span class="c1"># Construct Trainer</span>
+            <span class="n">trainer_data</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;datagen&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get_form_data</span><span class="p">(),</span>
+                <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;output&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get_form_data</span><span class="p">(),</span>
+                <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;trainer&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get_form_data</span><span class="p">(),</span>
+            <span class="p">}</span>
+
+            <span class="n">trainer_kwargs</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">key</span><span class="p">:</span> <span class="n">val</span>
+                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">trainer_data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">attr</span><span class="o">.</span><span class="n">fields_dict</span><span class="p">(</span><span class="n">Trainer</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+            <span class="p">}</span>
+            <span class="n">trainer</span> <span class="o">=</span> <span class="n">Trainer</span><span class="p">(</span><span class="o">**</span><span class="n">trainer_kwargs</span><span class="p">)</span>
+
+            <span class="c1"># Construct TrainingJob</span>
+            <span class="n">training_job_kwargs</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">key</span><span class="p">:</span> <span class="n">val</span>
+                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">trainer_data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">attr</span><span class="o">.</span><span class="n">fields_dict</span><span class="p">(</span><span class="n">TrainingJob</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+            <span class="p">}</span>
+            <span class="n">training_job</span> <span class="o">=</span> <span class="n">TrainingJob</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">trainer</span><span class="p">,</span> <span class="o">**</span><span class="n">training_job_kwargs</span><span class="p">)</span>
+
+            <span class="c1"># Write the file</span>
+            <span class="n">TrainingJob</span><span class="o">.</span><span class="n">save_json</span><span class="p">(</span><span class="n">training_job</span><span class="p">,</span> <span class="n">save_filename</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">saved_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">save_filename</span><span class="p">)</span>
+            <span class="c1"># print(cattr.unstructure(training_job))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">profile_filename</span> <span class="o">=</span> <span class="n">save_filename</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">sys</span>
+
+    <span class="n">profile_filename</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="c1"># profile_filename = &quot;training_profiles/default_confmaps.json&quot;</span>
+
+    <span class="n">app</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QApplication</span><span class="p">([])</span>
+    <span class="n">win</span> <span class="o">=</span> <span class="n">TrainingEditor</span><span class="p">(</span><span class="n">profile_filename</span><span class="p">)</span>
+    <span class="n">win</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Murthy Lab @ Princeton
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

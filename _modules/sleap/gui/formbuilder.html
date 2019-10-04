@@ -1,0 +1,610 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>sleap.gui.formbuilder &mdash; SLEAP  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> SLEAP
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">SLEAP Package</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../skeleton.html">Skeleton</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../video.html">Video</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instance.html">Instance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dataset.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../training.html">Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../gui.html">GUI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc.html">Misc</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">SLEAP</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>sleap.gui.formbuilder</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for sleap.gui.formbuilder</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Module for creating a form from a yaml file.</span>
+
+<span class="sd">Example:</span>
+
+<span class="sd">&gt;&gt;&gt; widget = YamlFormWidget(yaml_file=&quot;example.yaml&quot;)</span>
+<span class="sd">&gt;&gt;&gt; widget.mainAction.connect(my_function)</span>
+
+<span class="sd">my_function will get called with form data when user clicks the main button</span>
+<span class="sd">(main button has type &quot;button&quot; and default &quot;main action&quot;)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">yaml</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">from</span> <span class="nn">PySide2</span> <span class="k">import</span> <span class="n">QtWidgets</span><span class="p">,</span> <span class="n">QtCore</span>
+
+
+<div class="viewcode-block" id="YamlFormWidget"><a class="viewcode-back" href="../../../gui.html#sleap.gui.formbuilder.YamlFormWidget">[docs]</a><span class="k">class</span> <span class="nc">YamlFormWidget</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QGroupBox</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Custom QWidget which creates form based on yaml file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        yaml_file: filename</span>
+<span class="sd">        which_form (optional): key to form in yaml file, default &quot;main&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">mainAction</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="n">valueChanged</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">yaml_file</span><span class="p">,</span> <span class="n">which_form</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;main&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">YamlFormWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">yaml_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">form_yaml</span><span class="p">:</span>
+            <span class="n">items_to_create</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">form_yaml</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">SafeLoader</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">which_form</span> <span class="o">=</span> <span class="n">which_form</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">form_layout</span> <span class="o">=</span> <span class="n">FormBuilderLayout</span><span class="p">(</span><span class="n">items_to_create</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">which_form</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">form_layout</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items_to_create</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">which_form</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;button&quot;</span> <span class="ow">and</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;main action&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">buttons</span><span class="p">[</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trigger_main_action</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">form_layout</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">valueChanged</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return value for specified form field.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">FormBuilderLayout</span><span class="o">.</span><span class="n">get_widget_value</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set value for specified form field.&quot;&quot;&quot;</span>
+        <span class="n">FormBuilderLayout</span><span class="o">.</span><span class="n">set_widget_value</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">val</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">buttons</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a list of buttons in form (so we can connect to handlers).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_layout</span><span class="o">.</span><span class="n">buttons</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fields</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a dict of {name: widget} fields in form.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_layout</span><span class="o">.</span><span class="n">fields</span>
+
+<div class="viewcode-block" id="YamlFormWidget.set_form_data"><a class="viewcode-back" href="../../../gui.html#sleap.gui.formbuilder.YamlFormWidget.set_form_data">[docs]</a>    <span class="k">def</span> <span class="nf">set_form_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set data for form from dict.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">form_layout</span><span class="o">.</span><span class="n">set_form_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="YamlFormWidget.get_form_data"><a class="viewcode-back" href="../../../gui.html#sleap.gui.formbuilder.YamlFormWidget.get_form_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_form_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns dict of form data.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_layout</span><span class="o">.</span><span class="n">get_form_data</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="YamlFormWidget.trigger_main_action"><a class="viewcode-back" href="../../../gui.html#sleap.gui.formbuilder.YamlFormWidget.trigger_main_action">[docs]</a>    <span class="k">def</span> <span class="nf">trigger_main_action</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Emit mainAction signal with form data.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mainAction</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_form_data</span><span class="p">())</span></div></div>
+
+
+<div class="viewcode-block" id="FormBuilderLayout"><a class="viewcode-back" href="../../../gui.html#sleap.gui.formbuilder.FormBuilderLayout">[docs]</a><span class="k">class</span> <span class="nc">FormBuilderLayout</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QFormLayout</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Custom QFormLayout which populates itself from list of form fields.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        items_to_create: list which gets passed to :meth:`get_form_data`</span>
+<span class="sd">                         (see there for details about format)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">valueChanged</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">items_to_create</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">FormBuilderLayout</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">buttons</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fields</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">build_form</span><span class="p">(</span><span class="n">items_to_create</span><span class="p">)</span>
+
+<div class="viewcode-block" id="FormBuilderLayout.get_form_data"><a class="viewcode-back" href="../../../gui.html#sleap.gui.formbuilder.FormBuilderLayout.get_form_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_form_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Gets all user-editable data from the widgets in the form layout.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dict with key:value for each user-editable widget in layout</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">widgets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">w</span><span class="o">.</span><span class="n">objectName</span><span class="p">():</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_widget_value</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">widgets</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">objectName</span><span class="p">())</span>
+            <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QLabel</span><span class="p">,</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QPushButton</span><span class="p">)</span>
+        <span class="p">}</span>
+        <span class="n">stacked_data</span> <span class="o">=</span> <span class="p">[</span><span class="n">w</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">widgets</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="o">==</span> <span class="n">StackBuilderWidget</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">stack</span> <span class="ow">in</span> <span class="n">stacked_data</span><span class="p">:</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">stack</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">data</span></div>
+
+<div class="viewcode-block" id="FormBuilderLayout.set_form_data"><a class="viewcode-back" href="../../../gui.html#sleap.gui.formbuilder.FormBuilderLayout.set_form_data">[docs]</a>    <span class="k">def</span> <span class="nf">set_form_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set specified user-editable data.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data: dictionary of datay, key should match field name</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">widgets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># print(f&quot;Attempting to set {name} to {val}&quot;)</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">widgets</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">set_widget_value</span><span class="p">(</span><span class="n">widgets</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">val</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">pass</span></div>
+
+    <span class="c1">#                 print(f&quot;no {name} widget found&quot;)</span>
+
+<div class="viewcode-block" id="FormBuilderLayout.set_widget_value"><a class="viewcode-back" href="../../../gui.html#sleap.gui.formbuilder.FormBuilderLayout.set_widget_value">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">set_widget_value</span><span class="p">(</span><span class="n">widget</span><span class="p">:</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QWidget</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set value for specific widget.&quot;&quot;&quot;</span>
+        <span class="c1"># if widget.property(&quot;field_data_type&quot;) == &quot;sci&quot;:</span>
+        <span class="c1">#     val = str(val)</span>
+
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">widget</span><span class="p">,</span> <span class="s2">&quot;isChecked&quot;</span><span class="p">):</span>
+            <span class="n">widget</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">widget</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">):</span>
+            <span class="n">widget</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">widget</span><span class="p">,</span> <span class="s2">&quot;currentText&quot;</span><span class="p">):</span>
+            <span class="n">widget</span><span class="o">.</span><span class="n">setCurrentText</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">val</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">widget</span><span class="p">,</span> <span class="s2">&quot;text&quot;</span><span class="p">):</span>
+            <span class="n">widget</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">val</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;don&#39;t know how to set value for </span><span class="si">{widget}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="c1"># for macOS we need to call repaint (bug in Qt?)</span>
+        <span class="n">widget</span><span class="o">.</span><span class="n">repaint</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="FormBuilderLayout.get_widget_value"><a class="viewcode-back" href="../../../gui.html#sleap.gui.formbuilder.FormBuilderLayout.get_widget_value">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_widget_value</span><span class="p">(</span><span class="n">widget</span><span class="p">:</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QWidget</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns value of form field.</span>
+
+<span class="sd">        This determines the method appropriate for the type of widget.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            widget: The widget for which to return value.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            value (can be bool, numeric, string, or None)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">widget</span><span class="p">,</span> <span class="s2">&quot;isChecked&quot;</span><span class="p">):</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">widget</span><span class="o">.</span><span class="n">isChecked</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">widget</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">):</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">widget</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">widget</span><span class="p">,</span> <span class="s2">&quot;currentText&quot;</span><span class="p">):</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">widget</span><span class="o">.</span><span class="n">currentText</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">widget</span><span class="p">,</span> <span class="s2">&quot;text&quot;</span><span class="p">):</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">widget</span><span class="o">.</span><span class="n">text</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">widget</span><span class="p">,</span> <span class="s2">&quot;currentIndex&quot;</span><span class="p">):</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">widget</span><span class="o">.</span><span class="n">currentIndex</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">widget</span><span class="p">)</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">widget</span><span class="o">.</span><span class="n">property</span><span class="p">(</span><span class="s2">&quot;field_data_type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;sci&quot;</span><span class="p">:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">widget</span><span class="o">.</span><span class="n">property</span><span class="p">(</span><span class="s2">&quot;field_data_type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;int&quot;</span><span class="p">:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">widget</span><span class="o">.</span><span class="n">property</span><span class="p">(</span><span class="s2">&quot;field_data_type&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;file_&quot;</span><span class="p">):</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">val</span> <span class="o">==</span> <span class="s2">&quot;None&quot;</span> <span class="k">else</span> <span class="n">val</span>
+        <span class="k">return</span> <span class="n">val</span></div>
+
+<div class="viewcode-block" id="FormBuilderLayout.build_form"><a class="viewcode-back" href="../../../gui.html#sleap.gui.formbuilder.FormBuilderLayout.build_form">[docs]</a>    <span class="k">def</span> <span class="nf">build_form</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">items_to_create</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]):</span>
+        <span class="sd">&quot;&quot;&quot;Adds widgets to form layout for each item in items_to_create.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            items_to_create: list of dictionaries with keys</span>
+
+<span class="sd">              * name: used as key when we return form data as dict</span>
+<span class="sd">              * label: string to show in form</span>
+<span class="sd">              * type: supports double, int, bool, list, button, stack</span>
+<span class="sd">              * default: default value for form field</span>
+<span class="sd">              * [options]: comma separated list of options,</span>
+<span class="sd">                used for list or stack field-types</span>
+<span class="sd">              * for stack, array of dicts w/ form data for each stack page</span>
+
+<span class="sd">        A &quot;stack&quot; has a dropdown menu that determines which stack page to show.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items_to_create</span><span class="p">:</span>
+            <span class="c1"># double: show spinbox (number w/ up/down controls)</span>
+            <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;double&quot;</span><span class="p">:</span>
+                <span class="n">field</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDoubleSpinBox</span><span class="p">()</span>
+                <span class="n">field</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">])</span>
+                <span class="n">field</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">emit</span><span class="p">())</span>
+
+            <span class="c1"># int: show spinbox (number w/ up/down controls)</span>
+            <span class="k">elif</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;int&quot;</span><span class="p">:</span>
+                <span class="n">field</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QSpinBox</span><span class="p">()</span>
+                <span class="k">if</span> <span class="s2">&quot;range&quot;</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="nb">min</span><span class="p">,</span> <span class="nb">max</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;range&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)))</span>
+                    <span class="n">field</span><span class="o">.</span><span class="n">setRange</span><span class="p">(</span><span class="nb">min</span><span class="p">,</span> <span class="nb">max</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">100</span><span class="p">:</span>
+                    <span class="nb">min</span><span class="p">,</span> <span class="nb">max</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">10</span>
+                    <span class="n">field</span><span class="o">.</span><span class="n">setRange</span><span class="p">(</span><span class="nb">min</span><span class="p">,</span> <span class="nb">max</span><span class="p">)</span>
+                <span class="n">field</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">])</span>
+                <span class="n">field</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">emit</span><span class="p">())</span>
+
+            <span class="c1"># bool: show checkbox</span>
+            <span class="k">elif</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;bool&quot;</span><span class="p">:</span>
+                <span class="n">field</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QCheckBox</span><span class="p">()</span>
+                <span class="n">field</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">])</span>
+                <span class="n">field</span><span class="o">.</span><span class="n">stateChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">emit</span><span class="p">())</span>
+
+            <span class="c1"># list: show drop-down menu</span>
+            <span class="k">elif</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;list&quot;</span><span class="p">:</span>
+                <span class="n">field</span> <span class="o">=</span> <span class="n">FieldComboWidget</span><span class="p">()</span>
+                <span class="n">field</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;options&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">),</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">])</span>
+                <span class="n">field</span><span class="o">.</span><span class="n">currentIndexChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">emit</span><span class="p">())</span>
+
+            <span class="c1"># button</span>
+            <span class="k">elif</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;button&quot;</span><span class="p">:</span>
+                <span class="n">field</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QPushButton</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">buttons</span><span class="p">[</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">field</span>
+
+            <span class="c1"># string</span>
+            <span class="k">elif</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;string&quot;</span><span class="p">:</span>
+                <span class="n">field</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QLineEdit</span><span class="p">()</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span> <span class="k">if</span> <span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">val</span>
+                <span class="n">field</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">val</span><span class="p">))</span>
+
+            <span class="c1"># stacked: show menu and form panel corresponding to menu selection</span>
+            <span class="k">elif</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;stacked&quot;</span><span class="p">:</span>
+                <span class="n">field</span> <span class="o">=</span> <span class="n">StackBuilderWidget</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+            <span class="c1"># If we don&#39;t recognize the type, just show a text box</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">field</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QLineEdit</span><span class="p">()</span>
+                <span class="n">field</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)))</span>
+                <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;file&quot;</span><span class="p">:</span>
+                    <span class="n">field</span><span class="o">.</span><span class="n">setDisabled</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="c1"># Store name and type on widget</span>
+            <span class="n">field</span><span class="o">.</span><span class="n">setObjectName</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">])</span>
+            <span class="n">field</span><span class="o">.</span><span class="n">setProperty</span><span class="p">(</span><span class="s2">&quot;field_data_type&quot;</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;dtype&quot;</span><span class="p">,</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]))</span>
+            <span class="c1"># Store widget by name</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">field</span>
+            <span class="c1"># Add field (and label if appropriate) to form layout</span>
+            <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;stacked&quot;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="n">field</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;button&quot;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">field</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="n">field</span><span class="p">)</span>
+
+            <span class="c1"># file_[open|dir]: show button to select file/directory</span>
+            <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;file&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_file_button</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">field</span><span class="p">))</span></div>
+
+    <span class="k">def</span> <span class="nf">_make_file_button</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">field</span><span class="p">:</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QWidget</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QPushButton</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Creates the button for a file_* field-type.&quot;&quot;&quot;</span>
+        <span class="n">file_button</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QPushButton</span><span class="p">(</span><span class="s2">&quot;Select &quot;</span> <span class="o">+</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;open&quot;</span><span class="p">:</span>
+            <span class="c1"># Define function for button to trigger</span>
+            <span class="k">def</span> <span class="nf">select_file</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">field</span><span class="p">):</span>
+                <span class="nb">filter</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;filter&quot;</span><span class="p">,</span> <span class="s2">&quot;Any File (*.*)&quot;</span><span class="p">)</span>
+                <span class="n">filename</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QFileDialog</span><span class="o">.</span><span class="n">getOpenFileName</span><span class="p">(</span>
+                    <span class="kc">None</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">caption</span><span class="o">=</span><span class="s2">&quot;Open File&quot;</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="nb">filter</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+                    <span class="n">x</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span>
+
+        <span class="k">elif</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;dir&quot;</span><span class="p">:</span>
+            <span class="c1"># Define function for button to trigger</span>
+            <span class="k">def</span> <span class="nf">select_file</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">field</span><span class="p">):</span>
+                <span class="n">filename</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QFileDialog</span><span class="o">.</span><span class="n">getExistingDirectory</span><span class="p">(</span>
+                    <span class="kc">None</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">caption</span><span class="o">=</span><span class="s2">&quot;Open File&quot;</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+                    <span class="n">x</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">select_file</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;no action set for type </span><span class="si">{item[&#39;type&#39;]}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">file_button</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">select_file</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">file_button</span></div>
+
+
+<div class="viewcode-block" id="StackBuilderWidget"><a class="viewcode-back" href="../../../gui.html#sleap.gui.formbuilder.StackBuilderWidget">[docs]</a><span class="k">class</span> <span class="nc">StackBuilderWidget</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QWidget</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A custom widget that shows different subforms depending on menu selection.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        stack_data: Dictionary for field from `items_to_create`.</span>
+<span class="sd">            The &quot;options&quot; key will give the list of options to show in</span>
+<span class="sd">            menu. Each of the &quot;options&quot; will also be the key of a dictionary</span>
+<span class="sd">            within stack_data that has the same structure as the dictionary</span>
+<span class="sd">            passed to :meth:`FormBuilderLayout.build_form()`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stack_data</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">StackBuilderWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="n">multi_layout</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QFormLayout</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">combo_box</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QComboBox</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stacked_widget</span> <span class="o">=</span> <span class="n">ResizingStackedWidget</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">combo_box</span><span class="o">.</span><span class="n">activated</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">stacked_widget</span><span class="o">.</span><span class="n">setCurrentIndex</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">page_layouts</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">page</span> <span class="ow">in</span> <span class="n">stack_data</span><span class="p">[</span><span class="s2">&quot;options&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">):</span>
+
+            <span class="c1"># add page</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">page_layouts</span><span class="p">[</span><span class="n">page</span><span class="p">]</span> <span class="o">=</span> <span class="n">FormBuilderLayout</span><span class="p">(</span><span class="n">stack_data</span><span class="p">[</span><span class="n">page</span><span class="p">])</span>
+
+            <span class="n">page_widget</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QGroupBox</span><span class="p">()</span>
+            <span class="n">page_widget</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">page_layouts</span><span class="p">[</span><span class="n">page</span><span class="p">])</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">stacked_widget</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">page_widget</span><span class="p">)</span>
+
+            <span class="c1"># add option to menu</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">combo_box</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">page</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">stack_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;label&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)):</span>
+            <span class="n">combo_label</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;</span><span class="si">{stack_data[&#39;label&#39;]}</span><span class="s2">:&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">combo_label</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="n">multi_layout</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="n">combo_label</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">combo_box</span><span class="p">)</span>
+        <span class="n">multi_layout</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stacked_widget</span><span class="p">)</span>
+
+        <span class="n">default_page</span> <span class="o">=</span> <span class="n">stack_data</span><span class="p">[</span><span class="s2">&quot;options&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">stack_data</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">combo_box</span><span class="o">.</span><span class="n">setCurrentIndex</span><span class="p">(</span><span class="n">default_page</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stacked_widget</span><span class="o">.</span><span class="n">setCurrentIndex</span><span class="p">(</span><span class="n">default_page</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">multi_layout</span><span class="p">)</span>
+
+<div class="viewcode-block" id="StackBuilderWidget.value"><a class="viewcode-back" href="../../../gui.html#sleap.gui.formbuilder.StackBuilderWidget.value">[docs]</a>    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns value of menu.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">combo_box</span><span class="o">.</span><span class="n">currentText</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="StackBuilderWidget.get_data"><a class="viewcode-back" href="../../../gui.html#sleap.gui.formbuilder.StackBuilderWidget.get_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns value from currently shown subform.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">page_layouts</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">()]</span><span class="o">.</span><span class="n">get_form_data</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="FieldComboWidget"><a class="viewcode-back" href="../../../gui.html#sleap.gui.formbuilder.FieldComboWidget">[docs]</a><span class="k">class</span> <span class="nc">FieldComboWidget</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QComboBox</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A custom ComboBox widget with method to easily add set of options.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">FieldComboWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setSizeAdjustPolicy</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QComboBox</span><span class="o">.</span><span class="n">AdjustToContents</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setMinimumContentsLength</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+<div class="viewcode-block" id="FieldComboWidget.set_options"><a class="viewcode-back" href="../../../gui.html#sleap.gui.formbuilder.FieldComboWidget.set_options">[docs]</a>    <span class="k">def</span> <span class="nf">set_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">options_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">select_item</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sets list of menu options.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            options_list: List of items (strings) to show in menu.</span>
+<span class="sd">            select_item: Item to select initially.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">options_list</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">item</span> <span class="o">==</span> <span class="s2">&quot;---&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">insertSeparator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">())</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">select_item</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">select_item</span> <span class="ow">in</span> <span class="n">options_list</span><span class="p">:</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">options_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">select_item</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setCurrentIndex</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="ResizingStackedWidget"><a class="viewcode-back" href="../../../gui.html#sleap.gui.formbuilder.ResizingStackedWidget">[docs]</a><span class="k">class</span> <span class="nc">ResizingStackedWidget</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QStackedWidget</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    QStackedWidget that updates its sizeHint and minimumSizeHint as needed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ResizingStackedWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ResizingStackedWidget.sizeHint"><a class="viewcode-back" href="../../../gui.html#sleap.gui.formbuilder.ResizingStackedWidget.sizeHint">[docs]</a>    <span class="k">def</span> <span class="nf">sizeHint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Qt method.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">currentWidget</span><span class="p">()</span><span class="o">.</span><span class="n">sizeHint</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ResizingStackedWidget.minimumSizeHint"><a class="viewcode-back" href="../../../gui.html#sleap.gui.formbuilder.ResizingStackedWidget.minimumSizeHint">[docs]</a>    <span class="k">def</span> <span class="nf">minimumSizeHint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Qt method.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">currentWidget</span><span class="p">()</span><span class="o">.</span><span class="n">minimumSizeHint</span><span class="p">()</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Murthy Lab @ Princeton
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

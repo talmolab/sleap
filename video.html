@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Video &mdash; LEAP  documentation</title>
+  <title>Video &mdash; SLEAP  documentation</title>
   
 
   
@@ -50,7 +50,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> LEAP
+            <a href="index.html" class="icon icon-home"> SLEAP
           
 
           
@@ -80,7 +80,7 @@
               
             
             
-              <p class="caption"><span class="caption-text">sLEAP Package</span></p>
+              <p class="caption"><span class="caption-text">SLEAP Package</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="skeleton.html">Skeleton</a></li>
@@ -90,6 +90,7 @@
 <li class="toctree-l1"><a class="reference internal" href="training.html">Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="inference.html">Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gui.html">GUI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="misc.html">Misc</a></li>
 </ul>
 
             
@@ -104,7 +105,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">LEAP</a>
+          <a href="index.html">SLEAP</a>
         
       </nav>
 
@@ -160,16 +161,17 @@
 <dl class="class">
 <dt id="sleap.io.video.HDF5Video">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.io.video.</code><code class="sig-name descname">HDF5Video</code><span class="sig-paren">(</span><em class="sig-param">filename: str = None</em>, <em class="sig-param">dataset: str = None</em>, <em class="sig-param">input_format: str = 'channels_last'</em>, <em class="sig-param">convert_range: bool = True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/video.html#HDF5Video"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.HDF5Video" title="Permalink to this definition">¶</a></dt>
-<dd><p>Video data stored as 4D datasets in HDF5 files can be imported into
-the sLEAP system with this class.</p>
+<dd><p>Video data stored as 4D datasets in HDF5 files.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>filename</strong> – The name of the HDF5 file where the dataset with video data is stored.</p></li>
+<li><p><strong>filename</strong> – The name of the HDF5 file where the dataset with video data
+is stored.</p></li>
 <li><p><strong>dataset</strong> – The name of the HDF5 dataset where the video data is stored.</p></li>
 <li><p><strong>file_h5</strong> – The h5.File object that the underlying dataset is stored.</p></li>
 <li><p><strong>dataset_h5</strong> – The h5.Dataset object that the underlying data is stored.</p></li>
-<li><p><strong>input_format</strong> – <p>A string value equal to either “channels_last” or “channels_first”.
+<li><p><strong>input_format</strong> – <p>A string value equal to either “channels_last” or
+“channels_first”.
 This specifies whether the underlying video data is stored as:</p>
 <blockquote>
 <div><ul>
@@ -183,8 +185,38 @@ This specifies whether the underlying video data is stored as:</p>
 </dd>
 </dl>
 <dl class="method">
+<dt id="sleap.io.video.HDF5Video.channels">
+<em class="property">property </em><code class="sig-name descname">channels</code><a class="headerlink" href="#sleap.io.video.HDF5Video.channels" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.video.HDF5Video.check">
+<code class="sig-name descname">check</code><span class="sig-paren">(</span><em class="sig-param">attribute</em>, <em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/video.html#HDF5Video.check"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.HDF5Video.check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called by attrs to validates input format.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.video.HDF5Video.close">
+<code class="sig-name descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/video.html#HDF5Video.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.HDF5Video.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Closes the HDF5 file object (if it’s open).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.video.HDF5Video.dtype">
+<em class="property">property </em><code class="sig-name descname">dtype</code><a class="headerlink" href="#sleap.io.video.HDF5Video.dtype" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.video.HDF5Video.frames">
+<em class="property">property </em><code class="sig-name descname">frames</code><a class="headerlink" href="#sleap.io.video.HDF5Video.frames" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.io.video.HDF5Video.get_frame">
-<code class="sig-name descname">get_frame</code><span class="sig-paren">(</span><em class="sig-param">idx</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/video.html#HDF5Video.get_frame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.HDF5Video.get_frame" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_frame</code><span class="sig-paren">(</span><em class="sig-param">idx</em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="_modules/sleap/io/video.html#HDF5Video.get_frame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.HDF5Video.get_frame" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a frame from the underlying HDF5 video data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -197,17 +229,38 @@ This specifies whether the underlying video data is stored as:</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="sleap.io.video.HDF5Video.height">
+<em class="property">property </em><code class="sig-name descname">height</code><a class="headerlink" href="#sleap.io.video.HDF5Video.height" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.video.HDF5Video.last_frame_idx">
+<em class="property">property </em><code class="sig-name descname">last_frame_idx</code><a class="headerlink" href="#sleap.io.video.HDF5Video.last_frame_idx" title="Permalink to this definition">¶</a></dt>
+<dd><p>The idx number of the last frame.</p>
+<p>Overrides method of base <a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a> class for videos with
+select frames indexed by number from original video, since the last
+frame index here will not match the number of frames in video.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.io.video.HDF5Video.matches">
-<code class="sig-name descname">matches</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/video.html#HDF5Video.matches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.HDF5Video.matches" title="Permalink to this definition">¶</a></dt>
-<dd><p>Check if attributes match.</p>
+<code class="sig-name descname">matches</code><span class="sig-paren">(</span><em class="sig-param">other: sleap.io.video.HDF5Video</em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/sleap/io/video.html#HDF5Video.matches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.HDF5Video.matches" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if attributes match those of another video.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>other</strong> – The instance to compare with.</p>
+<dd class="field-odd"><p><strong>other</strong> – The other video to compare with.</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>True if attributes match, False otherwise</p>
+<dd class="field-even"><p>True if attributes match, False otherwise.</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.video.HDF5Video.width">
+<em class="property">property </em><code class="sig-name descname">width</code><a class="headerlink" href="#sleap.io.video.HDF5Video.width" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a>.</p>
 </dd></dl>
 
 </dd></dl>
@@ -215,21 +268,31 @@ This specifies whether the underlying video data is stored as:</p>
 <dl class="class">
 <dt id="sleap.io.video.ImgStoreVideo">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.io.video.</code><code class="sig-name descname">ImgStoreVideo</code><span class="sig-paren">(</span><em class="sig-param">filename: str = None</em>, <em class="sig-param">index_by_original: bool = True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/video.html#ImgStoreVideo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.ImgStoreVideo" title="Permalink to this definition">¶</a></dt>
-<dd><p>Video data stored as an ImgStore dataset. See: <a class="reference external" href="https://github.com/loopbio/imgstore">https://github.com/loopbio/imgstore</a>
-This class is just a lightweight wrapper for reading such datasets as videos sources
-for sLEAP.</p>
+<dd><p>Video data stored as an ImgStore dataset.</p>
+<p>See: <a class="reference external" href="https://github.com/loopbio/imgstore">https://github.com/loopbio/imgstore</a>
+This class is just a lightweight wrapper for reading such datasets as
+video sources for SLEAP.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>filename</strong> – The name of the file or directory to the imgstore.</p></li>
-<li><p><strong>index_by_original</strong> – ImgStores are great for storing a collection of frame</p></li>
-<li><p><strong>frames from an larger video. If the index_by_original is set to</strong> (<em>selected</em>) – </p></li>
-<li><p><strong>than the get_frame function will accept the original frame numbers of</strong> (<em>True</em>) – </p></li>
-<li><p><strong>original video. If False</strong><strong>, </strong><strong>then it will accept the frame index from the</strong> (<em>from</em>) – </p></li>
-<li><p><strong>directly.</strong> (<em>store</em>) – </p></li>
+<li><p><strong>index_by_original</strong> – ImgStores are great for storing a collection of
+selected frames from an larger video. If the index_by_original is
+set to True then the get_frame function will accept the original
+frame numbers of from original video. If False, then it will
+accept the frame index from the store directly.
+Default to True so that we can use an ImgStoreVideo in a dataset
+to replace another video without having to update all the frame
+indices on <code class="xref py py-class docutils literal notranslate"><span class="pre">LabeledFrame</span></code> objects in the dataset.</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="sleap.io.video.ImgStoreVideo.channels">
+<em class="property">property </em><code class="sig-name descname">channels</code><a class="headerlink" href="#sleap.io.video.ImgStoreVideo.channels" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a>.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="sleap.io.video.ImgStoreVideo.close">
 <code class="sig-name descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/video.html#ImgStoreVideo.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.ImgStoreVideo.close" title="Permalink to this definition">¶</a></dt>
@@ -242,21 +305,39 @@ for sLEAP.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="sleap.io.video.ImgStoreVideo.dtype">
+<em class="property">property </em><code class="sig-name descname">dtype</code><a class="headerlink" href="#sleap.io.video.ImgStoreVideo.dtype" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.video.ImgStoreVideo.frames">
+<em class="property">property </em><code class="sig-name descname">frames</code><a class="headerlink" href="#sleap.io.video.ImgStoreVideo.frames" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.io.video.ImgStoreVideo.get_frame">
-<code class="sig-name descname">get_frame</code><span class="sig-paren">(</span><em class="sig-param">frame_number</em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="_modules/sleap/io/video.html#ImgStoreVideo.get_frame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.ImgStoreVideo.get_frame" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_frame</code><span class="sig-paren">(</span><em class="sig-param">frame_number: int</em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="_modules/sleap/io/video.html#ImgStoreVideo.get_frame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.ImgStoreVideo.get_frame" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a frame from the underlying ImgStore video data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>frame_num</strong> – The number of the frame to get. If index_by_original is set to True,</p></li>
-<li><p><strong>this number should actually be a frame index withing the imgstore. That is</strong><strong>,</strong> (<em>then</em>) – </p></li>
-<li><p><strong>there are 4 frames in the imgstore</strong><strong>, </strong><strong>this number shoulde be from 0 to 3.</strong> (<em>if</em>) – </p></li>
-</ul>
+<dd class="field-odd"><p><strong>frame_number</strong> – The number of the frame to get. If
+index_by_original is set to True, then this number should
+actually be a frame index within the imgstore. That is,
+if there are 4 frames in the imgstore, this number should be
+be from 0 to 3.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>The numpy.ndarray representing the video frame data.</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.video.ImgStoreVideo.height">
+<em class="property">property </em><code class="sig-name descname">height</code><a class="headerlink" href="#sleap.io.video.ImgStoreVideo.height" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a>.</p>
 </dd></dl>
 
 <dl class="method">
@@ -268,6 +349,15 @@ for sLEAP.</p>
 <dd class="field-odd"><p>The imgstore that is backing this video object.</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.video.ImgStoreVideo.last_frame_idx">
+<em class="property">property </em><code class="sig-name descname">last_frame_idx</code><a class="headerlink" href="#sleap.io.video.ImgStoreVideo.last_frame_idx" title="Permalink to this definition">¶</a></dt>
+<dd><p>The idx number of the last frame.</p>
+<p>Overrides method of base <a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a> class for videos with
+select frames indexed by number from original video, since the last
+frame index here will not match the number of frames in video.</p>
 </dd></dl>
 
 <dl class="method">
@@ -295,35 +385,90 @@ for sLEAP.</p>
 </dl>
 </dd></dl>
 
+<dl class="method">
+<dt id="sleap.io.video.ImgStoreVideo.width">
+<em class="property">property </em><code class="sig-name descname">width</code><a class="headerlink" href="#sleap.io.video.ImgStoreVideo.width" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a>.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="sleap.io.video.MediaVideo">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.io.video.</code><code class="sig-name descname">MediaVideo</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em>, <em class="sig-param">grayscale: bool = NOTHING</em>, <em class="sig-param">bgr: bool = True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/video.html#MediaVideo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.MediaVideo" title="Permalink to this definition">¶</a></dt>
-<dd><p>Video data stored in traditional media formats readable by FFMPEG can be loaded
-with this class. This class provides bare minimum read only interface on top of
+<dd><p>Video data stored in traditional media formats readable by FFMPEG</p>
+<p>This class provides bare minimum read only interface on top of
 OpenCV’s VideoCapture class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>filename</strong> – The name of the file (.mp4, .avi, etc)</p></li>
-<li><p><strong>grayscale</strong> – Whether the video is grayscale or not. “auto” means detect</p></li>
-<li><p><strong>on first frame.</strong> (<em>based</em>) – </p></li>
+<li><p><strong>grayscale</strong> – Whether the video is grayscale or not. “auto” means detect
+based on first frame.</p></li>
+<li><p><strong>bgr</strong> – Whether color channels ordered as (blue, green, red).</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="method">
+<dt id="sleap.io.video.MediaVideo.channels">
+<em class="property">property </em><code class="sig-name descname">channels</code><a class="headerlink" href="#sleap.io.video.MediaVideo.channels" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.video.MediaVideo.dtype">
+<em class="property">property </em><code class="sig-name descname">dtype</code><a class="headerlink" href="#sleap.io.video.MediaVideo.dtype" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.video.MediaVideo.fps">
+<em class="property">property </em><code class="sig-name descname">fps</code><a class="headerlink" href="#sleap.io.video.MediaVideo.fps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns frames per second of video.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.video.MediaVideo.frames">
+<em class="property">property </em><code class="sig-name descname">frames</code><a class="headerlink" href="#sleap.io.video.MediaVideo.frames" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.video.MediaVideo.frames_float">
+<em class="property">property </em><code class="sig-name descname">frames_float</code><a class="headerlink" href="#sleap.io.video.MediaVideo.frames_float" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.video.MediaVideo.get_frame">
+<code class="sig-name descname">get_frame</code><span class="sig-paren">(</span><em class="sig-param">idx: int</em>, <em class="sig-param">grayscale: bool = None</em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="_modules/sleap/io/video.html#MediaVideo.get_frame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.MediaVideo.get_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.video.MediaVideo.height">
+<em class="property">property </em><code class="sig-name descname">height</code><a class="headerlink" href="#sleap.io.video.MediaVideo.height" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.io.video.MediaVideo.matches">
-<code class="sig-name descname">matches</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/video.html#MediaVideo.matches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.MediaVideo.matches" title="Permalink to this definition">¶</a></dt>
-<dd><p>Check if attributes match.</p>
+<code class="sig-name descname">matches</code><span class="sig-paren">(</span><em class="sig-param">other: sleap.io.video.MediaVideo</em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/sleap/io/video.html#MediaVideo.matches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.MediaVideo.matches" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if attributes match those of another video.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>other</strong> – The instance to compare with.</p>
+<dd class="field-odd"><p><strong>other</strong> – The other video to compare with.</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>True if attributes match, False otherwise</p>
+<dd class="field-even"><p>True if attributes match, False otherwise.</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.video.MediaVideo.width">
+<em class="property">property </em><code class="sig-name descname">width</code><a class="headerlink" href="#sleap.io.video.MediaVideo.width" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a>.</p>
 </dd></dl>
 
 </dd></dl>
@@ -341,17 +486,53 @@ OpenCV’s VideoCapture class.</p>
 </dd>
 </dl>
 <dl class="method">
+<dt id="sleap.io.video.NumpyVideo.channels">
+<em class="property">property </em><code class="sig-name descname">channels</code><a class="headerlink" href="#sleap.io.video.NumpyVideo.channels" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.video.NumpyVideo.dtype">
+<em class="property">property </em><code class="sig-name descname">dtype</code><a class="headerlink" href="#sleap.io.video.NumpyVideo.dtype" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.video.NumpyVideo.frames">
+<em class="property">property </em><code class="sig-name descname">frames</code><a class="headerlink" href="#sleap.io.video.NumpyVideo.frames" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.video.NumpyVideo.get_frame">
+<code class="sig-name descname">get_frame</code><span class="sig-paren">(</span><em class="sig-param">idx</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/video.html#NumpyVideo.get_frame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.NumpyVideo.get_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.video.NumpyVideo.height">
+<em class="property">property </em><code class="sig-name descname">height</code><a class="headerlink" href="#sleap.io.video.NumpyVideo.height" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.io.video.NumpyVideo.matches">
-<code class="sig-name descname">matches</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/video.html#NumpyVideo.matches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.NumpyVideo.matches" title="Permalink to this definition">¶</a></dt>
-<dd><p>Check if attributes match.</p>
+<code class="sig-name descname">matches</code><span class="sig-paren">(</span><em class="sig-param">other: sleap.io.video.NumpyVideo</em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="_modules/sleap/io/video.html#NumpyVideo.matches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.NumpyVideo.matches" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if attributes match those of another video.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>other</strong> – The instance to comapare with.</p>
+<dd class="field-odd"><p><strong>other</strong> – The other video to compare with.</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>True if attributes match, False otherwise</p>
+<dd class="field-even"><p>True if attributes match, False otherwise.</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.video.NumpyVideo.width">
+<em class="property">property </em><code class="sig-name descname">width</code><a class="headerlink" href="#sleap.io.video.NumpyVideo.width" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a>.</p>
 </dd></dl>
 
 </dd></dl>
@@ -359,38 +540,40 @@ OpenCV’s VideoCapture class.</p>
 <dl class="class">
 <dt id="sleap.io.video.Video">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.io.video.</code><code class="sig-name descname">Video</code><span class="sig-paren">(</span><em class="sig-param">backend: Union[sleap.io.video.HDF5Video, sleap.io.video.NumpyVideo, sleap.io.video.MediaVideo, sleap.io.video.ImgStoreVideo]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/video.html#Video"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.Video" title="Permalink to this definition">¶</a></dt>
-<dd><p>The top-level interface to any Video data used by sLEAP is represented by
-the <a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a> class. This class provides a common interface for
-various supported video data backends. It provides the bare minimum of
-properties and methods that any video data needs to support in order to
-function with other sLEAP components. This interface currently only supports
-reading of video data, there is no write support. Unless one is creating a new video
+<dd><p>The top-level interface to any Video data used by SLEAP.</p>
+<p>This class provides a common interface for various supported video data
+backends. It provides the bare minimum of properties and methods that
+any video data needs to support in order to function with other SLEAP
+components. This interface currently only supports reading of video
+data, there is no write support. Unless one is creating a new video
 backend, this class should be instantiated from its various class methods
 for different formats. For example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">video</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">from_hdf5</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s1">&#39;test.h5&#39;</span><span class="p">,</span> <span class="n">dataset</span><span class="o">=</span><span class="s1">&#39;box&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">video</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">from_media</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s1">&#39;test.mp4&#39;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">video</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">from_hdf5</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s2">&quot;test.h5&quot;</span><span class="p">,</span> <span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;box&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">video</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">from_media</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s2">&quot;test.mp4&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Or we can use auto-detection based on filename:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">video</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">from_filename</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s1">&#39;test.mp4&#39;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">video</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">from_filename</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s2">&quot;test.mp4&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>backend</strong> – A backend is and object that implements the following basic</p></li>
-<li><p><strong>methods and properties</strong> (<em>required</em>) – </p></li>
+<li><p><strong>backend</strong> – A backend is an object that implements the following basic
+required methods and properties</p></li>
 <li><p><strong>Properties</strong> (<em>*</em>) – <ul>
 <li><p><code class="code docutils literal notranslate"><span class="pre">frames</span></code>: The number of frames in the video</p></li>
-<li><p><code class="code docutils literal notranslate"><span class="pre">channels</span></code>: The number of channels in the video (e.g. 1 for grayscale, 3 for RGB)</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">channels</span></code>: The number of channels in the video
+(e.g. 1 for grayscale, 3 for RGB)</p></li>
 <li><p><code class="code docutils literal notranslate"><span class="pre">width</span></code>: The width of each frame in pixels</p></li>
 <li><p><code class="code docutils literal notranslate"><span class="pre">height</span></code>: The height of each frame in pixels</p></li>
 </ul>
 </p></li>
 <li><p><strong>Methods</strong> (<em>*</em>) – <ul>
-<li><p><code class="code docutils literal notranslate"><span class="pre">get_frame(frame_index:</span> <span class="pre">int)</span> <span class="pre">-&gt;</span> <span class="pre">np.ndarray(shape=(width,</span> <span class="pre">height,</span> <span class="pre">channels)</span></code>:</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">get_frame(frame_index:</span> <span class="pre">int)</span> <span class="pre">-&gt;</span> <span class="pre">np.ndarray</span></code>:
+Get a single frame from the underlying video data with
+output shape=(width, height, channels).</p></li>
 </ul>
-<p>Get a single frame from the underlying video data</p>
 </p></li>
 </ul>
 </dd>
@@ -398,7 +581,7 @@ for different formats. For example:</p>
 <dl class="method">
 <dt id="sleap.io.video.Video.cattr">
 <em class="property">static </em><code class="sig-name descname">cattr</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/video.html#Video.cattr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.Video.cattr" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a cattr converter for serialiazingdeseriializing Video objects.</p>
+<dd><p>Returns a cattr converter for serialiazing/deserializing Video objects.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>A cattr converter.</p>
@@ -408,55 +591,78 @@ for different formats. For example:</p>
 
 <dl class="method">
 <dt id="sleap.io.video.Video.fixup_path">
-<em class="property">static </em><code class="sig-name descname">fixup_path</code><span class="sig-paren">(</span><em class="sig-param">path</em>, <em class="sig-param">raise_error=False</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/sleap/io/video.html#Video.fixup_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.Video.fixup_path" title="Permalink to this definition">¶</a></dt>
-<dd><p>Given a path to a video try to find it. This is attempt to make the paths
-serialized for different video objects portabls across multiple computers.
-The default behaviour is to store whatever path is stored on the backend
-object. If this is an absolute path it is almost certainly wrong when
-transfered when the object is created on another computer. We try to
-find the video by looking in the current working directory as well.</p>
+<em class="property">static </em><code class="sig-name descname">fixup_path</code><span class="sig-paren">(</span><em class="sig-param">path: str</em>, <em class="sig-param">raise_error: bool = False</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/sleap/io/video.html#Video.fixup_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.Video.fixup_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tries to locate video if the given path doesn’t work.</p>
+<p>Given a path to a video try to find it. This is attempt to make the
+paths serialized for different video objects portable across multiple
+computers. The default behavior is to store whatever path is stored
+on the backend object. If this is an absolute path it is almost
+certainly wrong when transferred when the object is created on
+another computer. We try to find the video by looking in the current
+working directory as well.</p>
+<p>Note that when loading videos during the process of deserializing a
+saved <code class="xref py py-class docutils literal notranslate"><span class="pre">Labels</span></code> dataset, it’s usually preferable to fix video
+paths using a <cite>video_callback</cite>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>path</strong> – The path the video asset.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> – The path the video asset.</p></li>
+<li><p><strong>raise_error</strong> – Whether to raise error if we cannot find video.</p></li>
+</ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The fixed up path</p>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>FileNotFoundError</strong> – If file still cannot be found and raise_error
+    is True.</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The fixed up path</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="sleap.io.video.Video.from_filename">
-<em class="property">classmethod </em><code class="sig-name descname">from_filename</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/video.html#Video.from_filename"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.Video.from_filename" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create an instance of a video object from a filename, auto-detecting the backend.</p>
+<em class="property">classmethod </em><code class="sig-name descname">from_filename</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span> &#x2192; sleap.io.video.Video<a class="reference internal" href="_modules/sleap/io/video.html#Video.from_filename"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.Video.from_filename" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an instance of a video object, auto-detecting the backend.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>filename</strong> – The path to the video filename. Currently supported types are:</p></li>
-<li><p><strong>Media Videos - AVI</strong><strong>, </strong><strong>MP4</strong><strong>, </strong><strong>etc. handled by OpenCV directly</strong> (<em>*</em>) – </p></li>
-<li><p><strong>HDF5 Datasets - .h5 files</strong> (<em>*</em>) – </p></li>
-<li><p><strong>Numpy Arrays - npy files</strong> (<em>*</em>) – </p></li>
-<li><p><strong>imgstore datasets - produced by loopbio's Motif recording system. See</strong> (<em>*</em>) – <a class="reference external" href="https://github.com/loopbio/imgstore">https://github.com/loopbio/imgstore</a>.</p></li>
+<li><p><strong>filename</strong> – <p>The path to the video filename.
+Currently supported types are:</p>
+<ul>
+<li><p>Media Videos - AVI, MP4, etc. handled by OpenCV directly</p></li>
+<li><p>HDF5 Datasets - .h5 files</p></li>
+<li><p>Numpy Arrays - npy files</p></li>
+<li><dl class="simple">
+<dt>imgstore datasets - produced by loopbio’s Motif recording</dt><dd><p>system. See: <a class="reference external" href="https://github.com/loopbio/imgstore">https://github.com/loopbio/imgstore</a>.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p></li>
+<li><p><strong>args</strong> – Arguments to pass to <a class="reference internal" href="#sleap.io.video.NumpyVideo" title="sleap.io.video.NumpyVideo"><code class="xref py py-class docutils literal notranslate"><span class="pre">NumpyVideo</span></code></a></p></li>
+<li><p><strong>kwargs</strong> – Arguments to pass to <a class="reference internal" href="#sleap.io.video.NumpyVideo" title="sleap.io.video.NumpyVideo"><code class="xref py py-class docutils literal notranslate"><span class="pre">NumpyVideo</span></code></a></p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A Video object with the detected backend</p>
+<dd class="field-even"><p>A Video object with the detected backend.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="sleap.io.video.Video.from_hdf5">
-<em class="property">classmethod </em><code class="sig-name descname">from_hdf5</code><span class="sig-paren">(</span><em class="sig-param">dataset: Union[str, h5py._hl.dataset.Dataset], filename: Union[str, h5py._hl.files.File] = None, input_format: str = 'channels_last', convert_range: bool = True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/video.html#Video.from_hdf5"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.Video.from_hdf5" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create an instance of a video object from an HDF5 file and dataset. This
-is a helper method that invokes the HDF5Video backend.</p>
+<em class="property">classmethod </em><code class="sig-name descname">from_hdf5</code><span class="sig-paren">(</span><em class="sig-param">dataset: Union[str, h5py._hl.dataset.Dataset], filename: Union[str, h5py._hl.files.File] = None, input_format: str = 'channels_last', convert_range: bool = True</em><span class="sig-paren">)</span> &#x2192; sleap.io.video.Video<a class="reference internal" href="_modules/sleap/io/video.html#Video.from_hdf5"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.Video.from_hdf5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an instance of a video object from an HDF5 file and dataset.</p>
+<p>This is a helper method that invokes the HDF5Video backend.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dataset</strong> – The name of the dataset or and h5.Dataset object. If filename is</p></li>
-<li><p><strong>dataset must be a str of the dataset name.</strong> (<em>h5.File</em><em>,</em>) – </p></li>
+<li><p><strong>dataset</strong> – The name of the dataset or and h5.Dataset object. If
+filename is h5.File, dataset must be a str of the dataset name.</p></li>
 <li><p><strong>filename</strong> – The name of the HDF5 file or and open h5.File object.</p></li>
-<li><p><strong>input_format</strong> – Whether the data is oriented with “channels_first” or “channels_last”</p></li>
+<li><p><strong>input_format</strong> – Whether the data is oriented with “channels_first”
+or “channels_last”</p></li>
 <li><p><strong>convert_range</strong> – Whether we should convert data to [0, 255]-range</p></li>
 </ul>
 </dd>
@@ -468,11 +674,16 @@ is a helper method that invokes the HDF5Video backend.</p>
 
 <dl class="method">
 <dt id="sleap.io.video.Video.from_media">
-<em class="property">classmethod </em><code class="sig-name descname">from_media</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/video.html#Video.from_media"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.Video.from_media" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create an instance of a video object from a typical media file (e.g. .mp4, .avi).</p>
+<em class="property">classmethod </em><code class="sig-name descname">from_media</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span> &#x2192; sleap.io.video.Video<a class="reference internal" href="_modules/sleap/io/video.html#Video.from_media"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.Video.from_media" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an instance of a video object from a typical media file.</p>
+<p>For example, mp4, avi, or other types readable by FFMPEG.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>filename</strong> – The name of the file</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> – The name of the file</p></li>
+<li><p><strong>args</strong> – Arguments to pass to <a class="reference internal" href="#sleap.io.video.MediaVideo" title="sleap.io.video.MediaVideo"><code class="xref py py-class docutils literal notranslate"><span class="pre">MediaVideo</span></code></a></p></li>
+<li><p><strong>kwargs</strong> – Arguments to pass to <a class="reference internal" href="#sleap.io.video.MediaVideo" title="sleap.io.video.MediaVideo"><code class="xref py py-class docutils literal notranslate"><span class="pre">MediaVideo</span></code></a></p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>A Video object with a MediaVideo backend</p>
@@ -482,11 +693,15 @@ is a helper method that invokes the HDF5Video backend.</p>
 
 <dl class="method">
 <dt id="sleap.io.video.Video.from_numpy">
-<em class="property">classmethod </em><code class="sig-name descname">from_numpy</code><span class="sig-paren">(</span><em class="sig-param">filename</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/video.html#Video.from_numpy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.Video.from_numpy" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">from_numpy</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span> &#x2192; sleap.io.video.Video<a class="reference internal" href="_modules/sleap/io/video.html#Video.from_numpy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.Video.from_numpy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create an instance of a video object from a numpy array.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>filename</strong> – The numpy array or the name of the file</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> – The numpy array or the name of the file</p></li>
+<li><p><strong>args</strong> – Arguments to pass to <a class="reference internal" href="#sleap.io.video.NumpyVideo" title="sleap.io.video.NumpyVideo"><code class="xref py py-class docutils literal notranslate"><span class="pre">NumpyVideo</span></code></a></p></li>
+<li><p><strong>kwargs</strong> – Arguments to pass to <a class="reference internal" href="#sleap.io.video.NumpyVideo" title="sleap.io.video.NumpyVideo"><code class="xref py py-class docutils literal notranslate"><span class="pre">NumpyVideo</span></code></a></p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>A Video object with a NumpyVideo backend</p>
@@ -517,26 +732,33 @@ is a helper method that invokes the HDF5Video backend.</p>
 <dd class="field-odd"><p><strong>idxs</strong> – An iterable object that contains the indices of frames.</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The requested video frames with shape (len(idxs), width, height, channels)</p>
+<dd class="field-even"><p>The requested video frames with shape
+(len(idxs), width, height, channels)</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="sleap.io.video.Video.imgstore_from_filenames">
-<em class="property">classmethod </em><code class="sig-name descname">imgstore_from_filenames</code><span class="sig-paren">(</span><em class="sig-param">filenames: list</em>, <em class="sig-param">output_filename: str</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/video.html#Video.imgstore_from_filenames"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.Video.imgstore_from_filenames" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create an imagestore from a list of image files.</p>
+<em class="property">classmethod </em><code class="sig-name descname">imgstore_from_filenames</code><span class="sig-paren">(</span><em class="sig-param">filenames: list</em>, <em class="sig-param">output_filename: str</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span> &#x2192; sleap.io.video.Video<a class="reference internal" href="_modules/sleap/io/video.html#Video.imgstore_from_filenames"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.Video.imgstore_from_filenames" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an imgstore from a list of image files.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>filenames</strong> – List of filenames for the image files.</p></li>
-<li><p><strong>output_filename</strong> – Filename for the imagestore to create.</p></li>
+<li><p><strong>output_filename</strong> – Filename for the imgstore to create.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A <cite>Video</cite> object for the new imagestore.</p>
+<dd class="field-even"><p>A <cite>Video</cite> object for the new imgstore.</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.video.Video.last_frame_idx">
+<em class="property">property </em><code class="sig-name descname">last_frame_idx</code><a class="headerlink" href="#sleap.io.video.Video.last_frame_idx" title="Permalink to this definition">¶</a></dt>
+<dd><p>The idx number of the last frame. Usually <cite>numframes - 1</cite>.</p>
 </dd></dl>
 
 <dl class="method">
@@ -546,24 +768,62 @@ is a helper method that invokes the HDF5Video backend.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="sleap.io.video.Video.shape">
+<em class="property">property </em><code class="sig-name descname">shape</code><a class="headerlink" href="#sleap.io.video.Video.shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns (frame count, height, width, channels).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.video.Video.to_hdf5">
+<code class="sig-name descname">to_hdf5</code><span class="sig-paren">(</span><em class="sig-param">path: str</em>, <em class="sig-param">dataset: str</em>, <em class="sig-param">frame_numbers: List[int] = None</em>, <em class="sig-param">format: str = ''</em>, <em class="sig-param">index_by_original: bool = True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/video.html#Video.to_hdf5"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.Video.to_hdf5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts frames from arbitrary video backend to HDF5Video.</p>
+<p>Used for building an HDF5 that holds all data needed for training.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> – Filename to HDF5 (which could already exist).</p></li>
+<li><p><strong>dataset</strong> – The HDF5 dataset in which to store video frames.</p></li>
+<li><p><strong>frame_numbers</strong> – A list of frame numbers from the video to save.
+If None save the entire video.</p></li>
+<li><p><strong>format</strong> – If non-empty, then encode images in format before saving.
+Otherwise, save numpy matrix of frames.</p></li>
+<li><p><strong>index_by_original</strong> – If the index_by_original is set to True then
+the get_frame function will accept the original frame
+numbers of from original video.
+If False, then it will accept the frame index directly.
+Default to True so that we can use resulting video in a
+dataset to replace another video without having to update
+all the frame indices in the dataset.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A new Video object that references the HDF5 dataset.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.io.video.Video.to_imgstore">
-<code class="sig-name descname">to_imgstore</code><span class="sig-paren">(</span><em class="sig-param">path</em>, <em class="sig-param">frame_numbers: List[int] = None</em>, <em class="sig-param">format: str = 'png'</em>, <em class="sig-param">index_by_original: bool = True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/video.html#Video.to_imgstore"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.Video.to_imgstore" title="Permalink to this definition">¶</a></dt>
-<dd><p>Read frames from an arbitrary video backend and store them in a loopbio imgstore.
-This should facilitate conversion of any video to a loopbio imgstore.</p>
+<code class="sig-name descname">to_imgstore</code><span class="sig-paren">(</span><em class="sig-param">path: str</em>, <em class="sig-param">frame_numbers: List[int] = None</em>, <em class="sig-param">format: str = 'png'</em>, <em class="sig-param">index_by_original: bool = True</em><span class="sig-paren">)</span> &#x2192; sleap.io.video.Video<a class="reference internal" href="_modules/sleap/io/video.html#Video.to_imgstore"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.Video.to_imgstore" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts frames from arbitrary video backend to ImgStoreVideo.</p>
+<p>This should facilitate conversion of any video to a loopbio imgstore.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>path</strong> – Filename or directory name to store imgstore.</p></li>
-<li><p><strong>frame_numbers</strong> – A list of frame numbers from the video to save. If None save</p></li>
-<li><p><strong>entire video.</strong> (<em>the</em>) – </p></li>
-<li><p><strong>format</strong> – By default it will create a DirectoryImgStore with lossless PNG format.</p></li>
-<li><p><strong>the frame_indices = None</strong><strong>, </strong><strong>in which case</strong><strong>, </strong><strong>it will default to 'mjpeg/avi'</strong> (<em>Unless</em>) – </p></li>
-<li><p><strong>for video.</strong> (<em>format</em>) – </p></li>
-<li><p><strong>index_by_original</strong> – ImgStores are great for storing a collection of</p></li>
-<li><p><strong>frames from an larger video. If the index_by_original is set to</strong> (<em>selected</em>) – </p></li>
-<li><p><strong>than the get_frame function will accept the original frame numbers of</strong> (<em>True</em>) – </p></li>
-<li><p><strong>original video. If False</strong><strong>, </strong><strong>then it will accept the frame index from the</strong> (<em>from</em>) – </p></li>
-<li><p><strong>directly.</strong> (<em>store</em>) – </p></li>
+<li><p><strong>frame_numbers</strong> – A list of frame numbers from the video to save.
+If None save the entire video.</p></li>
+<li><p><strong>format</strong> – By default it will create a DirectoryImgStore with lossless
+PNG format unless the frame_indices = None, in which case,
+it will default to ‘mjpeg/avi’ format for video.</p></li>
+<li><p><strong>index_by_original</strong> – ImgStores are great for storing a collection of
+selected frames from an larger video. If the index_by_original
+is set to True then the get_frame function will accept the
+original frame numbers of from original video. If False,
+then it will accept the frame index from the store directly.
+Default to True so that we can use an ImgStoreVideo in a
+dataset to replace another video without having to update
+all the frame indices on <code class="xref py py-class docutils literal notranslate"><span class="pre">LabeledFrame</span></code> objects in the dataset.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Inference &mdash; LEAP  documentation</title>
+  <title>Inference &mdash; SLEAP  documentation</title>
   
 
   
@@ -50,7 +50,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> LEAP
+            <a href="index.html" class="icon icon-home"> SLEAP
           
 
           
@@ -80,7 +80,7 @@
               
             
             
-              <p class="caption"><span class="caption-text">sLEAP Package</span></p>
+              <p class="caption"><span class="caption-text">SLEAP Package</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="skeleton.html">Skeleton</a></li>
@@ -90,6 +90,7 @@
 <li class="toctree-l1"><a class="reference internal" href="training.html">Training</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gui.html">GUI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="misc.html">Misc</a></li>
 </ul>
 
             
@@ -104,7 +105,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">LEAP</a>
+          <a href="index.html">SLEAP</a>
         
       </nav>
 
@@ -157,8 +158,145 @@
   <div class="section" id="module-sleap.nn.inference">
 <span id="inference"></span><h1>Inference<a class="headerlink" href="#module-sleap.nn.inference" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
+<dt id="sleap.nn.inference.InferenceModel">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">InferenceModel</code><span class="sig-paren">(</span><em class="sig-param">job: sleap.nn.training.TrainingJob</em>, <em class="sig-param">keras_model: keras.engine.training.Model = None</em>, <em class="sig-param">model_path: str = None</em>, <em class="sig-param">trained_input_shape: Tuple[int] = None</em>, <em class="sig-param">output_channels: int = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/inference.html#InferenceModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.InferenceModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class provides convenience metadata and methods for running inference from a TrainingJob.</p>
+<dl class="method">
+<dt id="sleap.nn.inference.InferenceModel.compute_output_shape">
+<code class="sig-name descname">compute_output_shape</code><span class="sig-paren">(</span><em class="sig-param">input_shape: Tuple[int], relative=True</em><span class="sig-paren">)</span> &#x2192; Tuple[int]<a class="reference internal" href="_modules/sleap/nn/inference.html#InferenceModel.compute_output_shape"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.InferenceModel.compute_output_shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the output tensor shape for a given input shape.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_shape</strong> – Shape of input images in the form (height, width).</p></li>
+<li><p><strong>relative</strong> – If True, input_shape specifies the shape after input scaling.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A tuple of (height, width, channels) of the output of the model.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.inference.InferenceModel.down_blocks">
+<em class="property">property </em><code class="sig-name descname">down_blocks</code><a class="headerlink" href="#sleap.nn.inference.InferenceModel.down_blocks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of pooling steps applied during the model.</p>
+<p>Data needs to be of a shape divisible by the number of pooling steps.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.inference.InferenceModel.input_channels">
+<em class="property">property </em><code class="sig-name descname">input_channels</code><a class="headerlink" href="#sleap.nn.inference.InferenceModel.input_channels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of channels expected for the input data.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.inference.InferenceModel.input_scale">
+<em class="property">property </em><code class="sig-name descname">input_scale</code><a class="headerlink" href="#sleap.nn.inference.InferenceModel.input_scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the scale of the images that the model was trained on.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.inference.InferenceModel.is_grayscale">
+<em class="property">property </em><code class="sig-name descname">is_grayscale</code><a class="headerlink" href="#sleap.nn.inference.InferenceModel.is_grayscale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if the model expects grayscale images.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.inference.InferenceModel.keras_model">
+<em class="property">property </em><code class="sig-name descname">keras_model</code><a class="headerlink" href="#sleap.nn.inference.InferenceModel.keras_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the underlying Keras model, loading it if necessary.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.inference.InferenceModel.load_model">
+<code class="sig-name descname">load_model</code><span class="sig-paren">(</span><em class="sig-param">model_path: str = None</em><span class="sig-paren">)</span> &#x2192; keras.engine.training.Model<a class="reference internal" href="_modules/sleap/nn/inference.html#InferenceModel.load_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.InferenceModel.load_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads a saved model from disk and caches it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model_path</strong> – If not provided, uses the model
+paths in the training job.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The loaded Keras model. This model can accept any size
+of inputs that are valid.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.inference.InferenceModel.model_path">
+<em class="property">property </em><code class="sig-name descname">model_path</code><a class="headerlink" href="#sleap.nn.inference.InferenceModel.model_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the path to the loaded model.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.inference.InferenceModel.output_channels">
+<em class="property">property </em><code class="sig-name descname">output_channels</code><a class="headerlink" href="#sleap.nn.inference.InferenceModel.output_channels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of output channels of the model.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.inference.InferenceModel.output_relative_scale">
+<em class="property">property </em><code class="sig-name descname">output_relative_scale</code><a class="headerlink" href="#sleap.nn.inference.InferenceModel.output_relative_scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the scale of the outputs relative to the scaled inputs.</p>
+<p>This differs from output_scale in that it is the scaling factor after
+applying the input scaling.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.inference.InferenceModel.output_scale">
+<em class="property">property </em><code class="sig-name descname">output_scale</code><a class="headerlink" href="#sleap.nn.inference.InferenceModel.output_scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the scale of the outputs of the model relative to the original data.</p>
+<p>For a model trained on inputs with scale = 0.5 that outputs predictions that
+are half of the size of the inputs, the output scale is 0.25.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.inference.InferenceModel.output_type">
+<em class="property">property </em><code class="sig-name descname">output_type</code><a class="headerlink" href="#sleap.nn.inference.InferenceModel.output_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the output type of this model.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.inference.InferenceModel.predict">
+<code class="sig-name descname">predict</code><span class="sig-paren">(</span><em class="sig-param">X: Union[numpy.ndarray, List[numpy.ndarray]], batch_size: int = 32, normalize: bool = True</em><span class="sig-paren">)</span> &#x2192; Union[numpy.ndarray, List[numpy.ndarray]]<a class="reference internal" href="_modules/sleap/nn/inference.html#InferenceModel.predict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.InferenceModel.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs inference on the input data.</p>
+<p>This is a simple wrapper around the keras model predict function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> – The inputs to provide to the model. Can be different height/width as
+the data it was trained on.</p></li>
+<li><p><strong>batch_size</strong> – Batch size to perform inference on at a time.</p></li>
+<li><p><strong>normalize</strong> – Applies normalization to the input data if needed
+(e.g., if casting or range normalization is required).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The outputs of the model.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.inference.InferenceModel.skeleton">
+<em class="property">property </em><code class="sig-name descname">skeleton</code><a class="headerlink" href="#sleap.nn.inference.InferenceModel.skeleton" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the skeleton associated with this model.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.inference.InferenceModel.trained_input_shape">
+<em class="property">property </em><code class="sig-name descname">trained_input_shape</code><a class="headerlink" href="#sleap.nn.inference.InferenceModel.trained_input_shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the shape of the model when it was loaded.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="sleap.nn.inference.Predictor">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">Predictor</code><span class="sig-paren">(</span><em class="sig-param">sleap_models: Dict[sleap.nn.model.ModelOutputType</em>, <em class="sig-param">sleap.nn.training.TrainingJob] = None</em>, <em class="sig-param">skeleton: sleap.skeleton.Skeleton = None</em>, <em class="sig-param">inference_batch_size: int = 2</em>, <em class="sig-param">read_chunk_size: int = 256</em>, <em class="sig-param">save_frequency: int = 100</em>, <em class="sig-param">min_score_to_node_ratio: float = 0.2</em>, <em class="sig-param">min_score_midpts: float = 0.05</em>, <em class="sig-param">min_score_integral: float = 0.6</em>, <em class="sig-param">add_last_edge: bool = True</em>, <em class="sig-param">with_tracking: bool = False</em>, <em class="sig-param">flow_window: int = 15</em>, <em class="sig-param">crop_iou_threshold: float = 0.9</em>, <em class="sig-param">single_per_crop: bool = False</em>, <em class="sig-param">crop_padding: int = 40</em>, <em class="sig-param">crop_growth: int = 64</em>, <em class="sig-param">output_path: Optional[str] = None</em>, <em class="sig-param">save_confmaps_pafs: bool = False</em>, <em class="sig-param">resize_hack: bool = True</em>, <em class="sig-param">models: Dict = NOTHING</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/inference.html#Predictor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.Predictor" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">Predictor</code><span class="sig-paren">(</span><em class="sig-param">training_jobs: Dict[sleap.nn.model.ModelOutputType</em>, <em class="sig-param">sleap.nn.training.TrainingJob] = None</em>, <em class="sig-param">inference_models: Dict[sleap.nn.model.ModelOutputType</em>, <em class="sig-param">sleap.nn.inference.InferenceModel] = NOTHING</em>, <em class="sig-param">skeleton: sleap.skeleton.Skeleton = None</em>, <em class="sig-param">inference_batch_size: int = 2</em>, <em class="sig-param">read_chunk_size: int = 256</em>, <em class="sig-param">save_frequency: int = 100</em>, <em class="sig-param">nms_kernel_size: int = 9</em>, <em class="sig-param">nms_sigma: float = 3.0</em>, <em class="sig-param">min_score_to_node_ratio: float = 0.2</em>, <em class="sig-param">min_score_midpts: float = 0.05</em>, <em class="sig-param">min_score_integral: float = 0.6</em>, <em class="sig-param">add_last_edge: bool = True</em>, <em class="sig-param">with_tracking: bool = False</em>, <em class="sig-param">flow_window: int = 15</em>, <em class="sig-param">single_per_crop: bool = False</em>, <em class="sig-param">crop_padding: int = 40</em>, <em class="sig-param">crop_growth: int = 64</em>, <em class="sig-param">output_path: Optional[str] = None</em>, <em class="sig-param">save_confmaps_pafs: bool = False</em>, <em class="sig-param">resize_hack: bool = True</em>, <em class="sig-param">pool: multiprocessing.context.BaseContext.Pool = None</em>, <em class="sig-param">gpu_peak_finding: bool = True</em>, <em class="sig-param">supersample_window_size: int = 7</em>, <em class="sig-param">supersample_factor: float = 2</em>, <em class="sig-param">overlapping_instances_nms: bool = True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/inference.html#Predictor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.Predictor" title="Permalink to this definition">¶</a></dt>
 <dd><p>The Predictor class takes a set of trained sLEAP models and runs
 the full inference pipeline via the predict or predict_async method.</p>
 <p>Pipeline:</p>
@@ -182,9 +320,11 @@ time (CPU memory limited)</p></li>
 <li><p><strong>nms_min_thresh</strong> – A threshold of non-max suppression peak finding
 in confidence maps. All values below this minimum threshold
 will be set to zero before peak finding algorithm is run.</p></li>
-<li><p><strong>nms_sigma</strong> – Gaussian blur is applied to confidence maps before
-non-max supression peak finding occurs. This is the
-standard deviation of the kernel applied to the image.</p></li>
+<li><p><strong>nms_kernel_size</strong> – Gaussian blur is applied to confidence maps before
+non-max supression peak finding occurs. This is size of the
+kernel applied to the image.</p></li>
+<li><p><strong>nms_sigma</strong> – For Gassian blur applied to confidence maps, this
+is the standard deviation of the kernel.</p></li>
 <li><p><strong>min_score_to_node_ratio</strong> – FIXME</p></li>
 <li><p><strong>min_score_midpts</strong> – FIXME</p></li>
 <li><p><strong>min_score_integral</strong> – FIXME</p></li>
@@ -192,7 +332,6 @@ standard deviation of the kernel applied to the image.</p></li>
 <li><p><strong>with_tracking</strong> – whether to run tracking after inference</p></li>
 <li><p><strong>flow_window</strong> – The number of frames that tracking should look back
 when trying to identify instances.</p></li>
-<li><p><strong>crop_iou_threshold</strong> – FIXME</p></li>
 <li><p><strong>single_per_crop</strong> – FIXME</p></li>
 <li><p><strong>output_path</strong> – the output path to save the results</p></li>
 <li><p><strong>save_confmaps_pafs</strong> – whether to save confmaps/pafs</p></li>
@@ -202,7 +341,7 @@ when trying to identify instances.</p></li>
 </dl>
 <dl class="method">
 <dt id="sleap.nn.inference.Predictor.centroid_crop_inference">
-<code class="sig-name descname">centroid_crop_inference</code><span class="sig-paren">(</span><em class="sig-param">imgs: numpy.ndarray, frames_idx: List[int], iou_threshold: float = 0.9</em><span class="sig-paren">)</span> &#x2192; List[Tuple[numpy.ndarray, sleap.nn.transform.DataTransform]]<a class="reference internal" href="_modules/sleap/nn/inference.html#Predictor.centroid_crop_inference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.Predictor.centroid_crop_inference" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">centroid_crop_inference</code><span class="sig-paren">(</span><em class="sig-param">imgs: numpy.ndarray, frames_idx: List[int], box_size: int = None, do_merge: bool = True</em><span class="sig-paren">)</span> &#x2192; List[Tuple[numpy.ndarray, sleap.nn.transform.DataTransform]]<a class="reference internal" href="_modules/sleap/nn/inference.html#Predictor.centroid_crop_inference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.Predictor.centroid_crop_inference" title="Permalink to this definition">¶</a></dt>
 <dd><p>Takes stack of images and runs centroid inference to get crops.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -217,15 +356,21 @@ which allows us to merge overlapping crops into larger crops.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="sleap.nn.inference.Predictor.fetch_model">
-<code class="sig-name descname">fetch_model</code><span class="sig-paren">(</span><em class="sig-param">input_size: tuple, output_types: List[sleap.nn.model.ModelOutputType]</em><span class="sig-paren">)</span> &#x2192; dict<a class="reference internal" href="_modules/sleap/nn/inference.html#Predictor.fetch_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.Predictor.fetch_model" title="Permalink to this definition">¶</a></dt>
-<dd><p>Loads and returns keras Model with caching.</p>
-</dd></dl>
-
-<dl class="method">
 <dt id="sleap.nn.inference.Predictor.multi_instance_inference">
 <code class="sig-name descname">multi_instance_inference</code><span class="sig-paren">(</span><em class="sig-param">imgs</em>, <em class="sig-param">transform</em>, <em class="sig-param">video</em><span class="sig-paren">)</span> &#x2192; List[sleap.instance.LabeledFrame]<a class="reference internal" href="_modules/sleap/nn/inference.html#Predictor.multi_instance_inference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.Predictor.multi_instance_inference" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run the multi-instance inference pipeline for a stack of images.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>imgs</strong> – Subchunk of images to process.</p></li>
+<li><p><strong>transform</strong> – DataTransform object tracking input transformations.</p></li>
+<li><p><strong>video</strong> – Video object for building LabeledFrames with correct reference to source.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A list of LabeledFrames with predicted points.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -245,7 +390,7 @@ children.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>list of LabeledFrame objects</p>
+<dd class="field-even"><p>A list of LabeledFrames with predicted instances.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -275,6 +420,18 @@ object that will contain the result when the job finishes.</p>
 <dt id="sleap.nn.inference.Predictor.single_instance_inference">
 <code class="sig-name descname">single_instance_inference</code><span class="sig-paren">(</span><em class="sig-param">imgs</em>, <em class="sig-param">transform</em>, <em class="sig-param">video</em><span class="sig-paren">)</span> &#x2192; List[sleap.instance.LabeledFrame]<a class="reference internal" href="_modules/sleap/nn/inference.html#Predictor.single_instance_inference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.Predictor.single_instance_inference" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run the single instance pipeline for a stack of images.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>imgs</strong> – Subchunk of images to process.</p></li>
+<li><p><strong>transform</strong> – DataTransform object tracking input transformations.</p></li>
+<li><p><strong>video</strong> – Video object for building LabeledFrames with correct reference to source.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A list of LabeledFrames with predicted points.</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>

@@ -1,0 +1,812 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Misc &mdash; SLEAP  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="GUI" href="gui.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> SLEAP
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">SLEAP Package</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="skeleton.html">Skeleton</a></li>
+<li class="toctree-l1"><a class="reference internal" href="video.html">Video</a></li>
+<li class="toctree-l1"><a class="reference internal" href="instance.html">Instance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training.html">Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gui.html">GUI</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Misc</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-sleap.util">Utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-sleap.rangelist">Range list</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-sleap.io.legacy">Legacy formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#info-tools">Info tools</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-sleap.info.metrics">Metrics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-sleap.info.summary">Summary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-sleap.info.write_tracking_h5">Track Analysis</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">SLEAP</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Misc</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/misc.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="misc">
+<h1>Misc<a class="headerlink" href="#misc" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-sleap.util">
+<span id="utils"></span><h2>Utils<a class="headerlink" href="#module-sleap.util" title="Permalink to this headline">¶</a></h2>
+<p>A miscellaneous set of utility functions. Try not to put things in here
+unless they really have no other place.</p>
+<dl class="function">
+<dt id="sleap.util.attr_to_dtype">
+<code class="sig-prename descclassname">sleap.util.</code><code class="sig-name descname">attr_to_dtype</code><span class="sig-paren">(</span><em class="sig-param">cls: Any</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/util.html#attr_to_dtype"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.util.attr_to_dtype" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts classes with basic types to numpy composite dtypes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>cls</strong> – class to convert</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>numpy dtype.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.util.dict_cut">
+<code class="sig-prename descclassname">sleap.util.</code><code class="sig-name descname">dict_cut</code><span class="sig-paren">(</span><em class="sig-param">d: Dict</em>, <em class="sig-param">a: int</em>, <em class="sig-param">b: int</em><span class="sig-paren">)</span> &#x2192; Dict<a class="reference internal" href="_modules/sleap/util.html#dict_cut"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.util.dict_cut" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function for creating subdictionary by numeric indexing of items.</p>
+<p>Assumes that <cite>dict.items()</cite> will have a fixed order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>d</strong> – The dictionary to “split”</p></li>
+<li><p><strong>a</strong> – Start index of range of items to include in result.</p></li>
+<li><p><strong>b</strong> – End index of range of items to include in result.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A dictionary that contains a subset of the items in the original dict.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.util.frame_list">
+<code class="sig-prename descclassname">sleap.util.</code><code class="sig-name descname">frame_list</code><span class="sig-paren">(</span><em class="sig-param">frame_str: str</em><span class="sig-paren">)</span> &#x2192; Optional[List[int]]<a class="reference internal" href="_modules/sleap/util.html#frame_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.util.frame_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts ‘n-m’ string to list of ints.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>frame_str</strong> – string representing range</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of ints, or None if string does not represent valid range.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.util.json_dumps">
+<code class="sig-prename descclassname">sleap.util.</code><code class="sig-name descname">json_dumps</code><span class="sig-paren">(</span><em class="sig-param">d: Dict</em>, <em class="sig-param">filename: str = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/util.html#json_dumps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.util.json_dumps" title="Permalink to this definition">¶</a></dt>
+<dd><p>A simple wrapper around the JSON encoder we are using.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>d</strong> – The dict to write.</p></li>
+<li><p><strong>filename</strong> – The filename to write to.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.util.json_loads">
+<code class="sig-prename descclassname">sleap.util.</code><code class="sig-name descname">json_loads</code><span class="sig-paren">(</span><em class="sig-param">json_str: str</em><span class="sig-paren">)</span> &#x2192; Dict<a class="reference internal" href="_modules/sleap/util.html#json_loads"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.util.json_loads" title="Permalink to this definition">¶</a></dt>
+<dd><p>A simple wrapper around the JSON decoder we are using.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>json_str</strong> – JSON string to decode.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Result of decoding JSON string.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.util.save_dict_to_hdf5">
+<code class="sig-prename descclassname">sleap.util.</code><code class="sig-name descname">save_dict_to_hdf5</code><span class="sig-paren">(</span><em class="sig-param">h5file: h5py._hl.files.File</em>, <em class="sig-param">path: str</em>, <em class="sig-param">dic: dict</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/util.html#save_dict_to_hdf5"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.util.save_dict_to_hdf5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves dictionary to an HDF5 file.</p>
+<p>Calls itself recursively if items in dictionary are not
+<cite>np.ndarray</cite>, <cite>np.int64</cite>, <cite>np.float64</cite>, <cite>str</cite>, or bytes.
+Objects must be iterable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>h5file</strong> – The HDF5 filename object to save the data to.
+Assume it is open.</p></li>
+<li><p><strong>path</strong> – The path to group save the dict under.</p></li>
+<li><p><strong>dic</strong> – The dict to save.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If type for item in dict cannot be saved.</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.util.uniquify">
+<code class="sig-prename descclassname">sleap.util.</code><code class="sig-name descname">uniquify</code><span class="sig-paren">(</span><em class="sig-param">seq: Iterable[collections.abc.Hashable]</em><span class="sig-paren">)</span> &#x2192; List<a class="reference internal" href="_modules/sleap/util.html#uniquify"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.util.uniquify" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns unique elements from list, preserving order.</p>
+<p>Note: This will not work on Python 3.5 or lower since dicts don’t
+preserve order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>seq</strong> – The list to remove duplicates from.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The unique elements from the input list extracted in original
+order.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.util.usable_cpu_count">
+<code class="sig-prename descclassname">sleap.util.</code><code class="sig-name descname">usable_cpu_count</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="_modules/sleap/util.html#usable_cpu_count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.util.usable_cpu_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets number of CPUs usable by the current process.</p>
+<p>Takes into consideration cpusets restrictions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The number of usable cpus</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.util.weak_filename_match">
+<code class="sig-prename descclassname">sleap.util.</code><code class="sig-name descname">weak_filename_match</code><span class="sig-paren">(</span><em class="sig-param">filename_a: str</em>, <em class="sig-param">filename_b: str</em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/sleap/util.html#weak_filename_match"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.util.weak_filename_match" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if paths probably point to same file.</p>
+<p>Compares the filename and names of two directories up.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename_a</strong> – first path to check</p></li>
+<li><p><strong>filename_b</strong> – path to check against first path</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if the paths probably match.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-sleap.rangelist">
+<span id="range-list"></span><h2>Range list<a class="headerlink" href="#module-sleap.rangelist" title="Permalink to this headline">¶</a></h2>
+<p>Module with RangeList class for manipulating a list of range intervals.</p>
+<p>This is used to cache the track occupancy so we can keep cache updating
+when user manipulates tracks for a range of instances.</p>
+<dl class="class">
+<dt id="sleap.rangelist.RangeList">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.rangelist.</code><code class="sig-name descname">RangeList</code><span class="sig-paren">(</span><em class="sig-param">range_list: List[Tuple[int]] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/rangelist.html#RangeList"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.rangelist.RangeList" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for manipulating a list of range intervals.
+Each range interval in the list is a [start, end)-tuple.</p>
+<dl class="method">
+<dt id="sleap.rangelist.RangeList.add">
+<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param">val</em>, <em class="sig-param">tolerance=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/rangelist.html#RangeList.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.rangelist.RangeList.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a single value, merges to last range if contiguous.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.rangelist.RangeList.cut">
+<code class="sig-name descname">cut</code><span class="sig-paren">(</span><em class="sig-param">cut: int</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/rangelist.html#RangeList.cut"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.rangelist.RangeList.cut" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a pair of lists with everything before/after cut.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.rangelist.RangeList.cut_">
+<em class="property">static </em><code class="sig-name descname">cut_</code><span class="sig-paren">(</span><em class="sig-param">range_list: List[Tuple[int]], cut: int</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/rangelist.html#RangeList.cut_"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.rangelist.RangeList.cut_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a pair of lists with everything before/after cut.
+:param range_list: the list to cut
+:param cut: the value at which to cut list</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(pre-cut list, post-cut list)-tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.rangelist.RangeList.cut_range">
+<code class="sig-name descname">cut_range</code><span class="sig-paren">(</span><em class="sig-param">cut: tuple</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/rangelist.html#RangeList.cut_range"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.rangelist.RangeList.cut_range" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return three lists, everthing before/within/after cut range.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.rangelist.RangeList.insert">
+<code class="sig-name descname">insert</code><span class="sig-paren">(</span><em class="sig-param">new_range: tuple</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/rangelist.html#RangeList.insert"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.rangelist.RangeList.insert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a new range, merging to adjacent/overlapping ranges as appropriate.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.rangelist.RangeList.insert_list">
+<code class="sig-name descname">insert_list</code><span class="sig-paren">(</span><em class="sig-param">range_list: List[Tuple[int]]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/rangelist.html#RangeList.insert_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.rangelist.RangeList.insert_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add each range from a list of ranges.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.rangelist.RangeList.is_empty">
+<em class="property">property </em><code class="sig-name descname">is_empty</code><a class="headerlink" href="#sleap.rangelist.RangeList.is_empty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if the list is empty.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.rangelist.RangeList.join_">
+<em class="property">classmethod </em><code class="sig-name descname">join_</code><span class="sig-paren">(</span><em class="sig-param">list_list: List[List[Tuple[int]]]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/rangelist.html#RangeList.join_"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.rangelist.RangeList.join_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a single list that includes all lists in input list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>list_list</strong> – a list of range lists</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>range list that joins all of the lists in list_list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.rangelist.RangeList.join_pair_">
+<em class="property">static </em><code class="sig-name descname">join_pair_</code><span class="sig-paren">(</span><em class="sig-param">list_a: List[Tuple[int]], list_b: List[Tuple[int]]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/rangelist.html#RangeList.join_pair_"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.rangelist.RangeList.join_pair_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a single pair of lists that joins two input lists.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.rangelist.RangeList.list">
+<em class="property">property </em><code class="sig-name descname">list</code><a class="headerlink" href="#sleap.rangelist.RangeList.list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the list of ranges.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.rangelist.RangeList.remove">
+<code class="sig-name descname">remove</code><span class="sig-paren">(</span><em class="sig-param">remove: tuple</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/rangelist.html#RangeList.remove"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.rangelist.RangeList.remove" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove everything that overlaps with given range.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.rangelist.RangeList.start">
+<em class="property">property </em><code class="sig-name descname">start</code><a class="headerlink" href="#sleap.rangelist.RangeList.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the start value of range (or None if empty).</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-sleap.io.legacy">
+<span id="legacy-formats"></span><h2>Legacy formats<a class="headerlink" href="#module-sleap.io.legacy" title="Permalink to this headline">¶</a></h2>
+<p>Module for legacy LEAP dataset.</p>
+<dl class="function">
+<dt id="sleap.io.legacy.load_labels_json_old">
+<code class="sig-prename descclassname">sleap.io.legacy.</code><code class="sig-name descname">load_labels_json_old</code><span class="sig-paren">(</span><em class="sig-param">data_path: str</em>, <em class="sig-param">parsed_json: dict = None</em>, <em class="sig-param">adjust_matlab_indexing: bool = True</em>, <em class="sig-param">fix_rel_paths: bool = True</em><span class="sig-paren">)</span> &#x2192; List[sleap.instance.LabeledFrame]<a class="reference internal" href="_modules/sleap/io/legacy.html#load_labels_json_old"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.legacy.load_labels_json_old" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load predicted instances from Talmo’s old JSON format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data_path</strong> – The path to the JSON file.</p></li>
+<li><p><strong>parsed_json</strong> – The parsed json if already loaded, so we can save
+some time if already parsed.</p></li>
+<li><p><strong>adjust_matlab_indexing</strong> – Whether to adjust indexing from MATLAB.</p></li>
+<li><p><strong>fix_rel_paths</strong> – Whether to fix paths to videos to absolute paths.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A newly constructed Labels object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.io.legacy.load_predicted_labels_json_old">
+<code class="sig-prename descclassname">sleap.io.legacy.</code><code class="sig-name descname">load_predicted_labels_json_old</code><span class="sig-paren">(</span><em class="sig-param">data_path: str</em>, <em class="sig-param">parsed_json: dict = None</em>, <em class="sig-param">adjust_matlab_indexing: bool = True</em>, <em class="sig-param">fix_rel_paths: bool = True</em><span class="sig-paren">)</span> &#x2192; List[sleap.instance.LabeledFrame]<a class="reference internal" href="_modules/sleap/io/legacy.html#load_predicted_labels_json_old"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.legacy.load_predicted_labels_json_old" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load predicted instances from Talmo’s old JSON format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data_path</strong> – The path to the JSON file.</p></li>
+<li><p><strong>parsed_json</strong> – The parsed json if already loaded, so we can save
+some time if already parsed.</p></li>
+<li><p><strong>adjust_matlab_indexing</strong> – Whether to adjust indexing from MATLAB.</p></li>
+<li><p><strong>fix_rel_paths</strong> – Whether to fix paths to videos to absolute paths.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of <code class="xref py py-class docutils literal notranslate"><span class="pre">LabeledFrame</span></code> objects.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="info-tools">
+<h2>Info tools<a class="headerlink" href="#info-tools" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-sleap.info.metrics">
+<span id="metrics"></span><h3>Metrics<a class="headerlink" href="#module-sleap.info.metrics" title="Permalink to this headline">¶</a></h3>
+<p>Module for producing prediction metrics for SLEAP datasets.</p>
+<dl class="function">
+<dt id="sleap.info.metrics.calculate_pairwise_cost">
+<code class="sig-prename descclassname">sleap.info.metrics.</code><code class="sig-name descname">calculate_pairwise_cost</code><span class="sig-paren">(</span><em class="sig-param">instances_a: List[sleap.instance.Instance], instances_b: List[sleap.instance.Instance], cost_function: Callable</em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="_modules/sleap/info/metrics.html#calculate_pairwise_cost"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.info.metrics.calculate_pairwise_cost" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate (a * b) matrix of pairwise costs using cost function.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.info.metrics.compare_instance_lists">
+<code class="sig-prename descclassname">sleap.info.metrics.</code><code class="sig-name descname">compare_instance_lists</code><span class="sig-paren">(</span><em class="sig-param">instances_a: List[sleap.instance.Instance], instances_b: List[sleap.instance.Instance]</em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="_modules/sleap/info/metrics.html#compare_instance_lists"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.info.metrics.compare_instance_lists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given two lists of corresponding Instances, returns
+(instances * nodes) matrix of distances between corresponding nodes.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.info.metrics.list_points_array">
+<code class="sig-prename descclassname">sleap.info.metrics.</code><code class="sig-name descname">list_points_array</code><span class="sig-paren">(</span><em class="sig-param">instances: List[sleap.instance.Instance]</em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="_modules/sleap/info/metrics.html#list_points_array"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.info.metrics.list_points_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given list of Instances, returns (instances * nodes * 2) matrix.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.info.metrics.match_instance_lists">
+<code class="sig-prename descclassname">sleap.info.metrics.</code><code class="sig-name descname">match_instance_lists</code><span class="sig-paren">(</span><em class="sig-param">instances_a: List[sleap.instance.Instance], instances_b: List[sleap.instance.Instance], cost_function: Callable</em><span class="sig-paren">)</span> &#x2192; Tuple[List[sleap.instance.Instance], List[sleap.instance.Instance]]<a class="reference internal" href="_modules/sleap/info/metrics.html#match_instance_lists"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.info.metrics.match_instance_lists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sorts two lists of Instances to find best overall correspondence
+for a given cost function (e.g., total distance between points).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.info.metrics.match_instance_lists_nodewise">
+<code class="sig-prename descclassname">sleap.info.metrics.</code><code class="sig-name descname">match_instance_lists_nodewise</code><span class="sig-paren">(</span><em class="sig-param">instances_a: List[sleap.instance.Instance], instances_b: List[sleap.instance.Instance], thresh: float = 5</em><span class="sig-paren">)</span> &#x2192; Tuple[List[sleap.instance.Instance], List[sleap.instance.Instance]]<a class="reference internal" href="_modules/sleap/info/metrics.html#match_instance_lists_nodewise"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.info.metrics.match_instance_lists_nodewise" title="Permalink to this definition">¶</a></dt>
+<dd><p>For each node for each instance in the first list, pairs it with the
+closest corresponding node from <em>any</em> instance in the second list.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.info.metrics.matched_instance_distances">
+<code class="sig-prename descclassname">sleap.info.metrics.</code><code class="sig-name descname">matched_instance_distances</code><span class="sig-paren">(</span><em class="sig-param">labels_gt: sleap.io.dataset.Labels</em>, <em class="sig-param">labels_pr: sleap.io.dataset.Labels</em>, <em class="sig-param">match_lists_function: Callable</em>, <em class="sig-param">frame_range: Optional[range] = None</em><span class="sig-paren">)</span> &#x2192; Tuple[List[int], numpy.ndarray, numpy.ndarray, numpy.ndarray]<a class="reference internal" href="_modules/sleap/info/metrics.html#matched_instance_distances"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.info.metrics.matched_instance_distances" title="Permalink to this definition">¶</a></dt>
+<dd><p>Distances between ground truth and predicted nodes over a set of frames.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>labels_gt</strong> – the <cite>Labels</cite> object with ground truth data</p></li>
+<li><p><strong>labels_pr</strong> – the <cite>Labels</cite> object with predicted data</p></li>
+<li><p><strong>match_lists_function</strong> – function for determining corresponding instances
+Takes two lists of instances and returns “sorted” lists.</p></li>
+<li><p><strong>frame_range</strong> (<em>optional</em>) – range of frames for which to compare data
+If None, we compare every frame in labels_gt with corresponding
+frame in labels_pr.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>frame indices map: instance idx (for other matrices) -&gt; frame idx</p></li>
+<li><p>distance matrix: (instances * nodes)</p></li>
+<li><p>ground truth points matrix: (instances * nodes * 2)</p></li>
+<li><p>predicted points matrix: (instances * nodes * 2)</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.info.metrics.nodeless_point_dist">
+<code class="sig-prename descclassname">sleap.info.metrics.</code><code class="sig-name descname">nodeless_point_dist</code><span class="sig-paren">(</span><em class="sig-param">inst_a: sleap.instance.Instance</em>, <em class="sig-param">inst_b: sleap.instance.Instance</em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="_modules/sleap/info/metrics.html#nodeless_point_dist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.info.metrics.nodeless_point_dist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given two instances, returns array of distances for closest points
+ignoring node identities.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.info.metrics.point_dist">
+<code class="sig-prename descclassname">sleap.info.metrics.</code><code class="sig-name descname">point_dist</code><span class="sig-paren">(</span><em class="sig-param">inst_a: sleap.instance.Instance</em>, <em class="sig-param">inst_b: sleap.instance.Instance</em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="_modules/sleap/info/metrics.html#point_dist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.info.metrics.point_dist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given two instances, returns array of distances for corresponding nodes.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.info.metrics.point_match_count">
+<code class="sig-prename descclassname">sleap.info.metrics.</code><code class="sig-name descname">point_match_count</code><span class="sig-paren">(</span><em class="sig-param">dist_array: numpy.ndarray</em>, <em class="sig-param">thresh: float = 5</em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="_modules/sleap/info/metrics.html#point_match_count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.info.metrics.point_match_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given an array of distances, returns number which are &lt;= threshold.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.info.metrics.point_nonmatch_count">
+<code class="sig-prename descclassname">sleap.info.metrics.</code><code class="sig-name descname">point_nonmatch_count</code><span class="sig-paren">(</span><em class="sig-param">dist_array: numpy.ndarray</em>, <em class="sig-param">thresh: float = 5</em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="_modules/sleap/info/metrics.html#point_nonmatch_count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.info.metrics.point_nonmatch_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given an array of distances, returns number which are not &lt;= threshold.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-sleap.info.summary">
+<span id="summary"></span><h3>Summary<a class="headerlink" href="#module-sleap.info.summary" title="Permalink to this headline">¶</a></h3>
+<p>Module for getting a series which gives some statistic based on labeling
+data for each frame of some labeled video.</p>
+<dl class="class">
+<dt id="sleap.info.summary.StatisticSeries">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.info.summary.</code><code class="sig-name descname">StatisticSeries</code><span class="sig-paren">(</span><em class="sig-param">labels: sleap.io.dataset.Labels</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/info/summary.html#StatisticSeries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.info.summary.StatisticSeries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to calculate various statistical series for labeled frames.</p>
+<p>Each method returns a series which is a dictionary in which keys
+are frame index and value are some numerical value for the frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>labels</strong> – The <code class="xref py py-class docutils literal notranslate"><span class="pre">Labels</span></code> for which to calculate series.</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="sleap.info.summary.StatisticSeries.get_instance_score_series">
+<code class="sig-name descname">get_instance_score_series</code><span class="sig-paren">(</span><em class="sig-param">video</em>, <em class="sig-param">reduction='sum'</em><span class="sig-paren">)</span> &#x2192; Dict[int, float]<a class="reference internal" href="_modules/sleap/info/summary.html#StatisticSeries.get_instance_score_series"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.info.summary.StatisticSeries.get_instance_score_series" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get series with statistic of instance scores in each frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>video</strong> – The <code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code> for which to calculate statistic.</p></li>
+<li><p><strong>reduction</strong> – name of function applied to scores:
+* sum
+* min</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The series dictionary (see class docs for details)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.info.summary.StatisticSeries.get_point_count_series">
+<code class="sig-name descname">get_point_count_series</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em><span class="sig-paren">)</span> &#x2192; Dict[int, float]<a class="reference internal" href="_modules/sleap/info/summary.html#StatisticSeries.get_point_count_series"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.info.summary.StatisticSeries.get_point_count_series" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get series with total number of labeled points in each frame.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.info.summary.StatisticSeries.get_point_displacement_series">
+<code class="sig-name descname">get_point_displacement_series</code><span class="sig-paren">(</span><em class="sig-param">video</em>, <em class="sig-param">reduction='sum'</em><span class="sig-paren">)</span> &#x2192; Dict[int, float]<a class="reference internal" href="_modules/sleap/info/summary.html#StatisticSeries.get_point_displacement_series"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.info.summary.StatisticSeries.get_point_displacement_series" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get series with statistic of point displacement in each frame.</p>
+<p>Point displacement is the distance between the point location in
+frame and the location of the corresponding point (same node,
+same track) from the closest earlier labeled frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>video</strong> – The <code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code> for which to calculate statistic.</p></li>
+<li><p><strong>reduction</strong> – name of function applied to point scores:
+* sum
+* mean
+* max</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The series dictionary (see class docs for details)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.info.summary.StatisticSeries.get_point_score_series">
+<code class="sig-name descname">get_point_score_series</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em>, <em class="sig-param">reduction: str = 'sum'</em><span class="sig-paren">)</span> &#x2192; Dict[int, float]<a class="reference internal" href="_modules/sleap/info/summary.html#StatisticSeries.get_point_score_series"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.info.summary.StatisticSeries.get_point_score_series" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get series with statistic of point scores in each frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>video</strong> – The <code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code> for which to calculate statistic.</p></li>
+<li><p><strong>reduction</strong> – name of function applied to scores:
+* sum
+* min</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The series dictionary (see class docs for details)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-sleap.info.write_tracking_h5">
+<span id="track-analysis"></span><h3>Track Analysis<a class="headerlink" href="#module-sleap.info.write_tracking_h5" title="Permalink to this headline">¶</a></h3>
+<p>Generate an HDF5 file with track occupancy and point location data.</p>
+<p>Ignores tracks that are entirely empty. By default will also ignore
+empty frames from the beginning and end of video, although
+<cite>–all-frames</cite> argument will make it include empty frames from beginning
+of video.</p>
+<p>Call from command line as:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">sleap</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">write_tracking_h5</span> <span class="o">&lt;</span><span class="n">labels_filename</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>Will write file to <cite>&lt;labels_filename&gt;.tracking.h5</cite>.</p>
+<p>The HDF5 file has these datasets:
+* “track_occupancy”     shape: tracks * frames
+* “tracks”              shape: frames * nodes * 2 * tracks
+* “track_names”         shape: tracks</p>
+<p>Note: the datasets are stored column-major as expected by MATLAB.</p>
+<dl class="function">
+<dt id="sleap.info.write_tracking_h5.get_occupancy_and_points_matrices">
+<code class="sig-prename descclassname">sleap.info.write_tracking_h5.</code><code class="sig-name descname">get_occupancy_and_points_matrices</code><span class="sig-paren">(</span><em class="sig-param">labels: sleap.io.dataset.Labels</em>, <em class="sig-param">all_frames: bool</em><span class="sig-paren">)</span> &#x2192; Tuple[numpy.ndarray, numpy.ndarray]<a class="reference internal" href="_modules/sleap/info/write_tracking_h5.html#get_occupancy_and_points_matrices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.info.write_tracking_h5.get_occupancy_and_points_matrices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds numpy matrices with track occupancy and point location data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>labels</strong> – The <code class="xref py py-class docutils literal notranslate"><span class="pre">Labels</span></code> from which to get data.</p></li>
+<li><p><strong>all_frames</strong> – If True, then includes zeros so that frame index
+will line up with columns in the output. Otherwise,
+there will only be columns for the frames between the
+first and last frames with labeling data.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>occupancy matrix with shape (tracks, frames)</p></li>
+<li><p>point location matrix with shape (frames, nodes, 2, tracks)</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple of two matrices</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.info.write_tracking_h5.get_tracks_as_np_strings">
+<code class="sig-prename descclassname">sleap.info.write_tracking_h5.</code><code class="sig-name descname">get_tracks_as_np_strings</code><span class="sig-paren">(</span><em class="sig-param">labels: sleap.io.dataset.Labels</em><span class="sig-paren">)</span> &#x2192; List[numpy.bytes_]<a class="reference internal" href="_modules/sleap/info/write_tracking_h5.html#get_tracks_as_np_strings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.info.write_tracking_h5.get_tracks_as_np_strings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get list of track names as <cite>np.string_</cite>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.info.write_tracking_h5.main">
+<code class="sig-prename descclassname">sleap.info.write_tracking_h5.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><em class="sig-param">labels: sleap.io.dataset.Labels</em>, <em class="sig-param">output_path: str</em>, <em class="sig-param">all_frames: bool = True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/info/write_tracking_h5.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.info.write_tracking_h5.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes HDF5 file with matrices of track occupancy and coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>labels</strong> – The <code class="xref py py-class docutils literal notranslate"><span class="pre">Labels</span></code> from which to get data.</p></li>
+<li><p><strong>output_path</strong> – Path of HDF5 file to create.</p></li>
+<li><p><strong>all_frames</strong> – If True, then includes zeros so that frame index
+will line up with columns in the output. Otherwise,
+there will only be columns for the frames between the
+first and last frames with labeling data.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.info.write_tracking_h5.remove_empty_tracks_from_matrices">
+<code class="sig-prename descclassname">sleap.info.write_tracking_h5.</code><code class="sig-name descname">remove_empty_tracks_from_matrices</code><span class="sig-paren">(</span><em class="sig-param">track_names: List</em>, <em class="sig-param">occupancy_matrix: numpy.ndarray</em>, <em class="sig-param">locations_matrix: numpy.ndarray</em><span class="sig-paren">)</span> &#x2192; Tuple[List, numpy.ndarray, numpy.ndarray]<a class="reference internal" href="_modules/sleap/info/write_tracking_h5.html#remove_empty_tracks_from_matrices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.info.write_tracking_h5.remove_empty_tracks_from_matrices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes matrix rows/columns for unoccupied tracks.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>track_names</strong> – List of track names</p></li>
+<li><p><strong>occupancy_matrix</strong> – 2d numpy matrix, rows correspond to tracks</p></li>
+<li><p><strong>locations_matrix</strong> – 4d numpy matrix, last index is track</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>track_names, occupancy_matrix, locations_matrix from input,
+but without the rows/columns corresponding to unoccupied tracks.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.info.write_tracking_h5.write_occupancy_file">
+<code class="sig-prename descclassname">sleap.info.write_tracking_h5.</code><code class="sig-name descname">write_occupancy_file</code><span class="sig-paren">(</span><em class="sig-param">output_path: str, data_dict: Dict[str, Any], transpose: bool = True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/info/write_tracking_h5.html#write_occupancy_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.info.write_tracking_h5.write_occupancy_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write HDF5 file with data from given dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output_path</strong> – Path of HDF5 file.</p></li>
+<li><p><strong>data_dict</strong> – Dictionary with data to save. Keys are dataset names,
+values are the data.</p></li>
+<li><p><strong>transpose</strong> – If True, then any ndarray in data dictionary will be
+transposed before saving. This is useful for writing files
+that will be imported into MATLAB, which expects data in
+column-major format.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="gui.html" class="btn btn-neutral float-left" title="GUI" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Murthy Lab @ Princeton
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

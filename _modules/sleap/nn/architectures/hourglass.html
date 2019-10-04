@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>sleap.nn.architectures.hourglass &mdash; LEAP  documentation</title>
+  <title>sleap.nn.architectures.hourglass &mdash; SLEAP  documentation</title>
   
 
   
@@ -48,7 +48,7 @@
           
 
           
-            <a href="../../../../index.html" class="icon icon-home"> LEAP
+            <a href="../../../../index.html" class="icon icon-home"> SLEAP
           
 
           
@@ -78,7 +78,7 @@
               
             
             
-              <p class="caption"><span class="caption-text">sLEAP Package</span></p>
+              <p class="caption"><span class="caption-text">SLEAP Package</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../skeleton.html">Skeleton</a></li>
@@ -88,6 +88,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../training.html">Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../inference.html">Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../gui.html">GUI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../misc.html">Misc</a></li>
 </ul>
 
             
@@ -102,7 +103,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../../../../index.html">LEAP</a>
+          <a href="../../../../index.html">SLEAP</a>
         
       </nav>
 
@@ -153,8 +154,22 @@
   <h1>Source code for sleap.nn.architectures.hourglass</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">attr</span>
 
-<span class="kn">from</span> <span class="nn">sleap.nn.architectures.common</span> <span class="k">import</span> <span class="n">residual_block</span><span class="p">,</span> <span class="n">expand_to_n</span><span class="p">,</span> <span class="n">conv</span><span class="p">,</span> <span class="n">conv1</span><span class="p">,</span> <span class="n">conv3</span>
-<span class="kn">from</span> <span class="nn">keras.layers</span> <span class="k">import</span> <span class="n">Conv2D</span><span class="p">,</span> <span class="n">BatchNormalization</span><span class="p">,</span> <span class="n">Add</span><span class="p">,</span> <span class="n">MaxPool2D</span><span class="p">,</span> <span class="n">UpSampling2D</span><span class="p">,</span> <span class="n">Concatenate</span><span class="p">,</span> <span class="n">Conv2DTranspose</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.architectures.common</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">residual_block</span><span class="p">,</span>
+    <span class="n">expand_to_n</span><span class="p">,</span>
+    <span class="n">conv</span><span class="p">,</span>
+    <span class="n">conv1</span><span class="p">,</span>
+    <span class="n">conv3</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">keras.layers</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">Conv2D</span><span class="p">,</span>
+    <span class="n">BatchNormalization</span><span class="p">,</span>
+    <span class="n">Add</span><span class="p">,</span>
+    <span class="n">MaxPool2D</span><span class="p">,</span>
+    <span class="n">UpSampling2D</span><span class="p">,</span>
+    <span class="n">Concatenate</span><span class="p">,</span>
+    <span class="n">Conv2DTranspose</span><span class="p">,</span>
+<span class="p">)</span>
 
 
 <div class="viewcode-block" id="StackedHourglass"><a class="viewcode-back" href="../../../../training.html#sleap.nn.architectures.hourglass.StackedHourglass">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -186,16 +201,18 @@
 <span class="sd">           by concatenating with intermediate outputs</span>
 <span class="sd">       upsampling_layers: Use upsampling instead of transposed convolutions.</span>
 <span class="sd">       interp: Method to use for interpolation when upsampling smaller features.</span>
+<span class="sd">       initial_stride: Stride of first convolution to use for reducing input resolution.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">num_hourglass_blocks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>
+
+    <span class="n">num_stacks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>
     <span class="n">num_filters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">32</span>
     <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>
     <span class="n">batch_norm</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">intermediate_inputs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">upsampling_layers</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">interp</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bilinear&quot;</span>
-
+    <span class="n">initial_stride</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
 
 <div class="viewcode-block" id="StackedHourglass.output"><a class="viewcode-back" href="../../../../training.html#sleap.nn.architectures.hourglass.StackedHourglass.output">[docs]</a>    <span class="k">def</span> <span class="nf">output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_in</span><span class="p">,</span> <span class="n">num_output_channels</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -213,7 +230,15 @@
         <span class="k">return</span> <span class="n">stacked_hourglass</span><span class="p">(</span><span class="n">x_in</span><span class="p">,</span> <span class="n">num_output_channels</span><span class="p">,</span> <span class="o">**</span><span class="n">attr</span><span class="o">.</span><span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div></div>
 
 
-<div class="viewcode-block" id="hourglass_block"><a class="viewcode-back" href="../../../../training.html#sleap.nn.architectures.hourglass.hourglass_block">[docs]</a><span class="k">def</span> <span class="nf">hourglass_block</span><span class="p">(</span><span class="n">x_in</span><span class="p">,</span> <span class="n">num_output_channels</span><span class="p">,</span> <span class="n">num_filters</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">batch_norm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">upsampling_layers</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">interp</span><span class="o">=</span><span class="s2">&quot;bilinear&quot;</span><span class="p">):</span>
+<div class="viewcode-block" id="hourglass_block"><a class="viewcode-back" href="../../../../training.html#sleap.nn.architectures.hourglass.hourglass_block">[docs]</a><span class="k">def</span> <span class="nf">hourglass_block</span><span class="p">(</span>
+    <span class="n">x_in</span><span class="p">,</span>
+    <span class="n">num_output_channels</span><span class="p">,</span>
+    <span class="n">num_filters</span><span class="p">,</span>
+    <span class="n">depth</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">batch_norm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">upsampling_layers</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">interp</span><span class="o">=</span><span class="s2">&quot;bilinear&quot;</span><span class="p">,</span>
+<span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Creates a single hourglass block.</span>
 
 <span class="sd">    This function builds an hourglass block from residual blocks and max pooling.</span>
@@ -247,15 +272,21 @@
 <span class="sd">        x_out: tf.Tensor of the output of the block of the same width and height</span>
 <span class="sd">            as the input with `num_output_channels` channels.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    
+
     <span class="c1"># Check if input tensor has the right number of channels</span>
     <span class="k">if</span> <span class="n">x_in</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">num_filters</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Input tensor must have the same number of channels as the intermediate output of the hourglass (</span><span class="si">%d</span><span class="s2">).&quot;</span> <span class="o">%</span> <span class="n">num_filters</span><span class="p">)</span>
-    
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Input tensor must have the same number of channels as the intermediate output of the hourglass (</span><span class="si">%d</span><span class="s2">).&quot;</span>
+            <span class="o">%</span> <span class="n">num_filters</span>
+        <span class="p">)</span>
+
     <span class="c1"># Check if input tensor has the right height/width for pooling given depth</span>
-    <span class="k">if</span> <span class="n">x_in</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">%</span> <span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">depth</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">x_in</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">%</span> <span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">depth</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Input tensor must have width and height dimensions divisible by </span><span class="si">%d</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">depth</span><span class="p">))</span>
-    
+    <span class="k">if</span> <span class="n">x_in</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">%</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">depth</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">x_in</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">%</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">depth</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Input tensor must have width and height dimensions divisible by </span><span class="si">%d</span><span class="s2">.&quot;</span>
+            <span class="o">%</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">depth</span><span class="p">)</span>
+        <span class="p">)</span>
+
     <span class="c1"># Down</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">x_in</span>
     <span class="n">blocks_down</span> <span class="o">=</span> <span class="p">[]</span>
@@ -263,41 +294,59 @@
         <span class="n">x</span> <span class="o">=</span> <span class="n">residual_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">num_filters</span><span class="p">,</span> <span class="n">batch_norm</span><span class="p">)</span>
         <span class="n">blocks_down</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">MaxPool2D</span><span class="p">(</span><span class="n">pool_size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">strides</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">))(</span><span class="n">x</span><span class="p">)</span>
-        
+
     <span class="n">x</span> <span class="o">=</span> <span class="n">residual_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">num_filters</span><span class="p">,</span> <span class="n">batch_norm</span><span class="p">)</span>
-    
+
     <span class="c1"># Middle</span>
     <span class="n">x_identity</span> <span class="o">=</span> <span class="n">residual_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">num_filters</span><span class="p">,</span> <span class="n">batch_norm</span><span class="p">)</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">residual_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">num_filters</span><span class="p">,</span> <span class="n">batch_norm</span><span class="p">)</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">residual_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">num_filters</span><span class="p">,</span> <span class="n">batch_norm</span><span class="p">)</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">residual_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">num_filters</span><span class="p">,</span> <span class="n">batch_norm</span><span class="p">)</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">Add</span><span class="p">()([</span><span class="n">x_identity</span><span class="p">,</span> <span class="n">x</span><span class="p">])</span>
-    
+
     <span class="c1"># Up</span>
     <span class="k">for</span> <span class="n">x_down</span> <span class="ow">in</span> <span class="n">blocks_down</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
         <span class="n">x_down</span> <span class="o">=</span> <span class="n">residual_block</span><span class="p">(</span><span class="n">x_down</span><span class="p">,</span> <span class="n">num_filters</span><span class="p">,</span> <span class="n">batch_norm</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">upsampling_layers</span><span class="p">:</span>
-            <span class="n">x</span> <span class="o">=</span> <span class="n">UpSampling2D</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span> <span class="n">interpolation</span><span class="o">=</span><span class="n">interp</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">UpSampling2D</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">interpolation</span><span class="o">=</span><span class="n">interp</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">x</span> <span class="o">=</span> <span class="n">Conv2DTranspose</span><span class="p">(</span><span class="n">num_filters</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">strides</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;relu&quot;</span><span class="p">,</span> <span class="n">kernel_initializer</span><span class="o">=</span><span class="s2">&quot;glorot_normal&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">Conv2DTranspose</span><span class="p">(</span>
+                <span class="n">num_filters</span><span class="p">,</span>
+                <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                <span class="n">strides</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
+                <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;relu&quot;</span><span class="p">,</span>
+                <span class="n">kernel_initializer</span><span class="o">=</span><span class="s2">&quot;glorot_normal&quot;</span><span class="p">,</span>
+            <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">Add</span><span class="p">()([</span><span class="n">x_down</span><span class="p">,</span> <span class="n">x</span><span class="p">])</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">residual_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">num_filters</span><span class="p">,</span> <span class="n">batch_norm</span><span class="p">)</span>
-        
+
     <span class="c1"># Head</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">conv1</span><span class="p">(</span><span class="n">num_filters</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">batch_norm</span><span class="p">:</span> <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">()(</span><span class="n">x</span><span class="p">)</span>
-    
+    <span class="k">if</span> <span class="n">batch_norm</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">()(</span><span class="n">x</span><span class="p">)</span>
+
     <span class="n">x_out</span> <span class="o">=</span> <span class="n">conv1</span><span class="p">(</span><span class="n">num_output_channels</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-    
+
     <span class="n">x</span> <span class="o">=</span> <span class="n">conv1</span><span class="p">(</span><span class="n">num_filters</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
     <span class="n">x_</span> <span class="o">=</span> <span class="n">conv1</span><span class="p">(</span><span class="n">num_filters</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">)(</span><span class="n">x_out</span><span class="p">)</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">Add</span><span class="p">()([</span><span class="n">x_in</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">x_</span><span class="p">])</span>
-    
+
     <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">x_out</span></div>
 
 
-<div class="viewcode-block" id="stacked_hourglass"><a class="viewcode-back" href="../../../../training.html#sleap.nn.architectures.hourglass.stacked_hourglass">[docs]</a><span class="k">def</span> <span class="nf">stacked_hourglass</span><span class="p">(</span><span class="n">x_in</span><span class="p">,</span> <span class="n">num_output_channels</span><span class="p">,</span> <span class="n">num_hourglass_blocks</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">num_filters</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">batch_norm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                      <span class="n">intermediate_inputs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">upsampling_layers</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">interp</span><span class="o">=</span><span class="s2">&quot;bilinear&quot;</span><span class="p">):</span>
+<div class="viewcode-block" id="stacked_hourglass"><a class="viewcode-back" href="../../../../training.html#sleap.nn.architectures.hourglass.stacked_hourglass">[docs]</a><span class="k">def</span> <span class="nf">stacked_hourglass</span><span class="p">(</span>
+    <span class="n">x_in</span><span class="p">,</span>
+    <span class="n">num_output_channels</span><span class="p">,</span>
+    <span class="n">num_stacks</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">num_filters</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+    <span class="n">depth</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">batch_norm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">intermediate_inputs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">upsampling_layers</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">interp</span><span class="o">=</span><span class="s2">&quot;bilinear&quot;</span><span class="p">,</span>
+    <span class="n">initial_stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Stacked hourglass block.</span>
 
 <span class="sd">    This function builds and connects multiple hourglass blocks. See `hourglass` for</span>
@@ -325,43 +374,52 @@
 <span class="sd">            by concatenating with intermediate outputs</span>
 <span class="sd">        upsampling_layers: Use upsampling instead of transposed convolutions.</span>
 <span class="sd">        interp: Method to use for interpolation when upsampling smaller features.</span>
+<span class="sd">        initial_stride: Stride of first convolution to use for reducing input resolution.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        x_outs: List of tf.Tensors of the output of the block of the same width and height</span>
 <span class="sd">            as the input with `num_output_channels` channels.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
+    <span class="c1"># Expand block-specific parameters if scalars provided</span>
+    <span class="n">num_filters</span> <span class="o">=</span> <span class="n">expand_to_n</span><span class="p">(</span><span class="n">num_filters</span><span class="p">,</span> <span class="n">num_stacks</span><span class="p">)</span>
+    <span class="n">depth</span> <span class="o">=</span> <span class="n">expand_to_n</span><span class="p">(</span><span class="n">depth</span><span class="p">,</span> <span class="n">num_stacks</span><span class="p">)</span>
+    <span class="n">batch_norm</span> <span class="o">=</span> <span class="n">expand_to_n</span><span class="p">(</span><span class="n">batch_norm</span><span class="p">,</span> <span class="n">num_stacks</span><span class="p">)</span>
+    <span class="n">upsampling_layers</span> <span class="o">=</span> <span class="n">expand_to_n</span><span class="p">(</span><span class="n">upsampling_layers</span><span class="p">,</span> <span class="n">num_stacks</span><span class="p">)</span>
+    <span class="n">interp</span> <span class="o">=</span> <span class="n">expand_to_n</span><span class="p">(</span><span class="n">interp</span><span class="p">,</span> <span class="n">num_stacks</span><span class="p">)</span>
+
     <span class="c1"># Initial downsampling</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">conv</span><span class="p">(</span><span class="n">num_filters</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">))(</span><span class="n">x_in</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">conv</span><span class="p">(</span><span class="n">num_filters</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">),</span> <span class="n">strides</span><span class="o">=</span><span class="n">initial_stride</span><span class="p">)(</span><span class="n">x_in</span><span class="p">)</span>
 
     <span class="c1"># Batchnorm after the intial down sampling</span>
-    <span class="k">if</span> <span class="n">batch_norm</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">batch_norm</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">()(</span><span class="n">x</span><span class="p">)</span>
 
-    <span class="c1"># Expand block-specific parameters if scalars provided</span>
-    <span class="n">num_filters</span> <span class="o">=</span> <span class="n">expand_to_n</span><span class="p">(</span><span class="n">num_filters</span><span class="p">,</span> <span class="n">num_hourglass_blocks</span><span class="p">)</span>
-    <span class="n">depth</span> <span class="o">=</span> <span class="n">expand_to_n</span><span class="p">(</span><span class="n">depth</span><span class="p">,</span> <span class="n">num_hourglass_blocks</span><span class="p">)</span>
-    <span class="n">batch_norm</span> <span class="o">=</span> <span class="n">expand_to_n</span><span class="p">(</span><span class="n">batch_norm</span><span class="p">,</span> <span class="n">num_hourglass_blocks</span><span class="p">)</span>
-    <span class="n">upsampling_layers</span> <span class="o">=</span> <span class="n">expand_to_n</span><span class="p">(</span><span class="n">upsampling_layers</span><span class="p">,</span> <span class="n">num_hourglass_blocks</span><span class="p">)</span>
-    <span class="n">interp</span> <span class="o">=</span> <span class="n">expand_to_n</span><span class="p">(</span><span class="n">interp</span><span class="p">,</span> <span class="n">num_hourglass_blocks</span><span class="p">)</span>
-    
     <span class="c1"># Make sure first block gets the right number of channels</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">x_in</span>
+    <span class="c1"># x = x_in</span>
     <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">num_filters</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">residual_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">num_filters</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">batch_norm</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-    
+
     <span class="c1"># Create individual hourglasses and collect intermediate outputs</span>
+    <span class="n">x_in</span> <span class="o">=</span> <span class="n">x</span>
     <span class="n">x_outs</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_hourglass_blocks</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_stacks</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">intermediate_inputs</span><span class="p">:</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">Concatenate</span><span class="p">()([</span><span class="n">x</span><span class="p">,</span> <span class="n">x_in</span><span class="p">])</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">residual_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">num_filters</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">batch_norm</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
 
-        <span class="n">x</span><span class="p">,</span> <span class="n">x_out</span> <span class="o">=</span> <span class="n">hourglass_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">num_output_channels</span><span class="p">,</span> <span class="n">num_filters</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">depth</span><span class="o">=</span><span class="n">depth</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">batch_norm</span><span class="o">=</span><span class="n">batch_norm</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">upsampling_layers</span><span class="o">=</span><span class="n">upsampling_layers</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">interp</span><span class="o">=</span><span class="n">interp</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">x_out</span> <span class="o">=</span> <span class="n">hourglass_block</span><span class="p">(</span>
+            <span class="n">x</span><span class="p">,</span>
+            <span class="n">num_output_channels</span><span class="p">,</span>
+            <span class="n">num_filters</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+            <span class="n">depth</span><span class="o">=</span><span class="n">depth</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+            <span class="n">batch_norm</span><span class="o">=</span><span class="n">batch_norm</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+            <span class="n">upsampling_layers</span><span class="o">=</span><span class="n">upsampling_layers</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+            <span class="n">interp</span><span class="o">=</span><span class="n">interp</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+        <span class="p">)</span>
         <span class="n">x_outs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x_out</span><span class="p">)</span>
-        
-    <span class="k">return</span> <span class="n">x_outs</span></div>
 
+    <span class="k">return</span> <span class="n">x_outs</span></div>
 </pre></div>
 
            </div>

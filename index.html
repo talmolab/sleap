@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Social LEAP Estimates Animal Pose (sLEAP) &mdash; LEAP  documentation</title>
+  <title>Social LEAP Estimates Animal Pose (SLEAP) &mdash; SLEAP  documentation</title>
   
 
   
@@ -49,7 +49,7 @@
           
 
           
-            <a href="#" class="icon icon-home"> LEAP
+            <a href="#" class="icon icon-home"> SLEAP
           
 
           
@@ -79,7 +79,7 @@
               
             
             
-              <p class="caption"><span class="caption-text">sLEAP Package</span></p>
+              <p class="caption"><span class="caption-text">SLEAP Package</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="skeleton.html">Skeleton</a></li>
@@ -89,6 +89,7 @@
 <li class="toctree-l1"><a class="reference internal" href="training.html">Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="inference.html">Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gui.html">GUI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="misc.html">Misc</a></li>
 </ul>
 
             
@@ -103,7 +104,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="#">LEAP</a>
+          <a href="#">SLEAP</a>
         
       </nav>
 
@@ -134,7 +135,7 @@
     
       <li><a href="#">Docs</a> &raquo;</li>
         
-      <li>Social LEAP Estimates Animal Pose (sLEAP)</li>
+      <li>Social LEAP Estimates Animal Pose (SLEAP)</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -155,28 +156,28 @@
             
   <p><a class="reference external" href="https://ci.appveyor.com/project/talmo/sleap"><img alt="Appveyor build status" src="https://ci.appveyor.com/api/projects/status/tf5qlylwqse8ack5/branch/master?svg=true" /></a> <a class="reference external" href="https://GitHub.com/murthylab/sleap/releases/"><img alt="GitHub release" src="https://img.shields.io/github/release/murthylab/sleap.js.svg" /></a></p>
 <div class="section" id="social-leap-estimates-animal-pose-sleap">
-<h1>Social LEAP Estimates Animal Pose (sLEAP)<a class="headerlink" href="#social-leap-estimates-animal-pose-sleap" title="Permalink to this headline">¶</a></h1>
+<h1>Social LEAP Estimates Animal Pose (SLEAP)<a class="headerlink" href="#social-leap-estimates-animal-pose-sleap" title="Permalink to this headline">¶</a></h1>
 <a class="reference internal image-reference" href="docs/_static/supp_mov1-long_clip.gif"><img alt="docs/_static/supp_mov1-long_clip.gif" src="docs/_static/supp_mov1-long_clip.gif" style="width: 500px;" /></a>
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
-<p><strong>S</strong>ocial <strong>L</strong>EAP <strong>E</strong>stimates <strong>A</strong>nimal <strong>P</strong>ose (<strong>sLEAP</strong>) is a framework for multi-animal
-body part position estimation via deep learning. It is the successor to <a class="reference external" href="https://github.com/talmo/leap">LEAP</a>. <strong>sLEAP</strong> is written entirely in
+<p><strong>S</strong>ocial <strong>L</strong>EAP <strong>E</strong>stimates <strong>A</strong>nimal <strong>P</strong>ose (<strong>SLEAP</strong>) is a framework for multi-animal
+body part position estimation via deep learning. It is the successor to <a class="reference external" href="https://github.com/talmo/leap">LEAP</a>. <strong>SLEAP</strong> is written entirely in
 Python, supports multi-animal pose estimation, animal instance tracking, and a labeling/training GUI that
 supports active learning.</p>
 <div class="section" id="installation">
 <span id="id1"></span><h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
-<p><strong>sLEAP</strong> is compatible with Python versions 3.6 and above, with support for Windows and Linux. Mac OS X works but without GPU support.</p>
+<p><strong>SLEAP</strong> is compatible with Python versions 3.6 and above, with support for Windows and Linux. Mac OS X works but without GPU support.</p>
 </div>
 <div class="section" id="windows">
 <h2>Windows<a class="headerlink" href="#windows" title="Permalink to this headline">¶</a></h2>
-<p>Since <strong>sLEAP</strong> has a number of complex binary dependencies (TensorFlow, Keras, OpenCV), it is recommended to use the
+<p>Since <strong>SLEAP</strong> has a number of complex binary dependencies (TensorFlow, Keras, OpenCV), it is recommended to use the
 <a class="reference external" href="https://www.anaconda.com/distribution/">Anaconda</a> Python distribution to simplify installation.</p>
 <p>Once <a class="reference external" href="https://www.anaconda.com/distribution/">Anaconda</a> has been installed, go to start menu and type in <em>Anaconda</em>, which should bring up a menu entry
 <strong>Anaconda Prompt</strong> which opens a command line with the base anaconda environment activated. One of the key
 advantages to using <a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html">Anaconda Environments</a> is the ability to create separate Python installations (environments) for
 different projects, mitigating issues of managing complex dependencies. To create a new conda environment for
-<strong>sLEAP</strong> related development and use:</p>
+<strong>SLEAP</strong> related development and use:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">base</span><span class="p">)</span> <span class="n">C</span><span class="p">:</span>\<span class="o">&gt;</span>  <span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">sleap_env</span> <span class="o">-</span><span class="n">c</span> <span class="n">defaults</span> <span class="o">-</span><span class="n">c</span> <span class="n">sleap</span> <span class="n">sleap</span> <span class="n">python</span><span class="o">=</span><span class="mf">3.6</span> <span class="o">-</span><span class="n">y</span>
 </pre></div>
 </div>
@@ -188,7 +189,7 @@ different projects, mitigating issues of managing complex dependencies. To creat
 <p>Any Python installation commands (<code class="code docutils literal notranslate"><span class="pre">conda</span> <span class="pre">install</span></code> or <code class="code docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code>) issued after activating an
 environment will only effect the environment. Thus it is important to make sure the environment is active when issuing
 any commands that deal with Python on the command line.</p>
-<p><strong>sLEAP</strong> is now installed in the <code class="code docutils literal notranslate"><span class="pre">sleap_env</span></code> conda environment. With the environment active,
+<p><strong>SLEAP</strong> is now installed in the <code class="code docutils literal notranslate"><span class="pre">sleap_env</span></code> conda environment. With the environment active,
 you can run the labeling GUI by entering the following command:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">sleap_env</span><span class="p">)</span> <span class="n">C</span><span class="p">:</span>\<span class="o">&gt;</span> <span class="n">sleap</span><span class="o">-</span><span class="n">label</span>
 </pre></div>
@@ -196,14 +197,14 @@ you can run the labeling GUI by entering the following command:</p>
 </div>
 <div class="section" id="linux">
 <h2>Linux<a class="headerlink" href="#linux" title="Permalink to this headline">¶</a></h2>
-<p>No Linux conda packages are currently provided by the <strong>sLEAP</strong> channel. However, installing via <code class="code docutils literal notranslate"><span class="pre">pip</span></code> should not
+<p>No Linux conda packages are currently provided by the <strong>SLEAP</strong> channel. However, installing via <code class="code docutils literal notranslate"><span class="pre">pip</span></code> should not
 be difficult on most Linux systems. The first step is to get a working version of TensorFlow installed in your Python
 environment. Follow official directions for installing <a class="reference external" href="https://www.tensorflow.org/install/gpu">TensorFlow</a> with GPU support. Once TensorFlow is installed, simple
-issue the following command to install <strong>sLEAP</strong></p>
+issue the following command to install <strong>SLEAP</strong></p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">git</span><span class="o">+</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">murthylab</span><span class="o">/</span><span class="n">sleap</span><span class="o">.</span><span class="n">git</span>
 </pre></div>
 </div>
-<p><strong>sLEAP</strong> is now installed you can run the labeling GUI by entering the following command:</p>
+<p><strong>SLEAP</strong> is now installed you can run the labeling GUI by entering the following command:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;</span> <span class="n">sleap</span><span class="o">-</span><span class="n">label</span>
 </pre></div>
 </div>
@@ -211,16 +212,16 @@ issue the following command to install <strong>sLEAP</strong></p>
 <div class="section" id="mac-os">
 <h2>Mac OS<a class="headerlink" href="#mac-os" title="Permalink to this headline">¶</a></h2>
 <p>The installation for Mac OS X is the same as for Linux, although there’s no TensorFlow GPU support for Mac OS.
-You can install TensorFlow and <strong>sLEAP</strong> together by running</p>
+You can install TensorFlow and <strong>SLEAP</strong> together by running</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">tensorflow</span> <span class="n">git</span><span class="o">+</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">murthylab</span><span class="o">/</span><span class="n">sleap</span><span class="o">.</span><span class="n">git</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="research">
 <h2>Research<a class="headerlink" href="#research" title="Permalink to this headline">¶</a></h2>
-<p>If you use <strong>sLEAP</strong> in your research please acknowledge …</p>
+<p>If you use <strong>SLEAP</strong> in your research please acknowledge …</p>
 <div class="toctree-wrapper compound" id="sleap">
-<p class="caption"><span class="caption-text">sLEAP Package</span><a class="headerlink" href="#sleap" title="Permalink to this toctree">¶</a></p>
+<p class="caption"><span class="caption-text">SLEAP Package</span><a class="headerlink" href="#sleap" title="Permalink to this toctree">¶</a></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="tutorial.html#stage-1-creating-a-project">Stage 1: Creating a project</a><ul>
@@ -252,7 +253,47 @@ You can install TensorFlow and <strong>sLEAP</strong> together by running</p>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="inference.html">Inference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="gui.html">GUI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gui.html">GUI</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gui.html#module-sleap.gui.video">Video Player</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gui.html#dialogs">Dialogs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="gui.html#module-sleap.gui.active">Active Learning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gui.html#module-sleap.gui.importvideos">Video Importer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gui.html#module-sleap.gui.merge">Merging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gui.html#module-sleap.gui.shortcuts">Shortcuts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gui.html#module-sleap.gui.suggestions">Suggestions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gui.html#module-sleap.gui.training_editor">Training Profiles</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gui.html#other-widgets">Other Widgets</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="gui.html#module-sleap.gui.formbuilder">Form builder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gui.html#module-sleap.gui.slider">Slider</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gui.html#module-sleap.gui.multicheck">Multicheck</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gui.html#overlays">Overlays</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="gui.html#module-sleap.gui.overlays.instance">Instances</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gui.html#module-sleap.gui.overlays.tracks">Tracks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gui.html#module-sleap.gui.overlays.anchors">Anchors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gui.html#module-sleap.gui.overlays.base">Datasource classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gui.html#module-sleap.gui.overlays.confmaps">Confidence maps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gui.html#module-sleap.gui.overlays.pafs">Part affinity fields</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gui.html#module-sleap.gui.dataviews">Dataviews</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="misc.html">Misc</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#module-sleap.util">Utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#module-sleap.rangelist">Range list</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#module-sleap.io.legacy">Legacy formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#info-tools">Info tools</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="misc.html#module-sleap.info.metrics">Metrics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="misc.html#module-sleap.info.summary">Summary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="misc.html#module-sleap.info.write_tracking_h5">Track Analysis</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
