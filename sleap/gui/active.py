@@ -5,6 +5,7 @@ Module for running active learning (or just inference) from GUI.
 import os
 import cattr
 
+from datetime import datetime
 from functools import reduce
 from pkg_resources import Requirement, resource_filename
 from typing import Dict, List, Optional, Tuple
@@ -699,28 +700,6 @@ def find_saved_jobs(
     return jobs
 
 
-def add_frames_from_json(labels: Labels, new_labels_json: str) -> int:
-    """Merges new predictions (given as json string) into dataset.
-
-    Args:
-        labels: The dataset to which we're adding the predictions.
-        new_labels_json: A JSON string which can be deserialized into `Labels`.
-    Returns:
-        Number of labeled frames with new predictions.
-    """
-    # Deserialize the new frames, matching to the existing videos/skeletons if possible
-    new_lfs = Labels.from_json(new_labels_json, match_to=labels).labeled_frames
-
-    # Remove any frames without instances
-    new_lfs = list(filter(lambda lf: len(lf.instances), new_lfs))
-
-    # Now add them to labels and merge labeled frames with same video/frame_idx
-    labels.extend_from(new_lfs)
-    labels.merge_matching_frames()
-
-    return len(new_lfs)
-
-
 def run_active_learning_pipeline(
     labels_filename: str,
     labels: Labels,
@@ -879,8 +858,8 @@ def run_active_inference(
     # from multiprocessing import Pool
 
     # total_new_lf_count = 0
-    # timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
-    # inference_output_path = os.path.join(save_dir, f"{timestamp}.inference.h5")
+    timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
+    inference_output_path = os.path.join(save_dir, f"{timestamp}.inference.h5")
 
     # Create Predictor from the results of training
     # pool = Pool(processes=1)
@@ -942,10 +921,15 @@ def run_active_inference(
     # Remove any frames without instances
     new_lfs = list(filter(lambda lf: len(lf.instances), new_lfs))
 
-    # Now add them to labels and merge labeled frames with same video/frame_idx
-    # labels.extend_from(new_lfs)
-    labels.extend_from(new_lfs, unify=True)
-    labels.merge_matching_frames()
+    # Create and save dataset with predictions
+    new_labels = Labels(new_lfs)
+    Labels.save_file(new_labels, inference_output_path)
+
+    # Merge predictions into current labels dataset
+    _, _, new_conflicts = Labels.complex_merge_between(labels, new_labels)
+
+    # new predictions should replace old ones
+    Labels.finish_complex_merge(labels, new_conflicts)
 
     # close message window
     if gui:

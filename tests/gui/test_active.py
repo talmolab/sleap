@@ -1,4 +1,5 @@
 import os
+import pytest
 
 from sleap.skeleton import Skeleton
 from sleap.instance import Instance, Point, LabeledFrame, PredictedInstance
@@ -9,7 +10,6 @@ from sleap.gui.active import (
     ActiveLearningDialog,
     make_default_training_jobs,
     find_saved_jobs,
-    add_frames_from_json,
 )
 
 
@@ -80,6 +80,7 @@ def test_find_saved_jobs():
     assert os.path.basename(paths[1]) == "default_confmaps.json"
 
 
+@pytest.mark.skip(reason="for old merging method")
 def test_add_frames_from_json():
     vid_a = Video.from_filename("foo.mp4")
     vid_b = Video.from_filename("bar.mp4")
