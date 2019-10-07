@@ -47,3 +47,5 @@ class InstanceOverlay:
                 predicted=is_predicted,
                 color_predicted=self.color_predicted,
             )
+
+    # TODO: move show edges/labels/color predicted state response here

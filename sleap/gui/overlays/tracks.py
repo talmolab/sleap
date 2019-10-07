@@ -238,7 +238,6 @@ class TrackTrailOverlay:
             video: current video
             frame_idx: index of the frame to which the trail is attached
         """
-
         if not self.show:
             return
 

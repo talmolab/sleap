@@ -46,11 +46,11 @@ def test_gui_video_instances(qtbot, small_robot_mp4_vid, centered_pair_labels):
     assert vp.instances[0].childItems()[3].point.complete
 
     # Check that selection via keyboard works
-    assert vp.view.getSelection() == None
+    assert vp.view.getSelectionIndex() == None
     qtbot.keyClick(vp, QtCore.Qt.Key_1)
-    assert vp.view.getSelection() == 0
+    assert vp.view.getSelectionIndex() == 0
     qtbot.keyClick(vp, QtCore.Qt.Key_QuoteLeft)
-    assert vp.view.getSelection() == 1
+    assert vp.view.getSelectionIndex() == 1
 
     # Check that selection by Instance works
     for inst in labeled_frames[test_frame_idx].instances:

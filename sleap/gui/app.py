@@ -13,7 +13,6 @@ from PySide2.QtWidgets import QFileDialog, QMessageBox
 import re
 import operator
 import os
-import sys
 
 from pkg_resources import Requirement, resource_filename
 from pathlib import PurePath
@@ -41,6 +40,7 @@ from sleap.gui.formbuilder import YamlFormWidget
 from sleap.gui.merge import MergeDialog
 from sleap.gui.shortcuts import Shortcuts, ShortcutDialog
 from sleap.gui.suggestions import VideoFrameSuggestions
+from sleap.gui.state import GuiState
 
 from sleap.gui.overlays.tracks import (
     TrackColorManager,
@@ -63,12 +63,13 @@ class MainWindow(QMainWindow):
         labels: The :class:`Labels` dataset. If None, a new, empty project
             (i.e., :class:`Labels` object) will be created.
         skeleton: The active :class:`Skeleton` for the project in the gui
-        video: The active :class:`Video` in view in the gui
+        state: Object that holds GUI state, e.g., current video, frame,
+            whether to show node labels, etc.
     """
 
     labels: Labels
     skeleton: Skeleton
-    video: Video
+    state: GuiState = GuiState()
 
     def __init__(
         self,
@@ -92,8 +93,6 @@ class MainWindow(QMainWindow):
         self.labels = Labels()
         self.skeleton = Skeleton()
         self.labeled_frame = None
-        self.video = None
-        self.video_idx = None
         self.filename = None
         self._menu_actions = dict()
         self._buttons = dict()
@@ -104,9 +103,11 @@ class MainWindow(QMainWindow):
 
         self.overlays = dict()
 
-        self._show_labels = True
-        self._show_edges = True
-        self._auto_zoom = False
+        self.state["show labels"] = True
+        self.state["show edges"] = True
+        self.state["fit"] = False
+        self.state["show trails"] = False
+        self.state["color predicted"] = False
 
         self.changestack_clear()
         self._initialize_gui()
@@ -194,7 +195,7 @@ class MainWindow(QMainWindow):
 
     def _create_video_player(self):
         """Creates and connects :class:`QtVideoPlayer` for gui."""
-        self.player = QtVideoPlayer(color_manager=self._color_manager)
+        self.player = QtVideoPlayer(color_manager=self._color_manager, state=self.state)
         self.player.changedPlot.connect(self._after_plot_update)
         self.player.changedData.connect(
             lambda inst: self.changestack_push("viewer change")
@@ -203,62 +204,75 @@ class MainWindow(QMainWindow):
         self.player.seekbar.selectionChanged.connect(lambda: self.updateStatusMessage())
         self.setCentralWidget(self.player)
 
+        self.state.connect("video", self.showVideo)
+        # self.state.connect("fit", self.player.setFitZoom)
+
     def _create_menus(self):
         """Creates main application menus."""
         shortcuts = Shortcuts()
 
-        def _menu_item(menu, key: str, name: str, action: Callable):
+        def add_menu_item(menu, key: str, name: str, action: Callable):
             menu_item = menu.addAction(name, action, shortcuts[key])
             self._menu_actions[key] = menu_item
+
+        # set menu checkmarks
+        def connect_check(key):
+            self._menu_actions[key].setCheckable(True)
+            self._menu_actions[key].setChecked(self.state[key])
+            self.state.connect(key, self._menu_actions[key].setChecked)
+
+        def add_menu_check_item(menu, key: str, name: str):
+            add_menu_item(menu, key, name, lambda: self.state.toggle(key))
+            connect_check(key)
 
         ### File Menu ###
 
         fileMenu = self.menuBar().addMenu("File")
-        _menu_item(fileMenu, "new", "New Project", self.newProject)
-        _menu_item(fileMenu, "open", "Open Project...", self.openProject)
-        _menu_item(
+        add_menu_item(fileMenu, "new", "New Project", self.newProject)
+        add_menu_item(fileMenu, "open", "Open Project...", self.openProject)
+        add_menu_item(
             fileMenu, "import predictions", "Import Labels...", self.importPredictions
         )
 
         fileMenu.addSeparator()
-        _menu_item(fileMenu, "add videos", "Add Videos...", self.addVideo)
+        add_menu_item(fileMenu, "add videos", "Add Videos...", self.addVideo)
 
         fileMenu.addSeparator()
-        _menu_item(fileMenu, "save", "Save", self.saveProject)
-        _menu_item(fileMenu, "save as", "Save As...", self.saveProjectAs)
+        add_menu_item(fileMenu, "save", "Save", self.saveProject)
+        add_menu_item(fileMenu, "save as", "Save As...", self.saveProjectAs)
 
         fileMenu.addSeparator()
-        _menu_item(fileMenu, "close", "Quit", self.close)
+        add_menu_item(fileMenu, "close", "Quit", self.close)
 
         ### Go Menu ###
 
         goMenu = self.menuBar().addMenu("Go")
 
-        _menu_item(
+        add_menu_item(
             goMenu, "goto next labeled", "Next Labeled Frame", self.nextLabeledFrame
         )
-        _menu_item(
+        add_menu_item(
             goMenu,
             "goto prev labeled",
             "Previous Labeled Frame",
             self.previousLabeledFrame,
         )
-        _menu_item(
+        add_menu_item(
             goMenu,
             "goto next user",
             "Next User Labeled Frame",
             self.nextUserLabeledFrame,
         )
-        _menu_item(
+        add_menu_item(
             goMenu, "goto next suggestion", "Next Suggestion", self.nextSuggestedFrame
         )
-        _menu_item(
+        add_menu_item(
             goMenu,
             "goto prev suggestion",
             "Previous Suggestion",
             lambda: self.nextSuggestedFrame(-1),
         )
-        _menu_item(
+        add_menu_item(
             goMenu,
             "goto next track spawn",
             "Next Track Spawn Frame",
@@ -267,12 +281,17 @@ class MainWindow(QMainWindow):
 
         goMenu.addSeparator()
 
-        _menu_item(goMenu, "next video", "Next Video", self.nextVideo)
-        _menu_item(goMenu, "prev video", "Previous Video", self.previousVideo)
+        next_vid = lambda: self.state.increment_in_list("video", self.labels.videos)
+        prev_vid = lambda: self.state.increment_in_list(
+            "video", self.labels.videos, reverse=True
+        )
+
+        add_menu_item(goMenu, "next video", "Next Video", next_vid)
+        add_menu_item(goMenu, "prev video", "Previous Video", prev_vid)
 
         goMenu.addSeparator()
 
-        _menu_item(goMenu, "goto frame", "Go to Frame...", self.gotoFrame)
+        add_menu_item(goMenu, "goto frame", "Go to Frame...", self.gotoFrame)
 
         ### View Menu ###
 
@@ -280,12 +299,7 @@ class MainWindow(QMainWindow):
         self.viewMenu = viewMenu  # store as attribute so docks can add items
 
         viewMenu.addSeparator()
-        _menu_item(
-            viewMenu,
-            "color predicted",
-            "Color Predicted Instances",
-            self.toggleColorPredicted,
-        )
+        add_menu_check_item(viewMenu, "color predicted", "Color Predicted Instances")
 
         self.paletteMenu = viewMenu.addMenu("Color Palette")
         for palette_name in self._color_manager.palette_names:
@@ -317,9 +331,9 @@ class MainWindow(QMainWindow):
 
         viewMenu.addSeparator()
 
-        _menu_item(viewMenu, "show labels", "Show Node Names", self.toggleLabels)
-        _menu_item(viewMenu, "show edges", "Show Edges", self.toggleEdges)
-        _menu_item(viewMenu, "show trails", "Show Trails", self.toggleTrails)
+        add_menu_check_item(viewMenu, "show labels", "Show Node Names")
+        add_menu_check_item(viewMenu, "show edges", "Show Edges")
+        add_menu_check_item(viewMenu, "show trails", "Show Trails")
 
         self.trailLengthMenu = viewMenu.addMenu("Trail Length")
         for length_option in (4, 10, 20):
@@ -330,38 +344,25 @@ class MainWindow(QMainWindow):
 
         viewMenu.addSeparator()
 
-        _menu_item(viewMenu, "fit", "Fit Instances to View", self.toggleAutoZoom)
+        add_menu_check_item(viewMenu, "fit", "Fit Instances to View")
 
         viewMenu.addSeparator()
-
-        # set menu checkmarks
-        self._menu_actions["show labels"].setCheckable(True)
-        self._menu_actions["show labels"].setChecked(self._show_labels)
-        self._menu_actions["show edges"].setCheckable(True)
-        self._menu_actions["show edges"].setChecked(self._show_edges)
-        self._menu_actions["show trails"].setCheckable(True)
-        self._menu_actions["show trails"].setChecked(self.overlays["trails"].show)
-        self._menu_actions["color predicted"].setCheckable(True)
-        self._menu_actions["color predicted"].setChecked(
-            self.overlays["instance"].color_predicted
-        )
-        self._menu_actions["fit"].setCheckable(True)
 
         ### Label Menu ###
 
         labelMenu = self.menuBar().addMenu("Labels")
-        _menu_item(labelMenu, "add instance", "Add Instance", self.newInstance)
-        _menu_item(
+        add_menu_item(labelMenu, "add instance", "Add Instance", self.newInstance)
+        add_menu_item(
             labelMenu, "delete instance", "Delete Instance", self.deleteSelectedInstance
         )
 
         labelMenu.addSeparator()
 
         self.track_menu = labelMenu.addMenu("Set Instance Track")
-        _menu_item(
+        add_menu_item(
             labelMenu, "transpose", "Transpose Instance Tracks", self.transposeInstance
         )
-        _menu_item(
+        add_menu_item(
             labelMenu,
             "delete track",
             "Delete Instance and Track",
@@ -370,13 +371,13 @@ class MainWindow(QMainWindow):
 
         labelMenu.addSeparator()
 
-        _menu_item(
+        add_menu_item(
             labelMenu,
             "select next",
             "Select Next Instance",
             self.player.view.nextSelection,
         )
-        _menu_item(
+        add_menu_item(
             labelMenu,
             "clear selection",
             "Clear Selection",
@@ -389,19 +390,19 @@ class MainWindow(QMainWindow):
 
         predictionMenu = self.menuBar().addMenu("Predict")
 
-        _menu_item(
+        add_menu_item(
             predictionMenu,
             "active learning",
             "Run Active Learning...",
             lambda: self.showLearningDialog("learning"),
         )
-        _menu_item(
+        add_menu_item(
             predictionMenu,
             "inference",
             "Run Inference...",
             lambda: self.showLearningDialog("inference"),
         )
-        _menu_item(
+        add_menu_item(
             predictionMenu,
             "learning expert",
             "Expert Controls...",
@@ -409,13 +410,13 @@ class MainWindow(QMainWindow):
         )
 
         predictionMenu.addSeparator()
-        _menu_item(
+        add_menu_item(
             predictionMenu,
             "negative sample",
             "Mark Negative Training Sample...",
             self.markNegativeAnchor,
         )
-        _menu_item(
+        add_menu_item(
             predictionMenu,
             "clear negative samples",
             "Clear Current Frame Negative Samples",
@@ -423,7 +424,7 @@ class MainWindow(QMainWindow):
         )
 
         predictionMenu.addSeparator()
-        _menu_item(
+        add_menu_item(
             predictionMenu,
             "visualize models",
             "Visualize Model Outputs...",
@@ -431,31 +432,31 @@ class MainWindow(QMainWindow):
         )
 
         predictionMenu.addSeparator()
-        _menu_item(
+        add_menu_item(
             predictionMenu,
             "remove predictions",
             "Delete All Predictions...",
             self.deletePredictions,
         )
-        _menu_item(
+        add_menu_item(
             predictionMenu,
             "remove clip predictions",
             "Delete Predictions from Clip...",
             self.deleteClipPredictions,
         )
-        _menu_item(
+        add_menu_item(
             predictionMenu,
             "remove area predictions",
             "Delete Predictions from Area...",
             self.deleteAreaPredictions,
         )
-        _menu_item(
+        add_menu_item(
             predictionMenu,
             "remove score predictions",
             "Delete Predictions with Low Score...",
             self.deleteLowScorePredictions,
         )
-        _menu_item(
+        add_menu_item(
             predictionMenu,
             "remove frame limit predictions",
             "Delete Predictions beyond Frame Limit...",
@@ -463,13 +464,13 @@ class MainWindow(QMainWindow):
         )
 
         predictionMenu.addSeparator()
-        _menu_item(
+        add_menu_item(
             predictionMenu,
             "export frames",
             "Export Training Package...",
             self.exportLabeledFrames,
         )
-        _menu_item(
+        add_menu_item(
             predictionMenu,
             "export clip",
             "Export Labeled Clip...",
@@ -673,13 +674,25 @@ class MainWindow(QMainWindow):
         self.overlays["trails"] = TrackTrailOverlay(self.labels, self.player)
         self.overlays["instance"] = InstanceOverlay(self.labels, self.player)
 
+        def overlay_state_connect(overlay, state_key, overlay_attribute=None):
+            overlay_attribute = overlay_attribute or state_key
+            self.state.connect(
+                state_key, lambda x: setattr(overlay, overlay_attribute, x)
+            )
+            self.state.connect(state_key, self.plotFrame)
+
+        overlay_state_connect(self.overlays["trails"], "show trails", "show")
+        overlay_state_connect(
+            self.overlays["instance"], "color predicted", "color_predicted"
+        )
+
     def _update_gui_state(self):
         """Enable/disable gui items based on current state."""
-        has_selected_instance = self.player.view.getSelection() is not None
+        has_selected_instance = self.player.view.getSelectionInstance() is not None
         has_unsaved_changes = self.changestack_has_changes()
         has_multiple_videos = self.labels is not None and len(self.labels.videos) > 1
         has_labeled_frames = self.labels is not None and any(
-            (lf.video == self.video for lf in self.labels)
+            (lf.video == self.state["video"] for lf in self.labels)
         )
         has_suggestions = self.labels is not None and (len(self.labels.suggestions) > 0)
         has_tracks = self.labels is not None and (len(self.labels.tracks) > 0)
@@ -787,24 +800,25 @@ class MainWindow(QMainWindow):
 
     def plotFrame(self, *args, **kwargs):
         """Plots (or replots) current frame."""
-        if self.video is None:
+        if self.state["video"] is None:
             return
 
-        self.player.plot(*args, **kwargs)
-        self.player.showLabels(self._show_labels)
-        self.player.showEdges(self._show_edges)
-        if self._auto_zoom:
+        self.player.plot()
+
+        if self.state["fit"]:
             self.player.zoomToFit()
 
     def _after_plot_update(self, player, frame_idx, selected_inst):
         """Called each time a new frame is drawn."""
 
         # Store the current LabeledFrame (or make new, empty object)
-        self.labeled_frame = self.labels.find(self.video, frame_idx, return_new=True)[0]
+        self.labeled_frame = self.labels.find(
+            self.state["video"], frame_idx, return_new=True
+        )[0]
 
         # Show instances, etc, for this frame
         for overlay in self.overlays.values():
-            overlay.add_to_scene(self.video, frame_idx)
+            overlay.add_to_scene(self.state["video"], frame_idx)
 
         # Select instance if there was already selection
         if selected_inst is not None:
@@ -819,19 +833,23 @@ class MainWindow(QMainWindow):
 
     def updateStatusMessage(self, message: Optional[str] = None):
         """Updates status bar."""
+
+        current_video = self.state["video"]
+        frame_idx = self.state["frame_idx"] or 0
+
         if message is None:
-            message = f"Frame: {self.player.frame_idx+1}/{len(self.video)}"
+            message = f"Frame: {frame_idx+1}/{len(current_video)}"
             if self.player.seekbar.hasSelection():
                 start, end = self.player.seekbar.getSelection()
                 message += f" (selection: {start}-{end})"
 
             if len(self.labels.videos) > 1:
-                message += f" of video {self.labels.videos.index(self.video)}"
+                message += f" of video {self.labels.videos.index(current_video)}"
 
             message += f"    Labeled Frames: "
-            if self.video is not None:
+            if current_video is not None:
                 message += (
-                    f"{len(self.labels.get_video_user_labeled_frames(self.video))}"
+                    f"{len(self.labels.get_video_user_labeled_frames(current_video))}"
                 )
                 if len(self.labels.videos) > 1:
                     message += " in video, "
@@ -901,7 +919,7 @@ class MainWindow(QMainWindow):
 
             # Load first video
             if len(self.labels.videos):
-                self.loadVideo(self.labels.videos[0], 0)
+                self.state["video"] = self.labels.videos[0]
 
             # Update track menu options
             self.updateTrackMenu()
@@ -924,7 +942,7 @@ class MainWindow(QMainWindow):
         idx = self.videosTable.currentIndex()
         if not idx.isValid():
             return
-        self.loadVideo(self.labels.videos[idx.row()], idx.row())
+        self.state["video"] = self.labels.videos[idx.row()]
 
     def addVideo(self, filename: Optional[str] = None):
         """Shows gui for adding video to project.
@@ -952,8 +970,8 @@ class MainWindow(QMainWindow):
                 self.changestack_push("add video")
 
         # Load if no video currently loaded
-        if self.video is None:
-            self.loadVideo(video, len(self.labels.videos) - 1)
+        if self.state["video"] is None:
+            self.state["video"] = video
 
         # Update data model/view
         self._update_data_views("video")
@@ -990,33 +1008,27 @@ class MainWindow(QMainWindow):
         self._update_data_views()
 
         # Update view if this was the current video
-        if self.video == video:
+        if self.state["video"] == video:
             if len(self.labels.videos) == 0:
                 self.player.reset()
                 # TODO: update statusbar
             else:
                 new_idx = min(idx.row(), len(self.labels.videos) - 1)
-                self.loadVideo(self.labels.videos[new_idx], new_idx)
+                self.state["video"] = self.labels.videos[new_idx]
 
-    def loadVideo(self, video: Video, video_idx: int = None):
+    def showVideo(self, video: Video):
         """Activates video in gui."""
-
-        # Update current video instance
-        self.video = video
-        self.video_idx = (
-            video_idx if video_idx is not None else self.labels.videos.index(video)
-        )
-
+        print("show video", video)
         # Load video in player widget
-        self.player.load_video(self.video)
+        self.player.load_video(video)
 
         # Annotate labeled frames on seekbar
         self.updateSeekbarMarks()
 
         # Jump to last labeled frame
-        last_label = self.labels.find_last(self.video)
+        last_label = self.labels.find_last(video)
         if last_label is not None:
-            self.plotFrame(last_label.frame_idx)
+            self.state["frame_idx"] = last_label.frame_idx
 
     def openSkeleton(self):
         """Shows gui for loading saved skeleton into project."""
@@ -1149,7 +1161,7 @@ class MainWindow(QMainWindow):
 
     def updateSeekbarMarks(self):
         """Updates marks on seekbar."""
-        self.player.seekbar.setTracksFromLabels(self.labels, self.video)
+        self.player.seekbar.setTracksFromLabels(self.labels, self.state["video"])
 
     def setSeekbarHeader(self, graph_name):
         """Updates graph shown in seekbar header."""
@@ -1170,7 +1182,7 @@ class MainWindow(QMainWindow):
             self.player.seekbar.clearHeader()
         else:
             if graph_name in header_functions:
-                kwargs = dict(video=self.video)
+                kwargs = dict(video=self.state["video"])
                 reduction_name = re.search("\((sum|max|min)\)", graph_name)
                 if reduction_name is not None:
                     kwargs["reduction"] = reduction_name.group(1)
@@ -1212,12 +1224,14 @@ class MainWindow(QMainWindow):
             ]
             return list(set(frames) - set(video_user_labeled_frame_idxs))
 
+        current_video = self.state["video"]
+
         selection = dict()
-        selection["frame"] = {self.video: [self.player.frame_idx]}
+        selection["frame"] = {current_video: [self.state["frame_idx"]]}
         selection["clip"] = {
-            self.video: list(range(*self.player.seekbar.getSelection()))
+            current_video: list(range(*self.player.seekbar.getSelection()))
         }
-        selection["video"] = {self.video: list(range(self.video.num_frames))}
+        selection["video"] = {current_video: list(range(current_video.num_frames))}
 
         selection["suggestions"] = {
             video: remove_user_labeled(video, self.labels.get_video_suggestions(video))
@@ -1297,7 +1311,9 @@ class MainWindow(QMainWindow):
 
             from sleap.gui.overlays.base import DataOverlay
 
-            overlay = DataOverlay.from_model(filename, self.video, player=self.player)
+            overlay = DataOverlay.from_model(
+                filename, self.state["video"], player=self.player
+            )
 
             self.overlays["inference"] = overlay
 
@@ -1344,7 +1360,8 @@ class MainWindow(QMainWindow):
         predicted_instances = [
             (lf, inst)
             for lf in self.labels.find(
-                self.video, frame_idx=range(*self.player.seekbar.getSelection())
+                self.state["video"],
+                frame_idx=range(*self.player.seekbar.getSelection()),
             )
             for inst in lf
             if type(inst) == PredictedInstance
@@ -1392,7 +1409,7 @@ class MainWindow(QMainWindow):
             # Find all instances contained in selected area
             predicted_instances = [
                 (lf, inst)
-                for lf in self.labels.find(self.video)
+                for lf in self.labels.find(self.state["video"])
                 for inst in lf
                 if type(inst) == PredictedInstance and is_bounded(inst)
             ]
@@ -1414,7 +1431,7 @@ class MainWindow(QMainWindow):
             # Find all instances contained in selected area
             predicted_instances = [
                 (lf, inst)
-                for lf in self.labels.find(self.video)
+                for lf in self.labels.find(self.state["video"])
                 for inst in lf
                 if type(inst) == PredictedInstance and inst.score < score_thresh
             ]
@@ -1434,7 +1451,7 @@ class MainWindow(QMainWindow):
         if okay:
             predicted_instances = []
             # Find all instances contained in selected area
-            for lf in self.labels.find(self.video):
+            for lf in self.labels.find(self.state["video"]):
                 if len(lf.instances) > count_thresh:
                     # Get all but the count_thresh many instances with the highest score
                     extra_instances = sorted(
@@ -1478,7 +1495,9 @@ class MainWindow(QMainWindow):
 
         def click_callback(x, y):
             self.updateStatusMessage()
-            self.labels.add_negative_anchor(self.video, self.player.frame_idx, (x, y))
+            self.labels.add_negative_anchor(
+                self.state["video"], self.state["frame_idx"], (x, y)
+            )
             self.changestack_push("add negative anchors")
             self.plotFrame()
 
@@ -1488,14 +1507,16 @@ class MainWindow(QMainWindow):
 
     def clearFrameNegativeAnchors(self):
         """Removes negative training sample anchors on current frame."""
-        self.labels.remove_negative_anchors(self.video, self.player.frame_idx)
+        self.labels.remove_negative_anchors(
+            self.state["video"], self.state["frame_idx"]
+        )
         self.changestack_push("remove negative anchors")
         self.plotFrame()
 
     def importPredictions(self):
         """Starts gui for importing another dataset into currently one."""
         filters = ["HDF5 dataset (*.h5 *.hdf5)", "JSON labels (*.json *.json.zip)"]
-        filenames, selected_filter = openFileDialogs(
+        filenames, selected_filter = openFileDialog(
             self,
             dir=None,
             caption="Import labeled data...",
@@ -1579,10 +1600,10 @@ class MainWindow(QMainWindow):
         from_prev_frame = False
 
         if copy_instance is None:
-            selected_idx = self.player.view.getSelection()
-            if selected_idx is not None:
+            selected_inst = self.player.view.getSelectionInstance()
+            if selected_inst is not None:
                 # If the user has selected an instance, copy that one.
-                copy_instance = self.labeled_frame.instances[selected_idx]
+                copy_instance = selected_inst
                 from_predicted = copy_instance
 
         if copy_instance is None:
@@ -1600,7 +1621,7 @@ class MainWindow(QMainWindow):
 
             if prev_idx is not None:
                 prev_instances = self.labels.find(
-                    self.video, prev_idx, return_new=True
+                    self.state["video"], prev_idx, return_new=True
                 )[0].instances
                 if len(prev_instances) > len(self.labeled_frame.instances):
                     # If more instances in previous frame than current, then use the
@@ -1702,7 +1723,7 @@ class MainWindow(QMainWindow):
 
         if track is not None:
             # remove any instance on this track
-            for lf in self.labels.find(self.video):
+            for lf in self.labels.find(self.state["video"]):
                 for inst in filter(lambda inst: inst.track == track, lf.instances):
                     self.labels.remove_instance(lf, inst)
 
@@ -1718,10 +1739,10 @@ class MainWindow(QMainWindow):
             int(track.name) for track in self.labels.tracks if track.name.isnumeric()
         ]
         next_number = max(track_numbers_used, default=0) + 1
-        new_track = Track(spawned_on=self.player.frame_idx, name=next_number)
+        new_track = Track(spawned_on=self.state["frame_idx"], name=next_number)
 
         self.changestack_start_atomic("add track")
-        self.labels.add_track(self.video, new_track)
+        self.labels.add_track(self.state["video"], new_track)
         self.changestack_push("new track")
         self.setInstanceTrack(new_track)
         self.changestack_push("set track")
@@ -1733,11 +1754,10 @@ class MainWindow(QMainWindow):
 
     def setInstanceTrack(self, new_track: "Track"):
         """Sets track for selected instance."""
-        vis_idx = self.player.view.getSelection()
-        if vis_idx is None:
+        selected_instance = self.player.view.getSelectionInstance()
+        if selected_instance is None:
             return
 
-        selected_instance = self.labeled_frame.instances_to_show[vis_idx]
         idx = self.labeled_frame.index(selected_instance)
 
         old_track = selected_instance.track
@@ -1747,9 +1767,9 @@ class MainWindow(QMainWindow):
         if old_track is None:
             # Move anything already in the new track out of it
             new_track_instances = self.labels.find_track_instances(
-                video=self.video,
+                video=self.state["video"],
                 track=new_track,
-                frame_range=(self.player.frame_idx, self.player.frame_idx + 1),
+                frame_range=(self.state["frame_idx"], self.state["frame_idx"] + 1),
             )
             for instance in new_track_instances:
                 instance.track = None
@@ -1768,10 +1788,12 @@ class MainWindow(QMainWindow):
                 frame_range = tuple(*self.player.seekbar.getSelection())
             else:
                 # Otherwise, range is current to last frame
-                frame_range = (self.player.frame_idx, self.video.frames)
+                frame_range = (self.state["frame_idx"], self.state["video"].frames)
 
             # Do the swap
-            self.labels.track_swap(self.video, new_track, old_track, frame_range)
+            self.labels.track_swap(
+                self.state["video"], new_track, old_track, frame_range
+            )
 
         self.changestack_push("swap tracks")
 
@@ -1798,7 +1820,7 @@ class MainWindow(QMainWindow):
             return
         # If there are just two instances, transpose them.
         if len(self.labeled_frame.instances) == 2:
-            self._transpose_instances((0, 1))
+            self._transpose_instances(self.labeled_frame.instances)
         # If there are more than two, then we need the user to select the instances.
         else:
             self.player.onSequenceSelect(
@@ -1812,22 +1834,17 @@ class MainWindow(QMainWindow):
         word = "next" if len(instance_ids) else "first"
         self.updateStatusMessage(f"Please select the {word} instance to transpose...")
 
-    def _transpose_instances(self, instance_ids: list):
-        if len(instance_ids) != 2:
+    def _transpose_instances(self, instances: list):
+        if len(instances) != 2:
             return
 
-        idx_0 = instance_ids[0]
-        idx_1 = instance_ids[1]
-
-        # Swap order in array (just for this frame) for when we don't have tracks
-        instance_0 = self.labeled_frame.instances_to_show[idx_0]
-        instance_1 = self.labeled_frame.instances_to_show[idx_1]
-
-        # Swap tracks for current and subsequent frames when we do have tracks
-        old_track, new_track = instance_0.track, instance_1.track
+        # Swap tracks for current and subsequent frames when we have tracks
+        old_track, new_track = instances[0].track, instances[1].track
         if old_track is not None and new_track is not None:
-            frame_range = (self.player.frame_idx, self.video.frames)
-            self.labels.track_swap(self.video, new_track, old_track, frame_range)
+            frame_range = (self.state["frame_idx"], self.state["video"].frames)
+            self.labels.track_swap(
+                self.state["video"], new_track, old_track, frame_range
+            )
 
         self.changestack_push("swap tracks")
 
@@ -1955,20 +1972,8 @@ class MainWindow(QMainWindow):
             elif ret_val == QMessageBox.Save:
                 # save
                 self.saveProject()
-                # accept avent (close)
+                # accept event (closes window)
                 event.accept()
-
-    def nextVideo(self):
-        """Activates next video in project."""
-        new_idx = self.video_idx + 1
-        new_idx = 0 if new_idx >= len(self.labels.videos) else new_idx
-        self.loadVideo(self.labels.videos[new_idx], new_idx)
-
-    def previousVideo(self):
-        """Activates previous video in project."""
-        new_idx = self.video_idx - 1
-        new_idx = len(self.labels.videos) - 1 if new_idx < 0 else new_idx
-        self.loadVideo(self.labels.videos[new_idx], new_idx)
 
     def gotoFrame(self):
         """Shows gui to go to frame by number."""
@@ -1976,12 +1981,12 @@ class MainWindow(QMainWindow):
             self,
             "Go To Frame...",
             "Frame Number:",
-            self.player.frame_idx + 1,
+            self.state["frame_idx"] + 1,
             1,
-            self.video.frames,
+            self.state["video"].frames,
         )
         if okay:
-            self.plotFrame(frame_number - 1)
+            self.state["frame_idx"] = frame_number - 1
 
     def exportLabeledClip(self):
         """Shows gui for exporting clip with visual annotations."""
@@ -1993,7 +1998,7 @@ class MainWindow(QMainWindow):
                 self,
                 "Frames per second",
                 "Frames per second:",
-                getattr(self.video, "fps", 30),
+                getattr(self.state["video"], "fps", 30),
                 1,
                 300,
             )
@@ -2013,7 +2018,7 @@ class MainWindow(QMainWindow):
 
             save_labeled_video(
                 labels=self.labels,
-                video=self.video,
+                video=self.state["video"],
                 filename=filename,
                 frames=list(range(*self.player.seekbar.getSelection())),
                 fps=fps,
@@ -2052,24 +2057,28 @@ class MainWindow(QMainWindow):
         except StopIteration:
             return False
 
-        self.plotFrame(next_lf.frame_idx)
+        self.state["frame_idx"] = next_lf.frame_idx
         return True
 
     def previousLabeledFrame(self):
         """Goes to labeled frame prior to current frame."""
         frames = self.labels.frames(
-            self.video, from_frame_idx=self.player.frame_idx, reverse=True
+            self.state["video"], from_frame_idx=self.state["frame_idx"], reverse=True
         )
         self._plot_if_next(frames)
 
     def nextLabeledFrame(self):
         """Goes to labeled frame after current frame."""
-        frames = self.labels.frames(self.video, from_frame_idx=self.player.frame_idx)
+        frames = self.labels.frames(
+            self.state["video"], from_frame_idx=self.state["frame_idx"]
+        )
         self._plot_if_next(frames)
 
     def nextUserLabeledFrame(self):
         """Goes to next labeled frame with user instances."""
-        frames = self.labels.frames(self.video, from_frame_idx=self.player.frame_idx)
+        frames = self.labels.frames(
+            self.state["video"], from_frame_idx=self.state["frame_idx"]
+        )
         # Filter to frames with user instances
         frames = filter(lambda lf: lf.has_user_instances, frames)
         self._plot_if_next(frames)
@@ -2077,7 +2086,7 @@ class MainWindow(QMainWindow):
     def nextSuggestedFrame(self, seek_direction=1):
         """Goes to next (or previous) suggested frame."""
         next_video, next_frame = self.labels.get_next_suggestion(
-            self.video, self.player.frame_idx, seek_direction
+            self.state["video"], self.state["frame_idx"], seek_direction
         )
         if next_video is not None:
             self.gotoVideoAndFrame(next_video, next_frame)
@@ -2089,8 +2098,8 @@ class MainWindow(QMainWindow):
 
     def nextTrackFrame(self):
         """Goes to next frame on which a track starts."""
-        cur_idx = self.player.frame_idx
-        track_ranges = self.labels.get_track_occupany(self.video)
+        cur_idx = self.state["frame_idx"]
+        track_ranges = self.labels.get_track_occupany(self.state["video"])
         next_idx = min(
             [
                 track_range.start
@@ -2100,46 +2109,26 @@ class MainWindow(QMainWindow):
             default=-1,
         )
         if next_idx > -1:
-            self.plotFrame(next_idx)
+            self.state["frame_idx"] = next_idx
 
     def gotoVideoAndFrame(self, video: Video, frame_idx: int):
         """Activates video and goes to frame."""
-        if video != self.video:
-            # switch to the other video
-            self.loadVideo(video)
-        self.plotFrame(frame_idx)
-
-    def toggleLabels(self):
-        """Toggles whether skeleton node labels are shown in video overlay."""
-        self._show_labels = not self._show_labels
-        self._menu_actions["show labels"].setChecked(self._show_labels)
-        self.player.showLabels(self._show_labels)
-
-    def toggleEdges(self):
-        """Toggles whether skeleton edges are shown in video overlay."""
-        self._show_edges = not self._show_edges
-        self._menu_actions["show edges"].setChecked(self._show_edges)
-        self.player.showEdges(self._show_edges)
-
-    def toggleTrails(self):
-        """Toggles whether track trails are shown in video overlay."""
-        self.overlays["trails"].show = not self.overlays["trails"].show
-        self._menu_actions["show trails"].setChecked(self.overlays["trails"].show)
-        self.plotFrame()
+        self.state["video"] = video
+        self.state["frame_idx"] = frame_idx
 
     def setTrailLength(self, trail_length: int):
         """Sets length of track trails to show in video overlay."""
         self.overlays["trails"].trail_length = trail_length
         self._menu_check_single(self.trailLengthMenu, trail_length)
 
-        if self.video is not None:
+        if self.state["video"] is not None:
             self.plotFrame()
 
     def setPalette(self, palette: str):
         """Sets color palette used for track colors."""
         self._color_manager.set_palette(palette)
         self._menu_check_single(self.paletteMenu, palette)
-        if self.video is not None:
+        if self.state["video"] is not None:
             self.plotFrame()
         self.updateSeekbarMarks()
 
@@ -2150,23 +2139,6 @@ class MainWindow(QMainWindow):
                 menu_item.setChecked(True)
             else:
                 menu_item.setChecked(False)
-
-    def toggleColorPredicted(self):
-        """Toggles whether predicted instances are shown in track colors."""
-        val = self.overlays["instance"].color_predicted
-        self.overlays["instance"].color_predicted = not val
-        self._menu_actions["color predicted"].setChecked(
-            self.overlays["instance"].color_predicted
-        )
-        self.plotFrame()
-
-    def toggleAutoZoom(self):
-        """Toggles whether to zoom viewer to fit labeled instances."""
-        self._auto_zoom = not self._auto_zoom
-        self._menu_actions["fit"].setChecked(self._auto_zoom)
-        if not self._auto_zoom:
-            self.player.view.clearZoom()
-        self.plotFrame()
 
     def openKeyRef(self):
         """Shows gui for viewing/modifying keyboard shortucts."""

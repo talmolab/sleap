@@ -27,13 +27,13 @@ from PySide2.QtGui import QKeyEvent
 from PySide2.QtCore import Qt, Signal, Slot
 from PySide2.QtCore import QRectF, QPointF, QMarginsF
 
+import numpy as np
 import math
 
 from typing import Callable, List, Optional, Union
 
 from PySide2.QtWidgets import QGraphicsItem, QGraphicsObject
 
-# The PySide2.QtWidgets.QGraphicsObject class provides a base class for all graphics items that require signals, slots and properties.
 from PySide2.QtWidgets import (
     QGraphicsEllipseItem,
     QGraphicsLineItem,
@@ -41,10 +41,10 @@ from PySide2.QtWidgets import (
     QGraphicsRectItem,
 )
 
-from sleap.skeleton import Skeleton
 from sleap.instance import Instance, Point
-from sleap.io.video import Video, HDF5Video
+from sleap.io.video import Video
 from sleap.gui.slider import VideoSlider
+from sleap.gui.state import GuiState
 
 import qimage2ndarray
 
@@ -67,16 +67,19 @@ class QtVideoPlayer(QWidget):
     changedPlot = Signal(QWidget, int, Instance)
     changedData = Signal(Instance)
 
-    def __init__(self, video: Video = None, color_manager=None, *args, **kwargs):
+    def __init__(
+        self, video: Video = None, color_manager=None, state=None, *args, **kwargs
+    ):
         super(QtVideoPlayer, self).__init__(*args, **kwargs)
 
         self._shift_key_down = False
-        self.frame_idx = -1
+
         self.color_manager = color_manager
+        self.state = state or GuiState()
         self.view = GraphicsView()
+        self.video = None
 
         self.seekbar = VideoSlider(color_manager=self.color_manager)
-        self.seekbar.valueChanged.connect(lambda evt: self.plot(self.seekbar.value()))
         self.seekbar.keyPress.connect(self.keyPressEvent)
         self.seekbar.keyRelease.connect(self.keyReleaseEvent)
         self.seekbar.setEnabled(False)
@@ -89,6 +92,17 @@ class QtVideoPlayer(QWidget):
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.splitter)
         self.setLayout(self.layout)
+
+        self.seekbar.valueChanged.connect(
+            lambda e: self.state.set("frame_idx", self.seekbar.value())
+        )
+
+        self.state.connect("frame_idx", lambda idx: self.plot())
+        self.state.connect("frame_idx", lambda idx: self.seekbar.setValue(idx))
+
+        # self.state.connect("show labels", self.plot)
+        # self.state.connect("show edges", self.plot)
+        # self.state.connect("video", self.load_video)
 
         self.view.show()
 
@@ -106,28 +120,30 @@ class QtVideoPlayer(QWidget):
         """
 
         self.video = video
-        self.frame_idx = initial_frame
+
+        # self.state["frame_idx"] = initial_frame
 
         # Is this necessary?
         self.view.scene.setSceneRect(0, 0, video.width, video.height)
 
-        # self.seekbar.setTickInterval(1)
-        self.seekbar.setValue(self.frame_idx)
         self.seekbar.setMinimum(0)
         self.seekbar.setMaximum(self.video.last_frame_idx)
         self.seekbar.setEnabled(True)
 
         if plot:
-            try:
-                self.plot(initial_frame)
-            except:
-                pass
+            self.plot()
+
+        # if plot:
+        #     try:
+        #         self.state["frame_idx"] = initial_frame
+        #     except:
+        #         pass
 
     def reset(self):
         """ Reset viewer by removing all video data.
         """
         self.video = None
-        self.frame_idx = None
+        self.state["frame_idx"] = None
         self.view.clear()
         self.seekbar.setMaximum(0)
         self.seekbar.setEnabled(False)
@@ -174,27 +190,20 @@ class QtVideoPlayer(QWidget):
         # connect signal so we can adjust QtNodeLabel positions after zoom
         self.view.updatedViewer.connect(instance.updatePoints)
 
-    def plot(self, idx: Optional[int] = None):
+    def plot(self, *args):
         """
         Do the actual plotting of the video frame.
-
-        Args:
-            idx: Go to frame idx. If None, stay on current frame.
         """
-
         if self.video is None:
             return
 
-        # Refresh by default
-        if idx is None:
-            idx = self.frame_idx
+        idx = self.state["frame_idx"] or 0
 
         # Get image data
         frame = self.video.get_frame(idx)
 
         # Update index
-        self.frame_idx = idx
-        self.seekbar.setValue(self.frame_idx)
+        # self.seekbar.setValue(self.frame_idx)
 
         # Store which Instance is selected
         selected_inst = self.view.getSelectionInstance()
@@ -210,16 +219,6 @@ class QtVideoPlayer(QWidget):
 
         # Emit signal
         self.changedPlot.emit(self, idx, selected_inst)
-
-    def nextFrame(self, dt=1):
-        """ Go to next frame.
-        """
-        self.plot((self.frame_idx + abs(dt)) % self.video.frames)
-
-    def prevFrame(self, dt=1):
-        """ Go to previous frame.
-        """
-        self.plot((self.frame_idx - abs(dt)) % self.video.frames)
 
     def showLabels(self, show):
         """ Show/hide node labels for all instances in viewer.
@@ -239,24 +238,20 @@ class QtVideoPlayer(QWidget):
         for inst in self.selectable_instances:
             inst.showEdges(show)
 
-    def toggleLabels(self):
-        """ Toggle current show/hide state of node labels for all instances.
-        """
-        for inst in self.selectable_instances:
-            inst.toggleLabels()
-
-    def toggleEdges(self):
-        """ Toggle current show/hide state of edges for all instances.
-        """
-        for inst in self.selectable_instances:
-            inst.toggleEdges()
-
     def zoomToFit(self):
         """ Zoom view to fit all instances
         """
         zoom_rect = self.view.instancesBoundingRect(margin=20)
         if not zoom_rect.size().isEmpty():
             self.view.zoomToRect(zoom_rect)
+
+    def setFitZoom(self, value):
+        if self.video:
+            if value:
+                self.zoomToFit()
+            else:
+                self.view.clearZoom()
+            self.plot()
 
     def onSequenceSelect(
         self,
@@ -288,8 +283,8 @@ class QtVideoPlayer(QWidget):
         """
 
         indexes = []
-        if self.view.getSelection() is not None:
-            indexes.append(self.view.getSelection())
+        if self.view.getSelectionIndex() is not None:
+            indexes.append(self.view.getSelectionIndex())
 
         # Define function that will be called when user selects another instance
         def handle_selection(
@@ -300,7 +295,7 @@ class QtVideoPlayer(QWidget):
             on_failure=on_failure,
         ):
             # Get the index of the currently selected instance
-            new_idx = self.view.getSelection()
+            new_idx = self.view.getSelectionIndex()
             # If something is selected, add it to the list
             if new_idx is not None:
                 indexes.append(new_idx)
@@ -389,24 +384,24 @@ class QtVideoPlayer(QWidget):
         """
         Custom event handler, allows navigation and selection within view.
         """
-        frame_t0 = self.frame_idx
+        frame_t0 = self.state["frame_idx"]
 
         if event.key() == Qt.Key.Key_Shift:
             self._shift_key_down = True
         elif event.key() == Qt.Key.Key_Left:
-            self.prevFrame()
+            self.state.increment("frame_idx", step=-1, mod=self.video.frames)
         elif event.key() == Qt.Key.Key_Right:
-            self.nextFrame()
+            self.state.increment("frame_idx", step=1, mod=self.video.frames)
         elif event.key() == Qt.Key.Key_Up:
-            self.prevFrame(50)
+            self.state.increment("frame_idx", step=-50, mod=self.video.frames)
         elif event.key() == Qt.Key.Key_Down:
-            self.nextFrame(50)
+            self.state.increment("frame_idx", step=50, mod=self.video.frames)
         elif event.key() == Qt.Key.Key_Space:
-            self.nextFrame(500)
+            self.state.increment("frame_idx", step=500, mod=self.video.frames)
         elif event.key() == Qt.Key.Key_Home:
-            self.plot(0)
+            self.state["frame_idx"] = 0
         elif event.key() == Qt.Key.Key_End:
-            self.plot(self.video.frames - 1)
+            self.state["frame_idx"] = self.video.frames - 1
         elif event.key() == Qt.Key.Key_Escape:
             self.view.click_mode = ""
             self.view.clearSelection()
@@ -419,13 +414,13 @@ class QtVideoPlayer(QWidget):
             event.ignore()  # Kicks the event up to parent
 
         # If user is holding down shift and action resulted in moving to another frame
-        if self._shift_key_down and frame_t0 != self.frame_idx:
+        if self._shift_key_down and frame_t0 != self.state["frame_idx"]:
             # If there's no select, start seekbar selection at frame before action
             start, end = self.seekbar.getSelection()
             if start == end:
                 self.seekbar.startSelection(frame_t0)
             # Set endpoint to frame after action
-            self.seekbar.endSelection(self.frame_idx, update=True)
+            self.seekbar.endSelection(self.state["frame_idx"], update=True)
 
 
 class GraphicsView(QGraphicsView):
@@ -627,7 +622,7 @@ class GraphicsView(QGraphicsView):
         if signal:
             self.updatedSelection.emit()
 
-    def getSelection(self) -> int:
+    def getSelectionIndex(self) -> int:
         """ Returns the index of the currently selected instance.
         If no instance selected, returns None.
         """
@@ -1486,11 +1481,6 @@ class QtInstance(QGraphicsObject):
         # Update the selection box for this skeleton instance
         self.updateBox()
 
-    def toggleLabels(self):
-        """ Toggle whether or not labels are shown for this skeleton instance.
-        """
-        self.showLabels(not self.labels_shown)
-
     def showLabels(self, show: bool):
         """
         Draws/hides the labels for this skeleton instance.
@@ -1502,11 +1492,6 @@ class QtInstance(QGraphicsObject):
         for label in self.labels.values():
             label.setOpacity(op)
         self.labels_shown = show
-
-    def toggleEdges(self):
-        """ Toggle whether or not edges are shown for this skeleton instance.
-        """
-        self.showEdges(not self.edges_shown)
 
     def showEdges(self, show=True):
         """
