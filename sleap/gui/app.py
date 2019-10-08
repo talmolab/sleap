@@ -1495,7 +1495,7 @@ class MainWindow(QMainWindow):
     def importPredictions(self):
         """Starts gui for importing another dataset into currently one."""
         filters = ["HDF5 dataset (*.h5 *.hdf5)", "JSON labels (*.json *.json.zip)"]
-        filenames, selected_filter = openFileDialogs(
+        filenames, selected_filter = openFileDialog(
             self,
             dir=None,
             caption="Import labeled data...",
