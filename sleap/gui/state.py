@@ -49,6 +49,7 @@ class GuiState(object):
                 self[key] = value_list[0]
         else:
             idx = value_list.index(self[key])
+            step = 1 if not reverse else -1
             self[key] = value_list[(idx + step) % len(value_list)]
 
     def next_int_in_list(self, key: str, value_list: Iterable[int], reverse=False):
@@ -70,8 +71,8 @@ class GuiState(object):
         if key in self._state_vars and key in self._callbacks:
             val = self.get(key)
             for callback in self._callbacks[key]:
-                try:
-                    callback(val)
-                except Exception as e:
-                    print(f"Error occurred during callback for {key}!")
-                    print(e)
+                # try:
+                callback(val)
+            # except Exception as e:
+            #     print(f"Error occurred during callback for {key}!")
+            #     print(e)

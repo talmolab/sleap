@@ -19,9 +19,10 @@ from sleap.skeleton import Skeleton
 class VideosTable(QtWidgets.QTableView):
     """Table view widget for listing videos in dataset."""
 
-    def __init__(self, videos: list = []):
+    def __init__(self, state, videos: list = []):
         super(VideosTable, self).__init__()
 
+        self.state = state
         props = ("filename", "frames", "height", "width", "channels")
         model = GenericTableModel(props, videos, useCache=True)
 
@@ -29,6 +30,17 @@ class VideosTable(QtWidgets.QTableView):
 
         self.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+
+        self.doubleClicked.connect(self.activateSelected)
+
+    def activateSelected(self, *args):
+        """Activates video selected in table."""
+        # Get selected video
+        idx = self.currentIndex()
+        if not idx.isValid():
+            return
+        video = self.model().uncached_items[idx.row()]
+        self.state["video"] = video
 
 
 class GenericTableModel(QtCore.QAbstractTableModel):
@@ -50,6 +62,8 @@ class GenericTableModel(QtCore.QAbstractTableModel):
         self._use_cache = useCache
         self._props = propList
 
+        self.uncached_items = []
+
         if itemList is not None:
             self.items = itemList
         else:
@@ -62,6 +76,7 @@ class GenericTableModel(QtCore.QAbstractTableModel):
 
     @items.setter
     def items(self, val):
+        self.uncached_items = val
         self.beginResetModel()
         if self._use_cache:
             self._data = []
@@ -71,6 +86,14 @@ class GenericTableModel(QtCore.QAbstractTableModel):
         else:
             self._data = val
         self.endResetModel()
+
+    @property
+    def uncached_items(self):
+        return self._uncached_items
+
+    @uncached_items.setter
+    def uncached_items(self, val):
+        self._uncached_items = val
 
     def data(self, index: QtCore.QModelIndex, role=QtCore.Qt.DisplayRole):
         """Overrides Qt method, returns data to show in table."""
@@ -275,11 +298,27 @@ class LabeledFrameTable(QtWidgets.QTableView):
 
     selectionChangedSignal = QtCore.Signal(Instance)
 
-    def __init__(self, labeled_frame: LabeledFrame = None, labels: Labels = None):
+    def __init__(
+        self, state, labeled_frame: LabeledFrame = None, labels: Labels = None
+    ):
         super(LabeledFrameTable, self).__init__()
+        self.state = state
         self.setModel(LabeledFrameTableModel(labeled_frame, labels))
         self.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+
+        self.state.connect("instance", self.selectInstance)
+
+    def selectInstance(self, instance):
+        if not instance:
+            return
+
+        idx = -1
+        if instance in self.model().labeled_frame.instances_to_show:
+            idx = self.model().labeled_frame.instances_to_show.index(instance)
+
+        table_row_idx = self.model().createIndex(idx, 0)
+        self.setCurrentIndex(table_row_idx)
 
     def selectionChanged(self, new, old):
         """Custom event handler, emits selectionChangedSignal signal."""
@@ -294,7 +333,8 @@ class LabeledFrameTable(QtWidgets.QTableView):
                 # Usually means that there's no labeled_frame
                 pass
 
-        self.selectionChangedSignal.emit(instance)
+        # self.selectionChangedSignal.emit(instance)
+        self.state["instance"] = instance
 
 
 class LabeledFrameTableModel(QtCore.QAbstractTableModel):

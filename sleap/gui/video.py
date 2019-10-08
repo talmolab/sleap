@@ -76,7 +76,7 @@ class QtVideoPlayer(QWidget):
 
         self.color_manager = color_manager
         self.state = state or GuiState()
-        self.view = GraphicsView()
+        self.view = GraphicsView(self.state)
         self.video = None
 
         self.seekbar = VideoSlider(color_manager=self.color_manager)
@@ -99,29 +99,28 @@ class QtVideoPlayer(QWidget):
 
         self.state.connect("frame_idx", lambda idx: self.plot())
         self.state.connect("frame_idx", lambda idx: self.seekbar.setValue(idx))
+        self.state.connect("instance", self.view.selectInstance)
 
         # self.state.connect("show labels", self.plot)
         # self.state.connect("show edges", self.plot)
-        # self.state.connect("video", self.load_video)
+        self.state.connect("video", self.load_video)
+        self.state.connect("fit", self.setFitZoom)
 
         self.view.show()
 
         if video is not None:
             self.load_video(video)
 
-    def load_video(self, video: Video, initial_frame=0, plot=True):
+    def load_video(self, video: Video, plot=True):
         """
         Load video into viewer.
 
         Args:
             video: the :class:`Video` to display
-            initial_frame (optional): display this frame of video
             plot: If True, plot the video frame. Otherwise, just load the data.
         """
 
         self.video = video
-
-        # self.state["frame_idx"] = initial_frame
 
         # Is this necessary?
         self.view.scene.setSceneRect(0, 0, video.width, video.height)
@@ -132,12 +131,6 @@ class QtVideoPlayer(QWidget):
 
         if plot:
             self.plot()
-
-        # if plot:
-        #     try:
-        #         self.state["frame_idx"] = initial_frame
-        #     except:
-        #         pass
 
     def reset(self):
         """ Reset viewer by removing all video data.
@@ -200,25 +193,23 @@ class QtVideoPlayer(QWidget):
         idx = self.state["frame_idx"] or 0
 
         # Get image data
-        frame = self.video.get_frame(idx)
+        try:
+            frame = self.video.get_frame(idx)
+        except:
+            frame = None
 
-        # Update index
-        # self.seekbar.setValue(self.frame_idx)
+        if frame is not None:
+            # Clear existing objects
+            self.view.clear()
 
-        # Store which Instance is selected
-        selected_inst = self.view.getSelectionInstance()
+            # Convert ndarray to QImage
+            image = qimage2ndarray.array2qimage(frame)
 
-        # Clear existing objects
-        self.view.clear()
+            # Display image
+            self.view.setImage(image)
 
-        # Convert ndarray to QImage
-        image = qimage2ndarray.array2qimage(frame)
-
-        # Display image
-        self.view.setImage(image)
-
-        # Emit signal
-        self.changedPlot.emit(self, idx, selected_inst)
+            # Emit signal
+            self.changedPlot.emit(self, idx, self.state["instance"])
 
     def showLabels(self, show):
         """ Show/hide node labels for all instances in viewer.
@@ -404,12 +395,15 @@ class QtVideoPlayer(QWidget):
             self.state["frame_idx"] = self.video.frames - 1
         elif event.key() == Qt.Key.Key_Escape:
             self.view.click_mode = ""
-            self.view.clearSelection()
+            self.state["instance"] = None
         elif event.key() == Qt.Key.Key_QuoteLeft:
-            self.view.nextSelection()
+            self.state.increment_in_list("instance", self.selectable_instances)
         elif event.key() < 128 and chr(event.key()).isnumeric():
             # decrement by 1 since instances are 0-indexed
-            self.view.selectInstance(int(chr(event.key())) - 1)
+            idx = int(chr(event.key())) - 1
+            if 0 <= idx < len(self.selectable_instances):
+                instance = self.selectable_instances[idx].instance
+                self.state["instance"] = instance
         else:
             event.ignore()  # Kicks the event up to parent
 
@@ -461,9 +455,10 @@ class GraphicsView(QGraphicsView):
     leftMouseButtonDoubleClicked = QtCore.Signal(float, float)
     rightMouseButtonDoubleClicked = QtCore.Signal(float, float)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, state=None, *args, **kwargs):
         """ https://github.com/marcel-goldschen-ohm/PyQtImageViewer/blob/master/QtImageViewer.py """
         QGraphicsView.__init__(self)
+        self.state = state or GuiState()
         self.scene = QGraphicsScene()
         self.setScene(self.scene)
         # brush = QBrush(QColor.black())
@@ -575,52 +570,19 @@ class GraphicsView(QGraphicsView):
         scene_items = self.scene.items(Qt.SortOrder.AscendingOrder)
         return list(filter(lambda x: isinstance(x, QtInstance), scene_items))
 
-    def clearSelection(self, signal=True):
-        """ Clear instance skeleton selection.
-        """
-        for instance in self.all_instances:
-            instance.selected = False
-        # signal that the selection has changed (so we can update visual display)
-        if signal:
-            self.updatedSelection.emit()
-
-    def nextSelection(self):
-        """ Select next instance (or first, if none currently selected).
-        """
-        instances = self.selectable_instances
-        if len(instances) == 0:
-            return
-        select_inst = instances[0]  # default to selecting first instance
-        select_idx = 0
-        for idx, instance in enumerate(instances):
-            if instance.selected:
-                instance.selected = False
-                select_idx = (idx + 1) % len(instances)
-                select_inst = instances[select_idx]
-                break
-        select_inst.selected = True
-        # signal that the selection has changed (so we can update visual display)
-        self.updatedSelection.emit()
-
-    def selectInstance(self, select: Union[Instance, int], signal=True):
+    def selectInstance(self, select: Union[Instance, int]):
         """
         Select a particular instance in view.
 
         Args:
             select: Either `Instance` or index of instance in view.
-            signal: Whether to emit  updatedSelection.
 
         Returns:
             None
         """
-        self.clearSelection(signal=False)
-
         for idx, instance in enumerate(self.all_instances):
             instance.selected = select == idx or select == instance.instance
-
-        # signal that the selection has changed (so we can update visual display)
-        if signal:
-            self.updatedSelection.emit()
+        self.updatedSelection.emit()
 
     def getSelectionIndex(self) -> int:
         """ Returns the index of the currently selected instance.
@@ -643,6 +605,21 @@ class GraphicsView(QGraphicsView):
         for idx, instance in enumerate(instances):
             if instance.selected:
                 return instance.instance
+
+    def getTopInstanceAt(self, scenePos) -> Instance:
+        # Get all items at scenePos
+        clicked = self.scene.items(scenePos, Qt.IntersectsItemBoundingRect)
+
+        # Filter by selectable instances
+        def is_selectable(item):
+            return type(item) == QtInstance and item.selectable
+
+        clicked = list(filter(is_selectable, clicked))
+
+        if len(clicked):
+            return clicked[0].instance
+
+        return None
 
     def resizeEvent(self, event):
         """ Maintain current zoom on resize.
@@ -687,22 +664,7 @@ class GraphicsView(QGraphicsView):
             if self.click_mode == "":
                 # Check if this was just a tap (not a drag)
                 if not has_moved:
-                    # When just a tap, see if there's an item underneath to select
-                    clicked = self.scene.items(scenePos, Qt.IntersectsItemBoundingRect)
-                    clicked_instances = [
-                        item
-                        for item in clicked
-                        if type(item) == QtInstance and item.selectable
-                    ]
-                    # We only handle single instance selection so pick at most one from list
-                    clicked_instance = (
-                        clicked_instances[0] if len(clicked_instances) else None
-                    )
-                    for idx, instance in enumerate(self.selectable_instances):
-                        instance.selected = instance == clicked_instance
-                        # If we want to allow selection of multiple instances, do this:
-                        # instance.selected = (instance in clicked)
-                    self.updatedSelection.emit()
+                    self.state["instance"] = self.getTopInstanceAt(scenePos)
 
             elif self.click_mode == "area":
                 # Check if user was selecting rectangular area
@@ -715,7 +677,6 @@ class GraphicsView(QGraphicsView):
                     selection_rect.bottom(),
                 )
             elif self.click_mode == "point":
-                selection_point = scenePos
                 self.pointSelected.emit(scenePos.x(), scenePos.y())
 
             self.click_mode = ""

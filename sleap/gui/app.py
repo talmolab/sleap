@@ -204,8 +204,16 @@ class MainWindow(QMainWindow):
         self.player.seekbar.selectionChanged.connect(lambda: self.updateStatusMessage())
         self.setCentralWidget(self.player)
 
-        self.state.connect("video", self.showVideo)
-        # self.state.connect("fit", self.player.setFitZoom)
+        def switch_frame(video):
+            # Jump to last labeled frame
+            last_label = self.labels.find_last(video)
+            if last_label is not None:
+                self.state["frame_idx"] = last_label.frame_idx
+            else:
+                self.state["frame_idx"] = 0
+
+        self.state.connect("video", switch_frame)
+        self.state.connect("video", lambda x: self.updateSeekbarMarks())
 
     def _create_menus(self):
         """Creates main application menus."""
@@ -375,13 +383,15 @@ class MainWindow(QMainWindow):
             labelMenu,
             "select next",
             "Select Next Instance",
-            self.player.view.nextSelection,
+            lambda: self.state.increment_in_list(
+                "instance", self.labeled_frame.instances_to_show
+            ),
         )
         add_menu_item(
             labelMenu,
             "clear selection",
             "Clear Selection",
-            self.player.view.clearSelection,
+            lambda: self.state.set("instance", None),
         )
 
         labelMenu.addSeparator()
@@ -502,11 +512,11 @@ class MainWindow(QMainWindow):
 
         ####### Videos #######
         videos_layout = _make_dock("Videos")
-        self.videosTable = VideosTable()
+        self.videosTable = VideosTable(self.state)
         videos_layout.addWidget(self.videosTable)
         hb = QHBoxLayout()
         btn = QPushButton("Show video")
-        btn.clicked.connect(self.activateSelectedVideo)
+        btn.clicked.connect(self.videosTable.activateSelected)
         hb.addWidget(btn)
         self._buttons["show video"] = btn
         btn = QPushButton("Add videos")
@@ -519,8 +529,6 @@ class MainWindow(QMainWindow):
         hbw = QWidget()
         hbw.setLayout(hb)
         videos_layout.addWidget(hbw)
-
-        self.videosTable.doubleClicked.connect(self.activateSelectedVideo)
 
         ####### Skeleton #######
         skeleton_layout = _make_dock(
@@ -598,7 +606,7 @@ class MainWindow(QMainWindow):
 
         ####### Instances #######
         instances_layout = _make_dock("Instances")
-        self.instancesTable = LabeledFrameTable(labels=self.labels)
+        self.instancesTable = LabeledFrameTable(state=self.state, labels=self.labels)
         instances_layout.addWidget(self.instancesTable)
         hb = QHBoxLayout()
         btn = QPushButton("New instance")
@@ -611,24 +619,6 @@ class MainWindow(QMainWindow):
         hbw = QWidget()
         hbw.setLayout(hb)
         instances_layout.addWidget(hbw)
-
-        def update_instance_table_selection():
-            inst_selected = self.player.view.getSelectionInstance()
-
-            if not inst_selected:
-                return
-
-            idx = -1
-            if inst_selected in self.labeled_frame.instances_to_show:
-                idx = self.labeled_frame.instances_to_show.index(inst_selected)
-
-            table_row_idx = self.instancesTable.model().createIndex(idx, 0)
-            self.instancesTable.setCurrentIndex(table_row_idx)
-
-        self.instancesTable.selectionChangedSignal.connect(
-            lambda inst: self.player.view.selectInstance(inst, signal=False)
-        )
-        self.player.view.updatedSelection.connect(update_instance_table_selection)
 
         # update track UI when change to track name
         self.instancesTable.model().dataChanged.connect(self.updateTrackMenu)
@@ -936,14 +926,6 @@ class MainWindow(QMainWindow):
             )
         self.track_menu.addAction("New Track", self.addTrack, Qt.CTRL + Qt.Key_0)
 
-    def activateSelectedVideo(self, x):
-        """Activates video selected in table."""
-        # Get selected video
-        idx = self.videosTable.currentIndex()
-        if not idx.isValid():
-            return
-        self.state["video"] = self.labels.videos[idx.row()]
-
     def addVideo(self, filename: Optional[str] = None):
         """Shows gui for adding video to project.
 
@@ -1015,20 +997,6 @@ class MainWindow(QMainWindow):
             else:
                 new_idx = min(idx.row(), len(self.labels.videos) - 1)
                 self.state["video"] = self.labels.videos[new_idx]
-
-    def showVideo(self, video: Video):
-        """Activates video in gui."""
-        print("show video", video)
-        # Load video in player widget
-        self.player.load_video(video)
-
-        # Annotate labeled frames on seekbar
-        self.updateSeekbarMarks()
-
-        # Jump to last labeled frame
-        last_label = self.labels.find_last(video)
-        if last_label is not None:
-            self.state["frame_idx"] = last_label.frame_idx
 
     def openSkeleton(self):
         """Shows gui for loading saved skeleton into project."""
@@ -2061,8 +2029,9 @@ class MainWindow(QMainWindow):
         return True
 
     def previousLabeledFrameIndex(self):
-        cur_idx = self.player.frame_idx
-        frames = self.labels.frames(self.video, from_frame_idx=cur_idx, reverse=True)
+        frames = self.labels.frames(
+            self.state["video"], from_frame_idx=self.state["frame_idx"], reverse=True
+        )
 
         try:
             next_idx = next(frames).frame_idx
