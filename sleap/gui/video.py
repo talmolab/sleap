@@ -12,7 +12,7 @@ Example usage:
 
 """
 
-from PySide2 import QtWidgets
+from PySide2 import QtWidgets, QtCore
 
 from PySide2.QtWidgets import (
     QApplication,
@@ -24,8 +24,7 @@ from PySide2.QtWidgets import (
 from PySide2.QtGui import QImage, QPixmap, QPainter, QPainterPath, QTransform
 from PySide2.QtGui import QPen, QBrush, QColor, QFont
 from PySide2.QtGui import QKeyEvent
-from PySide2.QtCore import Qt, Signal, Slot
-from PySide2.QtCore import QRectF, QPointF, QMarginsF
+from PySide2.QtCore import Qt, QRectF, QPointF, QMarginsF
 
 import math
 
@@ -64,8 +63,8 @@ class QtVideoPlayer(QWidget):
 
     """
 
-    changedPlot = Signal(QWidget, int, Instance)
-    changedData = Signal(Instance)
+    changedPlot = QtCore.Signal(QWidget, int, Instance)
+    changedData = QtCore.Signal(Instance)
 
     def __init__(self, video: Video = None, color_manager=None, *args, **kwargs):
         super(QtVideoPlayer, self).__init__(*args, **kwargs)
@@ -328,7 +327,7 @@ class QtVideoPlayer(QWidget):
             on_each(indexes)
 
     @staticmethod
-    def _signal_once(signal: Signal, callback: Callable):
+    def _signal_once(signal: QtCore.Signal, callback: Callable):
         """
         Connects callback for next occurrence of signal.
 
@@ -454,17 +453,17 @@ class GraphicsView(QGraphicsView):
 
     """
 
-    updatedViewer = Signal()
-    updatedSelection = Signal()
-    instanceDoubleClicked = Signal(Instance)
-    areaSelected = Signal(float, float, float, float)
-    pointSelected = Signal(float, float)
-    leftMouseButtonPressed = Signal(float, float)
-    rightMouseButtonPressed = Signal(float, float)
-    leftMouseButtonReleased = Signal(float, float)
-    rightMouseButtonReleased = Signal(float, float)
-    leftMouseButtonDoubleClicked = Signal(float, float)
-    rightMouseButtonDoubleClicked = Signal(float, float)
+    updatedViewer = QtCore.Signal()
+    updatedSelection = QtCore.Signal()
+    instanceDoubleClicked = QtCore.Signal(Instance)
+    areaSelected = QtCore.Signal(float, float, float, float)
+    pointSelected = QtCore.Signal(float, float)
+    leftMouseButtonPressed = QtCore.Signal(float, float)
+    rightMouseButtonPressed = QtCore.Signal(float, float)
+    leftMouseButtonReleased = QtCore.Signal(float, float)
+    rightMouseButtonReleased = QtCore.Signal(float, float)
+    leftMouseButtonDoubleClicked = QtCore.Signal(float, float)
+    rightMouseButtonDoubleClicked = QtCore.Signal(float, float)
 
     def __init__(self, *args, **kwargs):
         """ https://github.com/marcel-goldschen-ohm/PyQtImageViewer/blob/master/QtImageViewer.py """
@@ -1315,7 +1314,7 @@ class QtInstance(QGraphicsObject):
 
     """
 
-    changedData = Signal(Instance)
+    changedData = QtCore.Signal(Instance)
 
     def __init__(
         self,
