@@ -1545,7 +1545,7 @@ class MainWindow(QMainWindow):
             ).boundingRect()
 
             for node in self.skeleton.nodes:
-                if node.name not in instance.node_names or instance[node].isnan():
+                if node not in instance.nodes or instance[node].isnan():
                     # pick random points within currently zoomed view
                     x = (
                         in_view_rect.x()
