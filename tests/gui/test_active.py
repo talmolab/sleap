@@ -1,4 +1,5 @@
 import os
+import pytest
 
 from sleap.skeleton import Skeleton
 from sleap.instance import Instance, Point, LabeledFrame, PredictedInstance
@@ -9,7 +10,6 @@ from sleap.gui.active import (
     ActiveLearningDialog,
     make_default_training_jobs,
     find_saved_jobs,
-    add_frames_from_json,
 )
 
 
@@ -29,6 +29,19 @@ def test_active_gui(qtbot, centered_pair_labels):
     win.form_widget.set_form_data(dict(_dont_use_pafs=True))
     jobs = win._get_current_training_jobs()
     assert ModelOutputType.PART_AFFINITY_FIELD not in jobs
+
+
+def test_inference_gui(qtbot, centered_pair_labels):
+    win = ActiveLearningDialog(
+        labels_filename="foo.json", labels=centered_pair_labels, mode="inference"
+    )
+    win.show()
+    qtbot.addWidget(win)
+
+    # There aren't any trained models, so there should be no options shown for
+    # inference
+    jobs = win._get_current_training_jobs()
+    assert len(jobs) == 0
 
 
 def test_make_default_training_jobs():
@@ -67,6 +80,7 @@ def test_find_saved_jobs():
     assert os.path.basename(paths[1]) == "default_confmaps.json"
 
 
+@pytest.mark.skip(reason="for old merging method")
 def test_add_frames_from_json():
     vid_a = Video.from_filename("foo.mp4")
     vid_b = Video.from_filename("bar.mp4")

@@ -2060,6 +2060,17 @@ class MainWindow(QMainWindow):
         self.state["frame_idx"] = next_lf.frame_idx
         return True
 
+    def previousLabeledFrameIndex(self):
+        cur_idx = self.player.frame_idx
+        frames = self.labels.frames(self.video, from_frame_idx=cur_idx, reverse=True)
+
+        try:
+            next_idx = next(frames).frame_idx
+        except:
+            return
+
+        return next_idx
+
     def previousLabeledFrame(self):
         """Goes to labeled frame prior to current frame."""
         frames = self.labels.frames(

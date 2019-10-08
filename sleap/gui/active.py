@@ -5,6 +5,7 @@ Module for running active learning (or just inference) from GUI.
 import os
 import cattr
 
+from datetime import datetime
 from functools import reduce
 from pkg_resources import Requirement, resource_filename
 from typing import Dict, List, Optional, Tuple
@@ -17,6 +18,9 @@ from sleap.nn.model import ModelOutputType
 from sleap.nn.training import TrainingJob
 
 from PySide2 import QtWidgets, QtCore
+
+
+SELECT_FILE_OPTION = "Select a training profile file..."
 
 
 class ActiveLearningDialog(QtWidgets.QDialog):
@@ -49,6 +53,10 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         self.labels_filename = labels_filename
         self.labels = labels
         self.mode = mode
+        self._job_filter = None
+
+        if self.mode == "inference":
+            self._job_filter = lambda job: job.is_trained
 
         print(f"Number of frames to train on: {len(labels.user_labeled_frames)}")
 
@@ -162,6 +170,13 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         # list default profiles
         find_saved_jobs(profile_dir, self.job_options)
 
+        # Apply any filters
+        if self._job_filter:
+            for model_type, jobs_list in self.job_options.items():
+                self.job_options[model_type] = [
+                    (path, job) for (path, job) in jobs_list if self._job_filter(job)
+                ]
+
     def _update_job_menus(self, init: bool = False):
         """Updates the menus with training profile options.
 
@@ -176,9 +191,11 @@ class ActiveLearningDialog(QtWidgets.QDialog):
             if model_type not in self.job_options:
                 self.job_options[model_type] = []
             if init:
-                field.currentIndexChanged.connect(
-                    lambda idx, mt=model_type: self._update_from_selected_job(mt, idx)
-                )
+
+                def menu_action(idx, mt=model_type, field=field):
+                    self._update_from_selected_job(mt, idx, field)
+
+                field.currentIndexChanged.connect(menu_action)
             else:
                 # block signals so we can update combobox without overwriting
                 # any user data with the defaults from the profile
@@ -365,6 +382,9 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         for model_type in self._get_model_types_to_use():
             job, _ = self._get_current_job(model_type)
 
+            if job is None:
+                continue
+
             if job.model.output_type != ModelOutputType.CENTROIDS:
                 # update training job from params in form
                 trainer = job.trainer
@@ -499,8 +519,9 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         """Returns list of menu options for given model type."""
         jobs = self.job_options[model_type]
         option_list = [name for (name, job) in jobs]
+        option_list.append("")
         option_list.append("---")
-        option_list.append("Select a training profile file...")
+        option_list.append(SELECT_FILE_OPTION)
         return option_list
 
     def _add_job_file(self, model_type):
@@ -548,9 +569,10 @@ class ActiveLearningDialog(QtWidgets.QDialog):
                         text=f"Profile selected is for training {str(file_model_type)} instead of {str(model_type)}."
                     ).exec_()
 
-    def _update_from_selected_job(self, model_type: ModelOutputType, idx: int):
+    def _update_from_selected_job(self, model_type: ModelOutputType, idx: int, field):
         """Updates dialog settings after user selects a training profile."""
         jobs = self.job_options[model_type]
+        field_text = field.currentText()
         if idx == -1:
             return
         if idx < len(jobs):
@@ -569,17 +591,13 @@ class ActiveLearningDialog(QtWidgets.QDialog):
             self.form_widget.set_form_data(training_params)
 
             # is the model already trained?
-            has_trained = False
-            final_model_filename = job.final_model_filename
-            if final_model_filename is not None:
-                if os.path.exists(os.path.join(job.save_dir, final_model_filename)):
-                    has_trained = True
+            is_trained = job.is_trained
             field_name = f"_use_trained_{str(model_type)}"
-            # update "use trained" checkbox
-            self.form_widget.fields[field_name].setEnabled(has_trained)
-            self.form_widget[field_name] = has_trained
-        else:
-            # last item is "select file..."
+            # update "use trained" checkbox if present
+            if field_name in self.form_widget.fields:
+                self.form_widget.fields[field_name].setEnabled(is_trained)
+                self.form_widget[field_name] = is_trained
+        elif field_text == SELECT_FILE_OPTION:
             self._add_job_file(model_type)
 
 
@@ -680,28 +698,6 @@ def find_saved_jobs(
             jobs[model_type].append((full_filename, job))
 
     return jobs
-
-
-def add_frames_from_json(labels: Labels, new_labels_json: str) -> int:
-    """Merges new predictions (given as json string) into dataset.
-
-    Args:
-        labels: The dataset to which we're adding the predictions.
-        new_labels_json: A JSON string which can be deserialized into `Labels`.
-    Returns:
-        Number of labeled frames with new predictions.
-    """
-    # Deserialize the new frames, matching to the existing videos/skeletons if possible
-    new_lfs = Labels.from_json(new_labels_json, match_to=labels).labeled_frames
-
-    # Remove any frames without instances
-    new_lfs = list(filter(lambda lf: len(lf.instances), new_lfs))
-
-    # Now add them to labels and merge labeled frames with same video/frame_idx
-    labels.extend_from(new_lfs)
-    labels.merge_matching_frames()
-
-    return len(new_lfs)
 
 
 def run_active_learning_pipeline(
@@ -862,8 +858,8 @@ def run_active_inference(
     # from multiprocessing import Pool
 
     # total_new_lf_count = 0
-    # timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
-    # inference_output_path = os.path.join(save_dir, f"{timestamp}.inference.h5")
+    timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
+    inference_output_path = os.path.join(save_dir, f"{timestamp}.inference.h5")
 
     # Create Predictor from the results of training
     # pool = Pool(processes=1)
@@ -925,10 +921,15 @@ def run_active_inference(
     # Remove any frames without instances
     new_lfs = list(filter(lambda lf: len(lf.instances), new_lfs))
 
-    # Now add them to labels and merge labeled frames with same video/frame_idx
-    # labels.extend_from(new_lfs)
-    labels.extend_from(new_lfs, unify=True)
-    labels.merge_matching_frames()
+    # Create and save dataset with predictions
+    new_labels = Labels(new_lfs)
+    Labels.save_file(new_labels, inference_output_path)
+
+    # Merge predictions into current labels dataset
+    _, _, new_conflicts = Labels.complex_merge_between(labels, new_labels)
+
+    # new predictions should replace old ones
+    Labels.finish_complex_merge(labels, new_conflicts)
 
     # close message window
     if gui:
