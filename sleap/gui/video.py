@@ -41,9 +41,9 @@ from PySide2.QtWidgets import (
     QGraphicsRectItem,
 )
 
-from sleap.skeleton import Skeleton
+from sleap.skeleton import Node
 from sleap.instance import Instance, Point
-from sleap.io.video import Video, HDF5Video
+from sleap.io.video import Video
 from sleap.gui.slider import VideoSlider
 
 import qimage2ndarray
@@ -835,9 +835,17 @@ class QtNodeLabel(QGraphicsTextItem):
     Args:
         node: The `QtNode` to which this label is attached.
         parent: The `QtInstance` which will contain this item.
+        predicted: Whether this is for a predicted point.
     """
 
-    def __init__(self, node, parent, predicted=False, *args, **kwargs):
+    def __init__(
+        self,
+        node: Node,
+        parent: QGraphicsObject,
+        predicted: bool = False,
+        *args,
+        **kwargs,
+    ):
         self.node = node
         self.text = node.name
         self.predicted = predicted
@@ -979,21 +987,25 @@ class QtNode(QGraphicsEllipseItem):
 
     Args:
         parent: The `QtInstance` which will contain this item.
-        point: The `Point` where this node is located.
+        node: The :class:`Node` corresponding to this visual node.
+        point: The :class:`Point` where this node is located.
             Note that this is a mutable object so we're able to directly access
             the very same `Point` object that's defined outside our class.
         radius: Radius of the visual node item.
         color: Color of the visual node item.
+        predicted: Whether this point is predicted.
+        color_predicted: Whether to color predicted points.
+        show_non_visible: Whether to show points where `visible` is False.
         callbacks: List of functions to call after we update to the `Point`.
     """
 
     def __init__(
         self,
-        parent,
+        parent: QGraphicsObject,
+        node: Node,
         point: Point,
         radius: float,
         color: list,
-        node_name: str = None,
         predicted=False,
         color_predicted=False,
         show_non_visible=True,
@@ -1003,10 +1015,11 @@ class QtNode(QGraphicsEllipseItem):
     ):
         self._parent = parent
         self.point = point
+        self.node = node
         self.radius = radius
         self.color = color
         self.edges = []
-        self.name = node_name
+        self.name = node.name
         self.predicted = predicted
         self.color_predicted = color_predicted
         self.show_non_visible = show_non_visible
@@ -1023,8 +1036,8 @@ class QtNode(QGraphicsEllipseItem):
             **kwargs,
         )
 
-        if node_name is not None:
-            self.setToolTip(node_name)
+        if self.name is not None:
+            self.setToolTip(self.name)
 
         self.setFlag(QGraphicsItem.ItemIgnoresTransformations)
 
@@ -1033,10 +1046,14 @@ class QtNode(QGraphicsEllipseItem):
         if self.predicted:
             self.setFlag(QGraphicsItem.ItemIsMovable, False)
 
+            pen_width = 1
+            if self.node == self._parent.instance.skeleton.nodes[0]:
+                pen_width = 3
+
             if self.color_predicted:
-                self.pen_default = QPen(col_line, 1)
+                self.pen_default = QPen(col_line, pen_width)
             else:
-                self.pen_default = QPen(QColor(250, 250, 10), 1)
+                self.pen_default = QPen(QColor(250, 250, 10), pen_width)
             self.pen_default.setCosmetic(True)
             self.pen_missing = self.pen_default
             self.brush = QBrush(QColor(128, 128, 128, 128))
@@ -1179,6 +1196,7 @@ class QtEdge(QGraphicsLineItem):
     QGraphicsLineItem to handle display of edge between skeleton instance nodes.
 
     Args:
+        parent: `QGraphicsObject` which will contain this item.
         src: The `QtNode` source node for the edge.
         dst: The `QtNode` destination node for the edge.
         color: Color as (r, g, b) tuple.
@@ -1187,11 +1205,11 @@ class QtEdge(QGraphicsLineItem):
 
     def __init__(
         self,
-        parent,
+        parent: QGraphicsObject,
         src: QtNode,
         dst: QtNode,
-        color,
-        show_non_visible=True,
+        color: tuple,
+        show_non_visible: bool = True,
         *args,
         **kwargs,
     ):
@@ -1361,8 +1379,8 @@ class QtInstance(QGraphicsObject):
         for (node, point) in self.instance.nodes_points:
             node_item = QtNode(
                 parent=self,
+                node=node,
                 point=point,
-                node_name=node.name,
                 predicted=self.predicted,
                 color_predicted=self.color_predicted,
                 color=self.color,
@@ -1535,7 +1553,7 @@ class QtTextWithBackground(QGraphicsTextItem):
     """
     Inherits methods/behavior of `QGraphicsTextItem`, but with background box.
 
-    Color of brackground box is light or dark depending on the text color.
+    Color of background box is light or dark depending on the text color.
     """
 
     def __init__(self, *args, **kwargs):
