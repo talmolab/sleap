@@ -2,6 +2,7 @@ import os
 import json
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 import numpy as np
@@ -20,8 +21,22 @@ from datetime import datetime
 from pathlib import Path, PureWindowsPath
 
 from keras import backend as K
-from keras.layers import Input, Conv2D, BatchNormalization, Add, MaxPool2D, UpSampling2D, Concatenate
-from keras.callbacks import ReduceLROnPlateau, EarlyStopping, TensorBoard, LambdaCallback, ModelCheckpoint
+from keras.layers import (
+    Input,
+    Conv2D,
+    BatchNormalization,
+    Add,
+    MaxPool2D,
+    UpSampling2D,
+    Concatenate,
+)
+from keras.callbacks import (
+    ReduceLROnPlateau,
+    EarlyStopping,
+    TensorBoard,
+    LambdaCallback,
+    ModelCheckpoint,
+)
 
 from sklearn.model_selection import train_test_split
 
@@ -30,7 +45,14 @@ from sleap.io.dataset import Labels
 from sleap.nn.augmentation import Augmenter
 from sleap.nn.model import Model, ModelOutputType
 from sleap.nn.monitor import LossViewer
-from sleap.nn.datagen import generate_training_data, generate_confmaps_from_points, generate_pafs_from_points, generate_images, generate_points, generate_centroid_points
+from sleap.nn.datagen import (
+    generate_training_data,
+    generate_confmaps_from_points,
+    generate_pafs_from_points,
+    generate_images,
+    generate_points,
+    generate_centroid_points,
+)
 
 
 @attr.s(auto_attribs=True)
@@ -133,15 +155,17 @@ class Trainer:
     min_crop_size: int = 32
     negative_samples: int = 10
 
-    def train(self,
-              model: Model,
-              labels: Union[str, Labels, Dict],
-              run_name: str = None,
-              save_dir: Union[str, None] = None,
-              tensorboard_dir: Union[str, None] = None,
-              control_zmq_port: int = 9000,
-              progress_report_zmq_port: int = 9001,
-              multiprocessing_workers: int = 0) -> str:
+    def train(
+        self,
+        model: Model,
+        labels: Union[str, Labels, Dict],
+        run_name: str = None,
+        save_dir: Union[str, None] = None,
+        tensorboard_dir: Union[str, None] = None,
+        control_zmq_port: int = 9000,
+        progress_report_zmq_port: int = 9001,
+        multiprocessing_workers: int = 0,
+    ) -> str:
         """
         Train a given model using labels and the Trainer's current hyper-parameter settings.
         This method executes synchronously, thus it blocks until training is finished.
@@ -176,7 +200,6 @@ class Trainer:
         elif type(labels) is dict:
             labels = Labels.from_json(labels)
 
-
         # FIXME: We need to handle multiple skeletons.
         skeleton = labels.skeletons[0]
 
@@ -187,22 +210,24 @@ class Trainer:
         # Generate CENTROID training data
         if model.output_type == ModelOutputType.CENTROIDS:
             imgs = generate_images(labels, scale=self.scale)
-            points = generate_centroid_points(
-                        generate_points(labels, scale=self.scale))
+            points = generate_centroid_points(generate_points(labels, scale=self.scale))
 
         # Generate REGULAR training data
         else:
             imgs, points = generate_training_data(
-                                labels,
-                                params = dict(
-                                            scale = self.scale,
-                                            instance_crop = self.instance_crop,
-                                            min_crop_size = self.min_crop_size,
-                                            negative_samples = self.negative_samples))
+                labels,
+                params=dict(
+                    scale=self.scale,
+                    instance_crop=self.instance_crop,
+                    min_crop_size=self.min_crop_size,
+                    negative_samples=self.negative_samples,
+                ),
+            )
 
         # Split data into train/validation
-        imgs_train, imgs_val, outputs_train, outputs_val = \
-            train_test_split(imgs, points, test_size=self.val_size)
+        imgs_train, imgs_val, outputs_train, outputs_val = train_test_split(
+            imgs, points, test_size=self.val_size
+        )
 
         # Free up the original datasets after test and train split.
         del imgs, points
@@ -227,10 +252,17 @@ class Trainer:
         # then the output (confidence maps or part affinity fields) will
         # be at a different scale than the input (images).
         input_img_size = (imgs_train.shape[1], imgs_train.shape[2])
-        output_img_size = (int(input_img_size[0] * model.output_scale), int(input_img_size[1] * model.output_scale))
+        output_img_size = (
+            int(input_img_size[0] * model.output_scale),
+            int(input_img_size[1] * model.output_scale),
+        )
 
-        logger.info(f"Training set: {imgs_train.shape} -> {output_img_size}, {num_outputs_channels} channels")
-        logger.info(f"Validation set: {imgs_val.shape} -> {output_img_size}, {num_outputs_channels} channels")
+        logger.info(
+            f"Training set: {imgs_train.shape} -> {output_img_size}, {num_outputs_channels} channels"
+        )
+        logger.info(
+            f"Validation set: {imgs_val.shape} -> {output_img_size}, {num_outputs_channels} channels"
+        )
 
         # Input layer
         img_input = Input((img_height, img_width, img_channels))
@@ -244,7 +276,8 @@ class Trainer:
             if img_height % pool_factor != 0 or img_width % pool_factor != 0:
                 logger.warning(
                     f"Image dimensions ({img_height}, {img_width}) are "
-                    f"not divisible by the pooling factor ({pool_factor}).")
+                    f"not divisible by the pooling factor ({pool_factor})."
+                )
                 # gap_height = (np.ceil(img_height / pool_factor) * pool_factor) - img_height
                 # gap_width = (np.ceil(img_width / pool_factor) * pool_factor) - img_width
 
@@ -254,24 +287,25 @@ class Trainer:
                 # Solution: https://www.tensorflow.org/api_docs/python/tf/pad + Lambda layer + corresponding crop at the end?
 
         # Instantiate the backbone, this builds the Tensorflow graph
-        x_outs = model.output(input_tensor=img_input, num_output_channels=num_outputs_channels)
+        x_outs = model.output(
+            input_tensor=img_input, num_output_channels=num_outputs_channels
+        )
 
         # Create training model by combining the input layer and backbone graph.
         keras_model = keras.Model(inputs=img_input, outputs=x_outs)
 
         # Specify the optimizer.
         if self.optimizer.lower() == "adam":
-            _optimizer = keras.optimizers.Adam(lr=self.learning_rate, amsgrad=self.amsgrad)
+            _optimizer = keras.optimizers.Adam(
+                lr=self.learning_rate, amsgrad=self.amsgrad
+            )
         elif self.optimizer.lower() == "rmsprop":
             _optimizer = keras.optimizers.RMSprop(lr=self.learning_rate)
         else:
             raise ValueError(f"Unknown optimizer, value = {self.optimizer}!")
 
         # Compile the Keras model
-        keras_model.compile(
-            optimizer=_optimizer,
-            loss="mean_squared_error",
-        )
+        keras_model.compile(optimizer=_optimizer, loss="mean_squared_error")
         logger.info("Params: {:,}".format(keras_model.count_params()))
 
         # Default to one loop through dataset per epoch
@@ -284,17 +318,34 @@ class Trainer:
 
         # Setup data generation
         if model.output_type == ModelOutputType.CONFIDENCE_MAP:
+
             def datagen_function(points):
-                return generate_confmaps_from_points(points, skeleton, input_img_size,
-                            sigma=self.sigma, scale=model.output_scale)
+                return generate_confmaps_from_points(
+                    points,
+                    skeleton,
+                    input_img_size,
+                    sigma=self.sigma,
+                    scale=model.output_scale,
+                )
+
         elif model.output_type == ModelOutputType.PART_AFFINITY_FIELD:
+
             def datagen_function(points):
-                return generate_pafs_from_points(points, skeleton, input_img_size,
-                            sigma=self.sigma, scale=model.output_scale)
+                return generate_pafs_from_points(
+                    points,
+                    skeleton,
+                    input_img_size,
+                    sigma=self.sigma,
+                    scale=model.output_scale,
+                )
+
         elif model.output_type == ModelOutputType.CENTROIDS:
+
             def datagen_function(points):
-                return generate_confmaps_from_points(points, None, input_img_size,
-                            node_count=1, sigma=self.sigma)
+                return generate_confmaps_from_points(
+                    points, None, input_img_size, node_count=1, sigma=self.sigma
+                )
+
         else:
             datagen_function = None
 
@@ -303,15 +354,23 @@ class Trainer:
 
         # Initialize data generator with augmentation
         train_datagen = Augmenter(
-            imgs_train, points=outputs_train,
-            datagen=datagen_function, output_names=keras_model.output_names,
-            batch_size=self.batch_size, shuffle_initially=self.shuffle_initially,
+            imgs_train,
+            points=outputs_train,
+            datagen=datagen_function,
+            output_names=keras_model.output_names,
+            batch_size=self.batch_size,
+            shuffle_initially=self.shuffle_initially,
             rotation=self.augment_rotation,
-            scale=(self.augment_scale_min, self.augment_scale_max))
+            scale=(self.augment_scale_min, self.augment_scale_max),
+        )
 
-        train_run = TrainingJob(model=model, trainer=self,
-                                save_dir=save_dir, run_name=run_name,
-                                labels_filename=labels_file_name)
+        train_run = TrainingJob(
+            model=model,
+            trainer=self,
+            save_dir=save_dir,
+            run_name=run_name,
+            labels_filename=labels_file_name,
+        )
 
         # Setup saving
         save_path = None
@@ -319,8 +378,10 @@ class Trainer:
             # Generate run name
             if run_name is None:
                 timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
-                train_run.run_name = f"{timestamp}.{str(model.output_type)}." \
-                           f"{model.name}.n={num_total}"
+                train_run.run_name = (
+                    f"{timestamp}.{str(model.output_type)}."
+                    f"{model.name}.n={num_total}"
+                )
 
             # Build save path
             save_path = os.path.join(save_dir, train_run.run_name)
@@ -328,8 +389,10 @@ class Trainer:
 
             # Check if it already exists
             if os.path.exists(save_path):
-                logger.warning(f"Save path already exists. "
-                               f"Previous run data may be overwritten!")
+                logger.warning(
+                    f"Save path already exists. "
+                    f"Previous run data may be overwritten!"
+                )
 
             # Create run folder
             os.makedirs(save_path, exist_ok=True)
@@ -339,19 +402,25 @@ class Trainer:
         if len(keras_model.output_names) > 1:
             monitor_metric_name = "val_" + keras_model.output_names[-1] + "_loss"
         callbacks = self._setup_callbacks(
-            train_run, save_path, train_datagen,
-            tensorboard_dir, control_zmq_port,
+            train_run,
+            save_path,
+            train_datagen,
+            tensorboard_dir,
+            control_zmq_port,
             progress_report_zmq_port,
             output_type=str(model.output_type),
             monitor_metric_name=monitor_metric_name,
-            )
+        )
 
         # Train!
         history = keras_model.fit_generator(
             train_datagen,
             steps_per_epoch=steps_per_epoch,
             epochs=self.num_epochs,
-            validation_data=(imgs_val, {output_name: outputs_val for output_name in keras_model.output_names}),
+            validation_data=(
+                imgs_val,
+                {output_name: outputs_val for output_name in keras_model.output_names},
+            ),
             callbacks=callbacks,
             verbose=2,
             use_multiprocessing=multiprocessing_workers > 0,
@@ -361,7 +430,9 @@ class Trainer:
         # Save once done training
         if save_path is not None:
             final_model_path = os.path.join(save_path, "final_model.h5")
-            keras_model.save(filepath=final_model_path, overwrite=True, include_optimizer=True)
+            keras_model.save(
+                filepath=final_model_path, overwrite=True, include_optimizer=True
+            )
             logger.info(f"Saved final model: {final_model_path}")
 
             # TODO: save training history
@@ -401,12 +472,17 @@ class Trainer:
 
         return pool, result
 
-    def _setup_callbacks(self, train_run: 'TrainingJob',
-                         save_path, train_datagen,
-                         tensorboard_dir, control_zmq_port,
-                         progress_report_zmq_port,
-                         output_type,
-                         monitor_metric_name="val_loss"):
+    def _setup_callbacks(
+        self,
+        train_run: "TrainingJob",
+        save_path,
+        train_datagen,
+        tensorboard_dir,
+        control_zmq_port,
+        progress_report_zmq_port,
+        output_type,
+        monitor_metric_name="val_loss",
+    ):
         """
         Setup callbacks for the call to Keras fit_generator.
 
@@ -421,61 +497,98 @@ class Trainer:
         if save_path is not None:
             if self.save_every_epoch:
                 full_path = os.path.join(save_path, "newest_model.h5")
-                train_run.newest_model_filename = os.path.relpath(full_path, train_run.save_dir)
+                train_run.newest_model_filename = os.path.relpath(
+                    full_path, train_run.save_dir
+                )
                 callbacks.append(
-                    ModelCheckpoint(filepath=full_path,
-                                    monitor=monitor_metric_name, save_best_only=False,
-                                    save_weights_only=False, period=1))
+                    ModelCheckpoint(
+                        filepath=full_path,
+                        monitor=monitor_metric_name,
+                        save_best_only=False,
+                        save_weights_only=False,
+                        period=1,
+                    )
+                )
             if self.save_best_val:
                 full_path = os.path.join(save_path, "best_model.h5")
-                train_run.best_model_filename = os.path.relpath(full_path, train_run.save_dir)
+                train_run.best_model_filename = os.path.relpath(
+                    full_path, train_run.save_dir
+                )
                 callbacks.append(
-                    ModelCheckpoint(filepath=full_path,
-                                    monitor=monitor_metric_name, save_best_only=True,
-                                    save_weights_only=False, period=1))
+                    ModelCheckpoint(
+                        filepath=full_path,
+                        monitor=monitor_metric_name,
+                        save_best_only=True,
+                        save_weights_only=False,
+                        period=1,
+                    )
+                )
             TrainingJob.save_json(train_run, f"{save_path}.json")
 
         # Callbacks: Shuffle after every epoch
         if self.shuffle_every_epoch:
             callbacks.append(
-                LambdaCallback(on_epoch_end=lambda epoch, logs: train_datagen.shuffle()))
+                LambdaCallback(on_epoch_end=lambda epoch, logs: train_datagen.shuffle())
+            )
 
         # Callbacks: LR reduction
         callbacks.append(
-            ReduceLROnPlateau(min_delta=self.reduce_lr_min_delta,
-                              factor=self.reduce_lr_factor,
-                              patience=self.reduce_lr_patience,
-                              cooldown=self.reduce_lr_cooldown,
-                              min_lr=self.reduce_lr_min_lr,
-                              monitor=monitor_metric_name, mode="auto", verbose=1, )
+            ReduceLROnPlateau(
+                min_delta=self.reduce_lr_min_delta,
+                factor=self.reduce_lr_factor,
+                patience=self.reduce_lr_patience,
+                cooldown=self.reduce_lr_cooldown,
+                min_lr=self.reduce_lr_min_lr,
+                monitor=monitor_metric_name,
+                mode="auto",
+                verbose=1,
+            )
         )
 
         # Callbacks: Early stopping
         callbacks.append(
-            EarlyStopping(monitor=monitor_metric_name,
-                          min_delta=self.early_stopping_min_delta,
-                          patience=self.early_stopping_patience, verbose=1))
+            EarlyStopping(
+                monitor=monitor_metric_name,
+                min_delta=self.early_stopping_min_delta,
+                patience=self.early_stopping_patience,
+                verbose=1,
+            )
+        )
 
         # Callbacks: Tensorboard
         if tensorboard_dir is not None:
             callbacks.append(
-                TensorBoard(log_dir=f"{tensorboard_dir}/{output_type}{time()}",
-                            batch_size=32, update_freq=150, histogram_freq=0,
-                            write_graph=False, write_grads=False, write_images=False,
-                            embeddings_freq=0, embeddings_layer_names=None,
-                            embeddings_metadata=None, embeddings_data=None))
+                TensorBoard(
+                    log_dir=f"{tensorboard_dir}/{output_type}{time()}",
+                    batch_size=32,
+                    update_freq=150,
+                    histogram_freq=0,
+                    write_graph=False,
+                    write_grads=False,
+                    write_images=False,
+                    embeddings_freq=0,
+                    embeddings_layer_names=None,
+                    embeddings_metadata=None,
+                    embeddings_data=None,
+                )
+            )
 
         # Callbacks: ZMQ control
         if control_zmq_port is not None:
             callbacks.append(
-                TrainingControllerZMQ(address="tcp://127.0.0.1",
-                                      port=control_zmq_port,
-                                      topic="", poll_timeout=10))
+                TrainingControllerZMQ(
+                    address="tcp://127.0.0.1",
+                    port=control_zmq_port,
+                    topic="",
+                    poll_timeout=10,
+                )
+            )
 
         # Callbacks: ZMQ progress reporter
         if progress_report_zmq_port is not None:
             callbacks.append(
-                ProgressReporterZMQ(port=progress_report_zmq_port, what=output_type))
+                ProgressReporterZMQ(port=progress_report_zmq_port, what=output_type)
+            )
 
         return callbacks
 
@@ -502,6 +615,7 @@ class TrainingJob:
         from the final state of training. Set to None if save_dir is None. This model
         file is not created until training is finished.
     """
+
     model: Model
     trainer: Trainer
     labels_filename: Union[str, None] = None
@@ -511,8 +625,16 @@ class TrainingJob:
     newest_model_filename: Union[str, None] = None
     final_model_filename: Union[str, None] = None
 
+    @property
+    def is_trained(self):
+        if self.final_model_filename is not None:
+            path = os.path.join(self.save_dir, self.final_model_filename)
+            if os.path.exists(path):
+                return True
+        return False
+
     @staticmethod
-    def save_json(training_job: 'TrainingJob', filename: str):
+    def save_json(training_job: "TrainingJob", filename: str):
         """
         Save a training run to a JSON file.
 
@@ -524,14 +646,13 @@ class TrainingJob:
             None
         """
 
-        with open(filename, 'w') as file:
+        with open(filename, "w") as file:
 
             # We have some skeletons to deal with, make sure to setup a Skeleton cattr.
             my_cattr = Skeleton.make_cattr()
             dicts = my_cattr.unstructure(training_job)
             json_str = json.dumps(dicts)
             file.write(json_str)
-
 
     @classmethod
     def load_json(cls, filename: str):
@@ -556,8 +677,9 @@ class TrainingJob:
         if ("model" in dicts) and ("skeletons" in dicts["model"]):
             if dicts["model"]["skeletons"]:
                 dicts["model"]["skeletons"] = converter.structure(
-                    dicts["model"]["skeletons"], List[Skeleton])
-                
+                    dicts["model"]["skeletons"], List[Skeleton]
+                )
+
             else:
                 dicts["model"]["skeletons"] = []
 
@@ -598,7 +720,9 @@ class TrainingControllerZMQ(keras.callbacks.Callback):
         self.socket = self.context.socket(zmq.SUB)
         self.socket.subscribe(self.topic)
         self.socket.connect(self.address)
-        logger.info(f"Training controller subscribed to: {self.address} (topic: {self.topic})")
+        logger.info(
+            f"Training controller subscribed to: {self.address} (topic: {self.topic})"
+        )
 
         # TODO: catch/throw exception about failure to connect
 
@@ -665,17 +789,26 @@ class ProgressReporterZMQ(keras.callbacks.Callback):
             logs: dict, currently no data is passed to this argument for this method
                 but that may change in the future.
         """
-        self.socket.send_string(jsonpickle.encode(dict(what=self.what,event="train_begin", logs=logs)))
-
+        self.socket.send_string(
+            jsonpickle.encode(dict(what=self.what, event="train_begin", logs=logs))
+        )
 
     def on_batch_begin(self, batch, logs=None):
         """A backwards compatibility alias for `on_train_batch_begin`."""
         # self.logger.info("batch_begin")
-        self.socket.send_string(jsonpickle.encode(dict(what=self.what,event="batch_begin", batch=batch, logs=logs)))
+        self.socket.send_string(
+            jsonpickle.encode(
+                dict(what=self.what, event="batch_begin", batch=batch, logs=logs)
+            )
+        )
 
     def on_batch_end(self, batch, logs=None):
         """A backwards compatibility alias for `on_train_batch_end`."""
-        self.socket.send_string(jsonpickle.encode(dict(what=self.what,event="batch_end", batch=batch, logs=logs)))
+        self.socket.send_string(
+            jsonpickle.encode(
+                dict(what=self.what, event="batch_end", batch=batch, logs=logs)
+            )
+        )
 
     def on_epoch_begin(self, epoch, logs=None):
         """Called at the start of an epoch.
@@ -686,7 +819,11 @@ class ProgressReporterZMQ(keras.callbacks.Callback):
             logs: dict, currently no data is passed to this argument for this method
                 but that may change in the future.
         """
-        self.socket.send_string(jsonpickle.encode(dict(what=self.what,event="epoch_begin", epoch=epoch, logs=logs)))
+        self.socket.send_string(
+            jsonpickle.encode(
+                dict(what=self.what, event="epoch_begin", epoch=epoch, logs=logs)
+            )
+        )
 
     def on_epoch_end(self, epoch, logs=None):
         """Called at the end of an epoch.
@@ -698,7 +835,11 @@ class ProgressReporterZMQ(keras.callbacks.Callback):
                 validation epoch if validation is performed. Validation result keys
                 are prefixed with `val_`.
         """
-        self.socket.send_string(jsonpickle.encode(dict(what=self.what,event="epoch_end", epoch=epoch, logs=logs)))
+        self.socket.send_string(
+            jsonpickle.encode(
+                dict(what=self.what, event="epoch_end", epoch=epoch, logs=logs)
+            )
+        )
 
     def on_train_end(self, logs=None):
         """Called at the end of training.
@@ -707,31 +848,48 @@ class ProgressReporterZMQ(keras.callbacks.Callback):
             logs: dict, currently no data is passed to this argument for this method
                 but that may change in the future.
         """
-        self.socket.send_string(jsonpickle.encode(dict(what=self.what,event="train_end", logs=logs)))
+        self.socket.send_string(
+            jsonpickle.encode(dict(what=self.what, event="train_end", logs=logs))
+        )
+
 
 def main():
     from PySide2 import QtWidgets
 
-#     from sleap.nn.architectures.unet import UNet
-#     model = Model(output_type=ModelOutputType.CONFIDENCE_MAP,
-#                   backbone=UNet(num_filters=16, depth=3, up_blocks=2))
+    #     from sleap.nn.architectures.unet import UNet
+    #     model = Model(output_type=ModelOutputType.CONFIDENCE_MAP,
+    #                   backbone=UNet(num_filters=16, depth=3, up_blocks=2))
 
     from sleap.nn.architectures.leap import LeapCNN
-    model = Model(output_type=ModelOutputType.PART_AFFINITY_FIELD,
-                  backbone=LeapCNN(down_blocks=3, up_blocks=2,
-                    upsampling_layers=True, num_filters=32, interp="bilinear"))
+
+    model = Model(
+        output_type=ModelOutputType.PART_AFFINITY_FIELD,
+        backbone=LeapCNN(
+            down_blocks=3,
+            up_blocks=2,
+            upsampling_layers=True,
+            num_filters=32,
+            interp="bilinear",
+        ),
+    )
 
     # Setup a Trainer object to train the model above
-    trainer = Trainer(val_size=0.1, batch_size=4,
-                      num_epochs=10, steps_per_epoch=5,
-                      save_best_val=True,
-                      save_every_epoch=True)
+    trainer = Trainer(
+        val_size=0.1,
+        batch_size=4,
+        num_epochs=10,
+        steps_per_epoch=5,
+        save_best_val=True,
+        save_every_epoch=True,
+    )
 
     # Run training asynchronously
-    pool, result = trainer.train_async(model=model,
-                                  labels=Labels.load_json("tests/data/json_format_v1/centered_pair.json"),
-                                  save_dir='test_train/',
-                                  run_name="training_run_2")
+    pool, result = trainer.train_async(
+        model=model,
+        labels=Labels.load_json("tests/data/json_format_v1/centered_pair.json"),
+        save_dir="test_train/",
+        run_name="training_run_2",
+    )
 
     app = QtWidgets.QApplication()
 
@@ -743,7 +901,7 @@ def main():
 
     while not result.ready():
         app.processEvents()
-        result.wait(.01)
+        result.wait(0.01)
 
     print("Get")
     train_job_path = result.get()
@@ -755,12 +913,20 @@ def main():
     # Now lets load the training job we just ran
     train_job = TrainingJob.load_json(train_job_path)
 
-    assert os.path.exists(os.path.join(train_job.save_dir, train_job.newest_model_filename))
-    assert os.path.exists(os.path.join(train_job.save_dir, train_job.best_model_filename))
-    assert os.path.exists(os.path.join(train_job.save_dir, train_job.final_model_filename))
+    assert os.path.exists(
+        os.path.join(train_job.save_dir, train_job.newest_model_filename)
+    )
+    assert os.path.exists(
+        os.path.join(train_job.save_dir, train_job.best_model_filename)
+    )
+    assert os.path.exists(
+        os.path.join(train_job.save_dir, train_job.final_model_filename)
+    )
 
     import sys
+
     sys.exit(0)
+
 
 def run(labels_filename: str, job_filename: str):
 
@@ -771,12 +937,13 @@ def run(labels_filename: str, job_filename: str):
     save_dir = os.path.join(os.path.dirname(labels_filename), "models")
 
     job.trainer.train(
-                        model=job.model,
-                        labels=labels,
-                        save_dir=save_dir,
-                        control_zmq_port=None,
-                        progress_report_zmq_port=None
-                        )
+        model=job.model,
+        labels=labels,
+        save_dir=save_dir,
+        control_zmq_port=None,
+        progress_report_zmq_port=None,
+    )
+
 
 if __name__ == "__main__":
     import argparse
@@ -790,7 +957,9 @@ if __name__ == "__main__":
 
     job_filename = args.profile_path
     if not os.path.exists(job_filename):
-        profile_dir = resource_filename(Requirement.parse("sleap"), "sleap/training_profiles")
+        profile_dir = resource_filename(
+            Requirement.parse("sleap"), "sleap/training_profiles"
+        )
         if os.path.exists(os.path.join(profile_dir, job_filename)):
             job_filename = os.path.join(profile_dir, job_filename)
         else:
@@ -799,7 +968,4 @@ if __name__ == "__main__":
     print(f"Training labels file: {args.labels_path}")
     print(f"Training profile: {job_filename}")
 
-    run(
-        labels_filename=args.labels_path,
-        job_filename=job_filename)
-
+    run(labels_filename=args.labels_path, job_filename=job_filename)

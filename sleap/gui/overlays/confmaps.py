@@ -8,24 +8,29 @@ Example:
 
 from PySide2 import QtWidgets, QtCore, QtGui
 
-import attr
 import numpy as np
 import qimage2ndarray
-from typing import Sequence
 
-from sleap.io.video import Video, HDF5Video
-from sleap.gui.video import QtVideoPlayer
 from sleap.gui.overlays.base import DataOverlay, h5_colors
 
+
 class ConfmapOverlay(DataOverlay):
+    """Overlay to show confidence maps."""
 
     @classmethod
     def from_h5(cls, filename, input_format="channels_last", **kwargs):
-        return DataOverlay.from_h5(filename, "/confmaps", input_format, overlay_class=ConfMapsPlot, **kwargs)
+        """Create object with hdf5 as datasource."""
+        return DataOverlay.from_h5(
+            filename, "/confmaps", input_format, overlay_class=ConfMapsPlot, **kwargs
+        )
 
     @classmethod
     def from_model(cls, filename, video, **kwargs):
-        return DataOverlay.from_model(filename, video, overlay_class=ConfMapsPlot, **kwargs)
+        """Create object with live predictions from model as datasource."""
+        return DataOverlay.from_model(
+            filename, video, overlay_class=ConfMapsPlot, **kwargs
+        )
+
 
 class ConfMapsPlot(QtWidgets.QGraphicsObject):
     """QGraphicsObject to display multiple confidence maps in a QGraphicsView.
@@ -42,7 +47,9 @@ class ConfMapsPlot(QtWidgets.QGraphicsObject):
     When initialized, creates one child ConfMapPlot item for each channel.
     """
 
-    def __init__(self, frame: np.array = None, show=None, show_box=True, *args, **kwargs):
+    def __init__(
+        self, frame: np.array = None, show=None, show_box=True, *args, **kwargs
+    ):
         super(ConfMapsPlot, self).__init__(*args, **kwargs)
         self.frame = frame
         self.show_box = show_box
@@ -50,16 +57,18 @@ class ConfMapsPlot(QtWidgets.QGraphicsObject):
         self.rect = QtCore.QRectF(0, 0, self.frame.shape[1], self.frame.shape[0])
 
         if self.show_box:
-            QtWidgets.QGraphicsRectItem(self.rect, parent=self).setPen(QtGui.QPen("yellow"))
+            QtWidgets.QGraphicsRectItem(self.rect, parent=self).setPen(
+                QtGui.QPen("yellow")
+            )
 
         for channel in range(self.frame.shape[2]):
             if show is None or channel in show:
                 color_map = h5_colors[channel % len(h5_colors)]
 
                 # Add QGraphicsPixmapItem as child object
-                ConfMapPlot(confmap=self.frame[..., channel],
-                        color=color_map,
-                        parent=self)
+                ConfMapPlot(
+                    confmap=self.frame[..., channel], color=color_map, parent=self
+                )
 
     def boundingRect(self) -> QtCore.QRectF:
         """Method required by Qt.
@@ -70,6 +79,7 @@ class ConfMapsPlot(QtWidgets.QGraphicsObject):
         """Method required by Qt.
         """
         pass
+
 
 class ConfMapPlot(QtWidgets.QGraphicsPixmapItem):
     """QGraphicsPixmapItem object for drawing single channel of confidence map.
@@ -85,7 +95,9 @@ class ConfMapPlot(QtWidgets.QGraphicsPixmapItem):
         In most cases this should only be called by ConfMapsPlot.
     """
 
-    def __init__(self, confmap: np.array = None, color=[255, 255, 255], *args, **kwargs):
+    def __init__(
+        self, confmap: np.array = None, color=[255, 255, 255], *args, **kwargs
+    ):
         super(ConfMapPlot, self).__init__(*args, **kwargs)
 
         self.color_map = color
@@ -108,16 +120,16 @@ class ConfMapPlot(QtWidgets.QGraphicsPixmapItem):
         frame = self.confmap
 
         # Colorize single-channel overlap
-        if np.ptp(frame) <= 1.:
+        if np.ptp(frame) <= 1.0:
             frame_a = (frame * 255).astype(np.uint8)
             frame_r = (frame * self.color_map[0]).astype(np.uint8)
             frame_g = (frame * self.color_map[1]).astype(np.uint8)
             frame_b = (frame * self.color_map[2]).astype(np.uint8)
         else:
             frame_a = (frame).astype(np.uint8)
-            frame_r = (frame * (self.color_map[0]/255.)).astype(np.uint8)
-            frame_g = (frame * (self.color_map[1]/255.)).astype(np.uint8)
-            frame_b = (frame * (self.color_map[2]/255.)).astype(np.uint8)
+            frame_r = (frame * (self.color_map[0] / 255.0)).astype(np.uint8)
+            frame_g = (frame * (self.color_map[1] / 255.0)).astype(np.uint8)
+            frame_b = (frame * (self.color_map[2] / 255.0)).astype(np.uint8)
 
         frame_composite = np.dstack((frame_r, frame_g, frame_b, frame_a))
 
@@ -126,20 +138,29 @@ class ConfMapPlot(QtWidgets.QGraphicsPixmapItem):
 
         return image
 
-def show_confmaps_from_h5(filename, input_format="channels_last", standalone=False):
-    video = HDF5Video(filename, "/box", input_format=input_format)
-    conf_data = HDF5Video(filename, "/confmaps", input_format=input_format, convert_range=False)
 
-    confmaps_ = [np.clip(conf_data.get_frame(i),0,1) for i in range(conf_data.frames)]
+def show_confmaps_from_h5(filename, input_format="channels_last", standalone=False):
+    """Demo function."""
+    from sleap.io.video import HDF5Video
+
+    video = HDF5Video(filename, "/box", input_format=input_format)
+    conf_data = HDF5Video(
+        filename, "/confmaps", input_format=input_format, convert_range=False
+    )
+
+    confmaps_ = [np.clip(conf_data.get_frame(i), 0, 1) for i in range(conf_data.frames)]
     confmaps = np.stack(confmaps_)
 
     return demo_confmaps(confmaps=confmaps, video=video, standalone=standalone)
 
+
 def demo_confmaps(confmaps, video, standalone=False, callback=None):
+    """Demo function."""
     from PySide2 import QtWidgets
     from sleap.gui.video import QtVideoPlayer
 
-    if standalone: app = QtWidgets.QApplication([])
+    if standalone:
+        app = QtWidgets.QApplication([])
 
     win = QtVideoPlayer(video=video)
     win.setWindowTitle("confmaps")
@@ -147,21 +168,21 @@ def demo_confmaps(confmaps, video, standalone=False, callback=None):
 
     def plot_confmaps(parent, item_idx):
         if parent.frame_idx < confmaps.shape[0]:
-            frame_conf_map = ConfMapsPlot(confmaps[parent.frame_idx,...])
+            frame_conf_map = ConfMapsPlot(confmaps[parent.frame_idx, ...])
             win.view.scene.addItem(frame_conf_map)
 
     win.changedPlot.connect(plot_confmaps)
-    if callback: win.changedPlot.connect(callback)
+    if callback:
+        win.changedPlot.connect(callback)
     win.plot()
 
-    if standalone: app.exec_()
+    if standalone:
+        app.exec_()
 
     return win
+
 
 if __name__ == "__main__":
 
     data_path = "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"
     show_confmaps_from_h5(data_path, input_format="channels_first", standalone=True)
-
-#     data_path = "/Users/tabris/Documents/predictions.h5"
-#     show_confmaps_from_h5(data_path, input_format="channels_last", standalone=True)

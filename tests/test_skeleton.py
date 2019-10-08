@@ -64,7 +64,8 @@ def test_getitem_node(skeleton):
         skeleton["non_exist_node"]
 
     # Now try to get the head node
-    assert(skeleton["head"] is not None)
+    assert skeleton["head"] is not None
+
 
 def test_contains_node(skeleton):
     """
@@ -86,17 +87,16 @@ def test_node_rename(skeleton):
         skeleton["head"]
 
     # Make sure new head has the correct name
-    assert(skeleton["new_head_name"] is not None)
+    assert skeleton["new_head_name"] is not None
 
 
 def test_eq():
     s1 = Skeleton("s1")
-    s1.add_nodes(['1','2','3','4','5','6'])
-    s1.add_edge('1', '2')
-    s1.add_edge('3', '4')
-    s1.add_edge('5', '6')
-    s1.add_symmetry('3', '6')
-
+    s1.add_nodes(["1", "2", "3", "4", "5", "6"])
+    s1.add_edge("1", "2")
+    s1.add_edge("3", "4")
+    s1.add_edge("5", "6")
+    s1.add_symmetry("3", "6")
 
     # Make a copy check that they are equal
     s2 = copy.deepcopy(s1)
@@ -104,22 +104,22 @@ def test_eq():
 
     # Add an edge, check that they are not equal
     s2 = copy.deepcopy(s1)
-    s2.add_edge('5', '1')
+    s2.add_edge("5", "1")
     assert not s1.matches(s2)
 
     # Add a symmetry edge, not equal
     s2 = copy.deepcopy(s1)
-    s2.add_symmetry('5', '1')
+    s2.add_symmetry("5", "1")
     assert not s1.matches(s2)
 
     # Delete a node
     s2 = copy.deepcopy(s1)
-    s2.delete_node('5')
+    s2.delete_node("5")
     assert not s1.matches(s2)
 
     # Delete and edge, not equal
     s2 = copy.deepcopy(s1)
-    s2.delete_edge('1', '2')
+    s2.delete_edge("1", "2")
     assert not s1.matches(s2)
 
     # FIXME: Probably shouldn't test it this way.
@@ -133,14 +133,15 @@ def test_eq():
     # s2._graph.nodes['1']['test'] = 5
     # assert s1 != s2
 
+
 def test_symmetry():
     s1 = Skeleton("s1")
-    s1.add_nodes(['1','2','3','4','5','6'])
-    s1.add_edge('1', '2')
-    s1.add_edge('3', '4')
-    s1.add_edge('5', '6')
-    s1.add_symmetry('1', '5')
-    s1.add_symmetry('3', '6')
+    s1.add_nodes(["1", "2", "3", "4", "5", "6"])
+    s1.add_edge("1", "2")
+    s1.add_edge("3", "4")
+    s1.add_edge("5", "6")
+    s1.add_symmetry("1", "5")
+    s1.add_symmetry("3", "6")
 
     assert s1.get_symmetry("1").name == "5"
     assert s1.get_symmetry("5").name == "1"
@@ -149,15 +150,22 @@ def test_symmetry():
 
     # Cannot add more than one symmetry to a node
     with pytest.raises(ValueError):
-        s1.add_symmetry('1', '6')
+        s1.add_symmetry("1", "6")
     with pytest.raises(ValueError):
-        s1.add_symmetry('6', '1')
+        s1.add_symmetry("6", "1")
+
+    s1.delete_symmetry("1", "5")
+    assert s1.get_symmetry("1") is None
+
+    with pytest.raises(ValueError):
+        s1.delete_symmetry("1", "5")
+
 
 def test_json(skeleton, tmpdir):
     """
     Test saving and loading a Skeleton object in JSON.
     """
-    JSON_TEST_FILENAME = os.path.join(tmpdir, 'skeleton.json')
+    JSON_TEST_FILENAME = os.path.join(tmpdir, "skeleton.json")
 
     # Save it to a JSON filename
     skeleton.save_json(JSON_TEST_FILENAME)
@@ -166,11 +174,11 @@ def test_json(skeleton, tmpdir):
     skeleton_copy = Skeleton.load_json(JSON_TEST_FILENAME)
 
     # Make sure we get back the same skeleton we saved.
-    assert(skeleton.matches(skeleton_copy))
+    assert skeleton.matches(skeleton_copy)
 
 
 def test_hdf5(skeleton, stickman, tmpdir):
-    filename = os.path.join(tmpdir, 'skeleton.h5')
+    filename = os.path.join(tmpdir, "skeleton.h5")
 
     if os.path.isfile(filename):
         os.remove(filename)
@@ -202,7 +210,7 @@ def test_hdf5(skeleton, stickman, tmpdir):
 
     # Make sure we can't load a non-existent skeleton
     with pytest.raises(KeyError):
-        Skeleton.load_hdf5(filename, 'BadName')
+        Skeleton.load_hdf5(filename, "BadName")
 
     # Make sure we can't save skeletons with the same name
     with pytest.raises(ValueError):
@@ -233,73 +241,83 @@ def test_name_change(skeleton):
     with pytest.raises(NotImplementedError):
         skeleton.name = "Test"
 
+
 def test_graph_property(skeleton):
     assert [node for node in skeleton.graph.nodes()] == skeleton.nodes
 
+
 def test_load_mat_format():
-    skeleton = Skeleton.load_mat('tests/data/skeleton/leap_mat_format/skeleton_legs.mat')
+    skeleton = Skeleton.load_mat(
+        "tests/data/skeleton/leap_mat_format/skeleton_legs.mat"
+    )
 
     # Check some stuff about the skeleton we loaded
-    assert(len(skeleton.nodes) == 24)
-    assert(len(skeleton.edges) == 23)
+    assert len(skeleton.nodes) == 24
+    assert len(skeleton.edges) == 23
 
     # The node and edge list that should be present in skeleton_legs.mat
     node_names = [
-        'head',
-        'neck',
-        'thorax',
-        'abdomen',
-        'wingL',
-        'wingR',
-        'forelegL1',
-        'forelegL2',
-        'forelegL3',
-        'forelegR1',
-        'forelegR2',
-        'forelegR3',
-        'midlegL1' ,
-        'midlegL2' ,
-        'midlegL3' ,
-        'midlegR1' ,
-        'midlegR2' ,
-        'midlegR3' ,
-        'hindlegL1',
-        'hindlegL2',
-        'hindlegL3',
-        'hindlegR1',
-        'hindlegR2',
-        'hindlegR3']
+        "head",
+        "neck",
+        "thorax",
+        "abdomen",
+        "wingL",
+        "wingR",
+        "forelegL1",
+        "forelegL2",
+        "forelegL3",
+        "forelegR1",
+        "forelegR2",
+        "forelegR3",
+        "midlegL1",
+        "midlegL2",
+        "midlegL3",
+        "midlegR1",
+        "midlegR2",
+        "midlegR3",
+        "hindlegL1",
+        "hindlegL2",
+        "hindlegL3",
+        "hindlegR1",
+        "hindlegR2",
+        "hindlegR3",
+    ]
 
     edges = [
-       [ 2,  1],
-       [ 1,  0],
-       [ 2,  3],
-       [ 2,  4],
-       [ 2,  5],
-       [ 2,  6],
-       [ 6,  7],
-       [ 7,  8],
-       [ 2,  9],
-       [ 9, 10],
-       [10, 11],
-       [ 2, 12],
-       [12, 13],
-       [13, 14],
-       [ 2, 15],
-       [15, 16],
-       [16, 17],
-       [ 2, 18],
-       [18, 19],
-       [19, 20],
-       [ 2, 21],
-       [21, 22],
-       [22, 23]]
+        [2, 1],
+        [1, 0],
+        [2, 3],
+        [2, 4],
+        [2, 5],
+        [2, 6],
+        [6, 7],
+        [7, 8],
+        [2, 9],
+        [9, 10],
+        [10, 11],
+        [2, 12],
+        [12, 13],
+        [13, 14],
+        [2, 15],
+        [15, 16],
+        [16, 17],
+        [2, 18],
+        [18, 19],
+        [19, 20],
+        [2, 21],
+        [21, 22],
+        [22, 23],
+    ]
 
     assert [n.name for n in skeleton.nodes] == node_names
 
     # Check the edges and their order
     for i, edge in enumerate(skeleton.edge_names):
-        assert tuple(edges[i]) == (skeleton.node_to_index(edge[0]), skeleton.node_to_index(edge[1]))
+        assert tuple(edges[i]) == (
+            skeleton.node_to_index(edge[0]),
+            skeleton.node_to_index(edge[1]),
+        )
+
 
 def test_edge_order():
     """Test is edge list order is maintained upon insertion"""

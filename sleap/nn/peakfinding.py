@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 
+
 def impeaksnms_cv(I, min_thresh=0.3, sigma=3, return_val=True):
     """ Find peaks via non-maximum suppresion using OpenCV. """
 
@@ -10,12 +11,10 @@ def impeaksnms_cv(I, min_thresh=0.3, sigma=3, return_val=True):
 
     # Blur
     if sigma is not None:
-        I = cv2.GaussianBlur(I, (9,9), sigma)
+        I = cv2.GaussianBlur(I, (9, 9), sigma)
 
     # Maximum filter
-    kernel = np.array([[1,1,1],
-                       [1,0,1],
-                       [1,1,1]]).astype("uint8")
+    kernel = np.array([[1, 1, 1], [1, 0, 1], [1, 1, 1]]).astype("uint8")
     m = cv2.dilate(I, kernel)
 
     # Convert to points
@@ -24,7 +23,7 @@ def impeaksnms_cv(I, min_thresh=0.3, sigma=3, return_val=True):
 
     # Return
     if return_val:
-        vals = np.array([I[pt[1],pt[0]] for pt in pts])
+        vals = np.array([I[pt[1], pt[0]] for pt in pts])
         return pts.astype("float32"), vals
     else:
         return pts.astype("float32")
@@ -38,13 +37,16 @@ def find_all_peaks(confmaps, min_thresh=0.3, sigma=3):
         peaks_i = []
         peak_vals_i = []
         for i in range(confmap.shape[-1]):
-            peak, val = impeaksnms_cv(confmap[...,i], min_thresh=min_thresh, sigma=sigma, return_val=True)
+            peak, val = impeaksnms_cv(
+                confmap[..., i], min_thresh=min_thresh, sigma=sigma, return_val=True
+            )
             peaks_i.append(peak)
             peak_vals_i.append(val)
         peaks.append(peaks_i)
         peak_vals.append(peak_vals_i)
 
     return peaks, peak_vals
+
 
 def find_all_single_peaks(confmaps, min_thresh=0.3):
     """
@@ -57,12 +59,16 @@ def find_all_single_peaks(confmaps, min_thresh=0.3):
     all_point_arrays = []
 
     for confmap in confmaps:
-        peaks_vals = [image_single_peak(confmap[...,i], min_thresh) for i in range(confmap.shape[-1])]
+        peaks_vals = [
+            image_single_peak(confmap[..., i], min_thresh)
+            for i in range(confmap.shape[-1])
+        ]
         peaks_vals = [(*point, val) for point, val in peaks_vals]
         points_array = np.stack(peaks_vals, axis=0)
         all_point_arrays.append(points_array)
 
     return all_point_arrays
+
 
 def image_single_peak(I, min_thresh):
     peak = np.unravel_index(I.argmax(), I.shape)

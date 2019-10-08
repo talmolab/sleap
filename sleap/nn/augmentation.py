@@ -57,7 +57,9 @@ class Augmenter(keras.utils.Sequence):
 
         # Setup batching
         all_idx = np.arange(self.num_samples)
-        self.batches = np.array_split(all_idx, np.ceil(self.num_samples / self.batch_size))
+        self.batches = np.array_split(
+            all_idx, np.ceil(self.num_samples / self.batch_size)
+        )
 
         # Initial shuffling
         if self.shuffle_initially:
@@ -67,10 +69,16 @@ class Augmenter(keras.utils.Sequence):
         # TODO: translation?
         self.aug_stack = []
         if self.rotation is not None:
-            self.rotation = self.rotation if isinstance(self.rotation, tuple) else (-self.rotation, self.rotation)
+            self.rotation = (
+                self.rotation
+                if isinstance(self.rotation, tuple)
+                else (-self.rotation, self.rotation)
+            )
             if self.scale is not None and self.scale[0] != self.scale[1]:
                 self.scale = (min(self.scale), max(self.scale))
-                self.aug_stack.append(imgaug.augmenters.Affine(rotate=self.rotation, scale=self.scale))
+                self.aug_stack.append(
+                    imgaug.augmenters.Affine(rotate=self.rotation, scale=self.scale)
+                )
             else:
                 self.aug_stack.append(imgaug.augmenters.Affine(rotate=self.rotation))
 
@@ -110,11 +118,13 @@ class Augmenter(keras.utils.Sequence):
             # Re-batch after shuffling
             all_idx = np.arange(self.num_samples)
             np.random.shuffle(all_idx)
-            self.batches = np.array_split(all_idx, np.ceil(self.num_samples / self.batch_size))
-        
+            self.batches = np.array_split(
+                all_idx, np.ceil(self.num_samples / self.batch_size)
+            )
+
     def __len__(self):
         return len(self.batches)
-    
+
     def __getitem__(self, batch_idx):
         aug_det = self.aug.to_deterministic()
         idx = self.batches[batch_idx]
@@ -137,18 +147,18 @@ class Augmenter(keras.utils.Sequence):
             # Combine each list of point arrays (per frame) to single KeypointsOnImage
             # points: frames -> instances -> point_array
             frames_in_batch = [self.points[i] for i in idx]
-            points_per_instance_per_frame = [[pa.shape[0] for pa in frame] for frame in frames_in_batch]
+            points_per_instance_per_frame = [
+                [pa.shape[0] for pa in frame] for frame in frames_in_batch
+            ]
 
             koi_in_frame = []
             for i, frame in enumerate(frames_in_batch):
                 if len(frame):
                     koi = imgaug.augmentables.kps.KeypointsOnImage.from_xy_array(
-                                np.concatenate(frame),
-                                shape=X[i].shape)
+                        np.concatenate(frame), shape=X[i].shape
+                    )
                 else:
-                    koi = imgaug.augmentables.kps.KeypointsOnImage(
-                                [],
-                                shape=X[i].shape)
+                    koi = imgaug.augmentables.kps.KeypointsOnImage([], shape=X[i].shape)
                 koi_in_frame.append(koi)
 
             # Augment KeypointsOnImage
@@ -165,7 +175,7 @@ class Augmenter(keras.utils.Sequence):
                 frame_point_arrays = []
                 offset = 0
                 for point_count in points_per_instance_per_frame[i]:
-                    inst_points = frame[offset:offset+point_count]
+                    inst_points = frame[offset : offset + point_count]
                     frame_point_arrays.append(inst_points)
                     offset += point_count
                 split_points.append(frame_point_arrays)
@@ -192,18 +202,22 @@ class Augmenter(keras.utils.Sequence):
         # parameters.
         aug_cattr.register_unstructure_hook(
             Augmenter,
-            lambda x:
-            attr.asdict(x,
-                        filter=attr.filters.exclude(
-                            attr.fields(Augmenter).X,
-                            attr.fields(Augmenter).Y,
-                            attr.fields(Augmenter).Points)))
+            lambda x: attr.asdict(
+                x,
+                filter=attr.filters.exclude(
+                    attr.fields(Augmenter).X,
+                    attr.fields(Augmenter).Y,
+                    attr.fields(Augmenter).Points,
+                ),
+            ),
+        )
 
         # We the user needs to unstructure, what images, outputs, and points should
         # they use. We didn't serialize these, just the parameters.
         if X is not None:
-            aug_cattr.register_structure_hook(Augmenter,
-                                              lambda x: Augmenter(X=X,Y=Y,Points=Points, **x))
+            aug_cattr.register_structure_hook(
+                Augmenter, lambda x: Augmenter(X=X, Y=Y, Points=Points, **x)
+            )
 
         return aug_cattr
 
@@ -211,27 +225,24 @@ class Augmenter(keras.utils.Sequence):
 def demo_augmentation():
     from sleap.io.dataset import Labels
     from sleap.nn.datagen import generate_training_data
-    from sleap.nn.datagen import generate_confmaps_from_points, generate_pafs_from_points
+    from sleap.nn.datagen import (
+        generate_confmaps_from_points,
+        generate_pafs_from_points,
+    )
 
-    data_path = "tests/data/json_format_v2/centered_pair_predictions.json"
-    # data_path = "tests/data/json_format_v2/minimal_instance.json"
-#     data_path = "tests/data/json_format_v1/test.json"
-
+    data_path = "tests/data/json_format_v1/centered_pair.json"
     labels = Labels.load_json(data_path)
-
-#     labels.labeled_frames = labels.labeled_frames[123:323:10]
 
     # Generate raw training data
     skeleton = labels.skeletons[0]
-    imgs, points = generate_training_data(labels, params = dict(
-                                    scale = 1,
-                                    instance_crop = True,
-                                    min_crop_size = 0,
-                                    negative_samples = 0))
+    imgs, points = generate_training_data(
+        labels,
+        params=dict(scale=1, instance_crop=True, min_crop_size=0, negative_samples=0),
+    )
     shape = (imgs.shape[1], imgs.shape[2])
 
     def datagen_from_points(points):
-#         return generate_pafs_from_points(points, skeleton, shape)
+        #         return generate_pafs_from_points(points, skeleton, shape)
         return generate_confmaps_from_points(points, skeleton, shape)
 
     # Augment
@@ -244,11 +255,12 @@ def demo_augmentation():
     from PySide2.QtWidgets import QApplication
 
     # Visualize augmented training data
-    vid = Video.from_numpy(imgs*255)
+    vid = Video.from_numpy(imgs * 255)
     app = QApplication([])
     demo_confmaps(aug_out, vid)
-#     demo_pafs(aug_out, vid)
+    #     demo_pafs(aug_out, vid)
     app.exec_()
+
 
 def demo_bad_augmentation():
     from sleap.io.dataset import Labels
@@ -267,7 +279,7 @@ def demo_bad_augmentation():
     confmaps = generate_confidence_maps(labels)
 
     # Augment
-    aug = Augmenter(X=imgs, Y=confmaps, scale=(.5, 2))
+    aug = Augmenter(X=imgs, Y=confmaps, scale=(0.5, 2))
     imgs, confmaps = aug[0]
 
     from sleap.io.video import Video
@@ -276,10 +288,11 @@ def demo_bad_augmentation():
     from PySide2.QtWidgets import QApplication
 
     # Visualize augmented training data
-    vid = Video.from_numpy(imgs*255)
+    vid = Video.from_numpy(imgs * 255)
     app = QApplication([])
     demo_confmaps(confmaps, vid)
     app.exec_()
+
 
 if __name__ == "__main__":
     demo_augmentation()

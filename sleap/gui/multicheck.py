@@ -1,31 +1,43 @@
 """
-Module for Qt Widget to show multiple checkboxes for selecting from a sequence of numbers.
+Module for Qt Widget to show multiple checkboxes for selecting.
 
 Example:
     >>> mc = MultiCheckWidget(count=5, selected=[0,1],title="My Items")
-    >>> me.selectionChanged.connect(window.plot)
+    >>> mc.selectionChanged.connect(window.plot)
     >>> window.layout.addWidget(mc)
 """
+
+from typing import List, Optional
+
 from PySide2.QtCore import QRectF, Signal
 from PySide2.QtWidgets import QGridLayout, QGroupBox, QButtonGroup, QCheckBox
 
+
 class MultiCheckWidget(QGroupBox):
-    """Qt Widget to show multiple checkboxes for selecting from a sequence of numbers.
+    """Qt Widget to show multiple checkboxes for a sequence of numbers.
 
     Args:
-        count (int): The number of checkboxes to show.
-        title (str, optional): Display title for group of checkboxes.
-        selected (list, optional): List of checkbox numbers to initially have checked.
-        default (bool, optional): Default to checked/unchecked (ignored if selected arg given).
+        count: The number of checkboxes to show.
+        title: Display title for group of checkboxes.
+        selected: List of checkbox numbers to initially check.
+        default: Whether to default boxes as checked.
     """
 
-    def __init__(self, *args, count, title="", selected=None, default=False, **kwargs):
+    def __init__(
+        self,
+        *args,
+        count: int,
+        title: Optional[str] = "",
+        selected: Optional[List] = None,
+        default: Optional[bool] = False,
+        **kwargs
+    ):
         super(MultiCheckWidget, self).__init__(*args, **kwargs)
 
         # QButtonGroup is the logical container
         # it allows us to get list of checked boxes more easily
         self.check_group = QButtonGroup()
-        self.check_group.setExclusive(False) # more than one can be checked
+        self.check_group.setExclusive(False)  # more than one can be checked
 
         if title != "":
             self.setTitle(title)
@@ -39,15 +51,15 @@ class MultiCheckWidget(QGroupBox):
         check_layout = QGridLayout()
         self.setLayout(check_layout)
         for i in range(count):
-            check = QCheckBox("%d"%(i))
+            check = QCheckBox("%d" % (i))
             # call signal/slot on self when one of the checkboxes is changed
             check.stateChanged.connect(lambda e: self.selectionChanged.emit())
             self.check_group.addButton(check, i)
-            check_layout.addWidget(check, i//8, i%8)
+            check_layout.addWidget(check, i // 8, i % 8)
         self.setSelected(selected)
 
     """
-    selectionChanged signal is sent whenever one of the checkboxes gets a stateChanged signal.
+    selectionChanged signal sent when a checkbox gets a stateChanged signal
     """
     selectionChanged = Signal()
 
@@ -67,7 +79,7 @@ class MultiCheckWidget(QGroupBox):
         """Method to set some checkboxes as checked.
 
         Args:
-            selected (list): List of checkboxes to check.
+            selected: List of checkboxes to check.
 
         Returns:
             None

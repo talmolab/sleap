@@ -50,5 +50,6 @@ requirements:
     - psutil
     - pyzmq
     - pyyaml
+    - python-rapidjson
     - pip
 

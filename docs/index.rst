@@ -3,7 +3,7 @@
 
 .. _sleap:
 .. toctree::
-    :caption: sLEAP Package
+    :caption: SLEAP Package
     :maxdepth: 3
 
     tutorial
@@ -14,6 +14,7 @@
     training
     inference
     gui
+    misc
 
 .. _Indices_and_Tables:
 

@@ -6,37 +6,43 @@ All interactions should go through `QtVideoPlayer`.
 Example usage:
     >>> my_video = Video(...)
     >>> my_instance = Instance(...)
-    >>> color = (r, g, b)
 
-    >>> vp = QtVideoPlayer(video = my_video)
-    >>> vp.addInstance(instance = my_instance, color)
+    >>> vp = QtVideoPlayer(video=my_video)
+    >>> vp.addInstance(instance=my_instance, color=(r, g, b))
+
 """
 
-from PySide2 import QtWidgets
+from PySide2 import QtWidgets, QtCore
 
-from PySide2.QtWidgets import QApplication, QVBoxLayout, QWidget
-from PySide2.QtWidgets import QLabel, QPushButton, QSlider
-from PySide2.QtWidgets import QAction
-
-from PySide2.QtWidgets import QGraphicsView, QGraphicsScene
+from PySide2.QtWidgets import (
+    QApplication,
+    QVBoxLayout,
+    QWidget,
+    QGraphicsView,
+    QGraphicsScene,
+)
 from PySide2.QtGui import QImage, QPixmap, QPainter, QPainterPath, QTransform
 from PySide2.QtGui import QPen, QBrush, QColor, QFont
 from PySide2.QtGui import QKeyEvent
-from PySide2.QtCore import Qt, Signal, Slot
-from PySide2.QtCore import QRectF, QLineF, QPointF, QMarginsF, QSizeF
+from PySide2.QtCore import Qt, QRectF, QPointF, QMarginsF
 
 import math
-import numpy as np
 
-from typing import Callable, Union
+from typing import Callable, List, Optional, Union
 
 from PySide2.QtWidgets import QGraphicsItem, QGraphicsObject
-# The PySide2.QtWidgets.QGraphicsObject class provides a base class for all graphics items that require signals, slots and properties.
-from PySide2.QtWidgets import QGraphicsEllipseItem, QGraphicsLineItem, QGraphicsTextItem, QGraphicsRectItem
 
-from sleap.skeleton import Skeleton
+# The PySide2.QtWidgets.QGraphicsObject class provides a base class for all graphics items that require signals, slots and properties.
+from PySide2.QtWidgets import (
+    QGraphicsEllipseItem,
+    QGraphicsLineItem,
+    QGraphicsTextItem,
+    QGraphicsRectItem,
+)
+
+from sleap.skeleton import Node
 from sleap.instance import Instance, Point
-from sleap.io.video import Video, HDF5Video
+from sleap.io.video import Video
 from sleap.gui.slider import VideoSlider
 
 import qimage2ndarray
@@ -46,26 +52,29 @@ class QtVideoPlayer(QWidget):
     """
     Main QWidget for displaying video with skeleton instances.
 
-    Args:
-        video (optional): the :class:`Video` to display
-
     Signals:
-        changedPlot: Emitted whenever the plot is redrawn
-        changedData: Emitted whenever data is changed by user
+        * changedPlot: Emitted whenever the plot is redrawn
+        * changedData: Emitted whenever data is changed by user
+
+    Attributes:
+        video: The :class:`Video` to display
+        color_manager: A :class:`TrackColorManager` object which determines
+            which color to show the instances.
+
     """
 
-    changedPlot = Signal(QWidget, int, Instance)
-    changedData = Signal(Instance)
+    changedPlot = QtCore.Signal(QWidget, int, Instance)
+    changedData = QtCore.Signal(Instance)
 
     def __init__(self, video: Video = None, color_manager=None, *args, **kwargs):
         super(QtVideoPlayer, self).__init__(*args, **kwargs)
 
         self._shift_key_down = False
         self.frame_idx = -1
-        self._color_manager = color_manager
+        self.color_manager = color_manager
         self.view = GraphicsView()
 
-        self.seekbar = VideoSlider(color_manager=self._color_manager)
+        self.seekbar = VideoSlider(color_manager=self.color_manager)
         self.seekbar.valueChanged.connect(lambda evt: self.plot(self.seekbar.value()))
         self.seekbar.keyPress.connect(self.keyPressEvent)
         self.seekbar.keyRelease.connect(self.keyReleaseEvent)
@@ -74,7 +83,7 @@ class QtVideoPlayer(QWidget):
         self.splitter = QtWidgets.QSplitter(Qt.Vertical)
         self.splitter.addWidget(self.view)
         self.splitter.addWidget(self.seekbar)
-        self.seekbar.updatedTracks.connect(lambda: self.splitter.refresh())
+        self.seekbar.heightUpdated.connect(lambda: self.splitter.refresh())
 
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.splitter)
@@ -104,11 +113,14 @@ class QtVideoPlayer(QWidget):
         # self.seekbar.setTickInterval(1)
         self.seekbar.setValue(self.frame_idx)
         self.seekbar.setMinimum(0)
-        self.seekbar.setMaximum(self.video.frames - 1)
+        self.seekbar.setMaximum(self.video.last_frame_idx)
         self.seekbar.setEnabled(True)
 
         if plot:
-            self.plot(initial_frame)
+            try:
+                self.plot(initial_frame)
+            except:
+                pass
 
     def reset(self):
         """ Reset viewer by removing all video data.
@@ -121,15 +133,23 @@ class QtVideoPlayer(QWidget):
 
     @property
     def instances(self):
+        """Returns list of all `QtInstance` objects in view."""
         return self.view.instances
 
     @property
     def selectable_instances(self):
+        """Returns list of selectable `QtInstance` objects in view."""
         return self.view.selectable_instances
 
     @property
     def predicted_instances(self):
+        """Returns list of predicted `QtInstance` objects in view."""
         return self.view.predicted_instances
+
+    @property
+    def scene(self):
+        """Returns `QGraphicsScene` for viewer."""
+        return self.view.scene
 
     def addInstance(self, instance, **kwargs):
         """Add a skeleton instance to the video.
@@ -142,23 +162,23 @@ class QtVideoPlayer(QWidget):
         # Check if instance is an Instance (or subclass of Instance)
         if issubclass(type(instance), Instance):
             instance = QtInstance(instance=instance, **kwargs)
-        if type(instance) != QtInstance: return
+        if type(instance) != QtInstance:
+            return
 
         self.view.scene.addItem(instance)
 
         # connect signal from instance
         instance.changedData.connect(self.changedData)
 
-
         # connect signal so we can adjust QtNodeLabel positions after zoom
         self.view.updatedViewer.connect(instance.updatePoints)
 
-    def plot(self, idx=None):
+    def plot(self, idx: Optional[int] = None):
         """
         Do the actual plotting of the video frame.
 
         Args:
-            idx (optional): Go to frame idx. If None, stay on current frame.
+            idx: Go to frame idx. If None, stay on current frame.
         """
 
         if self.video is None:
@@ -237,20 +257,33 @@ class QtVideoPlayer(QWidget):
         if not zoom_rect.size().isEmpty():
             self.view.zoomToRect(zoom_rect)
 
-    def onSequenceSelect(self, seq_len: int, on_success: Callable,
-                         on_each = None, on_failure = None):
+    def onSequenceSelect(
+        self,
+        seq_len: int,
+        on_success: Callable,
+        on_each: Optional[Callable] = None,
+        on_failure: Optional[Callable] = None,
+    ):
         """
-        Collect a sequence of instances (through user selection) and call `on_success`.
-        If the user cancels (by unselecting without new selection), call `on_failure`.
+        Collect a sequence of instances (through user selection).
 
-        Args:
-            seq_len: number of instances we expect user to select
-            on_success: callback after use has selected desired number of instances
-            on_failure (optional): callback if user cancels selection
+        When the sequence is complete, the `on_success` callback is called.
+        After each selection in sequence, the `on_each` callback is called
+        (if given). If the user cancels (by unselecting without new
+        selection), the `on_failure` callback is called (if given).
 
         Note:
             If successful, we call
             >>> on_success(sequence_of_selected_instance_indexes)
+
+        Args:
+            seq_len: Number of instances we want to collect in sequence.
+            on_success: Callback for when user has selected desired number of
+                instances.
+            on_each: Callback after user selects each instance.
+            on_failure: Callback if user cancels process before selecting
+                enough instances.
+
         """
 
         indexes = []
@@ -258,11 +291,13 @@ class QtVideoPlayer(QWidget):
             indexes.append(self.view.getSelection())
 
         # Define function that will be called when user selects another instance
-        def handle_selection(seq_len=seq_len,
-                             indexes=indexes,
-                             on_success=on_success,
-                             on_each=on_each,
-                             on_failure=on_failure):
+        def handle_selection(
+            seq_len=seq_len,
+            indexes=indexes,
+            on_success=on_success,
+            on_each=on_each,
+            on_failure=on_failure,
+        ):
             # Get the index of the currently selected instance
             new_idx = self.view.getSelection()
             # If something is selected, add it to the list
@@ -292,32 +327,67 @@ class QtVideoPlayer(QWidget):
             on_each(indexes)
 
     @staticmethod
-    def _signal_once(signal, callback):
+    def _signal_once(signal: QtCore.Signal, callback: Callable):
+        """
+        Connects callback for next occurrence of signal.
+
+        Args:
+            signal: The signal on which we want callback to be called.
+            callback: The function that should be called just once, the next
+                time the signal is emitted.
+
+        Returns:
+            None.
+        """
+
         def call_once(*args):
             signal.disconnect(call_once)
             callback(*args)
+
         signal.connect(call_once)
 
     def onPointSelection(self, callback: Callable):
+        """
+        Starts mode for user to click point, callback called when finished.
+
+        Args:
+            callback: The function called after user clicks point, should
+                take x and y as arguments.
+
+        Returns:
+            None.
+        """
         self.view.click_mode = "point"
         self.view.setCursor(Qt.CrossCursor)
         self._signal_once(self.view.pointSelected, callback)
 
     def onAreaSelection(self, callback: Callable):
+        """
+        Starts mode for user to select area, callback called when finished.
+
+        Args:
+            callback: The function called after user clicks point, should
+                take x0, y0, x1, y1 as arguments.
+
+        Returns:
+            None.
+        """
         self.view.click_mode = "area"
         self.view.setCursor(Qt.CrossCursor)
         self._signal_once(self.view.areaSelected, callback)
 
     def keyReleaseEvent(self, event: QKeyEvent):
+        """
+        Custom event handler, tracks when user releases modifier (shift) key.
+        """
         if event.key() == Qt.Key.Key_Shift:
             self._shift_key_down = False
         event.ignore()
 
     def keyPressEvent(self, event: QKeyEvent):
-        """ Custom event handler.
-        Move between frames, toggle display of edges/labels, and select instances.
         """
-        ignore = False
+        Custom event handler, allows navigation and selection within view.
+        """
         frame_t0 = self.frame_idx
 
         if event.key() == Qt.Key.Key_Shift:
@@ -343,13 +413,11 @@ class QtVideoPlayer(QWidget):
             self.view.nextSelection()
         elif event.key() < 128 and chr(event.key()).isnumeric():
             # decrement by 1 since instances are 0-indexed
-            self.view.selectInstance(int(chr(event.key()))-1)
+            self.view.selectInstance(int(chr(event.key())) - 1)
         else:
-            event.ignore() # Kicks the event up to parent
-            # print(event.key())
+            event.ignore()  # Kicks the event up to parent
 
         # If user is holding down shift and action resulted in moving to another frame
-        # event.modifiers() == Qt.ShiftModifier and
         if self._shift_key_down and frame_t0 != self.frame_idx:
             # If there's no select, start seekbar selection at frame before action
             start, end = self.seekbar.getSelection()
@@ -358,37 +426,44 @@ class QtVideoPlayer(QWidget):
             # Set endpoint to frame after action
             self.seekbar.endSelection(self.frame_idx, update=True)
 
+
 class GraphicsView(QGraphicsView):
     """
-    QGraphicsView used by QtVideoPlayer.
+    Custom `QGraphicsView` used by `QtVideoPlayer`.
 
-    This contains elements for display of video and event handlers for zoom/selection.
+    This contains elements for display of video and event handlers for zoom
+    and selection of instances in view.
 
     Signals:
-        updatedViewer: Emitted after update to view (e.g., zoom)
+        * updatedViewer: Emitted after update to view (e.g., zoom).
             Used internally so we know when to update points for each instance.
-        updatedSelection: Emitted after the user has selected/unselected an instance
-        instanceDoubleClicked: Emitted after an instance is double clicked
+        * updatedSelection: Emitted after the user has (un)selected an instance.
+        * instanceDoubleClicked: Emitted after an instance is double-clicked.
+            Passes the :class:`Instance` that was double-clicked.
+        * areaSelected: Emitted after user selects an area when in "area"
+            click mode. Passes x0, y0, x1, y1 for selected box coordinates.
+        * pointSelected: Emitted after user clicks a point (in "point" click
+            mode.) Passes x, y coordinates of point.
+        * leftMouseButtonPressed: Emitted by event handler.
+        * rightMouseButtonPressed: Emitted by event handler.
+        * leftMouseButtonReleased: Emitted by event handler.
+        * rightMouseButtonReleased: Emitted by event handler.
+        * leftMouseButtonDoubleClicked: Emitted by event handler.
+        * rightMouseButtonDoubleClicked: Emitted by event handler.
 
-        leftMouseButtonPressed
-        rightMouseButtonPressed
-        leftMouseButtonReleased
-        rightMouseButtonReleased
-        leftMouseButtonDoubleClicked
-        rightMouseButtonDoubleClicked
     """
 
-    updatedViewer = Signal()
-    updatedSelection = Signal()
-    instanceDoubleClicked = Signal(Instance)
-    leftMouseButtonPressed = Signal(float, float)
-    rightMouseButtonPressed = Signal(float, float)
-    leftMouseButtonReleased = Signal(float, float)
-    rightMouseButtonReleased = Signal(float, float)
-    leftMouseButtonDoubleClicked = Signal(float, float)
-    rightMouseButtonDoubleClicked = Signal(float, float)
-    areaSelected = Signal(float, float, float, float)
-    pointSelected = Signal(float, float)
+    updatedViewer = QtCore.Signal()
+    updatedSelection = QtCore.Signal()
+    instanceDoubleClicked = QtCore.Signal(Instance)
+    areaSelected = QtCore.Signal(float, float, float, float)
+    pointSelected = QtCore.Signal(float, float)
+    leftMouseButtonPressed = QtCore.Signal(float, float)
+    rightMouseButtonPressed = QtCore.Signal(float, float)
+    leftMouseButtonReleased = QtCore.Signal(float, float)
+    rightMouseButtonReleased = QtCore.Signal(float, float)
+    leftMouseButtonDoubleClicked = QtCore.Signal(float, float)
+    rightMouseButtonDoubleClicked = QtCore.Signal(float, float)
 
     def __init__(self, *args, **kwargs):
         """ https://github.com/marcel-goldschen-ohm/PyQtImageViewer/blob/master/QtImageViewer.py """
@@ -401,7 +476,6 @@ class GraphicsView(QGraphicsView):
         self._pixmapHandle = None
 
         self.setRenderHint(QPainter.Antialiasing)
-        # self.setCacheMode(QGraphicsView.CacheNone)
 
         self.aspectRatioMode = Qt.KeepAspectRatio
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -413,12 +487,9 @@ class GraphicsView(QGraphicsView):
 
         self.zoomFactor = 1
         anchor_mode = QGraphicsView.AnchorUnderMouse
-        # anchor_mode = QGraphicsView.AnchorViewCenter
         self.setTransformationAnchor(anchor_mode)
 
-        # self.scene.render()
-
-    def hasImage(self):
+    def hasImage(self) -> bool:
         """ Returns whether or not the scene contains an image pixmap.
         """
         return self._pixmapHandle is not None
@@ -429,18 +500,27 @@ class GraphicsView(QGraphicsView):
         self._pixmapHandle = None
         self.scene.clear()
 
-    def setImage(self, image):
-        """ Set the scene's current image pixmap to the input QImage or QPixmap.
-        Raises a RuntimeError if the input image has type other than QImage or QPixmap.
-        :type image: QImage | QPixmap
+    def setImage(self, image: Union[QImage, QPixmap]):
+        """
+        Set the scene's current image pixmap to the input QImage or QPixmap.
+
+        Args:
+            image: The QPixmap or QImage to display.
+
+        Raises:
+            RuntimeError: If the input image is not QImage or QPixmap
+
+        Returns:
+            None.
         """
         if type(image) is QPixmap:
             pixmap = image
         elif type(image) is QImage:
-            # pixmap = QPixmap.fromImage(image)
             pixmap = QPixmap(image)
         else:
-            raise RuntimeError("ImageViewer.setImage: Argument must be a QImage or QPixmap.")
+            raise RuntimeError(
+                "ImageViewer.setImage: Argument must be a QImage or QPixmap."
+            )
         if self.hasImage():
             self._pixmapHandle.setPixmap(pixmap)
         else:
@@ -449,8 +529,7 @@ class GraphicsView(QGraphicsView):
         self.updateViewer()
 
     def updateViewer(self):
-        """ Show current zoom (if showing entire image, apply current aspect ratio mode).
-        """
+        """ Apply current zoom. """
         if not self.hasImage():
             return
 
@@ -464,39 +543,41 @@ class GraphicsView(QGraphicsView):
         self.updatedViewer.emit()
 
     @property
-    def instances(self):
+    def instances(self) -> List["QtInstance"]:
         """
         Returns a list of instances.
 
-        Order in list should match the order in which instances were added to scene.
+        Order should match the order in which instances were added to scene.
         """
-        return [item for item in self.scene.items(Qt.SortOrder.AscendingOrder)
-                if type(item) == QtInstance and not item.predicted]
+        return list(filter(lambda x: not x.predicted, self.all_instances))
 
     @property
-    def selectable_instances(self):
-        return [item for item in self.scene.items(Qt.SortOrder.AscendingOrder)
-                if type(item) == QtInstance and item.selectable]
-
-    @property
-    def predicted_instances(self):
+    def predicted_instances(self) -> List["QtInstance"]:
         """
         Returns a list of predicted instances.
 
-        Order in list should match the order in which instances were added to scene.
+        Order should match the order in which instances were added to scene.
         """
-        return [item for item in self.scene.items(Qt.SortOrder.AscendingOrder)
-                if type(item) == QtInstance and item.predicted]
+        return list(filter(lambda x: not x.predicted, self.all_instances))
 
     @property
-    def all_instances(self):
+    def selectable_instances(self) -> List["QtInstance"]:
         """
-        Returns a list of instances and predicted instances.
+        Returns a list of instances which user can select.
 
-        Order in list should match the order in which instances were added to scene.
+        Order should match the order in which instances were added to scene.
         """
-        return [item for item in self.scene.items(Qt.SortOrder.AscendingOrder)
-                if type(item) == QtInstance]
+        return list(filter(lambda x: x.selectable, self.all_instances))
+
+    @property
+    def all_instances(self) -> List["QtInstance"]:
+        """
+        Returns a list of all `QtInstance` objects in scene.
+
+        Order should match the order in which instances were added to scene.
+        """
+        scene_items = self.scene.items(Qt.SortOrder.AscendingOrder)
+        return list(filter(lambda x: isinstance(x, QtInstance), scene_items))
 
     def clearSelection(self, signal=True):
         """ Clear instance skeleton selection.
@@ -504,19 +585,21 @@ class GraphicsView(QGraphicsView):
         for instance in self.all_instances:
             instance.selected = False
         # signal that the selection has changed (so we can update visual display)
-        if signal: self.updatedSelection.emit()
+        if signal:
+            self.updatedSelection.emit()
 
     def nextSelection(self):
         """ Select next instance (or first, if none currently selected).
         """
         instances = self.selectable_instances
-        if len(instances) == 0: return
-        select_inst = instances[0] # default to selecting first instance
+        if len(instances) == 0:
+            return
+        select_inst = instances[0]  # default to selecting first instance
         select_idx = 0
         for idx, instance in enumerate(instances):
             if instance.selected:
                 instance.selected = False
-                select_idx = (idx+1)%len(instances)
+                select_idx = (idx + 1) % len(instances)
                 select_inst = instances[select_idx]
                 break
         select_inst.selected = True
@@ -528,34 +611,39 @@ class GraphicsView(QGraphicsView):
         Select a particular instance in view.
 
         Args:
-            select: either `Instance` or index of instance in view
+            select: Either `Instance` or index of instance in view.
+            signal: Whether to emit  updatedSelection.
+
         Returns:
             None
         """
         self.clearSelection(signal=False)
 
         for idx, instance in enumerate(self.all_instances):
-            instance.selected = (select == idx or select == instance.instance)
+            instance.selected = select == idx or select == instance.instance
 
         # signal that the selection has changed (so we can update visual display)
-        if signal: self.updatedSelection.emit()
+        if signal:
+            self.updatedSelection.emit()
 
-    def getSelection(self):
+    def getSelection(self) -> int:
         """ Returns the index of the currently selected instance.
         If no instance selected, returns None.
         """
         instances = self.all_instances
-        if len(instances) == 0: return None
+        if len(instances) == 0:
+            return None
         for idx, instance in enumerate(instances):
             if instance.selected:
                 return idx
 
-    def getSelectionInstance(self):
+    def getSelectionInstance(self) -> Instance:
         """ Returns the currently selected instance.
         If no instance selected, returns None.
         """
         instances = self.all_instances
-        if len(instances) == 0: return None
+        if len(instances) == 0:
+            return None
         for idx, instance in enumerate(instances):
             if instance.selected:
                 return instance.instance
@@ -597,7 +685,7 @@ class GraphicsView(QGraphicsView):
         QGraphicsView.mouseReleaseEvent(self, event)
         scenePos = self.mapToScene(event.pos())
         # check if mouse moved during click
-        has_moved = (event.pos() != self._down_pos)
+        has_moved = event.pos() != self._down_pos
         if event.button() == Qt.LeftButton:
 
             if self.click_mode == "":
@@ -605,12 +693,17 @@ class GraphicsView(QGraphicsView):
                 if not has_moved:
                     # When just a tap, see if there's an item underneath to select
                     clicked = self.scene.items(scenePos, Qt.IntersectsItemBoundingRect)
-                    clicked_instances = [item for item in clicked
-                                         if type(item) == QtInstance and item.selectable]
+                    clicked_instances = [
+                        item
+                        for item in clicked
+                        if type(item) == QtInstance and item.selectable
+                    ]
                     # We only handle single instance selection so pick at most one from list
-                    clicked_instance = clicked_instances[0] if len(clicked_instances) else None
+                    clicked_instance = (
+                        clicked_instances[0] if len(clicked_instances) else None
+                    )
                     for idx, instance in enumerate(self.selectable_instances):
-                        instance.selected = (instance == clicked_instance)
+                        instance.selected = instance == clicked_instance
                         # If we want to allow selection of multiple instances, do this:
                         # instance.selected = (instance in clicked)
                     self.updatedSelection.emit()
@@ -620,10 +713,11 @@ class GraphicsView(QGraphicsView):
                 selection_rect = self.scene.selectionArea().boundingRect()
 
                 self.areaSelected.emit(
-                        selection_rect.left(),
-                        selection_rect.top(),
-                        selection_rect.right(),
-                        selection_rect.bottom())
+                    selection_rect.left(),
+                    selection_rect.top(),
+                    selection_rect.right(),
+                    selection_rect.bottom(),
+                )
             elif self.click_mode == "point":
                 selection_point = scenePos
                 self.pointSelected.emit(scenePos.x(), scenePos.y())
@@ -638,7 +732,7 @@ class GraphicsView(QGraphicsView):
         elif event.button() == Qt.RightButton:
             if self.canZoom:
                 zoom_rect = self.scene.selectionArea().boundingRect()
-                self.scene.setSelectionArea(QPainterPath()) # clear selection
+                self.scene.setSelectionArea(QPainterPath())  # clear selection
                 self.zoomToRect(zoom_rect)
             self.setDragMode(QGraphicsView.NoDrag)
             self.rightMouseButtonReleased.emit(scenePos.x(), scenePos.y())
@@ -653,13 +747,13 @@ class GraphicsView(QGraphicsView):
 
         Args:
             zoom_rect: The `QRectF` to which we want to zoom.
-            relative: Controls whether rect is relative to current zoom.
         """
 
-        if zoom_rect.isNull(): return
+        if zoom_rect.isNull():
+            return
 
-        scale_h = self.scene.height()/zoom_rect.height()
-        scale_w = self.scene.width()/zoom_rect.width()
+        scale_h = self.scene.height() / zoom_rect.height()
+        scale_w = self.scene.width() / zoom_rect.width()
         scale = min(scale_h, scale_w)
 
         self.zoomFactor = scale
@@ -671,7 +765,7 @@ class GraphicsView(QGraphicsView):
         """
         self.zoomFactor = 1
 
-    def instancesBoundingRect(self, margin=0):
+    def instancesBoundingRect(self, margin: float = 0) -> QRectF:
         """
         Returns a rect which contains all displayed skeleton instances.
 
@@ -688,7 +782,7 @@ class GraphicsView(QGraphicsView):
         return rect
 
     def mouseDoubleClickEvent(self, event):
-        """ Custom event handler. Show entire image.
+        """ Custom event handler, clears zoom.
         """
         scenePos = self.mapToScene(event.pos())
         if event.button() == Qt.LeftButton:
@@ -725,10 +819,12 @@ class GraphicsView(QGraphicsView):
                 pass
 
     def keyPressEvent(self, event):
-        event.ignore() # Kicks the event up to parent
+        """Custom event hander, disables default QGraphicsView behavior."""
+        event.ignore()  # Kicks the event up to parent
 
     def keyReleaseEvent(self, event):
-        event.ignore() # Kicks the event up to parent
+        """Custom event hander, disables default QGraphicsView behavior."""
+        event.ignore()  # Kicks the event up to parent
 
 
 class QtNodeLabel(QGraphicsTextItem):
@@ -738,9 +834,17 @@ class QtNodeLabel(QGraphicsTextItem):
     Args:
         node: The `QtNode` to which this label is attached.
         parent: The `QtInstance` which will contain this item.
+        predicted: Whether this is for a predicted point.
     """
 
-    def __init__(self, node, parent, predicted=False, *args, **kwargs):
+    def __init__(
+        self,
+        node: Node,
+        parent: QGraphicsObject,
+        predicted: bool = False,
+        *args,
+        **kwargs,
+    ):
         self.node = node
         self.text = node.name
         self.predicted = predicted
@@ -776,20 +880,24 @@ class QtNodeLabel(QGraphicsTextItem):
         if len(node.edges):
             edge_angles = sorted([edge.angle_to(node) for edge in node.edges])
 
-            edge_angles.append(edge_angles[0] + math.pi*2)
+            edge_angles.append(edge_angles[0] + math.pi * 2)
             # Calculate size and bisector for each arc between adjacent edges
-            edge_arcs = [(edge_angles[i+1]-edge_angles[i],
-                            edge_angles[i+1]/2+edge_angles[i]/2)
-                         for i in range(len(edge_angles)-1)]
+            edge_arcs = [
+                (
+                    edge_angles[i + 1] - edge_angles[i],
+                    edge_angles[i + 1] / 2 + edge_angles[i] / 2,
+                )
+                for i in range(len(edge_angles) - 1)
+            ]
             max_arc = sorted(edge_arcs)[-1]
-            shift_angle = max_arc[1] # this is the angle of the bisector
-            shift_angle %= 2*math.pi
+            shift_angle = max_arc[1]  # this is the angle of the bisector
+            shift_angle %= 2 * math.pi
 
         # Use the _shift_factor to control how the label is positioned
         # relative to the node.
         # Shift factor of -1 means we shift label up/left by its height/width.
-        self._shift_factor_x = (math.cos(shift_angle)*.6) -.5
-        self._shift_factor_y = (math.sin(shift_angle)*.6) -.5
+        self._shift_factor_x = (math.cos(shift_angle) * 0.6) - 0.5
+        self._shift_factor_y = (math.sin(shift_angle) * 0.6) - 0.5
 
         # Since item doesn't scale when view is transformed (i.e., zoom)
         # we need to calculate bounding size in view manually.
@@ -803,8 +911,10 @@ class QtNodeLabel(QGraphicsTextItem):
             height = height / view.viewportTransform().m11()
             width = width / view.viewportTransform().m22()
 
-        self.setPos(self._anchor_x + width*self._shift_factor_x,
-                    self._anchor_y + height*self._shift_factor_y)
+        self.setPos(
+            self._anchor_x + width * self._shift_factor_x,
+            self._anchor_y + height * self._shift_factor_y,
+        )
 
         # Now apply these changes to the visual display
         self.adjustStyle()
@@ -813,7 +923,9 @@ class QtNodeLabel(QGraphicsTextItem):
         """ Update visual display of the label and its node.
         """
 
-        complete_color = QColor(80, 194, 159) if self.node.point.complete else QColor(232, 45, 32)
+        complete_color = (
+            QColor(80, 194, 159) if self.node.point.complete else QColor(232, 45, 32)
+        )
 
         if self.predicted:
             self._base_font.setBold(False)
@@ -827,13 +939,13 @@ class QtNodeLabel(QGraphicsTextItem):
         elif self.node.point.complete:
             self._base_font.setBold(True)
             self.setFont(self._base_font)
-            self.setDefaultTextColor(complete_color) # greenish
+            self.setDefaultTextColor(complete_color)  # greenish
             # FIXME: Adjust style of node here as well?
             # self.node.setBrush(complete_color)
         else:
             self._base_font.setBold(False)
             self.setFont(self._base_font)
-            self.setDefaultTextColor(complete_color) # redish
+            self.setDefaultTextColor(complete_color)  # redish
 
     def boundingRect(self):
         """ Method required by Qt.
@@ -874,32 +986,57 @@ class QtNode(QGraphicsEllipseItem):
 
     Args:
         parent: The `QtInstance` which will contain this item.
-        point: The `Point` where this node is located.
+        node: The :class:`Node` corresponding to this visual node.
+        point: The :class:`Point` where this node is located.
             Note that this is a mutable object so we're able to directly access
             the very same `Point` object that's defined outside our class.
         radius: Radius of the visual node item.
         color: Color of the visual node item.
+        predicted: Whether this point is predicted.
+        color_predicted: Whether to color predicted points.
+        show_non_visible: Whether to show points where `visible` is False.
         callbacks: List of functions to call after we update to the `Point`.
     """
-    def __init__(self, parent, point:Point, radius:float, color:list, node_name:str = None,
-                    predicted=False, color_predicted=False, show_non_visible=True,
-                    callbacks = None, *args, **kwargs):
+
+    def __init__(
+        self,
+        parent: QGraphicsObject,
+        node: Node,
+        point: Point,
+        radius: float,
+        color: list,
+        predicted=False,
+        color_predicted=False,
+        show_non_visible=True,
+        callbacks=None,
+        *args,
+        **kwargs,
+    ):
         self._parent = parent
         self.point = point
+        self.node = node
         self.radius = radius
         self.color = color
         self.edges = []
-        self.name = node_name
+        self.name = node.name
         self.predicted = predicted
         self.color_predicted = color_predicted
         self.show_non_visible = show_non_visible
         self.callbacks = [] if callbacks is None else callbacks
         self.dragParent = False
 
-        super(QtNode, self).__init__(-self.radius, -self.radius, self.radius*2, self.radius*2, parent=parent, *args, **kwargs)
+        super(QtNode, self).__init__(
+            -self.radius,
+            -self.radius,
+            self.radius * 2,
+            self.radius * 2,
+            parent=parent,
+            *args,
+            **kwargs,
+        )
 
-        if node_name is not None:
-            self.setToolTip(node_name)
+        if self.name is not None:
+            self.setToolTip(self.name)
 
         self.setFlag(QGraphicsItem.ItemIgnoresTransformations)
 
@@ -908,10 +1045,14 @@ class QtNode(QGraphicsEllipseItem):
         if self.predicted:
             self.setFlag(QGraphicsItem.ItemIsMovable, False)
 
+            pen_width = 1
+            if self.node == self._parent.instance.skeleton.nodes[0]:
+                pen_width = 3
+
             if self.color_predicted:
-                self.pen_default = QPen(col_line, 1)
+                self.pen_default = QPen(col_line, pen_width)
             else:
-                self.pen_default = QPen(QColor(250, 250, 10), 1)
+                self.pen_default = QPen(QColor(250, 250, 10), pen_width)
             self.pen_default.setCosmetic(True)
             self.pen_missing = self.pen_default
             self.brush = QBrush(QColor(128, 128, 128, 128))
@@ -920,7 +1061,9 @@ class QtNode(QGraphicsEllipseItem):
             self.setFlag(QGraphicsItem.ItemIsMovable)
 
             self.pen_default = QPen(col_line, 1)
-            self.pen_default.setCosmetic(True) # https://stackoverflow.com/questions/13120486/adjusting-qpen-thickness-when-scaling-qgraphicsview
+            self.pen_default.setCosmetic(
+                True
+            )  # https://stackoverflow.com/questions/13120486/adjusting-qpen-thickness-when-scaling-qgraphicsview
             self.pen_missing = QPen(col_line, 1)
             self.pen_missing.setCosmetic(True)
             self.brush = QBrush(QColor(*self.color, a=128))
@@ -936,11 +1079,12 @@ class QtNode(QGraphicsEllipseItem):
             if callable(callback):
                 callback(self)
 
-    def updatePoint(self, user_change=True):
-        """ Method to update data for node/edge after user manipulates visual point.
+    def updatePoint(self, user_change: bool = True):
+        """
+        Method to update data for node/edge when node position is manipulated.
 
         Args:
-            user_change (optional): Is this being called because of change by user?
+            user_change: Whether this being called because of change by user.
         """
         self.point.x = self.scenePos().x()
         self.point.y = self.scenePos().y()
@@ -951,12 +1095,12 @@ class QtNode(QGraphicsEllipseItem):
             self.setPen(self.pen_default)
             self.setBrush(self.brush)
         else:
-            radius = self.radius / 2.
+            radius = self.radius / 2.0
             self.setPen(self.pen_missing)
             self.setBrush(self.brush_missing)
             if not self.show_non_visible:
                 self.hide()
-        self.setRect(-radius, -radius, radius*2, radius*2)
+        self.setRect(-radius, -radius, radius * 2, radius * 2)
 
         for edge in self.edges:
             edge.updateEdge(self)
@@ -967,13 +1111,15 @@ class QtNode(QGraphicsEllipseItem):
         self.calls()
 
         # Emit event if we're updating from a user change
-        if user_change: self._parent.changedData.emit(self._parent.instance)
+        if user_change:
+            self._parent.changedData.emit(self._parent.instance)
 
     def mousePressEvent(self, event):
         """ Custom event handler for mouse press.
         """
         # Do nothing if node is from predicted instance
-        if self.parentObject().predicted: return
+        if self.parentObject().predicted:
+            return
 
         self.setCursor(Qt.ArrowCursor)
 
@@ -1005,17 +1151,19 @@ class QtNode(QGraphicsEllipseItem):
     def mouseMoveEvent(self, event):
         """ Custom event handler for mouse move.
         """
-        #print(event)
+        # print(event)
         if self.dragParent:
             self.parentObject().mouseMoveEvent(event)
         else:
             super(QtNode, self).mouseMoveEvent(event)
-            self.updatePoint(user_change=False) # don't count change until mouse release
+            self.updatePoint(
+                user_change=False
+            )  # don't count change until mouse release
 
     def mouseReleaseEvent(self, event):
         """ Custom event handler for mouse release.
         """
-        #print(event)
+        # print(event)
         self.unsetCursor()
         if self.dragParent:
             self.parentObject().mouseReleaseEvent(event)
@@ -1035,39 +1183,61 @@ class QtNode(QGraphicsEllipseItem):
             event.accept()
 
     def mouseDoubleClickEvent(self, event):
+        """Custom event handler to emit signal on event."""
         scene = self.scene()
         if scene is not None:
             view = scene.views()[0]
             view.instanceDoubleClicked.emit(self.parentObject().instance)
+
 
 class QtEdge(QGraphicsLineItem):
     """
     QGraphicsLineItem to handle display of edge between skeleton instance nodes.
 
     Args:
+        parent: `QGraphicsObject` which will contain this item.
         src: The `QtNode` source node for the edge.
         dst: The `QtNode` destination node for the edge.
+        color: Color as (r, g, b) tuple.
+        show_non_visible: Whether to show "non-visible" nodes/edges.
     """
-    def __init__(self, parent, src:QtNode, dst:QtNode, color,
-                 show_non_visible=True,
-                 *args, **kwargs):
+
+    def __init__(
+        self,
+        parent: QGraphicsObject,
+        src: QtNode,
+        dst: QtNode,
+        color: tuple,
+        show_non_visible: bool = True,
+        *args,
+        **kwargs,
+    ):
         self.src = src
         self.dst = dst
         self.show_non_visible = show_non_visible
 
-        super(QtEdge, self).__init__(self.src.point.x, self.src.point.y, self.dst.point.x, self.dst.point.y, parent=parent, *args, **kwargs)
+        super(QtEdge, self).__init__(
+            self.src.point.x,
+            self.src.point.y,
+            self.dst.point.x,
+            self.dst.point.y,
+            parent=parent,
+            *args,
+            **kwargs,
+        )
 
         pen = QPen(QColor(*color), 1)
         pen.setCosmetic(True)
         self.setPen(pen)
         self.full_opacity = 1
 
-    def connected_to(self, node):
+    def connected_to(self, node: QtNode):
         """
         Return the other node along the edge.
 
         Args:
             node: One of the edge's nodes.
+
         Returns:
             The other node (or None if edge doesn't have node).
         """
@@ -1078,7 +1248,7 @@ class QtEdge(QGraphicsLineItem):
 
         return None
 
-    def angle_to(self, node):
+    def angle_to(self, node: QtNode) -> float:
         """
         Returns the angle from one edge node to the other.
 
@@ -1093,17 +1263,20 @@ class QtEdge(QGraphicsLineItem):
             y = to.point.y - node.point.y
             return math.atan2(y, x)
 
-    def updateEdge(self, node):
+    def updateEdge(self, node: QtNode):
         """
         Updates the visual display of node.
 
         Args:
             node: The node to update.
+
+        Returns:
+            None.
         """
         if self.src.point.visible and self.dst.point.visible:
             self.full_opacity = 1
         else:
-            self.full_opacity = .5 if self.show_non_visible else 0
+            self.full_opacity = 0.5 if self.show_non_visible else 0
         self.setOpacity(self.full_opacity)
 
         if node == self.src:
@@ -1125,22 +1298,37 @@ class QtInstance(QGraphicsObject):
     and handles the events to manipulate the skeleton within
     a video frame (i.e., moving, rotating, marking nodes).
 
-    It should be instatiated with a `Skeleton` or `Instance`
-    and added to the relevant `QGraphicsScene`.
+    It should be instantiated with an `Instance` and added to the relevant
+    `QGraphicsScene`.
 
     When instantiated, it creates `QtNode`, `QtEdge`, and
     `QtNodeLabel` items as children of itself.
+
+    Args:
+        instance: The :class:`Instance` to show.
+        predicted: Whether this is a predicted instance.
+        color_predicted: Whether to show predicted instance in color.
+        color: Color of the visual item.
+        markerRadius: Radius of nodes.
+        show_non_visible: Whether to show "non-visible" nodes/edges.
+
     """
 
-    changedData = Signal(Instance)
+    changedData = QtCore.Signal(Instance)
 
-    def __init__(self, skeleton:Skeleton = None, instance: Instance = None,
-                 predicted=False, color_predicted=False,
-                 color=(0, 114, 189), markerRadius=4,
-                 show_non_visible=True,
-                 *args, **kwargs):
+    def __init__(
+        self,
+        instance: Instance = None,
+        predicted=False,
+        color_predicted=False,
+        color=(0, 114, 189),
+        markerRadius=4,
+        show_non_visible=True,
+        *args,
+        **kwargs,
+    ):
         super(QtInstance, self).__init__(*args, **kwargs)
-        self.skeleton = skeleton if instance is None else instance.skeleton
+        self.skeleton = instance.skeleton
         self.instance = instance
         self.predicted = predicted
         self.color_predicted = color_predicted
@@ -1156,8 +1344,6 @@ class QtInstance(QGraphicsObject):
         self.labels_shown = True
         self._selected = False
         self._bounding_rect = QRectF()
-        #self.setFlag(QGraphicsItem.ItemIsMovable)
-        #self.setFlag(QGraphicsItem.ItemIsSelectable)
 
         if self.predicted:
             self.setZValue(0)
@@ -1183,15 +1369,23 @@ class QtInstance(QGraphicsObject):
             track_name = "[none]"
         instance_label_text += f"<b>Track</b>: {track_name}"
         if hasattr(self.instance, "score"):
-            instance_label_text += f"<br /><b>Prediction Score</b>: {round(self.instance.score, 2)}"
+            instance_label_text += (
+                f"<br /><b>Prediction Score</b>: {round(self.instance.score, 2)}"
+            )
         self.track_label.setHtml(instance_label_text)
 
         # Add nodes
         for (node, point) in self.instance.nodes_points:
-            node_item = QtNode(parent=self, point=point, node_name=node.name,
-                               predicted=self.predicted, color_predicted=self.color_predicted,
-                               color=self.color, radius=self.markerRadius,
-                               show_non_visible=self.show_non_visible)
+            node_item = QtNode(
+                parent=self,
+                node=node,
+                point=point,
+                predicted=self.predicted,
+                color_predicted=self.color_predicted,
+                color=self.color,
+                radius=self.markerRadius,
+                show_non_visible=self.show_non_visible,
+            )
 
             self.nodes[node.name] = node_item
 
@@ -1199,8 +1393,13 @@ class QtInstance(QGraphicsObject):
         for (src, dst) in self.skeleton.edge_names:
             # Make sure that both nodes are present in this instance before drawing edge
             if src in self.nodes and dst in self.nodes:
-                edge_item = QtEdge(parent=self, src=self.nodes[src], dst=self.nodes[dst],
-                                   color=self.color, show_non_visible=self.show_non_visible)
+                edge_item = QtEdge(
+                    parent=self,
+                    src=self.nodes[src],
+                    dst=self.nodes[dst],
+                    color=self.color,
+                    show_non_visible=self.show_non_visible,
+                )
                 self.nodes[src].edges.append(edge_item)
                 self.nodes[dst].edges.append(edge_item)
                 self.edges.append(edge_item)
@@ -1220,16 +1419,18 @@ class QtInstance(QGraphicsObject):
         # Update size of box so it includes all the nodes/edges
         self.updateBox()
 
-    def updatePoints(self, complete:bool = False, user_change:bool = False):
+    def updatePoints(self, complete: bool = False, user_change: bool = False):
         """
         Updates data and display for all points in skeleton.
 
         This is called any time the skeleton is manipulated as a whole.
 
         Args:
-            complete (optional): If set, we mark the state of all
-                nodes in the skeleton to "complete".
-            user_change (optional): Is this being called because of change by user?
+            complete: Whether to update all nodes by setting "completed"
+                attribute.
+            user_change: Whether method is called because of change made by
+                user.
+
         Returns:
             None.
         """
@@ -1239,7 +1440,8 @@ class QtInstance(QGraphicsObject):
             node_item.point.x = node_item.scenePos().x()
             node_item.point.y = node_item.scenePos().y()
             node_item.setPos(node_item.point.x, node_item.point.y)
-            if complete: node_item.point.complete = True
+            if complete:
+                node_item.point.complete = True
         # Wait to run callbacks until all nodes are updated
         # Otherwise the label positions aren't correct since
         # they depend on the edge vectors to old node positions.
@@ -1255,13 +1457,18 @@ class QtInstance(QGraphicsObject):
         # Update box for instance selection
         self.updateBox()
         # Emit event if we're updating from a user change
-        if user_change: self.changedData.emit(self.instance)
+        if user_change:
+            self.changedData.emit(self.instance)
 
-    def getPointsBoundingRect(self):
+    def getPointsBoundingRect(self) -> QRectF:
         """Returns a rect which contains all the nodes in the skeleton."""
         rect = None
         for item in self.edges:
-            rect = item.boundingRect() if rect is None else rect.united(item.boundingRect())
+            rect = (
+                item.boundingRect()
+                if rect is None
+                else rect.united(item.boundingRect())
+            )
         return rect
 
     def updateBox(self, *args, **kwargs):
@@ -1273,7 +1480,7 @@ class QtInstance(QGraphicsObject):
         select this instance.
         """
         # Only show box if instance is selected
-        op = .7 if self._selected else 0
+        op = 0.7 if self._selected else 0
         self.box.setOpacity(op)
         # Update the position for the box
         rect = self.getPointsBoundingRect()
@@ -1286,10 +1493,12 @@ class QtInstance(QGraphicsObject):
 
     @property
     def selected(self):
+        """Whether instance is selected."""
         return self._selected
 
     @selected.setter
-    def selected(self, selected:bool):
+    def selected(self, selected: bool):
+        """Sets select-state for instance."""
         self._selected = selected
         # Update the selection box for this skeleton instance
         self.updateBox()
@@ -1299,7 +1508,7 @@ class QtInstance(QGraphicsObject):
         """
         self.showLabels(not self.labels_shown)
 
-    def showLabels(self, show):
+    def showLabels(self, show: bool):
         """
         Draws/hides the labels for this skeleton instance.
 
@@ -1316,7 +1525,7 @@ class QtInstance(QGraphicsObject):
         """
         self.showEdges(not self.edges_shown)
 
-    def showEdges(self, show = True):
+    def showEdges(self, show=True):
         """
         Draws/hides the edges for this skeleton instance.
 
@@ -1338,7 +1547,13 @@ class QtInstance(QGraphicsObject):
         """
         pass
 
+
 class QtTextWithBackground(QGraphicsTextItem):
+    """
+    Inherits methods/behavior of `QGraphicsTextItem`, but with background box.
+
+    Color of background box is light or dark depending on the text color.
+    """
 
     def __init__(self, *args, **kwargs):
         super(QtTextWithBackground, self).__init__(*args, **kwargs)
@@ -1354,52 +1569,66 @@ class QtTextWithBackground(QGraphicsTextItem):
         """
         text_color = self.defaultTextColor()
         brush = painter.brush()
-        background_color = "white" if text_color.lightnessF() < .4 else "black"
-        background_color = QColor(background_color, a=.5)
+        background_color = "white" if text_color.lightnessF() < 0.4 else "black"
+        background_color = QColor(background_color, a=0.5)
         painter.setBrush(QBrush(background_color))
         painter.drawRect(self.boundingRect())
         painter.setBrush(brush)
         super(QtTextWithBackground, self).paint(painter, option, *args, **kwargs)
 
+
 def video_demo(labels, standalone=False):
+    """Demo function for showing (first) video from dataset."""
     video = labels.videos[0]
-    if standalone: app = QApplication([])
+    if standalone:
+        app = QApplication([])
     window = QtVideoPlayer(video=video)
 
-    window.changedPlot.connect(lambda vp, idx, select_idx: plot_instances(vp.view.scene, idx, labels, video))
+    window.changedPlot.connect(
+        lambda vp, idx, select_idx: plot_instances(vp.view.scene, idx, labels, video)
+    )
 
     window.show()
     window.plot()
 
-    if standalone: app.exec_()
+    if standalone:
+        app.exec_()
+
 
 def plot_instances(scene, frame_idx, labels, video=None, fixed=True):
-    video = labels.videos[0]
-    color_manager = TrackColorManager(labels)
-    lfs = [label for label in labels.labels if label.video == video and label.frame_idx == frame_idx]
+    """Demo function for plotting instances."""
+    from sleap.gui.overlays.tracks import TrackColorManager
 
-    if len(lfs) == 0: return
+    video = labels.videos[0]
+    color_manager = TrackColorManager(labels=labels)
+    lfs = labels.find(video, frame_idx)
+
+    if not lfs:
+        return
 
     labeled_frame = lfs[0]
 
     count_no_track = 0
     for i, instance in enumerate(labeled_frame.instances_to_show):
-        if instance.track in self.labels.tracks:
+        if instance.track in labels.tracks:
             pseudo_track = instance.track
         else:
             # Instance without track
-            pseudo_track = len(self.labels.tracks) + count_no_track
+            pseudo_track = len(labels.tracks) + count_no_track
             count_no_track += 1
 
         # Plot instance
-        inst = QtInstance(instance=instance,
-                          color=color_manager(pseudo_track),
-                          predicted=fixed,
-                          color_predicted=True,
-                          show_non_visible=False)
+        inst = QtInstance(
+            instance=instance,
+            color=color_manager.get_color(pseudo_track),
+            predicted=fixed,
+            color_predicted=True,
+            show_non_visible=False,
+        )
         inst.showLabels(False)
         scene.addItem(inst)
         inst.updatePoints()
+
 
 if __name__ == "__main__":
 
