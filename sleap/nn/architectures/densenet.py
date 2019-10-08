@@ -10,9 +10,9 @@
 
 https://github.com/keras-team/keras-applications/blob/master/keras_applications/densenet.py
 """
-import keras
-from keras import backend, layers, models
-import keras.utils as keras_utils
+from tensorflow import keras
+from tensorflow.keras import backend, layers, models
+import tensorflow.keras.utils as keras_utils
 
 
 def dense_block(x, blocks, name):

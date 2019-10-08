@@ -2,8 +2,7 @@ attrs
 cattrs==1.0.0rc
 jsonpickle==1.1
 networkx
-tensorflow
-keras
+tensorflow-gpu==2.0
 h5py
 python-rapidjson
 opencv-python-headless==3.4.1.15

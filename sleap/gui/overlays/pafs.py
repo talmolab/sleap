@@ -36,14 +36,6 @@ class MultiQuiverPlot(QtWidgets.QGraphicsObject):
     When initialized, creates one child QuiverPlot item for each channel.
     """
 
-<<<<<<< HEAD
-    def __init__(self,
-            frame: np.array = None,
-            show: list = None,
-            decimation: int = 2,
-            scale: float = 1.0,
-            *args, **kwargs):
-=======
     def __init__(
         self,
         frame: np.array = None,
@@ -53,7 +45,6 @@ class MultiQuiverPlot(QtWidgets.QGraphicsObject):
         *args,
         **kwargs,
     ):
->>>>>>> develop
         super(MultiQuiverPlot, self).__init__(*args, **kwargs)
         self.frame = frame
         self.affinity_field = []

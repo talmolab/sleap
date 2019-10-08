@@ -2,8 +2,8 @@ import os
 import time
 
 import h5py
-import keras
 import tensorflow as tf
+from tensorflow import keras
 
 import numpy as np
 

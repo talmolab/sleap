@@ -1,6 +1,6 @@
 import attr
 
-from keras.layers import Conv2D, Conv2DTranspose, MaxPool2D, UpSampling2D
+from tensorflow.keras.layers import Conv2D, Conv2DTranspose, MaxPool2D, UpSampling2D
 
 
 @attr.s(auto_attribs=True)

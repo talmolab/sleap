@@ -7,7 +7,7 @@ from sleap.nn.architectures.common import (
     conv1,
     conv3,
 )
-from keras.layers import (
+from tensorflow.keras.layers import (
     Conv2D,
     BatchNormalization,
     Add,

@@ -10,7 +10,7 @@ import attr
 import cattr
 import zmq
 import jsonpickle
-import keras
+from tensorflow import keras
 
 from multiprocessing import Process, Pool
 from multiprocessing.pool import AsyncResult
@@ -20,8 +20,8 @@ from time import time, sleep
 from datetime import datetime
 from pathlib import Path, PureWindowsPath
 
-from keras import backend as K
-from keras.layers import (
+from tensorflow.keras import backend as K
+from tensorflow.keras.layers import (
     Input,
     Conv2D,
     BatchNormalization,
@@ -30,7 +30,7 @@ from keras.layers import (
     UpSampling2D,
     Concatenate,
 )
-from keras.callbacks import (
+from tensorflow.keras.callbacks import (
     ReduceLROnPlateau,
     EarlyStopping,
     TensorBoard,

@@ -7,7 +7,7 @@ transformations of labelled ground truth data.
 import numpy as np
 import attr
 import cattr
-import keras
+from tensorflow import keras
 import imgaug
 
 from typing import Union, List, Tuple, Callable

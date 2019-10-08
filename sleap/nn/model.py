@@ -1,6 +1,6 @@
 import attr
 import cattr
-import keras
+from tensorflow import keras
 
 from enum import Enum
 from typing import List
