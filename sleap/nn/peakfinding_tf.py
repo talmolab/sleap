@@ -45,6 +45,49 @@ def impeaksnms_tf(I, min_thresh=0.3):
 
     return inds, peak_vals
 
+def upsample_peaks(unrolled_confmaps, peaks, h, w, channel_sample_ind, upsample_factor, win_size):
+    offset = (win_size - 1) / 2
+
+    # Get the boxes coordinates centered on the peaks, normalized to image
+    # coordinates
+    box_ind = tf.squeeze(tf.cast(channel_sample_ind, tf.int32))
+    top_left = (
+        tf.cast(peaks[:, 1:3], tf.float32)
+        + tf.constant([-offset, -offset], dtype="float32")
+    ) / (h - 1.0)
+    bottom_right = (
+        tf.cast(peaks[:, 1:3], tf.float32)
+        + tf.constant([offset, offset], dtype="float32")
+    ) / (w - 1.0)
+    boxes = tf.concat([top_left, bottom_right], axis=1)
+
+    small_windows = tf.image.crop_and_resize(
+        unrolled_confmaps, boxes, box_ind, crop_size=[win_size, win_size]
+    )
+
+    # Upsample cropped windows
+    windows = tf.image.resize_bicubic(
+        small_windows, [upsample_factor * win_size, upsample_factor * win_size]
+    )
+
+    windows = tf.squeeze(windows)
+
+    # Find global maximum of each window
+    windows_peaks = find_maxima_tf(windows)  # [row_ind, col_ind] ==> (nc, 2)
+
+    # Adjust back to resolution before upsampling
+    windows_peaks = tf.cast(windows_peaks, tf.float32) / tf.cast(
+        upsample_factor, tf.float32
+    )
+
+    # Convert to offsets relative to the original peaks (center of cropped windows)
+    windows_offsets = windows_peaks - tf.cast(offset, tf.float32)  # (nc, 2)
+    windows_offsets = tf.pad(
+        windows_offsets, [[0, 0], [1, 1]], mode="CONSTANT", constant_values=0
+    )  # (nc, 4)
+
+    # Apply offsets
+    return tf.cast(peaks, tf.float32) + windows_offsets
 
 def find_peaks_tf(
     confmaps,
@@ -68,54 +111,13 @@ def find_peaks_tf(
     sample_ind = tf.floordiv(channel_sample_ind, c)
 
     peaks = tf.concat([sample_ind, y, x, channel_ind], axis=1)  # (nc, 4)
-
     # If we have run prediction on low res and need to upsample the peaks
     # to a higher resolution. Compute sub-pixel accurate peaks
     # from these approximate peaks and return the upsampled sub-pixel peaks.
     if upsample_factor > 1:
-
-        offset = (win_size - 1) / 2
-
-        # Get the boxes coordinates centered on the peaks, normalized to image
-        # coordinates
-        box_ind = tf.squeeze(tf.cast(channel_sample_ind, tf.int32))
-        top_left = (
-            tf.cast(peaks[:, 1:3], tf.float32)
-            + tf.constant([-offset, -offset], dtype="float32")
-        ) / (h - 1.0)
-        bottom_right = (
-            tf.cast(peaks[:, 1:3], tf.float32)
-            + tf.constant([offset, offset], dtype="float32")
-        ) / (w - 1.0)
-        boxes = tf.concat([top_left, bottom_right], axis=1)
-
-        small_windows = tf.image.crop_and_resize(
-            unrolled_confmaps, boxes, box_ind, crop_size=[win_size, win_size]
-        )
-
-        # Upsample cropped windows
-        windows = tf.image.resize_bicubic(
-            small_windows, [upsample_factor * win_size, upsample_factor * win_size]
-        )
-
-        windows = tf.squeeze(windows)
-
-        # Find global maximum of each window
-        windows_peaks = find_maxima_tf(windows)  # [row_ind, col_ind] ==> (nc, 2)
-
-        # Adjust back to resolution before upsampling
-        windows_peaks = tf.cast(windows_peaks, tf.float32) / tf.cast(
-            upsample_factor, tf.float32
-        )
-
-        # Convert to offsets relative to the original peaks (center of cropped windows)
-        windows_offsets = windows_peaks - tf.cast(offset, tf.float32)  # (nc, 2)
-        windows_offsets = tf.pad(
-            windows_offsets, [[0, 0], [1, 1]], mode="CONSTANT", constant_values=0
-        )  # (nc, 4)
-
-        # Apply offsets
-        peaks = tf.cast(peaks, tf.float32) + windows_offsets
+        peaks = tf.cond(tf.less(tf.shape(peaks)[0], 1),
+            lambda: upsample_peaks(unrolled_confmaps, peaks, h, w, channel_sample_ind, upsample_factor, win_size),
+            lambda: tf.cast(peaks, tf.float32))
 
     return peaks, peak_vals
 

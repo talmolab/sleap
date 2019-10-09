@@ -145,6 +145,24 @@ learning:
 
 inference:
 
+- name: conf_job
+  label: Node (confmap) Training Profile
+  type: list
+  default: a
+  options: a,b,c
+
+- name: paf_job
+  label: Edge (paf) Training Profile
+  type: list
+  default: a
+  options: a,b,c
+
+- name: centroid_job
+  label: Centroid Training Profile
+  type: list
+  default: a
+  options: a,b,c
+
 - name: _predict_frames
   label: Predict On
   type: list

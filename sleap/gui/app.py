@@ -1495,7 +1495,7 @@ class MainWindow(QMainWindow):
     def importPredictions(self):
         """Starts gui for importing another dataset into currently one."""
         filters = ["HDF5 dataset (*.h5 *.hdf5)", "JSON labels (*.json *.json.zip)"]
-        filenames, selected_filter = openFileDialogs(
+        filenames, selected_filter = openFileDialog(
             self,
             dir=None,
             caption="Import labeled data...",
@@ -1545,7 +1545,7 @@ class MainWindow(QMainWindow):
             ).boundingRect()
 
             for node in self.skeleton.nodes:
-                if node.name not in instance.node_names or instance[node].isnan():
+                if node not in instance.nodes or instance[node].isnan():
                     # pick random points within currently zoomed view
                     x = (
                         in_view_rect.x()
@@ -2054,6 +2054,17 @@ class MainWindow(QMainWindow):
 
         self.plotFrame(next_lf.frame_idx)
         return True
+
+    def previousLabeledFrameIndex(self):
+        cur_idx = self.player.frame_idx
+        frames = self.labels.frames(self.video, from_frame_idx=cur_idx, reverse=True)
+
+        try:
+            next_idx = next(frames).frame_idx
+        except:
+            return
+
+        return next_idx
 
     def previousLabeledFrame(self):
         """Goes to labeled frame prior to current frame."""
