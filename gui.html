@@ -957,11 +957,12 @@ given in absolute coordinates for displayed frame.</p>
 
 <dl class="class">
 <dt id="sleap.gui.video.QtEdge">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.video.</code><code class="sig-name descname">QtEdge</code><span class="sig-paren">(</span><em class="sig-param">parent</em>, <em class="sig-param">src: sleap.gui.video.QtNode</em>, <em class="sig-param">dst: sleap.gui.video.QtNode</em>, <em class="sig-param">color</em>, <em class="sig-param">show_non_visible=True</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtEdge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtEdge" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.video.</code><code class="sig-name descname">QtEdge</code><span class="sig-paren">(</span><em class="sig-param">parent: PySide2.QtWidgets.QGraphicsObject</em>, <em class="sig-param">src: sleap.gui.video.QtNode</em>, <em class="sig-param">dst: sleap.gui.video.QtNode</em>, <em class="sig-param">color: tuple</em>, <em class="sig-param">show_non_visible: bool = True</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtEdge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtEdge" title="Permalink to this definition">¶</a></dt>
 <dd><p>QGraphicsLineItem to handle display of edge between skeleton instance nodes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>parent</strong> – <cite>QGraphicsObject</cite> which will contain this item.</p></li>
 <li><p><strong>src</strong> – The <cite>QtNode</cite> source node for the edge.</p></li>
 <li><p><strong>dst</strong> – The <cite>QtNode</cite> destination node for the edge.</p></li>
 <li><p><strong>color</strong> – Color as (r, g, b) tuple.</p></li>
@@ -1127,17 +1128,21 @@ user.</p></li>
 
 <dl class="class">
 <dt id="sleap.gui.video.QtNode">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.video.</code><code class="sig-name descname">QtNode</code><span class="sig-paren">(</span><em class="sig-param">parent</em>, <em class="sig-param">point: sleap.instance.Point</em>, <em class="sig-param">radius: float</em>, <em class="sig-param">color: list</em>, <em class="sig-param">node_name: str = None</em>, <em class="sig-param">predicted=False</em>, <em class="sig-param">color_predicted=False</em>, <em class="sig-param">show_non_visible=True</em>, <em class="sig-param">callbacks=None</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtNode" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.video.</code><code class="sig-name descname">QtNode</code><span class="sig-paren">(</span><em class="sig-param">parent: PySide2.QtWidgets.QGraphicsObject</em>, <em class="sig-param">node: sleap.skeleton.Node</em>, <em class="sig-param">point: sleap.instance.Point</em>, <em class="sig-param">radius: float</em>, <em class="sig-param">color: list</em>, <em class="sig-param">predicted=False</em>, <em class="sig-param">color_predicted=False</em>, <em class="sig-param">show_non_visible=True</em>, <em class="sig-param">callbacks=None</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtNode" title="Permalink to this definition">¶</a></dt>
 <dd><p>QGraphicsEllipseItem to handle display of skeleton instance node.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>parent</strong> – The <cite>QtInstance</cite> which will contain this item.</p></li>
-<li><p><strong>point</strong> – The <cite>Point</cite> where this node is located.
+<li><p><strong>node</strong> – The <code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code> corresponding to this visual node.</p></li>
+<li><p><strong>point</strong> – The <code class="xref py py-class docutils literal notranslate"><span class="pre">Point</span></code> where this node is located.
 Note that this is a mutable object so we’re able to directly access
 the very same <cite>Point</cite> object that’s defined outside our class.</p></li>
 <li><p><strong>radius</strong> – Radius of the visual node item.</p></li>
 <li><p><strong>color</strong> – Color of the visual node item.</p></li>
+<li><p><strong>predicted</strong> – Whether this point is predicted.</p></li>
+<li><p><strong>color_predicted</strong> – Whether to color predicted points.</p></li>
+<li><p><strong>show_non_visible</strong> – Whether to show points where <cite>visible</cite> is False.</p></li>
 <li><p><strong>callbacks</strong> – List of functions to call after we update to the <cite>Point</cite>.</p></li>
 </ul>
 </dd>
@@ -1193,13 +1198,14 @@ the very same <cite>Point</cite> object that’s defined outside our class.</p><
 
 <dl class="class">
 <dt id="sleap.gui.video.QtNodeLabel">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.video.</code><code class="sig-name descname">QtNodeLabel</code><span class="sig-paren">(</span><em class="sig-param">node</em>, <em class="sig-param">parent</em>, <em class="sig-param">predicted=False</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtNodeLabel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtNodeLabel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.video.</code><code class="sig-name descname">QtNodeLabel</code><span class="sig-paren">(</span><em class="sig-param">node: sleap.skeleton.Node</em>, <em class="sig-param">parent: PySide2.QtWidgets.QGraphicsObject</em>, <em class="sig-param">predicted: bool = False</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtNodeLabel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtNodeLabel" title="Permalink to this definition">¶</a></dt>
 <dd><p>QGraphicsTextItem to handle display of node text label.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>node</strong> – The <cite>QtNode</cite> to which this label is attached.</p></li>
 <li><p><strong>parent</strong> – The <cite>QtInstance</cite> which will contain this item.</p></li>
+<li><p><strong>predicted</strong> – Whether this is for a predicted point.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1262,7 +1268,7 @@ the very same <cite>Point</cite> object that’s defined outside our class.</p><
 <dt id="sleap.gui.video.QtTextWithBackground">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.gui.video.</code><code class="sig-name descname">QtTextWithBackground</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtTextWithBackground"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtTextWithBackground" title="Permalink to this definition">¶</a></dt>
 <dd><p>Inherits methods/behavior of <cite>QGraphicsTextItem</cite>, but with background box.</p>
-<p>Color of brackground box is light or dark depending on the text color.</p>
+<p>Color of background box is light or dark depending on the text color.</p>
 <dl class="method">
 <dt id="sleap.gui.video.QtTextWithBackground.boundingRect">
 <code class="sig-name descname">boundingRect</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtTextWithBackground.boundingRect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtTextWithBackground.boundingRect" title="Permalink to this definition">¶</a></dt>
@@ -1559,23 +1565,6 @@ enough instances.</p></li>
 <dd><p>Shows windows with sample visual data that will be used training.</p>
 </dd></dl>
 
-</dd></dl>
-
-<dl class="function">
-<dt id="sleap.gui.active.add_frames_from_json">
-<code class="sig-prename descclassname">sleap.gui.active.</code><code class="sig-name descname">add_frames_from_json</code><span class="sig-paren">(</span><em class="sig-param">labels: sleap.io.dataset.Labels</em>, <em class="sig-param">new_labels_json: str</em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="_modules/sleap/gui/active.html#add_frames_from_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.active.add_frames_from_json" title="Permalink to this definition">¶</a></dt>
-<dd><p>Merges new predictions (given as json string) into dataset.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>labels</strong> – The dataset to which we’re adding the predictions.</p></li>
-<li><p><strong>new_labels_json</strong> – A JSON string which can be deserialized into <cite>Labels</cite>.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Number of labeled frames with new predictions.</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="function">

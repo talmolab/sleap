@@ -159,6 +159,7 @@
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">cattr</span>
 
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
 <span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">reduce</span>
 <span class="kn">from</span> <span class="nn">pkg_resources</span> <span class="k">import</span> <span class="n">Requirement</span><span class="p">,</span> <span class="n">resource_filename</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
@@ -171,6 +172,9 @@
 <span class="kn">from</span> <span class="nn">sleap.nn.training</span> <span class="k">import</span> <span class="n">TrainingJob</span>
 
 <span class="kn">from</span> <span class="nn">PySide2</span> <span class="k">import</span> <span class="n">QtWidgets</span><span class="p">,</span> <span class="n">QtCore</span>
+
+
+<span class="n">SELECT_FILE_OPTION</span> <span class="o">=</span> <span class="s2">&quot;Select a training profile file...&quot;</span>
 
 
 <div class="viewcode-block" id="ActiveLearningDialog"><a class="viewcode-back" href="../../../gui.html#sleap.gui.active.ActiveLearningDialog">[docs]</a><span class="k">class</span> <span class="nc">ActiveLearningDialog</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDialog</span><span class="p">):</span>
@@ -203,6 +207,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">labels_filename</span> <span class="o">=</span> <span class="n">labels_filename</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_job_filter</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;inference&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_job_filter</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">job</span><span class="p">:</span> <span class="n">job</span><span class="o">.</span><span class="n">is_trained</span>
 
         <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Number of frames to train on: {len(labels.user_labeled_frames)}&quot;</span><span class="p">)</span>
 
@@ -316,6 +324,13 @@
         <span class="c1"># list default profiles</span>
         <span class="n">find_saved_jobs</span><span class="p">(</span><span class="n">profile_dir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_options</span><span class="p">)</span>
 
+        <span class="c1"># Apply any filters</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_job_filter</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">model_type</span><span class="p">,</span> <span class="n">jobs_list</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_options</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">job_options</span><span class="p">[</span><span class="n">model_type</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">job</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">job</span><span class="p">)</span> <span class="ow">in</span> <span class="n">jobs_list</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_job_filter</span><span class="p">(</span><span class="n">job</span><span class="p">)</span>
+                <span class="p">]</span>
+
     <span class="k">def</span> <span class="nf">_update_job_menus</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">init</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Updates the menus with training profile options.</span>
 
@@ -330,9 +345,11 @@
             <span class="k">if</span> <span class="n">model_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_options</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">job_options</span><span class="p">[</span><span class="n">model_type</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">if</span> <span class="n">init</span><span class="p">:</span>
-                <span class="n">field</span><span class="o">.</span><span class="n">currentIndexChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
-                    <span class="k">lambda</span> <span class="n">idx</span><span class="p">,</span> <span class="n">mt</span><span class="o">=</span><span class="n">model_type</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_from_selected_job</span><span class="p">(</span><span class="n">mt</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>
-                <span class="p">)</span>
+
+                <span class="k">def</span> <span class="nf">menu_action</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">mt</span><span class="o">=</span><span class="n">model_type</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="n">field</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_update_from_selected_job</span><span class="p">(</span><span class="n">mt</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">field</span><span class="p">)</span>
+
+                <span class="n">field</span><span class="o">.</span><span class="n">currentIndexChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">menu_action</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="c1"># block signals so we can update combobox without overwriting</span>
                 <span class="c1"># any user data with the defaults from the profile</span>
@@ -519,6 +536,9 @@
         <span class="k">for</span> <span class="n">model_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_model_types_to_use</span><span class="p">():</span>
             <span class="n">job</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_current_job</span><span class="p">(</span><span class="n">model_type</span><span class="p">)</span>
 
+            <span class="k">if</span> <span class="n">job</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+
             <span class="k">if</span> <span class="n">job</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">output_type</span> <span class="o">!=</span> <span class="n">ModelOutputType</span><span class="o">.</span><span class="n">CENTROIDS</span><span class="p">:</span>
                 <span class="c1"># update training job from params in form</span>
                 <span class="n">trainer</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">trainer</span>
@@ -653,8 +673,9 @@
         <span class="sd">&quot;&quot;&quot;Returns list of menu options for given model type.&quot;&quot;&quot;</span>
         <span class="n">jobs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_options</span><span class="p">[</span><span class="n">model_type</span><span class="p">]</span>
         <span class="n">option_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">job</span><span class="p">)</span> <span class="ow">in</span> <span class="n">jobs</span><span class="p">]</span>
+        <span class="n">option_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
         <span class="n">option_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;---&quot;</span><span class="p">)</span>
-        <span class="n">option_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Select a training profile file...&quot;</span><span class="p">)</span>
+        <span class="n">option_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">SELECT_FILE_OPTION</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">option_list</span>
 
     <span class="k">def</span> <span class="nf">_add_job_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_type</span><span class="p">):</span>
@@ -702,9 +723,10 @@
                         <span class="n">text</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;Profile selected is for training {str(file_model_type)} instead of {str(model_type)}.&quot;</span>
                     <span class="p">)</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">_update_from_selected_job</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_type</span><span class="p">:</span> <span class="n">ModelOutputType</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_update_from_selected_job</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_type</span><span class="p">:</span> <span class="n">ModelOutputType</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">field</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Updates dialog settings after user selects a training profile.&quot;&quot;&quot;</span>
         <span class="n">jobs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_options</span><span class="p">[</span><span class="n">model_type</span><span class="p">]</span>
+        <span class="n">field_text</span> <span class="o">=</span> <span class="n">field</span><span class="o">.</span><span class="n">currentText</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">idx</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
             <span class="k">return</span>
         <span class="k">if</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">jobs</span><span class="p">):</span>
@@ -723,17 +745,13 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">set_form_data</span><span class="p">(</span><span class="n">training_params</span><span class="p">)</span>
 
             <span class="c1"># is the model already trained?</span>
-            <span class="n">has_trained</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="n">final_model_filename</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">final_model_filename</span>
-            <span class="k">if</span> <span class="n">final_model_filename</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">job</span><span class="o">.</span><span class="n">save_dir</span><span class="p">,</span> <span class="n">final_model_filename</span><span class="p">)):</span>
-                    <span class="n">has_trained</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">is_trained</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">is_trained</span>
             <span class="n">field_name</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;_use_trained_{str(model_type)}&quot;</span>
-            <span class="c1"># update &quot;use trained&quot; checkbox</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="n">has_trained</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">has_trained</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># last item is &quot;select file...&quot;</span>
+            <span class="c1"># update &quot;use trained&quot; checkbox if present</span>
+            <span class="k">if</span> <span class="n">field_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">fields</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="n">is_trained</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">is_trained</span>
+        <span class="k">elif</span> <span class="n">field_text</span> <span class="o">==</span> <span class="n">SELECT_FILE_OPTION</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_add_job_file</span><span class="p">(</span><span class="n">model_type</span><span class="p">)</span></div>
 
 
@@ -834,28 +852,6 @@
             <span class="n">jobs</span><span class="p">[</span><span class="n">model_type</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">full_filename</span><span class="p">,</span> <span class="n">job</span><span class="p">))</span>
 
     <span class="k">return</span> <span class="n">jobs</span></div>
-
-
-<div class="viewcode-block" id="add_frames_from_json"><a class="viewcode-back" href="../../../gui.html#sleap.gui.active.add_frames_from_json">[docs]</a><span class="k">def</span> <span class="nf">add_frames_from_json</span><span class="p">(</span><span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span><span class="p">,</span> <span class="n">new_labels_json</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Merges new predictions (given as json string) into dataset.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        labels: The dataset to which we&#39;re adding the predictions.</span>
-<span class="sd">        new_labels_json: A JSON string which can be deserialized into `Labels`.</span>
-<span class="sd">    Returns:</span>
-<span class="sd">        Number of labeled frames with new predictions.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Deserialize the new frames, matching to the existing videos/skeletons if possible</span>
-    <span class="n">new_lfs</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">from_json</span><span class="p">(</span><span class="n">new_labels_json</span><span class="p">,</span> <span class="n">match_to</span><span class="o">=</span><span class="n">labels</span><span class="p">)</span><span class="o">.</span><span class="n">labeled_frames</span>
-
-    <span class="c1"># Remove any frames without instances</span>
-    <span class="n">new_lfs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">lf</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">lf</span><span class="o">.</span><span class="n">instances</span><span class="p">),</span> <span class="n">new_lfs</span><span class="p">))</span>
-
-    <span class="c1"># Now add them to labels and merge labeled frames with same video/frame_idx</span>
-    <span class="n">labels</span><span class="o">.</span><span class="n">extend_from</span><span class="p">(</span><span class="n">new_lfs</span><span class="p">)</span>
-    <span class="n">labels</span><span class="o">.</span><span class="n">merge_matching_frames</span><span class="p">()</span>
-
-    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_lfs</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="run_active_learning_pipeline"><a class="viewcode-back" href="../../../gui.html#sleap.gui.active.run_active_learning_pipeline">[docs]</a><span class="k">def</span> <span class="nf">run_active_learning_pipeline</span><span class="p">(</span>
@@ -1016,8 +1012,8 @@
     <span class="c1"># from multiprocessing import Pool</span>
 
     <span class="c1"># total_new_lf_count = 0</span>
-    <span class="c1"># timestamp = datetime.now().strftime(&quot;%y%m%d_%H%M%S&quot;)</span>
-    <span class="c1"># inference_output_path = os.path.join(save_dir, f&quot;{timestamp}.inference.h5&quot;)</span>
+    <span class="n">timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%y%m</span><span class="si">%d</span><span class="s2">_%H%M%S&quot;</span><span class="p">)</span>
+    <span class="n">inference_output_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save_dir</span><span class="p">,</span> <span class="n">f</span><span class="s2">&quot;</span><span class="si">{timestamp}</span><span class="s2">.inference.h5&quot;</span><span class="p">)</span>
 
     <span class="c1"># Create Predictor from the results of training</span>
     <span class="c1"># pool = Pool(processes=1)</span>
@@ -1079,10 +1075,15 @@
     <span class="c1"># Remove any frames without instances</span>
     <span class="n">new_lfs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">lf</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">lf</span><span class="o">.</span><span class="n">instances</span><span class="p">),</span> <span class="n">new_lfs</span><span class="p">))</span>
 
-    <span class="c1"># Now add them to labels and merge labeled frames with same video/frame_idx</span>
-    <span class="c1"># labels.extend_from(new_lfs)</span>
-    <span class="n">labels</span><span class="o">.</span><span class="n">extend_from</span><span class="p">(</span><span class="n">new_lfs</span><span class="p">,</span> <span class="n">unify</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">labels</span><span class="o">.</span><span class="n">merge_matching_frames</span><span class="p">()</span>
+    <span class="c1"># Create and save dataset with predictions</span>
+    <span class="n">new_labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="p">(</span><span class="n">new_lfs</span><span class="p">)</span>
+    <span class="n">Labels</span><span class="o">.</span><span class="n">save_file</span><span class="p">(</span><span class="n">new_labels</span><span class="p">,</span> <span class="n">inference_output_path</span><span class="p">)</span>
+
+    <span class="c1"># Merge predictions into current labels dataset</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">new_conflicts</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">complex_merge_between</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">new_labels</span><span class="p">)</span>
+
+    <span class="c1"># new predictions should replace old ones</span>
+    <span class="n">Labels</span><span class="o">.</span><span class="n">finish_complex_merge</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">new_conflicts</span><span class="p">)</span>
 
     <span class="c1"># close message window</span>
     <span class="k">if</span> <span class="n">gui</span><span class="p">:</span>

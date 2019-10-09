@@ -1649,7 +1649,7 @@
 <div class="viewcode-block" id="MainWindow.importPredictions"><a class="viewcode-back" href="../../../gui.html#sleap.gui.app.MainWindow.importPredictions">[docs]</a>    <span class="k">def</span> <span class="nf">importPredictions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Starts gui for importing another dataset into currently one.&quot;&quot;&quot;</span>
         <span class="n">filters</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;HDF5 dataset (*.h5 *.hdf5)&quot;</span><span class="p">,</span> <span class="s2">&quot;JSON labels (*.json *.json.zip)&quot;</span><span class="p">]</span>
-        <span class="n">filenames</span><span class="p">,</span> <span class="n">selected_filter</span> <span class="o">=</span> <span class="n">openFileDialogs</span><span class="p">(</span>
+        <span class="n">filenames</span><span class="p">,</span> <span class="n">selected_filter</span> <span class="o">=</span> <span class="n">openFileDialog</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">caption</span><span class="o">=</span><span class="s2">&quot;Import labeled data...&quot;</span><span class="p">,</span>
@@ -1699,7 +1699,7 @@
             <span class="p">)</span><span class="o">.</span><span class="n">boundingRect</span><span class="p">()</span>
 
             <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">instance</span><span class="o">.</span><span class="n">node_names</span> <span class="ow">or</span> <span class="n">instance</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">.</span><span class="n">isnan</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">instance</span><span class="o">.</span><span class="n">nodes</span> <span class="ow">or</span> <span class="n">instance</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">.</span><span class="n">isnan</span><span class="p">():</span>
                     <span class="c1"># pick random points within currently zoomed view</span>
                     <span class="n">x</span> <span class="o">=</span> <span class="p">(</span>
                         <span class="n">in_view_rect</span><span class="o">.</span><span class="n">x</span><span class="p">()</span>
@@ -2208,6 +2208,17 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">plotFrame</span><span class="p">(</span><span class="n">next_lf</span><span class="o">.</span><span class="n">frame_idx</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">previousLabeledFrameIndex</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">cur_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">frame_idx</span>
+        <span class="n">frames</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">frames</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="p">,</span> <span class="n">from_frame_idx</span><span class="o">=</span><span class="n">cur_idx</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">next_idx</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span><span class="o">.</span><span class="n">frame_idx</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">return</span> <span class="n">next_idx</span>
 
 <div class="viewcode-block" id="MainWindow.previousLabeledFrame"><a class="viewcode-back" href="../../../gui.html#sleap.gui.app.MainWindow.previousLabeledFrame">[docs]</a>    <span class="k">def</span> <span class="nf">previousLabeledFrame</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Goes to labeled frame prior to current frame.&quot;&quot;&quot;</span>
