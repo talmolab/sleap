@@ -33,8 +33,13 @@ from sleap.nn.tracking import FlowShiftTracker, Track
 from sleap.nn.transform import DataTransform
 
 from sleap.nn.datagen import merge_boxes_with_overlap_and_padding
-from sleap.nn.peakfinding import find_all_peaks, find_all_single_peaks
-from sleap.nn.peakfinding_tf import peak_tf_inference
+from sleap.nn.peakfinding import (
+    find_global_peaks,
+    find_local_peaks,
+    refine_peaks,
+    peak_subs_to_list,
+)
+
 from sleap.nn.peakmatching import (
     match_single_peaks_all,
     match_peaks_paf,
@@ -333,9 +338,8 @@ class Predictor:
     resize_hack: bool = True
     pool: multiprocessing.Pool = None
 
-    gpu_peak_finding: bool = True
-    supersample_window_size: int = 7  # must be odd
-    supersample_factor: float = 2  # factor to upsample cropped windows by
+    supersample_window_size: int = 5  # must be odd
+    supersample_factor: float = 10  # factor to upsample cropped windows by
     overlapping_instances_nms: bool = True  # suppress overlapping instances
 
     def __attrs_post_init__(self):
@@ -374,8 +378,8 @@ class Predictor:
         self.is_async = is_async
 
         # Initialize parallel pool if needed.
-        if not is_async and self.pool is None:
-            self.pool = multiprocessing.Pool(processes=usable_cpu_count())
+        # if not is_async and self.pool is None:
+        #     self.pool = multiprocessing.Pool(processes=usable_cpu_count())
 
         # Fix the number of threads for OpenCV, not that we are using
         # anything in OpenCV that is actually multi-threaded but maybe
@@ -417,7 +421,8 @@ class Predictor:
 
             # Create output directory if it doesn't exist
             if not os.path.exists(self.output_path):
-                os.makedirs(os.path.dirname(self.output_path), exist_ok=True)
+                if len(os.path.dirname(self.output_path)) > 0:
+                    os.makedirs(os.path.dirname(self.output_path), exist_ok=True)
             logger.info("Output path: " + self.output_path)
 
         # Process chunk-by-chunk!
@@ -677,8 +682,11 @@ class Predictor:
             centroid_imgs_scaled, batch_size=self.inference_batch_size
         )
 
-        peaks, peak_vals = find_all_peaks(
-            centroid_confmaps, min_thresh=self.nms_min_thresh, sigma=self.nms_sigma
+        peaks, peak_vals = find_local_peaks(
+            centroid_confmaps, min_val=self.nms_min_thresh, return_vals=True
+        )
+        peaks, peak_vals = peak_subs_to_list(
+            peaks, peak_vals, samples=len(centroid_confmaps), channels=1
         )
 
         elapsed = time() - t0
@@ -840,12 +848,26 @@ class Predictor:
 
         t0 = time()
 
-        # TODO: Move this to GPU and add subpixel refinement.
         # Use single highest peak in channel corresponding node
-        points_arrays = find_all_single_peaks(confmaps, min_thresh=self.nms_min_thresh)
+        peaks, peak_vals = find_global_peaks(confmaps, return_vals=True)
+        peaks = refine_peaks(
+            confmaps,
+            peaks,
+            window_length=self.supersample_window_size,
+            upsampling_factor=self.supersample_factor,
+        )
+        peaks = tf.where(
+            peak_vals < self.nms_min_thresh, np.nan, tf.cast(peaks, tf.float32)
+        )
+        peaks, peak_vals = peak_subs_to_list(
+            peaks, peak_vals, samples=len(confmaps), channels=tf.shape(confmaps)[-1]
+        )
+        peaks = [
+            np.concatenate(peaks_sample, axis=0) for peaks_sample in peaks
+        ]  # [(K, 2), (K, 2), ...]
 
         # Adjust for multi-scale such that the points are at the scale of the transform.
-        points_arrays = [pts / cm_model.output_relative_scale for pts in points_arrays]
+        points_arrays = [pts / cm_model.output_relative_scale for pts in peaks]
 
         # Create labeled frames and predicted instances from the points.
         predicted_frames_chunk = match_single_peaks_all(
@@ -888,9 +910,6 @@ class Predictor:
         cm_model = self.inference_models[ModelOutputType.CONFIDENCE_MAP]
         paf_model = self.inference_models[ModelOutputType.PART_AFFINITY_FIELD]
 
-        # Find peaks
-        t0 = time()
-
         # Scale to match input resolution of model.
         # Images are expected to be at full resolution, but may be cropped.
         assert transform.scale == 1.0
@@ -902,33 +921,30 @@ class Predictor:
         if imgs_scaled.dtype == np.dtype("uint8"):  # TODO: Unify normalization.
             imgs_scaled = imgs_scaled.astype("float32") / 255.0
 
-        # TODO: Unfuck this whole workflow
-        if self.gpu_peak_finding:
-            confmaps_shape = cm_model.compute_output_shape(
-                (imgs_scaled.shape[1], imgs_scaled.shape[2])
-            )
-            peaks, peak_vals, confmaps = peak_tf_inference(
-                model=cm_model.keras_model,
-                confmaps_shape=confmaps_shape,
-                data=imgs_scaled,
-                min_thresh=self.nms_min_thresh,
-                gaussian_size=self.nms_kernel_size,
-                gaussian_sigma=self.nms_sigma,
-                upsample_factor=int(self.supersample_factor / cm_model.output_scale),
-                win_size=self.supersample_window_size,
-                return_confmaps=self.save_confmaps_pafs,
-                batch_size=self.inference_batch_size,
-            )
+        # Inference
+        t0 = time()
+        confmaps = cm_model.predict(imgs_scaled)
+        elapsed = time() - t0
+        logger.info(
+            f"    Predicted confmaps [{elapsed:.2f}s / {len(imgs) / elapsed:.2f} FPS]."
+        )
 
-        else:
-            confmaps = cm_model.predict(
-                imgs_scaled, batch_size=self.inference_batch_size
-            )
-            peaks, peak_vals = find_all_peaks(
-                confmaps, min_thresh=self.nms_min_thresh, sigma=self.nms_sigma
-            )
+        # Peak finding
+        t0 = time()
+        peaks, peak_vals = find_local_peaks(
+            confmaps, min_val=self.nms_min_thresh, return_vals=True
+        )
+        peaks = refine_peaks(
+            confmaps,
+            peaks,
+            window_length=self.supersample_window_size,
+            upsampling_factor=self.supersample_factor,
+        )
+        peaks, peak_vals = peak_subs_to_list(
+            peaks, peak_vals, samples=len(confmaps), channels=tf.shape(confmaps)[-1]
+        )
 
-        # # Undo just the scaling so we're back to full resolution, but possibly cropped.
+        # Undo just the scaling so we're back to full resolution, but possibly cropped.
         for t in range(len(peaks)):  # frames
             for c in range(len(peaks[t])):  # channels
                 peaks[t][c] /= cm_model.output_scale
@@ -946,7 +962,7 @@ class Predictor:
             ]
         )
         logger.info(
-            f"    Found {total_peaks} peaks ({total_peaks / len(imgs):.2f} peaks/frame) [{elapsed:.2f}s]."
+            f"    Found {total_peaks} peaks ({total_peaks / len(imgs):.2f} peaks/frame) [{elapsed:.2f}s / {len(imgs) / elapsed:.2f} FPS]."
         )
         # logger.info(f"    peaks: {peaks}")
 
@@ -981,9 +997,10 @@ class Predictor:
 
         # Determine whether to use serial or parallel version of peak-finding
         # Use the serial version is we're already running in a thread pool
-        match_peaks_function = (
-            match_peaks_paf_par if not self.is_async else match_peaks_paf
-        )
+        # match_peaks_function = (
+        #     match_peaks_paf_par if not self.is_async else match_peaks_paf
+        # )
+        match_peaks_function = match_peaks_paf
 
         # Match peaks via PAFs
         t0 = time()
@@ -1158,7 +1175,7 @@ def main():
     )
 
     # Run the inference pipeline
-    return predictor.predict(input_video=data_path, frames=frames)
+    predictor.predict(input_video=data_path, frames=frames)
 
 
 if __name__ == "__main__":
