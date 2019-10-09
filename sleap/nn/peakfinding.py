@@ -252,7 +252,7 @@ def find_global_peaks(
         return subs_max
 
 
-@tf.function
+# @tf.function
 def crop_centered_boxes(
     img: tf.Tensor, peaks: tf.Tensor, window_length: int = 5
 ) -> tf.Tensor:
@@ -314,7 +314,7 @@ def crop_centered_boxes(
     return cropped_boxes
 
 
-@tf.function
+# @tf.function
 def _find_center_offsets(
     centered_boxes: tf.Tensor, upsampling_factor: float
 ) -> tf.Tensor:
