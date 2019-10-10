@@ -17,6 +17,8 @@ from typing import Any, Dict, List, Optional
 
 from PySide2 import QtWidgets, QtCore
 
+from sleap.gui.filedialog import FileDialog
+
 
 class YamlFormWidget(QtWidgets.QGroupBox):
     """
