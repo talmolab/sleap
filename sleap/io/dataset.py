@@ -2259,7 +2259,7 @@ class Labels(MutableSequence):
                         ).exec_()
 
                         current_root, current_ext = os.path.splitext(current_basename)
-                        caption = f"Please locate {current_basename}..."
+                        caption = f"Please locate {current_filename}..."
                         filters = [
                             f"{current_root} file (*{current_ext})",
                             "Any File (*.*)",
