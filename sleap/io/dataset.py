@@ -1594,7 +1594,7 @@ class Labels(MutableSequence):
             )
 
             num_instances = len(labels.all_instances)
-            max_skeleton_size = max([len(s.nodes) for s in labels.skeletons])
+            max_skeleton_size = max([len(s.nodes) for s in labels.skeletons], default=0)
 
             # Initialize data arrays for serialization
             points = np.zeros(num_instances * max_skeleton_size, dtype=Point.dtype)
@@ -2215,7 +2215,7 @@ class Labels(MutableSequence):
 
         def gui_video_callback(video_list, new_paths=search_paths):
             import os
-            from PySide2.QtWidgets import QFileDialog, QMessageBox
+            from PySide2.QtWidgets import QMessageBox
 
             basename_list = []
 
