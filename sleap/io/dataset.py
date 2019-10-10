@@ -44,7 +44,7 @@ from sleap.instance import (
 
 from sleap.io.legacy import load_labels_json_old
 from sleap.io.video import Video
-from sleap.gui.filedialog import FileDialog
+from sleap.gui.missingfiles import MissingFilesDialog
 from sleap.rangelist import RangeList
 from sleap.util import uniquify, weak_filename_match, json_dumps, json_loads
 
@@ -2218,65 +2218,43 @@ class Labels(MutableSequence):
         search_paths = search_paths or []
 
         def gui_video_callback(video_list, new_paths=search_paths):
-            import os
-            from PySide2.QtWidgets import QMessageBox
+            filenames = [item["backend"]["filename"] for item in video_list]
+            missing = MissingFilesDialog.list_file_missing(filenames)
 
-            basename_list = []
+            # First check for file in search_path directories
+            if sum(missing) and new_paths:
+                for i, filename in enumerate(filenames):
+                    fixed_path = find_path_using_paths(filename, new_paths)
+                    if fixed_path != filename:
+                        filenames[i] = fixed_path
+                        missing[i] = False
 
-            # Check each video
-            for video_item in video_list:
-                if "backend" in video_item and "filename" in video_item["backend"]:
-                    current_filename = video_item["backend"]["filename"]
-                    # check if we can find video
-                    if not os.path.exists(current_filename):
-                        is_found = False
+            # If there are still missing paths, prompt user
+            if sum(missing):
+                MissingFilesDialog(filenames, missing).exec_()
 
-                        current_basename = os.path.basename(current_filename)
-                        # handle unix, windows, or mixed paths
-                        if current_basename.find("/") > -1:
-                            current_basename = current_basename.split("/")[-1]
-                        if current_basename.find("\\") > -1:
-                            current_basename = current_basename.split("\\")[-1]
-
-                        # First see if we can find the file in another directory,
-                        # and if not, prompt the user to find the file.
-
-                        # We'll check in the current working directory, and if the user has
-                        # already found any missing videos, check in the directory of those.
-                        if current_basename not in basename_list:
-                            for path_dir in new_paths:
-                                check_path = os.path.join(path_dir, current_basename)
-                                if os.path.exists(check_path):
-                                    # we found the file in a different directory
-                                    video_item["backend"]["filename"] = check_path
-                                    is_found = True
-                                    break
-
-                        # if we found this file, then move on to the next file
-                        if is_found:
-                            continue
-
-                        # Since we couldn't find the file on our own, prompt the user.
-                        print(f"Unable to find: {current_filename}")
-                        QMessageBox(
-                            text=f"We're unable to locate one or more video files for this project. Please locate {current_filename}."
-                        ).exec_()
-
-                        current_root, current_ext = os.path.splitext(current_basename)
-                        caption = f"Please locate {current_filename}..."
-                        filters = [
-                            f"{current_root} file (*{current_ext})",
-                            "Any File (*.*)",
-                        ]
-                        dir = None if len(new_paths) == 0 else new_paths[-1]
-                        new_filename, _ = FileDialog.open(
-                            None, dir=dir, caption=caption, filter=";;".join(filters)
-                        )
-                        # if we got an answer, then update filename for video
-                        if len(new_filename):
-                            video_item["backend"]["filename"] = new_filename
-                            # keep track of the directory chosen by user
-                            new_paths.append(os.path.dirname(new_filename))
-                            basename_list.append(current_basename)
+            # Replace the video filenames with changes by user
+            for i, item in enumerate(video_list):
+                item["backend"]["filename"] = filenames[i]
 
         return gui_video_callback
+
+
+def find_path_using_paths(missing_path, search_paths):
+
+    # Get basename (filename with directories) using current os path format
+    current_basename = os.path.basename(missing_path)
+
+    # Handle unix, windows, or mixed paths
+    if current_basename.find("/") > -1:
+        current_basename = current_basename.split("/")[-1]
+    if current_basename.find("\\") > -1:
+        current_basename = current_basename.split("\\")[-1]
+
+    # Look for file with that name in each of the search path directories
+    for path_dir in search_paths:
+        check_path = os.path.join(path_dir, current_basename)
+        if os.path.exists(check_path):
+            return check_path
+
+    return missing_path
