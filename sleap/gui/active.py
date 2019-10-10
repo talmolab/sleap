@@ -12,6 +12,7 @@ from typing import Dict, List, Optional, Tuple
 
 from sleap.io.dataset import Labels
 from sleap.io.video import Video
+from sleap.gui.filedialog import FileDialog
 from sleap.gui.training_editor import TrainingEditor
 from sleap.gui.formbuilder import YamlFormWidget
 from sleap.nn.model import ModelOutputType
@@ -526,7 +527,7 @@ class ActiveLearningDialog(QtWidgets.QDialog):
 
     def _add_job_file(self, model_type):
         """Allow user to add training profile for given model type."""
-        filename, _ = QtWidgets.QFileDialog.getOpenFileName(
+        filename, _ = FileDialog.open(
             None,
             dir=None,
             caption="Select training profile...",

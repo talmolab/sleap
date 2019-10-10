@@ -8,7 +8,7 @@ from PySide2.QtCore import Qt, QEvent
 from PySide2.QtWidgets import QApplication, QMainWindow, QWidget, QDockWidget
 from PySide2.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox
 from PySide2.QtWidgets import QLabel, QPushButton, QComboBox
-from PySide2.QtWidgets import QFileDialog, QMessageBox
+from PySide2.QtWidgets import QMessageBox
 
 import re
 import operator
@@ -37,6 +37,7 @@ from sleap.gui.dataviews import (
     SuggestionsTable,
 )
 from sleap.gui.importvideos import ImportVideos
+from sleap.gui.filedialog import FileDialog
 from sleap.gui.formbuilder import YamlFormWidget
 from sleap.gui.merge import MergeDialog
 from sleap.gui.shortcuts import Shortcuts, ShortcutDialog
@@ -70,24 +71,16 @@ class MainWindow(QMainWindow):
     skeleton: Skeleton
     video: Video
 
-    def __init__(
-        self,
-        labels_path: Optional[str] = None,
-        nonnative: bool = False,
-        *args,
-        **kwargs,
-    ):
+    def __init__(self, labels_path: Optional[str] = None, *args, **kwargs):
         """Initialize the app.
 
         Args:
             labels_path: Path to saved :class:`Labels` dataset.
-            nonnative: Whether to use native or Qt file dialog.
+
         Returns:
             None.
         """
         super(MainWindow, self).__init__(*args, **kwargs)
-
-        self.nonnative = nonnative
 
         self.labels = Labels()
         self.skeleton = Skeleton()
@@ -110,10 +103,6 @@ class MainWindow(QMainWindow):
 
         self.changestack_clear()
         self._initialize_gui()
-
-        self._file_dialog_options = 0
-        if self.nonnative:
-            self._file_dialog_options = QFileDialog.DontUseNativeDialog
 
         if labels_path:
             self.loadProject(labels_path)
@@ -1021,12 +1010,8 @@ class MainWindow(QMainWindow):
     def openSkeleton(self):
         """Shows gui for loading saved skeleton into project."""
         filters = ["JSON skeleton (*.json)", "HDF5 skeleton (*.h5 *.hdf5)"]
-        filename, selected_filter = openFileDialog(
-            self,
-            dir=None,
-            caption="Open skeleton...",
-            filter=";;".join(filters),
-            options=self._file_dialog_options,
+        filename, selected_filter = FileDialog.open(
+            self, dir=None, caption="Open skeleton...", filter=";;".join(filters)
         )
 
         if len(filename) == 0:
@@ -1050,12 +1035,8 @@ class MainWindow(QMainWindow):
         """Shows gui for saving skeleton from project."""
         default_name = "skeleton.json"
         filters = ["JSON skeleton (*.json)", "HDF5 skeleton (*.h5 *.hdf5)"]
-        filename, selected_filter = saveFileDialog(
-            self,
-            caption="Save As...",
-            dir=default_name,
-            filter=";;".join(filters),
-            options=self._file_dialog_options,
+        filename, selected_filter = FileDialog.save(
+            self, caption="Save As...", dir=default_name, filter=";;".join(filters)
         )
 
         if len(filename) == 0:
@@ -1280,12 +1261,11 @@ class MainWindow(QMainWindow):
             models_dir = os.path.join(os.path.dirname(self.filename), "models/")
 
         # Show dialog
-        filename, selected_filter = openFileDialog(
+        filename, selected_filter = FileDialog.open(
             self,
             dir=models_dir,
             caption="Import model outputs...",
             filter=";;".join(filters),
-            options=self._file_dialog_options,
         )
 
         if len(filename) == 0:
@@ -1495,12 +1475,8 @@ class MainWindow(QMainWindow):
     def importPredictions(self):
         """Starts gui for importing another dataset into currently one."""
         filters = ["HDF5 dataset (*.h5 *.hdf5)", "JSON labels (*.json *.json.zip)"]
-        filenames, selected_filter = openFileDialog(
-            self,
-            dir=None,
-            caption="Import labeled data...",
-            filter=";;".join(filters),
-            options=self._file_dialog_options,
+        filenames, selected_filter = FileDialog.open(
+            self, dir=None, caption="Import labeled data...", filter=";;".join(filters)
         )
 
         if len(filenames) == 0:
@@ -1859,12 +1835,8 @@ class MainWindow(QMainWindow):
             "DeepLabCut csv (*.csv)",
         ]
 
-        filename, selected_filter = openFileDialog(
-            self,
-            dir=None,
-            caption="Import labeled data...",
-            filter=";;".join(filters),
-            # options=self._file_dialog_options,
+        filename, selected_filter = FileDialog.open(
+            self, dir=None, caption="Import labeled data...", filter=";;".join(filters)
         )
 
         if len(filename) == 0:
@@ -1896,12 +1868,8 @@ class MainWindow(QMainWindow):
             "JSON labels (*.json)",
             "Compressed JSON (*.zip)",
         ]
-        filename, selected_filter = saveFileDialog(
-            self,
-            caption="Save As...",
-            dir=default_name,
-            filter=";;".join(filters),
-            options=self._file_dialog_options,
+        filename, selected_filter = FileDialog.save(
+            self, caption="Save As...", dir=default_name, filter=";;".join(filters)
         )
 
         if len(filename) == 0:
@@ -2000,12 +1968,11 @@ class MainWindow(QMainWindow):
             if not okay:
                 return
 
-            filename, _ = saveFileDialog(
+            filename, _ = FileDialog.save(
                 self,
                 caption="Save Video As...",
                 dir=self.filename + ".avi",
                 filter="AVI Video (*.avi)",
-                options=self._file_dialog_options,
             )
 
             if len(filename) == 0:
@@ -2023,12 +1990,11 @@ class MainWindow(QMainWindow):
     def exportLabeledFrames(self):
         """Gui for exporting the training dataset of labels/frame images."""
         filters = ["HDF5 dataset (*.h5)", "Compressed JSON dataset (*.json *.json.zip)"]
-        filename, _ = saveFileDialog(
+        filename, _ = FileDialog.save(
             self,
             caption="Save Labeled Frames As...",
             dir=self.filename + ".h5",
             filters=";;".join(filters),
-            options=self._file_dialog_options,
         )
         if len(filename) == 0:
             return
@@ -2184,26 +2150,6 @@ class MainWindow(QMainWindow):
         ShortcutDialog().exec_()
 
 
-def openFileDialog(*args, **kwargs):
-    """Wrapper for openFileDialog.
-
-    Passes along everything except empty "options" arg.
-    """
-    if "options" in kwargs and not kwargs["options"]:
-        del kwargs["options"]
-    return QFileDialog.getOpenFileName(*args, **kwargs)
-
-
-def saveFileDialog(*args, **kwargs):
-    """Wrapper for saveFileDialog.
-
-    Passes along everything except empty "options" arg.
-    """
-    if "options" in kwargs and not kwargs["options"]:
-        del kwargs["options"]
-    return QFileDialog.getSaveFileName(*args, **kwargs)
-
-
 def main(*args, **kwargs):
     """Starts new instance of app."""
     app = QApplication([])
@@ -2235,4 +2181,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    main(**vars(args))
+    if args.nonnative:
+        os.environ["USE_NON_NATIVE_FILE"] = "1"
+
+    main(labels_path=args.labels_path)

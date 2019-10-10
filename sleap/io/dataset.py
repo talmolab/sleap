@@ -44,6 +44,7 @@ from sleap.instance import (
 
 from sleap.io.legacy import load_labels_json_old
 from sleap.io.video import Video
+from sleap.gui.filedialog import FileDialog
 from sleap.rangelist import RangeList
 from sleap.util import uniquify, weak_filename_match, json_dumps, json_loads
 
@@ -2264,7 +2265,7 @@ class Labels(MutableSequence):
                             "Any File (*.*)",
                         ]
                         dir = None if len(new_paths) == 0 else new_paths[-1]
-                        new_filename, _ = QFileDialog.getOpenFileName(
+                        new_filename, _ = FileDialog.open(
                             None, dir=dir, caption=caption, filter=";;".join(filters)
                         )
                         # if we got an answer, then update filename for video
