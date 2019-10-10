@@ -704,7 +704,7 @@ def run_active_learning_pipeline(
     training_jobs: Dict["ModelOutputType", "TrainingJob"] = None,
     frames_to_predict: Dict[Video, List[int]] = None,
     with_tracking: bool = False,
-    save_predictions: bool = True,
+    save_predictions: bool = False,
 ) -> int:
     """Run training (as needed) and inference.
 
@@ -732,9 +732,17 @@ def run_active_learning_pipeline(
     for job in training_jobs.values():
         job.labels_filename = labels_filename
 
-    # TODO: what if no labels_filename (since labels not yet saved)?
+    if labels_filename:
+        save_dir = os.path.join(os.path.dirname(labels_filename), "models")
 
-    save_dir = os.path.join(os.path.dirname(labels_filename), "models")
+    # If there are jobs to train and no path to save them, ask for path
+    if (has_jobs_to_train or save_predictions) and not labels_filename:
+        save_dir = FileDialog.openDir(
+            None, directory=None, caption="Please select directory for saving files..."
+        )
+
+        if not save_dir:
+            raise ValueError("No valid directory for saving files.")
 
     # Train the TrainingJobs
     trained_jobs = run_active_training(labels, training_jobs, save_dir)
@@ -753,6 +761,11 @@ def run_active_learning_pipeline(
     )
 
     return new_labeled_frame_count
+
+
+def has_jobs_to_train(training_jobs: Dict["ModelOutputType", "TrainingJob"]):
+    """Returns whether any of the jobs need to be trained."""
+    return any(not getattr(job, "use_trained_model", False) for job in training_jobs)
 
 
 def run_active_training(
