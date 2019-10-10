@@ -1896,6 +1896,10 @@ class Labels(MutableSequence):
         Returns:
             None.
         """
+        # Make sure that all directories for path exist
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+
+        # Detect filetype and use appropriate save method
         if not filename.endswith((".json", ".zip", ".h5")) and default_suffix:
             filename += f".{default_suffix}"
         if filename.endswith((".json", ".zip")):

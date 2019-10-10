@@ -723,3 +723,9 @@ def test_hdf5_empty_save(tmpdir):
     dummy_video = Video.from_filename("foo.mp4")
     labels.videos.append(dummy_video)
     Labels.save_hdf5(filename=filename, labels=labels)
+
+
+def test_makedirs(tmpdir):
+    labels = Labels()
+    filename = os.path.join(tmpdir, "new/dirs/test.h5")
+    Labels.save_file(filename=filename, labels=labels)
