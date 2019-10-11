@@ -54,8 +54,14 @@ class MissingFilesDialog(QtWidgets.QDialog):
         layout.addWidget(self.file_table)
 
         buttons = QtWidgets.QDialogButtonBox()
-        buttons.addButton("Continue", QtWidgets.QDialogButtonBox.AcceptRole)
-        buttons.accepted.connect(self.finish)
+        buttons.addButton("Abort", QtWidgets.QDialogButtonBox.RejectRole)
+        self.accept_button = buttons.addButton(
+            "Continue", QtWidgets.QDialogButtonBox.AcceptRole
+        )
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+
+        self.accept_button.setEnabled(False)
 
         layout.addWidget(buttons)
 
@@ -97,6 +103,10 @@ class MissingFilesDialog(QtWidgets.QDialog):
         pathutils.filenames_prefix_change(
             self.filenames, old_prefix, new_prefix, self.missing, confirm_callback
         )
+
+        # If there are no missing files still, enable the "accept" button
+        if sum(self.missing) == 0:
+            self.accept_button.setEnabled(True)
 
     def confirmAutoReplace(self, old, new):
         message = (
@@ -197,3 +207,10 @@ class MissingFileTableModel(QtCore.QAbstractTableModel):
             elif orientation == QtCore.Qt.Vertical:
                 return section
         return None
+
+
+# if __name__ == "__main__":
+#     app = QtWidgets.QApplication()
+#     win = MissingFilesDialog(["m:/centered_pair_small.mp4", "m:/small_robot.mp4"])
+#     result = win.exec_()
+#     print(result)

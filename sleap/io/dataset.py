@@ -42,6 +42,7 @@ from sleap.instance import (
     PredictedPointArray,
 )
 
+from sleap.io import pathutils
 from sleap.io.legacy import load_labels_json_old
 from sleap.io.video import Video
 from sleap.gui.missingfiles import MissingFilesDialog
@@ -1429,7 +1430,9 @@ class Labels(MutableSequence):
 
                 # Use the callback if given to handle missing videos
                 if callable(video_callback):
-                    video_callback(dicts["videos"])
+                    abort = video_callback(dicts["videos"])
+                    if abort:
+                        raise FileNotFoundError
 
                 # Try to load the labels filename.
                 try:
@@ -2208,6 +2211,8 @@ class Labels(MutableSequence):
         allows the user to find videos which have been moved (or have
         paths from a different system).
 
+        The callback function returns True to signal "abort".
+
         Args:
             search_paths: If specified, this is a list of paths where
                 we'll automatically try to find the missing videos.
@@ -2219,7 +2224,7 @@ class Labels(MutableSequence):
 
         def gui_video_callback(video_list, new_paths=search_paths):
             filenames = [item["backend"]["filename"] for item in video_list]
-            missing = MissingFilesDialog.list_file_missing(filenames)
+            missing = pathutils.list_file_missing(filenames)
 
             # First check for file in search_path directories
             if sum(missing) and new_paths:
@@ -2231,7 +2236,9 @@ class Labels(MutableSequence):
 
             # If there are still missing paths, prompt user
             if sum(missing):
-                MissingFilesDialog(filenames, missing).exec_()
+                okay = MissingFilesDialog(filenames, missing).exec_()
+                if not okay:
+                    return True  # True for stop
 
             # Replace the video filenames with changes by user
             for i, item in enumerate(video_list):
