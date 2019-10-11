@@ -21,7 +21,7 @@ requirements:
   host:
     - python=3.6
     - attrs
-    - jsonpickle=1.1
+    - jsonpickle=1.2
     - networkx
     - tensorflow-gpu=1.13
     - keras
@@ -39,7 +39,7 @@ requirements:
   run:
     - python=3.6
     - attrs
-    - jsonpickle=1.1
+    - jsonpickle=1.2
     - networkx
     - tensorflow-gpu=1.13
     - keras
