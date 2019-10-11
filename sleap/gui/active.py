@@ -681,13 +681,11 @@ def find_saved_jobs(
         try:
             # try to load json as TrainingJob
             job = TrainingJob.load_json(full_filename)
-        except ValueError:
-            # couldn't load as TrainingJob so just ignore this json file
-            # probably it's a json file for something else
-            pass
         except:
-            # but do raise any other type of error
-            raise
+            # Couldn't load as TrainingJob so just ignore this json file
+            # probably it's a json file for something else (or an json for a
+            # older version of the object with different class attributes).
+            pass
         else:
             # we loaded the json as a TrainingJob, so see what type of model it's for
             model_type = job.model.output_type
