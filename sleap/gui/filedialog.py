@@ -11,7 +11,7 @@ class FileDialog(object):
     @classmethod
     def open(cls, *args, **kwargs):
         """
-        Wrapper for `QFileDialog.openFileDialog()`
+        Wrapper for `QFileDialog.getOpenFileName()`
 
         Uses non-native file dialog if USE_NON_NATIVE_FILE env var set.
 
@@ -21,8 +21,20 @@ class FileDialog(object):
         return QtWidgets.QFileDialog.getOpenFileName(*args, **kwargs)
 
     @classmethod
+    def openMultiple(cls, *args, **kwargs):
+        """
+        Wrapper for `QFileDialog.getOpenFileNames()`
+
+        Uses non-native file dialog if USE_NON_NATIVE_FILE env var set.
+
+        Passes along everything except empty "options" arg.
+        """
+        cls._non_native_if_set(kwargs)
+        return QtWidgets.QFileDialog.getOpenFileNames(*args, **kwargs)
+
+    @classmethod
     def save(cls, *args, **kwargs):
-        """Wrapper for `QFileDialog.saveFileDialog()`
+        """Wrapper for `QFileDialog.getSaveFileName()`
 
         Uses non-native file dialog if USE_NON_NATIVE_FILE env var set.
 
