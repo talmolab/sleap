@@ -86,8 +86,8 @@ def improfile(I, p0, p1, max_points=None):
     n = int(n)
 
     # Compute coordinates
-    x = np.round(np.linspace(p0[0], p1[0], n)).astype("int32")
-    y = np.round(np.linspace(p0[1], p1[1], n)).astype("int32")
+    x = np.floor(np.linspace(p0[0], p1[0], n)).astype("int32")
+    y = np.floor(np.linspace(p0[1], p1[1], n)).astype("int32")
 
     # Extract values and concatenate into vector
     vals = np.stack([I[yi, xi] for xi, yi in zip(x, y)])
