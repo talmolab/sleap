@@ -1,4 +1,4 @@
-from typing import Any, Callable, Iterable
+from typing import Any, Callable, Iterable, List, Union
 
 
 class GuiState(object):
@@ -60,8 +60,16 @@ class GuiState(object):
         """
         pass
 
-    def connect(self, key: str, callback: Callable) -> str:
-        """Connects callbacks for state variable."""
+    def connect(self, key: str, callbacks: Union[Callable, List[Callable]]) -> str:
+        """Connects one or more callbacks for state variable."""
+        if callable(callbacks):
+            self._connect_callback(key, callbacks)
+        else:
+            for callback in callbacks:
+                self._connect_callback(key, callback)
+
+    def _connect_callback(self, key: str, callback: Callable) -> str:
+        """Connects a callback for state variable."""
         if key not in self._callbacks:
             self._callbacks[key] = []
         self._callbacks[key].append(callback)

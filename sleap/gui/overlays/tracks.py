@@ -121,12 +121,14 @@ class TrackColorManager(object):
         self._labels = val
 
     @property
-    def palette_names(self):
-        """Gets list of palette names."""
-        return self._palettes.keys()
+    def palette(self):
+        """Gets or sets palette (by name)."""
+        return self._palette
 
-    def set_palette(self, palette):
-        """Sets palette (by name)."""
+    @palette.setter
+    def palette(self, palette):
+        self._palette = palette
+
         if isinstance(palette, str):
             self.mode = "clip" if palette.endswith("+") else "cycle"
 
@@ -136,6 +138,15 @@ class TrackColorManager(object):
                 self._color_map = self._palettes["standard"]
         else:
             self._color_map = palette
+
+    @property
+    def palette_names(self):
+        """Gets list of palette names."""
+        return self._palettes.keys()
+
+    def set_palette(self, palette):
+        """Functional alias for palette property setter."""
+        self.palette = palette
 
     def get_color(self, track: Union[Track, int]):
         """Return the color to use for a given track.
@@ -148,6 +159,8 @@ class TrackColorManager(object):
         track_idx = (
             self.labels.tracks.index(track) if isinstance(track, Track) else track
         )
+        if track_idx is None:
+            return (0, 0, 0)
         color_idx = self._modes[self.mode](track_idx, len(self._color_map))
         color = self._color_map[color_idx]
         return color

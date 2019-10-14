@@ -96,13 +96,16 @@ class QtVideoPlayer(QWidget):
         self.seekbar.valueChanged.connect(
             lambda e: self.state.set("frame_idx", self.seekbar.value())
         )
+        self.seekbar.selectionChanged.connect(
+            lambda a, b: self.state.set("frame_range", (a, b))
+        )
 
         self.state.connect("frame_idx", lambda idx: self.plot())
         self.state.connect("frame_idx", lambda idx: self.seekbar.setValue(idx))
         self.state.connect("instance", self.view.selectInstance)
 
-        # self.state.connect("show labels", self.plot)
-        # self.state.connect("show edges", self.plot)
+        self.state.connect("show labels", self.plot)
+        self.state.connect("show edges", self.plot)
         self.state.connect("video", self.load_video)
         self.state.connect("fit", self.setFitZoom)
 
@@ -230,19 +233,24 @@ class QtVideoPlayer(QWidget):
             inst.showEdges(show)
 
     def zoomToFit(self):
-        """ Zoom view to fit all instances
+        """ Zoom view to fit all instances.
         """
         zoom_rect = self.view.instancesBoundingRect(margin=20)
         if not zoom_rect.size().isEmpty():
             self.view.zoomToRect(zoom_rect)
 
     def setFitZoom(self, value):
+        """Zooms or unzooms current view to fit all instances."""
         if self.video:
             if value:
                 self.zoomToFit()
             else:
                 self.view.clearZoom()
             self.plot()
+
+    def getVisibleRect(self):
+        """Returns `QRectF` with currently visible portion of frame image."""
+        return self.view.mapToScene(self.view.rect()).boundingRect()
 
     def onSequenceSelect(
         self,
@@ -1169,6 +1177,7 @@ class QtEdge(QGraphicsLineItem):
         *args,
         **kwargs,
     ):
+        self.parent = parent
         self.src = src
         self.dst = dst
         self.show_non_visible = show_non_visible
@@ -1234,7 +1243,9 @@ class QtEdge(QGraphicsLineItem):
             self.full_opacity = 1
         else:
             self.full_opacity = 0.5 if self.show_non_visible else 0
-        self.setOpacity(self.full_opacity)
+
+        if self.parent.edges_shown:
+            self.setOpacity(self.full_opacity)
 
         if node == self.src:
             line = self.line()
@@ -1472,7 +1483,7 @@ class QtInstance(QGraphicsObject):
             label.setOpacity(op)
         self.labels_shown = show
 
-    def showEdges(self, show=True):
+    def showEdges(self, show: bool):
         """
         Draws/hides the edges for this skeleton instance.
 

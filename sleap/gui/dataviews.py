@@ -313,10 +313,7 @@ class LabeledFrameTable(QtWidgets.QTableView):
         if not instance:
             return
 
-        idx = -1
-        if instance in self.model().labeled_frame.instances_to_show:
-            idx = self.model().labeled_frame.instances_to_show.index(instance)
-
+        idx = self.model().get_instance_index(instance)
         table_row_idx = self.model().createIndex(idx, 0)
         self.setCurrentIndex(table_row_idx)
 
@@ -383,6 +380,13 @@ class LabeledFrameTableModel(QtCore.QAbstractTableModel):
     @color_manager.setter
     def color_manager(self, val):
         self._color_manager = val
+
+    def get_instance_index(self, instance):
+        idx = -1
+        if self.labeled_frame is not None:
+            if instance in self.labeled_frame.instances_to_show:
+                idx = self.labeled_frame.instances_to_show.index(instance)
+        return idx
 
     def data(self, index: QtCore.QModelIndex, role=QtCore.Qt.DisplayRole):
         """Overrides Qt method, returns data to show in table."""
