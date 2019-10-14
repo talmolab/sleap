@@ -12,6 +12,7 @@ from typing import Dict, List, Optional, Tuple
 
 from sleap.io.dataset import Labels
 from sleap.io.video import Video
+from sleap.gui.filedialog import FileDialog
 from sleap.gui.training_editor import TrainingEditor
 from sleap.gui.formbuilder import YamlFormWidget
 from sleap.nn.model import ModelOutputType
@@ -160,13 +161,14 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         profile_dir = resource_filename(
             Requirement.parse("sleap"), "sleap/training_profiles"
         )
-        labels_dir = os.path.join(os.path.dirname(self.labels_filename), "models")
 
         self.job_options = dict()
 
         # list any profiles from previous runs
-        if os.path.exists(labels_dir):
-            find_saved_jobs(labels_dir, self.job_options)
+        if self.labels_filename:
+            labels_dir = os.path.join(os.path.dirname(self.labels_filename), "models")
+            if os.path.exists(labels_dir):
+                find_saved_jobs(labels_dir, self.job_options)
         # list default profiles
         find_saved_jobs(profile_dir, self.job_options)
 
@@ -428,13 +430,8 @@ class ActiveLearningDialog(QtWidgets.QDialog):
             with_tracking = True
         else:
             frames_to_predict = dict()
-        save_confmaps_pafs = False
-        # Disable save_confmaps_pafs since not currently working.
-        # The problem is that we can't put data for different crop sizes
-        # all into a single h5 datasource. It's now possible to view live
-        # predicted confmap and paf in the gui, so this isn't high priority.
-        # If you want to enable, uncomment this:
-        # save_confmaps_pafs = form_data.get("_save_confmaps_pafs", False)
+
+        save_predictions = form_data.get("_save_predictions", False)
 
         # Run active learning pipeline using the TrainingJobs
         new_counts = run_active_learning_pipeline(
@@ -443,6 +440,7 @@ class ActiveLearningDialog(QtWidgets.QDialog):
             training_jobs=training_jobs,
             frames_to_predict=frames_to_predict,
             with_tracking=with_tracking,
+            save_predictions=save_predictions,
         )
 
         self.learningFinished.emit()
@@ -526,7 +524,7 @@ class ActiveLearningDialog(QtWidgets.QDialog):
 
     def _add_job_file(self, model_type):
         """Allow user to add training profile for given model type."""
-        filename, _ = QtWidgets.QFileDialog.getOpenFileName(
+        filename, _ = FileDialog.open(
             None,
             dir=None,
             caption="Select training profile...",
@@ -683,13 +681,11 @@ def find_saved_jobs(
         try:
             # try to load json as TrainingJob
             job = TrainingJob.load_json(full_filename)
-        except ValueError:
-            # couldn't load as TrainingJob so just ignore this json file
-            # probably it's a json file for something else
-            pass
         except:
-            # but do raise any other type of error
-            raise
+            # Couldn't load as TrainingJob so just ignore this json file
+            # probably it's a json file for something else (or an json for a
+            # older version of the object with different class attributes).
+            pass
         else:
             # we loaded the json as a TrainingJob, so see what type of model it's for
             model_type = job.model.output_type
@@ -706,6 +702,7 @@ def run_active_learning_pipeline(
     training_jobs: Dict["ModelOutputType", "TrainingJob"] = None,
     frames_to_predict: Dict[Video, List[int]] = None,
     with_tracking: bool = False,
+    save_predictions: bool = False,
 ) -> int:
     """Run training (as needed) and inference.
 
@@ -716,6 +713,7 @@ def run_active_learning_pipeline(
         frames_to_predict: Dict that gives list of frame indices for each video.
         with_tracking: Whether to run tracking code after we predict instances.
             This should be used only when predicting on continuous set of frames.
+        save_predictions: Whether to save new predictions in separate file.
 
     Returns:
         Number of new frames added to labels.
@@ -732,7 +730,17 @@ def run_active_learning_pipeline(
     for job in training_jobs.values():
         job.labels_filename = labels_filename
 
+    if labels_filename:
         save_dir = os.path.join(os.path.dirname(labels_filename), "models")
+
+    # If there are jobs to train and no path to save them, ask for path
+    if (has_jobs_to_train or save_predictions) and not labels_filename:
+        save_dir = FileDialog.openDir(
+            None, directory=None, caption="Please select directory for saving files..."
+        )
+
+        if not save_dir:
+            raise ValueError("No valid directory for saving files.")
 
     # Train the TrainingJobs
     trained_jobs = run_active_training(labels, training_jobs, save_dir)
@@ -741,12 +749,21 @@ def run_active_learning_pipeline(
     if None in trained_jobs.values():
         return 0
 
+    # Clear save_dir if we don't want to save predictions in new file
+    if not save_predictions:
+        save_dir = ""
+
     # Run the Predictor for suggested frames
     new_labeled_frame_count = run_active_inference(
         labels, trained_jobs, save_dir, frames_to_predict, with_tracking
     )
 
     return new_labeled_frame_count
+
+
+def has_jobs_to_train(training_jobs: Dict["ModelOutputType", "TrainingJob"]):
+    """Returns whether any of the jobs need to be trained."""
+    return any(not getattr(job, "use_trained_model", False) for job in training_jobs)
 
 
 def run_active_training(
@@ -855,20 +872,8 @@ def run_active_inference(
     """
     from sleap.nn.inference import Predictor
 
-    # from multiprocessing import Pool
-
-    # total_new_lf_count = 0
-    timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
-    inference_output_path = os.path.join(save_dir, f"{timestamp}.inference.h5")
-
     # Create Predictor from the results of training
-    # pool = Pool(processes=1)
-    predictor = Predictor(
-        training_jobs=training_jobs,
-        with_tracking=with_tracking,
-        # output_path=inference_output_path,
-        # pool=pool
-    )
+    predictor = Predictor(training_jobs=training_jobs, with_tracking=with_tracking)
 
     if gui:
         # show message while running inference
@@ -921,9 +926,14 @@ def run_active_inference(
     # Remove any frames without instances
     new_lfs = list(filter(lambda lf: len(lf.instances), new_lfs))
 
-    # Create and save dataset with predictions
+    # Create dataset with predictions
     new_labels = Labels(new_lfs)
-    Labels.save_file(new_labels, inference_output_path)
+
+    # Save dataset of predictions (if desired)
+    if save_dir:
+        timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
+        inference_output_path = os.path.join(save_dir, f"{timestamp}.inference.h5")
+        Labels.save_file(new_labels, inference_output_path)
 
     # Merge predictions into current labels dataset
     _, _, new_conflicts = Labels.complex_merge_between(labels, new_labels)
