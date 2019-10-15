@@ -236,13 +236,13 @@ def dict_cut(d: Dict, a: int, b: int) -> Dict:
 
 
 def get_package_file(filename: str) -> str:
-    """Returns text of specified file within sleap package."""
+    """Returns full path to specified file within sleap package."""
     package_path = Requirement.parse("sleap")
     result = resource_filename(package_path, filename)
     return result
 
 
 def get_config_file(shortname: str) -> str:
-    """Returns text from specified file in config directory of package."""
+    """Returns full path to specified file in config directory of package."""
     local_path = f"sleap/config/{shortname}"
     return get_package_file(local_path)

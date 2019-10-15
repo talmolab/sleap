@@ -7,7 +7,6 @@ import cattr
 
 from datetime import datetime
 from functools import reduce
-from pkg_resources import Requirement, resource_filename
 from typing import Dict, List, Optional, Tuple
 
 from sleap.io.dataset import Labels
@@ -20,6 +19,7 @@ from sleap.nn.training import TrainingJob
 
 from PySide2 import QtWidgets, QtCore
 
+from sleap.util import get_config_file, get_package_file
 
 SELECT_FILE_OPTION = "Select a training profile file..."
 
@@ -67,9 +67,7 @@ class ActiveLearningDialog(QtWidgets.QDialog):
             expert="Inference Pipeline",
         )
 
-        learning_yaml = resource_filename(
-            Requirement.parse("sleap"), "sleap/config/active.yaml"
-        )
+        learning_yaml = get_config_file("active.yaml")
         self.form_widget = YamlFormWidget(
             yaml_file=learning_yaml,
             which_form=self.mode,
@@ -158,9 +156,7 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         Rebuilds list of profile options (checking for new profile files).
         """
         # load list of job profiles from directory
-        profile_dir = resource_filename(
-            Requirement.parse("sleap"), "sleap/training_profiles"
-        )
+        profile_dir = get_package_file("sleap/training_profiles")
 
         self.job_options = dict()
 

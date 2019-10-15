@@ -10,6 +10,7 @@ from operator import itemgetter
 
 from typing import Callable, List, Optional
 
+from sleap.gui.state import GuiState
 from sleap.gui.overlays.tracks import TrackColorManager
 from sleap.io.dataset import Labels
 from sleap.instance import LabeledFrame, Instance
@@ -19,10 +20,10 @@ from sleap.skeleton import Skeleton
 class VideosTable(QtWidgets.QTableView):
     """Table view widget for listing videos in dataset."""
 
-    def __init__(self, state, videos: list = []):
+    def __init__(self, state: GuiState = None, videos: list = []):
         super(VideosTable, self).__init__()
 
-        self.state = state
+        self.state = state or GuiState()
         props = ("filename", "frames", "height", "width", "channels")
         model = GenericTableModel(props, videos, useCache=True)
 
@@ -33,14 +34,31 @@ class VideosTable(QtWidgets.QTableView):
 
         self.doubleClicked.connect(self.activateSelected)
 
+    def selectionChanged(self, new, old):
+        """Custom event handler."""
+        super(VideosTable, self).selectionChanged(new, old)
+
+        item = None
+        if len(new.indexes()):
+            row_idx = new.indexes()[0].row()
+            try:
+                item = self.model().uncached_items[row_idx]
+            except:
+                pass
+
+        # self.selectionChangedSignal.emit(instance)
+        self.state["selected_video"] = item
+
     def activateSelected(self, *args):
         """Activates video selected in table."""
         # Get selected video
+        self.state["video"] = self.getSelectedRowItem()
+
+    def getSelectedRowItem(self):
         idx = self.currentIndex()
         if not idx.isValid():
             return
-        video = self.model().uncached_items[idx.row()]
-        self.state["video"] = video
+        return self.model().uncached_items[idx.row()]
 
 
 class GenericTableModel(QtCore.QAbstractTableModel):
@@ -299,10 +317,13 @@ class LabeledFrameTable(QtWidgets.QTableView):
     selectionChangedSignal = QtCore.Signal(Instance)
 
     def __init__(
-        self, state, labeled_frame: LabeledFrame = None, labels: Labels = None
+        self,
+        state: GuiState = None,
+        labeled_frame: LabeledFrame = None,
+        labels: Labels = None,
     ):
         super(LabeledFrameTable, self).__init__()
-        self.state = state
+        self.state = state or GuiState()
         self.setModel(LabeledFrameTableModel(labeled_frame, labels))
         self.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)

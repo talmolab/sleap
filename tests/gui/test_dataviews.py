@@ -22,7 +22,7 @@ def test_skeleton_nodes(qtbot, centered_pair_predictions):
     table.selectRow(2)
     assert table.model().data(table.currentIndex()) == "thorax"
 
-    table = VideosTable(centered_pair_predictions.videos)
+    table = VideosTable(videos=centered_pair_predictions.videos)
     table.selectRow(0)
     assert (
         table.model().data(table.currentIndex()).find("centered_pair_low_quality.mp4")
@@ -30,7 +30,8 @@ def test_skeleton_nodes(qtbot, centered_pair_predictions):
     )
 
     table = LabeledFrameTable(
-        centered_pair_predictions.labels[13], centered_pair_predictions
+        labeled_frame=centered_pair_predictions.labels[13],
+        labels=centered_pair_predictions,
     )
     table.selectRow(1)
     assert table.model().data(table.currentIndex()) == "21/24"

@@ -1,6 +1,8 @@
 """
 Main GUI application for labeling, active learning, and proofreading.
 """
+from enum import Enum
+
 import attr
 from PySide2 import QtCore, QtWidgets
 from PySide2.QtCore import Qt, QEvent
@@ -54,6 +56,19 @@ from sleap.util import get_config_file
 OPEN_IN_NEW = True
 
 
+class UpdateTopic(Enum):
+    all = 1
+    video = 2
+    skeleton = 3
+    labels = 4
+    on_frame = 5
+    suggestions = 6
+    tracks = 7
+    frame = 8
+    project = 9
+    project_instances = 10
+
+
 class MainWindow(QMainWindow):
     """The SLEAP GUI application.
 
@@ -86,7 +101,9 @@ class MainWindow(QMainWindow):
 
         self.files = AppFiles(state=self.state, app=self)
         self.navigation = AppNavigation(state=self.state, app=self)
-        self.edit = AppEditor(state=self.state, app=self)
+        self.edit = AppEditor(
+            state=self.state, app=self, update_callback=self.on_data_update
+        )
 
         self._menu_actions = dict()
         self._buttons = dict()
@@ -763,38 +780,57 @@ class MainWindow(QMainWindow):
             control_key_down and has_selected_instance
         )
 
-    def _update_data_views(self, *update):
-        """Update data used by data view table models.
+    def on_data_update(self, what: List[UpdateTopic]):
+        def _has_topic(topic_list):
+            if UpdateTopic.all in what:
+                return True
+            for topic in topic_list:
+                if topic in what:
+                    return True
+            return False
 
-        Args:
-            Accepts names of what data to update as unnamed string arguments:
-                "video", "skeleton", "labels", "frame", "suggestions"
-            If no arguments are given, then everything is updated.
-        Returns:
-             None.
-        """
-        update = update or ("video", "skeleton", "labels", "frame", "suggestions")
+        if _has_topic(
+            [
+                UpdateTopic.frame,
+                UpdateTopic.skeleton,
+                UpdateTopic.project_instances,
+                UpdateTopic.tracks,
+            ]
+        ):
+            self.plotFrame()
 
-        if len(self.state["skeleton"].nodes) == 0 and len(self.labels.skeletons):
-            self.state["skeleton"] = self.labels.skeletons[0]
+        if _has_topic(
+            [
+                UpdateTopic.frame,
+                UpdateTopic.project_instances,
+                UpdateTopic.tracks,
+                UpdateTopic.suggestions,
+            ]
+        ):
+            self.updateSeekbarMarks()
 
-        if "video" in update:
+        if _has_topic(
+            [UpdateTopic.frame, UpdateTopic.project_instances, UpdateTopic.tracks]
+        ):
+            self.updateTrackMenu()
+
+        if _has_topic([UpdateTopic.video]):
             self.videosTable.model().items = self.labels.videos
 
-        if "skeleton" in update:
+        if _has_topic([UpdateTopic.skeleton]):
             self.skeletonNodesTable.model().skeleton = self.state["skeleton"]
             self.skeletonEdgesTable.model().skeleton = self.state["skeleton"]
             self.skeletonEdgesSrc.model().skeleton = self.state["skeleton"]
             self.skeletonEdgesDst.model().skeleton = self.state["skeleton"]
 
-        if "labels" in update:
+        if _has_topic([UpdateTopic.project]):
             self.instancesTable.model().labels = self.labels
             self.instancesTable.model().color_manager = self._color_manager
 
-        if "frame" in update:
+        if _has_topic([UpdateTopic.on_frame]):
             self.instancesTable.model().labeled_frame = self.state["labeled_frame"]
 
-        if "suggestions" in update:
+        if _has_topic([UpdateTopic.suggestions]):
             self.suggestionsTable.model().labels = self.labels
 
             # update count of suggested frames w/ labeled instances
@@ -839,7 +875,7 @@ class MainWindow(QMainWindow):
 
         # Update related displays
         self.updateStatusMessage()
-        self._update_data_views("frame")
+        self.on_data_update([UpdateTopic.on_frame])
 
         # Trigger event after the overlays have been added
         player.view.updatedViewer.emit()
@@ -927,15 +963,11 @@ class MainWindow(QMainWindow):
                 # TODO: add support for multiple skeletons
                 self.state["skeleton"] = self.labels.skeletons[0]
 
-            # Update UI tables
-            self._update_data_views()
-
             # Load first video
             if len(self.labels.videos):
                 self.state["video"] = self.labels.videos[0]
 
-            # Update track menu options
-            self.updateTrackMenu()
+            self.on_data_update([UpdateTopic.project, UpdateTopic.all])
 
     def updateTrackMenu(self):
         """Updates track menu options."""
@@ -945,7 +977,9 @@ class MainWindow(QMainWindow):
             if self.labels.tracks.index(track) < 9:
                 key_command = Qt.CTRL + Qt.Key_0 + self.labels.tracks.index(track) + 1
             self.track_menu.addAction(
-                f"{track.name}", lambda x=track: self.setInstanceTrack(x), key_command
+                f"{track.name}",
+                lambda x=track: self.edit.setInstanceTrack(x),
+                key_command,
             )
         self.track_menu.addAction("New Track", self.edit.addTrack, Qt.CTRL + Qt.Key_0)
 
@@ -1052,9 +1086,7 @@ class MainWindow(QMainWindow):
     def learningFinished(self):
         """Called when active learning (or inference) finishes."""
         # we ran active learning so update display/ui
-        self.plotFrame()
-        self.updateSeekbarMarks()
-        self._update_data_views()
+        self.on_data_update([UpdateTopic.all])
         self.edit.changestack_push("new predictions")
 
     def visualizeOutputs(self):
@@ -1133,26 +1165,7 @@ class MainWindow(QMainWindow):
 
         # When a regular instance is double-clicked, add any missing points
         else:
-            # the rect that's currently visibile in the window view
-            in_view_rect = self.player.getVisibleRect()
-
-            for node in self.state["skeleton"].nodes:
-                if node not in instance.nodes or instance[node].isnan():
-                    # pick random points within currently zoomed view
-                    x = (
-                        in_view_rect.x()
-                        + (in_view_rect.width() * 0.1)
-                        + (np.random.rand() * in_view_rect.width() * 0.8)
-                    )
-                    y = (
-                        in_view_rect.y()
-                        + (in_view_rect.height() * 0.1)
-                        + (np.random.rand() * in_view_rect.height() * 0.8)
-                    )
-                    # set point for node
-                    instance[node] = Point(x=x, y=y, visible=False)
-
-            self.plotFrame()
+            self.edit.completeInstanceNodes(instance)
 
     def openKeyRef(self):
         """Shows gui for viewing/modifying keyboard shortucts."""
@@ -1438,6 +1451,7 @@ class AppNavigation(object):
 class AppEditor(object):
     state: GuiState
     app: MainWindow
+    update_callback: Optional[Callable] = None
     _change_stack: List = attr.ib(default=attr.Factory(list))
 
     @property
@@ -1448,14 +1462,10 @@ class AppEditor(object):
     def labeled_frame(self):
         return self.state["labeled_frame"]
 
-    def redraw(self):
-        self.app.plotFrame()
-        self.app.updateSeekbarMarks()
-        self.app.updateTrackMenu()
-
-    def redrawData(self):
-        self.app.plotFrame()
-        self.app._update_data_views()
+    def signal_update(self, what: List[UpdateTopic]):
+        """Calls the update callback after data has been changed."""
+        if callable(self.update_callback):
+            self.update_callback(what)
 
     def changestack_push(self, change: str = ""):
         """Adds to stack of changes made by user."""
@@ -1512,18 +1522,13 @@ class AppEditor(object):
         if self.state["video"] is None:
             self.state["video"] = video
 
-        # Update data model/view
-        # TODO fix
-        self.redrawData()
-        # self._update_data_views("video")
+        self.signal_update([UpdateTopic.video])
 
     def removeVideo(self):
         """Removes video (selected in table) from project."""
-        # Get selected video
-        idx = self.app.videosTable.currentIndex()
-        if not idx.isValid():
+        video = self.state["selected_video"]
+        if video is None:
             return
-        video = self.labels.videos[idx.row()]
 
         # Count labeled frames for this video
         n = len(self.labels.find(video))
@@ -1546,16 +1551,12 @@ class AppEditor(object):
         self.changestack_push("remove video")
 
         # Update data model
-        self.redrawData()
+        self.signal_update([UpdateTopic.video])
 
         # Update view if this was the current video
         if self.state["video"] == video:
-            if len(self.labels.videos) == 0:
-                self.app.player.reset()
-                # TODO: update statusbar
-            else:
-                new_idx = min(idx.row(), len(self.labels.videos) - 1)
-                self.state["video"] = self.labels.videos[new_idx]
+            if len(self.labels.videos) > 0:
+                self.state["video"] = self.labels.videos[-1]
 
     def openSkeleton(self):
         """Shows gui for loading saved skeleton into project."""
@@ -1579,7 +1580,7 @@ class AppEditor(object):
             self.changestack_push("new skeleton")
 
         # Update data model
-        self.redrawData()
+        self.signal_update([UpdateTopic.skeleton])
 
     def saveSkeleton(self):
         """Shows gui for saving skeleton from project."""
@@ -1607,10 +1608,10 @@ class AppEditor(object):
             i += 1
 
         # Add the node to the skeleton
-        self.app.skeleton.add_node(part_name)
+        self.state["skeleton"].add_node(part_name)
         self.changestack_push("new node")
 
-        self.redrawData()
+        self.signal_update([UpdateTopic.skeleton])
 
     def deleteNode(self):
         """Removes (currently selected) node from skeleton."""
@@ -1618,17 +1619,17 @@ class AppEditor(object):
         idx = self.app.skeletonNodesTable.currentIndex()
         if not idx.isValid():
             return
-        node = self.app.skeleton.nodes[idx.row()]
+        node = self.state["skeleton"].nodes[idx.row()]
 
         # Remove
         self.state["skeleton"].delete_node(node)
         self.changestack_push("delete node")
 
-        self.redrawData()
+        self.signal_update([UpdateTopic.skeleton])
 
     def updateEdges(self):
         """Called when edges in skeleton have been changed."""
-        self.redrawData()
+        self.signal_update([UpdateTopic.skeleton])
 
     def newEdge(self):
         """Adds new edge to skeleton."""
@@ -1649,7 +1650,7 @@ class AppEditor(object):
         self.state["skeleton"].add_edge(source=src_node, destination=dst_node)
         self.changestack_push("new edge")
 
-        self.redrawData()
+        self.signal_update([UpdateTopic.skeleton])
 
     def deleteEdge(self):
         """Removes (currently selected) edge from skeleton."""
@@ -1665,7 +1666,7 @@ class AppEditor(object):
         self.state["skeleton"].delete_edge(source=edge[0], destination=edge[1])
         self.changestack_push("delete edge")
 
-        self.redrawData()
+        self.signal_update([UpdateTopic.skeleton])
 
     def deletePredictions(self):
         """Deletes all predicted instances in project."""
@@ -1778,6 +1779,7 @@ class AppEditor(object):
             for lf in self.labels.find(self.state["video"]):
                 if len(lf.instances) > count_thresh:
                     # Get all but the count_thresh many instances with the highest score
+                    # FIXME what about instances w/o score?
                     extra_instances = sorted(
                         lf.instances, key=operator.attrgetter("score")
                     )[:-count_thresh]
@@ -1792,14 +1794,15 @@ class AppEditor(object):
             lf_inst_list: A list of (labeled frame, instance) tuples.
         """
 
+        title = "Removing predicted instances"
+        message = (
+            f"There are {len(lf_inst_list)} predicted instances which "
+            f"would be deleted. Are you sure you want to delete these?"
+        )
+
         # Confirm that we want to delete
         resp = QMessageBox.critical(
-            self.app,
-            "Removing predicted instances",
-            f"There are {len(lf_inst_list)} predicted instances that would be deleted. "
-            "Are you sure you want to delete these?",
-            QMessageBox.Yes,
-            QMessageBox.No,
+            self.app, title, message, QMessageBox.Yes, QMessageBox.No
         )
 
         if resp == QMessageBox.No:
@@ -1810,8 +1813,8 @@ class AppEditor(object):
             self.labels.remove_instance(lf, inst)
 
         # Update visuals
-        self.redraw()
         self.changestack_push("removed predictions")
+        self.signal_update([UpdateTopic.project_instances])
 
     def previousLabeledFrameIndex(self):
         frames = self.labels.frames(
@@ -1824,6 +1827,24 @@ class AppEditor(object):
             return
 
         return next_idx
+
+    def _get_xy_in_rect(self, rect: QtCore.QRectF):
+        """Returns random x, y coordinates within given rect."""
+        x = rect.x() + (rect.width() * 0.1) + (np.random.rand() * rect.width() * 0.8)
+        y = rect.y() + (rect.height() * 0.1) + (np.random.rand() * rect.height() * 0.8)
+        return x, y
+
+    def completeInstanceNodes(self, instance: Instance):
+        """Adds missing nodes to given instance."""
+        # the rect that's currently visibile in the window view
+        in_view_rect = self.app.player.getVisibleRect()
+
+        for node in self.state["skeleton"].nodes:
+            if node not in instance.nodes or instance[node].isnan():
+                # pick random points within currently zoomed view
+                x, y = self._get_xy_in_rect(in_view_rect)
+                # set point for node
+                instance[node] = Point(x=x, y=y, visible=False)
 
     def newInstance(self, copy_instance: Optional[Instance] = None):
         """
@@ -1908,16 +1929,7 @@ class AppEditor(object):
                 )
             else:
                 # pick random points within currently zoomed view
-                x = (
-                    in_view_rect.x()
-                    + (in_view_rect.width() * 0.1)
-                    + (np.random.rand() * in_view_rect.width() * 0.8)
-                )
-                y = (
-                    in_view_rect.y()
-                    + (in_view_rect.height() * 0.1)
-                    + (np.random.rand() * in_view_rect.height() * 0.8)
-                )
+                x, y = self._get_xy_in_rect(in_view_rect)
                 # mark the node as not "visible" if we're copying from a predicted instance without this node
                 is_visible = copy_instance is None or not hasattr(
                     copy_instance, "score"
@@ -1937,7 +1949,7 @@ class AppEditor(object):
             self.labels.append(self.state["labeled_frame"])
             self.changestack_push("new labeled frame")
 
-        self.redraw()
+        self.signal_update([UpdateTopic.frame])
 
     def deleteSelectedInstance(self):
         """Deletes currently selected instance."""
@@ -1948,7 +1960,7 @@ class AppEditor(object):
         self.labels.remove_instance(self.state["labeled_frame"], selected_inst)
         self.changestack_push("delete instance")
 
-        self.redraw()
+        self.signal_update([UpdateTopic.frame])
 
     def deleteSelectedInstanceTrack(self):
         """Deletes all instances from track of currently selected instance."""
@@ -1969,7 +1981,7 @@ class AppEditor(object):
 
         self.changestack_push("delete track")
 
-        self.redraw()
+        self.signal_update([UpdateTopic.project_instances])
 
     def addTrack(self):
         """Creates new track and moves selected instance into this track."""
@@ -1987,10 +1999,7 @@ class AppEditor(object):
         self.changestack_end_atomic()
 
         # update track menu and seekbar
-        # TODO fix
-        self.redraw()
-        # self.updateTrackMenu()
-        # self.updateSeekbarMarks()
+        self.signal_update([UpdateTopic.tracks])
 
     def setInstanceTrack(self, new_track: "Track"):
         """Sets track for selected instance."""
@@ -2038,10 +2047,9 @@ class AppEditor(object):
         self.changestack_push("swap tracks")
 
         # Update visuals
-        self.redraw()
+        self.signal_update([UpdateTopic.tracks])
 
         # Make sure the originally selected instance is still selected
-        # self.app.player.view.selectInstance(idx)
         self.state["instance"] = selected_instance
 
     def transposeInstance(self):
@@ -2091,7 +2099,7 @@ class AppEditor(object):
         self.changestack_push("swap tracks")
 
         # Update visuals
-        self.redraw()
+        self.signal_update([UpdateTopic.tracks])
 
     def markNegativeAnchor(self):
         """Allows user to add negative training sample anchor."""
@@ -2102,7 +2110,7 @@ class AppEditor(object):
                 self.state["video"], self.state["frame_idx"], (x, y)
             )
             self.changestack_push("add negative anchors")
-            self.redraw()
+            self.signal_update([UpdateTopic.frame])
 
         # Prompt the user to select area
         self.app.updateStatusMessage(
@@ -2116,7 +2124,7 @@ class AppEditor(object):
             self.state["video"], self.state["frame_idx"]
         )
         self.changestack_push("remove negative anchors")
-        self.redraw()
+        self.signal_update([UpdateTopic.frame])
 
     def importPredictions(self):
         """Starts gui for importing another dataset into currently one."""
@@ -2143,8 +2151,7 @@ class AppEditor(object):
             MergeDialog(base_labels=self.labels, new_labels=new_labels).exec_()
 
         # update display/ui
-        self.redraw()
-        self.redrawData()
+        self.signal_update([UpdateTopic.all])
         self.changestack_push("new predictions")
 
     def generateSuggestions(self, params: Dict):
@@ -2157,10 +2164,7 @@ class AppEditor(object):
 
         self.labels.set_suggestions(new_suggestions)
 
-        # TODO fix
-        self.redrawData()
-        # self._update_data_views("suggestions")
-        # self.updateSeekbarMarks()
+        self.signal_update([UpdateTopic.suggestions])
 
 
 def main(*args, **kwargs):
@@ -2172,7 +2176,7 @@ def main(*args, **kwargs):
     window.showMaximized()
 
     if not kwargs.get("labels_path", None):
-        window.openProject(first_open=True)
+        window.files.openProject(first_open=True)
 
     app.exec_()
 

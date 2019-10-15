@@ -26,7 +26,6 @@ from PySide2.QtGui import QPen, QBrush, QColor, QFont
 from PySide2.QtGui import QKeyEvent
 from PySide2.QtCore import Qt, QRectF, QPointF, QMarginsF
 
-import numpy as np
 import math
 
 from typing import Callable, List, Optional, Union
@@ -593,9 +592,10 @@ class GraphicsView(QGraphicsView):
         """
         for idx, instance in enumerate(self.all_instances):
             instance.selected = select == idx or select == instance.instance
+        print("emit")
         self.updatedSelection.emit()
 
-    def getSelectionIndex(self) -> int:
+    def getSelectionIndex(self) -> Optional[int]:
         """ Returns the index of the currently selected instance.
         If no instance selected, returns None.
         """
@@ -606,7 +606,7 @@ class GraphicsView(QGraphicsView):
             if instance.selected:
                 return idx
 
-    def getSelectionInstance(self) -> Instance:
+    def getSelectionInstance(self) -> Optional[Instance]:
         """ Returns the currently selected instance.
         If no instance selected, returns None.
         """
@@ -617,7 +617,8 @@ class GraphicsView(QGraphicsView):
             if instance.selected:
                 return instance.instance
 
-    def getTopInstanceAt(self, scenePos) -> Instance:
+    def getTopInstanceAt(self, scenePos) -> Optional[Instance]:
+        """Returns topmost instance at position in scene."""
         # Get all items at scenePos
         clicked = self.scene.items(scenePos, Qt.IntersectsItemBoundingRect)
 
