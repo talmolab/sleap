@@ -6,6 +6,8 @@ unless they really have no other place.
 import os
 import re
 
+from pkg_resources import Requirement, resource_filename
+
 import h5py as h5
 import numpy as np
 import attr
@@ -231,3 +233,16 @@ def dict_cut(d: Dict, a: int, b: int) -> Dict:
         A dictionary that contains a subset of the items in the original dict.
     """
     return dict(list(d.items())[a:b])
+
+
+def get_package_file(filename: str) -> str:
+    """Returns text of specified file within sleap package."""
+    package_path = Requirement.parse("sleap")
+    result = resource_filename(package_path, filename)
+    return result
+
+
+def get_config_file(shortname: str) -> str:
+    """Returns text from specified file in config directory of package."""
+    local_path = f"sleap/config/{shortname}"
+    return get_package_file(local_path)

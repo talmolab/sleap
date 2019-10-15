@@ -96,9 +96,12 @@ class QtVideoPlayer(QWidget):
         self.seekbar.valueChanged.connect(
             lambda e: self.state.set("frame_idx", self.seekbar.value())
         )
-        self.seekbar.selectionChanged.connect(
-            lambda a, b: self.state.set("frame_range", (a, b))
-        )
+
+        def update_selection_state(a, b):
+            self.state.set("frame_range", (a, b))
+            self.state.set("has_frame_range", (a < b))
+
+        self.seekbar.selectionChanged.connect(update_selection_state)
 
         self.state.connect("frame_idx", lambda idx: self.plot())
         self.state.connect("frame_idx", lambda idx: self.seekbar.setValue(idx))

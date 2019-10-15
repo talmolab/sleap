@@ -70,6 +70,8 @@ class GuiState(object):
 
     def _connect_callback(self, key: str, callback: Callable) -> str:
         """Connects a callback for state variable."""
+        if callback is None:
+            raise ValueError("callback cannot be None!")
         if key not in self._callbacks:
             self._callbacks[key] = []
         self._callbacks[key].append(callback)
@@ -78,9 +80,10 @@ class GuiState(object):
         """Triggers callbacks for state variable."""
         if key in self._state_vars and key in self._callbacks:
             val = self.get(key)
-            for callback in self._callbacks[key]:
-                # try:
-                callback(val)
-            # except Exception as e:
-            #     print(f"Error occurred during callback for {key}!")
-            #     print(e)
+            for i, callback in enumerate(self._callbacks[key]):
+                try:
+                    callback(val)
+                except Exception as e:
+                    print(f"Error occurred during callback {i} for {key}!")
+                    print(self._callbacks[key])
+                    print(e)
