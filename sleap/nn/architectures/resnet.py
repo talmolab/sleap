@@ -58,15 +58,13 @@ class ResNet50:
         return 1 / (2 ** (self.down_blocks - self.up_blocks))
 
 
-def preprocess_input(X):
-    """Rescale input to [-1, 1] and tile if not RGB."""
-    X = (X * 2) - 1
+def scale_input(X):
+    """Rescale input to [-1, 1]."""
+    return (X * 2) - 1
 
-    if tf.shape(X)[-1] != 3:
-        X = tf.tile(X, [1, 1, 1, 3])
-
-    return X
-
+def tile_channels(X):
+    """Tiles single channel to 3 channel."""
+    return tf.tile(X, [1, 1, 1, 3])
 
 def resnet50(
     x_in,
@@ -80,7 +78,10 @@ def resnet50(
     """Build ResNet50 backbone."""
 
     # Input should be rescaled from [0, 1] to [-1, 1] and needs to be 3 channels (RGB)
-    x = keras.layers.Lambda(preprocess_input)(x_in)
+    x = keras.layers.Lambda(scale_input)(x_in)
+
+    if x_in.shape[-1] == 1:
+        x = keras.layers.Lambda(tile_channels)(x)
 
     # Automatically downloads weights
     resnet_model = applications.ResNet50(
