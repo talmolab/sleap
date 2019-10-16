@@ -68,6 +68,14 @@ class ShiftedInstance:
         """
         return self.frame.frame_idx
 
+    @property
+    def points_array(self):
+        return self.points
+
+    @property
+    def skeleton(self):
+        return self.source.skeleton
+    
     def get_points_array(self, *args, **kwargs):
         """
         Return the ShiftedInstance as a numpy array. ShiftedInstance stores its
