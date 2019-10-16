@@ -506,7 +506,7 @@ class Trainer:
                         monitor=monitor_metric_name,
                         save_best_only=False,
                         save_weights_only=False,
-                        period=1,
+                        save_freq=1,
                     )
                 )
             if self.save_best_val:
@@ -520,7 +520,7 @@ class Trainer:
                         monitor=monitor_metric_name,
                         save_best_only=True,
                         save_weights_only=False,
-                        period=1,
+                        save_freq=1,
                     )
                 )
             TrainingJob.save_json(train_run, f"{save_path}.json")
