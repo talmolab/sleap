@@ -723,7 +723,6 @@ class RemoveVideo(EditCommand):
         video = params["video"]
         # Remove video
         context.labels.remove_video(video)
-        context.changestack_push("remove video")
 
         # Update view if this was the current video
         if context.state["video"] == video:

@@ -213,6 +213,7 @@ class GenericTableView(QtWidgets.QTableView):
         super(GenericTableView, self).selectionChanged(new, old)
 
         if self.row_name:
+            print(f"setting {self.name_prefix + self.row_name}")
             item = self.getSelectedRowItem()
             self.state[self.name_prefix + self.row_name] = item
 
@@ -228,6 +229,9 @@ class GenericTableView(QtWidgets.QTableView):
         idx = self.model().uncached_items.index(item)
         table_row_idx = self.model().createIndex(idx, 0)
         self.setCurrentIndex(table_row_idx)
+
+        if self.row_name:
+            self.state[self.name_prefix + self.row_name] = item
 
     def getSelectedRowItem(self):
         idx = self.currentIndex()
