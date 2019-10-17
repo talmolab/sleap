@@ -70,6 +70,9 @@ def test_gui_video_instances(qtbot, small_robot_mp4_vid, centered_pair_labels):
         vp.onSequenceSelect(2, cb)
         qtbot.keyClick(vp, QtCore.Qt.Key_2)
         qtbot.keyClick(vp, QtCore.Qt.Key_1)
-    assert cb.args[0] == [1, 0]
+
+    inst_1 = vp.selectable_instances[1].instance
+    inst_0 = vp.selectable_instances[0].instance
+    assert cb.args[0] == [inst_1, inst_0]
 
     assert vp.close()

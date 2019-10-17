@@ -1,12 +1,15 @@
+"""
+Module for gui command context and commands objects.
+"""
+
 import attr
-import re
 import operator
 import os
 
 from abc import ABC
 from enum import Enum
 from pathlib import PurePath
-from typing import Callable, Dict, Iterator, List, Optional, Type
+from typing import Callable, Dict, Iterator, List, Optional, Type, Tuple
 
 import numpy as np
 
@@ -15,7 +18,7 @@ from PySide2 import QtCore, QtWidgets
 from PySide2.QtWidgets import QMessageBox
 
 from sleap.skeleton import Skeleton
-from sleap.instance import Instance, PredictedInstance, Point, Track
+from sleap.instance import Instance, PredictedInstance, Point, Track, LabeledFrame
 from sleap.io.video import Video
 from sleap.io.dataset import Labels
 from sleap.gui.importvideos import ImportVideos
@@ -44,10 +47,41 @@ class UpdateTopic(Enum):
 
 
 class AppCommand(ABC):
+    """Abstract Base Class for Commands.
+
+    Attributes:
+        topics: List of `UpdateTopic` items. Override this to indicate what
+            should be updated after command is executed.
+        does_edits: Whether command will modify data that could be saved.
+    """
+
     topics = []
     does_edits = False
 
     def execute(self, context: "CommandContext", params=None):
+        """Entry point for running command.
+
+        This calls internal methods to gather information required for
+        execution, perform the action, and notify about changes.
+
+        Ideally, any information gathering should be performed in the `ask`
+        method, and be added to the `params` dictionary which then gets
+        passed to `do_action`. The `ask` method should not modify state.
+
+        (This will make it easier to add support for undo,
+        using an `undo_action` which will be given the same `params`
+        dictionary.)
+
+        If it's not possible to easily separate information gathering from
+        performing the action, the child class should implement `ask_and_do`,
+        which it turn should call `do_with_signal` to notify about changes.
+
+        Args:
+            context: This is the `CommandContext` in which the command will
+                execute. Commands will use this to access `MainWindow`,
+                `GuiState`, and `Labels`.
+            params: Dictionary of any params for command.
+        """
         params = params or dict()
 
         if hasattr(self, "ask_and_do"):
@@ -59,14 +93,26 @@ class AppCommand(ABC):
 
     @staticmethod
     def ask(context: "CommandContext", params: dict) -> bool:
+        """Method for information gathering.
+
+        Returns:
+            Whether to perform action. By default returns True, but this is
+            where we should return False if we prompt user for confirmation
+            and they abort.
+        """
         return True
 
     @staticmethod
     def do_action(context: "CommandContext", params: dict):
+        """Method for performing action."""
         pass
 
     @classmethod
     def do_with_signal(cls, context: "CommandContext", params: dict):
+        """Wrapper to perform action and notify/track changes.
+
+        Don't override this method!
+        """
         cls.do_action(context, params)
         if cls.topics:
             context.signal_update(cls.topics)
@@ -76,6 +122,16 @@ class AppCommand(ABC):
 
 @attr.s(auto_attribs=True, eq=False)
 class CommandContext(object):
+    """
+    Context within in which commands are executed.
+
+    Attributes:
+        state: The `GuiState` object used to store state and pass messages.
+        app: The `MainWindow`, available for commands that modify the app.
+        update_callback: A callback to receive update notifications.
+            This function should accept a list of `UpdateTopic` items.
+    """
+
     state: GuiState
     app: "MainWindow"
 
@@ -84,11 +140,8 @@ class CommandContext(object):
 
     @property
     def labels(self):
+        """Alias to app.labels."""
         return self.app.labels
-
-    @property
-    def labeled_frame(self):
-        return self.state["labeled_frame"]
 
     def signal_update(self, what: List[UpdateTopic]):
         """Calls the update callback after data has been changed."""
@@ -113,13 +166,8 @@ class CommandContext(object):
         self._change_stack = list()
         self.state["has_changes"] = False
 
-    # def action(self, command: AppCommand):
-    #     def action_function(*args):
-    #         command().execute(context=self)
-    #
-    #     return action_function
-
     def execute(self, command: Type[AppCommand], **kwargs):
+        """Execute command in this context, passing named arguments."""
         command().execute(context=self, params=kwargs)
 
     # File commands
@@ -140,29 +188,7 @@ class CommandContext(object):
         Returns:
             None.
         """
-        filters = [
-            "HDF5 dataset (*.h5 *.hdf5)",
-            "JSON labels (*.json *.json.zip)",
-            "Matlab dataset (*.mat)",
-            "DeepLabCut csv (*.csv)",
-        ]
-
-        filename, selected_filter = FileDialog.open(
-            self.app,
-            dir=None,
-            caption="Import labeled data...",
-            filter=";;".join(filters),
-        )
-
-        if len(filename) == 0:
-            return
-
-        if OPEN_IN_NEW and not first_open:
-            new_window = self.app.__class__()
-            new_window.showMaximized()
-            new_window.loadProject(filename)
-        else:
-            self.app.loadProject(filename)
+        self.execute(OpenProject, first_open=first_open)
 
     def saveProject(self):
         """Show gui to save project (or save as if not yet saved)."""
@@ -171,34 +197,6 @@ class CommandContext(object):
     def saveProjectAs(self):
         """Show gui to save project as a new file."""
         self.execute(SaveProjectAs)
-
-    def closeEvent(self, event):
-        """Closes application window, prompting for saving as needed."""
-        if not self.state["has_changes"]:
-            # No unsaved changes, so accept event (close)
-            event.accept()
-        else:
-            msgBox = QMessageBox()
-            msgBox.setText("Do you want to save the changes to this project?")
-            msgBox.setInformativeText("If you don't save, your changes will be lost.")
-            msgBox.setStandardButtons(
-                QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel
-            )
-            msgBox.setDefaultButton(QMessageBox.Save)
-
-            ret_val = msgBox.exec_()
-
-            if ret_val == QMessageBox.Cancel:
-                # cancel close by ignoring event
-                event.ignore()
-            elif ret_val == QMessageBox.Discard:
-                # don't save, just close
-                event.accept()
-            elif ret_val == QMessageBox.Save:
-                # save
-                self.saveProject()
-                # accept event (closes window)
-                event.accept()
 
     def exportLabeledClip(self):
         """Shows gui for exporting clip with visual annotations."""
@@ -245,121 +243,48 @@ class CommandContext(object):
     # Editing Commands
 
     def addVideo(self):
+        """Shows gui for adding videos to project."""
         self.execute(AddVideo)
 
     def removeVideo(self):
+        """Removes selected video from project."""
         self.execute(RemoveVideo)
 
     def openSkeleton(self):
         """Shows gui for loading saved skeleton into project."""
-        filters = ["JSON skeleton (*.json)", "HDF5 skeleton (*.h5 *.hdf5)"]
-        filename, selected_filter = FileDialog.open(
-            self.app, dir=None, caption="Open skeleton...", filter=";;".join(filters)
-        )
-
-        if len(filename) == 0:
-            return
-
-        if filename.endswith(".json"):
-            self.state["skeleton"] = Skeleton.load_json(filename)
-        elif filename.endswith((".h5", ".hdf5")):
-            sk_list = Skeleton.load_all_hdf5(filename)
-            if len(sk_list):
-                self.state["skeleton"] = sk_list[0]
-
-        if self.state["skeleton"] not in self.labels:
-            self.labels.skeletons.append(self.state["skeleton"])
-            self.changestack_push("new skeleton")
-
-        # Update data model
-        self.signal_update([UpdateTopic.skeleton])
+        self.execute(OpenSkeleton)
 
     def saveSkeleton(self):
         """Shows gui for saving skeleton from project."""
-        default_name = "skeleton.json"
-        filters = ["JSON skeleton (*.json)", "HDF5 skeleton (*.h5 *.hdf5)"]
-        filename, selected_filter = FileDialog.save(
-            self.app, caption="Save As...", dir=default_name, filter=";;".join(filters)
-        )
-
-        if len(filename) == 0:
-            return
-
-        if filename.endswith(".json"):
-            self.state["skeleton"].save_json(filename)
-        elif filename.endswith((".h5", ".hdf5")):
-            self.state["skeleton"].save_hdf5(filename)
+        self.execute(SaveSkeleton)
 
     def newNode(self):
         """Adds new node to skeleton."""
-        # Find new part name
-        part_name = "new_part"
-        i = 1
-        while part_name in self.state["skeleton"]:
-            part_name = f"new_part_{i}"
-            i += 1
-
-        # Add the node to the skeleton
-        self.state["skeleton"].add_node(part_name)
-        self.changestack_push("new node")
-
-        self.signal_update([UpdateTopic.skeleton])
+        self.execute(NewNode)
 
     def deleteNode(self):
         """Removes (currently selected) node from skeleton."""
-        # TODO remove table access
-        # Get selected node
-        idx = self.app.skeletonNodesTable.currentIndex()
-        if not idx.isValid():
-            return
-        node = self.state["skeleton"].nodes[idx.row()]
+        self.execute(DeleteNode)
 
-        # Remove
-        self.state["skeleton"].delete_node(node)
-        self.changestack_push("delete node")
+    def setNodeName(self, skeleton, node, name):
+        """Changes name of node in skeleton."""
+        self.execute(SetNodeName, skeleton=skeleton, node=node, name=name)
 
-        self.signal_update([UpdateTopic.skeleton])
+    def setNodeSymmetry(self, skeleton, node, symmetry: str):
+        """Sets node symmetry in skeleton."""
+        self.execute(SetNodeSymmetry, skeleton=skeleton, node=node, symmetry=symmetry)
 
     def updateEdges(self):
         """Called when edges in skeleton have been changed."""
         self.signal_update([UpdateTopic.skeleton])
 
-    def newEdge(self):
+    def newEdge(self, src_node, dst_node):
         """Adds new edge to skeleton."""
-        # TODO remove table access
-
-        # Get selected nodes
-        src_node = self.app.skeletonEdgesSrc.currentText()
-        dst_node = self.app.skeletonEdgesDst.currentText()
-
-        # Check if they're in the graph
-        if (
-            src_node not in self.state["skeleton"]
-            or dst_node not in self.state["skeleton"]
-        ):
-            return
-
-        # Add edge
-        self.state["skeleton"].add_edge(source=src_node, destination=dst_node)
-        self.changestack_push("new edge")
-
-        self.signal_update([UpdateTopic.skeleton])
+        self.execute(NewEdge, src_node=src_node, dst_node=dst_node)
 
     def deleteEdge(self):
         """Removes (currently selected) edge from skeleton."""
-        # TODO: remove table access
-
-        # Get selected edge
-        idx = self.app.skeletonEdgesTable.currentIndex()
-        if not idx.isValid():
-            return
-        edge = self.state["skeleton"].edges[idx.row()]
-
-        # Delete edge
-        self.state["skeleton"].delete_edge(source=edge[0], destination=edge[1])
-        self.changestack_push("delete edge")
-
-        self.signal_update([UpdateTopic.skeleton])
+        self.execute(DeleteEdge)
 
     def deletePredictions(self):
         """Deletes all predicted instances in project."""
@@ -411,6 +336,10 @@ class CommandContext(object):
         """Sets track for selected instance."""
         self.execute(SetSelectedInstanceTrack, new_track=new_track)
 
+    def setTrackName(self, track: "Track", name: str):
+        """Sets name for track."""
+        self.execute(SetTrackName, track=track, name=name)
+
     def transposeInstance(self):
         """Transposes tracks for two instances.
 
@@ -447,6 +376,40 @@ class NewProject(AppCommand):
         window.showMaximized()
 
 
+class OpenProject(AppCommand):
+    @staticmethod
+    def do_action(context: "CommandContext", params: dict):
+        filename = params["filename"]
+        if OPEN_IN_NEW and not params.get("first_open", False):
+            new_window = context.app.__class__()
+            new_window.showMaximized()
+            new_window.loadProject(filename)
+        else:
+            context.app.loadProject(filename)
+
+    @staticmethod
+    def ask(context: "CommandContext", params: dict) -> bool:
+        filters = [
+            "HDF5 dataset (*.h5 *.hdf5)",
+            "JSON labels (*.json *.json.zip)",
+            "Matlab dataset (*.mat)",
+            "DeepLabCut csv (*.csv)",
+        ]
+
+        filename, selected_filter = FileDialog.open(
+            context.app,
+            dir=None,
+            caption="Import labeled data...",
+            filter=";;".join(filters),
+        )
+
+        if len(filename) == 0:
+            return False
+
+        params["filename"] = filename
+        return True
+
+
 class SaveProjectAs(AppCommand):
     @staticmethod
     def _try_save(context, labels: Labels, filename: str):
@@ -475,7 +438,7 @@ class SaveProjectAs(AppCommand):
             context.state["filename"] = params["filename"]
 
     @staticmethod
-    def ask(context: CommandContext, params: dict):
+    def ask(context: CommandContext, params: dict) -> bool:
         default_name = context.state["filename"] or "untitled"
         p = PurePath(default_name)
         default_name = str(p.with_name(f"{p.stem} copy{p.suffix}"))
@@ -493,7 +456,7 @@ class SaveProjectAs(AppCommand):
         )
 
         if len(filename) == 0:
-            return
+            return False
 
         params["filename"] = filename
         return True
@@ -501,7 +464,7 @@ class SaveProjectAs(AppCommand):
 
 class SaveProject(SaveProjectAs):
     @classmethod
-    def ask(cls, context: CommandContext, params: dict):
+    def ask(cls, context: CommandContext, params: dict) -> bool:
         if context.state["filename"] is not None:
             params["filename"] = context.state["filename"]
             return True
@@ -525,7 +488,7 @@ class ExportLabeledClip(AppCommand):
         )
 
     @staticmethod
-    def ask(context: CommandContext, params: dict):
+    def ask(context: CommandContext, params: dict) -> bool:
         if context.state["has_frame_range"]:
 
             fps, okay = QtWidgets.QInputDialog.getInt(
@@ -537,7 +500,7 @@ class ExportLabeledClip(AppCommand):
                 300,
             )
             if not okay:
-                return
+                return False
 
             filename, _ = FileDialog.save(
                 context.app,
@@ -547,7 +510,7 @@ class ExportLabeledClip(AppCommand):
             )
 
             if len(filename) == 0:
-                return
+                return False
 
             params["filename"] = filename
             params["fps"] = fps
@@ -559,6 +522,7 @@ class ExportLabeledClip(AppCommand):
                 "seekbar."
             )
             QMessageBox(text=message).exec_()
+            return False
 
 
 class ExportLabeledFrames(AppCommand):
@@ -572,7 +536,7 @@ class ExportLabeledFrames(AppCommand):
         )
 
     @staticmethod
-    def ask(context: CommandContext, params: dict):
+    def ask(context: CommandContext, params: dict) -> bool:
         filters = ["HDF5 dataset (*.h5)", "Compressed JSON dataset (*.json *.json.zip)"]
         filename, _ = FileDialog.save(
             context.app,
@@ -581,7 +545,7 @@ class ExportLabeledFrames(AppCommand):
             filters=";;".join(filters),
         )
         if len(filename) == 0:
-            return
+            return False
 
         params["filename"] = filename
         return True
@@ -744,10 +708,11 @@ class AddVideo(EditCommand):
             context.state["video"] = video
 
     @staticmethod
-    def ask(context: CommandContext, params: dict):
+    def ask(context: CommandContext, params: dict) -> bool:
         """Shows gui for adding video to project."""
         params["import_list"] = ImportVideos().go()
-        return True
+
+        return len(params["import_list"]) > 0
 
 
 class RemoveVideo(EditCommand):
@@ -768,10 +733,10 @@ class RemoveVideo(EditCommand):
                 context.state["video"] = None
 
     @staticmethod
-    def ask(context: CommandContext, params: dict):
+    def ask(context: CommandContext, params: dict) -> bool:
         video = context.state["selected_video"]
         if video is None:
-            return
+            return False
 
         # Count labeled frames for this video
         n = len(context.labels.find(video))
@@ -787,10 +752,154 @@ class RemoveVideo(EditCommand):
                 QMessageBox.No,
             )
             if response == QMessageBox.No:
-                return
+                return False
 
         params["video"] = video
         return True
+
+
+class OpenSkeleton(EditCommand):
+    topics = [UpdateTopic.skeleton]
+
+    @staticmethod
+    def ask(context: CommandContext, params: dict) -> bool:
+        filters = ["JSON skeleton (*.json)", "HDF5 skeleton (*.h5 *.hdf5)"]
+        filename, selected_filter = FileDialog.open(
+            context.app, dir=None, caption="Open skeleton...", filter=";;".join(filters)
+        )
+
+        if len(filename) == 0:
+            return False
+
+        params["filename"] = filename
+        return True
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        filename = params["filename"]
+        if filename.endswith(".json"):
+            context.state["skeleton"] = Skeleton.load_json(filename)
+        elif filename.endswith((".h5", ".hdf5")):
+            sk_list = Skeleton.load_all_hdf5(filename)
+            if len(sk_list):
+                context.state["skeleton"] = sk_list[0]
+
+        if context.state["skeleton"] not in context.labels:
+            context.labels.skeletons.append(context.state["skeleton"])
+
+
+class SaveSkeleton(AppCommand):
+    @staticmethod
+    def ask(context: CommandContext, params: dict) -> bool:
+        default_name = "skeleton.json"
+        filters = ["JSON skeleton (*.json)", "HDF5 skeleton (*.h5 *.hdf5)"]
+        filename, selected_filter = FileDialog.save(
+            context.app,
+            caption="Save As...",
+            dir=default_name,
+            filter=";;".join(filters),
+        )
+
+        if len(filename) == 0:
+            return False
+
+        params["filename"] = filename
+        return True
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        filename = params["filename"]
+        if filename.endswith(".json"):
+            context.state["skeleton"].save_json(filename)
+        elif filename.endswith((".h5", ".hdf5")):
+            context.state["skeleton"].save_hdf5(filename)
+
+
+class NewNode(EditCommand):
+    topics = [UpdateTopic.skeleton]
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        # Find new part name
+        part_name = "new_part"
+        i = 1
+        while part_name in context.state["skeleton"]:
+            part_name = f"new_part_{i}"
+            i += 1
+
+        # Add the node to the skeleton
+        context.state["skeleton"].add_node(part_name)
+
+
+class DeleteNode(EditCommand):
+    topics = [UpdateTopic.skeleton]
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        node = context.state["selected_node"]
+        context.state["skeleton"].delete_node(node)
+
+
+class SetNodeName(EditCommand):
+    topics = [UpdateTopic.skeleton]
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        node = params["node"]
+        name = params["name"]
+        skeleton = params["skeleton"]
+        skeleton.relabel_node(node.name, name)
+
+
+class SetNodeSymmetry(EditCommand):
+    topics = [UpdateTopic.skeleton]
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        node = params["node"]
+        symmetry = params["symmetry"]
+        skeleton = params["skeleton"]
+
+        if symmetry:
+            skeleton.add_symmetry(node.name, symmetry)
+        else:
+            # Value was cleared by user, so delete symmetry
+            symmetric_to = skeleton.get_symmetry(node.name)
+            skeleton.delete_symmetry(node.name, symmetric_to)
+
+
+class NewEdge(EditCommand):
+    topics = [UpdateTopic.skeleton]
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        src_node = params["src_node"]
+        dst_node = params["dst_node"]
+
+        # Check if they're in the graph
+        if (
+            src_node not in context.state["skeleton"]
+            or dst_node not in context.state["skeleton"]
+        ):
+            return
+
+        # Add edge
+        context.state["skeleton"].add_edge(source=src_node, destination=dst_node)
+
+
+class DeleteEdge(EditCommand):
+    topics = [UpdateTopic.skeleton]
+
+    @staticmethod
+    def ask(context: "CommandContext", params: dict) -> bool:
+        params["edge"] = context.state["selected_edge"]
+        return True
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        edge = params["edge"]
+        # Delete edge
+        context.state["skeleton"].delete_edge(**edge)
 
 
 class InstanceDeleteCommand(EditCommand):
@@ -801,7 +910,7 @@ class InstanceDeleteCommand(EditCommand):
         raise NotImplementedError("Call to virtual method.")
 
     @staticmethod
-    def _confirm_deletion(context: CommandContext, lf_inst_list: List):
+    def _confirm_deletion(context: CommandContext, lf_inst_list: List) -> bool:
         """Helper function to confirm before deleting instances.
 
         Args:
@@ -820,7 +929,7 @@ class InstanceDeleteCommand(EditCommand):
         )
 
         if resp == QMessageBox.No:
-            return
+            return False
 
         return True
 
@@ -834,11 +943,11 @@ class InstanceDeleteCommand(EditCommand):
         context.changestack_push("delete instances")
 
     @classmethod
-    def do_action(cls, context: "CommandContext", params: dict):
+    def do_action(cls, context: CommandContext, params: dict):
         cls._do_deletion(context, params["lf_instance_list"])
 
     @classmethod
-    def ask(cls, context: "CommandContext", params: dict) -> bool:
+    def ask(cls, context: CommandContext, params: dict) -> bool:
         lf_inst_list = cls.get_frame_instance_list(context, params)
         params["lf_instance_list"] = lf_inst_list
 
@@ -847,7 +956,9 @@ class InstanceDeleteCommand(EditCommand):
 
 class DeleteAllPredictions(InstanceDeleteCommand):
     @staticmethod
-    def get_frame_instance_list(context: CommandContext, params: dict):
+    def get_frame_instance_list(
+        context: CommandContext, params: dict
+    ) -> List[Tuple[LabeledFrame, Instance]]:
         return [
             (lf, inst)
             for lf in context.labels
@@ -909,7 +1020,7 @@ class DeleteAreaPredictions(InstanceDeleteCommand):
         return predicted_instances
 
     @classmethod
-    def ask_and_do(cls, context: "CommandContext", params: dict):
+    def ask_and_do(cls, context: CommandContext, params: dict):
         # Callback to delete after area has been selected
         def delete_area_callback(x0, y0, x1, y1):
             context.app.updateStatusMessage()
@@ -947,7 +1058,7 @@ class DeleteLowScorePredictions(InstanceDeleteCommand):
         return predicted_instances
 
     @classmethod
-    def ask(cls, context: "CommandContext", params: dict) -> bool:
+    def ask(cls, context: CommandContext, params: dict) -> bool:
         score_thresh, okay = QtWidgets.QInputDialog.getDouble(
             context.app, "Delete Instances with Low Score...", "Score Below:", 1, 0, 100
         )
@@ -972,7 +1083,7 @@ class DeleteFrameLimitPredictions(InstanceDeleteCommand):
         return predicted_instances
 
     @classmethod
-    def ask(cls, context: "CommandContext", params: dict) -> bool:
+    def ask(cls, context: CommandContext, params: dict) -> bool:
         count_thresh, okay = QtWidgets.QInputDialog.getInt(
             context.app,
             "Limit Instances in Frame...",
@@ -1081,7 +1192,7 @@ class AddTrack(EditCommand):
 
 
 class SetSelectedInstanceTrack(EditCommand):
-    topics = [UpdateTopic.tracks]  # TODO: more?
+    topics = [UpdateTopic.tracks]
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
@@ -1089,8 +1200,6 @@ class SetSelectedInstanceTrack(EditCommand):
         new_track = params["new_track"]
         if selected_instance is None:
             return
-
-        # idx = self.state["labeled_frame"].index(selected_instance)
 
         old_track = selected_instance.track
 
@@ -1137,6 +1246,16 @@ class SetSelectedInstanceTrack(EditCommand):
         context.state["instance"] = selected_instance
 
 
+class SetTrackName(EditCommand):
+    topics = [UpdateTopic.tracks, UpdateTopic.frame]
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        track = params["track"]
+        name = params["name"]
+        track.name = name
+
+
 class ClearFrameNegativeAnchors(EditCommand):
     topics = [UpdateTopic.frame]
 
@@ -1151,7 +1270,7 @@ class MarkNegativeAnchor(EditCommand):
     topics = [UpdateTopic.frame]
 
     @classmethod
-    def ask_and_do(cls, context: "CommandContext", params: dict):
+    def ask_and_do(cls, context: CommandContext, params: dict):
         def click_callback(x, y):
             context.app.updateStatusMessage()
             context.labels.add_negative_anchor(
@@ -1170,7 +1289,7 @@ class GenerateSuggestions(EditCommand):
     topics = [UpdateTopic.suggestions]
 
     @classmethod
-    def do_action(cls, context: "CommandContext", params: dict):
+    def do_action(cls, context: CommandContext, params: dict):
         new_suggestions = dict()
         for video in context.labels.videos:
             new_suggestions[video] = VideoFrameSuggestions.suggest(
@@ -1184,7 +1303,7 @@ class MergeProject(EditCommand):
     topics = [UpdateTopic.all]
 
     @classmethod
-    def ask_and_do(cls, context: "CommandContext", params: dict):
+    def ask_and_do(cls, context: CommandContext, params: dict):
         filters = ["HDF5 dataset (*.h5 *.hdf5)", "JSON labels (*.json *.json.zip)"]
 
         filenames, selected_filter = FileDialog.openMultiple(
@@ -1214,7 +1333,7 @@ class AddInstance(EditCommand):
     topics = [UpdateTopic.frame]
 
     @staticmethod
-    def get_previous_frame_index(context: "CommandContext") -> Optional[int]:
+    def get_previous_frame_index(context: CommandContext) -> Optional[int]:
         frames = context.labels.frames(
             context.state["video"],
             from_frame_idx=context.state["frame_idx"],
@@ -1229,7 +1348,7 @@ class AddInstance(EditCommand):
         return next_idx
 
     @classmethod
-    def do_action(cls, context: "CommandContext", params: dict):
+    def do_action(cls, context: CommandContext, params: dict):
         copy_instance = params.get("copy_instance", None)
 
         if context.state["labeled_frame"] is None:
@@ -1330,7 +1449,7 @@ class AddMissingInstanceNodes(EditCommand):
     topics = [UpdateTopic.frame]
 
     @classmethod
-    def do_action(cls, context: "CommandContext", params: dict):
+    def do_action(cls, context: CommandContext, params: dict):
         instance = params["instance"]
         # the rect that's currently visibile in the window view
         in_view_rect = context.app.player.getVisibleRect()

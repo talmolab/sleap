@@ -19,24 +19,23 @@ from PySide2.QtWidgets import QMessageBox
 
 
 from sleap.skeleton import Skeleton
-from sleap.instance import Instance, PredictedInstance, Point, Track
-from sleap.io.video import Video
+from sleap.instance import Instance
 from sleap.io.dataset import Labels
 from sleap.info.summary import StatisticSeries
 from sleap.gui.commands import CommandContext, UpdateTopic
 from sleap.gui.video import QtVideoPlayer
 from sleap.gui.dataviews import (
-    VideosTable,
-    SkeletonNodesTable,
-    SkeletonEdgesTable,
-    LabeledFrameTable,
+    GenericTableView,
+    VideosTableModel,
+    SkeletonNodesTableModel,
+    SkeletonEdgesTableModel,
+    SuggestionsTableModel,
+    LabeledFrameTableModel,
     SkeletonNodeModel,
-    SuggestionsTable,
 )
-from sleap.gui.importvideos import ImportVideos
+
 from sleap.gui.filedialog import FileDialog
 from sleap.gui.formbuilder import YamlFormWidget
-from sleap.gui.merge import MergeDialog
 from sleap.gui.shortcuts import Shortcuts, ShortcutDialog
 from sleap.gui.suggestions import VideoFrameSuggestions
 from sleap.gui.state import GuiState
@@ -130,7 +129,31 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         """Closes application window, prompting for saving as needed."""
-        self.commands.closeEvent(event)
+        if not self.state["has_changes"]:
+            # No unsaved changes, so accept event (close)
+            event.accept()
+        else:
+            msgBox = QMessageBox()
+            msgBox.setText("Do you want to save the changes to this project?")
+            msgBox.setInformativeText("If you don't save, your changes will be lost.")
+            msgBox.setStandardButtons(
+                QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel
+            )
+            msgBox.setDefaultButton(QMessageBox.Save)
+
+            ret_val = msgBox.exec_()
+
+            if ret_val == QMessageBox.Cancel:
+                # cancel close by ignoring event
+                event.ignore()
+            elif ret_val == QMessageBox.Discard:
+                # don't save, just close
+                event.accept()
+            elif ret_val == QMessageBox.Save:
+                # save
+                self.saveProject()
+                # accept event (closes window)
+                event.accept()
 
     @property
     def labels(self):
@@ -159,7 +182,7 @@ class MainWindow(QMainWindow):
 
     def _create_video_player(self):
         """Creates and connects :class:`QtVideoPlayer` for gui."""
-        self.player = QtVideoPlayer(color_manager=self._color_manager, state=self.state)
+        self.player = QtVideoPlayer(color_manager=self.color_manager, state=self.state)
         self.player.changedPlot.connect(self._after_plot_update)
         self.player.changedData.connect(
             lambda inst: self.commands.changestack_push("viewer change")
@@ -181,8 +204,8 @@ class MainWindow(QMainWindow):
         )
 
     def _create_color_manager(self):
-        self._color_manager = TrackColorManager(self.labels)
-        self._color_manager.palette = self.state.get("palette", default="standard")
+        self.color_manager = TrackColorManager(self.labels)
+        self.color_manager.palette = self.state.get("palette", default="standard")
 
     def _create_menus(self):
         """Creates main application menus."""
@@ -316,7 +339,7 @@ class MainWindow(QMainWindow):
         add_submenu_choices(
             menu=viewMenu,
             title="Color Palette",
-            options=self._color_manager.palette_names,
+            options=self.color_manager.palette_names,
             key="palette",
         )
 
@@ -533,7 +556,12 @@ class MainWindow(QMainWindow):
 
         ####### Videos #######
         videos_layout = _make_dock("Videos")
-        self.videosTable = VideosTable(self.state)
+        self.videosTable = GenericTableView(
+            state=self.state,
+            row_name="video",
+            is_activatable=True,
+            model=VideosTableModel(items=self.labels.videos, context=self.commands),
+        )
         videos_layout.addWidget(self.videosTable)
 
         hb = QHBoxLayout()
@@ -552,7 +580,14 @@ class MainWindow(QMainWindow):
 
         gb = QGroupBox("Nodes")
         vb = QVBoxLayout()
-        self.skeletonNodesTable = SkeletonNodesTable(self.state["skeleton"])
+        self.skeletonNodesTable = GenericTableView(
+            state=self.state,
+            row_name="node",
+            model=SkeletonNodesTableModel(
+                items=self.state["skeleton"], context=self.commands
+            ),
+        )
+
         vb.addWidget(self.skeletonNodesTable)
         hb = QHBoxLayout()
         _add_button(hb, "New Node", self.commands.newNode)
@@ -569,7 +604,14 @@ class MainWindow(QMainWindow):
 
         gb = QGroupBox("Edges")
         vb = QVBoxLayout()
-        self.skeletonEdgesTable = SkeletonEdgesTable(self.state["skeleton"])
+        self.skeletonEdgesTable = GenericTableView(
+            state=self.state,
+            row_name="edge",
+            model=SkeletonEdgesTableModel(
+                items=self.state["skeleton"], context=self.commands
+            ),
+        )
+
         vb.addWidget(self.skeletonEdgesTable)
         hb = QHBoxLayout()
         self.skeletonEdgesSrc = QComboBox()
@@ -587,7 +629,12 @@ class MainWindow(QMainWindow):
             )
         )
 
-        _add_button(hb, "Add Edge", self.commands.newEdge)
+        def new_edge():
+            src_node = self.skeletonEdgesSrc.currentText()
+            dst_node = self.skeletonEdgesDst.currentText()
+            self.commands.newEdge(src_node, dst_node)
+
+        _add_button(hb, "Add Edge", new_edge)
         _add_button(hb, "Delete Edge", self.commands.deleteEdge)
 
         hbw = QWidget()
@@ -604,15 +651,16 @@ class MainWindow(QMainWindow):
         hbw.setLayout(hb)
         skeleton_layout.addWidget(hbw)
 
-        # update edge UI when change to nodes
-        self.skeletonNodesTable.model().dataChanged.connect(self.commands.updateEdges)
-        self.skeletonNodesTable.model().dataChanged.connect(
-            self.commands.changestack_push
-        )
-
         ####### Instances #######
         instances_layout = _make_dock("Instances")
-        self.instancesTable = LabeledFrameTable(state=self.state, labels=self.labels)
+        self.instancesTable = GenericTableView(
+            state=self.state,
+            row_name="instance",
+            name_prefix="",
+            model=LabeledFrameTableModel(
+                items=self.state["labeled_frame"], context=self.commands
+            ),
+        )
         instances_layout.addWidget(self.instancesTable)
 
         hb = QHBoxLayout()
@@ -629,7 +677,12 @@ class MainWindow(QMainWindow):
 
         ####### Suggestions #######
         suggestions_layout = _make_dock("Labeling Suggestions")
-        self.suggestionsTable = SuggestionsTable(labels=self.labels)
+        self.suggestionsTable = GenericTableView(
+            state=self.state,
+            is_sortable=True,
+            model=SuggestionsTableModel(items=self.labels, context=self.commands),
+        )
+
         suggestions_layout.addWidget(self.suggestionsTable)
 
         hb = QHBoxLayout()
@@ -649,9 +702,8 @@ class MainWindow(QMainWindow):
         hbw.setLayout(hb)
         suggestions_layout.addWidget(hbw)
 
-        suggestions_yaml = get_config_file("suggestions.yaml")
         form_wid = YamlFormWidget(
-            yaml_file=suggestions_yaml, title="Generate Suggestions"
+            yaml_file=get_config_file("suggestions.yaml"), title="Generate Suggestions"
         )
         form_wid.mainAction.connect(self.commands.generateSuggestions)
         suggestions_layout.addWidget(form_wid)
@@ -687,7 +739,7 @@ class MainWindow(QMainWindow):
         )
         overlay_state_connect(self.overlays["trails"], "trail_length")
 
-        overlay_state_connect(self._color_manager, "palette")
+        overlay_state_connect(self.color_manager, "palette")
         self.state.connect("palette", lambda x: self.updateSeekbarMarks())
 
         # Set defaults
@@ -696,6 +748,10 @@ class MainWindow(QMainWindow):
     def _update_gui_state(self):
         """Enable/disable gui items based on current state."""
         has_selected_instance = self.state["instance"] is not None
+        has_selected_video = self.state["selected_video"] is not None
+        has_selected_node = self.state["selected_node"] is not None
+        has_selected_edge = self.state["selected_edge"] is not None
+
         has_frame_range = bool(self.state["has_frame_range"])
         has_unsaved_changes = bool(self.state["has_changes"])
         has_multiple_videos = self.labels is not None and len(self.labels.videos) > 1
@@ -741,21 +797,11 @@ class MainWindow(QMainWindow):
 
         # Update buttons
         self._buttons["add edge"].setEnabled(has_nodes_selected)
-        self._buttons["delete edge"].setEnabled(
-            self.skeletonEdgesTable.currentIndex().isValid()
-        )
-        self._buttons["delete node"].setEnabled(
-            self.skeletonNodesTable.currentIndex().isValid()
-        )
-        self._buttons["show video"].setEnabled(
-            self.videosTable.currentIndex().isValid()
-        )
-        self._buttons["remove video"].setEnabled(
-            self.videosTable.currentIndex().isValid()
-        )
-        self._buttons["delete instance"].setEnabled(
-            self.instancesTable.currentIndex().isValid()
-        )
+        self._buttons["delete edge"].setEnabled(has_selected_edge)
+        self._buttons["delete node"].setEnabled(has_selected_node)
+        self._buttons["show video"].setEnabled(has_selected_video)
+        self._buttons["remove video"].setEnabled(has_selected_video)
+        self._buttons["delete instance"].setEnabled(has_selected_instance)
 
         # Update overlays
         self.overlays["track_labels"].visible = (
@@ -800,20 +846,16 @@ class MainWindow(QMainWindow):
             self.videosTable.model().items = self.labels.videos
 
         if _has_topic([UpdateTopic.skeleton]):
-            self.skeletonNodesTable.model().skeleton = self.state["skeleton"]
-            self.skeletonEdgesTable.model().skeleton = self.state["skeleton"]
+            self.skeletonNodesTable.model().items = self.state["skeleton"]
+            self.skeletonEdgesTable.model().items = self.state["skeleton"]
             self.skeletonEdgesSrc.model().skeleton = self.state["skeleton"]
             self.skeletonEdgesDst.model().skeleton = self.state["skeleton"]
 
-        if _has_topic([UpdateTopic.project]):
-            self.instancesTable.model().labels = self.labels
-            self.instancesTable.model().color_manager = self._color_manager
-
-        if _has_topic([UpdateTopic.on_frame]):
-            self.instancesTable.model().labeled_frame = self.state["labeled_frame"]
+        if _has_topic([UpdateTopic.project, UpdateTopic.on_frame]):
+            self.instancesTable.model().items = self.state["labeled_frame"]
 
         if _has_topic([UpdateTopic.suggestions]):
-            self.suggestionsTable.model().labels = self.labels
+            self.suggestionsTable.model().items = self.labels
 
             # update count of suggested frames w/ labeled instances
             suggestion_status_text = ""
@@ -900,8 +942,6 @@ class MainWindow(QMainWindow):
         Returns:
             None:
         """
-        show_msg = False
-
         if len(filename) == 0:
             return
 
@@ -928,21 +968,12 @@ class MainWindow(QMainWindow):
 
         if has_loaded:
             self.commands.changestack_clear()
-            self._color_manager.labels = self.labels
-            self._color_manager.set_palette(self.state["palette"])
+            self.color_manager.labels = self.labels
+            self.color_manager.set_palette(self.state["palette"])
 
             self.load_overlays()
 
-            # self.setTrailLength(self.overlays["trails"].trail_length)
-
-            if show_msg:
-                msgBox = QMessageBox(
-                    text=f"Imported {len(self.labels)} labeled frames."
-                )
-                msgBox.exec_()
-
             if len(self.labels.skeletons):
-                # TODO: add support for multiple skeletons
                 self.state["skeleton"] = self.labels.skeletons[0]
 
             # Load first video
