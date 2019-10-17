@@ -271,7 +271,7 @@ class QtVideoPlayer(QWidget):
 
         Note:
             If successful, we call
-            >>> on_success(sequence_of_selected_instance_indexes)
+            >>> on_success(list_of_instances)
 
         Args:
             seq_len: Number of instances we want to collect in sequence.
@@ -283,45 +283,45 @@ class QtVideoPlayer(QWidget):
 
         """
 
-        indexes = []
-        if self.view.getSelectionIndex() is not None:
-            indexes.append(self.view.getSelectionIndex())
+        selected_instances = []
+        if self.view.getSelectionInstance() is not None:
+            selected_instances.append(self.view.getSelectionInstance())
 
         # Define function that will be called when user selects another instance
         def handle_selection(
             seq_len=seq_len,
-            indexes=indexes,
+            selected_instances=selected_instances,
             on_success=on_success,
             on_each=on_each,
             on_failure=on_failure,
         ):
             # Get the index of the currently selected instance
-            new_idx = self.view.getSelectionIndex()
+            new_instance = self.view.getSelectionInstance()
             # If something is selected, add it to the list
-            if new_idx is not None:
-                indexes.append(new_idx)
+            if new_instance is not None:
+                selected_instances.append(new_instance)
             # If nothing is selected, then remove this handler and trigger on_failure
             else:
                 self.view.updatedSelection.disconnect(handle_selection)
                 if callable(on_failure):
-                    on_failure(indexes)
+                    on_failure(selected_instances)
                 return
 
             # If we have all the instances we want in our sequence, we're done
-            if len(indexes) >= seq_len:
+            if len(selected_instances) >= seq_len:
                 # remove this handler
                 self.view.updatedSelection.disconnect(handle_selection)
-                # trigger success, passing the list of selected indexes
-                on_success(indexes)
+                # trigger success, passing the list of selected instances
+                on_success(selected_instances)
             # If we're still in progress...
             else:
                 if callable(on_each):
-                    on_each(indexes)
+                    on_each(selected_instances)
 
         self.view.updatedSelection.connect(handle_selection)
 
         if callable(on_each):
-            on_each(indexes)
+            on_each(selected_instances)
 
     @staticmethod
     def _signal_once(signal: QtCore.Signal, callback: Callable):
@@ -592,7 +592,6 @@ class GraphicsView(QGraphicsView):
         """
         for idx, instance in enumerate(self.all_instances):
             instance.selected = select == idx or select == instance.instance
-        print("emit")
         self.updatedSelection.emit()
 
     def getSelectionIndex(self) -> Optional[int]:

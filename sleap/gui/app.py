@@ -1,9 +1,14 @@
 """
 Main GUI application for labeling, active learning, and proofreading.
 """
-from enum import Enum
 
-import attr
+
+import re
+import os
+
+
+from typing import Callable, Dict, Iterator, List, Optional
+
 from PySide2 import QtCore, QtWidgets
 from PySide2.QtCore import Qt, QEvent
 
@@ -12,21 +17,13 @@ from PySide2.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox
 from PySide2.QtWidgets import QLabel, QPushButton, QComboBox
 from PySide2.QtWidgets import QMessageBox
 
-import re
-import operator
-import os
-
-from pathlib import PurePath
-
-from typing import Callable, Dict, Iterator, List, Optional
-
-import numpy as np
 
 from sleap.skeleton import Skeleton
 from sleap.instance import Instance, PredictedInstance, Point, Track
 from sleap.io.video import Video
 from sleap.io.dataset import Labels
 from sleap.info.summary import StatisticSeries
+from sleap.gui.commands import CommandContext, UpdateTopic
 from sleap.gui.video import QtVideoPlayer
 from sleap.gui.dataviews import (
     VideosTable,
@@ -52,21 +49,6 @@ from sleap.gui.overlays.tracks import (
 from sleap.gui.overlays.instance import InstanceOverlay
 from sleap.gui.overlays.anchors import NegativeAnchorOverlay
 from sleap.util import get_config_file
-
-OPEN_IN_NEW = True
-
-
-class UpdateTopic(Enum):
-    all = 1
-    video = 2
-    skeleton = 3
-    labels = 4
-    on_frame = 5
-    suggestions = 6
-    tracks = 7
-    frame = 8
-    project = 9
-    project_instances = 10
 
 
 class MainWindow(QMainWindow):
@@ -99,9 +81,7 @@ class MainWindow(QMainWindow):
 
         self.labels = Labels()
 
-        self.files = AppFiles(state=self.state, app=self)
-        self.navigation = AppNavigation(state=self.state, app=self)
-        self.edit = AppEditor(
+        self.commands = CommandContext(
             state=self.state, app=self, update_callback=self.on_data_update
         )
 
@@ -150,7 +130,7 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         """Closes application window, prompting for saving as needed."""
-        self.files.closeEvent(event)
+        self.commands.closeEvent(event)
 
     @property
     def labels(self):
@@ -182,7 +162,7 @@ class MainWindow(QMainWindow):
         self.player = QtVideoPlayer(color_manager=self._color_manager, state=self.state)
         self.player.changedPlot.connect(self._after_plot_update)
         self.player.changedData.connect(
-            lambda inst: self.edit.changestack_push("viewer change")
+            lambda inst: self.commands.changestack_push("viewer change")
         )
         self.player.view.instanceDoubleClicked.connect(self.doubleClickInstance)
         self.player.seekbar.selectionChanged.connect(lambda: self.updateStatusMessage())
@@ -250,21 +230,21 @@ class MainWindow(QMainWindow):
         ### File Menu ###
 
         fileMenu = self.menuBar().addMenu("File")
-        add_menu_item(fileMenu, "new", "New Project", self.files.newProject)
-        add_menu_item(fileMenu, "open", "Open Project...", self.files.openProject)
+        add_menu_item(fileMenu, "new", "New Project", self.commands.newProject)
+        add_menu_item(fileMenu, "open", "Open Project...", self.commands.openProject)
         add_menu_item(
             fileMenu,
             "import predictions",
             "Import Labels...",
-            self.edit.importPredictions,
+            self.commands.importPredictions,
         )
 
         fileMenu.addSeparator()
-        add_menu_item(fileMenu, "add videos", "Add Videos...", self.edit.addVideo)
+        add_menu_item(fileMenu, "add videos", "Add Videos...", self.commands.addVideo)
 
         fileMenu.addSeparator()
-        add_menu_item(fileMenu, "save", "Save", self.files.saveProject)
-        add_menu_item(fileMenu, "save as", "Save As...", self.files.saveProjectAs)
+        add_menu_item(fileMenu, "save", "Save", self.commands.saveProject)
+        add_menu_item(fileMenu, "save as", "Save As...", self.commands.saveProjectAs)
 
         fileMenu.addSeparator()
         add_menu_item(fileMenu, "close", "Quit", self.close)
@@ -277,37 +257,37 @@ class MainWindow(QMainWindow):
             goMenu,
             "goto next labeled",
             "Next Labeled Frame",
-            self.navigation.nextLabeledFrame,
+            self.commands.nextLabeledFrame,
         )
         add_menu_item(
             goMenu,
             "goto prev labeled",
             "Previous Labeled Frame",
-            self.navigation.previousLabeledFrame,
+            self.commands.previousLabeledFrame,
         )
         add_menu_item(
             goMenu,
             "goto next user",
             "Next User Labeled Frame",
-            self.navigation.nextUserLabeledFrame,
+            self.commands.nextUserLabeledFrame,
         )
         add_menu_item(
             goMenu,
             "goto next suggestion",
             "Next Suggestion",
-            self.navigation.nextSuggestedFrame,
+            self.commands.nextSuggestedFrame,
         )
         add_menu_item(
             goMenu,
             "goto prev suggestion",
             "Previous Suggestion",
-            lambda: self.navigation.nextSuggestedFrame(-1),
+            self.commands.prevSuggestedFrame,
         )
         add_menu_item(
             goMenu,
             "goto next track spawn",
             "Next Track Spawn Frame",
-            self.navigation.nextTrackFrame,
+            self.commands.nextTrackFrame,
         )
 
         goMenu.addSeparator()
@@ -323,7 +303,7 @@ class MainWindow(QMainWindow):
 
         goMenu.addSeparator()
 
-        add_menu_item(goMenu, "goto frame", "Go to Frame...", self.navigation.gotoFrame)
+        add_menu_item(goMenu, "goto frame", "Go to Frame...", self.commands.gotoFrame)
 
         ### View Menu ###
 
@@ -384,12 +364,14 @@ class MainWindow(QMainWindow):
         ### Label Menu ###
 
         labelMenu = self.menuBar().addMenu("Labels")
-        add_menu_item(labelMenu, "add instance", "Add Instance", self.edit.newInstance)
+        add_menu_item(
+            labelMenu, "add instance", "Add Instance", self.commands.newInstance
+        )
         add_menu_item(
             labelMenu,
             "delete instance",
             "Delete Instance",
-            self.edit.deleteSelectedInstance,
+            self.commands.deleteSelectedInstance,
         )
 
         labelMenu.addSeparator()
@@ -399,13 +381,13 @@ class MainWindow(QMainWindow):
             labelMenu,
             "transpose",
             "Transpose Instance Tracks",
-            self.edit.transposeInstance,
+            self.commands.transposeInstance,
         )
         add_menu_item(
             labelMenu,
             "delete track",
             "Delete Instance and Track",
-            self.edit.deleteSelectedInstanceTrack,
+            self.commands.deleteSelectedInstanceTrack,
         )
 
         labelMenu.addSeparator()
@@ -455,13 +437,13 @@ class MainWindow(QMainWindow):
             predictionMenu,
             "negative sample",
             "Mark Negative Training Sample...",
-            self.edit.markNegativeAnchor,
+            self.commands.markNegativeAnchor,
         )
         add_menu_item(
             predictionMenu,
             "clear negative samples",
             "Clear Current Frame Negative Samples",
-            self.edit.clearFrameNegativeAnchors,
+            self.commands.clearFrameNegativeAnchors,
         )
 
         predictionMenu.addSeparator()
@@ -477,31 +459,31 @@ class MainWindow(QMainWindow):
             predictionMenu,
             "remove predictions",
             "Delete All Predictions...",
-            self.edit.deletePredictions,
+            self.commands.deletePredictions,
         )
         add_menu_item(
             predictionMenu,
             "remove clip predictions",
             "Delete Predictions from Clip...",
-            self.edit.deleteClipPredictions,
+            self.commands.deleteClipPredictions,
         )
         add_menu_item(
             predictionMenu,
             "remove area predictions",
             "Delete Predictions from Area...",
-            self.edit.deleteAreaPredictions,
+            self.commands.deleteAreaPredictions,
         )
         add_menu_item(
             predictionMenu,
             "remove score predictions",
             "Delete Predictions with Low Score...",
-            self.edit.deleteLowScorePredictions,
+            self.commands.deleteLowScorePredictions,
         )
         add_menu_item(
             predictionMenu,
             "remove frame limit predictions",
             "Delete Predictions beyond Frame Limit...",
-            self.edit.deleteFrameLimitPredictions,
+            self.commands.deleteFrameLimitPredictions,
         )
 
         predictionMenu.addSeparator()
@@ -509,13 +491,13 @@ class MainWindow(QMainWindow):
             predictionMenu,
             "export frames",
             "Export Training Package...",
-            self.files.exportLabeledFrames,
+            self.commands.exportLabeledFrames,
         )
         add_menu_item(
             predictionMenu,
             "export clip",
             "Export Labeled Clip...",
-            self.files.exportLabeledClip,
+            self.commands.exportLabeledClip,
         )
 
         ############
@@ -556,8 +538,8 @@ class MainWindow(QMainWindow):
 
         hb = QHBoxLayout()
         _add_button(hb, "Show Video", self.videosTable.activateSelected)
-        _add_button(hb, "Add Videos", self.edit.addVideo)
-        _add_button(hb, "Remove Video", self.edit.removeVideo)
+        _add_button(hb, "Add Videos", self.commands.addVideo)
+        _add_button(hb, "Remove Video", self.commands.removeVideo)
 
         hbw = QWidget()
         hbw.setLayout(hb)
@@ -573,8 +555,8 @@ class MainWindow(QMainWindow):
         self.skeletonNodesTable = SkeletonNodesTable(self.state["skeleton"])
         vb.addWidget(self.skeletonNodesTable)
         hb = QHBoxLayout()
-        _add_button(hb, "New Node", self.edit.newNode)
-        _add_button(hb, "Delete Node", self.edit.deleteNode)
+        _add_button(hb, "New Node", self.commands.newNode)
+        _add_button(hb, "Delete Node", self.commands.deleteNode)
 
         hbw = QWidget()
         hbw.setLayout(hb)
@@ -605,8 +587,8 @@ class MainWindow(QMainWindow):
             )
         )
 
-        _add_button(hb, "Add Edge", self.edit.newEdge)
-        _add_button(hb, "Delete Edge", self.edit.deleteEdge)
+        _add_button(hb, "Add Edge", self.commands.newEdge)
+        _add_button(hb, "Delete Edge", self.commands.deleteEdge)
 
         hbw = QWidget()
         hbw.setLayout(hb)
@@ -615,16 +597,18 @@ class MainWindow(QMainWindow):
         skeleton_layout.addWidget(gb)
 
         hb = QHBoxLayout()
-        _add_button(hb, "Load Skeleton", self.edit.openSkeleton)
-        _add_button(hb, "Save Skeleton", self.edit.saveSkeleton)
+        _add_button(hb, "Load Skeleton", self.commands.openSkeleton)
+        _add_button(hb, "Save Skeleton", self.commands.saveSkeleton)
 
         hbw = QWidget()
         hbw.setLayout(hb)
         skeleton_layout.addWidget(hbw)
 
         # update edge UI when change to nodes
-        self.skeletonNodesTable.model().dataChanged.connect(self.edit.updateEdges)
-        self.skeletonNodesTable.model().dataChanged.connect(self.edit.changestack_push)
+        self.skeletonNodesTable.model().dataChanged.connect(self.commands.updateEdges)
+        self.skeletonNodesTable.model().dataChanged.connect(
+            self.commands.changestack_push
+        )
 
         ####### Instances #######
         instances_layout = _make_dock("Instances")
@@ -633,7 +617,7 @@ class MainWindow(QMainWindow):
 
         hb = QHBoxLayout()
         _add_button(hb, "New Instance", lambda x: self.newInstance())
-        _add_button(hb, "Delete Instance", self.edit.deleteSelectedInstance)
+        _add_button(hb, "Delete Instance", self.commands.deleteSelectedInstance)
 
         hbw = QWidget()
         hbw.setLayout(hb)
@@ -641,7 +625,7 @@ class MainWindow(QMainWindow):
 
         # update track UI when change to track name
         self.instancesTable.model().dataChanged.connect(self.updateTrackMenu)
-        self.instancesTable.model().dataChanged.connect(self.edit.changestack_push)
+        self.instancesTable.model().dataChanged.connect(self.commands.changestack_push)
 
         ####### Suggestions #######
         suggestions_layout = _make_dock("Labeling Suggestions")
@@ -651,20 +635,14 @@ class MainWindow(QMainWindow):
         hb = QHBoxLayout()
 
         _add_button(
-            hb,
-            "Prev",
-            lambda: self.navigation.nextSuggestedFrame(-1),
-            "goto previous suggestion",
+            hb, "Prev", self.commands.prevSuggestedFrame, "goto previous suggestion"
         )
 
         self.suggested_count_label = QLabel()
         hb.addWidget(self.suggested_count_label)
 
         _add_button(
-            hb,
-            "Next",
-            lambda: self.navigation.nextSuggestedFrame(),
-            "goto next suggestion",
+            hb, "Next", self.commands.nextSuggestedFrame, "goto next suggestion"
         )
 
         hbw = QWidget()
@@ -675,11 +653,11 @@ class MainWindow(QMainWindow):
         form_wid = YamlFormWidget(
             yaml_file=suggestions_yaml, title="Generate Suggestions"
         )
-        form_wid.mainAction.connect(self.edit.generateSuggestions)
+        form_wid.mainAction.connect(self.commands.generateSuggestions)
         suggestions_layout.addWidget(form_wid)
 
         self.suggestionsTable.doubleClicked.connect(
-            lambda table_idx: self.navigation.gotoVideoAndFrame(
+            lambda table_idx: self.commands.gotoVideoAndFrame(
                 *self.labels.get_suggestions()[table_idx.row()]
             )
         )
@@ -718,7 +696,8 @@ class MainWindow(QMainWindow):
     def _update_gui_state(self):
         """Enable/disable gui items based on current state."""
         has_selected_instance = self.state["instance"] is not None
-        has_unsaved_changes = self.state["has_changes"]
+        has_frame_range = bool(self.state["has_frame_range"])
+        has_unsaved_changes = bool(self.state["has_changes"])
         has_multiple_videos = self.labels is not None and len(self.labels.videos) > 1
         has_labeled_frames = self.labels is not None and any(
             (lf.video == self.state["video"] for lf in self.labels)
@@ -741,6 +720,9 @@ class MainWindow(QMainWindow):
         self.track_menu.setEnabled(has_selected_instance)
         self._menu_actions["clear selection"].setEnabled(has_selected_instance)
         self._menu_actions["delete instance"].setEnabled(has_selected_instance)
+
+        self._menu_actions["remove clip predictions"].setEnabled(has_frame_range)
+        self._menu_actions["export clip"].setEnabled(has_frame_range)
 
         self._menu_actions["transpose"].setEnabled(has_multiple_instances)
 
@@ -945,7 +927,7 @@ class MainWindow(QMainWindow):
         self.state["filename"] = filename
 
         if has_loaded:
-            self.edit.changestack_clear()
+            self.commands.changestack_clear()
             self._color_manager.labels = self.labels
             self._color_manager.set_palette(self.state["palette"])
 
@@ -978,10 +960,12 @@ class MainWindow(QMainWindow):
                 key_command = Qt.CTRL + Qt.Key_0 + self.labels.tracks.index(track) + 1
             self.track_menu.addAction(
                 f"{track.name}",
-                lambda x=track: self.edit.setInstanceTrack(x),
+                lambda x=track: self.commands.setInstanceTrack(x),
                 key_command,
             )
-        self.track_menu.addAction("New Track", self.edit.addTrack, Qt.CTRL + Qt.Key_0)
+        self.track_menu.addAction(
+            "New Track", self.commands.addTrack, Qt.CTRL + Qt.Key_0
+        )
 
     def updateSeekbarMarks(self):
         """Updates marks on seekbar."""
@@ -1087,7 +1071,7 @@ class MainWindow(QMainWindow):
         """Called when active learning (or inference) finishes."""
         # we ran active learning so update display/ui
         self.on_data_update([UpdateTopic.all])
-        self.edit.changestack_push("new predictions")
+        self.commands.changestack_push("new predictions")
 
     def visualizeOutputs(self):
         """Gui for adding overlay with live visualization of predictions."""
@@ -1161,1010 +1145,15 @@ class MainWindow(QMainWindow):
         """
         # When a predicted instance is double-clicked, add a new instance
         if hasattr(instance, "score"):
-            self.edit.newInstance(copy_instance=instance)
+            self.commands.newInstance(copy_instance=instance)
 
         # When a regular instance is double-clicked, add any missing points
         else:
-            self.edit.completeInstanceNodes(instance)
+            self.commands.completeInstanceNodes(instance)
 
     def openKeyRef(self):
         """Shows gui for viewing/modifying keyboard shortucts."""
         ShortcutDialog().exec_()
-
-
-@attr.s(auto_attribs=True, eq=False)
-class AppFiles(object):
-    state: GuiState
-    app: MainWindow
-
-    @staticmethod
-    def newProject():
-        """Create a new project in a new window."""
-        window = MainWindow()
-        window.showMaximized()
-
-    def openProject(self, first_open: bool = False):
-        """
-        Allows use to select and then open a saved project.
-
-        Args:
-            first_open: Whether this is the first window opened. If True,
-                then the new project is loaded into the current window
-                rather than a new application window.
-
-        Returns:
-            None.
-        """
-        filters = [
-            "HDF5 dataset (*.h5 *.hdf5)",
-            "JSON labels (*.json *.json.zip)",
-            "Matlab dataset (*.mat)",
-            "DeepLabCut csv (*.csv)",
-        ]
-
-        filename, selected_filter = FileDialog.open(
-            self.app,
-            dir=None,
-            caption="Import labeled data...",
-            filter=";;".join(filters),
-        )
-
-        if len(filename) == 0:
-            return
-
-        if OPEN_IN_NEW and not first_open:
-            new_window = MainWindow()
-            new_window.showMaximized()
-            new_window.loadProject(filename)
-        else:
-            self.app.loadProject(filename)
-
-    def saveProject(self):
-        """Show gui to save project (or save as if not yet saved)."""
-        if self.state["filename"] is not None:
-            self._trySave(self.state["labels"], self.state["filename"])
-        else:
-            # No filename (must be new project), so treat as "Save as"
-            self.saveProjectAs()
-
-    def saveProjectAs(self):
-        """Show gui to save project as a new file."""
-        default_name = self.state["filename"] or "untitled"
-        p = PurePath(default_name)
-        default_name = str(p.with_name(f"{p.stem} copy{p.suffix}"))
-
-        filters = [
-            "HDF5 dataset (*.h5)",
-            "JSON labels (*.json)",
-            "Compressed JSON (*.zip)",
-        ]
-        filename, selected_filter = FileDialog.save(
-            self.app, caption="Save As...", dir=default_name, filter=";;".join(filters)
-        )
-
-        if len(filename) == 0:
-            return
-
-        if self._trySave(self.state["labels"], filename):
-            # If save was successful
-            self.state["filename"] = filename
-
-    def _trySave(self, labels: Labels, filename: str):
-        """Helper function which attempts save and handles errors."""
-        success = False
-        try:
-            Labels.save_file(labels=labels, filename=filename)
-            success = True
-            # Mark savepoint in change stack
-            self.app.edit.changestack_savepoint()
-
-        except Exception as e:
-            message = f"An error occured when attempting to save:\n {e}\n\n"
-            message += "Try saving your project with a different filename or in a different format."
-            QtWidgets.QMessageBox(text=message).exec_()
-
-        # Redraw. Not sure why, but sometimes we need to do this.
-        self.app.plotFrame()
-
-        return success
-
-    def closeEvent(self, event):
-        """Closes application window, prompting for saving as needed."""
-        if not self.state["has_changes"]:
-            # No unsaved changes, so accept event (close)
-            event.accept()
-        else:
-            msgBox = QMessageBox()
-            msgBox.setText("Do you want to save the changes to this project?")
-            msgBox.setInformativeText("If you don't save, your changes will be lost.")
-            msgBox.setStandardButtons(
-                QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel
-            )
-            msgBox.setDefaultButton(QMessageBox.Save)
-
-            ret_val = msgBox.exec_()
-
-            if ret_val == QMessageBox.Cancel:
-                # cancel close by ignoring event
-                event.ignore()
-            elif ret_val == QMessageBox.Discard:
-                # don't save, just close
-                event.accept()
-            elif ret_val == QMessageBox.Save:
-                # save
-                self.saveProject()
-                # accept event (closes window)
-                event.accept()
-
-    def exportLabeledClip(self):
-        """Shows gui for exporting clip with visual annotations."""
-        from sleap.io.visuals import save_labeled_video
-
-        if self.app.player.seekbar.hasSelection():
-
-            fps, okay = QtWidgets.QInputDialog.getInt(
-                self.app,
-                "Frames per second",
-                "Frames per second:",
-                getattr(self.state["video"], "fps", 30),
-                1,
-                300,
-            )
-            if not okay:
-                return
-
-            filename, _ = FileDialog.save(
-                self.app,
-                caption="Save Video As...",
-                dir=self.state["filename"] + ".avi",
-                filter="AVI Video (*.avi)",
-            )
-
-            if len(filename) == 0:
-                return
-
-            save_labeled_video(
-                filename=filename,
-                labels=self.state["labels"],
-                video=self.state["video"],
-                frames=list(range(*self.state["frame_range"])),
-                fps=fps,
-                gui_progress=True,
-            )
-
-    def exportLabeledFrames(self):
-        """Gui for exporting the training dataset of labels/frame images."""
-        filters = ["HDF5 dataset (*.h5)", "Compressed JSON dataset (*.json *.json.zip)"]
-        filename, _ = FileDialog.save(
-            self.app,
-            caption="Save Labeled Frames As...",
-            dir=self.state["filename"] + ".h5",
-            filters=";;".join(filters),
-        )
-        if len(filename) == 0:
-            return
-
-        Labels.save_file(
-            self.state["labels"], filename, default_suffix="h5", save_frame_data=True
-        )
-
-
-@attr.s(auto_attribs=True, eq=False)
-class AppNavigation(object):
-    state: GuiState
-    app: MainWindow
-
-    @property
-    def labels(self):
-        return self.app.labels
-
-    def _plot_if_next(self, frame_iterator: Iterator) -> bool:
-        """Plots next frame (if there is one) from iterator.
-
-        Arguments:
-            frame_iterator: The iterator from which we'll try to get next
-            :class:`LabeledFrame`.
-
-        Returns:
-            True if we went to next frame.
-        """
-        try:
-            next_lf = next(frame_iterator)
-        except StopIteration:
-            return False
-
-        self.state["frame_idx"] = next_lf.frame_idx
-        return True
-
-    def previousLabeledFrame(self):
-        """Goes to labeled frame prior to current frame."""
-        frames = self.labels.frames(
-            self.state["video"], from_frame_idx=self.state["frame_idx"], reverse=True
-        )
-        self._plot_if_next(frames)
-
-    def nextLabeledFrame(self):
-        """Goes to labeled frame after current frame."""
-        frames = self.labels.frames(
-            self.state["video"], from_frame_idx=self.state["frame_idx"]
-        )
-        self._plot_if_next(frames)
-
-    def nextUserLabeledFrame(self):
-        """Goes to next labeled frame with user instances."""
-        frames = self.labels.frames(
-            self.state["video"], from_frame_idx=self.state["frame_idx"]
-        )
-        # Filter to frames with user instances
-        frames = filter(lambda lf: lf.has_user_instances, frames)
-        self._plot_if_next(frames)
-
-    def nextSuggestedFrame(self, seek_direction=1):
-        """Goes to next (or previous) suggested frame."""
-        next_video, next_frame = self.labels.get_next_suggestion(
-            self.state["video"], self.state["frame_idx"], seek_direction
-        )
-        if next_video is not None:
-            self.gotoVideoAndFrame(next_video, next_frame)
-        if next_frame is not None:
-            selection_idx = self.labels.get_suggestions().index(
-                (next_video, next_frame)
-            )
-            self.state["suggestion_idx"] = selection_idx
-
-    def nextTrackFrame(self):
-        """Goes to next frame on which a track starts."""
-        cur_idx = self.state["frame_idx"]
-        track_ranges = self.labels.get_track_occupany(self.state["video"])
-        next_idx = min(
-            [
-                track_range.start
-                for track_range in track_ranges.values()
-                if track_range.start is not None and track_range.start > cur_idx
-            ],
-            default=-1,
-        )
-        if next_idx > -1:
-            self.state["frame_idx"] = next_idx
-
-    def gotoVideoAndFrame(self, video: Video, frame_idx: int):
-        """Activates video and goes to frame."""
-        self.state["video"] = video
-        self.state["frame_idx"] = frame_idx
-
-    def gotoFrame(self):
-        """Shows gui to go to frame by number."""
-        # TODO: should we separate GUI stuff?
-        frame_number, okay = QtWidgets.QInputDialog.getInt(
-            self.app,
-            "Go To Frame...",
-            "Frame Number:",
-            self.state["frame_idx"] + 1,
-            1,
-            self.state["video"].frames,
-        )
-        if okay:
-            self.state["frame_idx"] = frame_number - 1
-
-
-@attr.s(auto_attribs=True, eq=False)
-class AppEditor(object):
-    state: GuiState
-    app: MainWindow
-    update_callback: Optional[Callable] = None
-    _change_stack: List = attr.ib(default=attr.Factory(list))
-
-    @property
-    def labels(self):
-        return self.app.labels
-
-    @property
-    def labeled_frame(self):
-        return self.state["labeled_frame"]
-
-    def signal_update(self, what: List[UpdateTopic]):
-        """Calls the update callback after data has been changed."""
-        if callable(self.update_callback):
-            self.update_callback(what)
-
-    def changestack_push(self, change: str = ""):
-        """Adds to stack of changes made by user."""
-        # Currently the change doesn't store any data, and we're only using this
-        # to determine if there are unsaved changes. Eventually we could use this
-        # to support undo/redo.
-        self._change_stack.append(change)
-        self.state["has_changes"] = True
-
-    def changestack_savepoint(self):
-        """Marks that project was just saved."""
-        self.changestack_push("SAVE")
-        self.state["has_changes"] = False
-
-    def changestack_clear(self):
-        """Clears stack of changes."""
-        self._change_stack = list()
-        self.state["has_changes"] = False
-
-    def changestack_start_atomic(self, name: str = ""):
-        """Marks that we want to track a set of changes as a single change."""
-        self.changestack_push("ATOMIC_START")
-
-    def changestack_end_atomic(self, name: str = ""):
-        """Marks that we want finished the set of changes to track together."""
-        self.changestack_push("ATOMIC_END")
-
-    def addVideo(self, filename: Optional[str] = None):
-        """Shows gui for adding video to project.
-
-        Args:
-            filename: If given, then we just load this video. If not given,
-                then we show dialog for importing videos.
-
-        Returns:
-            None.
-        """
-        # Browse for file
-        video = None
-        if isinstance(filename, str):
-            video = Video.from_filename(filename)
-            # Add to labels
-            self.labels.add_video(video)
-        else:
-            import_list = ImportVideos().go()
-            for import_item in import_list:
-                # Create Video object
-                video = Video.from_filename(**import_item["params"])
-                # Add to labels
-                self.labels.add_video(video)
-                self.changestack_push("add video")
-
-        # Load if no video currently loaded
-        if self.state["video"] is None:
-            self.state["video"] = video
-
-        self.signal_update([UpdateTopic.video])
-
-    def removeVideo(self):
-        """Removes video (selected in table) from project."""
-        video = self.state["selected_video"]
-        if video is None:
-            return
-
-        # Count labeled frames for this video
-        n = len(self.labels.find(video))
-
-        # Warn if there are labels that will be deleted
-        if n > 0:
-            response = QMessageBox.critical(
-                self.app,
-                "Removing video with labels",
-                f"{n} labeled frames in this video will be deleted, "
-                "are you sure you want to remove this video?",
-                QMessageBox.Yes,
-                QMessageBox.No,
-            )
-            if response == QMessageBox.No:
-                return
-
-        # Remove video
-        self.labels.remove_video(video)
-        self.changestack_push("remove video")
-
-        # Update data model
-        self.signal_update([UpdateTopic.video])
-
-        # Update view if this was the current video
-        if self.state["video"] == video:
-            if len(self.labels.videos) > 0:
-                self.state["video"] = self.labels.videos[-1]
-
-    def openSkeleton(self):
-        """Shows gui for loading saved skeleton into project."""
-        filters = ["JSON skeleton (*.json)", "HDF5 skeleton (*.h5 *.hdf5)"]
-        filename, selected_filter = FileDialog.open(
-            self.app, dir=None, caption="Open skeleton...", filter=";;".join(filters)
-        )
-
-        if len(filename) == 0:
-            return
-
-        if filename.endswith(".json"):
-            self.state["skeleton"] = Skeleton.load_json(filename)
-        elif filename.endswith((".h5", ".hdf5")):
-            sk_list = Skeleton.load_all_hdf5(filename)
-            if len(sk_list):
-                self.state["skeleton"] = sk_list[0]
-
-        if self.state["skeleton"] not in self.labels:
-            self.labels.skeletons.append(self.state["skeleton"])
-            self.changestack_push("new skeleton")
-
-        # Update data model
-        self.signal_update([UpdateTopic.skeleton])
-
-    def saveSkeleton(self):
-        """Shows gui for saving skeleton from project."""
-        default_name = "skeleton.json"
-        filters = ["JSON skeleton (*.json)", "HDF5 skeleton (*.h5 *.hdf5)"]
-        filename, selected_filter = FileDialog.save(
-            self.app, caption="Save As...", dir=default_name, filter=";;".join(filters)
-        )
-
-        if len(filename) == 0:
-            return
-
-        if filename.endswith(".json"):
-            self.state["skeleton"].save_json(filename)
-        elif filename.endswith((".h5", ".hdf5")):
-            self.state["skeleton"].save_hdf5(filename)
-
-    def newNode(self):
-        """Adds new node to skeleton."""
-        # Find new part name
-        part_name = "new_part"
-        i = 1
-        while part_name in self.state["skeleton"]:
-            part_name = f"new_part_{i}"
-            i += 1
-
-        # Add the node to the skeleton
-        self.state["skeleton"].add_node(part_name)
-        self.changestack_push("new node")
-
-        self.signal_update([UpdateTopic.skeleton])
-
-    def deleteNode(self):
-        """Removes (currently selected) node from skeleton."""
-        # Get selected node
-        idx = self.app.skeletonNodesTable.currentIndex()
-        if not idx.isValid():
-            return
-        node = self.state["skeleton"].nodes[idx.row()]
-
-        # Remove
-        self.state["skeleton"].delete_node(node)
-        self.changestack_push("delete node")
-
-        self.signal_update([UpdateTopic.skeleton])
-
-    def updateEdges(self):
-        """Called when edges in skeleton have been changed."""
-        self.signal_update([UpdateTopic.skeleton])
-
-    def newEdge(self):
-        """Adds new edge to skeleton."""
-        # TODO: Move this to unified data model
-
-        # Get selected nodes
-        src_node = self.app.skeletonEdgesSrc.currentText()
-        dst_node = self.app.skeletonEdgesDst.currentText()
-
-        # Check if they're in the graph
-        if (
-            src_node not in self.state["skeleton"]
-            or dst_node not in self.state["skeleton"]
-        ):
-            return
-
-        # Add edge
-        self.state["skeleton"].add_edge(source=src_node, destination=dst_node)
-        self.changestack_push("new edge")
-
-        self.signal_update([UpdateTopic.skeleton])
-
-    def deleteEdge(self):
-        """Removes (currently selected) edge from skeleton."""
-        # TODO: Move this to unified data model
-
-        # Get selected edge
-        idx = self.app.skeletonEdgesTable.currentIndex()
-        if not idx.isValid():
-            return
-        edge = self.state["skeleton"].edges[idx.row()]
-
-        # Delete edge
-        self.state["skeleton"].delete_edge(source=edge[0], destination=edge[1])
-        self.changestack_push("delete edge")
-
-        self.signal_update([UpdateTopic.skeleton])
-
-    def deletePredictions(self):
-        """Deletes all predicted instances in project."""
-
-        predicted_instances = [
-            (lf, inst)
-            for lf in self.labels
-            for inst in lf
-            if type(inst) == PredictedInstance
-        ]
-
-        self._delete_confirm(predicted_instances)
-
-    def deleteClipPredictions(self):
-        """Deletes all instances within selected range of video frames."""
-
-        predicted_instances = [
-            (lf, inst)
-            for lf in self.labels.find(
-                self.state["video"], frame_idx=range(*self.state["frame_range"])
-            )
-            for inst in lf
-            if type(inst) == PredictedInstance
-        ]
-
-        # If user selected an instance, then only delete for that track.
-        selected_inst = self.state["instance"]
-        if selected_inst is not None:
-            track = selected_inst.track
-            if track is None:
-                # If user selected an instance without a track, delete only
-                # that instance and only on the current frame.
-                predicted_instances = [(self.state["labeled_frame"], selected_inst)]
-            else:
-                # Filter by track
-                predicted_instances = list(
-                    filter(lambda x: x[1].track == track, predicted_instances)
-                )
-
-        self._delete_confirm(predicted_instances)
-
-    def deleteAreaPredictions(self):
-        """Gui for deleting instances within some rect on frame images."""
-
-        # Callback to delete after area has been selected
-        def delete_area_callback(x0, y0, x1, y1):
-
-            self.app.updateStatusMessage()
-
-            # Make sure there was an area selected
-            if x0 == x1 or y0 == y1:
-                return
-
-            min_corner = (x0, y0)
-            max_corner = (x1, y1)
-
-            def is_bounded(inst):
-                points_array = inst.points_array
-                valid_points = points_array[~np.isnan(points_array).any(axis=1)]
-
-                is_gt_min = np.all(valid_points >= min_corner)
-                is_lt_max = np.all(valid_points <= max_corner)
-                return is_gt_min and is_lt_max
-
-            # Find all instances contained in selected area
-            predicted_instances = [
-                (lf, inst)
-                for lf in self.labels.find(self.state["video"])
-                for inst in lf
-                if type(inst) == PredictedInstance and is_bounded(inst)
-            ]
-
-            self._delete_confirm(predicted_instances)
-
-        # Prompt the user to select area
-        self.app.updateStatusMessage(
-            f"Please select the area from which to remove instances. This will be applied to all frames."
-        )
-        self.app.player.onAreaSelection(delete_area_callback)
-
-    def deleteLowScorePredictions(self):
-        """Gui for deleting instances below some score threshold."""
-        score_thresh, okay = QtWidgets.QInputDialog.getDouble(
-            self.app, "Delete Instances with Low Score...", "Score Below:", 1, 0, 100
-        )
-        if okay:
-            # Find all instances contained in selected area
-            predicted_instances = [
-                (lf, inst)
-                for lf in self.labels.find(self.state["video"])
-                for inst in lf
-                if type(inst) == PredictedInstance and inst.score < score_thresh
-            ]
-
-            self._delete_confirm(predicted_instances)
-
-    def deleteFrameLimitPredictions(self):
-        """Gui for deleting instances beyond some number in each frame."""
-        count_thresh, okay = QtWidgets.QInputDialog.getInt(
-            self.app,
-            "Limit Instances in Frame...",
-            "Maximum instances in a frame:",
-            3,
-            1,
-            100,
-        )
-        if okay:
-            predicted_instances = []
-            # Find all instances contained in selected area
-            for lf in self.labels.find(self.state["video"]):
-                if len(lf.instances) > count_thresh:
-                    # Get all but the count_thresh many instances with the highest score
-                    # FIXME what about instances w/o score?
-                    extra_instances = sorted(
-                        lf.instances, key=operator.attrgetter("score")
-                    )[:-count_thresh]
-                    predicted_instances.extend([(lf, inst) for inst in extra_instances])
-
-            self._delete_confirm(predicted_instances)
-
-    def _delete_confirm(self, lf_inst_list):
-        """Helper function to confirm before deleting instances.
-
-        Args:
-            lf_inst_list: A list of (labeled frame, instance) tuples.
-        """
-
-        title = "Removing predicted instances"
-        message = (
-            f"There are {len(lf_inst_list)} predicted instances which "
-            f"would be deleted. Are you sure you want to delete these?"
-        )
-
-        # Confirm that we want to delete
-        resp = QMessageBox.critical(
-            self.app, title, message, QMessageBox.Yes, QMessageBox.No
-        )
-
-        if resp == QMessageBox.No:
-            return
-
-        # Delete the instances
-        for lf, inst in lf_inst_list:
-            self.labels.remove_instance(lf, inst)
-
-        # Update visuals
-        self.changestack_push("removed predictions")
-        self.signal_update([UpdateTopic.project_instances])
-
-    def previousLabeledFrameIndex(self):
-        frames = self.labels.frames(
-            self.state["video"], from_frame_idx=self.state["frame_idx"], reverse=True
-        )
-
-        try:
-            next_idx = next(frames).frame_idx
-        except:
-            return
-
-        return next_idx
-
-    def _get_xy_in_rect(self, rect: QtCore.QRectF):
-        """Returns random x, y coordinates within given rect."""
-        x = rect.x() + (rect.width() * 0.1) + (np.random.rand() * rect.width() * 0.8)
-        y = rect.y() + (rect.height() * 0.1) + (np.random.rand() * rect.height() * 0.8)
-        return x, y
-
-    def completeInstanceNodes(self, instance: Instance):
-        """Adds missing nodes to given instance."""
-        # the rect that's currently visibile in the window view
-        in_view_rect = self.app.player.getVisibleRect()
-
-        for node in self.state["skeleton"].nodes:
-            if node not in instance.nodes or instance[node].isnan():
-                # pick random points within currently zoomed view
-                x, y = self._get_xy_in_rect(in_view_rect)
-                # set point for node
-                instance[node] = Point(x=x, y=y, visible=False)
-
-    def newInstance(self, copy_instance: Optional[Instance] = None):
-        """
-        Creates a new instance, copying node coordinates as appropriate.
-
-        Args:
-            copy_instance: The :class:`Instance` (or
-                :class:`PredictedInstance`) which we want to copy.
-        """
-        if self.state["labeled_frame"] is None:
-            return
-
-        # FIXME: filter by skeleton type
-
-        from_predicted = copy_instance
-        from_prev_frame = False
-
-        if copy_instance is None:
-            selected_inst = self.state["instance"]
-            if selected_inst is not None:
-                # If the user has selected an instance, copy that one.
-                copy_instance = selected_inst
-                from_predicted = copy_instance
-
-        if copy_instance is None:
-            unused_predictions = self.state["labeled_frame"].unused_predictions
-            if len(unused_predictions):
-                # If there are predicted instances that don't correspond to an instance
-                # in this frame, use the first predicted instance without matching instance.
-                copy_instance = unused_predictions[0]
-                from_predicted = copy_instance
-
-        if copy_instance is None:
-            # Otherwise, if there are instances in previous frames,
-            # copy the points from one of those instances.
-            prev_idx = self.previousLabeledFrameIndex()
-
-            if prev_idx is not None:
-                prev_instances = self.labels.find(
-                    self.state["video"], prev_idx, return_new=True
-                )[0].instances
-                if len(prev_instances) > len(self.state["labeled_frame"].instances):
-                    # If more instances in previous frame than current, then use the
-                    # first unmatched instance.
-                    copy_instance = prev_instances[
-                        len(self.state["labeled_frame"].instances)
-                    ]
-                    from_prev_frame = True
-                elif len(self.state["labeled_frame"].instances):
-                    # Otherwise, if there are already instances in current frame,
-                    # copy the points from the last instance added to frame.
-                    copy_instance = self.state["labeled_frame"].instances[-1]
-                elif len(prev_instances):
-                    # Otherwise use the last instance added to previous frame.
-                    copy_instance = prev_instances[-1]
-                    from_prev_frame = True
-
-        from_predicted = from_predicted if hasattr(from_predicted, "score") else None
-
-        # Now create the new instance
-        new_instance = Instance(
-            skeleton=self.state["skeleton"], from_predicted=from_predicted
-        )
-
-        # Get the rect that's currently visible in the window view
-        in_view_rect = self.app.player.getVisibleRect()
-
-        # go through each node in skeleton
-        for node in self.state["skeleton"].node_names:
-            # if we're copying from a skeleton that has this node
-            if (
-                copy_instance is not None
-                and node in copy_instance
-                and not copy_instance[node].isnan()
-            ):
-                # just copy x, y, and visible
-                # we don't want to copy a PredictedPoint or score attribute
-                new_instance[node] = Point(
-                    x=copy_instance[node].x,
-                    y=copy_instance[node].y,
-                    visible=copy_instance[node].visible,
-                )
-            else:
-                # pick random points within currently zoomed view
-                x, y = self._get_xy_in_rect(in_view_rect)
-                # mark the node as not "visible" if we're copying from a predicted instance without this node
-                is_visible = copy_instance is None or not hasattr(
-                    copy_instance, "score"
-                )
-                # set point for node
-                new_instance[node] = Point(x=x, y=y, visible=is_visible)
-
-        # If we're copying a predicted instance or from another frame, copy the track
-        if hasattr(copy_instance, "score") or from_prev_frame:
-            new_instance.track = copy_instance.track
-
-        # Add the instance
-        self.labels.add_instance(self.state["labeled_frame"], new_instance)
-        self.changestack_push("new instance")
-
-        if self.state["labeled_frame"] not in self.labels.labels:
-            self.labels.append(self.state["labeled_frame"])
-            self.changestack_push("new labeled frame")
-
-        self.signal_update([UpdateTopic.frame])
-
-    def deleteSelectedInstance(self):
-        """Deletes currently selected instance."""
-        selected_inst = self.state["instance"]
-        if selected_inst is None:
-            return
-
-        self.labels.remove_instance(self.state["labeled_frame"], selected_inst)
-        self.changestack_push("delete instance")
-
-        self.signal_update([UpdateTopic.frame])
-
-    def deleteSelectedInstanceTrack(self):
-        """Deletes all instances from track of currently selected instance."""
-        selected_inst = self.state["instance"]
-        if selected_inst is None:
-            return
-
-        # to do: range of frames?
-
-        track = selected_inst.track
-        self.labels.remove_instance(self.state["labeled_frame"], selected_inst)
-
-        if track is not None:
-            # remove any instance on this track
-            for lf in self.labels.find(self.state["video"]):
-                for inst in filter(lambda inst: inst.track == track, lf.instances):
-                    self.labels.remove_instance(lf, inst)
-
-        self.changestack_push("delete track")
-
-        self.signal_update([UpdateTopic.project_instances])
-
-    def addTrack(self):
-        """Creates new track and moves selected instance into this track."""
-        track_numbers_used = [
-            int(track.name) for track in self.labels.tracks if track.name.isnumeric()
-        ]
-        next_number = max(track_numbers_used, default=0) + 1
-        new_track = Track(spawned_on=self.state["frame_idx"], name=str(next_number))
-
-        self.changestack_start_atomic("add track")
-        self.labels.add_track(self.state["video"], new_track)
-        self.changestack_push("new track")
-        self.setInstanceTrack(new_track)
-        self.changestack_push("set track")
-        self.changestack_end_atomic()
-
-        # update track menu and seekbar
-        self.signal_update([UpdateTopic.tracks])
-
-    def setInstanceTrack(self, new_track: "Track"):
-        """Sets track for selected instance."""
-        selected_instance = self.state["instance"]
-        if selected_instance is None:
-            return
-
-        # idx = self.state["labeled_frame"].index(selected_instance)
-
-        old_track = selected_instance.track
-
-        # When setting track for an instance that doesn't already have a track set,
-        # just set for selected instance.
-        if old_track is None:
-            # Move anything already in the new track out of it
-            new_track_instances = self.labels.find_track_instances(
-                video=self.state["video"],
-                track=new_track,
-                frame_range=(self.state["frame_idx"], self.state["frame_idx"] + 1),
-            )
-            for instance in new_track_instances:
-                instance.track = None
-            # Move selected instance into new track
-            self.labels.track_set_instance(
-                self.state["labeled_frame"], selected_instance, new_track
-            )
-
-        # When the instance does already have a track, then we want to update
-        # the track for a range of frames.
-        else:
-
-            # Determine range that should be affected
-            if self.state["has_frame_range"]:
-                # If range is selected in seekbar, use that
-                frame_range = tuple(*self.state["frame_range"])
-            else:
-                # Otherwise, range is current to last frame
-                frame_range = (self.state["frame_idx"], self.state["video"].frames)
-
-            # Do the swap
-            self.labels.track_swap(
-                self.state["video"], new_track, old_track, frame_range
-            )
-
-        self.changestack_push("swap tracks")
-
-        # Update visuals
-        self.signal_update([UpdateTopic.tracks])
-
-        # Make sure the originally selected instance is still selected
-        self.state["instance"] = selected_instance
-
-    def transposeInstance(self):
-        """Transposes tracks for two instances.
-
-        If there are only two instances, then this swaps tracks.
-        Otherwise, it allows user to select the instances for which we want
-        to swap tracks.
-        """
-        # We're currently identifying instances by numeric index, so it's
-        # impossible to (e.g.) have a single instance which we identify
-        # as the second instance in some other frame.
-
-        # For the present, we can only "transpose" if there are multiple instances.
-        if len(self.state["labeled_frame"].instances) < 2:
-            return
-        # If there are just two instances, transpose them.
-        if len(self.state["labeled_frame"].instances) == 2:
-            self._transpose_instances(self.state["labeled_frame"].instances)
-        # If there are more than two, then we need the user to select the instances.
-        else:
-            self.app.player.onSequenceSelect(
-                seq_len=2,
-                on_success=self._transpose_instances,
-                on_each=self._transpose_message,
-                on_failure=lambda x: self.app.updateStatusMessage(),
-            )
-
-    def _transpose_message(self, instance_ids: list):
-        word = "next" if len(instance_ids) else "first"
-        self.app.updateStatusMessage(
-            f"Please select the {word} instance to transpose..."
-        )
-
-    def _transpose_instances(self, instances: list):
-        if len(instances) != 2:
-            return
-
-        # Swap tracks for current and subsequent frames when we have tracks
-        old_track, new_track = instances[0].track, instances[1].track
-        if old_track is not None and new_track is not None:
-            frame_range = (self.state["frame_idx"], self.state["video"].frames)
-            self.labels.track_swap(
-                self.state["video"], new_track, old_track, frame_range
-            )
-
-        self.changestack_push("swap tracks")
-
-        # Update visuals
-        self.signal_update([UpdateTopic.tracks])
-
-    def markNegativeAnchor(self):
-        """Allows user to add negative training sample anchor."""
-
-        def click_callback(x, y):
-            self.app.updateStatusMessage()
-            self.labels.add_negative_anchor(
-                self.state["video"], self.state["frame_idx"], (x, y)
-            )
-            self.changestack_push("add negative anchors")
-            self.signal_update([UpdateTopic.frame])
-
-        # Prompt the user to select area
-        self.app.updateStatusMessage(
-            f"Please click where you want a negative sample..."
-        )
-        self.app.player.onPointSelection(click_callback)
-
-    def clearFrameNegativeAnchors(self):
-        """Removes negative training sample anchors on current frame."""
-        self.labels.remove_negative_anchors(
-            self.state["video"], self.state["frame_idx"]
-        )
-        self.changestack_push("remove negative anchors")
-        self.signal_update([UpdateTopic.frame])
-
-    def importPredictions(self):
-        """Starts gui for importing another dataset into currently one."""
-        filters = ["HDF5 dataset (*.h5 *.hdf5)", "JSON labels (*.json *.json.zip)"]
-
-        filenames, selected_filter = FileDialog.openMultiple(
-            self.app,
-            dir=None,
-            caption="Import labeled data...",
-            filter=";;".join(filters),
-        )
-
-        if len(filenames) == 0:
-            return
-
-        for filename in filenames:
-            gui_video_callback = Labels.make_gui_video_callback(
-                search_paths=[os.path.dirname(filename)]
-            )
-
-            new_labels = Labels.load_file(filename, video_callback=gui_video_callback)
-
-            # Merging data is handled by MergeDialog
-            MergeDialog(base_labels=self.labels, new_labels=new_labels).exec_()
-
-        # update display/ui
-        self.signal_update([UpdateTopic.all])
-        self.changestack_push("new predictions")
-
-    def generateSuggestions(self, params: Dict):
-        """Generates suggestions using given params dictionary."""
-        new_suggestions = dict()
-        for video in self.labels.videos:
-            new_suggestions[video] = VideoFrameSuggestions.suggest(
-                video=video, labels=self.labels, params=params
-            )
-
-        self.labels.set_suggestions(new_suggestions)
-
-        self.signal_update([UpdateTopic.suggestions])
 
 
 def main(*args, **kwargs):
@@ -2176,7 +1165,7 @@ def main(*args, **kwargs):
     window.showMaximized()
 
     if not kwargs.get("labels_path", None):
-        window.files.openProject(first_open=True)
+        window.commands.openProject(first_open=True)
 
     app.exec_()
 
