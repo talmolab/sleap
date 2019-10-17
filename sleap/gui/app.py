@@ -151,7 +151,7 @@ class MainWindow(QMainWindow):
                 event.accept()
             elif ret_val == QMessageBox.Save:
                 # save
-                self.saveProject()
+                self.commands.saveProject()
                 # accept event (closes window)
                 event.accept()
 
@@ -664,16 +664,12 @@ class MainWindow(QMainWindow):
         instances_layout.addWidget(self.instancesTable)
 
         hb = QHBoxLayout()
-        _add_button(hb, "New Instance", lambda x: self.newInstance())
+        _add_button(hb, "New Instance", lambda x: self.commands.newInstance())
         _add_button(hb, "Delete Instance", self.commands.deleteSelectedInstance)
 
         hbw = QWidget()
         hbw.setLayout(hb)
         instances_layout.addWidget(hbw)
-
-        # update track UI when change to track name
-        self.instancesTable.model().dataChanged.connect(self.updateTrackMenu)
-        self.instancesTable.model().dataChanged.connect(self.commands.changestack_push)
 
         ####### Suggestions #######
         suggestions_layout = _make_dock("Labeling Suggestions")

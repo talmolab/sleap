@@ -470,7 +470,7 @@ class SaveProject(SaveProjectAs):
             return True
 
         # No filename (must be new project), so treat as "Save as"
-        return super(SaveProjectAs, cls).ask(context, params)
+        return SaveProjectAs.ask(context, params)
 
 
 class ExportLabeledClip(AppCommand):
