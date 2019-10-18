@@ -1048,7 +1048,9 @@ class MainWindow(QMainWindow):
 
         selection = dict()
         selection["frame"] = {current_video: [self.state["frame_idx"]]}
-        selection["clip"] = {current_video: list(range(*self.state["frame_range"]))}
+        selection["clip"] = {
+            current_video: list(range(*self.state.get("frame_range", default=(0, 0))))
+        }
         selection["video"] = {current_video: list(range(current_video.num_frames))}
 
         selection["suggestions"] = {
