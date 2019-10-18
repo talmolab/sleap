@@ -213,7 +213,6 @@ class GenericTableView(QtWidgets.QTableView):
         super(GenericTableView, self).selectionChanged(new, old)
 
         if self.row_name:
-            print(f"setting {self.name_prefix + self.row_name}")
             item = self.getSelectedRowItem()
             self.state[self.name_prefix + self.row_name] = item
 

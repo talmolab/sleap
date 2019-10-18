@@ -586,10 +586,10 @@ class Labels(MutableSequence):
             None.
         """
         # Get ranges in track occupancy cache
-        _, within_old, _ = self._track_occupancy[video][old_track].cut_range(
+        _, within_old, _ = self._get_track_occupany(video, old_track).cut_range(
             frame_range
         )
-        _, within_new, _ = self._track_occupancy[video][new_track].cut_range(
+        _, within_new, _ = self._get_track_occupany(video, new_track).cut_range(
             frame_range
         )
 
@@ -670,6 +670,16 @@ class Labels(MutableSequence):
                     tracks[instance.track] = RangeList()
                 tracks[instance.track].add(frame_idx)
         return tracks
+
+    def _get_track_occupany(self, video: Video, track: Track) -> RangeList:
+        """
+        Accessor for track occupancy cache that adds video/track as needed.
+        """
+        if video not in self._track_occupancy:
+            self._track_occupancy[video] = dict()
+        if track not in self._track_occupancy[video]:
+            self._track_occupancy[video][track] = RangeList()
+        return self._track_occupancy[video][track]
 
     def find_track_occupancy(
         self, video: Video, track: Union[Track, int], frame_range=None

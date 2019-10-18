@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 
 from sleap.skeleton import Skeleton
-from sleap.instance import Instance, Point, LabeledFrame, PredictedInstance
+from sleap.instance import Instance, Point, LabeledFrame, PredictedInstance, Track
 from sleap.io.video import Video, MediaVideo
 from sleap.io.dataset import Labels
 from sleap.io.legacy import load_labels_json_old
@@ -729,3 +729,26 @@ def test_makedirs(tmpdir):
     labels = Labels()
     filename = os.path.join(tmpdir, "new/dirs/test.h5")
     Labels.save_file(filename=filename, labels=labels)
+
+
+def test_multivideo_tracks():
+    vid_a = Video.from_filename("foo.mp4")
+    vid_b = Video.from_filename("bar.mp4")
+
+    skeleton = Skeleton.load_json("tests/data/skeleton/fly_skeleton_legs.json")
+
+    track_a = Track(spawned_on=2, name="A")
+    track_b = Track(spawned_on=3, name="B")
+
+    inst_a = Instance(track=track_a, skeleton=skeleton)
+    inst_b = Instance(track=track_b, skeleton=skeleton)
+
+    lf_a = LabeledFrame(vid_a, frame_idx=2, instances=[inst_a])
+    lf_b = LabeledFrame(vid_b, frame_idx=3, instances=[inst_b])
+
+    labels = Labels(labeled_frames=[lf_a, lf_b])
+
+    # Try setting video B instance to track used in video A
+    labels.track_swap(vid_b, new_track=track_a, old_track=track_b, frame_range=(3, 4))
+
+    assert inst_b.track == track_a
