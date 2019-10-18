@@ -48,6 +48,12 @@ def test_app_workflow(qtbot, centered_pair_vid, small_robot_mp4_vid):
 
     assert len(app.state["skeleton"].edges) == 2
 
+    # Add and remove symmetry
+    app.commands.setNodeSymmetry(app.state["skeleton"], "b", "c")
+    assert app.state["skeleton"].get_symmetry_name("c") == "b"
+    app.commands.setNodeSymmetry(app.state["skeleton"], "b", "")
+    assert app.state["skeleton"].get_symmetry("c") == None
+
     # Remove an edge
     app.skeletonEdgesTable.selectRowItem(dict(source="b", destination="c"))
     app.commands.deleteEdge()
@@ -122,16 +128,20 @@ def test_app_workflow(qtbot, centered_pair_vid, small_robot_mp4_vid):
     app.commands.addTrack()
 
     assert len(app.labels.tracks) == 1
-    track = app.labels.tracks[0]
+    track_a = app.labels.tracks[0]
 
-    assert inst_29_0.track == track
+    assert inst_29_0.track == track_a
+
+    # Set track name
+    app.commands.setTrackName(track_a, "Track A")
+    assert track_a.name == "Track A"
 
     # Set track on existing instance in another frame
     app.state["frame_idx"] = 27
     app.state["instance"] = inst_27_0
 
-    app.commands.setInstanceTrack(new_track=track)
-    assert inst_27_0.track == track
+    app.commands.setInstanceTrack(new_track=track_a)
+    assert inst_27_0.track == track_a
 
     # Delete all instances in track
     app.commands.deleteSelectedInstanceTrack()
@@ -139,3 +149,57 @@ def test_app_workflow(qtbot, centered_pair_vid, small_robot_mp4_vid):
     assert len(app.state["labeled_frame"].instances) == 0
     app.state["frame_idx"] = 29
     assert len(app.state["labeled_frame"].instances) == 1
+
+    # Set up new frame/tracks for transposing instances
+    app.state["frame_idx"] = 31
+
+    app.commands.newInstance()
+    app.commands.newInstance()
+
+    inst_31_0 = app.state["labeled_frame"].instances[0]
+    inst_31_1 = app.state["labeled_frame"].instances[1]
+
+    app.commands.addTrack()
+    assert len(app.labels.tracks) == 2
+    track_b = app.labels.tracks[1]
+    app.commands.setTrackName(track_b, "Track B")
+    assert track_b.name == "Track B"
+
+    app.state["instance"] = inst_31_0
+    app.commands.setInstanceTrack(track_a)
+    assert inst_31_0.track == track_a
+
+    app.state["instance"] = inst_31_1
+    app.commands.setInstanceTrack(track_b)
+    assert inst_31_1.track == track_b
+
+    # Here we do the actual transpose for the pair of instances we just made
+    app.commands.transposeInstance()
+    assert inst_31_0.track == track_b
+    assert inst_31_1.track == track_a
+
+    # Try transposing back
+    app.commands.transposeInstance()
+    assert inst_31_0.track == track_a
+    assert inst_31_1.track == track_b
+
+    # Add a third instance on a new track
+
+    app.commands.newInstance()
+    inst_31_2 = app.state["labeled_frame"].instances[2]
+
+    app.state["instance"] = None  # so we don't set track when creating
+    app.commands.addTrack()
+    assert len(app.labels.tracks) == 3
+    track_c = app.labels.tracks[2]
+
+    app.state["instance"] = inst_31_2
+    app.commands.setInstanceTrack(track_c)
+    assert inst_31_2.track == track_c
+
+    # Try transposing instance 2 and instance 0
+    app.commands.transposeInstance()
+    app.state["instance"] = inst_31_0
+    assert inst_31_0.track == track_c
+    assert inst_31_2.track == track_a
+    assert inst_31_1.track == track_b

@@ -879,11 +879,11 @@ class SetNodeSymmetry(EditCommand):
         skeleton = params["skeleton"]
 
         if symmetry:
-            skeleton.add_symmetry(node.name, symmetry)
+            skeleton.add_symmetry(node, symmetry)
         else:
             # Value was cleared by user, so delete symmetry
-            symmetric_to = skeleton.get_symmetry(node.name)
-            skeleton.delete_symmetry(node.name, symmetric_to)
+            symmetric_to = skeleton.get_symmetry(node)
+            skeleton.delete_symmetry(node, symmetric_to)
 
 
 class NewEdge(EditCommand):
