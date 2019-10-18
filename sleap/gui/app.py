@@ -182,11 +182,11 @@ class MainWindow(QMainWindow):
 
     def _create_video_player(self):
         """Creates and connects :class:`QtVideoPlayer` for gui."""
-        self.player = QtVideoPlayer(color_manager=self.color_manager, state=self.state)
-        self.player.changedPlot.connect(self._after_plot_update)
-        self.player.changedData.connect(
-            lambda inst: self.commands.changestack_push("viewer change")
+        self.player = QtVideoPlayer(
+            color_manager=self.color_manager, state=self.state, context=self.commands
         )
+        self.player.changedPlot.connect(self._after_plot_update)
+
         self.player.view.instanceDoubleClicked.connect(self.doubleClickInstance)
         self.player.seekbar.selectionChanged.connect(lambda: self.updateStatusMessage())
         self.setCentralWidget(self.player)

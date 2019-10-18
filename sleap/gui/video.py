@@ -28,7 +28,7 @@ from PySide2.QtCore import Qt, QRectF, QPointF, QMarginsF
 
 import math
 
-from typing import Callable, List, Optional, Union
+from typing import Callable, Dict, List, Optional, Tuple, Union
 
 from PySide2.QtWidgets import QGraphicsItem, QGraphicsObject
 
@@ -54,7 +54,6 @@ class QtVideoPlayer(QWidget):
 
     Signals:
         * changedPlot: Emitted whenever the plot is redrawn
-        * changedData: Emitted whenever data is changed by user
 
     Attributes:
         video: The :class:`Video` to display
@@ -64,10 +63,15 @@ class QtVideoPlayer(QWidget):
     """
 
     changedPlot = QtCore.Signal(QWidget, int, Instance)
-    changedData = QtCore.Signal(Instance)
 
     def __init__(
-        self, video: Video = None, color_manager=None, state=None, *args, **kwargs
+        self,
+        video: Video = None,
+        color_manager=None,
+        state=None,
+        context=None,
+        *args,
+        **kwargs,
     ):
         super(QtVideoPlayer, self).__init__(*args, **kwargs)
 
@@ -75,6 +79,7 @@ class QtVideoPlayer(QWidget):
 
         self.color_manager = color_manager
         self.state = state or GuiState()
+        self.context = context
         self.view = GraphicsView(self.state)
         self.video = None
 
@@ -176,14 +181,11 @@ class QtVideoPlayer(QWidget):
         """
         # Check if instance is an Instance (or subclass of Instance)
         if issubclass(type(instance), Instance):
-            instance = QtInstance(instance=instance, **kwargs)
+            instance = QtInstance(instance=instance, player=self, **kwargs)
         if type(instance) != QtInstance:
             return
 
         self.view.scene.addItem(instance)
-
-        # connect signal from instance
-        instance.changedData.connect(self.changedData)
 
         # connect signal so we can adjust QtNodeLabel positions after zoom
         self.view.updatedViewer.connect(instance.updatePoints)
@@ -816,7 +818,7 @@ class QtNodeLabel(QGraphicsTextItem):
         self.node = node
         self.text = node.name
         self.predicted = predicted
-        self._parent = parent
+        self._parent_instance = parent
         super(QtNodeLabel, self).__init__(self.text, parent=parent, *args, **kwargs)
 
         self._anchor_x = self.pos().x()
@@ -840,8 +842,8 @@ class QtNodeLabel(QGraphicsTextItem):
             Accepts arbitrary arguments so we can connect to various signals.
         """
         node = self.node
-        self._anchor_x = node.point.x
-        self._anchor_y = node.point.y
+        self._anchor_x = node.pos().x()
+        self._anchor_y = node.pos().y()
 
         # Calculate position for label within the largest arc made by edges.
         shift_angle = 0
@@ -980,7 +982,7 @@ class QtNode(QGraphicsEllipseItem):
         *args,
         **kwargs,
     ):
-        self._parent = parent
+        self._parent_instance = parent
         self.point = point
         self.node = node
         self.radius = radius
@@ -1014,7 +1016,7 @@ class QtNode(QGraphicsEllipseItem):
             self.setFlag(QGraphicsItem.ItemIsMovable, False)
 
             pen_width = 1
-            if self.node == self._parent.instance.skeleton.nodes[0]:
+            if self.node == self._parent_instance.instance.skeleton.nodes[0]:
                 pen_width = 3
 
             if self.color_predicted:
@@ -1047,15 +1049,21 @@ class QtNode(QGraphicsEllipseItem):
             if callable(callback):
                 callback(self)
 
-    def updatePoint(self, user_change: bool = True):
+    def updatePoint(self, user_change: bool = False):
         """
         Method to update data for node/edge when node position is manipulated.
 
         Args:
             user_change: Whether this being called because of change by user.
         """
-        self.point.x = self.scenePos().x()
-        self.point.y = self.scenePos().y()
+        x = self.scenePos().x()
+        y = self.scenePos().y()
+
+        context = self._parent_instance.player.context
+        if user_change and context:
+            context.setPointLocations(
+                self._parent_instance.instance, {self.node.name: (x, y)}
+            )
         self.show()
 
         if self.point.visible:
@@ -1078,9 +1086,15 @@ class QtNode(QGraphicsEllipseItem):
         # trigger callbacks for this node
         self.calls()
 
-        # Emit event if we're updating from a user change
-        if user_change:
-            self._parent.changedData.emit(self._parent.instance)
+    def toggleVisibility(self):
+        context = self._parent_instance.player.context
+        visible = not self.point.visible
+        if context:
+            context.setInstancePointVisibility(
+                self._parent_instance.instance, self.node, visible
+            )
+        else:
+            self.point.visible = visible
 
     def mousePressEvent(self, event):
         """ Custom event handler for mouse press.
@@ -1107,12 +1121,12 @@ class QtNode(QGraphicsEllipseItem):
                 super(QtNode, self).mousePressEvent(event)
                 self.updatePoint()
 
-            self.point.complete = True
+            self.point.complete = True  # FIXME: move to command
         elif event.button() == Qt.RightButton:
             # Right-click to toggle node as missing from this instance
-            self.point.visible = not self.point.visible
-            self.point.complete = True
-            self.updatePoint()
+            self.toggleVisibility()
+            self.point.complete = True  # FIXME: move to command
+            self.updatePoint(user_change=True)
         elif event.button() == Qt.MidButton:
             pass
 
@@ -1140,7 +1154,7 @@ class QtNode(QGraphicsEllipseItem):
             self.parentObject().updatePoints(user_change=True)
         else:
             super(QtNode, self).mouseReleaseEvent(event)
-            self.updatePoint()
+            self.updatePoint(user_change=True)
         self.dragParent = False
 
     def wheelEvent(self, event):
@@ -1285,11 +1299,10 @@ class QtInstance(QGraphicsObject):
 
     """
 
-    changedData = QtCore.Signal(Instance)
-
     def __init__(
         self,
         instance: Instance = None,
+        player: Optional[QtVideoPlayer] = None,
         predicted=False,
         color_predicted=False,
         color=(0, 114, 189),
@@ -1299,6 +1312,7 @@ class QtInstance(QGraphicsObject):
         **kwargs,
     ):
         super(QtInstance, self).__init__(*args, **kwargs)
+        self.player = player
         self.skeleton = instance.skeleton
         self.instance = instance
         self.predicted = predicted
@@ -1407,11 +1421,21 @@ class QtInstance(QGraphicsObject):
         """
 
         # Update the position for each node
+        context = self.player.context
+        if user_change and context:
+            new_data = {
+                node_item.node.name: (
+                    node_item.scenePos().x(),
+                    node_item.scenePos().y(),
+                )
+                for node_item in self.nodes.values()
+            }
+            context.setPointLocations(self.instance, new_data)
+
         for node_item in self.nodes.values():
-            node_item.point.x = node_item.scenePos().x()
-            node_item.point.y = node_item.scenePos().y()
             node_item.setPos(node_item.point.x, node_item.point.y)
             if complete:
+                # FIXME: move to command
                 node_item.point.complete = True
         # Wait to run callbacks until all nodes are updated
         # Otherwise the label positions aren't correct since
@@ -1427,9 +1451,6 @@ class QtInstance(QGraphicsObject):
             edge_item.updateEdge(edge_item.dst)
         # Update box for instance selection
         self.updateBox()
-        # Emit event if we're updating from a user change
-        if user_change:
-            self.changedData.emit(self.instance)
 
     def getPointsBoundingRect(self) -> QRectF:
         """Returns a rect which contains all the nodes in the skeleton."""

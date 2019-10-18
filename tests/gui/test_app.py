@@ -88,6 +88,17 @@ def test_app_workflow(qtbot, centered_pair_vid, small_robot_mp4_vid):
     inst_27_0 = app.state["labeled_frame"].instances[0]
     inst_27_1 = app.state["labeled_frame"].instances[1]
 
+    # Move instance nodes
+    app.commands.setPointLocations(inst_27_0, {"a": (15, 20)})
+
+    assert inst_27_0["a"].x == 15
+    assert inst_27_0["a"].y == 20
+
+    # Toggle node visibility
+    assert inst_27_0["b"].visible
+    app.commands.setInstancePointVisibility(inst_27_0, "b", False)
+    assert not inst_27_0["b"].visible
+
     # Select and delete instance
     app.state["instance"] = inst_27_1
     app.commands.deleteSelectedInstance()

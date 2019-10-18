@@ -154,6 +154,7 @@ class CommandContext(object):
         # to determine if there are unsaved changes. Eventually we could use this
         # to support undo/redo.
         self._change_stack.append(change)
+        # print(len(self._change_stack))
         self.state["has_changes"] = True
 
     def changestack_savepoint(self):
@@ -319,6 +320,24 @@ class CommandContext(object):
                 :class:`PredictedInstance`) which we want to copy.
         """
         self.execute(AddInstance, copy_instance=copy_instance)
+
+    def setPointLocations(
+        self, instance: Instance, nodes_locations: Dict["Node", Tuple[int, int]]
+    ):
+        """Sets locations for node(s) for an instance."""
+        self.execute(
+            SetInstancePointLocations,
+            instance=instance,
+            nodes_locations=nodes_locations,
+        )
+
+    def setInstancePointVisibility(
+        self, instance: Instance, node: "Node", visible: bool
+    ):
+        """Toggles visibility set for a node for an instance."""
+        self.execute(
+            SetInstancePointVisibility, instance=instance, node=node, visible=visible
+        )
 
     def deleteSelectedInstance(self):
         """Deletes currently selected instance."""
@@ -1442,6 +1461,57 @@ class AddInstance(EditCommand):
 
         if context.state["labeled_frame"] not in context.labels.labels:
             context.labels.append(context.state["labeled_frame"])
+
+
+class SetInstancePointLocations(EditCommand):
+    """Sets locations for node(s) for an instance.
+
+    Note: It's important that this command does *not* update the visual
+    scene, since this would redraw the frame and create new visual objects.
+    The calling code is responsible for updating the visual scene.
+
+    Params:
+        instance: The instance
+        nodes_locations: A dictionary of data to set
+        * keys are nodes (or node names)
+        * values are (x, y) coordinate tuples.
+    """
+
+    topics = []
+
+    @classmethod
+    def do_action(cls, context: "CommandContext", params: dict):
+        instance = params["instance"]
+        nodes_locations = params["nodes_locations"]
+
+        for node, (x, y) in nodes_locations.items():
+            if node in instance:
+                instance[node].x = x
+                instance[node].y = y
+
+
+class SetInstancePointVisibility(EditCommand):
+    """Toggles visibility set for a node for an instance.
+
+    Note: It's important that this command does *not* update the visual
+    scene, since this would redraw the frame and create new visual objects.
+    The calling code is responsible for updating the visual scene.
+
+    Params:
+        instance: The instance
+        node: The `Node` (or name string)
+        visible: Whether to set or clear visibility for node
+    """
+
+    topics = []
+
+    @classmethod
+    def do_action(cls, context: "CommandContext", params: dict):
+        instance = params["instance"]
+        node = params["node"]
+        visible = params["visible"]
+
+        instance[node].visible = visible
 
 
 class AddMissingInstanceNodes(EditCommand):
