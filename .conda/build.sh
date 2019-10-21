@@ -8,3 +8,11 @@
 # conda install of the packages.
 
 export PIP_NO_INDEX=False
+export PIP_NO_DEPENDENCIES=False
+export PIP_IGNORE_INSTALLED=False
+
+pip install cattrs==1.0.0rc opencv-python-headless==3.4.1.15 PySide2==5.12.0 imgaug qimage2ndarray==1.8 imgstore
+
+pip install setuptools-scm
+
+python setup.py install --single-version-externally-managed --record=record.txt

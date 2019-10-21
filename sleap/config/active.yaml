@@ -99,6 +99,11 @@ expert:
   options: current frame,random frames
   default: current frame
 
+- name: _save_predictions
+  label: Save Predictions in Separate File
+  type: bool
+  default: False
+
 - name: _view_datagen
   label: View Training Image Inputs...
   type: button
@@ -139,6 +144,11 @@ learning:
   options: current frame,random frames
   default: current frame
 
+- name: _save_predictions
+  label: Save Predictions in Separate File
+  type: bool
+  default: False
+
 - name: _view_datagen
   label: View Training Image Inputs...
   type: button
@@ -168,3 +178,8 @@ inference:
   type: list
   options: current frame,random frames
   default: current frame
+
+- name: _save_predictions
+  label: Save Predictions in Separate File
+  type: bool
+  default: False

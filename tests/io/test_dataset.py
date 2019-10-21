@@ -713,3 +713,19 @@ def test_hdf5_from_predicted(multi_skel_vid_labels, tmpdir):
     for frame_num, frame in enumerate(loaded_labels):
         if frame_num % 20 == 0:
             assert frame.instances[0].from_predicted.score == float(frame_num)
+
+
+def test_hdf5_empty_save(tmpdir):
+    labels = Labels()
+    filename = os.path.join(tmpdir, "test.h5")
+    Labels.save_hdf5(filename=filename, labels=labels)
+
+    dummy_video = Video.from_filename("foo.mp4")
+    labels.videos.append(dummy_video)
+    Labels.save_hdf5(filename=filename, labels=labels)
+
+
+def test_makedirs(tmpdir):
+    labels = Labels()
+    filename = os.path.join(tmpdir, "new/dirs/test.h5")
+    Labels.save_file(filename=filename, labels=labels)
