@@ -188,7 +188,7 @@
 <p>Main GUI application for labeling, active learning, and proofreading.</p>
 <dl class="class">
 <dt id="sleap.gui.app.MainWindow">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.app.</code><code class="sig-name descname">MainWindow</code><span class="sig-paren">(</span><em class="sig-param">labels_path: Optional[str] = None</em>, <em class="sig-param">nonnative: bool = False</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.app.</code><code class="sig-name descname">MainWindow</code><span class="sig-paren">(</span><em class="sig-param">labels_path: Optional[str] = None</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow" title="Permalink to this definition">¶</a></dt>
 <dd><p>The SLEAP GUI application.</p>
 <p>Each project (<cite>Labels</cite> dataset) that you have loaded in the GUI will
 have its own <cite>MainWindow</cite> object.</p>
@@ -702,20 +702,6 @@ to swap tracks.</p>
 <dt id="sleap.gui.app.main">
 <code class="sig-prename descclassname">sleap.gui.app.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.main" title="Permalink to this definition">¶</a></dt>
 <dd><p>Starts new instance of app.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="sleap.gui.app.openFileDialog">
-<code class="sig-prename descclassname">sleap.gui.app.</code><code class="sig-name descname">openFileDialog</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#openFileDialog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.openFileDialog" title="Permalink to this definition">¶</a></dt>
-<dd><p>Wrapper for openFileDialog.</p>
-<p>Passes along everything except empty “options” arg.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="sleap.gui.app.saveFileDialog">
-<code class="sig-prename descclassname">sleap.gui.app.</code><code class="sig-name descname">saveFileDialog</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#saveFileDialog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.saveFileDialog" title="Permalink to this definition">¶</a></dt>
-<dd><p>Wrapper for saveFileDialog.</p>
-<p>Passes along everything except empty “options” arg.</p>
 </dd></dl>
 
 <div class="section" id="module-sleap.gui.video">
@@ -1589,6 +1575,12 @@ rather than creating new dict.</p></li>
 </dd></dl>
 
 <dl class="function">
+<dt id="sleap.gui.active.has_jobs_to_train">
+<code class="sig-prename descclassname">sleap.gui.active.</code><code class="sig-name descname">has_jobs_to_train</code><span class="sig-paren">(</span><em class="sig-param">training_jobs: Dict[ModelOutputType, TrainingJob]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/active.html#has_jobs_to_train"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.active.has_jobs_to_train" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether any of the jobs need to be trained.</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="sleap.gui.active.make_default_training_jobs">
 <code class="sig-prename descclassname">sleap.gui.active.</code><code class="sig-name descname">make_default_training_jobs</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Dict[sleap.nn.model.ModelOutputType, sleap.nn.training.TrainingJob]<a class="reference internal" href="_modules/sleap/gui/active.html#make_default_training_jobs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.active.make_default_training_jobs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates TrainingJobs with some default settings.</p>
@@ -1618,7 +1610,7 @@ This should be used only when predicting on continuous set of frames.</p></li>
 
 <dl class="function">
 <dt id="sleap.gui.active.run_active_learning_pipeline">
-<code class="sig-prename descclassname">sleap.gui.active.</code><code class="sig-name descname">run_active_learning_pipeline</code><span class="sig-paren">(</span><em class="sig-param">labels_filename: str</em>, <em class="sig-param">labels: sleap.io.dataset.Labels</em>, <em class="sig-param">training_jobs: Dict[ModelOutputType</em>, <em class="sig-param">TrainingJob] = None</em>, <em class="sig-param">frames_to_predict: Dict[sleap.io.video.Video</em>, <em class="sig-param">List[int]] = None</em>, <em class="sig-param">with_tracking: bool = False</em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="_modules/sleap/gui/active.html#run_active_learning_pipeline"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.active.run_active_learning_pipeline" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">sleap.gui.active.</code><code class="sig-name descname">run_active_learning_pipeline</code><span class="sig-paren">(</span><em class="sig-param">labels_filename: str</em>, <em class="sig-param">labels: sleap.io.dataset.Labels</em>, <em class="sig-param">training_jobs: Dict[ModelOutputType</em>, <em class="sig-param">TrainingJob] = None</em>, <em class="sig-param">frames_to_predict: Dict[sleap.io.video.Video</em>, <em class="sig-param">List[int]] = None</em>, <em class="sig-param">with_tracking: bool = False</em>, <em class="sig-param">save_predictions: bool = False</em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="_modules/sleap/gui/active.html#run_active_learning_pipeline"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.active.run_active_learning_pipeline" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run training (as needed) and inference.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1629,6 +1621,7 @@ This should be used only when predicting on continuous set of frames.</p></li>
 <li><p><strong>frames_to_predict</strong> – Dict that gives list of frame indices for each video.</p></li>
 <li><p><strong>with_tracking</strong> – Whether to run tracking code after we predict instances.
 This should be used only when predicting on continuous set of frames.</p></li>
+<li><p><strong>save_predictions</strong> – Whether to save new predictions in separate file.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1745,11 +1738,11 @@ the <cite>Video</cite> object when they aren’t specified as params</p>
 
 <dl class="class">
 <dt id="sleap.gui.importvideos.ImportParamDialog">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.importvideos.</code><code class="sig-name descname">ImportParamDialog</code><span class="sig-paren">(</span><em class="sig-param">file_names: list</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/importvideos.html#ImportParamDialog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.importvideos.ImportParamDialog" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.importvideos.</code><code class="sig-name descname">ImportParamDialog</code><span class="sig-paren">(</span><em class="sig-param">filenames: list</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/importvideos.html#ImportParamDialog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.importvideos.ImportParamDialog" title="Permalink to this definition">¶</a></dt>
 <dd><p>Dialog for selecting parameters with preview when importing video.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>file_names</strong> (<em>list</em>) – List of files we want to import.</p>
+<dd class="field-odd"><p><strong>filenames</strong> (<em>list</em>) – List of files we want to import.</p>
 </dd>
 </dl>
 <dl class="method">

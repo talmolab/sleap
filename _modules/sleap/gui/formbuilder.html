@@ -171,6 +171,8 @@
 
 <span class="kn">from</span> <span class="nn">PySide2</span> <span class="k">import</span> <span class="n">QtWidgets</span><span class="p">,</span> <span class="n">QtCore</span>
 
+<span class="kn">from</span> <span class="nn">sleap.gui.filedialog</span> <span class="k">import</span> <span class="n">FileDialog</span>
+
 
 <div class="viewcode-block" id="YamlFormWidget"><a class="viewcode-back" href="../../../gui.html#sleap.gui.formbuilder.YamlFormWidget">[docs]</a><span class="k">class</span> <span class="nc">YamlFormWidget</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QGroupBox</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -434,7 +436,7 @@
             <span class="c1"># Define function for button to trigger</span>
             <span class="k">def</span> <span class="nf">select_file</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">field</span><span class="p">):</span>
                 <span class="nb">filter</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;filter&quot;</span><span class="p">,</span> <span class="s2">&quot;Any File (*.*)&quot;</span><span class="p">)</span>
-                <span class="n">filename</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QFileDialog</span><span class="o">.</span><span class="n">getOpenFileName</span><span class="p">(</span>
+                <span class="n">filename</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">FileDialog</span><span class="o">.</span><span class="n">open</span><span class="p">(</span>
                     <span class="kc">None</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">caption</span><span class="o">=</span><span class="s2">&quot;Open File&quot;</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="nb">filter</span>
                 <span class="p">)</span>
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
@@ -444,9 +446,7 @@
         <span class="k">elif</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;dir&quot;</span><span class="p">:</span>
             <span class="c1"># Define function for button to trigger</span>
             <span class="k">def</span> <span class="nf">select_file</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">field</span><span class="p">):</span>
-                <span class="n">filename</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QFileDialog</span><span class="o">.</span><span class="n">getExistingDirectory</span><span class="p">(</span>
-                    <span class="kc">None</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">caption</span><span class="o">=</span><span class="s2">&quot;Open File&quot;</span>
-                <span class="p">)</span>
+                <span class="n">filename</span> <span class="o">=</span> <span class="n">FileDialog</span><span class="o">.</span><span class="n">openDir</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">caption</span><span class="o">=</span><span class="s2">&quot;Open File&quot;</span><span class="p">)</span>
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
                     <span class="n">x</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span>

@@ -162,7 +162,7 @@
 <span class="kn">from</span> <span class="nn">PySide2.QtWidgets</span> <span class="k">import</span> <span class="n">QApplication</span><span class="p">,</span> <span class="n">QMainWindow</span><span class="p">,</span> <span class="n">QWidget</span><span class="p">,</span> <span class="n">QDockWidget</span>
 <span class="kn">from</span> <span class="nn">PySide2.QtWidgets</span> <span class="k">import</span> <span class="n">QVBoxLayout</span><span class="p">,</span> <span class="n">QHBoxLayout</span><span class="p">,</span> <span class="n">QGroupBox</span>
 <span class="kn">from</span> <span class="nn">PySide2.QtWidgets</span> <span class="k">import</span> <span class="n">QLabel</span><span class="p">,</span> <span class="n">QPushButton</span><span class="p">,</span> <span class="n">QComboBox</span>
-<span class="kn">from</span> <span class="nn">PySide2.QtWidgets</span> <span class="k">import</span> <span class="n">QFileDialog</span><span class="p">,</span> <span class="n">QMessageBox</span>
+<span class="kn">from</span> <span class="nn">PySide2.QtWidgets</span> <span class="k">import</span> <span class="n">QMessageBox</span>
 
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">operator</span>
@@ -191,6 +191,7 @@
     <span class="n">SuggestionsTable</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">sleap.gui.importvideos</span> <span class="k">import</span> <span class="n">ImportVideos</span>
+<span class="kn">from</span> <span class="nn">sleap.gui.filedialog</span> <span class="k">import</span> <span class="n">FileDialog</span>
 <span class="kn">from</span> <span class="nn">sleap.gui.formbuilder</span> <span class="k">import</span> <span class="n">YamlFormWidget</span>
 <span class="kn">from</span> <span class="nn">sleap.gui.merge</span> <span class="k">import</span> <span class="n">MergeDialog</span>
 <span class="kn">from</span> <span class="nn">sleap.gui.shortcuts</span> <span class="k">import</span> <span class="n">Shortcuts</span><span class="p">,</span> <span class="n">ShortcutDialog</span>
@@ -224,24 +225,16 @@
     <span class="n">skeleton</span><span class="p">:</span> <span class="n">Skeleton</span>
     <span class="n">video</span><span class="p">:</span> <span class="n">Video</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">labels_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">nonnative</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
-        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labels_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initialize the app.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            labels_path: Path to saved :class:`Labels` dataset.</span>
-<span class="sd">            nonnative: Whether to use native or Qt file dialog.</span>
+
 <span class="sd">        Returns:</span>
 <span class="sd">            None.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">MainWindow</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">nonnative</span> <span class="o">=</span> <span class="n">nonnative</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span> <span class="o">=</span> <span class="n">Skeleton</span><span class="p">()</span>
@@ -264,10 +257,6 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">changestack_clear</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_gui</span><span class="p">()</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_file_dialog_options</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nonnative</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_file_dialog_options</span> <span class="o">=</span> <span class="n">QFileDialog</span><span class="o">.</span><span class="n">DontUseNativeDialog</span>
 
         <span class="k">if</span> <span class="n">labels_path</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">loadProject</span><span class="p">(</span><span class="n">labels_path</span><span class="p">)</span>
@@ -1175,12 +1164,8 @@
 <div class="viewcode-block" id="MainWindow.openSkeleton"><a class="viewcode-back" href="../../../gui.html#sleap.gui.app.MainWindow.openSkeleton">[docs]</a>    <span class="k">def</span> <span class="nf">openSkeleton</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Shows gui for loading saved skeleton into project.&quot;&quot;&quot;</span>
         <span class="n">filters</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;JSON skeleton (*.json)&quot;</span><span class="p">,</span> <span class="s2">&quot;HDF5 skeleton (*.h5 *.hdf5)&quot;</span><span class="p">]</span>
-        <span class="n">filename</span><span class="p">,</span> <span class="n">selected_filter</span> <span class="o">=</span> <span class="n">openFileDialog</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span>
-            <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-            <span class="n">caption</span><span class="o">=</span><span class="s2">&quot;Open skeleton...&quot;</span><span class="p">,</span>
-            <span class="nb">filter</span><span class="o">=</span><span class="s2">&quot;;;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filters</span><span class="p">),</span>
-            <span class="n">options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_file_dialog_options</span><span class="p">,</span>
+        <span class="n">filename</span><span class="p">,</span> <span class="n">selected_filter</span> <span class="o">=</span> <span class="n">FileDialog</span><span class="o">.</span><span class="n">open</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">caption</span><span class="o">=</span><span class="s2">&quot;Open skeleton...&quot;</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="s2">&quot;;;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filters</span><span class="p">)</span>
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -1204,12 +1189,8 @@
         <span class="sd">&quot;&quot;&quot;Shows gui for saving skeleton from project.&quot;&quot;&quot;</span>
         <span class="n">default_name</span> <span class="o">=</span> <span class="s2">&quot;skeleton.json&quot;</span>
         <span class="n">filters</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;JSON skeleton (*.json)&quot;</span><span class="p">,</span> <span class="s2">&quot;HDF5 skeleton (*.h5 *.hdf5)&quot;</span><span class="p">]</span>
-        <span class="n">filename</span><span class="p">,</span> <span class="n">selected_filter</span> <span class="o">=</span> <span class="n">saveFileDialog</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span>
-            <span class="n">caption</span><span class="o">=</span><span class="s2">&quot;Save As...&quot;</span><span class="p">,</span>
-            <span class="nb">dir</span><span class="o">=</span><span class="n">default_name</span><span class="p">,</span>
-            <span class="nb">filter</span><span class="o">=</span><span class="s2">&quot;;;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filters</span><span class="p">),</span>
-            <span class="n">options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_file_dialog_options</span><span class="p">,</span>
+        <span class="n">filename</span><span class="p">,</span> <span class="n">selected_filter</span> <span class="o">=</span> <span class="n">FileDialog</span><span class="o">.</span><span class="n">save</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">caption</span><span class="o">=</span><span class="s2">&quot;Save As...&quot;</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="n">default_name</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="s2">&quot;;;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filters</span><span class="p">)</span>
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -1434,12 +1415,11 @@
             <span class="n">models_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">),</span> <span class="s2">&quot;models/&quot;</span><span class="p">)</span>
 
         <span class="c1"># Show dialog</span>
-        <span class="n">filename</span><span class="p">,</span> <span class="n">selected_filter</span> <span class="o">=</span> <span class="n">openFileDialog</span><span class="p">(</span>
+        <span class="n">filename</span><span class="p">,</span> <span class="n">selected_filter</span> <span class="o">=</span> <span class="n">FileDialog</span><span class="o">.</span><span class="n">open</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="nb">dir</span><span class="o">=</span><span class="n">models_dir</span><span class="p">,</span>
             <span class="n">caption</span><span class="o">=</span><span class="s2">&quot;Import model outputs...&quot;</span><span class="p">,</span>
             <span class="nb">filter</span><span class="o">=</span><span class="s2">&quot;;;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filters</span><span class="p">),</span>
-            <span class="n">options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_file_dialog_options</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -1649,12 +1629,8 @@
 <div class="viewcode-block" id="MainWindow.importPredictions"><a class="viewcode-back" href="../../../gui.html#sleap.gui.app.MainWindow.importPredictions">[docs]</a>    <span class="k">def</span> <span class="nf">importPredictions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Starts gui for importing another dataset into currently one.&quot;&quot;&quot;</span>
         <span class="n">filters</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;HDF5 dataset (*.h5 *.hdf5)&quot;</span><span class="p">,</span> <span class="s2">&quot;JSON labels (*.json *.json.zip)&quot;</span><span class="p">]</span>
-        <span class="n">filenames</span><span class="p">,</span> <span class="n">selected_filter</span> <span class="o">=</span> <span class="n">openFileDialog</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span>
-            <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-            <span class="n">caption</span><span class="o">=</span><span class="s2">&quot;Import labeled data...&quot;</span><span class="p">,</span>
-            <span class="nb">filter</span><span class="o">=</span><span class="s2">&quot;;;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filters</span><span class="p">),</span>
-            <span class="n">options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_file_dialog_options</span><span class="p">,</span>
+        <span class="n">filenames</span><span class="p">,</span> <span class="n">selected_filter</span> <span class="o">=</span> <span class="n">FileDialog</span><span class="o">.</span><span class="n">openMultiple</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">caption</span><span class="o">=</span><span class="s2">&quot;Import labeled data...&quot;</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="s2">&quot;;;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filters</span><span class="p">)</span>
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">filenames</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -2013,12 +1989,8 @@
             <span class="s2">&quot;DeepLabCut csv (*.csv)&quot;</span><span class="p">,</span>
         <span class="p">]</span>
 
-        <span class="n">filename</span><span class="p">,</span> <span class="n">selected_filter</span> <span class="o">=</span> <span class="n">openFileDialog</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span>
-            <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-            <span class="n">caption</span><span class="o">=</span><span class="s2">&quot;Import labeled data...&quot;</span><span class="p">,</span>
-            <span class="nb">filter</span><span class="o">=</span><span class="s2">&quot;;;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filters</span><span class="p">),</span>
-            <span class="c1"># options=self._file_dialog_options,</span>
+        <span class="n">filename</span><span class="p">,</span> <span class="n">selected_filter</span> <span class="o">=</span> <span class="n">FileDialog</span><span class="o">.</span><span class="n">open</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">caption</span><span class="o">=</span><span class="s2">&quot;Import labeled data...&quot;</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="s2">&quot;;;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filters</span><span class="p">)</span>
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -2050,12 +2022,8 @@
             <span class="s2">&quot;JSON labels (*.json)&quot;</span><span class="p">,</span>
             <span class="s2">&quot;Compressed JSON (*.zip)&quot;</span><span class="p">,</span>
         <span class="p">]</span>
-        <span class="n">filename</span><span class="p">,</span> <span class="n">selected_filter</span> <span class="o">=</span> <span class="n">saveFileDialog</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span>
-            <span class="n">caption</span><span class="o">=</span><span class="s2">&quot;Save As...&quot;</span><span class="p">,</span>
-            <span class="nb">dir</span><span class="o">=</span><span class="n">default_name</span><span class="p">,</span>
-            <span class="nb">filter</span><span class="o">=</span><span class="s2">&quot;;;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filters</span><span class="p">),</span>
-            <span class="n">options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_file_dialog_options</span><span class="p">,</span>
+        <span class="n">filename</span><span class="p">,</span> <span class="n">selected_filter</span> <span class="o">=</span> <span class="n">FileDialog</span><span class="o">.</span><span class="n">save</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">caption</span><span class="o">=</span><span class="s2">&quot;Save As...&quot;</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="n">default_name</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="s2">&quot;;;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filters</span><span class="p">)</span>
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -2154,12 +2122,11 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="n">okay</span><span class="p">:</span>
                 <span class="k">return</span>
 
-            <span class="n">filename</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">saveFileDialog</span><span class="p">(</span>
+            <span class="n">filename</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">FileDialog</span><span class="o">.</span><span class="n">save</span><span class="p">(</span>
                 <span class="bp">self</span><span class="p">,</span>
                 <span class="n">caption</span><span class="o">=</span><span class="s2">&quot;Save Video As...&quot;</span><span class="p">,</span>
                 <span class="nb">dir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">+</span> <span class="s2">&quot;.avi&quot;</span><span class="p">,</span>
                 <span class="nb">filter</span><span class="o">=</span><span class="s2">&quot;AVI Video (*.avi)&quot;</span><span class="p">,</span>
-                <span class="n">options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_file_dialog_options</span><span class="p">,</span>
             <span class="p">)</span>
 
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -2177,12 +2144,11 @@
 <div class="viewcode-block" id="MainWindow.exportLabeledFrames"><a class="viewcode-back" href="../../../gui.html#sleap.gui.app.MainWindow.exportLabeledFrames">[docs]</a>    <span class="k">def</span> <span class="nf">exportLabeledFrames</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Gui for exporting the training dataset of labels/frame images.&quot;&quot;&quot;</span>
         <span class="n">filters</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;HDF5 dataset (*.h5)&quot;</span><span class="p">,</span> <span class="s2">&quot;Compressed JSON dataset (*.json *.json.zip)&quot;</span><span class="p">]</span>
-        <span class="n">filename</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">saveFileDialog</span><span class="p">(</span>
+        <span class="n">filename</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">FileDialog</span><span class="o">.</span><span class="n">save</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">caption</span><span class="o">=</span><span class="s2">&quot;Save Labeled Frames As...&quot;</span><span class="p">,</span>
             <span class="nb">dir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">+</span> <span class="s2">&quot;.h5&quot;</span><span class="p">,</span>
             <span class="n">filters</span><span class="o">=</span><span class="s2">&quot;;;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filters</span><span class="p">),</span>
-            <span class="n">options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_file_dialog_options</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span>
@@ -2338,26 +2304,6 @@
         <span class="n">ShortcutDialog</span><span class="p">()</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span></div></div>
 
 
-<div class="viewcode-block" id="openFileDialog"><a class="viewcode-back" href="../../../gui.html#sleap.gui.app.openFileDialog">[docs]</a><span class="k">def</span> <span class="nf">openFileDialog</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Wrapper for openFileDialog.</span>
-
-<span class="sd">    Passes along everything except empty &quot;options&quot; arg.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="s2">&quot;options&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;options&quot;</span><span class="p">]:</span>
-        <span class="k">del</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;options&quot;</span><span class="p">]</span>
-    <span class="k">return</span> <span class="n">QFileDialog</span><span class="o">.</span><span class="n">getOpenFileName</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="saveFileDialog"><a class="viewcode-back" href="../../../gui.html#sleap.gui.app.saveFileDialog">[docs]</a><span class="k">def</span> <span class="nf">saveFileDialog</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Wrapper for saveFileDialog.</span>
-
-<span class="sd">    Passes along everything except empty &quot;options&quot; arg.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="s2">&quot;options&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;options&quot;</span><span class="p">]:</span>
-        <span class="k">del</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;options&quot;</span><span class="p">]</span>
-    <span class="k">return</span> <span class="n">QFileDialog</span><span class="o">.</span><span class="n">getSaveFileName</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
-
-
 <div class="viewcode-block" id="main"><a class="viewcode-back" href="../../../gui.html#sleap.gui.app.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Starts new instance of app.&quot;&quot;&quot;</span>
     <span class="n">app</span> <span class="o">=</span> <span class="n">QApplication</span><span class="p">([])</span>
@@ -2389,7 +2335,10 @@
 
     <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
 
-    <span class="n">main</span><span class="p">(</span><span class="o">**</span><span class="nb">vars</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">nonnative</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;USE_NON_NATIVE_FILE&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;1&quot;</span>
+
+    <span class="n">main</span><span class="p">(</span><span class="n">labels_path</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">labels_path</span><span class="p">)</span>
 </pre></div>
 
            </div>

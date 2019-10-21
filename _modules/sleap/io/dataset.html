@@ -196,8 +196,10 @@
     <span class="n">PredictedPointArray</span><span class="p">,</span>
 <span class="p">)</span>
 
+<span class="kn">from</span> <span class="nn">sleap.io</span> <span class="k">import</span> <span class="n">pathutils</span>
 <span class="kn">from</span> <span class="nn">sleap.io.legacy</span> <span class="k">import</span> <span class="n">load_labels_json_old</span>
 <span class="kn">from</span> <span class="nn">sleap.io.video</span> <span class="k">import</span> <span class="n">Video</span>
+<span class="kn">from</span> <span class="nn">sleap.gui.missingfiles</span> <span class="k">import</span> <span class="n">MissingFilesDialog</span>
 <span class="kn">from</span> <span class="nn">sleap.rangelist</span> <span class="k">import</span> <span class="n">RangeList</span>
 <span class="kn">from</span> <span class="nn">sleap.util</span> <span class="k">import</span> <span class="n">uniquify</span><span class="p">,</span> <span class="n">weak_filename_match</span><span class="p">,</span> <span class="n">json_dumps</span><span class="p">,</span> <span class="n">json_loads</span>
 
@@ -1582,7 +1584,9 @@
 
                 <span class="c1"># Use the callback if given to handle missing videos</span>
                 <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">video_callback</span><span class="p">):</span>
-                    <span class="n">video_callback</span><span class="p">(</span><span class="n">dicts</span><span class="p">[</span><span class="s2">&quot;videos&quot;</span><span class="p">])</span>
+                    <span class="n">abort</span> <span class="o">=</span> <span class="n">video_callback</span><span class="p">(</span><span class="n">dicts</span><span class="p">[</span><span class="s2">&quot;videos&quot;</span><span class="p">])</span>
+                    <span class="k">if</span> <span class="n">abort</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">FileNotFoundError</span>
 
                 <span class="c1"># Try to load the labels filename.</span>
                 <span class="k">try</span><span class="p">:</span>
@@ -1747,7 +1751,7 @@
             <span class="p">)</span>
 
             <span class="n">num_instances</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">all_instances</span><span class="p">)</span>
-            <span class="n">max_skeleton_size</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span><span class="p">])</span>
+            <span class="n">max_skeleton_size</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span><span class="p">],</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
             <span class="c1"># Initialize data arrays for serialization</span>
             <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_instances</span> <span class="o">*</span> <span class="n">max_skeleton_size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">Point</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
@@ -2049,6 +2053,10 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            None.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Make sure that all directories for path exist</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">filename</span><span class="p">),</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Detect filetype and use appropriate save method</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">&quot;.json&quot;</span><span class="p">,</span> <span class="s2">&quot;.zip&quot;</span><span class="p">,</span> <span class="s2">&quot;.h5&quot;</span><span class="p">))</span> <span class="ow">and</span> <span class="n">default_suffix</span><span class="p">:</span>
             <span class="n">filename</span> <span class="o">+=</span> <span class="n">f</span><span class="s2">&quot;.</span><span class="si">{default_suffix}</span><span class="s2">&quot;</span>
         <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">&quot;.json&quot;</span><span class="p">,</span> <span class="s2">&quot;.zip&quot;</span><span class="p">)):</span>
@@ -2357,6 +2365,8 @@
 <span class="sd">        allows the user to find videos which have been moved (or have</span>
 <span class="sd">        paths from a different system).</span>
 
+<span class="sd">        The callback function returns True to signal &quot;abort&quot;.</span>
+
 <span class="sd">        Args:</span>
 <span class="sd">            search_paths: If specified, this is a list of paths where</span>
 <span class="sd">                we&#39;ll automatically try to find the missing videos.</span>
@@ -2367,68 +2377,48 @@
         <span class="n">search_paths</span> <span class="o">=</span> <span class="n">search_paths</span> <span class="ow">or</span> <span class="p">[]</span>
 
         <span class="k">def</span> <span class="nf">gui_video_callback</span><span class="p">(</span><span class="n">video_list</span><span class="p">,</span> <span class="n">new_paths</span><span class="o">=</span><span class="n">search_paths</span><span class="p">):</span>
-            <span class="kn">import</span> <span class="nn">os</span>
-            <span class="kn">from</span> <span class="nn">PySide2.QtWidgets</span> <span class="k">import</span> <span class="n">QFileDialog</span><span class="p">,</span> <span class="n">QMessageBox</span>
+            <span class="n">filenames</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;backend&quot;</span><span class="p">][</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">video_list</span><span class="p">]</span>
+            <span class="n">missing</span> <span class="o">=</span> <span class="n">pathutils</span><span class="o">.</span><span class="n">list_file_missing</span><span class="p">(</span><span class="n">filenames</span><span class="p">)</span>
 
-            <span class="n">basename_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="c1"># First check for file in search_path directories</span>
+            <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span> <span class="ow">and</span> <span class="n">new_paths</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">filename</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">filenames</span><span class="p">):</span>
+                    <span class="n">fixed_path</span> <span class="o">=</span> <span class="n">find_path_using_paths</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">new_paths</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">fixed_path</span> <span class="o">!=</span> <span class="n">filename</span><span class="p">:</span>
+                        <span class="n">filenames</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">fixed_path</span>
+                        <span class="n">missing</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
 
-            <span class="c1"># Check each video</span>
-            <span class="k">for</span> <span class="n">video_item</span> <span class="ow">in</span> <span class="n">video_list</span><span class="p">:</span>
-                <span class="k">if</span> <span class="s2">&quot;backend&quot;</span> <span class="ow">in</span> <span class="n">video_item</span> <span class="ow">and</span> <span class="s2">&quot;filename&quot;</span> <span class="ow">in</span> <span class="n">video_item</span><span class="p">[</span><span class="s2">&quot;backend&quot;</span><span class="p">]:</span>
-                    <span class="n">current_filename</span> <span class="o">=</span> <span class="n">video_item</span><span class="p">[</span><span class="s2">&quot;backend&quot;</span><span class="p">][</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span>
-                    <span class="c1"># check if we can find video</span>
-                    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">current_filename</span><span class="p">):</span>
-                        <span class="n">is_found</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="c1"># If there are still missing paths, prompt user</span>
+            <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="n">missing</span><span class="p">):</span>
+                <span class="n">okay</span> <span class="o">=</span> <span class="n">MissingFilesDialog</span><span class="p">(</span><span class="n">filenames</span><span class="p">,</span> <span class="n">missing</span><span class="p">)</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">okay</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">True</span>  <span class="c1"># True for stop</span>
 
-                        <span class="n">current_basename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">current_filename</span><span class="p">)</span>
-                        <span class="c1"># handle unix, windows, or mixed paths</span>
-                        <span class="k">if</span> <span class="n">current_basename</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
-                            <span class="n">current_basename</span> <span class="o">=</span> <span class="n">current_basename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-                        <span class="k">if</span> <span class="n">current_basename</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
-                            <span class="n">current_basename</span> <span class="o">=</span> <span class="n">current_basename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-
-                        <span class="c1"># First see if we can find the file in another directory,</span>
-                        <span class="c1"># and if not, prompt the user to find the file.</span>
-
-                        <span class="c1"># We&#39;ll check in the current working directory, and if the user has</span>
-                        <span class="c1"># already found any missing videos, check in the directory of those.</span>
-                        <span class="k">if</span> <span class="n">current_basename</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">basename_list</span><span class="p">:</span>
-                            <span class="k">for</span> <span class="n">path_dir</span> <span class="ow">in</span> <span class="n">new_paths</span><span class="p">:</span>
-                                <span class="n">check_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path_dir</span><span class="p">,</span> <span class="n">current_basename</span><span class="p">)</span>
-                                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">check_path</span><span class="p">):</span>
-                                    <span class="c1"># we found the file in a different directory</span>
-                                    <span class="n">video_item</span><span class="p">[</span><span class="s2">&quot;backend&quot;</span><span class="p">][</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">check_path</span>
-                                    <span class="n">is_found</span> <span class="o">=</span> <span class="kc">True</span>
-                                    <span class="k">break</span>
-
-                        <span class="c1"># if we found this file, then move on to the next file</span>
-                        <span class="k">if</span> <span class="n">is_found</span><span class="p">:</span>
-                            <span class="k">continue</span>
-
-                        <span class="c1"># Since we couldn&#39;t find the file on our own, prompt the user.</span>
-                        <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Unable to find: </span><span class="si">{current_filename}</span><span class="s2">&quot;</span><span class="p">)</span>
-                        <span class="n">QMessageBox</span><span class="p">(</span>
-                            <span class="n">text</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;We&#39;re unable to locate one or more video files for this project. Please locate </span><span class="si">{current_filename}</span><span class="s2">.&quot;</span>
-                        <span class="p">)</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
-
-                        <span class="n">current_root</span><span class="p">,</span> <span class="n">current_ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">current_basename</span><span class="p">)</span>
-                        <span class="n">caption</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Please locate </span><span class="si">{current_basename}</span><span class="s2">...&quot;</span>
-                        <span class="n">filters</span> <span class="o">=</span> <span class="p">[</span>
-                            <span class="n">f</span><span class="s2">&quot;</span><span class="si">{current_root}</span><span class="s2"> file (*</span><span class="si">{current_ext}</span><span class="s2">)&quot;</span><span class="p">,</span>
-                            <span class="s2">&quot;Any File (*.*)&quot;</span><span class="p">,</span>
-                        <span class="p">]</span>
-                        <span class="nb">dir</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_paths</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">new_paths</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-                        <span class="n">new_filename</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">QFileDialog</span><span class="o">.</span><span class="n">getOpenFileName</span><span class="p">(</span>
-                            <span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="nb">dir</span><span class="p">,</span> <span class="n">caption</span><span class="o">=</span><span class="n">caption</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="s2">&quot;;;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filters</span><span class="p">)</span>
-                        <span class="p">)</span>
-                        <span class="c1"># if we got an answer, then update filename for video</span>
-                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_filename</span><span class="p">):</span>
-                            <span class="n">video_item</span><span class="p">[</span><span class="s2">&quot;backend&quot;</span><span class="p">][</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_filename</span>
-                            <span class="c1"># keep track of the directory chosen by user</span>
-                            <span class="n">new_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">new_filename</span><span class="p">))</span>
-                            <span class="n">basename_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current_basename</span><span class="p">)</span>
+            <span class="c1"># Replace the video filenames with changes by user</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">video_list</span><span class="p">):</span>
+                <span class="n">item</span><span class="p">[</span><span class="s2">&quot;backend&quot;</span><span class="p">][</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">filenames</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
 
         <span class="k">return</span> <span class="n">gui_video_callback</span></div></div>
+
+
+<span class="k">def</span> <span class="nf">find_path_using_paths</span><span class="p">(</span><span class="n">missing_path</span><span class="p">,</span> <span class="n">search_paths</span><span class="p">):</span>
+
+    <span class="c1"># Get basename (filename with directories) using current os path format</span>
+    <span class="n">current_basename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">missing_path</span><span class="p">)</span>
+
+    <span class="c1"># Handle unix, windows, or mixed paths</span>
+    <span class="k">if</span> <span class="n">current_basename</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">current_basename</span> <span class="o">=</span> <span class="n">current_basename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">current_basename</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">current_basename</span> <span class="o">=</span> <span class="n">current_basename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="c1"># Look for file with that name in each of the search path directories</span>
+    <span class="k">for</span> <span class="n">path_dir</span> <span class="ow">in</span> <span class="n">search_paths</span><span class="p">:</span>
+        <span class="n">check_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path_dir</span><span class="p">,</span> <span class="n">current_basename</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">check_path</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">check_path</span>
+
+    <span class="k">return</span> <span class="n">missing_path</span>
 </pre></div>
 
            </div>

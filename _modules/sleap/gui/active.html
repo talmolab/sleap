@@ -166,6 +166,7 @@
 
 <span class="kn">from</span> <span class="nn">sleap.io.dataset</span> <span class="k">import</span> <span class="n">Labels</span>
 <span class="kn">from</span> <span class="nn">sleap.io.video</span> <span class="k">import</span> <span class="n">Video</span>
+<span class="kn">from</span> <span class="nn">sleap.gui.filedialog</span> <span class="k">import</span> <span class="n">FileDialog</span>
 <span class="kn">from</span> <span class="nn">sleap.gui.training_editor</span> <span class="k">import</span> <span class="n">TrainingEditor</span>
 <span class="kn">from</span> <span class="nn">sleap.gui.formbuilder</span> <span class="k">import</span> <span class="n">YamlFormWidget</span>
 <span class="kn">from</span> <span class="nn">sleap.nn.model</span> <span class="k">import</span> <span class="n">ModelOutputType</span>
@@ -314,13 +315,14 @@
         <span class="n">profile_dir</span> <span class="o">=</span> <span class="n">resource_filename</span><span class="p">(</span>
             <span class="n">Requirement</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;sleap&quot;</span><span class="p">),</span> <span class="s2">&quot;sleap/training_profiles&quot;</span>
         <span class="p">)</span>
-        <span class="n">labels_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels_filename</span><span class="p">),</span> <span class="s2">&quot;models&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">job_options</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
 
         <span class="c1"># list any profiles from previous runs</span>
-        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">labels_dir</span><span class="p">):</span>
-            <span class="n">find_saved_jobs</span><span class="p">(</span><span class="n">labels_dir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_options</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels_filename</span><span class="p">:</span>
+            <span class="n">labels_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels_filename</span><span class="p">),</span> <span class="s2">&quot;models&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">labels_dir</span><span class="p">):</span>
+                <span class="n">find_saved_jobs</span><span class="p">(</span><span class="n">labels_dir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_options</span><span class="p">)</span>
         <span class="c1"># list default profiles</span>
         <span class="n">find_saved_jobs</span><span class="p">(</span><span class="n">profile_dir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_options</span><span class="p">)</span>
 
@@ -582,13 +584,8 @@
             <span class="n">with_tracking</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">frames_to_predict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
-        <span class="n">save_confmaps_pafs</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="c1"># Disable save_confmaps_pafs since not currently working.</span>
-        <span class="c1"># The problem is that we can&#39;t put data for different crop sizes</span>
-        <span class="c1"># all into a single h5 datasource. It&#39;s now possible to view live</span>
-        <span class="c1"># predicted confmap and paf in the gui, so this isn&#39;t high priority.</span>
-        <span class="c1"># If you want to enable, uncomment this:</span>
-        <span class="c1"># save_confmaps_pafs = form_data.get(&quot;_save_confmaps_pafs&quot;, False)</span>
+
+        <span class="n">save_predictions</span> <span class="o">=</span> <span class="n">form_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_save_predictions&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 
         <span class="c1"># Run active learning pipeline using the TrainingJobs</span>
         <span class="n">new_counts</span> <span class="o">=</span> <span class="n">run_active_learning_pipeline</span><span class="p">(</span>
@@ -597,6 +594,7 @@
             <span class="n">training_jobs</span><span class="o">=</span><span class="n">training_jobs</span><span class="p">,</span>
             <span class="n">frames_to_predict</span><span class="o">=</span><span class="n">frames_to_predict</span><span class="p">,</span>
             <span class="n">with_tracking</span><span class="o">=</span><span class="n">with_tracking</span><span class="p">,</span>
+            <span class="n">save_predictions</span><span class="o">=</span><span class="n">save_predictions</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">learningFinished</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span>
@@ -680,7 +678,7 @@
 
     <span class="k">def</span> <span class="nf">_add_job_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_type</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Allow user to add training profile for given model type.&quot;&quot;&quot;</span>
-        <span class="n">filename</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QFileDialog</span><span class="o">.</span><span class="n">getOpenFileName</span><span class="p">(</span>
+        <span class="n">filename</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">FileDialog</span><span class="o">.</span><span class="n">open</span><span class="p">(</span>
             <span class="kc">None</span><span class="p">,</span>
             <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">caption</span><span class="o">=</span><span class="s2">&quot;Select training profile...&quot;</span><span class="p">,</span>
@@ -837,13 +835,11 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="c1"># try to load json as TrainingJob</span>
             <span class="n">job</span> <span class="o">=</span> <span class="n">TrainingJob</span><span class="o">.</span><span class="n">load_json</span><span class="p">(</span><span class="n">full_filename</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-            <span class="c1"># couldn&#39;t load as TrainingJob so just ignore this json file</span>
-            <span class="c1"># probably it&#39;s a json file for something else</span>
-            <span class="k">pass</span>
         <span class="k">except</span><span class="p">:</span>
-            <span class="c1"># but do raise any other type of error</span>
-            <span class="k">raise</span>
+            <span class="c1"># Couldn&#39;t load as TrainingJob so just ignore this json file</span>
+            <span class="c1"># probably it&#39;s a json file for something else (or an json for a</span>
+            <span class="c1"># older version of the object with different class attributes).</span>
+            <span class="k">pass</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># we loaded the json as a TrainingJob, so see what type of model it&#39;s for</span>
             <span class="n">model_type</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">output_type</span>
@@ -860,6 +856,7 @@
     <span class="n">training_jobs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="s2">&quot;ModelOutputType&quot;</span><span class="p">,</span> <span class="s2">&quot;TrainingJob&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">frames_to_predict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Video</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">with_tracking</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">save_predictions</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Run training (as needed) and inference.</span>
 
@@ -870,6 +867,7 @@
 <span class="sd">        frames_to_predict: Dict that gives list of frame indices for each video.</span>
 <span class="sd">        with_tracking: Whether to run tracking code after we predict instances.</span>
 <span class="sd">            This should be used only when predicting on continuous set of frames.</span>
+<span class="sd">        save_predictions: Whether to save new predictions in separate file.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Number of new frames added to labels.</span>
@@ -886,7 +884,17 @@
     <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">training_jobs</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
         <span class="n">job</span><span class="o">.</span><span class="n">labels_filename</span> <span class="o">=</span> <span class="n">labels_filename</span>
 
+    <span class="k">if</span> <span class="n">labels_filename</span><span class="p">:</span>
         <span class="n">save_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">labels_filename</span><span class="p">),</span> <span class="s2">&quot;models&quot;</span><span class="p">)</span>
+
+    <span class="c1"># If there are jobs to train and no path to save them, ask for path</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">has_jobs_to_train</span> <span class="ow">or</span> <span class="n">save_predictions</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">labels_filename</span><span class="p">:</span>
+        <span class="n">save_dir</span> <span class="o">=</span> <span class="n">FileDialog</span><span class="o">.</span><span class="n">openDir</span><span class="p">(</span>
+            <span class="kc">None</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">caption</span><span class="o">=</span><span class="s2">&quot;Please select directory for saving files...&quot;</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">save_dir</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No valid directory for saving files.&quot;</span><span class="p">)</span>
 
     <span class="c1"># Train the TrainingJobs</span>
     <span class="n">trained_jobs</span> <span class="o">=</span> <span class="n">run_active_training</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">training_jobs</span><span class="p">,</span> <span class="n">save_dir</span><span class="p">)</span>
@@ -895,12 +903,21 @@
     <span class="k">if</span> <span class="kc">None</span> <span class="ow">in</span> <span class="n">trained_jobs</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
         <span class="k">return</span> <span class="mi">0</span>
 
+    <span class="c1"># Clear save_dir if we don&#39;t want to save predictions in new file</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">save_predictions</span><span class="p">:</span>
+        <span class="n">save_dir</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
     <span class="c1"># Run the Predictor for suggested frames</span>
     <span class="n">new_labeled_frame_count</span> <span class="o">=</span> <span class="n">run_active_inference</span><span class="p">(</span>
         <span class="n">labels</span><span class="p">,</span> <span class="n">trained_jobs</span><span class="p">,</span> <span class="n">save_dir</span><span class="p">,</span> <span class="n">frames_to_predict</span><span class="p">,</span> <span class="n">with_tracking</span>
     <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">new_labeled_frame_count</span></div>
+
+
+<div class="viewcode-block" id="has_jobs_to_train"><a class="viewcode-back" href="../../../gui.html#sleap.gui.active.has_jobs_to_train">[docs]</a><span class="k">def</span> <span class="nf">has_jobs_to_train</span><span class="p">(</span><span class="n">training_jobs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="s2">&quot;ModelOutputType&quot;</span><span class="p">,</span> <span class="s2">&quot;TrainingJob&quot;</span><span class="p">]):</span>
+    <span class="sd">&quot;&quot;&quot;Returns whether any of the jobs need to be trained.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">job</span><span class="p">,</span> <span class="s2">&quot;use_trained_model&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">training_jobs</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="run_active_training"><a class="viewcode-back" href="../../../gui.html#sleap.gui.active.run_active_training">[docs]</a><span class="k">def</span> <span class="nf">run_active_training</span><span class="p">(</span>
@@ -1009,20 +1026,8 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">sleap.nn.inference</span> <span class="k">import</span> <span class="n">Predictor</span>
 
-    <span class="c1"># from multiprocessing import Pool</span>
-
-    <span class="c1"># total_new_lf_count = 0</span>
-    <span class="n">timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%y%m</span><span class="si">%d</span><span class="s2">_%H%M%S&quot;</span><span class="p">)</span>
-    <span class="n">inference_output_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save_dir</span><span class="p">,</span> <span class="n">f</span><span class="s2">&quot;</span><span class="si">{timestamp}</span><span class="s2">.inference.h5&quot;</span><span class="p">)</span>
-
     <span class="c1"># Create Predictor from the results of training</span>
-    <span class="c1"># pool = Pool(processes=1)</span>
-    <span class="n">predictor</span> <span class="o">=</span> <span class="n">Predictor</span><span class="p">(</span>
-        <span class="n">training_jobs</span><span class="o">=</span><span class="n">training_jobs</span><span class="p">,</span>
-        <span class="n">with_tracking</span><span class="o">=</span><span class="n">with_tracking</span><span class="p">,</span>
-        <span class="c1"># output_path=inference_output_path,</span>
-        <span class="c1"># pool=pool</span>
-    <span class="p">)</span>
+    <span class="n">predictor</span> <span class="o">=</span> <span class="n">Predictor</span><span class="p">(</span><span class="n">training_jobs</span><span class="o">=</span><span class="n">training_jobs</span><span class="p">,</span> <span class="n">with_tracking</span><span class="o">=</span><span class="n">with_tracking</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">gui</span><span class="p">:</span>
         <span class="c1"># show message while running inference</span>
@@ -1075,9 +1080,14 @@
     <span class="c1"># Remove any frames without instances</span>
     <span class="n">new_lfs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">lf</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">lf</span><span class="o">.</span><span class="n">instances</span><span class="p">),</span> <span class="n">new_lfs</span><span class="p">))</span>
 
-    <span class="c1"># Create and save dataset with predictions</span>
+    <span class="c1"># Create dataset with predictions</span>
     <span class="n">new_labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="p">(</span><span class="n">new_lfs</span><span class="p">)</span>
-    <span class="n">Labels</span><span class="o">.</span><span class="n">save_file</span><span class="p">(</span><span class="n">new_labels</span><span class="p">,</span> <span class="n">inference_output_path</span><span class="p">)</span>
+
+    <span class="c1"># Save dataset of predictions (if desired)</span>
+    <span class="k">if</span> <span class="n">save_dir</span><span class="p">:</span>
+        <span class="n">timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%y%m</span><span class="si">%d</span><span class="s2">_%H%M%S&quot;</span><span class="p">)</span>
+        <span class="n">inference_output_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save_dir</span><span class="p">,</span> <span class="n">f</span><span class="s2">&quot;</span><span class="si">{timestamp}</span><span class="s2">.inference.h5&quot;</span><span class="p">)</span>
+        <span class="n">Labels</span><span class="o">.</span><span class="n">save_file</span><span class="p">(</span><span class="n">new_labels</span><span class="p">,</span> <span class="n">inference_output_path</span><span class="p">)</span>
 
     <span class="c1"># Merge predictions into current labels dataset</span>
     <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">new_conflicts</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">complex_merge_between</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">new_labels</span><span class="p">)</span>
