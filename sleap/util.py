@@ -271,7 +271,10 @@ def get_config_file(shortname: str) -> str:
             )
         # Make sure there's a ~/.sleap/ directory to store user version of the
         # config file.
-        os.makedirs(os.path.expanduser("~/.sleap"))
+        try:
+            os.makedirs(os.path.expanduser("~/.sleap"))
+        except FileExistsError as e:
+            pass
 
         # Copy package version of config file into user config directory.
         shutil.copy(package_path, desired_path)
