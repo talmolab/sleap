@@ -5,6 +5,7 @@ unless they really have no other place.
 
 import os
 import re
+import shutil
 
 from pkg_resources import Requirement, resource_filename
 
@@ -243,6 +244,36 @@ def get_package_file(filename: str) -> str:
 
 
 def get_config_file(shortname: str) -> str:
-    """Returns full path to specified file in config directory of package."""
-    local_path = f"sleap/config/{shortname}"
-    return get_package_file(local_path)
+    """
+    Returns the full path to the specified config file.
+
+    The config file will be at ~/.sleap/<shortname>
+
+    If that file doesn't yet exist, we'll look for a <shortname> file inside
+    the package config directory (sleap/config) and copy the file into the
+    user's config directory (creating the directory if needed).
+
+    Args:
+        shortname: The short filename, e.g., shortcuts.yaml
+
+    Raises:
+        FileNotFoundError: If the specified config file cannot be found.
+
+    Returns:
+        The full path to the specified config file.
+    """
+    desired_path = os.path.expanduser(f"~/.sleap/{shortname}")
+    if not os.path.exists(desired_path):
+        package_path = get_package_file(f"sleap/config/{shortname}")
+        if not os.path.exists(package_path):
+            return FileNotFoundError(
+                f"Cannot locate {shortname} config file at {desired_path} or {package_path}."
+            )
+        # Make sure there's a ~/.sleap/ directory to store user version of the
+        # config file.
+        os.makedirs(os.path.expanduser("~/.sleap"))
+
+        # Copy package version of config file into user config directory.
+        shutil.copy(package_path, desired_path)
+
+    return desired_path
