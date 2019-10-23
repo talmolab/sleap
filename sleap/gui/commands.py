@@ -1424,8 +1424,7 @@ class AddInstance(EditCommand):
             skeleton=context.state["skeleton"], from_predicted=from_predicted
         )
 
-        # Get the rect that's currently visible in the window view
-        in_view_rect = context.app.player.getVisibleRect()
+        has_missing_nodes = False
 
         # go through each node in skeleton
         for node in context.state["skeleton"].node_names:
@@ -1443,14 +1442,14 @@ class AddInstance(EditCommand):
                     visible=copy_instance[node].visible,
                 )
             else:
-                # pick random points within currently zoomed view
-                x, y = get_xy_in_rect(in_view_rect)
-                # mark the node as not "visible" if we're copying from a predicted instance without this node
-                is_visible = copy_instance is None or not hasattr(
-                    copy_instance, "score"
-                )
-                # set point for node
-                new_instance[node] = Point(x=x, y=y, visible=is_visible)
+                has_missing_nodes = True
+
+        if has_missing_nodes:
+            # mark the node as not "visible" if we're copying from a predicted instance without this node
+            is_visible = copy_instance is None or (not hasattr(copy_instance, "score"))
+            context.execute(
+                AddMissingInstanceNodes, instance=new_instance, visible=is_visible
+            )
 
         # If we're copying a predicted instance or from another frame, copy the track
         if hasattr(copy_instance, "score") or from_prev_frame:
@@ -1520,19 +1519,47 @@ class AddMissingInstanceNodes(EditCommand):
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
         instance = params["instance"]
-        # the rect that's currently visibile in the window view
+        visible = params.get("visible", False)
+
+        current_node_count = len(instance.nodes)
+        if current_node_count:
+            cls.add_random_nodes(context, instance, visible)
+        else:
+            cls.add_force_directed_nodes(context, instance, visible)
+
+    @classmethod
+    def add_random_nodes(cls, context, instance, visible):
+        # the rect that's currently visible in the window view
         in_view_rect = context.app.player.getVisibleRect()
 
         for node in context.state["skeleton"].nodes:
             if node not in instance.nodes or instance[node].isnan():
                 # pick random points within currently zoomed view
-                x, y = get_xy_in_rect(in_view_rect)
+                x, y = cls.get_xy_in_rect(in_view_rect)
                 # set point for node
-                instance[node] = Point(x=x, y=y, visible=False)
+                instance[node] = Point(x=x, y=y, visible=visible)
 
+    @staticmethod
+    def get_xy_in_rect(rect: QtCore.QRectF):
+        """Returns random x, y coordinates within given rect."""
+        x = rect.x() + (rect.width() * 0.1) + (np.random.rand() * rect.width() * 0.8)
+        y = rect.y() + (rect.height() * 0.1) + (np.random.rand() * rect.height() * 0.8)
+        return x, y
 
-def get_xy_in_rect(rect: QtCore.QRectF):
-    """Returns random x, y coordinates within given rect."""
-    x = rect.x() + (rect.width() * 0.1) + (np.random.rand() * rect.width() * 0.8)
-    y = rect.y() + (rect.height() * 0.1) + (np.random.rand() * rect.height() * 0.8)
-    return x, y
+    @staticmethod
+    def get_rect_center_xy(rect: QtCore.QRectF):
+        """Returns x, y at center of rect."""
+
+    @classmethod
+    def add_force_directed_nodes(cls, context, instance, visible):
+        import networkx as nx
+
+        view_center = context.app.player.getVisibleRect().center()
+        x_center, y_center = view_center.x(), view_center.y()
+
+        node_positions = nx.spring_layout(context.state["skeleton"].graph, scale=50)
+
+        for node, pos in node_positions.items():
+            instance[node] = Point(
+                x=pos[0] + x_center, y=pos[1] + y_center, visible=visible
+            )
