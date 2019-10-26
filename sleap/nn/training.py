@@ -161,6 +161,7 @@ class Trainer:
         labels: Union[str, Labels, Dict],
         run_name: str = None,
         save_dir: Union[str, None] = None,
+        tensorboard: bool = False,
         tensorboard_dir: Union[str, None] = None,
         control_zmq_port: int = 9000,
         progress_report_zmq_port: int = 9001,
@@ -173,7 +174,8 @@ class Trainer:
         Args:
             model: The model to run training on.
             labels: The SLEAP Labels dataset of labeled frames to run training on.
-            tensorboard_dir: An optional tensorboard directory.
+            tensorboard: If True, enables Tensorboard logging.
+            tensorboard_dir: An optional tensorboard directory. Defaults to the run folder.
             run_name: A string name to use to prefix each model file name. If set to None,
             the default value is:
             f"{timestamp}.{str(model.output_type).lower()}.{model.name}.n={num_total}".
@@ -405,6 +407,7 @@ class Trainer:
             train_run,
             save_path,
             train_datagen,
+            tensorboard,
             tensorboard_dir,
             control_zmq_port,
             progress_report_zmq_port,
@@ -422,7 +425,7 @@ class Trainer:
                 {output_name: outputs_val for output_name in keras_model.output_names},
             ),
             callbacks=callbacks,
-            verbose=2,
+            verbose=2 if control_zmq_port else 1,
             use_multiprocessing=multiprocessing_workers > 0,
             workers=multiprocessing_workers,
         )
@@ -438,9 +441,9 @@ class Trainer:
             # TODO: save training history
 
             train_run.final_model_filename = os.path.relpath(final_model_path, save_dir)
-            TrainingJob.save_json(train_run, f"{save_path}.json")
+            TrainingJob.save_json(train_run, f"{save_path}/training_job.json")
 
-            return f"{save_path}.json"
+            return f"{save_path}/training_job.json"
         else:
             return train_run
 
@@ -477,6 +480,7 @@ class Trainer:
         train_run: "TrainingJob",
         save_path,
         train_datagen,
+        tensorboard,
         tensorboard_dir,
         control_zmq_port,
         progress_report_zmq_port,
@@ -523,7 +527,7 @@ class Trainer:
                         save_freq="epoch",
                     )
                 )
-            TrainingJob.save_json(train_run, f"{save_path}.json")
+            TrainingJob.save_json(train_run, f"{save_path}/training_job.json")
 
         # Callbacks: Shuffle after every epoch
         if self.shuffle_every_epoch:
@@ -556,20 +560,20 @@ class Trainer:
         )
 
         # Callbacks: Tensorboard
-        if tensorboard_dir is not None:
+        if tensorboard:
+            if tensorboard_dir is None:
+                tensorboard_dir = save_path
+
             callbacks.append(
                 TensorBoard(
-                    log_dir=f"{tensorboard_dir}/{output_type}{time()}",
-                    batch_size=32,
-                    update_freq=150,
+                    log_dir=tensorboard_dir,
+                    update_freq="epoch",
                     histogram_freq=0,
                     write_graph=False,
-                    write_grads=False,
                     write_images=False,
+                    profile_batch=0,
                     embeddings_freq=0,
-                    embeddings_layer_names=None,
                     embeddings_metadata=None,
-                    embeddings_data=None,
                 )
             )
 
@@ -853,82 +857,7 @@ class ProgressReporterZMQ(keras.callbacks.Callback):
         )
 
 
-def main():
-    from PySide2 import QtWidgets
-
-    #     from sleap.nn.architectures.unet import UNet
-    #     model = Model(output_type=ModelOutputType.CONFIDENCE_MAP,
-    #                   backbone=UNet(num_filters=16, depth=3, up_blocks=2))
-
-    from sleap.nn.architectures.leap import LeapCNN
-
-    model = Model(
-        output_type=ModelOutputType.PART_AFFINITY_FIELD,
-        backbone=LeapCNN(
-            down_blocks=3,
-            up_blocks=2,
-            upsampling_layers=True,
-            num_filters=32,
-            interp="bilinear",
-        ),
-    )
-
-    # Setup a Trainer object to train the model above
-    trainer = Trainer(
-        val_size=0.1,
-        batch_size=4,
-        num_epochs=10,
-        steps_per_epoch=5,
-        save_best_val=True,
-        save_every_epoch=True,
-    )
-
-    # Run training asynchronously
-    pool, result = trainer.train_async(
-        model=model,
-        labels=Labels.load_json("tests/data/json_format_v1/centered_pair.json"),
-        save_dir="test_train/",
-        run_name="training_run_2",
-    )
-
-    app = QtWidgets.QApplication()
-
-    app.setQuitOnLastWindowClosed(True)
-
-    win = LossViewer()
-    win.resize(600, 400)
-    win.show()
-
-    while not result.ready():
-        app.processEvents()
-        result.wait(0.01)
-
-    print("Get")
-    train_job_path = result.get()
-
-    # Stop training
-
-    app.closeAllWindows()
-
-    # Now lets load the training job we just ran
-    train_job = TrainingJob.load_json(train_job_path)
-
-    assert os.path.exists(
-        os.path.join(train_job.save_dir, train_job.newest_model_filename)
-    )
-    assert os.path.exists(
-        os.path.join(train_job.save_dir, train_job.best_model_filename)
-    )
-    assert os.path.exists(
-        os.path.join(train_job.save_dir, train_job.final_model_filename)
-    )
-
-    import sys
-
-    sys.exit(0)
-
-
-def run(labels_filename: str, job_filename: str):
+def run(labels_filename: str, job_filename: str, tensorboard: bool = False):
 
     labels = Labels.load_file(labels_filename)
     job = TrainingJob.load_json(job_filename)
@@ -942,6 +871,7 @@ def run(labels_filename: str, job_filename: str):
         save_dir=save_dir,
         control_zmq_port=None,
         progress_report_zmq_port=None,
+        tensorboard=tensorboard,
     )
 
 
@@ -950,8 +880,9 @@ if __name__ == "__main__":
     from pkg_resources import Requirement, resource_filename
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("labels_path", help="Path to labels file")
-    parser.add_argument("profile_path", help="Path to training job profile file")
+    parser.add_argument("labels_path", help="Path to labels file.")
+    parser.add_argument("profile_path", help="Path to training job profile file.")
+    parser.add_argument("--tensorboard", help="Enables TensorBoard logging to the run path.", action="store_true")
 
     args = parser.parse_args()
 
@@ -968,4 +899,4 @@ if __name__ == "__main__":
     print(f"Training labels file: {args.labels_path}")
     print(f"Training profile: {job_filename}")
 
-    run(labels_filename=args.labels_path, job_filename=job_filename)
+    run(labels_filename=args.labels_path, job_filename=job_filename, tensorboard=args.tensorboard)
