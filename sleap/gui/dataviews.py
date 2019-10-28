@@ -47,6 +47,7 @@ class GenericTableModel(QtCore.QAbstractTableModel):
             self._data = []
 
     def object_to_items(self, item_list):
+        """Virtual method, convert object to list of items to show in rows."""
         return item_list
 
     @property
@@ -80,6 +81,7 @@ class GenericTableModel(QtCore.QAbstractTableModel):
         self._uncached_items = val
 
     def get_item_color(self, item: Any, key: str):
+        """Virtual method, returns color for given item."""
         return None
 
     def data(self, index: QtCore.QModelIndex, role=QtCore.Qt.DisplayRole):
@@ -113,6 +115,7 @@ class GenericTableModel(QtCore.QAbstractTableModel):
 
             if self.can_set(item, key):
                 self.set_item(item, key, value)
+                # self.dataChanged.emit(index, index)
                 return True
 
         return False
@@ -153,6 +156,7 @@ class GenericTableModel(QtCore.QAbstractTableModel):
         self.endResetModel()
 
     def get_from_idx(self, index: QtCore.QModelIndex):
+        """Gets item from QModelIndex."""
         if not index.isValid():
             return None, None
         item = self.uncached_items[index.row()]
@@ -160,9 +164,11 @@ class GenericTableModel(QtCore.QAbstractTableModel):
         return item, key
 
     def can_set(self, item, key):
+        """Virtual method, returns whether table cell is editable."""
         return False
 
     def set_item(self, item, key, value):
+        """Virtual method, used to set value for item in table cell."""
         pass
 
     def flags(self, index: QtCore.QModelIndex):
@@ -331,37 +337,39 @@ class LabeledFrameTableModel(GenericTableModel):
 
 
 class SuggestionsTableModel(GenericTableModel):
-    properties = ("video", "frame", "labeled", "mean score")
+    properties = ("video", "frame", "group", "labeled", "mean score")
 
     def object_to_items(self, labels: Labels):
         """Converts given skeleton to list of nodes to show in table."""
-        item_list = []
-        for video, frame_idx in labels.get_suggestions():
-            item = dict()
+        return labels.get_suggestions()
+        # item_list = []
 
-            item[
-                "video"
-            ] = f"{labels.videos.index(video)}: {os.path.basename(video.filename)}"
-            item["frame"] = int(frame_idx) + 1  # start at frame 1 rather than 0
+    def item_to_data(self, obj, item):
+        labels = obj
+        item_dict = dict()
 
-            # show how many labeled instances are in this frame
-            val = labels.instance_count(video, frame_idx)
-            val = str(val) if val > 0 else ""
-            item["labeled"] = val
+        video_string = f"{labels.videos.index(item.video)}: {os.path.basename(item.video.filename)}"
 
-            # calculate score for frame
-            scores = [
-                inst.score
-                for lf in labels.find(video, frame_idx)
-                for inst in lf
-                if hasattr(inst, "score")
-            ]
-            val = sum(scores) / len(scores) if scores else None
-            item["mean score"] = val
+        item_dict["group"] = str(item.group)
+        item_dict["video"] = video_string
+        item_dict["frame"] = int(item.frame_idx) + 1  # start at frame 1 rather than 0
 
-            item_list.append(item)
+        # show how many labeled instances are in this frame
+        val = labels.instance_count(item.video, item.frame_idx)
+        val = str(val) if val > 0 else ""
+        item_dict["labeled"] = val
 
-        return item_list
+        # calculate score for frame
+        scores = [
+            inst.score
+            for lf in labels.find(item.video, item.frame_idx)
+            for inst in lf
+            if hasattr(inst, "score")
+        ]
+        val = sum(scores) / len(scores) if scores else None
+        item_dict["mean score"] = val
+
+        return item_dict
 
 
 class SkeletonNodeModel(QtCore.QStringListModel):

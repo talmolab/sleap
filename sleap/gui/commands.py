@@ -646,13 +646,15 @@ class GoNextSuggestedFrame(NavCommand):
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
 
-        next_video, next_frame = context.labels.get_next_suggestion(
+        next_suggestion_frame = context.labels.get_next_suggestion(
             context.state["video"], context.state["frame_idx"], cls.seek_direction
         )
-        if next_frame is not None:
-            cls.go_to(context, next_frame, next_video)
+        if next_suggestion_frame is not None:
+            cls.go_to(
+                context, next_suggestion_frame.frame_idx, next_suggestion_frame.video
+            )
             selection_idx = context.labels.get_suggestions().index(
-                (next_video, next_frame)
+                next_suggestion_frame
             )
             context.state["suggestion_idx"] = selection_idx
 
@@ -1308,10 +1310,12 @@ class GenerateSuggestions(EditCommand):
 
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
-        new_suggestions = dict()
+        new_suggestions = []
         for video in context.labels.videos:
-            new_suggestions[video] = VideoFrameSuggestions.suggest(
-                video=video, labels=context.labels, params=params
+            new_suggestions.extend(
+                VideoFrameSuggestions.suggest(
+                    video=video, labels=context.labels, params=params
+                )
             )
 
         context.labels.set_suggestions(new_suggestions)

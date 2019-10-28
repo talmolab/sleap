@@ -549,8 +549,7 @@ def test_suggestions(small_robot_mp4_vid):
     labels = Labels()
     labels.append(dummy_frame)
 
-    suggestions = dict()
-    suggestions[dummy_video] = VideoFrameSuggestions.suggest(
+    suggestions = VideoFrameSuggestions.suggest(
         dummy_video, params=dict(method="random", per_video=13)
     )
     labels.set_suggestions(suggestions)

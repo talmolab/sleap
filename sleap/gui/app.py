@@ -704,11 +704,13 @@ class MainWindow(QMainWindow):
         form_wid.mainAction.connect(self.commands.generateSuggestions)
         suggestions_layout.addWidget(form_wid)
 
-        self.suggestionsTable.doubleClicked.connect(
-            lambda table_idx: self.commands.gotoVideoAndFrame(
-                *self.labels.get_suggestions()[table_idx.row()]
+        def goto_suggestion(*args):
+            selected_frame = self.suggestionsTable.getSelectedRowItem()
+            self.commands.gotoVideoAndFrame(
+                selected_frame.video, selected_frame.frame_idx
             )
-        )
+
+        self.suggestionsTable.doubleClicked.connect(goto_suggestion)
 
         self.state.connect("suggestion_idx", self.suggestionsTable.selectRow)
 
@@ -856,16 +858,21 @@ class MainWindow(QMainWindow):
             # update count of suggested frames w/ labeled instances
             suggestion_status_text = ""
             suggestion_list = self.labels.get_suggestions()
-            if len(suggestion_list):
+            if suggestion_list:
                 suggestion_label_counts = [
-                    self.labels.instance_count(video, frame_idx)
-                    for (video, frame_idx) in suggestion_list
+                    self.labels.instance_count(item.video, item.frame_idx)
+                    for item in suggestion_list
                 ]
                 labeled_count = len(suggestion_list) - suggestion_label_counts.count(0)
                 suggestion_status_text = (
                     f"{labeled_count}/{len(suggestion_list)} labeled"
                 )
             self.suggested_count_label.setText(suggestion_status_text)
+
+            # FIXME: this is a hack because the table isn't redrawing
+            self.suggestionsTable.repaint()
+            self.suggested_count_label.repaint()
+            self.suggestionsTable.parent().repaint()
 
     def plotFrame(self, *args, **kwargs):
         """Plots (or replots) current frame."""

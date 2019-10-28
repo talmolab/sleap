@@ -726,73 +726,80 @@ class Labels(MutableSequence):
         Returns the list of suggested frames for the specified video
         or suggestions for all videos (if no video specified).
         """
-        return self.suggestions.get(video, list())
+        return [item.frame_idx for item in self.suggestions if item.video == video]
 
     def get_suggestions(self) -> list:
-        """Return all suggestions as a list of (video, frame) tuples."""
-        suggestion_list = [
-            (video, frame_idx)
-            for video in self.videos
-            for frame_idx in self.get_video_suggestions(video)
+        """Return all suggestions as a list of SuggestionFrame items."""
+        return self.suggestions
+
+    def find_suggestion(self, video, frame_idx):
+        """Find SuggestionFrame by video and frame index."""
+        matches = [
+            item
+            for item in self.suggestions
+            if item.video == video and item.frame_idx == frame_idx
         ]
-        return suggestion_list
+
+        if matches:
+            return matches[0]
+
+        return None
 
     def get_next_suggestion(self, video, frame_idx, seek_direction=1) -> list:
         """Returns a (video, frame_idx) tuple seeking from given frame."""
         # make sure we have valid seek_direction
         if seek_direction not in (-1, 1):
-            return (None, None)
+            raise ValueError("seek_direction should be -1 or 1.")
         # make sure the video belongs to this Labels object
         if video not in self.videos:
-            return (None, None)
+            return None
 
         all_suggestions = self.get_suggestions()
 
         # If we're currently on a suggestion, then follow order of list
-        if (video, frame_idx) in all_suggestions:
-            suggestion_idx = all_suggestions.index((video, frame_idx))
+        match = self.find_suggestion(video, frame_idx)
+        if match is not None:
+            suggestion_idx = all_suggestions.index(match)
             new_idx = (suggestion_idx + seek_direction) % len(all_suggestions)
-            video, frame_suggestion = all_suggestions[new_idx]
+            return all_suggestions[new_idx]
 
-        # Otherwise, find the prev/next suggestion sorted by frame order
-        else:
-            # look for next (or previous) suggestion in current video
-            if seek_direction == 1:
-                frame_suggestion = min(
-                    (i for i in self.get_video_suggestions(video) if i > frame_idx),
-                    default=None,
-                )
-            else:
-                frame_suggestion = max(
-                    (i for i in self.get_video_suggestions(video) if i < frame_idx),
-                    default=None,
-                )
-            if frame_suggestion is not None:
-                return (video, frame_suggestion)
-            # if we didn't find suggestion in current video,
-            # then we want earliest frame in next video with suggestions
-            next_video_idx = (self.videos.index(video) + seek_direction) % len(
-                self.videos
+        # Otherwise, find the prev/next suggestion sorted by frame order...
+
+        # Look for next (or previous) suggestion in current video.
+        if seek_direction == 1:
+            frame_suggestion = min(
+                (i for i in self.get_video_suggestions(video) if i > frame_idx),
+                default=None,
             )
-            video = self.videos[next_video_idx]
-            if seek_direction == 1:
-                frame_suggestion = min(
-                    (i for i in self.get_video_suggestions(video)), default=None
-                )
-            else:
-                frame_suggestion = max(
-                    (i for i in self.get_video_suggestions(video)), default=None
-                )
-        return (video, frame_suggestion)
+        else:
+            frame_suggestion = max(
+                (i for i in self.get_video_suggestions(video) if i < frame_idx),
+                default=None,
+            )
+        if frame_suggestion is not None:
+            return self.find_suggestion(video, frame_suggestion)
 
-    def set_suggestions(self, suggestions: Dict[Video, list]):
+        # If we didn't find suggestion in current video, then we want earliest
+        # frame in next video with suggestions.
+        next_video_idx = (self.videos.index(video) + seek_direction) % len(self.videos)
+        video = self.videos[next_video_idx]
+        if seek_direction == 1:
+            frame_suggestion = min(
+                (i for i in self.get_video_suggestions(video)), default=None
+            )
+        else:
+            frame_suggestion = max(
+                (i for i in self.get_video_suggestions(video)), default=None
+            )
+        return self.find_suggestion(video, frame_suggestion)
+
+    def set_suggestions(self, suggestions: List["SuggestionFrame"]):
         """Sets the suggested frames."""
         self.suggestions = suggestions
 
     def delete_suggestions(self, video):
         """Deletes suggestions for specified video."""
-        if video in self.suggestions:
-            del self.suggestions[video]
+        self.suggestions = [item for item in self.suggestions if item.video != video]
 
     # Methods for videos
 
