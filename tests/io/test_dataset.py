@@ -557,6 +557,39 @@ def test_suggestions(small_robot_mp4_vid):
     assert len(labels.get_video_suggestions(dummy_video)) == 13
 
 
+def test_deserialize_suggestions(small_robot_mp4_vid, tmpdir):
+    dummy_video = small_robot_mp4_vid
+    dummy_skeleton = Skeleton()
+    dummy_instance = Instance(dummy_skeleton)
+    dummy_frame = LabeledFrame(dummy_video, frame_idx=0, instances=[dummy_instance])
+
+    labels = Labels()
+    labels.append(dummy_frame)
+
+    suggestions = VideoFrameSuggestions.suggest(
+        dummy_video, params=dict(method="random", per_video=13)
+    )
+    labels.set_suggestions(suggestions)
+
+    filename = os.path.join(tmpdir, "new_suggestions.h5")
+    Labels.save_file(filename=filename, labels=labels)
+
+    new_suggestion_labels = Labels.load_file(filename)
+    assert len(suggestions) == len(new_suggestion_labels.suggestions)
+    assert [frame.frame_idx for frame in suggestions] == [
+        frame.frame_idx for frame in new_suggestion_labels.suggestions
+    ]
+
+    old_suggestions = {dummy_video: [2, 5, 7]}
+    labels.set_suggestions(old_suggestions)
+
+    filename = os.path.join(tmpdir, "old_suggestions.h5")
+    Labels.save_file(filename=filename, labels=labels)
+    old_suggestion_labels = Labels.load_file(filename)
+    assert len(old_suggestion_labels.suggestions) == 3
+    assert [frame.frame_idx for frame in old_suggestion_labels.suggestions] == [2, 5, 7]
+
+
 def test_negative_anchors():
     video = Video.from_filename("foo.mp4")
     labels = Labels()

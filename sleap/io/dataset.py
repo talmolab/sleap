@@ -45,6 +45,7 @@ from sleap.instance import (
 from sleap.io import pathutils
 from sleap.io.legacy import load_labels_json_old
 from sleap.io.video import Video
+from sleap.gui.suggestions import SuggestionFrame
 from sleap.gui.missingfiles import MissingFilesDialog
 from sleap.rangelist import RangeList
 from sleap.util import uniquify, weak_filename_match, json_dumps, json_loads
@@ -74,11 +75,9 @@ class Labels(MutableSequence):
         skeletons: A list of :class:`Skeleton` objects (again, that may or may
             not be referenced by an :class:`Instance` in labeled frame).
         tracks: A list of :class:`Track` that instances can belong to.
-        suggestions: Dictionary that stores "suggested" frames for
+        suggestions: List that stores "suggested" frames for
             videos in project. These can be suggested frames for user
             to label or suggested frames for user to review.
-            Dictionary key is :class:`Video`, value is list of frame
-            indices.
         negative_anchors: Dictionary that stores center-points around
             which to crop as negative samples when training.
             Dictionary key is :class:`Video`, value is list of
@@ -90,7 +89,7 @@ class Labels(MutableSequence):
     skeletons: List[Skeleton] = attr.ib(default=attr.Factory(list))
     nodes: List[Node] = attr.ib(default=attr.Factory(list))
     tracks: List[Track] = attr.ib(default=attr.Factory(list))
-    suggestions: Dict[Video, list] = attr.ib(default=attr.Factory(dict))
+    suggestions: List["SuggestionFrame"] = attr.ib(default=attr.Factory(list))
     negative_anchors: Dict[Video, list] = attr.ib(default=attr.Factory(dict))
 
     def __attrs_post_init__(self):
@@ -981,7 +980,7 @@ class Labels(MutableSequence):
             base_labels._build_lookup_caches()
 
         # Merge suggestions and negative anchors
-        cls.merge_container_dicts(base_labels.suggestions, new_labels.suggestions)
+        base_labels.suggestions.extend(new_labels.suggestions)
         cls.merge_container_dicts(
             base_labels.negative_anchors, new_labels.negative_anchors
         )
@@ -1299,16 +1298,35 @@ class Labels(MutableSequence):
                         videos[idx] = old_vid
                         break
 
+        suggestions = []
         if "suggestions" in dicts:
             suggestions_cattr = cattr.Converter()
             suggestions_cattr.register_structure_hook(
                 Video, lambda x, type: videos[int(x)]
             )
-            suggestions = suggestions_cattr.structure(
-                dicts["suggestions"], Dict[Video, List]
-            )
-        else:
-            suggestions = dict()
+            try:
+                suggestions = suggestions_cattr.structure(
+                    dicts["suggestions"], List[SuggestionFrame]
+                )
+            except:
+                try:
+                    # Convert old suggestion format to new format.
+                    # Old format: {video: list of frame indices}
+                    # New format: [SuggestionFrames]
+                    old_suggestions = suggestions_cattr.structure(
+                        dicts["suggestions"], Dict[Video, List]
+                    )
+                    for video in old_suggestions.keys():
+                        suggestions.extend(
+                            [
+                                SuggestionFrame(video, idx)
+                                for idx in old_suggestions[video]
+                            ]
+                        )
+                except:
+                    print("Error while loading suggestions")
+                    print(e)
+                    pass
 
         if "negative_anchors" in dicts:
             negative_anchors_cattr = cattr.Converter()

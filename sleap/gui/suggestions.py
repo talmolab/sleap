@@ -12,9 +12,12 @@ from sklearn.cluster import KMeans
 
 import cv2
 
-from typing import List, Hashable, Tuple, Optional
+from typing import List, Tuple, Optional, Union
 
 from sleap.io.video import Video
+
+
+GroupType = int
 
 
 @attr.s(auto_attribs=True, slots=True)
@@ -23,7 +26,7 @@ class SuggestionFrame:
 
     video: Video
     frame_idx: int
-    group: Optional[Hashable] = None
+    group: Optional[GroupType] = None
 
 
 class VideoFrameSuggestions:
@@ -367,7 +370,7 @@ class VideoFrameSuggestions:
 
     @staticmethod
     def idx_list_to_frame_list(
-        idx_list, video: "Video", group: Optional[Hashable] = None
+        idx_list, video: "Video", group: Optional[GroupType] = None
     ) -> List[SuggestionFrame]:
         return [SuggestionFrame(video, frame_idx, group) for frame_idx in idx_list]
 
