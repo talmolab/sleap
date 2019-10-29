@@ -6,7 +6,7 @@ from sleap.instance import Instance, Point, LabeledFrame, PredictedInstance
 from sleap.io.video import Video
 from sleap.io.dataset import Labels
 from sleap.nn.model import ModelOutputType
-from sleap.gui.active import (
+from sleap.gui.inference import (
     InferenceDialog,
     make_default_training_jobs,
     find_saved_jobs,

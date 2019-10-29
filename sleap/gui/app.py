@@ -1116,7 +1116,7 @@ class MainWindow(QMainWindow):
         Returns:
             None.
         """
-        from sleap.gui.active import InferenceDialog
+        from sleap.gui.inference import InferenceDialog
 
         if "inference" in self.overlays:
             QMessageBox(
