@@ -45,6 +45,7 @@ from sleap.instance import (
 from sleap.io import pathutils
 from sleap.io.legacy import load_labels_json_old
 from sleap.io.video import Video
+from sleap.gui.suggestions import SuggestionFrame
 from sleap.gui.missingfiles import MissingFilesDialog
 from sleap.rangelist import RangeList
 from sleap.util import uniquify, weak_filename_match, json_dumps, json_loads
@@ -74,11 +75,9 @@ class Labels(MutableSequence):
         skeletons: A list of :class:`Skeleton` objects (again, that may or may
             not be referenced by an :class:`Instance` in labeled frame).
         tracks: A list of :class:`Track` that instances can belong to.
-        suggestions: Dictionary that stores "suggested" frames for
+        suggestions: List that stores "suggested" frames for
             videos in project. These can be suggested frames for user
             to label or suggested frames for user to review.
-            Dictionary key is :class:`Video`, value is list of frame
-            indices.
         negative_anchors: Dictionary that stores center-points around
             which to crop as negative samples when training.
             Dictionary key is :class:`Video`, value is list of
@@ -90,7 +89,7 @@ class Labels(MutableSequence):
     skeletons: List[Skeleton] = attr.ib(default=attr.Factory(list))
     nodes: List[Node] = attr.ib(default=attr.Factory(list))
     tracks: List[Track] = attr.ib(default=attr.Factory(list))
-    suggestions: Dict[Video, list] = attr.ib(default=attr.Factory(dict))
+    suggestions: List["SuggestionFrame"] = attr.ib(default=attr.Factory(list))
     negative_anchors: Dict[Video, list] = attr.ib(default=attr.Factory(dict))
 
     def __attrs_post_init__(self):
@@ -586,10 +585,10 @@ class Labels(MutableSequence):
             None.
         """
         # Get ranges in track occupancy cache
-        _, within_old, _ = self._track_occupancy[video][old_track].cut_range(
+        _, within_old, _ = self._get_track_occupany(video, old_track).cut_range(
             frame_range
         )
-        _, within_new, _ = self._track_occupancy[video][new_track].cut_range(
+        _, within_new, _ = self._get_track_occupany(video, new_track).cut_range(
             frame_range
         )
 
@@ -671,6 +670,16 @@ class Labels(MutableSequence):
                 tracks[instance.track].add(frame_idx)
         return tracks
 
+    def _get_track_occupany(self, video: Video, track: Track) -> RangeList:
+        """
+        Accessor for track occupancy cache that adds video/track as needed.
+        """
+        if video not in self._track_occupancy:
+            self._track_occupancy[video] = dict()
+        if track not in self._track_occupancy[video]:
+            self._track_occupancy[video][track] = RangeList()
+        return self._track_occupancy[video][track]
+
     def find_track_occupancy(
         self, video: Video, track: Union[Track, int], frame_range=None
     ) -> List[Instance]:
@@ -716,73 +725,80 @@ class Labels(MutableSequence):
         Returns the list of suggested frames for the specified video
         or suggestions for all videos (if no video specified).
         """
-        return self.suggestions.get(video, list())
+        return [item.frame_idx for item in self.suggestions if item.video == video]
 
     def get_suggestions(self) -> list:
-        """Return all suggestions as a list of (video, frame) tuples."""
-        suggestion_list = [
-            (video, frame_idx)
-            for video in self.videos
-            for frame_idx in self.get_video_suggestions(video)
+        """Return all suggestions as a list of SuggestionFrame items."""
+        return self.suggestions
+
+    def find_suggestion(self, video, frame_idx):
+        """Find SuggestionFrame by video and frame index."""
+        matches = [
+            item
+            for item in self.suggestions
+            if item.video == video and item.frame_idx == frame_idx
         ]
-        return suggestion_list
+
+        if matches:
+            return matches[0]
+
+        return None
 
     def get_next_suggestion(self, video, frame_idx, seek_direction=1) -> list:
         """Returns a (video, frame_idx) tuple seeking from given frame."""
         # make sure we have valid seek_direction
         if seek_direction not in (-1, 1):
-            return (None, None)
+            raise ValueError("seek_direction should be -1 or 1.")
         # make sure the video belongs to this Labels object
         if video not in self.videos:
-            return (None, None)
+            return None
 
         all_suggestions = self.get_suggestions()
 
         # If we're currently on a suggestion, then follow order of list
-        if (video, frame_idx) in all_suggestions:
-            suggestion_idx = all_suggestions.index((video, frame_idx))
+        match = self.find_suggestion(video, frame_idx)
+        if match is not None:
+            suggestion_idx = all_suggestions.index(match)
             new_idx = (suggestion_idx + seek_direction) % len(all_suggestions)
-            video, frame_suggestion = all_suggestions[new_idx]
+            return all_suggestions[new_idx]
 
-        # Otherwise, find the prev/next suggestion sorted by frame order
-        else:
-            # look for next (or previous) suggestion in current video
-            if seek_direction == 1:
-                frame_suggestion = min(
-                    (i for i in self.get_video_suggestions(video) if i > frame_idx),
-                    default=None,
-                )
-            else:
-                frame_suggestion = max(
-                    (i for i in self.get_video_suggestions(video) if i < frame_idx),
-                    default=None,
-                )
-            if frame_suggestion is not None:
-                return (video, frame_suggestion)
-            # if we didn't find suggestion in current video,
-            # then we want earliest frame in next video with suggestions
-            next_video_idx = (self.videos.index(video) + seek_direction) % len(
-                self.videos
+        # Otherwise, find the prev/next suggestion sorted by frame order...
+
+        # Look for next (or previous) suggestion in current video.
+        if seek_direction == 1:
+            frame_suggestion = min(
+                (i for i in self.get_video_suggestions(video) if i > frame_idx),
+                default=None,
             )
-            video = self.videos[next_video_idx]
-            if seek_direction == 1:
-                frame_suggestion = min(
-                    (i for i in self.get_video_suggestions(video)), default=None
-                )
-            else:
-                frame_suggestion = max(
-                    (i for i in self.get_video_suggestions(video)), default=None
-                )
-        return (video, frame_suggestion)
+        else:
+            frame_suggestion = max(
+                (i for i in self.get_video_suggestions(video) if i < frame_idx),
+                default=None,
+            )
+        if frame_suggestion is not None:
+            return self.find_suggestion(video, frame_suggestion)
 
-    def set_suggestions(self, suggestions: Dict[Video, list]):
+        # If we didn't find suggestion in current video, then we want earliest
+        # frame in next video with suggestions.
+        next_video_idx = (self.videos.index(video) + seek_direction) % len(self.videos)
+        video = self.videos[next_video_idx]
+        if seek_direction == 1:
+            frame_suggestion = min(
+                (i for i in self.get_video_suggestions(video)), default=None
+            )
+        else:
+            frame_suggestion = max(
+                (i for i in self.get_video_suggestions(video)), default=None
+            )
+        return self.find_suggestion(video, frame_suggestion)
+
+    def set_suggestions(self, suggestions: List["SuggestionFrame"]):
         """Sets the suggested frames."""
         self.suggestions = suggestions
 
     def delete_suggestions(self, video):
         """Deletes suggestions for specified video."""
-        if video in self.suggestions:
-            del self.suggestions[video]
+        self.suggestions = [item for item in self.suggestions if item.video != video]
 
     # Methods for videos
 
@@ -964,7 +980,7 @@ class Labels(MutableSequence):
             base_labels._build_lookup_caches()
 
         # Merge suggestions and negative anchors
-        cls.merge_container_dicts(base_labels.suggestions, new_labels.suggestions)
+        base_labels.suggestions.extend(new_labels.suggestions)
         cls.merge_container_dicts(
             base_labels.negative_anchors, new_labels.negative_anchors
         )
@@ -1282,16 +1298,35 @@ class Labels(MutableSequence):
                         videos[idx] = old_vid
                         break
 
+        suggestions = []
         if "suggestions" in dicts:
             suggestions_cattr = cattr.Converter()
             suggestions_cattr.register_structure_hook(
                 Video, lambda x, type: videos[int(x)]
             )
-            suggestions = suggestions_cattr.structure(
-                dicts["suggestions"], Dict[Video, List]
-            )
-        else:
-            suggestions = dict()
+            try:
+                suggestions = suggestions_cattr.structure(
+                    dicts["suggestions"], List[SuggestionFrame]
+                )
+            except:
+                try:
+                    # Convert old suggestion format to new format.
+                    # Old format: {video: list of frame indices}
+                    # New format: [SuggestionFrames]
+                    old_suggestions = suggestions_cattr.structure(
+                        dicts["suggestions"], Dict[Video, List]
+                    )
+                    for video in old_suggestions.keys():
+                        suggestions.extend(
+                            [
+                                SuggestionFrame(video, idx)
+                                for idx in old_suggestions[video]
+                            ]
+                        )
+                except:
+                    print("Error while loading suggestions")
+                    print(e)
+                    pass
 
         if "negative_anchors" in dicts:
             negative_anchors_cattr = cattr.Converter()

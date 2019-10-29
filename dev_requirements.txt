@@ -5,3 +5,5 @@ ipython
 sphinx
 sphinx_rtd_theme
 coveralls
+black
+pre-commit

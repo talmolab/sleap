@@ -3,6 +3,7 @@ Module with overlay for showing instances.
 """
 import attr
 
+from sleap.gui.state import GuiState
 from sleap.gui.video import QtVideoPlayer
 from sleap.io.dataset import Labels
 
@@ -21,6 +22,7 @@ class InstanceOverlay:
     labels: Labels = None
     player: QtVideoPlayer = None
     color_predicted: bool = False
+    state: GuiState = GuiState()
 
     def add_to_scene(self, video, frame_idx):
         """Adds overlay for frame to player scene."""
@@ -47,3 +49,6 @@ class InstanceOverlay:
                 predicted=is_predicted,
                 color_predicted=self.color_predicted,
             )
+
+        self.player.showLabels(self.state.get("show labels", default=True))
+        self.player.showEdges(self.state.get("show edges", default=True))

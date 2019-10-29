@@ -10,6 +10,7 @@ dependencies:
 - scikit-learn
 - h5py
 - pandas
+- Pillow
 - Shapely
 - psutil
 - pyzmq
