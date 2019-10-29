@@ -1,5 +1,5 @@
 """
-Main GUI application for labeling, active learning, and proofreading.
+Main GUI application for labeling, training/inference, and proofreading.
 """
 
 
@@ -438,8 +438,8 @@ class MainWindow(QMainWindow):
 
         add_menu_item(
             predictionMenu,
-            "active learning",
-            "Run Active Learning...",
+            "training",
+            "Run Training...",
             lambda: self.showLearningDialog("learning"),
         )
         add_menu_item(
@@ -1079,7 +1079,7 @@ class MainWindow(QMainWindow):
         return selection
 
     def showLearningDialog(self, mode: str):
-        """Helper function to show active learning dialog in given mode.
+        """Helper function to show learning dialog in given mode.
 
         Args:
             mode: A string representing mode for dialog, which could be:
@@ -1090,7 +1090,7 @@ class MainWindow(QMainWindow):
         Returns:
             None.
         """
-        from sleap.gui.active import ActiveLearningDialog
+        from sleap.gui.active import InferenceDialog
 
         if "inference" in self.overlays:
             QMessageBox(
@@ -1101,7 +1101,7 @@ class MainWindow(QMainWindow):
             return
 
         if self._child_windows.get(mode, None) is None:
-            self._child_windows[mode] = ActiveLearningDialog(
+            self._child_windows[mode] = InferenceDialog(
                 self.state["filename"], self.labels, mode
             )
             self._child_windows[mode].learningFinished.connect(self.learningFinished)
@@ -1110,8 +1110,8 @@ class MainWindow(QMainWindow):
         self._child_windows[mode].open()
 
     def learningFinished(self):
-        """Called when active learning (or inference) finishes."""
-        # we ran active learning so update display/ui
+        """Called when inference finishes."""
+        # we ran inference so update display/ui
         self.on_data_update([UpdateTopic.all])
         self.commands.changestack_push("new predictions")
 

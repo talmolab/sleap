@@ -7,14 +7,14 @@ from sleap.io.video import Video
 from sleap.io.dataset import Labels
 from sleap.nn.model import ModelOutputType
 from sleap.gui.active import (
-    ActiveLearningDialog,
+    InferenceDialog,
     make_default_training_jobs,
     find_saved_jobs,
 )
 
 
 def test_active_gui(qtbot, centered_pair_labels):
-    win = ActiveLearningDialog(
+    win = InferenceDialog(
         labels_filename="foo.json", labels=centered_pair_labels, mode="expert"
     )
     win.show()
@@ -32,7 +32,7 @@ def test_active_gui(qtbot, centered_pair_labels):
 
 
 def test_inference_gui(qtbot, centered_pair_labels):
-    win = ActiveLearningDialog(
+    win = InferenceDialog(
         labels_filename="foo.json", labels=centered_pair_labels, mode="inference"
     )
     win.show()
@@ -45,7 +45,7 @@ def test_inference_gui(qtbot, centered_pair_labels):
 
 
 def test_training_gui(qtbot, centered_pair_labels):
-    win = ActiveLearningDialog(
+    win = InferenceDialog(
         labels_filename="foo.json", labels=centered_pair_labels, mode="learning"
     )
     win.show()

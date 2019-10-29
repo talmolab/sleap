@@ -1,5 +1,5 @@
 """
-Module for running active learning (or just inference) from GUI.
+Module for running training and inference from the main gui application.
 """
 
 import os
@@ -24,18 +24,18 @@ from sleap.util import get_config_file, get_package_file
 SELECT_FILE_OPTION = "Select a training profile file..."
 
 
-class ActiveLearningDialog(QtWidgets.QDialog):
-    """Active learning dialog.
+class InferenceDialog(QtWidgets.QDialog):
+    """Training/inference dialog.
 
     The dialog can be used in different modes:
-    * simplified active learning (fewer controls)
-    * expert active learning (full controls)
+    * simplified training + inference (fewer controls)
+    * expert training + inference (full controls)
     * inference only
 
     Arguments:
         labels_filename: Path to the dataset where we'll get training data.
         labels: The dataset where we'll get training data and add predictions.
-        mode: String which specified mode ("active", "expert", or "inference").
+        mode: String which specified mode ("learning", "expert", or "inference").
     """
 
     learningFinished = QtCore.Signal()
@@ -49,7 +49,7 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         **kwargs,
     ):
 
-        super(ActiveLearningDialog, self).__init__(*args, **kwargs)
+        super(InferenceDialog, self).__init__(*args, **kwargs)
 
         self.labels_filename = labels_filename
         self.labels = labels
@@ -62,16 +62,18 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         print(f"Number of frames to train on: {len(labels.user_labeled_frames)}")
 
         title = dict(
-            learning="Active Learning",
+            learning="Training and Inference",
             inference="Inference",
             expert="Inference Pipeline",
         )
 
         self.form_widget = YamlFormWidget.from_name(
-            form_name="active",
+            form_name="inference_forms",
             which_form=self.mode,
             title=title[self.mode] + " Settings",
         )
+
+        self.setWindowTitle(title[self.mode])
 
         # form ui
 
@@ -230,6 +232,8 @@ class ActiveLearningDialog(QtWidgets.QDialog):
 
             # Build list of options
 
+            if self.mode != "inference":
+                prediction_options.append("nothing")
             prediction_options.append("current frame")
 
             option = f"random frames ({total_random} total frames)"
@@ -254,7 +258,7 @@ class ActiveLearningDialog(QtWidgets.QDialog):
 
     def show(self):
         """Shows dialog (we hide rather than close to maintain settings)."""
-        super(ActiveLearningDialog, self).show()
+        super(InferenceDialog, self).show()
 
         # TODO: keep selection and any items added from training editor
 
@@ -415,7 +419,7 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         return training_jobs
 
     def run(self):
-        """Run active learning (or inference) with current dialog settings."""
+        """Run training (or inference) with current dialog settings."""
         # Collect TrainingJobs and params from form
         form_data = self.form_widget.get_form_data()
         training_jobs = self._get_current_training_jobs()
@@ -442,8 +446,8 @@ class ActiveLearningDialog(QtWidgets.QDialog):
 
         save_predictions = form_data.get("_save_predictions", False)
 
-        # Run active learning pipeline using the TrainingJobs
-        new_counts = run_active_learning_pipeline(
+        # Run training/inference pipeline using the TrainingJobs
+        new_counts = run_learning_pipeline(
             labels_filename=self.labels_filename,
             labels=self.labels,
             training_jobs=training_jobs,
@@ -455,7 +459,7 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         self.learningFinished.emit()
 
         QtWidgets.QMessageBox(
-            text=f"Active learning has finished. Instances were predicted on {new_counts} frames."
+            text=f"Inference has finished. Instances were predicted on {new_counts} frames."
         ).exec_()
 
     def view_datagen(self):
@@ -705,7 +709,7 @@ def find_saved_jobs(
     return jobs
 
 
-def run_active_learning_pipeline(
+def run_learning_pipeline(
     labels_filename: str,
     labels: Labels,
     training_jobs: Dict["ModelOutputType", "TrainingJob"] = None,
@@ -731,7 +735,7 @@ def run_active_learning_pipeline(
 
     # Prepare our TrainingJobs
 
-    # Load the defaults we use for active learning
+    # Load the defaults we use for training
     if training_jobs is None:
         training_jobs = make_default_training_jobs()
 
@@ -752,7 +756,7 @@ def run_active_learning_pipeline(
             raise ValueError("No valid directory for saving files.")
 
     # Train the TrainingJobs
-    trained_jobs = run_active_training(labels, training_jobs, save_dir)
+    trained_jobs = run_gui_training(labels, training_jobs, save_dir)
 
     # Check that all the models were trained
     if None in trained_jobs.values():
@@ -763,7 +767,7 @@ def run_active_learning_pipeline(
         save_dir = ""
 
     # Run the Predictor for suggested frames
-    new_labeled_frame_count = run_active_inference(
+    new_labeled_frame_count = run_gui_inference(
         labels, trained_jobs, save_dir, frames_to_predict, with_tracking
     )
 
@@ -775,7 +779,7 @@ def has_jobs_to_train(training_jobs: Dict["ModelOutputType", "TrainingJob"]):
     return any(not getattr(job, "use_trained_model", False) for job in training_jobs)
 
 
-def run_active_training(
+def run_gui_training(
     labels: Labels,
     training_jobs: Dict["ModelOutputType", "TrainingJob"],
     save_dir: str,
@@ -857,7 +861,7 @@ def run_active_training(
     return trained_jobs
 
 
-def run_active_inference(
+def run_gui_inference(
     labels: Labels,
     training_jobs: Dict["ModelOutputType", "TrainingJob"],
     save_dir: str,
@@ -966,7 +970,7 @@ if __name__ == "__main__":
     labels = Labels.load_json(labels_filename)
 
     app = QtWidgets.QApplication()
-    win = ActiveLearningDialog(labels=labels, labels_filename=labels_filename)
+    win = InferenceDialog(labels=labels, labels_filename=labels_filename)
     win.show()
     app.exec_()
 
