@@ -1042,14 +1042,14 @@ class MainWindow(QMainWindow):
         """
 
         def remove_user_labeled(
-            video, frames, user_labeled_frames=self.labels.user_labeled_frames
+            video, frame_idxs, user_labeled_frames=self.labels.user_labeled_frames
         ):
-            if len(frames) == 0:
-                return frames
-            video_user_labeled_frame_idxs = [
+            if len(frame_idxs) == 0:
+                return frame_idxs
+            video_user_labeled_frame_idxs = {
                 lf.frame_idx for lf in user_labeled_frames if lf.video == video
-            ]
-            return list(set(frames) - set(video_user_labeled_frame_idxs))
+            }
+            return list(set(frame_idxs) - video_user_labeled_frame_idxs)
 
         current_video = self.state["video"]
 
@@ -1060,17 +1060,21 @@ class MainWindow(QMainWindow):
         }
         selection["video"] = {current_video: list(range(current_video.num_frames))}
 
-        # selection["suggestions"] = {
-        #     video: remove_user_labeled(video, self.labels.get_video_suggestions(video))
-        #     for video in self.labels.videos
-        # }
-        #
-        # selection["random"] = {
-        #     video: remove_user_labeled(video, VideoFrameSuggestions.random(video=video))
-        #     for video in self.labels.videos
-        # }
-        selection["suggestions"] = set()
-        selection["random"] = set()
+        selection["suggestions"] = {
+            video: remove_user_labeled(video, self.labels.get_video_suggestions(video))
+            for video in self.labels.videos
+        }
+
+        selection["random"] = {
+            video: remove_user_labeled(
+                video,
+                [
+                    frame.frame_idx
+                    for frame in VideoFrameSuggestions.random(video=video)
+                ],
+            )
+            for video in self.labels.videos
+        }
 
         return selection
 

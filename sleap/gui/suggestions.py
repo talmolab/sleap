@@ -46,7 +46,9 @@ class VideoFrameSuggestions:
     rescale_below = 512
 
     @classmethod
-    def suggest(cls, video: Video, params: dict, labels: "Labels" = None) -> List[int]:
+    def suggest(
+        cls, video: Video, params: dict, labels: "Labels" = None
+    ) -> List[SuggestionFrame]:
         """
         This is the main entry point for generating lists of suggested frames.
 
@@ -58,7 +60,7 @@ class VideoFrameSuggestions:
             labels: A `Labels` object for which we are generating suggestions.
 
         Returns:
-            List of suggested frame indices.
+            List of `SuggestionFrame` objects.
         """
 
         # map from method param value to corresponding class method
