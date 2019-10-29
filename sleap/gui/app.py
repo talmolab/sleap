@@ -386,10 +386,36 @@ class MainWindow(QMainWindow):
 
         ### Label Menu ###
 
+        instance_adding_methods = dict(
+            best="Best",
+            force_directed="Force Directed",
+            random="Random",
+            prior_frame="Copy prior frame",
+            prediction="Copy predictions",
+        )
+
+        def new_instance_menu_action():
+            method_key = [
+                key
+                for (key, val) in instance_adding_methods.items()
+                if val == self.state["instance_init_method"]
+            ]
+            if method_key:
+                self.commands.newInstance(init_method=method_key[0])
+
         labelMenu = self.menuBar().addMenu("Labels")
         add_menu_item(
-            labelMenu, "add instance", "Add Instance", self.commands.newInstance
+            labelMenu, "add instance", "Add Instance", new_instance_menu_action
         )
+
+        add_submenu_choices(
+            menu=labelMenu,
+            title="Instance Placement Method",
+            options=instance_adding_methods.values(),
+            key="instance_init_method",
+        )
+        self.state["instance_init_method"] = instance_adding_methods["best"]
+
         add_menu_item(
             labelMenu,
             "delete instance",

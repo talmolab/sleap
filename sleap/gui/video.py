@@ -97,6 +97,9 @@ class QtVideoPlayer(QWidget):
         self.layout.addWidget(self.splitter)
         self.setLayout(self.layout)
 
+        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.show_contextual_menu)
+
         self.seekbar.valueChanged.connect(
             lambda e: self.state.set("frame_idx", self.seekbar.value())
         )
@@ -120,6 +123,33 @@ class QtVideoPlayer(QWidget):
 
         if video is not None:
             self.load_video(video)
+
+    def show_contextual_menu(self, where: QtCore.QPoint):
+        scene_pos = self.view.mapToScene(where)
+        menu = QtWidgets.QMenu()
+
+        menu.addAction("Add Instance:").setEnabled(False)
+
+        menu.addAction("Default", lambda: self.context.newInstance(init_method="best"))
+
+        menu.addAction(
+            "Force Directed",
+            lambda: self.context.newInstance(
+                init_method="force_directed", location=scene_pos
+            ),
+        )
+
+        menu.addAction(
+            "Copy Prior Frame",
+            lambda: self.context.newInstance(init_method="prior_frame"),
+        )
+
+        menu.addAction(
+            "Random",
+            lambda: self.context.newInstance(init_method="random", location=scene_pos),
+        )
+
+        menu.exec_(self.mapToGlobal(where))
 
     def load_video(self, video: Video, plot=True):
         """
@@ -487,6 +517,7 @@ class GraphicsView(QGraphicsView):
         self.canZoom = True
         self.canPan = True
         self.click_mode = ""
+        self.in_zoom = False
 
         self.zoomFactor = 1
         anchor_mode = QGraphicsView.AnchorUnderMouse
@@ -657,11 +688,14 @@ class GraphicsView(QGraphicsView):
                 elif self.canPan:
                     self.setDragMode(QGraphicsView.ScrollHandDrag)
 
+            elif event.modifiers() == Qt.AltModifier:
+                if self.canZoom:
+                    self.in_zoom = True
+                    self.setDragMode(QGraphicsView.RubberBandDrag)
+
             self.leftMouseButtonPressed.emit(scenePos.x(), scenePos.y())
 
         elif event.button() == Qt.RightButton:
-            if self.canZoom:
-                self.setDragMode(QGraphicsView.RubberBandDrag)
             self.rightMouseButtonPressed.emit(scenePos.x(), scenePos.y())
         QGraphicsView.mousePressEvent(self, event)
 
@@ -674,7 +708,13 @@ class GraphicsView(QGraphicsView):
         has_moved = event.pos() != self._down_pos
         if event.button() == Qt.LeftButton:
 
-            if self.click_mode == "":
+            if self.in_zoom:
+                self.in_zoom = False
+                zoom_rect = self.scene.selectionArea().boundingRect()
+                self.scene.setSelectionArea(QPainterPath())  # clear selection
+                self.zoomToRect(zoom_rect)
+
+            elif self.click_mode == "":
                 # Check if this was just a tap (not a drag)
                 if not has_moved:
                     self.state["instance"] = self.getTopInstanceAt(scenePos)
@@ -700,10 +740,7 @@ class GraphicsView(QGraphicsView):
             # pass along event
             self.leftMouseButtonReleased.emit(scenePos.x(), scenePos.y())
         elif event.button() == Qt.RightButton:
-            if self.canZoom:
-                zoom_rect = self.scene.selectionArea().boundingRect()
-                self.scene.setSelectionArea(QPainterPath())  # clear selection
-                self.zoomToRect(zoom_rect)
+
             self.setDragMode(QGraphicsView.NoDrag)
             self.rightMouseButtonReleased.emit(scenePos.x(), scenePos.y())
 
@@ -756,11 +793,14 @@ class GraphicsView(QGraphicsView):
         """
         scenePos = self.mapToScene(event.pos())
         if event.button() == Qt.LeftButton:
+
+            if event.modifiers() == Qt.AltModifier:
+                if self.canZoom:
+                    self.clearZoom()
+                    self.updateViewer()
+
             self.leftMouseButtonDoubleClicked.emit(scenePos.x(), scenePos.y())
         elif event.button() == Qt.RightButton:
-            if self.canZoom:
-                self.clearZoom()
-                self.updateViewer()
             self.rightMouseButtonDoubleClicked.emit(scenePos.x(), scenePos.y())
         QGraphicsView.mouseDoubleClickEvent(self, event)
 
@@ -1114,7 +1154,7 @@ class QtNode(QGraphicsEllipseItem):
                 self.parentObject().setTransformOriginPoint(self.scenePos())
                 self.parentObject().mousePressEvent(event)
             # Shift-click to mark all points as complete
-            elif event.modifiers() == Qt.ShiftModifier:
+            elif event.modifiers() == Qt.AltModifier:
                 self.parentObject().updatePoints(complete=True, user_change=True)
             else:
                 self.dragParent = False

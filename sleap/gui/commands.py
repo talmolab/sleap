@@ -311,15 +311,28 @@ class CommandContext(object):
         """Adds missing nodes to given instance."""
         self.execute(AddMissingInstanceNodes, instance=instance)
 
-    def newInstance(self, copy_instance: Optional[Instance] = None):
+    def newInstance(
+        self,
+        copy_instance: Optional[Instance] = None,
+        init_method: str = "best",
+        location: Optional[QtCore.QPoint] = None,
+    ):
         """
         Creates a new instance, copying node coordinates as appropriate.
 
         Args:
             copy_instance: The :class:`Instance` (or
                 :class:`PredictedInstance`) which we want to copy.
+            init_method: Method to use for positioning nodes.
+            location: The location where instance should be added (if node init
+                method supports custom location).
         """
-        self.execute(AddInstance, copy_instance=copy_instance)
+        self.execute(
+            AddInstance,
+            copy_instance=copy_instance,
+            init_method=init_method,
+            location=location,
+        )
 
     def setPointLocations(
         self, instance: Instance, nodes_locations: Dict["Node", Tuple[int, int]]
@@ -1372,6 +1385,8 @@ class AddInstance(EditCommand):
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
         copy_instance = params.get("copy_instance", None)
+        init_method = params.get("init_method", "best")
+        location = params.get("location", None)
 
         if context.state["labeled_frame"] is None:
             return
@@ -1381,14 +1396,16 @@ class AddInstance(EditCommand):
         from_predicted = copy_instance
         from_prev_frame = False
 
-        if copy_instance is None:
+        if init_method == "best" and copy_instance is None:
             selected_inst = context.state["instance"]
             if selected_inst is not None:
                 # If the user has selected an instance, copy that one.
                 copy_instance = selected_inst
                 from_predicted = copy_instance
 
-        if copy_instance is None:
+        if (
+            init_method == "best" and copy_instance is None
+        ) or init_method == "prediction":
             unused_predictions = context.state["labeled_frame"].unused_predictions
             if len(unused_predictions):
                 # If there are predicted instances that don't correspond to an instance
@@ -1396,7 +1413,9 @@ class AddInstance(EditCommand):
                 copy_instance = unused_predictions[0]
                 from_predicted = copy_instance
 
-        if copy_instance is None:
+        if (
+            init_method == "best" and copy_instance is None
+        ) or init_method == "prior_frame":
             # Otherwise, if there are instances in previous frames,
             # copy the points from one of those instances.
             prev_idx = cls.get_previous_frame_index(context)
@@ -1412,7 +1431,9 @@ class AddInstance(EditCommand):
                         len(context.state["labeled_frame"].instances)
                     ]
                     from_prev_frame = True
-                elif len(context.state["labeled_frame"].instances):
+                elif init_method == "best" and (
+                    context.state["labeled_frame"].instances
+                ):
                     # Otherwise, if there are already instances in current frame,
                     # copy the points from the last instance added to frame.
                     copy_instance = context.state["labeled_frame"].instances[-1]
@@ -1451,9 +1472,22 @@ class AddInstance(EditCommand):
         if has_missing_nodes:
             # mark the node as not "visible" if we're copying from a predicted instance without this node
             is_visible = copy_instance is None or (not hasattr(copy_instance, "score"))
-            context.execute(
-                AddMissingInstanceNodes, instance=new_instance, visible=is_visible
-            )
+
+            if init_method == "force_directed":
+                AddMissingInstanceNodes.add_force_directed_nodes(
+                    context=context,
+                    instance=new_instance,
+                    visible=is_visible,
+                    center_point=location,
+                )
+            elif init_method == "random":
+                AddMissingInstanceNodes.add_random_nodes(
+                    context=context, instance=new_instance, visible=is_visible
+                )
+            else:
+                AddMissingInstanceNodes.add_best_nodes(
+                    context=context, instance=new_instance, visible=is_visible
+                )
 
         # If we're copying a predicted instance or from another frame, copy the track
         if hasattr(copy_instance, "score") or from_prev_frame:
@@ -1525,6 +1559,10 @@ class AddMissingInstanceNodes(EditCommand):
         instance = params["instance"]
         visible = params.get("visible", False)
 
+        cls.add_best_nodes(context, instance, visible)
+
+    @classmethod
+    def add_best_nodes(cls, context, instance, visible):
         current_node_count = len(instance.nodes)
         if current_node_count:
             cls.add_random_nodes(context, instance, visible)
@@ -1555,15 +1593,17 @@ class AddMissingInstanceNodes(EditCommand):
         """Returns x, y at center of rect."""
 
     @classmethod
-    def add_force_directed_nodes(cls, context, instance, visible):
+    def add_force_directed_nodes(
+        cls, context, instance, visible, center_point: QtCore.QPoint = None
+    ):
         import networkx as nx
 
-        view_center = context.app.player.getVisibleRect().center()
-        x_center, y_center = view_center.x(), view_center.y()
+        center_point = center_point or context.app.player.getVisibleRect().center()
+        center_tuple = (center_point.x(), center_point.y())
 
-        node_positions = nx.spring_layout(context.state["skeleton"].graph, scale=50)
+        node_positions = nx.spring_layout(
+            G=context.state["skeleton"].graph, center=center_tuple, scale=50
+        )
 
         for node, pos in node_positions.items():
-            instance[node] = Point(
-                x=pos[0] + x_center, y=pos[1] + y_center, visible=visible
-            )
+            instance[node] = Point(x=pos[0], y=pos[1], visible=visible)
