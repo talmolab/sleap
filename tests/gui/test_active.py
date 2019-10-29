@@ -44,6 +44,31 @@ def test_inference_gui(qtbot, centered_pair_labels):
     assert len(jobs) == 0
 
 
+def test_training_gui(qtbot, centered_pair_labels):
+    win = ActiveLearningDialog(
+        labels_filename="foo.json", labels=centered_pair_labels, mode="learning"
+    )
+    win.show()
+    qtbot.addWidget(win)
+
+    # Make sure we include pafs and centroids by default
+    jobs = win._get_current_training_jobs()
+    assert ModelOutputType.PART_AFFINITY_FIELD in jobs
+    assert ModelOutputType.CENTROIDS in jobs
+
+    # Test option to not include pafs
+    assert "_multi_instance_mode" in win.form_widget.fields
+    win.form_widget.set_form_data(dict(_multi_instance_mode="single-instance"))
+    jobs = win._get_current_training_jobs()
+    assert ModelOutputType.PART_AFFINITY_FIELD not in jobs
+
+    # Test option to not include centroids
+    assert "_region_proposal_mode" in win.form_widget.fields
+    win.form_widget.set_form_data(dict(_region_proposal_mode="full_frame"))
+    jobs = win._get_current_training_jobs()
+    assert ModelOutputType.CENTROIDS not in jobs
+
+
 def test_make_default_training_jobs():
     jobs = make_default_training_jobs()
 

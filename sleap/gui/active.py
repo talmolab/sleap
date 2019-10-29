@@ -67,9 +67,8 @@ class ActiveLearningDialog(QtWidgets.QDialog):
             expert="Inference Pipeline",
         )
 
-        learning_yaml = get_config_file("active.yaml")
-        self.form_widget = YamlFormWidget(
-            yaml_file=learning_yaml,
+        self.form_widget = YamlFormWidget.from_name(
+            form_name="active",
             which_form=self.mode,
             title=title[self.mode] + " Settings",
         )
@@ -218,6 +217,8 @@ class ActiveLearningDialog(QtWidgets.QDialog):
             prediction_options = []
 
             def count_total_frames(videos_frames):
+                if not videos_frames:
+                    return 0
                 return reduce(lambda x, y: x + y, map(len, videos_frames.values()))
 
             # Determine which options are available given _frame_selection
@@ -361,11 +362,23 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         types_to_use.append(ModelOutputType.CONFIDENCE_MAP)
 
         # by default we want to use part affinity fields
-        if not form_data.get("_dont_use_pafs", False):
+        do_use_pafs = True
+        if form_data.get("_dont_use_pafs", False):
+            do_use_pafs = False
+        elif form_data.get("_multi_instance_mode", "") == "single-instance":
+            do_use_pafs = False
+
+        if do_use_pafs:
             types_to_use.append(ModelOutputType.PART_AFFINITY_FIELD)
 
         # by default we want to use centroids
-        if form_data.get("_use_centroids", True):
+        do_use_centroids = True
+        if not form_data.get("_use_centroids", True):
+            do_use_centroids = False
+        elif form_data.get("_region_proposal_mode", "") == "full_frame":
+            do_use_centroids = False
+
+        if do_use_centroids:
             types_to_use.append(ModelOutputType.CENTROIDS)
 
         return types_to_use

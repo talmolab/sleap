@@ -110,33 +110,55 @@ expert:
 
 learning:
 
-- name: min_crop_size
-  label: Minimum crop size
-  type: list
-  dtype: int
-  options: 0,64,128,256,512
-  default: 0
+- name: _multi_instance_mode
+  label: Multi-Instance Mode
+  type: stacked
+  default: multi-instance
+  options: multi-instance,single-instance
 
-- name: negative_samples
-  label: Negative samples
-  type: int
-  default: 20
-  range: 0,1000
+  multi-instance:
+  - name: sigma_confmaps
+    label: Sigma for confmaps
+    type: double
+    default: 5.0
+
+  - name: sigma_pafs
+    label: Sigma for pafs
+    type: double
+    default: 5.0
+
+  single-instance:
+  - name: sigma_confmaps
+    label: Sigma for confmaps
+    type: double
+    default: 5.0
+
+- name: _region_proposal_mode
+  label: Region Proposal Mode
+  type: stacked
+  default: crop
+  options: crop,full_frame
+
+  crop:
+  - name: min_crop_size
+    label: Minimum crop size
+    type: list
+    dtype: int
+    options: 0,64,128,256,512
+    default: 0
+
+  - name: negative_samples
+    label: Negative samples
+    type: int
+    default: 20
+    range: 0,1000
+
+  full_frame:
 
 - name: batch_size
   label: Batch Size
   type: int
   default: 2
-
-- name: sigma_confmaps
-  label: Sigma for confmaps
-  type: double
-  default: 5.0
-
-- name: sigma_pafs
-  label: Sigma for pafs
-  type: double
-  default: 5.0
 
 - name: _predict_frames
   label: Predict On

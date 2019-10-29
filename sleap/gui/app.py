@@ -1060,15 +1060,17 @@ class MainWindow(QMainWindow):
         }
         selection["video"] = {current_video: list(range(current_video.num_frames))}
 
-        selection["suggestions"] = {
-            video: remove_user_labeled(video, self.labels.get_video_suggestions(video))
-            for video in self.labels.videos
-        }
-
-        selection["random"] = {
-            video: remove_user_labeled(video, VideoFrameSuggestions.random(video=video))
-            for video in self.labels.videos
-        }
+        # selection["suggestions"] = {
+        #     video: remove_user_labeled(video, self.labels.get_video_suggestions(video))
+        #     for video in self.labels.videos
+        # }
+        #
+        # selection["random"] = {
+        #     video: remove_user_labeled(video, VideoFrameSuggestions.random(video=video))
+        #     for video in self.labels.videos
+        # }
+        selection["suggestions"] = set()
+        selection["random"] = set()
 
         return selection
 
