@@ -374,9 +374,6 @@ class StackBuilderWidget(QtWidgets.QWidget):
         multi_layout.addRow(self.stacked_widget)
 
         self.setValue(stack_data["default"])
-        # default_page = self.option_list.index(stack_data["default"])
-        # self.combo_box.setCurrentIndex(default_page)
-        # self.stacked_widget.setCurrentIndex(default_page)
 
         self.setLayout(multi_layout)
 
