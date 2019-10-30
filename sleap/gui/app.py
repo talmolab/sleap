@@ -40,11 +40,8 @@ from sleap.gui.shortcuts import Shortcuts, ShortcutDialog
 from sleap.gui.suggestions import VideoFrameSuggestions
 from sleap.gui.state import GuiState
 
-from sleap.gui.overlays.tracks import (
-    TrackColorManager,
-    TrackTrailOverlay,
-    TrackListOverlay,
-)
+from sleap.gui.overlays.tracks import TrackTrailOverlay, TrackListOverlay
+from sleap.gui.color import ColorManager
 from sleap.gui.overlays.instance import InstanceOverlay
 from sleap.gui.overlays.anchors import NegativeAnchorOverlay
 from sleap.util import get_config_file
@@ -204,7 +201,7 @@ class MainWindow(QMainWindow):
         )
 
     def _create_color_manager(self):
-        self.color_manager = TrackColorManager(self.labels)
+        self.color_manager = ColorManager(self.labels)
         self.color_manager.palette = self.state.get("palette", default="standard")
 
     def _create_menus(self):
@@ -343,7 +340,31 @@ class MainWindow(QMainWindow):
             key="palette",
         )
 
+        distinctly_color_options = ("instances", "nodes", "edges")
+
+        add_submenu_choices(
+            menu=viewMenu,
+            title="Apply Distinct Colors To",
+            options=distinctly_color_options,
+            key="distinctly_color",
+        )
+
         self.state["palette"] = "standard"
+        self.state["distinctly_color"] = "instances"
+
+        viewMenu.addSeparator()
+
+        add_menu_check_item(viewMenu, "show labels", "Show Node Names")
+        add_menu_check_item(viewMenu, "show edges", "Show Edges")
+        add_menu_check_item(viewMenu, "show trails", "Show Trails")
+
+        add_submenu_choices(
+            menu=viewMenu, title="Trail Length", options=(4, 10, 20), key="trail_length"
+        )
+
+        viewMenu.addSeparator()
+
+        add_menu_check_item(viewMenu, "fit", "Fit Instances to View")
 
         viewMenu.addSeparator()
 
@@ -367,20 +388,6 @@ class MainWindow(QMainWindow):
 
         self.state["seekbar_header"] = "None"
         self.state.connect("seekbar_header", self.setSeekbarHeader)
-
-        viewMenu.addSeparator()
-
-        add_menu_check_item(viewMenu, "show labels", "Show Node Names")
-        add_menu_check_item(viewMenu, "show edges", "Show Edges")
-        add_menu_check_item(viewMenu, "show trails", "Show Trails")
-
-        add_submenu_choices(
-            menu=viewMenu, title="Trail Length", options=(4, 10, 20), key="trail_length"
-        )
-
-        viewMenu.addSeparator()
-
-        add_menu_check_item(viewMenu, "fit", "Fit Instances to View")
 
         viewMenu.addSeparator()
 
@@ -764,6 +771,7 @@ class MainWindow(QMainWindow):
         overlay_state_connect(self.overlays["trails"], "trail_length")
 
         overlay_state_connect(self.color_manager, "palette")
+        overlay_state_connect(self.color_manager, "distinctly_color")
         self.state.connect("palette", lambda x: self.updateSeekbarMarks())
 
         # Set defaults

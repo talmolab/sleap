@@ -391,6 +391,16 @@ class Skeleton:
         except ValueError:
             return node_list.index(self.find_node(node))
 
+    def edge_to_index(self, source: NodeRef, destination: NodeRef):
+        """Returns the index of edge from source to destination."""
+        source = self.find_node(source)
+        destination = self.find_node(destination)
+        edge = (source, destination)
+        if edge in self.edges:
+            return self.edges.index(edge)
+
+        return -1
+
     def add_node(self, name: str):
         """Add a node representing an animal part to the skeleton.
 

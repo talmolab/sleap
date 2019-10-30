@@ -44,6 +44,7 @@ from sleap.instance import Instance, Point
 from sleap.io.video import Video
 from sleap.gui.slider import VideoSlider
 from sleap.gui.state import GuiState
+from sleap.gui.color import ColorManager
 
 import qimage2ndarray
 
@@ -57,7 +58,7 @@ class QtVideoPlayer(QWidget):
 
     Attributes:
         video: The :class:`Video` to display
-        color_manager: A :class:`TrackColorManager` object which determines
+        color_manager: A :class:`ColorManager` object which determines
             which color to show the instances.
 
     """
@@ -77,7 +78,7 @@ class QtVideoPlayer(QWidget):
 
         self._shift_key_down = False
 
-        self.color_manager = color_manager
+        self.color_manager = color_manager or ColorManager()
         self.state = state or GuiState()
         self.context = context
         self.view = GraphicsView(self.state)
@@ -97,8 +98,9 @@ class QtVideoPlayer(QWidget):
         self.layout.addWidget(self.splitter)
         self.setLayout(self.layout)
 
-        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.customContextMenuRequested.connect(self.show_contextual_menu)
+        if self.context:
+            self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+            self.customContextMenuRequested.connect(self.show_contextual_menu)
 
         self.seekbar.valueChanged.connect(
             lambda e: self.state.set("frame_idx", self.seekbar.value())
@@ -1001,9 +1003,7 @@ class QtNode(QGraphicsEllipseItem):
             Note that this is a mutable object so we're able to directly access
             the very same `Point` object that's defined outside our class.
         radius: Radius of the visual node item.
-        color: Color of the visual node item.
         predicted: Whether this point is predicted.
-        color_predicted: Whether to color predicted points.
         show_non_visible: Whether to show points where `visible` is False.
         callbacks: List of functions to call after we update to the `Point`.
     """
@@ -1011,12 +1011,11 @@ class QtNode(QGraphicsEllipseItem):
     def __init__(
         self,
         parent: QGraphicsObject,
+        player: QtVideoPlayer,
         node: Node,
         point: Point,
         radius: float,
-        color: list,
         predicted=False,
-        color_predicted=False,
         show_non_visible=True,
         callbacks=None,
         *args,
@@ -1026,11 +1025,13 @@ class QtNode(QGraphicsEllipseItem):
         self.point = point
         self.node = node
         self.radius = radius
-        self.color = color
+        self.color_manager = player.color_manager
+        self.color = self.color_manager.get_item_color(
+            self.node, self._parent_instance.instance
+        )
         self.edges = []
         self.name = node.name
         self.predicted = predicted
-        self.color_predicted = color_predicted
         self.show_non_visible = show_non_visible
         self.callbacks = [] if callbacks is None else callbacks
         self.dragParent = False
@@ -1050,31 +1051,29 @@ class QtNode(QGraphicsEllipseItem):
 
         self.setFlag(QGraphicsItem.ItemIgnoresTransformations)
 
-        col_line = QColor(*self.color)
+        line_color = QColor(*self.color)
+
+        pen_width = self.color_manager.get_item_pen_width(
+            self.node, self._parent_instance.instance
+        )
 
         if self.predicted:
             self.setFlag(QGraphicsItem.ItemIsMovable, False)
 
-            pen_width = 1
-            if self.node == self._parent_instance.instance.skeleton.nodes[0]:
-                pen_width = 3
-
-            if self.color_predicted:
-                self.pen_default = QPen(col_line, pen_width)
-            else:
-                self.pen_default = QPen(QColor(250, 250, 10), pen_width)
+            self.pen_default = QPen(line_color, pen_width)
             self.pen_default.setCosmetic(True)
             self.pen_missing = self.pen_default
+
             self.brush = QBrush(QColor(128, 128, 128, 128))
             self.brush_missing = self.brush
         else:
             self.setFlag(QGraphicsItem.ItemIsMovable)
 
-            self.pen_default = QPen(col_line, 1)
+            self.pen_default = QPen(line_color, pen_width)
             self.pen_default.setCosmetic(
                 True
             )  # https://stackoverflow.com/questions/13120486/adjusting-qpen-thickness-when-scaling-qgraphicsview
-            self.pen_missing = QPen(col_line, 1)
+            self.pen_missing = QPen(line_color, 1)
             self.pen_missing.setCosmetic(True)
             self.brush = QBrush(QColor(*self.color, a=128))
             self.brush_missing = QBrush(QColor(*self.color, a=0))
@@ -1220,16 +1219,15 @@ class QtEdge(QGraphicsLineItem):
         parent: `QGraphicsObject` which will contain this item.
         src: The `QtNode` source node for the edge.
         dst: The `QtNode` destination node for the edge.
-        color: Color as (r, g, b) tuple.
         show_non_visible: Whether to show "non-visible" nodes/edges.
     """
 
     def __init__(
         self,
         parent: QGraphicsObject,
+        player: QtVideoPlayer,
         src: QtNode,
         dst: QtNode,
-        color: tuple,
         show_non_visible: bool = True,
         *args,
         **kwargs,
@@ -1249,7 +1247,10 @@ class QtEdge(QGraphicsLineItem):
             **kwargs,
         )
 
-        pen = QPen(QColor(*color), 1)
+        edge_pair = (src.node, dst.node)
+        color = player.color_manager.get_item_color(edge_pair, parent.instance)
+        pen_width = player.color_manager.get_item_pen_width(edge_pair, parent.instance)
+        pen = QPen(QColor(*color), pen_width)
         pen.setCosmetic(True)
         self.setPen(pen)
         self.full_opacity = 1
@@ -1331,21 +1332,14 @@ class QtInstance(QGraphicsObject):
 
     Args:
         instance: The :class:`Instance` to show.
-        predicted: Whether this is a predicted instance.
-        color_predicted: Whether to show predicted instance in color.
-        color: Color of the visual item.
         markerRadius: Radius of nodes.
         show_non_visible: Whether to show "non-visible" nodes/edges.
-
     """
 
     def __init__(
         self,
         instance: Instance = None,
         player: Optional[QtVideoPlayer] = None,
-        predicted=False,
-        color_predicted=False,
-        color=(0, 114, 189),
         markerRadius=4,
         show_non_visible=True,
         *args,
@@ -1355,11 +1349,13 @@ class QtInstance(QGraphicsObject):
         self.player = player
         self.skeleton = instance.skeleton
         self.instance = instance
-        self.predicted = predicted
-        self.color_predicted = color_predicted
+        self.predicted = hasattr(instance, "score")
+
+        color_manager = self.player.color_manager
+        color = color_manager.get_item_color(self.instance)
+
         self.show_non_visible = show_non_visible
-        self.selectable = not self.predicted or self.color_predicted
-        self.color = color
+        self.selectable = not self.predicted or color_manager.color_predicted
         self.markerRadius = markerRadius
 
         self.nodes = {}
@@ -1370,22 +1366,19 @@ class QtInstance(QGraphicsObject):
         self._selected = False
         self._bounding_rect = QRectF()
 
-        if self.predicted:
-            self.setZValue(0)
-            if not self.color_predicted:
-                self.color = (128, 128, 128)
-        else:
-            self.setZValue(1)
+        # Show predicted instances behind non-predicted ones
+        self.setZValue(0 if self.predicted else 1)
 
         # Add box to go around instance
         self.box = QGraphicsRectItem(parent=self)
-        box_pen = QPen(QColor(*self.color), 1)
+        box_pen_widget = color_manager.get_item_pen_width(self.instance)
+        box_pen = QPen(QColor(*color), box_pen_widget)
         box_pen.setStyle(Qt.DashLine)
         box_pen.setCosmetic(True)
         self.box.setPen(box_pen)
 
         self.track_label = QtTextWithBackground(parent=self)
-        self.track_label.setDefaultTextColor(QColor(*self.color))
+        self.track_label.setDefaultTextColor(QColor(*color))
 
         instance_label_text = ""
         if self.instance.track is not None:
@@ -1403,11 +1396,10 @@ class QtInstance(QGraphicsObject):
         for (node, point) in self.instance.nodes_points:
             node_item = QtNode(
                 parent=self,
+                player=player,
                 node=node,
                 point=point,
                 predicted=self.predicted,
-                color_predicted=self.color_predicted,
-                color=self.color,
                 radius=self.markerRadius,
                 show_non_visible=self.show_non_visible,
             )
@@ -1420,9 +1412,9 @@ class QtInstance(QGraphicsObject):
             if src in self.nodes and dst in self.nodes:
                 edge_item = QtEdge(
                     parent=self,
+                    player=player,
                     src=self.nodes[src],
                     dst=self.nodes[dst],
-                    color=self.color,
                     show_non_visible=self.show_non_visible,
                 )
                 self.nodes[src].edges.append(edge_item)
@@ -1619,10 +1611,10 @@ def video_demo(labels, standalone=False):
 
 def plot_instances(scene, frame_idx, labels, video=None, fixed=True):
     """Demo function for plotting instances."""
-    from sleap.gui.overlays.tracks import TrackColorManager
+    from sleap.gui.color import ColorManager
 
     video = labels.videos[0]
-    color_manager = TrackColorManager(labels=labels)
+    color_manager = ColorManager(labels=labels)
     lfs = labels.find(video, frame_idx)
 
     if not lfs:
@@ -1642,7 +1634,7 @@ def plot_instances(scene, frame_idx, labels, video=None, fixed=True):
         # Plot instance
         inst = QtInstance(
             instance=instance,
-            color=color_manager.get_color(pseudo_track),
+            color=color_manager.get_track_color(pseudo_track),
             predicted=fixed,
             color_predicted=True,
             show_non_visible=False,

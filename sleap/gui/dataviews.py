@@ -12,7 +12,7 @@ from typing import Any, Callable, Dict, List, Optional, Type
 
 from sleap.gui.state import GuiState
 from sleap.gui.commands import CommandContext
-from sleap.gui.overlays.tracks import TrackColorManager
+from sleap.gui.color import ColorManager
 from sleap.io.dataset import Labels
 from sleap.instance import LabeledFrame, Instance
 from sleap.skeleton import Skeleton
@@ -324,7 +324,7 @@ class LabeledFrameTableModel(GenericTableModel):
     def get_item_color(self, item: Any, key: str):
         if key == "track" and item.track is not None:
             track = item.track
-            return QtGui.QColor(*self.context.app.color_manager.get_color(track))
+            return QtGui.QColor(*self.context.app.color_manager.get_track_color(track))
         return None
 
     def can_set(self, item, key):
