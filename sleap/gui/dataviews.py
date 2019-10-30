@@ -143,13 +143,12 @@ class GenericTableModel(QtCore.QAbstractTableModel):
     def sort(self, column_idx: int, order: QtCore.Qt.SortOrder):
         """Sorts table by given column and order."""
         prop = self.properties[column_idx]
+        reverse = order == QtCore.Qt.SortOrder.DescendingOrder
 
         sort_function = itemgetter(prop)
         if prop in ("video", "frame"):
             if "video" in self.properties and "frame" in self.properties:
                 sort_function = itemgetter("video", "frame")
-
-        reverse = order == QtCore.Qt.SortOrder.DescendingOrder
 
         self.beginResetModel()
         self._data.sort(key=sort_function, reverse=reverse)
@@ -367,7 +366,7 @@ class SuggestionsTableModel(GenericTableModel):
 
         video_string = f"{labels.videos.index(item.video)}: {os.path.basename(item.video.filename)}"
 
-        item_dict["group"] = str(item.group)
+        item_dict["group"] = str(item.group) if item.group is not None else ""
         item_dict["video"] = video_string
         item_dict["frame"] = int(item.frame_idx) + 1  # start at frame 1 rather than 0
 
@@ -387,6 +386,39 @@ class SuggestionsTableModel(GenericTableModel):
         item_dict["mean score"] = val
 
         return item_dict
+
+    def sort(self, column_idx: int, order: QtCore.Qt.SortOrder):
+        """Sorts table by given column and order."""
+        prop = self.properties[column_idx]
+        reverse = order == QtCore.Qt.SortOrder.DescendingOrder
+
+        if prop != "group" or not reverse:
+            super(SuggestionsTableModel, self).sort(column_idx, order)
+        else:
+            # Instead of a reverse sort order on groups, we'll interleave the
+            # items so that we get the earliest item from each group, then the
+            # second item from each group, and so on.
+
+            # Make a decorated list of items with positions in group (plus the
+            # secondary sort keys: group, video, and frame)
+            self._data.sort(key=itemgetter("group"))
+            decorated_data = []
+            last_group = object()
+            for item in self._data:
+                if last_group != item["group"]:
+                    group_i = 0
+                decorated_data.append(
+                    (group_i, item["group"], item["video"], item["frame"], item)
+                )
+                last_group = item["group"]
+                group_i += 1
+
+            decorated_data.sort()
+
+            # Undecorate the list
+            self.beginResetModel()
+            self._data = [item for (*_, item) in decorated_data]
+            self.endResetModel()
 
 
 class SkeletonNodeModel(QtCore.QStringListModel):
