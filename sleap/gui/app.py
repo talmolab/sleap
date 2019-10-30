@@ -56,13 +56,9 @@ class MainWindow(QMainWindow):
     Attributes:
         labels: The :class:`Labels` dataset. If None, a new, empty project
             (i.e., :class:`Labels` object) will be created.
-        skeleton: The active :class:`Skeleton` for the project in the gui
         state: Object that holds GUI state, e.g., current video, frame,
             whether to show node labels, etc.
     """
-
-    skeleton: Skeleton
-    state: GuiState = GuiState()
 
     def __init__(self, labels_path: Optional[str] = None, *args, **kwargs):
         """Initialize the app.
@@ -75,6 +71,7 @@ class MainWindow(QMainWindow):
         """
         super(MainWindow, self).__init__(*args, **kwargs)
 
+        self.state = GuiState()
         self.labels = Labels()
 
         self.commands = CommandContext(
@@ -773,6 +770,13 @@ class MainWindow(QMainWindow):
         overlay_state_connect(self.color_manager, "palette")
         overlay_state_connect(self.color_manager, "distinctly_color")
         self.state.connect("palette", lambda x: self.updateSeekbarMarks())
+        # update the skeleton tables since we may want to redraw colors
+        self.state.connect(
+            "palette", lambda x: self.on_data_update([UpdateTopic.skeleton])
+        )
+        self.state.connect(
+            "distinctly_color", lambda x: self.on_data_update([UpdateTopic.skeleton])
+        )
 
         # Set defaults
         self.state["trail_length"] = 4

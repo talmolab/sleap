@@ -168,12 +168,18 @@ class ColorManager(object):
         return self.default_pen_width
 
     def get_item_color(
-        self, item: Any, parent_instance: Optional[Instance] = None
+        self,
+        item: Any,
+        parent_instance: Optional[Instance] = None,
+        parent_skeleton: Optional["Skeleton"] = None,
     ) -> Tuple[int, int, int]:
         """Gets (r, g, b) tuple of color to use for drawing item."""
 
         if not parent_instance and isinstance(item, Instance):
             parent_instance = item
+
+        if not parent_skeleton and hasattr(parent_instance, "skeleton"):
+            parent_skeleton = parent_instance.skeleton
 
         is_predicted = False
         if parent_instance and self.is_predicted(parent_instance):
@@ -198,7 +204,7 @@ class ColorManager(object):
 
             return self.get_track_color(track=track)
 
-        if self.distinctly_color == "nodes":
+        if self.distinctly_color == "nodes" and parent_skeleton:
             node = None
             if isinstance(item, Node):
                 node = item
@@ -206,18 +212,18 @@ class ColorManager(object):
                 # use dst node for coloring edge
                 node = item[1]
 
-            if node and parent_instance:
-                node_idx = parent_instance.skeleton.node_to_index(node)
+            if node:
+                node_idx = parent_skeleton.node_to_index(node)
                 return self.get_color_by_idx(node_idx)
 
-            return (255, 0, 0)
+            # return (255, 0, 0)
 
-        if self.distinctly_color == "edges":
+        if self.distinctly_color == "edges" and parent_skeleton:
             edge_idx = 0
             if self.is_edge(item):
-                edge_idx = parent_instance.skeleton.edge_to_index(*item)
+                edge_idx = parent_skeleton.edge_to_index(*item)
             elif self.is_node(item):
-                for i, (src, dst) in enumerate(parent_instance.skeleton.edges):
+                for i, (src, dst) in enumerate(parent_skeleton.edges):
                     if dst == item:
                         edge_idx = i
                         break
