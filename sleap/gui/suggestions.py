@@ -49,14 +49,11 @@ class VideoFrameSuggestions:
     rescale_below = 512
 
     @classmethod
-    def suggest(
-        cls, video: Video, params: dict, labels: "Labels" = None
-    ) -> List[SuggestionFrame]:
+    def suggest(cls, params: dict, labels: "Labels" = None) -> List[SuggestionFrame]:
         """
         This is the main entry point for generating lists of suggested frames.
 
         Args:
-            video: A `Video` object for which we're generating suggestions.
             params: A dictionary with all params to control how we generate
                 suggestions, minimally this will have a "method" key with
                 the name of one of the class methods.
@@ -78,26 +75,33 @@ class VideoFrameSuggestions:
 
         method = params["method"]
         if method_functions.get(method, None) is not None:
-            return method_functions[method](video=video, labels=labels, **params)
+            suggestions = []
+            for video in labels.videos:
+                suggestions.extend(
+                    method_functions[method](video=video, labels=labels, **params)
+                )
+            return suggestions
         else:
             print(f"No {method} method found for generating suggestions.")
 
     # Functions corresponding to "method" param
 
     @classmethod
-    def strides(cls, video, per_video=20, **kwargs):
+    def strides(cls, video, labels, per_video=20, **kwargs):
         """Method to generate suggestions by taking strides through video."""
         suggestions = list(range(0, video.frames, video.frames // per_video))
         suggestions = suggestions[:per_video]
-        return cls.idx_list_to_frame_list(suggestions, video)
+        group = labels.videos.index(video)
+        return cls.idx_list_to_frame_list(suggestions, video, group)
 
     @classmethod
-    def random(cls, video, per_video=20, **kwargs):
+    def random(cls, video, labels, per_video=20, **kwargs):
         """Method to generate suggestions by taking random frames in video."""
         import random
 
         suggestions = random.sample(range(video.frames), per_video)
-        return cls.idx_list_to_frame_list(suggestions, video)
+        group = labels.videos.index(video)
+        return cls.idx_list_to_frame_list(suggestions, video, group)
 
     @classmethod
     def raw_image_pca_cluster(cls, video, initial_samples, **kwargs):

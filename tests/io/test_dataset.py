@@ -550,7 +550,7 @@ def test_suggestions(small_robot_mp4_vid):
     labels.append(dummy_frame)
 
     suggestions = VideoFrameSuggestions.suggest(
-        dummy_video, params=dict(method="random", per_video=13)
+        labels=labels, params=dict(method="random", per_video=13)
     )
     labels.set_suggestions(suggestions)
 
@@ -567,7 +567,7 @@ def test_deserialize_suggestions(small_robot_mp4_vid, tmpdir):
     labels.append(dummy_frame)
 
     suggestions = VideoFrameSuggestions.suggest(
-        dummy_video, params=dict(method="random", per_video=13)
+        labels=labels, params=dict(method="random", per_video=13)
     )
     labels.set_suggestions(suggestions)
 

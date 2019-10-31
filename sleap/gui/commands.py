@@ -1323,13 +1323,10 @@ class GenerateSuggestions(EditCommand):
 
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
-        new_suggestions = []
-        for video in context.labels.videos:
-            new_suggestions.extend(
-                VideoFrameSuggestions.suggest(
-                    video=video, labels=context.labels, params=params
-                )
-            )
+
+        new_suggestions = VideoFrameSuggestions.suggest(
+            labels=context.labels, params=params
+        )
 
         context.labels.set_suggestions(new_suggestions)
 

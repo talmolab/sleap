@@ -115,7 +115,7 @@ class GenericTableModel(QtCore.QAbstractTableModel):
 
             if self.can_set(item, key):
                 self.set_item(item, key, value)
-                # self.dataChanged.emit(index, index)
+                self.dataChanged.emit(index, index)
                 return True
 
         return False
@@ -355,14 +355,11 @@ class LabeledFrameTableModel(GenericTableModel):
 class SuggestionsTableModel(GenericTableModel):
     properties = ("video", "frame", "group", "labeled", "mean score")
 
-    def object_to_items(self, labels: Labels):
-        """Converts given skeleton to list of nodes to show in table."""
-        return labels.get_suggestions()
-        # item_list = []
-
     def item_to_data(self, obj, item):
-        labels = obj
+        labels = self.context.labels
         item_dict = dict()
+
+        item_dict["SuggestionFrame"] = item
 
         video_string = f"{labels.videos.index(item.video)}: {os.path.basename(item.video.filename)}"
 
@@ -382,7 +379,7 @@ class SuggestionsTableModel(GenericTableModel):
             for inst in lf
             if hasattr(inst, "score")
         ]
-        val = sum(scores) / len(scores) if scores else None
+        val = sum(scores) / len(scores) if scores else ""
         item_dict["mean score"] = val
 
         return item_dict
@@ -413,12 +410,18 @@ class SuggestionsTableModel(GenericTableModel):
                 last_group = item["group"]
                 group_i += 1
 
+            # Sort decorated list
             decorated_data.sort()
 
-            # Undecorate the list
+            # Undecorate the list and update table
             self.beginResetModel()
             self._data = [item for (*_, item) in decorated_data]
             self.endResetModel()
+
+        # Update order in project (so order can be saved and affects what we
+        # consider previous/next suggestion for navigation).
+        resorted_suggestions = [item["SuggestionFrame"] for item in self._data]
+        self.context.labels.set_suggestions(resorted_suggestions)
 
 
 class SkeletonNodeModel(QtCore.QStringListModel):

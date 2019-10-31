@@ -558,6 +558,15 @@ class MainWindow(QMainWindow):
         helpMenu = self.menuBar().addMenu("Help")
         helpMenu.addAction("Keyboard Reference", self.openKeyRef)
 
+    def process_events_then(self, action: Callable):
+        """Decorates a function with a call to first process events."""
+
+        def wrapped_function(*args):
+            QApplication.instance().processEvents()
+            action(*args)
+
+        return wrapped_function
+
     def _create_dock_windows(self):
         """Create dock windows and connects them to gui."""
 
@@ -706,7 +715,9 @@ class MainWindow(QMainWindow):
         self.suggestionsTable = GenericTableView(
             state=self.state,
             is_sortable=True,
-            model=SuggestionsTableModel(items=self.labels, context=self.commands),
+            model=SuggestionsTableModel(
+                items=self.labels.suggestions, context=self.commands
+            ),
         )
 
         suggestions_layout.addWidget(self.suggestionsTable)
@@ -714,14 +725,20 @@ class MainWindow(QMainWindow):
         hb = QHBoxLayout()
 
         _add_button(
-            hb, "Prev", self.commands.prevSuggestedFrame, "goto previous suggestion"
+            hb,
+            "Prev",
+            self.process_events_then(self.commands.prevSuggestedFrame),
+            "goto previous suggestion",
         )
 
         self.suggested_count_label = QLabel()
         hb.addWidget(self.suggested_count_label)
 
         _add_button(
-            hb, "Next", self.commands.nextSuggestedFrame, "goto next suggestion"
+            hb,
+            "Next",
+            self.process_events_then(self.commands.nextSuggestedFrame),
+            "goto next suggestion",
         )
 
         hbw = QWidget()
@@ -731,7 +748,9 @@ class MainWindow(QMainWindow):
         form_wid = YamlFormWidget(
             yaml_file=get_config_file("suggestions.yaml"), title="Generate Suggestions"
         )
-        form_wid.mainAction.connect(self.commands.generateSuggestions)
+        form_wid.mainAction.connect(
+            self.process_events_then(self.commands.generateSuggestions)
+        )
         suggestions_layout.addWidget(form_wid)
 
         def goto_suggestion(*args):
@@ -891,7 +910,7 @@ class MainWindow(QMainWindow):
             self.instancesTable.model().items = self.state["labeled_frame"]
 
         if _has_topic([UpdateTopic.suggestions]):
-            self.suggestionsTable.model().items = self.labels
+            self.suggestionsTable.model().items = self.labels.suggestions
 
             # update count of suggested frames w/ labeled instances
             suggestion_status_text = ""
@@ -906,11 +925,6 @@ class MainWindow(QMainWindow):
                     f"{labeled_count}/{len(suggestion_list)} labeled"
                 )
             self.suggested_count_label.setText(suggestion_status_text)
-
-            # FIXME: this is a hack because the table isn't redrawing
-            self.suggestionsTable.repaint()
-            self.suggested_count_label.repaint()
-            self.suggestionsTable.parent().repaint()
 
     def plotFrame(self, *args, **kwargs):
         """Plots (or replots) current frame."""
