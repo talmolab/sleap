@@ -1,6 +1,11 @@
 import numpy as np
 
-from sleap.info.feature_suggestions import FrameItem, FrameGroupSet, ItemStack
+from sleap.info.feature_suggestions import (
+    FrameItem,
+    FrameGroupSet,
+    ItemStack,
+    feature_suggestion_pipeline,
+)
 
 
 def test_frame_item(small_robot_mp4_vid):
@@ -68,16 +73,19 @@ def test_item_stack(centered_pair_vid, small_robot_mp4_vid):
 
     stack.get_raw_images(scale=0.1)
 
+    # Make sure an item owns its row of data
+    assert stack.get_item_data_idxs(stack.items[1]) == (1,)
+    assert stack.get_item_by_data_row(3) == stack.items[3]
+
     # Make sure that we loaded correctly sized data
     i = len(stack.items)
     h = max(centered_pair_vid.height // 10, small_robot_mp4_vid.height // 10)
     w = max(centered_pair_vid.width // 10, small_robot_mp4_vid.width // 10)
     c = max(centered_pair_vid.channels, small_robot_mp4_vid.channels)
     assert stack.data.shape == (i, h, w, c)
+    assert stack.get_item_data(stack.items[1]).shape == (1, h, w, c)
 
     stack.flatten()
-
-    # TODO: test brisk
 
     # Make sure that data was correctly flattened
     assert stack.data.shape == (i, h * w * c)
@@ -107,3 +115,43 @@ def test_item_stack(centered_pair_vid, small_robot_mp4_vid):
     assert frame_items[0].group == 10
     assert frame_items[1].frame_idx == stack.items[1].frame_idx
     assert frame_items[1].group == 11
+
+
+def test_brisk_suggestions(centered_pair_vid):
+    stack = ItemStack()
+
+    videos = [centered_pair_vid]
+    stack.make_sample_group(videos, samples_per_video=3, sample_method="stride")
+    stack.get_all_items_from_group()
+    stack.get_raw_images(scale=0.25)
+
+    assert stack.data.shape[0] == len(stack.items)
+
+    stack.brisk()
+
+    # We should have more than one keypoint per frame,
+    # so make sure there are more rows of data than frames
+    assert stack.data.shape[0] > len(stack.items)
+
+    item_0_data = stack.get_item_data_idxs(stack.items[0])
+    item_1_data = stack.get_item_data_idxs(stack.items[1])
+
+    assert len(item_0_data) > 1
+    assert len(item_1_data) > 1
+    assert min(item_1_data) == max(item_0_data) + 1
+
+
+def test_feature_suggestion_pipeline(centered_pair_vid):
+    videos = [centered_pair_vid]
+    suggestions = feature_suggestion_pipeline(
+        videos=videos,
+        per_video=5,
+        scale=0.1,
+        sample_method="random",
+        feature_type="raw",
+        n_components=3,
+        n_clusters=2,
+        per_cluster=1,
+    ).to_suggestion_frames()
+
+    assert len(suggestions) == 2
