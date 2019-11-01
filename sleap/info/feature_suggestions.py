@@ -4,6 +4,7 @@ Module for generating lists of frames using frame features, pca, kmeans, etc.
 
 
 import attr
+import cattr
 import itertools
 import numpy as np
 import random
@@ -14,12 +15,14 @@ import cv2
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
 
+from sleap.io.video import Video
+
 
 @attr.s(auto_attribs=True, frozen=True)
 class FrameItem(object):
     """Just a simple wrapper for (video, frame_idx), plus method to get image."""
 
-    video: "Video"
+    video: Video
     frame_idx: int
 
     def get_raw_image(self, scale: float = 1.0):
@@ -86,33 +89,6 @@ class FrameGroupSet(object):
     def all_items(self):
         """Gets list of all items."""
         return list(itertools.chain(self.item_group.keys()))
-
-    # def get_all_items(self, interleave: bool = False):
-    #     """
-    #     Returns list of all items, with control over ordering.
-    #
-    #     Args:
-    #         interleave: Whether to interleave items from different groups.
-    #
-    #     Returns:
-    #         Single list which contains all items from all groups in set.
-    #     """
-    #     if interleave:
-    #         list_of_lists = self.group_items.values()
-    #
-    #         # Cycle through groups, taking one item from each in turn
-    #         all_items = itertools.chain.from_iterable(
-    #             itertools.zip_longest(*list_of_lists)
-    #         )
-    #
-    #         # Remove Nones (from shorter groups) and convert iterator to list.
-    #         all_items = list(filter(lambda x: x is not None, all_items))
-    #
-    #         # Return interleaved list of items
-    #         return all_items
-    #
-    #     # Default
-    #     return self.all_items
 
     def sample(self, per_group: int, unique_samples: bool = True):
         """
@@ -314,10 +290,7 @@ class ItemStack(object):
         self.meta.append(dict(action="kmeans", n_clusters=n_clusters))
 
     def make_sample_group(
-        self,
-        videos: List["Video"],
-        samples_per_video: int,
-        sample_method: str = "stride",
+        self, videos: List[Video], samples_per_video: int, sample_method: str = "stride"
     ):
         """Adds GroupSet by sampling frames from each video."""
         groupset = FrameGroupSet(method="stride")
@@ -325,7 +298,9 @@ class ItemStack(object):
 
         for i, video in enumerate(videos):
 
-            if sample_method == "stride":
+            if samples_per_video >= video.num_frames:
+                idxs = list(range(video.num_frames))
+            elif sample_method == "stride":
                 idxs = list(range(0, video.frames, video.frames // samples_per_video))
                 idxs = idxs[:samples_per_video]
             elif sample_method == "random":
@@ -366,54 +341,55 @@ class ItemStack(object):
         return suggestions
 
 
-def feature_suggestion_pipeline(
-    videos,
-    per_video,
-    sample_method,
-    scale,
-    feature_type,
-    n_components,
-    n_clusters,
-    per_cluster,
-    **kwargs,
-):
-    frame_data = ItemStack()
+@attr.s(auto_attribs=True, slots=True)
+class FeatureSuggestionPipeline(object):
+    per_video: int
+    sample_method: str
+    scale: float
+    feature_type: str
+    n_components: int
+    n_clusters: int
+    per_cluster: int
+    brisk_threshold: int = 80
 
-    # Make the list of frames, sampling from each video
-    frame_data.make_sample_group(
-        videos, samples_per_video=per_video, sample_method=sample_method
-    )
-    frame_data.get_all_items_from_group()
+    def run(self, videos):
+        frame_data = ItemStack()
 
-    # Load the frame images
-    frame_data.get_raw_images(scale=scale)
+        # Make the list of frames, sampling from each video
+        frame_data.make_sample_group(
+            videos, samples_per_video=self.per_video, sample_method=self.sample_method
+        )
+        frame_data.get_all_items_from_group()
 
-    # Generate feature data for each frame
-    if feature_type == "brisk":
-        # brisk_threshold is an optional parameter
-        brisk_threshold = kwargs.get("brisk_threshold", 80)
+        # Load the frame images
+        frame_data.get_raw_images(scale=self.scale)
 
-        # Get brisk descriptors for keypoints in each image.
-        # This will result in multiple rows of data for each image
-        # (the ImageStack object handles this behinds the scenes).
-        frame_data.brisk(threshold=brisk_threshold)
-    else:
-        # Flatten the raw image matrix for each image
-        frame_data.flatten()
+        # Generate feature data for each frame
+        if self.feature_type == "brisk":
+            # Get brisk descriptors for keypoints in each image.
+            # This will result in multiple rows of data for each image
+            # (the ImageStack object handles this behinds the scenes).
+            frame_data.brisk(threshold=self.brisk_threshold)
+        else:
+            # Flatten the raw image matrix for each image
+            frame_data.flatten()
 
-    # Transform data using PCA
-    frame_data.pca(n_components=n_components)
+        # Transform data using PCA
+        frame_data.pca(n_components=self.n_components)
 
-    # Generate groups of frames using k-means
-    frame_data.kmeans(n_clusters=n_clusters)
+        # Generate groups of frames using k-means
+        frame_data.kmeans(n_clusters=self.n_clusters)
 
-    # Limit the number of items in each group
-    frame_data.sample_groups(samples_per_group=per_cluster)
+        # Limit the number of items in each group
+        frame_data.sample_groups(samples_per_group=self.per_cluster)
 
-    # Finally, make the list of items across all the groups
-    frame_data.get_all_items_from_group()
+        # Finally, make the list of items across all the groups
+        frame_data.get_all_items_from_group()
 
-    return frame_data
+        return frame_data
+
+    def get_suggestion_frames(self, videos, group_offset=0):
+        return self.run(videos).to_suggestion_frames(group_offset)
 
 
 def demo_pipeline():
@@ -424,8 +400,7 @@ def demo_pipeline():
         Video.from_filename("tests/data/videos/small_robot.mp4"),
     ]
 
-    suggestions = feature_suggestion_pipeline(
-        videos=vids,
+    pipeline = FeatureSuggestionPipeline(
         per_video=100,
         scale=0.25,
         sample_method="stride",
@@ -434,7 +409,8 @@ def demo_pipeline():
         n_components=5,
         n_clusters=5,
         per_cluster=5,
-    ).to_suggestion_frames(group_offset=100)
+    )
+    suggestions = pipeline.get_suggestion_frames(vids)
 
     print(suggestions)
 

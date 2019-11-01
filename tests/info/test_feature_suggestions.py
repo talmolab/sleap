@@ -4,7 +4,7 @@ from sleap.info.feature_suggestions import (
     FrameItem,
     FrameGroupSet,
     ItemStack,
-    feature_suggestion_pipeline,
+    FeatureSuggestionPipeline,
 )
 
 
@@ -143,8 +143,7 @@ def test_brisk_suggestions(centered_pair_vid):
 
 def test_feature_suggestion_pipeline(centered_pair_vid):
     videos = [centered_pair_vid]
-    suggestions = feature_suggestion_pipeline(
-        videos=videos,
+    pipeline = FeatureSuggestionPipeline(
         per_video=5,
         scale=0.1,
         sample_method="random",
@@ -152,6 +151,8 @@ def test_feature_suggestion_pipeline(centered_pair_vid):
         n_components=3,
         n_clusters=2,
         per_cluster=1,
-    ).to_suggestion_frames()
+    )
+
+    suggestions = pipeline.get_suggestion_frames(videos)
 
     assert len(suggestions) == 2

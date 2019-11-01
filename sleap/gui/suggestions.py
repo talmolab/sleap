@@ -3,12 +3,14 @@ Module for generating lists of suggested frames (for labeling or reviewing).
 """
 
 import attr
+import itertools
 import numpy as np
 import random
 
 from typing import List, Optional
 
 from sleap.io.video import Video
+from sleap.info.feature_suggestions import FeatureSuggestionPipeline
 
 
 GroupType = int
@@ -109,14 +111,12 @@ class VideoFrameSuggestions(object):
         This is a wrapper for `feature_suggestion_pipeline` implemented in
         `sleap.info.feature_suggestions`.
         """
-        from sleap.info.feature_suggestions import feature_suggestion_pipeline
 
         brisk_threshold = kwargs.get("brisk_threshold", 80)
 
         if merge_video_features == "across all videos":
             # Run single pipeline with all videos
-            return feature_suggestion_pipeline(
-                videos=labels.videos,
+            return FeatureSuggestionPipeline(
                 per_video=per_video,
                 scale=scale,
                 sample_method=sample_method,
@@ -125,26 +125,35 @@ class VideoFrameSuggestions(object):
                 n_components=pca_components,
                 n_clusters=n_clusters,
                 per_cluster=per_cluster,
-            ).to_suggestion_frames(group_offset=0)
+            ).get_suggestion_frames(videos=labels.videos)
         else:
-            suggestions = []
-            group_offset = 0
             # Run pipeline separately for each video
-            for video in labels.videos:
-                suggestions.extend(
-                    feature_suggestion_pipeline(
-                        videos=[video],
-                        per_video=per_video,
-                        scale=scale,
-                        sample_method=sample_method,
-                        feature_type=feature_type,
-                        brisk_threshold=brisk_threshold,
-                        n_components=pca_components,
-                        n_clusters=n_clusters,
-                        per_cluster=per_cluster,
-                    ).to_suggestion_frames(group_offset=group_offset)
-                )
-                group_offset += n_clusters
+            pipeline = FeatureSuggestionPipeline(
+                per_video=per_video,
+                scale=scale,
+                sample_method=sample_method,
+                feature_type=feature_type,
+                brisk_threshold=brisk_threshold,
+                n_components=pca_components,
+                n_clusters=n_clusters,
+                per_cluster=per_cluster,
+            )
+
+            # List of (video, group_offset) tuples
+            suggestion_by_video = [
+                ([video], i * n_clusters) for (i, video) in enumerate(labels.videos)
+            ]
+
+            # Map each tuple to list of suggestions for that video
+            suggestion_by_video = list(
+                itertools.starmap(pipeline.get_suggestion_frames, suggestion_by_video)
+            )
+
+            # TODO: implement parallel version
+
+            # Chain each of these to get a single list of all suggestions
+            suggestions = list(itertools.chain.from_iterable(suggestion_by_video))
+
             return suggestions
 
     @classmethod
