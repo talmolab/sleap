@@ -745,9 +745,7 @@ class MainWindow(QMainWindow):
         hbw.setLayout(hb)
         suggestions_layout.addWidget(hbw)
 
-        form_wid = YamlFormWidget(
-            yaml_file=get_config_file("suggestions.yaml"), title="Generate Suggestions"
-        )
+        form_wid = YamlFormWidget.from_name("suggestions", title="Generate Suggestions")
         form_wid.mainAction.connect(
             self.process_events_then(self.commands.generateSuggestions)
         )
