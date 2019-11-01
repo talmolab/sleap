@@ -40,11 +40,8 @@ from sleap.gui.shortcuts import Shortcuts, ShortcutDialog
 from sleap.gui.suggestions import VideoFrameSuggestions
 from sleap.gui.state import GuiState
 
-from sleap.gui.overlays.tracks import (
-    TrackColorManager,
-    TrackTrailOverlay,
-    TrackListOverlay,
-)
+from sleap.gui.overlays.tracks import TrackTrailOverlay, TrackListOverlay
+from sleap.gui.color import ColorManager
 from sleap.gui.overlays.instance import InstanceOverlay
 from sleap.gui.overlays.anchors import NegativeAnchorOverlay
 from sleap.util import get_config_file
@@ -59,13 +56,9 @@ class MainWindow(QMainWindow):
     Attributes:
         labels: The :class:`Labels` dataset. If None, a new, empty project
             (i.e., :class:`Labels` object) will be created.
-        skeleton: The active :class:`Skeleton` for the project in the gui
         state: Object that holds GUI state, e.g., current video, frame,
             whether to show node labels, etc.
     """
-
-    skeleton: Skeleton
-    state: GuiState = GuiState()
 
     def __init__(self, labels_path: Optional[str] = None, *args, **kwargs):
         """Initialize the app.
@@ -78,6 +71,7 @@ class MainWindow(QMainWindow):
         """
         super(MainWindow, self).__init__(*args, **kwargs)
 
+        self.state = GuiState()
         self.labels = Labels()
 
         self.commands = CommandContext(
@@ -204,7 +198,7 @@ class MainWindow(QMainWindow):
         )
 
     def _create_color_manager(self):
-        self.color_manager = TrackColorManager(self.labels)
+        self.color_manager = ColorManager(self.labels)
         self.color_manager.palette = self.state.get("palette", default="standard")
 
     def _create_menus(self):
@@ -343,7 +337,31 @@ class MainWindow(QMainWindow):
             key="palette",
         )
 
+        distinctly_color_options = ("instances", "nodes", "edges")
+
+        add_submenu_choices(
+            menu=viewMenu,
+            title="Apply Distinct Colors To",
+            options=distinctly_color_options,
+            key="distinctly_color",
+        )
+
         self.state["palette"] = "standard"
+        self.state["distinctly_color"] = "instances"
+
+        viewMenu.addSeparator()
+
+        add_menu_check_item(viewMenu, "show labels", "Show Node Names")
+        add_menu_check_item(viewMenu, "show edges", "Show Edges")
+        add_menu_check_item(viewMenu, "show trails", "Show Trails")
+
+        add_submenu_choices(
+            menu=viewMenu, title="Trail Length", options=(4, 10, 20), key="trail_length"
+        )
+
+        viewMenu.addSeparator()
+
+        add_menu_check_item(viewMenu, "fit", "Fit Instances to View")
 
         viewMenu.addSeparator()
 
@@ -367,20 +385,6 @@ class MainWindow(QMainWindow):
 
         self.state["seekbar_header"] = "None"
         self.state.connect("seekbar_header", self.setSeekbarHeader)
-
-        viewMenu.addSeparator()
-
-        add_menu_check_item(viewMenu, "show labels", "Show Node Names")
-        add_menu_check_item(viewMenu, "show edges", "Show Edges")
-        add_menu_check_item(viewMenu, "show trails", "Show Trails")
-
-        add_submenu_choices(
-            menu=viewMenu, title="Trail Length", options=(4, 10, 20), key="trail_length"
-        )
-
-        viewMenu.addSeparator()
-
-        add_menu_check_item(viewMenu, "fit", "Fit Instances to View")
 
         viewMenu.addSeparator()
 
@@ -554,6 +558,15 @@ class MainWindow(QMainWindow):
         helpMenu = self.menuBar().addMenu("Help")
         helpMenu.addAction("Keyboard Reference", self.openKeyRef)
 
+    def process_events_then(self, action: Callable):
+        """Decorates a function with a call to first process events."""
+
+        def wrapped_function(*args):
+            QApplication.instance().processEvents()
+            action(*args)
+
+        return wrapped_function
+
     def _create_dock_windows(self):
         """Create dock windows and connects them to gui."""
 
@@ -702,7 +715,9 @@ class MainWindow(QMainWindow):
         self.suggestionsTable = GenericTableView(
             state=self.state,
             is_sortable=True,
-            model=SuggestionsTableModel(items=self.labels, context=self.commands),
+            model=SuggestionsTableModel(
+                items=self.labels.suggestions, context=self.commands
+            ),
         )
 
         suggestions_layout.addWidget(self.suggestionsTable)
@@ -710,24 +725,30 @@ class MainWindow(QMainWindow):
         hb = QHBoxLayout()
 
         _add_button(
-            hb, "Prev", self.commands.prevSuggestedFrame, "goto previous suggestion"
+            hb,
+            "Prev",
+            self.process_events_then(self.commands.prevSuggestedFrame),
+            "goto previous suggestion",
         )
 
         self.suggested_count_label = QLabel()
         hb.addWidget(self.suggested_count_label)
 
         _add_button(
-            hb, "Next", self.commands.nextSuggestedFrame, "goto next suggestion"
+            hb,
+            "Next",
+            self.process_events_then(self.commands.nextSuggestedFrame),
+            "goto next suggestion",
         )
 
         hbw = QWidget()
         hbw.setLayout(hb)
         suggestions_layout.addWidget(hbw)
 
-        form_wid = YamlFormWidget(
-            yaml_file=get_config_file("suggestions.yaml"), title="Generate Suggestions"
+        form_wid = YamlFormWidget.from_name("suggestions", title="Generate Suggestions")
+        form_wid.mainAction.connect(
+            self.process_events_then(self.commands.generateSuggestions)
         )
-        form_wid.mainAction.connect(self.commands.generateSuggestions)
         suggestions_layout.addWidget(form_wid)
 
         def goto_suggestion(*args):
@@ -764,7 +785,15 @@ class MainWindow(QMainWindow):
         overlay_state_connect(self.overlays["trails"], "trail_length")
 
         overlay_state_connect(self.color_manager, "palette")
+        overlay_state_connect(self.color_manager, "distinctly_color")
         self.state.connect("palette", lambda x: self.updateSeekbarMarks())
+        # update the skeleton tables since we may want to redraw colors
+        self.state.connect(
+            "palette", lambda x: self.on_data_update([UpdateTopic.skeleton])
+        )
+        self.state.connect(
+            "distinctly_color", lambda x: self.on_data_update([UpdateTopic.skeleton])
+        )
 
         # Set defaults
         self.state["trail_length"] = 4
@@ -879,7 +908,7 @@ class MainWindow(QMainWindow):
             self.instancesTable.model().items = self.state["labeled_frame"]
 
         if _has_topic([UpdateTopic.suggestions]):
-            self.suggestionsTable.model().items = self.labels
+            self.suggestionsTable.model().items = self.labels.suggestions
 
             # update count of suggested frames w/ labeled instances
             suggestion_status_text = ""
@@ -894,11 +923,6 @@ class MainWindow(QMainWindow):
                     f"{labeled_count}/{len(suggestion_list)} labeled"
                 )
             self.suggested_count_label.setText(suggestion_status_text)
-
-            # FIXME: this is a hack because the table isn't redrawing
-            self.suggestionsTable.repaint()
-            self.suggested_count_label.repaint()
-            self.suggestionsTable.parent().repaint()
 
     def plotFrame(self, *args, **kwargs):
         """Plots (or replots) current frame."""

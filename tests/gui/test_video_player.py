@@ -24,7 +24,7 @@ def test_gui_video_instances(qtbot, small_robot_mp4_vid, centered_pair_labels):
 
     def plot_instances(vp, idx):
         for instance in labeled_frames[test_frame_idx].instances:
-            vp.addInstance(instance=instance, color=(0, 0, 128))
+            vp.addInstance(instance=instance)
 
     vp.changedPlot.connect(plot_instances)
     vp.view.updatedViewer.emit()

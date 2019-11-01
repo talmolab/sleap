@@ -5,7 +5,7 @@ Drop-in replacement for QSlider with additional features.
 from PySide2 import QtCore, QtWidgets
 from PySide2.QtGui import QPen, QBrush, QColor, QKeyEvent, QPolygonF, QPainterPath
 
-from sleap.gui.overlays.tracks import TrackColorManager
+from sleap.gui.color import ColorManager
 
 import attr
 import itertools
@@ -84,7 +84,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
             this can be either
             * list of values to mark
             * list of (track, value)-tuples to mark
-        color_manager: A :class:`TrackColorManager` which determines the
+        color_manager: A :class:`ColorManager` which determines the
             color to use for "track"-type marks
 
     Signals:
@@ -114,7 +114,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
         max=100,
         val=0,
         marks=None,
-        color_manager: Optional[TrackColorManager] = None,
+        color_manager: Optional[ColorManager] = None,
         *args,
         **kwargs
     ):
@@ -196,7 +196,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
         """
 
         if self._color_manager is None:
-            self._color_manager = TrackColorManager(labels=labels)
+            self._color_manager = ColorManager(labels=labels)
 
         lfs = labels.find(video)
 
@@ -214,7 +214,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
                             val=occupancy_range[0],
                             end_val=occupancy_range[1],
                             row=track_row,
-                            color=self._color_manager.get_color(track),
+                            color=self._color_manager.get_track_color(track),
                         )
                     )
                 track_row += 1

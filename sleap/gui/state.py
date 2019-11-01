@@ -1,35 +1,27 @@
-from enum import Enum
+"""
+Module with object for storing and accessing gui state variables.
+"""
+
 from typing import Any, Callable, Iterable, List, Union
-
-
-class GSVar(Enum):
-    COLOR_PREDICTED = 1
-    FILENAME = 2
-    FIT = 3
-    FRAME_IDX = 4
-    FRAME_RANGE = 5
-    HAS_CHANGES = 6
-    HAS_FRAME_RANGE = 7
-    INSTANCE = 8
-    LABELED_FRAME = 9
-    LABELS = 10
-    PALETTE = 11
-    SEEKBAR_HEADER = 12
-    SHOW_EDGES = 13
-    SHOW_LABELS = 14
-    SHOW_TRAILS = 15
-    SKELETON = 16
-    SUGGESTION_IDX = 17
-    TRAIL_LENGTH = 18
-    VIDEO = 19
 
 
 GSVarType = str
 
 
 class GuiState(object):
-    _state_vars = dict()
-    _callbacks = dict()
+    """
+    Class for passing persistent gui state variables.
+
+    Arbitrary variables can be set, bools can be toggled, and callbacks can be
+    automatically triggered on variable changes.
+
+    This allows us to separate controls (which set state variables) and views
+    (which can update themselves when the relevant state variables change).
+    """
+
+    def __init__(self):
+        self._state_vars = dict()
+        self._callbacks = dict()
 
     def __getitem__(self, item):
         return self.get(item, default=None)
