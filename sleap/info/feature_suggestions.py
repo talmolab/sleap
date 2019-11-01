@@ -255,7 +255,7 @@ class ItemStack(object):
         row_size = np.product(meta["shape"])
         self.data = np.reshape(self.data, (row_count, row_size))
 
-    def brisk(self, threshold):
+    def brisk(self, threshold=30):
         """Transforms data from raw images to brisk features."""
         meta = dict(action="brisk")
         self.meta.append(meta)
