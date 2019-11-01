@@ -101,3 +101,9 @@ def test_item_stack(centered_pair_vid, small_robot_mp4_vid):
 
     # Make sure we got 1 item from each of the 2 groups
     assert len(stack.items) == 2
+
+    frame_items = stack.to_suggestion_frames(group_offset=10)
+    assert frame_items[0].frame_idx == stack.items[0].frame_idx
+    assert frame_items[0].group == 10
+    assert frame_items[1].frame_idx == stack.items[1].frame_idx
+    assert frame_items[1].group == 11

@@ -360,7 +360,6 @@ class ItemStack(object):
         suggestions = []
         for frame in self.items:
             group = self.current_groupset.get_item_group(frame)
-            print(group, group_offset)
             if group is not None:
                 group += group_offset
             suggestions.append(SuggestionFrame(frame.video, frame.frame_idx, group))
