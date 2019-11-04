@@ -779,14 +779,13 @@ class MainWindow(QMainWindow):
             )
 
         overlay_state_connect(self.overlays["trails"], "show trails", "show")
-        overlay_state_connect(
-            self.overlays["instance"], "color predicted", "color_predicted"
-        )
         overlay_state_connect(self.overlays["trails"], "trail_length")
 
         overlay_state_connect(self.color_manager, "palette")
         overlay_state_connect(self.color_manager, "distinctly_color")
+        overlay_state_connect(self.color_manager, "color predicted", "color_predicted")
         self.state.connect("palette", lambda x: self.updateSeekbarMarks())
+
         # update the skeleton tables since we may want to redraw colors
         self.state.connect(
             "palette", lambda x: self.on_data_update([UpdateTopic.skeleton])
@@ -797,6 +796,11 @@ class MainWindow(QMainWindow):
 
         # Set defaults
         self.state["trail_length"] = 4
+
+        # Emit signals for default that may have been set earlier
+        self.state.emit("palette")
+        self.state.emit("distinctly_color")
+        self.state.emit("color predicted")
 
     def _update_gui_state(self):
         """Enable/disable gui items based on current state."""
