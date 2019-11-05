@@ -4,7 +4,7 @@ import attr
 import tensorflow as tf
 import numpy as np
 from collections import defaultdict
-from typing import Callable, Dict, Tuple
+from typing import Callable, Dict, Tuple, Union
 from sleap.io.video import Video
 
 
@@ -38,8 +38,11 @@ def expand_to_4d(img: tf.Tensor) -> tf.Tensor:
 
 
 def batched_call(
-    fn: Callable[[tf.Tensor], tf.Tensor], x: tf.Tensor, batch_size: int = 8
-) -> tf.Tensor:
+    fn: Callable[[tf.Tensor], tf.Tensor], x: tf.Tensor,
+    batch_size: int = 8,
+    call_with_batch_ind: bool = False,
+    return_batch_inds: bool = False,
+) -> Union[tf.Tensor, Tuple[tf.Tensor, np.ndarray]]:
     """Calls a TensorFlow-based function in batches and returns concatenated outputs.
 
     This function concatenates the outputs from calling fn(x_batch) for each batch
@@ -52,9 +55,16 @@ def batched_call(
         x: Input data tensor to be batched along the first axis. Rank will not change
             with batching when provided to fn.
         batch_size: Number of elements along the first axis of x to evaluate at a time.
+        return_batch_inds: If True, also returns a vector of the length of the outputs
+            denoting the batch indices they correspond to. Useful for functions that
+            return variable length outputs.
 
     Returns:
         The output of fn(x) as if called without batching.
+
+        If return_batch_inds is True, a vector is also returned that indicates the batch
+        index that each output element came from. This is a int32 np.ndarray of the same
+        length as the outputs.
 
     Notes:
         The input will be batched into as many batches as possible with a length of
@@ -70,19 +80,30 @@ def batched_call(
     """
 
     # Split indices into batches.
-    all_indices = np.arange(len(x))
-    batched_indices = np.split(all_indices, all_indices[batch_size::batch_size])
+    sample_inds = np.arange(len(x))
+    batched_sample_inds = np.split(sample_inds,
+        sample_inds[batch_size::batch_size])
 
     # Evaluate each batch.
     outputs = []
-    for indices in batched_indices:
-        ind0 = indices[0]
-        ind1 = indices[-1] + 1
-        x_batch = x[ind0:ind1]
-        outputs.append(fn(x_batch))
+    output_batch_inds = []
+    for batch_ind, batch_sample_inds in enumerate(batched_sample_inds):
+        batch_x = x[batch_sample_inds[0] : (batch_sample_inds[-1] + 1)]
+
+        if call_with_batch_ind:
+            batch_outputs = fn(batch_ind, batch_x)
+        else:
+            batch_outputs = fn(batch_x)
+
+        outputs.append(batch_outputs)
+        if return_batch_inds:
+            output_batch_inds.append(np.full(len(batch_outputs), batch_ind, dtype=np.int32))
 
     # Return concatenated outputs.
-    return tf.concat(outputs, axis=0)
+    if return_batch_inds:
+        return tf.concat(outputs, axis=0), np.concatenate(output_batch_inds, axis=0)
+    else:
+        return tf.concat(outputs, axis=0)
 
 
 def group_array(
@@ -145,19 +166,29 @@ def resize_imgs(
 
     Returns:
         The resized imgs tensor.
+
+    Note:
+        The returned imgs will be on the GPU (if available) regardless of the initial device.
     """
 
     # Get input image dimensions.
     img_shape = tf.shape(imgs)
-    img_height = tf.cast(img_shape[1], tf.float32)
-    img_width = tf.cast(img_shape[2], tf.float32)
+    img_height = img_shape[1]
+    img_width = img_shape[2]
+
+    # Store initial dtype. Performing all the subsequent ops will be much faster when
+    # the tensor is float32.
+    initial_dtype = imgs.dtype
+    imgs = tf.cast(imgs, tf.float32)
 
     # Compute initial target dimensions.
-    target_height = tf.cast(img_height * scale, tf.int32)
-    target_width = tf.cast(img_width * scale, tf.int32)
+    target_height = tf.cast(tf.cast(img_height, tf.float32) * scale, tf.int32)
+    target_width = tf.cast(tf.cast(img_width, tf.float32) * scale, tf.int32)
 
-    # Apply resizing.
-    resized_imgs = tf.image.resize(imgs, [target_height, target_width], method=method)
+    if target_height != img_height or target_width != img_width:
+        
+        # Apply resizing.
+        imgs = tf.image.resize(imgs, [target_height, target_width], method=method)
 
     if common_divisor > 1:
 
@@ -165,22 +196,26 @@ def resize_imgs(
         divisible_height = tf.cast(
             tf.math.ceil(
                 tf.cast(target_height, tf.float32) / tf.cast(common_divisor, tf.float32)
-            ) * common_divisor,
-            tf.int32,
+            )
+            * common_divisor, tf.int32
         )
         divisible_width = tf.cast(
             tf.math.ceil(
                 tf.cast(target_width, tf.float32) / tf.cast(common_divisor, tf.float32)
-            ) * common_divisor,
-            tf.int32,
+            )
+            * common_divisor, tf.int32
         )
+        
+        if divisible_height != target_height or divisible_width != target_width:
+            # Pad bottom/right as needed.
+            imgs = tf.image.pad_to_bounding_box(
+                imgs, 0, 0, divisible_height, divisible_width
+            )
+        
+    # Cast back to original dtype.
+    imgs = tf.cast(imgs, initial_dtype)
 
-        # Pad bottom/right as needed.
-        resized_imgs = tf.image.pad_to_bounding_box(
-            resized_imgs, 0, 0, divisible_height, divisible_width
-        )
-
-    return resized_imgs
+    return imgs
 
 
 @attr.s(auto_attribs=True)

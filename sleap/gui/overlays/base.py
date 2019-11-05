@@ -43,8 +43,10 @@ class ModelData:
         inference_transform = DataTransform()
         if self.do_rescale:
             # Scale input image if model trained on scaled images
+            self.inference_model.load_model()
+            print("trained_input_shape:", self.inference_model.trained_input_shape)
             frame_img = inference_transform.scale_to(
-                imgs=frame_img, target_size=self.inference_model.input_shape[1:3]
+                imgs=frame_img, target_size=self.inference_model.trained_input_shape[1:3]
             )
 
         # Get predictions
