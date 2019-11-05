@@ -118,27 +118,8 @@ def test_item_stack(centered_pair_vid, small_robot_mp4_vid):
 
 
 def test_brisk_suggestions(centered_pair_vid):
-    stack = ItemStack()
-
-    videos = [centered_pair_vid]
-    stack.make_sample_group(videos, samples_per_video=3, sample_method="stride")
-    stack.get_all_items_from_group()
-    stack.get_raw_images(scale=0.25)
-
-    assert stack.data.shape[0] == len(stack.items)
-
-    stack.brisk()
-
-    # We should have more than one keypoint per frame,
-    # so make sure there are more rows of data than frames
-    assert stack.data.shape[0] > len(stack.items)
-
-    item_0_data = stack.get_item_data_idxs(stack.items[0])
-    item_1_data = stack.get_item_data_idxs(stack.items[1])
-
-    assert len(item_0_data) > 1
-    assert len(item_1_data) > 1
-    assert min(item_1_data) == max(item_0_data) + 1
+    # TODO: add test for brisk_bag_of_features
+    pass
 
 
 def test_feature_suggestion_pipeline(centered_pair_vid):

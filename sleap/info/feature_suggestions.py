@@ -6,9 +6,11 @@ Module for generating lists of frames using frame features, pca, kmeans, etc.
 import attr
 import cattr
 import itertools
+import logging
 import numpy as np
 import random
-from typing import Dict, List, Optional
+from time import time
+from typing import Dict, List, Optional, Tuple
 
 import cv2
 
@@ -16,6 +18,8 @@ from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
 
 from sleap.io.video import Video
+
+logger = logging.getLogger(__name__)
 
 
 @attr.s(auto_attribs=True, frozen=True)
@@ -231,31 +235,47 @@ class ItemStack(object):
         row_size = np.product(meta["shape"])
         self.data = np.reshape(self.data, (row_count, row_size))
 
-    def brisk(self, threshold=30):
-        """Transforms data from raw images to brisk features."""
-        meta = dict(action="brisk")
-        self.meta.append(meta)
+    def brisk_bag_of_features(self, brisk_threshold=120, brisk_vocab_size=60):
+        """Transform data using bag of features based on brisk features."""
+        all_descs = []
+        row_img = []
 
-        brisk = cv2.BRISK_create(thresh=threshold)
+        brisk = cv2.BRISK_create(thresh=brisk_threshold)
 
-        brisk_data = None
-        brisk_ownership = []
-        # start_i = 0
-        for item in self.items:
+        # Create matrix with multiple brisk descriptors for each image.
+        for i, item in enumerate(self.items):
             img = self.get_item_data(item)[0]
-
             kps, descs = brisk.detectAndCompute(img, None)
 
-            if descs is not None:
-                if brisk_data is None:
-                    brisk_data = descs
-                else:
-                    brisk_data = np.concatenate((brisk_data, descs))
+            # Brisk descriptor is 512 bits, but opencv returns this as 16 uint8's,
+            # so we'll convert it to discrete numbers.
+            descs = np.unpackbits(descs, axis=1)
 
-                self.extend_ownership(brisk_ownership, row_count=descs.shape[0])
+            # Make list with all brisk descriptors (or all images) and map which
+            # tells us which descriptor goes with which image
+            row_img.extend([i] * len(descs))
+            all_descs.append(descs)
 
-        self.data = brisk_data
-        self.ownership = brisk_ownership
+        # Convert to single matrix of descriptors
+        all_descs = np.concatenate(all_descs)
+
+        # Convert to single matrix of row (individual descriptor) -> image index
+        row_img = np.array(row_img)
+
+        # Create a bag of features for each image by clustering the brisk image
+        # descriptors (these clusters will be the "words" in a bag of words for
+        # each image), then generate vocab-length vector for each image which
+        # represents whether the "word" (i.e., brisk feature in some cluster)
+        # is present in the image.
+
+        kmeans = KMeans(n_clusters=brisk_vocab_size).fit(all_descs)
+        img_bags = np.zeros((len(self.items), brisk_vocab_size), dtype="bool")
+
+        for i in range(len(self.items)):
+            img_words = kmeans.labels_[row_img == i]
+            img_bags[(i,), img_words] = 1
+
+        self.data = img_bags
 
     def pca(self, n_components: int):
         """Transforms data by applying PCA."""
@@ -329,7 +349,19 @@ class ItemStack(object):
             )
             self.group_sets.append(new_groupset)
 
-    def to_suggestion_frames(self, group_offset: int = 0):
+    def to_suggestion_tuples(
+        self, videos, group_offset: int = 0, video_offset: int = 0
+    ) -> List[Tuple[int, int, int]]:
+        tuples = []
+        for frame in self.items:
+            group = self.current_groupset.get_item_group(frame)
+            if group is not None:
+                group += group_offset
+            video_idx = videos.index(frame.video) + video_offset
+            tuples.append((video_idx, frame.frame_idx, group))
+        return tuples
+
+    def to_suggestion_frames(self, group_offset: int = 0) -> List["SuggestionFrame"]:
         from sleap.gui.suggestions import SuggestionFrame
 
         suggestions = []
@@ -351,45 +383,137 @@ class FeatureSuggestionPipeline(object):
     n_clusters: int
     per_cluster: int
     brisk_threshold: int = 80
+    frame_data: Optional[ItemStack] = None
 
-    def run(self, videos):
-        frame_data = ItemStack()
+    def run_disk_stage(self, videos):
+        self.frame_data = ItemStack()
 
         # Make the list of frames, sampling from each video
-        frame_data.make_sample_group(
+        self.frame_data.make_sample_group(
             videos, samples_per_video=self.per_video, sample_method=self.sample_method
         )
-        frame_data.get_all_items_from_group()
+        self.frame_data.get_all_items_from_group()
 
         # Load the frame images
-        frame_data.get_raw_images(scale=self.scale)
+        self.frame_data.get_raw_images(scale=self.scale)
+
+    def run_processing_state(self):
+        if self.frame_data is None:
+            raise ValueError(
+                "Processing state called before disk stage (frame_data is None)"
+            )
 
         # Generate feature data for each frame
         if self.feature_type == "brisk":
             # Get brisk descriptors for keypoints in each image.
             # This will result in multiple rows of data for each image
             # (the ImageStack object handles this behinds the scenes).
-            frame_data.brisk(threshold=self.brisk_threshold)
+            self.frame_data.brisk_bag_of_features(brisk_threshold=self.brisk_threshold)
         else:
             # Flatten the raw image matrix for each image
-            frame_data.flatten()
+            self.frame_data.flatten()
 
         # Transform data using PCA
-        frame_data.pca(n_components=self.n_components)
+        self.frame_data.pca(n_components=self.n_components)
 
         # Generate groups of frames using k-means
-        frame_data.kmeans(n_clusters=self.n_clusters)
+        self.frame_data.kmeans(n_clusters=self.n_clusters)
 
         # Limit the number of items in each group
-        frame_data.sample_groups(samples_per_group=self.per_cluster)
+        self.frame_data.sample_groups(samples_per_group=self.per_cluster)
 
         # Finally, make the list of items across all the groups
-        frame_data.get_all_items_from_group()
+        self.frame_data.get_all_items_from_group()
 
-        return frame_data
+        return self.frame_data
+
+    def run(self, videos):
+        # Only run disk stage is we're running from scratch; otherwise, we
+        # assume that the disk stage was already run.
+        if self.frame_data is None:
+            self.run_disk_stage(videos)
+        self.run_processing_state()
+        return self.frame_data
+
+    def reset(self):
+        self.frame_data = None
 
     def get_suggestion_frames(self, videos, group_offset=0):
         return self.run(videos).to_suggestion_frames(group_offset)
+
+    def get_suggestion_tuples(self, videos, group_offset=0, video_offset=0):
+        return self.run(videos).to_suggestion_tuples(videos, group_offset, video_offset)
+
+
+@attr.s(auto_attribs=True, slots=True)
+class ParallelFeaturePipeline(object):
+    """
+    Enables easy per-video pipeline parallelization for feature suggestions.
+
+    Create a `FeatureSuggestionPipeline` with the desired parameters, and
+    then call `ParallelFeaturePipeline.run()` with the pipeline and the list
+    of videos to process in parallel. This will take care of serializing the
+    videos, running the pipelines in a process pool, and then deserializing
+    the results back into a single list of `SuggestionFrame` objects.
+    """
+
+    pipeline: FeatureSuggestionPipeline
+    videos_as_dicts: List[Dict]
+
+    def get(self, video_idx):
+        """Apply pipeline to single video by idx. Can be called in process."""
+        video_dict = self.videos_as_dicts[video_idx]
+        video = cattr.structure(video_dict, Video)
+        group_offset = video_idx * self.pipeline.n_clusters
+
+        # t0 = time()
+        # logger.info(f"starting {video_idx}")
+
+        result = self.pipeline.get_suggestion_tuples(
+            videos=[video], group_offset=group_offset, video_offset=video_idx
+        )
+        self.pipeline.reset()
+
+        # logger.info(f"done with {video_idx} in {time() - t0} s for {len(result)} suggestions")
+        return result
+
+    @classmethod
+    def make(cls, pipeline, videos):
+        """Make class object from pipeline and list of videos."""
+        videos_as_dicts = cattr.unstructure(videos)
+        return cls(pipeline, videos_as_dicts)
+
+    @classmethod
+    def tuples_to_suggestions(cls, tuples, videos):
+        """Converts serialized data from processes back into SuggestionFrames."""
+        from sleap.gui.suggestions import SuggestionFrame
+
+        suggestions = []
+        for (video_idx, frame_idx, group) in tuples:
+            video = videos[video_idx]
+            suggestions.append(SuggestionFrame(video, frame_idx, group))
+        return suggestions
+
+    @classmethod
+    def run(cls, pipeline, videos, parallel=True):
+        """Runs pipeline on all videos in parallel and returns suggestions."""
+        from multiprocessing import Pool, Lock
+
+        pp = cls.make(pipeline, videos)
+        video_idxs = list(range(len(videos)))
+
+        if parallel:
+
+            pool = Pool()
+
+            per_video_tuples = pool.map(pp.get, video_idxs)
+
+        else:
+            per_video_tuples = map(pp.get, video_idxs)
+
+        tuples = list(itertools.chain.from_iterable(per_video_tuples))
+
+        return pp.tuples_to_suggestions(tuples, videos)
 
 
 def demo_pipeline():
@@ -403,14 +527,15 @@ def demo_pipeline():
     pipeline = FeatureSuggestionPipeline(
         per_video=100,
         scale=0.25,
-        sample_method="stride",
-        feature_type="raw",
-        brisk_threshold=80,
+        sample_method="random",
+        feature_type="brisk",
+        brisk_threshold=120,
         n_components=5,
         n_clusters=5,
         per_cluster=5,
     )
-    suggestions = pipeline.get_suggestion_frames(vids)
+
+    suggestions = ParallelFeaturePipeline.run(pipeline, vids, parallel=True)
 
     print(suggestions)
 

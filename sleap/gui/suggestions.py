@@ -10,7 +10,10 @@ import random
 from typing import List, Optional
 
 from sleap.io.video import Video
-from sleap.info.feature_suggestions import FeatureSuggestionPipeline
+from sleap.info.feature_suggestions import (
+    FeatureSuggestionPipeline,
+    ParallelFeaturePipeline,
+)
 
 
 GroupType = int
@@ -127,7 +130,7 @@ class VideoFrameSuggestions(object):
                 per_cluster=per_cluster,
             ).get_suggestion_frames(videos=labels.videos)
         else:
-            # Run pipeline separately for each video
+            # Build pipeline
             pipeline = FeatureSuggestionPipeline(
                 per_video=per_video,
                 scale=scale,
@@ -139,20 +142,8 @@ class VideoFrameSuggestions(object):
                 per_cluster=per_cluster,
             )
 
-            # List of (video, group_offset) tuples
-            suggestion_by_video = [
-                ([video], i * n_clusters) for (i, video) in enumerate(labels.videos)
-            ]
-
-            # Map each tuple to list of suggestions for that video
-            suggestion_by_video = list(
-                itertools.starmap(pipeline.get_suggestion_frames, suggestion_by_video)
-            )
-
-            # TODO: implement parallel version
-
-            # Chain each of these to get a single list of all suggestions
-            suggestions = list(itertools.chain.from_iterable(suggestion_by_video))
+            # Run pipeline separately (in parallel) for each video
+            suggestions = ParallelFeaturePipeline.run(pipeline, labels.videos)
 
             return suggestions
 
