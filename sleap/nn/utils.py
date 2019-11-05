@@ -1,9 +1,11 @@
 """This module contains generic utilities used for training and inference."""
 
+import attr
 import tensorflow as tf
 import numpy as np
 from collections import defaultdict
-from typing import Callable, Dict
+from typing import Callable, Dict, Tuple
+from sleap.io.video import Video
 
 
 def ensure_odd(x: tf.Tensor) -> tf.Tensor:
@@ -14,12 +16,12 @@ def ensure_odd(x: tf.Tensor) -> tf.Tensor:
 
 def expand_to_4d(img: tf.Tensor) -> tf.Tensor:
     """Expands an image to rank 4 by adding singleton dimensions.
-    
+
     Args:
         img: Image tensor with rank of 2, 3 or 4.
             If img is rank 2, it is assumed to have shape (height, width).
             if img is rank 3, it is assumed to have shape (height, width, channels).
-        
+
     Returns:
         Rank 4 tensor of shape (samples, height, width, channels).
     """
@@ -74,7 +76,9 @@ def batched_call(
     # Evaluate each batch.
     outputs = []
     for indices in batched_indices:
-        x_batch = x[indices[0] : (indices[-1] + 1)]
+        ind0 = indices[0]
+        ind1 = indices[-1] + 1
+        x_batch = x[ind0:ind1]
         outputs.append(fn(x_batch))
 
     # Return concatenated outputs.
@@ -85,7 +89,7 @@ def group_array(
     X: np.ndarray, groups: np.ndarray, axis=0
 ) -> Dict[np.ndarray, np.ndarray]:
     """Groups an array into a dictionary keyed by a grouping vector.
-    
+
     Args:
         X: Numpy array with length n along the specified axis.
         groups: Vector of n values denoting the group that each slice of X should be
@@ -93,14 +97,14 @@ def group_array(
             or labels vector.
         axis: Dimension of X to group on. The length of this axis in X must correspond
             to the length of groups.
-    
+
     Returns:
         A dictionary with keys mapping each unique value in groups to a subset of X.
-        
+
     References:
         See this `blog post<https://jakevdp.github.io/blog/2017/03/22/group-by-from-scratch/>`
         for performance comparisons of different approaches.
-        
+
     Example:
         >>> group_array(np.arange(5), np.array([1, 5, 2, 1, 5]))
         {1: array([0, 3]), 5: array([1, 4]), 2: array([2])}
@@ -111,6 +115,14 @@ def group_array(
         group_inds[key].append(ind)
 
     return {key: np.take(X, inds, axis=axis) for key, inds in group_inds.items()}
+
+
+def normalize_imgs(imgs: tf.Tensor) -> tf.Tensor:
+    """Normalize images to unit range and dtype float32."""
+
+    if imgs.dtype == tf.uint8:
+        imgs = tf.cast(imgs, tf.float32) / 255.0
+    return imgs
 
 
 def resize_imgs(
@@ -153,14 +165,14 @@ def resize_imgs(
         divisible_height = tf.cast(
             tf.math.ceil(
                 tf.cast(target_height, tf.float32) / tf.cast(common_divisor, tf.float32)
-            )
-            * common_divisor, tf.int32
+            ) * common_divisor,
+            tf.int32,
         )
         divisible_width = tf.cast(
             tf.math.ceil(
                 tf.cast(target_width, tf.float32) / tf.cast(common_divisor, tf.float32)
-            )
-            * common_divisor, tf.int32
+            ) * common_divisor,
+            tf.int32,
         )
 
         # Pad bottom/right as needed.
@@ -169,3 +181,105 @@ def resize_imgs(
         )
 
     return resized_imgs
+
+
+@attr.s(auto_attribs=True)
+class VideoLoader:
+    filename: str
+    chunk_size: int = 32
+    prefetch_chunks: int = 1
+
+    _video: Video = attr.ib(init=False, repr=False)
+    _shape: Tuple[int, int, int, int] = attr.ib(init=False)
+    _np_dtype: np.dtype = attr.ib(init=False)
+    _tf_dtype: tf.DType = attr.ib(init=False)
+    _ds: tf.data.Dataset = attr.ib(init=False)
+
+    @property
+    def video(self):
+        return self._video
+
+    @property
+    def shape(self):
+        return self._shape
+
+    @property
+    def n_frames(self):
+        return self.shape[0]
+
+    @property
+    def n_chunks(self):
+        return int(np.ceil(self.frames / self.chunk_size))
+
+    def __len__(self):
+        return self.n_chunks
+
+    @property
+    def ds(self):
+        return self._ds
+
+    @property
+    def np_dtype(self):
+        return self._np_dtype
+
+    @property
+    def tf_dtype(self):
+        return self._tf_dtype
+
+    def __attrs_post_init__(self):
+
+        self._video = Video.from_filename(self.filename)
+        self._shape = self.video.shape
+        self._np_dtype = self.video.dtype
+        self._tf_dtype = tf.dtypes.as_dtype(self.np_dtype)
+        self._ds = self.make_ds()
+
+    def load_frames(self, frame_inds):
+        local_vid = Video.from_filename(self.video.filename)
+        imgs = local_vid[np.array(frame_inds).astype("int64")]
+        return imgs
+
+    def tf_load_frames(self, frame_inds):
+        [imgs] = tf.py_function(
+            func=self.load_frames, inp=[frame_inds], Tout=[self.tf_dtype]
+        )
+        return frame_inds, imgs
+
+    def make_ds(self):
+        ds = tf.data.Dataset.range(self.n_frames)
+        ds = ds.batch(self.chunk_size, drop_remainder=False)
+        ds = ds.map(
+            self.tf_load_frames, num_parallel_calls=tf.data.experimental.AUTOTUNE
+        )
+        return ds
+
+    def load_chunk(self, chunk_ind=0):
+        chunk_ds = self.ds
+        if chunk_ind > 0:
+            chunk_ds = chunk_ds.skip(chunk_ind)
+
+        frame_inds, imgs = list(chunk_ds.take(1))[0]
+
+        return frame_inds, imgs
+
+    def iter_chunks(self, with_chunk_ind=True, first_chunk=0, max_chunks=None):
+
+        ds = self.ds
+        if first_chunk > 0:
+            ds = ds.skip(first_chunk)
+
+        ds = ds.prefetch(self.prefetch_chunks)
+
+        chunk_ind = 0
+        for frame_inds, imgs in ds:
+            if with_chunk_ind:
+                yield chunk_ind, frame_inds, imgs
+            else:
+                yield frame_inds, imgs
+            chunk_ind += 1
+
+            if max_chunks is not None and chunk_ind >= max_chunks:
+                break
+
+    def __iter__(self):
+        return self.iter_chunks()

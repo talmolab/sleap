@@ -9,227 +9,116 @@ present each pixel. This is often represented by an unnormalized 2D Gaussian PDF
 centered at the true location and evaluated over the entire image grid.
 
 Peak finding entails finding either the global or local maxima of these confidence maps.
-
-Note: Several of the functions in this module (especially the ones prefixed with _*),
-are optimized via autograph. These will typically contain a fixed input signature
-without defaults or kwargs. This is a constraint required to prevent frequent retracing
-when executing them via different code paths or with variable size data.
-
-For flexibility, higher level wrappers are provided to customize the execution of
-autographed functions, usually by implementing lightweight dynamic ops in eager mode.
 """
 
+import attr
 import tensorflow as tf
 import numpy as np
 from typing import Union, Tuple
-from sleap.nn.utils import ensure_odd
+
+from sleap.nn import inference
+from sleap.nn import region_proposal
+from sleap.nn import utils
 
 
-@tf.function(
-    input_signature=[
-        tf.TensorSpec(shape=(None, None, None, None), dtype=tf.float32),
-        tf.TensorSpec(shape=[], dtype=tf.float32),
-    ]
-)
-def _find_local_peaks_with_vals(
-    img: tf.Tensor, min_val: float
-) -> Tuple[tf.Tensor, tf.Tensor]:
-    """Finds local maxima via non-maximum suppresion.
-    
+def find_global_peaks(img: tf.Tensor) -> tf.Tensor:
+    """Finds the global maximum for each sample and channel.
+
     Args:
         img: Tensor of shape (samples, height, width, channels).
-        min_val: Minimum threshold to consider a pixel a local maximum.
-        
+
     Returns:
-        A float32 tensor of shape (n_peaks, 4), where n_peaks is the number of local
-        maxima detected. The location of the i-th peak is specified by its subscripts
-        in img, e.g.:
-            sample, row, col, channel = find_local_peaks(img)[i]
-            
-        Also returns a tensor of shape (n_peaks,) with the values of img at the peaks.
+        A tuple of (peak_subs, peak_vals).
+
+        peak_subs: float32 tensor of shape (n_peaks, 4), where n_peaks is the number
+        of global peaks (samples * channels). The location of the i-th peak is
+        specified by its subscripts in img, e.g.:
+            sample, row, col, channel = find_global_peaks(img)[i]
+
+        peak_vals: float32 tensor of shape (n_peaks,) containing the values at the
+        subscripts indicated by peak_subs within img.
     """
 
-    # Store initial shape.
-    samples, height, width, channels = tf.unstack(
-        tf.cast(tf.shape(img), tf.int64), num=4
-    )
+    # Find row maxima.
+    max_img_rows = tf.reduce_max(img, axis=2)
+    argmax_rows = tf.reshape(tf.argmax(max_img_rows, axis=1), [-1])
 
-    # Pack channels along samples axis to enforce a singleton channel.
-    packed_img = tf.reshape(
-        tf.transpose(img, (0, 3, 1, 2)), (samples * channels, height, width, 1)
-    )
+    # Find col maxima.
+    max_img_cols = tf.reduce_max(img, axis=1)
+    argmax_cols = tf.reshape(tf.argmax(max_img_cols, axis=1), [-1])
 
-    # Create local maximum kernel.
-    kernel = tf.reshape(
-        tf.constant([[0, 0, 0], [0, -1, 0], [0, 0, 0]], dtype=tf.float32), (3, 3, 1)
-    )
+    # Construct sample and channel subscripts.
+    samples = tf.range(argmax_cols.shape[0], dtype=tf.int64) // img.shape[-1]
+    channels = tf.range(argmax_cols.shape[0], dtype=tf.int64) % img.shape[-1]
 
-    # Apply a dilation (max filter) with custom kernel.
-    max_img = tf.nn.dilation2d(
-        packed_img, kernel, [1, 1, 1, 1], "SAME", "NHWC", [1, 1, 1, 1]
-    )
+    # Gather subscripts.
+    peak_subs = tf.stack([samples, argmax_rows, argmax_cols, channels], axis=1)
 
-    # Find peaks by comparing to dilation and threshold.
-    peaks_mask = tf.greater(packed_img, max_img) & tf.greater(packed_img, min_val)
+    # Gather values at global maxima.
+    peak_vals = tf.gather_nd(img, peak_subs)
 
-    # Convert to subscripts where rows are [sample_channel, row, col, 0].
-    packed_peak_subs = tf.where(peaks_mask)
-
-    # Adjust coordinates to account for channel packing.
-    sample_channel, row, col, _ = tf.unstack(packed_peak_subs, num=4, axis=1)
-    sample = sample_channel // channels
-    channel = sample_channel % channels
-    peak_subs = tf.stack([sample, row, col, channel], axis=1)
-
-    return tf.cast(peak_subs, tf.float32), tf.boolean_mask(packed_img, peaks_mask)
+    return tf.cast(peak_subs, tf.float32), peak_vals
 
 
 def find_local_peaks(
-    img: tf.Tensor, min_val: float = 0.3, return_vals: bool = True
-) -> Union[tf.Tensor, Tuple[tf.Tensor, tf.Tensor]]:
+    img: tf.Tensor, min_val: float = 0.3
+) -> Tuple[tf.Tensor, tf.Tensor]:
     """Finds local maxima via non-maximum suppresion.
-    
+
     Args:
         img: Tensor of shape (samples, height, width, channels).
         min_val: Minimum threshold to consider a pixel a local maximum.
-        return_vals: If True, returns the values at the maxima.
-        
+
     Returns:
-        A float32 tensor of shape (n_peaks, 4), where n_peaks is the number of local
-        maxima detected. The location of the i-th peak is specified by its subscripts
-        in img, e.g.:
+        A tuple of (peak_subs, peak_vals).
+
+        peak_subs: float32 tensor of shape (n_peaks, 4), where n_peaks is the number of
+        local maxima detected. The location of the i-th peak is specified by its
+        subscripts in img, e.g.:
             sample, row, col, channel = find_local_peaks(img)[i]
-            
-        If return_vals is True, also returns a tensor of shape (n_peaks,) with the
-        values of img at the peaks.
 
-        We recommend smoothing the image with a Gaussian filter before local peak
-        finding to minimize spurious detections.
+        peak_vals: float32 tensor of shape (n_peaks,) containing the values at the
+        subscripts indicated by peak_subs within img.
     """
 
-    peak_subs, peak_vals = _find_local_peaks_with_vals(img, min_val)
+    # Max filter to find local maxima.
+    max_img = tf.nn.max_pool2d(
+        img, ksize=[1, 3, 3, 1], strides=[1, 1, 1, 1], padding="SAME"
+    )
 
-    if return_vals:
-        return peak_subs, peak_vals
-    else:
-        return peak_subs
+    # Filter pixels by equality to max filtered image and threshold.
+    argmax_img = img == max_img
+    thresh_img = img > min_val
+    argmax_and_thresh_img = argmax_img & thresh_img
 
+    # Convert to subscripts.
+    peak_subs = tf.where(argmax_and_thresh_img)
 
-@tf.function(input_signature=[tf.TensorSpec(shape=(None, None, None, None))])
-def _find_global_peaks_with_vals(img: tf.Tensor) -> Tuple[tf.Tensor, tf.Tensor]:
-    """Finds the global maximum for each sample and channel.
-    
-    Args:
-        img: Tensor of shape (samples, height, width, channels).
-        
-    Returns:
-        A float32 tensor of shape (n_peaks, 2), where n_peaks is the number of global
-        peaks, i.e.:
-            n_peaks = samples * channels.
-        
-        The location of the i-th peak is specified by its row and column in img, e.g.:
-            row, col = _find_global_peaks_with_vals(img)[i]
-            
-        Also returns a tensor of shape (n_peaks,) with the values of img at the peaks.
-    """
+    # Get peak values.
+    peak_vals = tf.gather_nd(img, peak_subs)
 
-    # Store initial shape.
-    samples, height, width, channels = tf.unstack(tf.shape(img), num=4)
-
-    # Collapse height/width into a single dimension.
-    flat_img = tf.reshape(img, (samples, -1, channels))
-
-    # Find maximum indices within collapsed height/width axis (samples, 1, channels).
-    inds_max = tf.argmax(flat_img, axis=1)
-    inds_max = tf.reshape(inds_max, (-1,))  # (samples * channels)
-
-    # Convert to subscripts (samples * channels, [row, col]).
-    subs_max = tf.transpose(tf.unravel_index(inds_max, (height, width)))
-
-    # Compute values at maxima.
-    vals_max = tf.reshape(tf.reduce_max(flat_img, axis=1), (-1,))
-
-    return tf.cast(subs_max, tf.float32), vals_max
+    return tf.cast(peak_subs, tf.float32), peak_vals
 
 
-def find_global_peaks(
-    img: tf.Tensor, return_all_subs: bool = True
-) -> Union[tf.Tensor, Tuple[tf.Tensor, tf.Tensor]]:
-    """Finds the global maximum for each sample and channel.
-    
-    Args:
-        img: Tensor of shape (samples, height, width, channels).
-        return_all_subs: If True, returns full subscripts of each peak, similar
-            to tf.where.
-        
-    Returns:
-        A tuple of (subs_max, vals_max).
-
-        subs_max is a float32 tensor of shape (n_peaks, 2) or (n_peaks, 4), where n_peaks
-        is the number of global peaks, i.e., n_peaks = samples * channels.
-
-        If return_all_subs is True, the location of the i-th peak is specified by its
-        full subscripts in img, e.g.:
-            sample, row, col, channel = find_global_peaks(img, return_all_subs=True)[i]
-        
-        If return_all_subs is False, the location only specifies the row and column:
-            row, col = find_global_peaks(img, return_all_subs=False)[i]
-            
-        vals_max a tensor of shape (n_peaks,) with the values of img at the peaks.
-    """
-
-    # Find peaks with reduced subscripts (row, col).
-    subs_max, vals_max = _find_global_peaks_with_vals(img)
-
-    # Append the sample and channel subscripts to match tf.where notation.
-    if return_all_subs:
-        samples, height, width, channels = tf.unstack(
-            tf.cast(tf.shape(img), tf.int64), num=4
-        )
-
-        inds = tf.range(0, samples * channels, dtype=tf.int64)
-        sample_subs = inds // channels
-        channel_subs = inds % channels
-
-        # Each row specifies peak subscripts as [sample, row, col, channel].
-        subs_max = tf.concat(
-            [
-                tf.expand_dims(sample_subs, axis=1),
-                subs_max,
-                tf.expand_dims(channel_subs, axis=1),
-            ],
-            axis=1,
-        )
-
-    return subs_max, vals_max
-
-
-@tf.function(
-    input_signature=[
-        tf.TensorSpec(shape=(None, None, None, None), dtype=tf.float32),
-        tf.TensorSpec(shape=(None, 4), dtype=tf.float32),
-        tf.TensorSpec(shape=[], dtype=tf.int64),
-    ]
-)
 def crop_centered_boxes(
     img: tf.Tensor, peaks: tf.Tensor, window_length: int
 ) -> tf.Tensor:
     """Crops boxes centered around peaks.
-    
+
     Args:
         img: Tensor of shape (samples, height, width, channels).
         peaks: Tensor of shape (n_peaks, 4) where subscripts of peak locations are
             specified in each row as [sample, row, col, channel].
         window_length: Size (width and height) of windows to be cropped. This parameter
             will be rounded up to nearest odd number.
-        
+
     Returns:
         A tensor of shape (n_peaks, window_length, window_length, 1) corresponding to
         the box cropped around each peak.
     """
 
     # Compute window offset from odd window length.
-    window_length = ensure_odd(window_length)
+    window_length = utils.ensure_odd(window_length)
     crop_size = tf.cast((window_length, window_length), tf.int32)
     half_window = tf.cast(window_length // 2, tf.float32)
 
@@ -274,7 +163,7 @@ def crop_centered_boxes(
 
 def make_gaussian_kernel(size: int, sigma: float) -> tf.Tensor:
     """Generates a square unnormalized 2D symmetric Gaussian kernel.
-    
+
     Args:
         size: Length of kernel. This should be an odd integer.
         sigma: Standard deviation of the Gaussian specified as a scalar float.
@@ -294,8 +183,8 @@ def make_gaussian_kernel(size: int, sigma: float) -> tf.Tensor:
 
     # Generate kernel and broadcast to 2D.
     kernel = tf.exp(
-        -(tf.reshape(gv, (1, -1)) ** 2 + tf.reshape(gv, (-1, 1)) ** 2)
-        / (2 * sigma ** 2)
+        -(tf.reshape(gv, (1, -1)) ** 2 + tf.reshape(gv, (-1, 1)) ** 2) /
+        (2 * sigma ** 2)
     )
 
     return kernel
@@ -410,7 +299,7 @@ def refine_peaks_local_direction(
     Returns:
         refined_peaks, a float32 tensor of shape (n_peaks, 4) in the same format as the
         input peaks, but with offsets applied.
-    
+
     References:
         .. [1] Alejandro Newell, Kaiyu Yang, and Jia Deng. Stacked Hourglass Networks
            for Human Pose Estimation. In _European conference on computer vision_, 2016.
@@ -426,3 +315,118 @@ def refine_peaks_local_direction(
     refined_peaks = tf.cast(peaks, tf.float32) + tf.pad(offsets, [[0, 0], [1, 1]])
 
     return refined_peaks
+
+
+@attr.s(auto_attribs=True, slots=True)
+class RegionPeakSet:
+    peaks: np.ndarray
+    peak_vals: np.ndarray
+    patch_inds: np.ndarray
+
+    @property
+    def sample_inds(self):
+        return self.peaks[:, 0]
+
+    @property
+    def peaks_with_patch_inds(self):
+        return np.concatenate((self.patch_inds[:, None], self.peaks[:, 1:]), axis=1)
+
+
+@attr.s(auto_attribs=True, eq=False)
+class ConfmapPeakFinder:
+    confmap_model: inference.InferenceModel
+    batch_size: int = 16
+    rps_batch_size: int = 64
+    smoothing_kernel_size: int = 5
+    smoothing_sigma: float = 1.0
+    min_peak_threshold: float = 0.3
+
+    def preproc(self, imgs):
+        # Scale to model input size.
+        imgs = utils.resize_imgs(
+            imgs,
+            self.confmap_model.input_scale,
+            common_divisor=2 ** self.confmap_model.down_blocks,
+        )
+
+        # Convert to float32 and scale values to [0., 1.].
+        imgs = utils.normalize_imgs(imgs)
+
+        return imgs
+
+    @tf.function
+    def inference(self, imgs):
+        # Model inference
+        confmaps = self.confmap_model.keras_model(imgs)
+
+        if self.smoothing_sigma > 0:
+            # Smooth
+            confmaps = smooth_imgs(confmaps, kernel_size=self.smoothing_kernel_size,)
+
+        return confmaps
+
+    def batched_inference(self, imgs, batch_size=None):
+        if batch_size is None:
+            batch_size = self.batch_size
+
+        confmaps = utils.batched_call(self.inference, imgs, batch_size=batch_size)
+
+        return confmaps
+
+    @tf.function
+    def postproc(self, confmaps):
+
+        # Peak finding
+        peaks, peak_vals = find_local_peaks(confmaps, min_val=self.min_peak_threshold)
+        peaks = refine_peaks_local_direction(confmaps, peaks)
+        peaks /= tf.constant(
+            [[1, self.confmap_model.output_scale, self.confmap_model.output_scale, 1]]
+        )
+
+        return peaks, peak_vals
+
+    def predict(self, imgs, concat=False):
+
+        imgs = self.preproc(imgs)
+        confmaps = self.batched_inference(imgs)
+        peaks, peak_vals = self.postproc(confmaps)
+
+        if not concat:
+            return peaks, peak_vals
+        else:
+            return tf.concat([peaks, tf.expand_dims(peak_vals, axis=1)], axis=1)
+
+    def predict_rps(self, rps: region_proposal.RegionProposalSet) -> RegionPeakSet:
+
+        # We also batch here to minimize retracing since we have many
+        # irregular batch sizes when using region proposals.
+        peaks_and_vals, batch_inds = utils.batched_call(
+            lambda patches: self.predict(patches, concat=True),
+            rps.patches,
+            batch_size=self.rps_batch_size,
+            return_batch_inds=True,
+        )
+
+        # Copy to CPU.
+        peaks_and_vals = peaks_and_vals.numpy()
+
+        # Split.
+        peaks = peaks_and_vals[:, :4]
+        peak_vals = peaks_and_vals[:, 4].squeeze()
+
+        # Pull out indices of peaks within the patches in this set.
+        patch_inds = peaks[:, 0].astype(int)
+
+        # Adjust for the region proposal set batching.
+        patch_inds += batch_inds * self.rps_batch_size
+
+        # Update subscripts with the sample indices.
+        peaks[:, 0] = rps.sample_inds[patch_inds]
+        peaks[:, 1] += rps.bboxes[patch_inds, 0]
+        peaks[:, 2] += rps.bboxes[patch_inds, 1]
+
+        region_peaks = RegionPeakSet(
+            peaks=peaks, peak_vals=peak_vals, patch_inds=patch_inds
+        )
+
+        return region_peaks

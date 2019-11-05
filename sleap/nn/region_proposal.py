@@ -11,9 +11,10 @@ import itertools
 from collections import defaultdict
 import numpy as np
 import tensorflow as tf
+
+from sleap.nn import inference
 from sleap.nn import peak_finding
 from sleap.nn import utils
-from sleap.nn.inference import InferenceModel
 
 
 @attr.s(auto_attribs=True, slots=True)
@@ -135,7 +136,7 @@ def nms_bboxes(
         iou_threshold: The minimum intersection over union between a pair of bounding
             boxes to consider them as overlapping.
         max_boxes: The maximum number of bounding boxes to output.
-    
+
     Returns:
         merged_bboxes a numpy array of shape (n_merged_bboxes, 4) corresponding to a
         subset of the bounding boxes after suppressing overlaps.
@@ -146,38 +147,6 @@ def nms_bboxes(
     )
 
     return bboxes[selected_indices.numpy()]
-
-
-def merge_bboxes(bboxes, bbox_scores, merge_box_length, merge_min_iou=0.1):
-
-    candidate_bboxes = []
-    candidate_bbox_scores = []
-    for i in range(len(bboxes) - 1):
-
-        bbox_i = bboxes[i]
-        for j in range(i + 1, len(bboxes)):
-            bbox_j = bboxes[j]
-
-            iou = compute_iou(bbox_i, bbox_j)
-
-            if iou > merge_min_iou:
-                middle_centroid = np.array(
-                    [(bbox_i[0] + bbox_j[2]) / 2, (bbox_i[1] + bbox_j[3]) / 2]
-                )
-                candidate_bboxes.append(
-                    [
-                        middle_centroid[0] - merge_box_length / 2,  # y1
-                        middle_centroid[1] - merge_box_length / 2,  # x1
-                        middle_centroid[0] + merge_box_length / 2,  # y2
-                        middle_centroid[1] + merge_box_length / 2,  # x2
-                    ]
-                )
-                candidate_bbox_scores.append((bbox_scores[i] + bbox_scores[j]))
-
-    candidate_bboxes.extend(list(bboxes))
-    candidate_bbox_scores.extend(list(bbox_scores))
-
-    return np.stack(candidate_bboxes, axis=0), np.stack(candidate_bbox_scores, axis=0)
 
 
 def generate_merged_bboxes(
@@ -205,7 +174,7 @@ def generate_merged_bboxes(
     Returns:
         A tuple of (merged_bboxes, merged_bbox_scores).
 
-        merged_bboxes: A numpy array of shape (n_merged_bboxes, 4) specified in the 
+        merged_bboxes: A numpy array of shape (n_merged_bboxes, 4) specified in the
             [y1, x1, y2, x2] format. This is a superset of the input bboxes and the
             new merged region proposals.
         merged_bbox_scores: A numpy array of shape (n_merged_bboxes,) with the
@@ -267,73 +236,75 @@ def normalize_bboxes(bboxes: np.ndarray, img_height: int, img_width: int) -> np.
     return bboxes / np.array([[h, w, h, w]])
 
 
-def predict_centroids(
-    imgs: tf.Tensor, centroid_model: InferenceModel, batch_size: int = 16
-) -> Tuple[np.ndarray, np.ndarray]:
-    """Predicts centroids given a stack of images and a centroid model.
+###########################################################################
 
-    This function is a convenience wrapper for extracting centroids from a stack of
-    images. It performs resizing/preprocessing, batched model inference and adjusts the
-    resolution of the output coordinates.
 
-    Args:
-        imgs: A tensor of shape (samples, height, width, channels) to provide as input
-            to the trained model.
-        centroid_model: An InferenceModel containing the tf.keras.Model for predicting
-            centroid heatmaps, together with metadata about the architecture and job.
-        batch_size: Number of samples to process on the GPU at a time.
+@attr.s(auto_attribs=True, eq=False)
+class CentroidPredictor:
+    centroid_model: inference.InferenceModel
+    batch_size: int = 16
 
-    Returns:
-        A tuple of (centroid_peaks, centroid_peak_vals).
+    def preproc(self, imgs):
+        # Scale to model input size.
+        imgs = utils.resize_imgs(
+            imgs,
+            self.centroid_model.input_scale,
+            common_divisor=2 ** self.centroid_model.down_blocks,
+        )
 
-        centroid_peaks is a float32 tensor of shape (n_centroids, 4), where rows
-        indicate subscripts to detected peaks in the form (sample, row, col, channel).
+        # Convert to float32 and scale values to [0., 1.].
+        imgs = utils.normalize_imgs(imgs)
+
+        return imgs
+
+    def inference(self, imgs):
+        # Model inference
+        confmaps = utils.batched_call(
+            self.centroid_model.keras_model, imgs, batch_size=self.batch_size
+        )
+
+        return confmaps
+
+    def postproc(self, centroid_confmaps):
+        # Peak finding
+        centroids, centroid_vals = peak_finding.find_local_peaks(centroid_confmaps)
+        centroids /= tf.constant(
+            [[1, self.centroid_model.output_scale, self.centroid_model.output_scale, 1]]
+        )
+        return centroids, centroid_vals
+
+    @tf.function
+    def predict(self, imgs):
+        imgs = self.preproc(imgs)
+        confmaps = self.inference(imgs)
+        return self.postproc(confmaps)
+
+
+@tf.function(experimental_relax_shapes=True)
+def extract_patches(imgs, bboxes, sample_inds):
+
+    bbox = bboxes[0]
+    box_size = (int(bbox[2] - bbox[0]), int(bbox[3] - bbox[1]))
+
+    patches = tf.image.crop_and_resize(
+        imgs,
+        boxes=normalize_bboxes(bboxes, imgs.shape[1], imgs.shape[2]),
+        box_indices=sample_inds,
+        crop_size=box_size,
+    )
+
+    # Keep in the same dtype without changing devices.
+    if patches.dtype != imgs.dtype:
+        with tf.device(imgs.device):
+            patches = tf.cast(patches, imgs.dtype)
+
+    return patches
+
+
+@attr.s(auto_attribs=True, eq=False)
+class RegionProposalExtractor:
     """
-
-    # Preprocess
-    resized_imgs = utils.resize_imgs(
-        imgs, centroid_model.input_scale, common_divisor=2 ** centroid_model.down_blocks
-    )
-    resized_imgs = tf.cast(resized_imgs, tf.float32) / 255.0
-
-    # Model inference
-    centroid_confmaps = utils.batched_call(
-        centroid_model.keras_model, resized_imgs, batch_size=batch_size
-    )
-
-    # Peak finding
-    centroids, centroid_vals = peak_finding.find_local_peaks(centroid_confmaps)
-    centroids = centroids.numpy().astype("float32")
-    centroid_vals = centroid_vals.numpy()
-    centroids /= np.array(
-        [[1, centroid_model.output_scale, centroid_model.output_scale, 1]]
-    )
-
-    return centroids, centroid_vals
-
-
-def extract_region_proposals(
-    imgs: tf.Tensor,
-    centroids: np.ndarray,
-    centroid_vals: np.ndarray,
-    instance_box_length: int,
-    merged_box_length: int,
-    merge_iou_threshold: float = 0.1,
-    nms_iou_threshold: float = 0.25,
-) -> List[RegionProposalSet]:
-    """Extracts a set of centered patches given detected centroids.
-
-    This function will attempt to merge overlapping bounding boxes and group them
-    accordingly, together with metadata about the region proposals.
-
-    Args:
-        imgs: A tensor of shape (samples, height, width, channels) to provide as input
-            to the trained model.
-        centroids: A float32 numpy array of shape (n_centroids, 4), where rows indicate
-            subscripts to detected peaks in the form (sample, row, col, channel).
-        centroid_vals: A float32 vector corresponding to the centroids that will be
-            used as the scores for the generated centered bounding boxes for subsequent
-            overlap merging via NMS.
+    Attributes:
         instance_box_length: Scalar int specifying the width and height of bounding
             boxes centered on individual instances (detected by centroids).
         merged_box_length: Scalar int specifing the width and height of the bounding
@@ -343,70 +314,115 @@ def extract_region_proposals(
             boxes at the midpoint between overlapping instances.
         nms_iou_threshold: Overlap threshold to use for suppressing bounding box
             overlaps via NMS. See nms_bboxes for more info.
-
-    Returns:
-        A list of RegionProposalSet instances, where each set consists of bounding box
-        metadata as well as the patches extracted from the final bounding boxes after
-        merging and filtering.
     """
 
-    # Create initial region proposals from bounding boxes centered on the centroids.
-    all_bboxes = make_centered_bboxes(centroids, instance_box_length)
+    instance_box_length: int
+    merged_box_length: int
+    merge_iou_threshold: float = 0.1
+    nms_iou_threshold: float = 0.25
 
-    # Group region proposals by sample indices.
-    sample_inds = centroids[:, 0].astype(int)
-    sample_grouped_bboxes = utils.group_array(all_bboxes, sample_inds)
-    sample_grouped_bbox_scores = utils.group_array(centroid_vals, sample_inds)
+    def generate_initial_proposals(self, centroids):
+        # Create initial region proposals from bounding boxes centered on the centroids.
+        all_bboxes = make_centered_bboxes(centroids, self.instance_box_length)
 
-    # Merge bounding boxes that are closely overlapping.
-    merged_bboxes = dict()
-    for sample in sample_grouped_bboxes.keys():
+        return all_bboxes
+
+    def merge_bboxes(self, bboxes, bbox_scores):
 
         # Generate new candidates by merging overlapping bounding boxes.
         candidate_bboxes, candidate_bbox_scores = generate_merged_bboxes(
-            sample_grouped_bboxes[sample],
-            sample_grouped_bbox_scores[sample],
-            merged_box_length=merged_box_length,
-            merge_iou_threshold=merge_iou_threshold,
+            bboxes,
+            bbox_scores,
+            merged_box_length=self.merged_box_length,
+            merge_iou_threshold=self.merge_iou_threshold,
         )
 
         # Suppress overlaps including merged proposals.
-        merged_bboxes[sample] = nms_bboxes(
-            candidate_bboxes, candidate_bbox_scores, iou_threshold=nms_iou_threshold
+        merged_bboxes = nms_bboxes(
+            candidate_bboxes,
+            candidate_bbox_scores,
+            iou_threshold=self.nms_iou_threshold,
         )
 
-    # Group merged proposals by size.
-    size_grouped_bboxes = defaultdict(list)
-    size_grouped_sample_inds = defaultdict(list)
-    for sample_ind, sample_bboxes in merged_bboxes.items():
-        for bbox in sample_bboxes:
+        return merged_bboxes
 
-            # Compute (height, width) of bounding box.
-            box_size = (int(bbox[2] - bbox[0]), int(bbox[3] - bbox[1]))
+    def merge_all_bboxes(self, centroids, centroid_vals, all_bboxes):
 
-            # Add to the size group.
-            size_grouped_bboxes[box_size].append(bbox)
-            size_grouped_sample_inds[box_size].append(sample_ind)
+        # Group region proposals by sample indices.
+        sample_inds = centroids[:, 0].astype(int)
+        sample_grouped_bboxes = utils.group_array(all_bboxes, sample_inds)
+        sample_grouped_bbox_scores = utils.group_array(centroid_vals, sample_inds)
 
-    # Generate proposal sets by size.
-    region_proposal_sets = []
-    for box_size in size_grouped_bboxes.keys():
+        # Merge bounding boxes that are closely overlapping.
+        merged_bboxes = dict()
+        for sample in sample_grouped_bboxes.keys():
 
-        # Gather size grouped data.
-        sample_inds = np.stack(size_grouped_sample_inds[box_size])
-        bboxes = np.stack(size_grouped_bboxes[box_size])
+            # Suppress overlaps including merged proposals.
+            merged_bboxes[sample] = self.merge_bboxes(
+                sample_grouped_bboxes[sample], sample_grouped_bbox_scores[sample]
+            )
 
-        # Extract image patches for all regions in the set.
-        patches = tf.image.crop_and_resize(
-            imgs,
-            boxes=normalize_bboxes(bboxes, imgs.shape[1], imgs.shape[2]),
-            box_indices=sample_inds,
-            crop_size=box_size,
+        return merged_bboxes
+
+    def size_group_bboxes(self, merged_bboxes):
+        # Group merged proposals by size.
+        size_grouped_bboxes = defaultdict(list)
+        size_grouped_sample_inds = defaultdict(list)
+        for sample_ind, sample_bboxes in merged_bboxes.items():
+            for bbox in sample_bboxes:
+
+                # Compute (height, width) of bounding box.
+                box_size = (int(bbox[2] - bbox[0]), int(bbox[3] - bbox[1]))
+
+                # Add to the size group.
+                size_grouped_bboxes[box_size].append(bbox)
+                size_grouped_sample_inds[box_size].append(sample_ind)
+
+        for box_size in size_grouped_bboxes:
+            size_grouped_bboxes[box_size] = np.stack(size_grouped_bboxes[box_size])
+            size_grouped_sample_inds[box_size] = np.stack(
+                size_grouped_sample_inds[box_size]
+            )
+
+        return size_grouped_bboxes, size_grouped_sample_inds
+
+    def extract_region_proposal_sets(
+        self, imgs, size_grouped_bboxes, size_grouped_sample_inds
+    ):
+
+        region_proposal_sets = []
+        for box_size in size_grouped_bboxes.keys():
+            # Gather size grouped data.
+            sample_inds = size_grouped_sample_inds[box_size]
+            bboxes = size_grouped_bboxes[box_size]
+
+            # Extract image patches for all regions in the set.
+            patches = extract_patches(
+                imgs, tf.cast(bboxes, tf.float32), tf.cast(sample_inds, tf.int32)
+            )
+
+            # Save proposal set.
+            region_proposal_sets.append(
+                RegionProposalSet(box_size, sample_inds, bboxes, patches)
+            )
+
+        return region_proposal_sets
+
+    def extract(self, imgs, centroids, centroid_vals):
+
+        if tf.is_tensor(centroids):
+            centroids = centroids.numpy()
+
+        if tf.is_tensor(centroid_vals):
+            centroid_vals = centroid_vals.numpy()
+
+        all_bboxes = self.generate_initial_proposals(centroids)
+        merged_bboxes = self.merge_all_bboxes(centroids, centroid_vals, all_bboxes)
+        size_grouped_bboxes, size_grouped_sample_inds = self.size_group_bboxes(
+            merged_bboxes
+        )
+        region_proposal_sets = self.extract_region_proposal_sets(
+            imgs, size_grouped_bboxes, size_grouped_sample_inds
         )
 
-        # Save proposal set.
-        region_proposal_sets.append(
-            RegionProposalSet(box_size, sample_inds, bboxes, patches)
-        )
-
-    return region_proposal_sets
+        return region_proposal_sets
