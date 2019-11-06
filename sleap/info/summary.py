@@ -114,6 +114,57 @@ class StatisticSeries:
                 series[lf.frame_idx] = val  # len(lf.instances)
         return series
 
+    def get_primary_point_displacement_series(
+        self, video, reduction="sum", primary_node=None
+    ):
+        """
+        Get sum of displacement for single node of each instance per frame.
+
+        Args:
+            video: The :class:`Video` for which to calculate statistic.
+            reduction: name of function applied to point scores:
+                * sum
+                * mean
+                * max
+            primary_node: The node for which we'll calculate displacement.
+                This can be name of node or `Node` object. If not specified,
+                then defaults to first node.
+
+        Returns:
+            The series dictionary (see class docs for details)
+        """
+        reduce_funct = dict(sum=np.sum, mean=np.nanmean, max=np.max)[reduction]
+
+        track_count = len(self.labels.find_first(video).instances)
+
+        try:
+            primary_node_idx = self.labels.skeletons[0].node_to_index(primary_node)
+        except:
+            print(f"Unable to locate node {primary_node} so using node 0")
+            primary_node_idx = 0
+
+        last_frame_idx = self.labels.find_last(video).frame_idx
+        location_matrix = np.full(
+            (last_frame_idx + 1, track_count, 2), np.nan, dtype=np.float
+        )
+        for lf in self.labels.find(video):
+            for inst in lf.instances:
+                if inst.track is not None:
+                    track_idx = self.labels.tracks.index(inst.track)
+                    if track_idx < track_count:
+                        frame_idx = lf.frame_idx
+                        point = inst.points_array[primary_node_idx, :2]
+                        location_matrix[frame_idx, track_idx] = point
+
+        displacement = location_matrix[1:, ...] - location_matrix[:-1, ...]
+
+        displacement_distances = np.linalg.norm(displacement, axis=2)
+
+        result = reduce_funct(displacement_distances, axis=1)
+        result[np.isnan(result)] = 0
+
+        return result
+
     @staticmethod
     def _calculate_frame_velocity(
         lf: "LabeledFrame", last_lf: "LabeledFrame", reduce_function: Callable
