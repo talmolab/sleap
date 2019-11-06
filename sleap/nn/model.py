@@ -1,15 +1,19 @@
+import os
 import attr
 import cattr
+import tensorflow as tf
 from tensorflow import keras
-
+import numpy as np
 from enum import Enum
-from typing import List
+from typing import List, Text, Callable, Tuple, Dict, Union
+import logging
 
+# from sleap.nn.training import TrainingJob
 from sleap.skeleton import Skeleton
 from sleap.nn.augmentation import Augmenter
 from sleap.nn.architectures import *
 
-from typing import Callable, Tuple, Dict, Union
+logger = logging.getLogger(__name__)
 
 
 class ModelOutputType(Enum):
@@ -200,3 +204,223 @@ class Model:
             output_type=ModelOutputType(model_dict["output_type"]),
             skeletons=model_dict["skeletons"],
         )
+
+
+@attr.s(auto_attribs=True)
+class InferenceModel:
+    """This class provides convenience metadata and methods for running inference from
+    a TrainingJob."""
+
+    job: "sleap.nn.training.TrainingJob"
+    _keras_model: keras.Model = None
+    _model_path: Text = None
+    _trained_input_shape: Tuple[int] = None
+    _output_channels: int = None
+
+    @property
+    def skeleton(self) -> Skeleton:
+        """Returns the skeleton associated with this model."""
+
+        return self.job.model.skeletons[0]
+
+    @property
+    def output_type(self) -> ModelOutputType:
+        """Returns the output type of this model."""
+
+        return self.job.model.output_type
+
+    @property
+    def input_scale(self) -> float:
+        """Returns the scale of the images that the model was trained on."""
+
+        return self.job.trainer.scale
+
+    @property
+    def output_scale(self) -> float:
+        """Returns the scale of the outputs of the model relative to the original data.
+
+        For a model trained on inputs with scale = 0.5 that outputs predictions that
+        are half of the size of the inputs, the output scale is 0.25.
+        """
+        return self.input_scale * self.job.model.output_scale
+
+    @property
+    def output_relative_scale(self) -> float:
+        """Returns the scale of the outputs relative to the scaled inputs.
+
+        This differs from output_scale in that it is the scaling factor after
+        applying the input scaling.
+        """
+
+        return self.job.model.output_scale
+
+    def compute_output_shape(
+        self, input_shape: Tuple[int], relative=True
+    ) -> Tuple[int]:
+        """Returns the output tensor shape for a given input shape.
+
+        Args:
+            input_shape: Shape of input images in the form (height, width).
+            relative: If True, input_shape specifies the shape after input scaling.
+
+        Returns:
+            A tuple of (height, width, channels) of the output of the model.
+        """
+
+        # TODO: Support multi-input/multi-output models.
+
+        scaling_factor = self.output_scale
+        if relative:
+            scaling_factor = self.output_relative_scale
+
+        output_shape = (
+            int(input_shape[0] * scaling_factor),
+            int(input_shape[1] * scaling_factor),
+            self.output_channels,
+        )
+
+        return output_shape
+
+    def load_model(self, model_path: Text = None) -> keras.Model:
+        """Loads a saved model from disk and caches it.
+
+        Args:
+            model_path: If not provided, uses the model
+                paths in the training job.
+
+        Returns:
+            The loaded Keras model. This model can accept any size
+            of inputs that are valid.
+        """
+
+        if not model_path:
+            # Try the best model first.
+            model_path = os.path.join(self.job.save_dir, self.job.best_model_filename)
+
+            # Try the final model if that didn't exist.
+            if not os.path.exists(model_path):
+                model_path = os.path.join(
+                    self.job.save_dir, self.job.final_model_filename
+                )
+
+        # Load from disk.
+        keras_model = keras.models.load_model(model_path, custom_objects={"tf": tf})
+        logger.info("Loaded model: " + model_path)
+
+        # Store the loaded model path for reference.
+        self._model_path = model_path
+
+        # TODO: Multi-input/output support
+        # Find the original data shape from the input shape of the first input node.
+        self._trained_input_shape = keras_model.get_input_shape_at(0)
+
+        # Save output channels since that should be static.
+        self._output_channels = keras_model.get_output_shape_at(0)[-1]
+
+        # Create input node with undetermined height/width.
+        input_tensor = keras.layers.Input((None, None, self.input_channels))
+        keras_model = keras.Model(
+            inputs=input_tensor, outputs=keras_model(input_tensor)
+        )
+
+        # Save the modified and loaded model.
+        self._keras_model = keras_model
+
+        return self.keras_model
+
+    @property
+    def keras_model(self) -> keras.Model:
+        """Returns the underlying Keras model, loading it if necessary."""
+
+        if self._keras_model is None:
+            self.load_model()
+
+        return self._keras_model
+
+    @property
+    def model_path(self) -> Text:
+        """Returns the path to the loaded model."""
+
+        if not self._model_path:
+            raise AttributeError(
+                "No model loaded. Call inference_model.load_model() first."
+            )
+
+        return self._model_path
+
+    @property
+    def trained_input_shape(self) -> Tuple[int]:
+        """Returns the shape of the model when it was loaded."""
+
+        if not self._trained_input_shape:
+            raise AttributeError(
+                "No model loaded. Call inference_model.load_model() first."
+            )
+
+        return self._trained_input_shape
+
+    @property
+    def output_channels(self) -> int:
+        """Returns the number of output channels of the model."""
+        if not self._trained_input_shape:
+            raise AttributeError(
+                "No model loaded. Call inference_model.load_model() first."
+            )
+
+        return self._output_channels
+
+    @property
+    def input_channels(self) -> int:
+        """Returns the number of channels expected for the input data."""
+
+        # TODO: Multi-output support
+        return self.trained_input_shape[-1]
+
+    @property
+    def is_grayscale(self) -> bool:
+        """Returns True if the model expects grayscale images."""
+
+        return self.input_channels == 1
+
+    @property
+    def down_blocks(self):
+        """Returns the number of pooling steps applied during the model.
+
+        Data needs to be of a shape divisible by the number of pooling steps.
+        """
+
+        # TODO: Replace this with an explicit calculation that takes stride sizes into account.
+        return self.job.model.down_blocks
+
+    def predict(
+        self,
+        X: Union[np.ndarray, List[np.ndarray]],
+        batch_size: int = 32,
+        normalize: bool = True,
+    ) -> Union[np.ndarray, List[np.ndarray]]:
+        """Runs inference on the input data.
+
+        This is a simple wrapper around the keras model predict function.
+
+        Args:
+            X: The inputs to provide to the model. Can be different height/width as
+                the data it was trained on.
+            batch_size: Batch size to perform inference on at a time.
+            normalize: Applies normalization to the input data if needed
+                (e.g., if casting or range normalization is required).
+
+        Returns:
+            The outputs of the model.
+        """
+
+        if normalize:
+            # TODO: Store normalization scheme in the model metadata.
+            if isinstance(X, np.ndarray):
+                if X.dtype == np.dtype("uint8"):
+                    X = X.astype("float32") / 255.0
+            elif isinstance(X, list):
+                for i in range(len(X)):
+                    if X[i].dtype == np.dtype("uint8"):
+                        X[i] = X[i].astype("float32") / 255.0
+
+        return self.keras_model.predict(X, batch_size=batch_size)

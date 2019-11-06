@@ -88,7 +88,9 @@ def batched_call(
     outputs = []
     output_batch_inds = []
     for batch_ind, batch_sample_inds in enumerate(batched_sample_inds):
-        batch_x = x[batch_sample_inds[0] : (batch_sample_inds[-1] + 1)]
+        ind0 = batch_sample_inds[0]
+        ind1 = batch_sample_inds[-1] + 1
+        batch_x = x[ind0:ind1]
 
         if call_with_batch_ind:
             batch_outputs = fn(batch_ind, batch_x)
@@ -97,7 +99,8 @@ def batched_call(
 
         outputs.append(batch_outputs)
         if return_batch_inds:
-            output_batch_inds.append(np.full(len(batch_outputs), batch_ind, dtype=np.int32))
+            output_batch_inds.append(np.full(len(batch_outputs), batch_ind,
+                dtype=np.int32))
 
     # Return concatenated outputs.
     if return_batch_inds:
@@ -186,7 +189,7 @@ def resize_imgs(
     target_width = tf.cast(tf.cast(img_width, tf.float32) * scale, tf.int32)
 
     if target_height != img_height or target_width != img_width:
-        
+
         # Apply resizing.
         imgs = tf.image.resize(imgs, [target_height, target_width], method=method)
 
@@ -196,22 +199,19 @@ def resize_imgs(
         divisible_height = tf.cast(
             tf.math.ceil(
                 tf.cast(target_height, tf.float32) / tf.cast(common_divisor, tf.float32)
-            )
-            * common_divisor, tf.int32
+            ) * common_divisor, tf.int32
         )
         divisible_width = tf.cast(
             tf.math.ceil(
                 tf.cast(target_width, tf.float32) / tf.cast(common_divisor, tf.float32)
-            )
-            * common_divisor, tf.int32
+            ) * common_divisor, tf.int32
         )
-        
         if divisible_height != target_height or divisible_width != target_width:
             # Pad bottom/right as needed.
             imgs = tf.image.pad_to_bounding_box(
                 imgs, 0, 0, divisible_height, divisible_width
             )
-        
+
     # Cast back to original dtype.
     imgs = tf.cast(imgs, initial_dtype)
 

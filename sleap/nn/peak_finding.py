@@ -16,8 +16,7 @@ import tensorflow as tf
 import numpy as np
 from typing import Union, Tuple
 
-from sleap.nn import inference
-from sleap.nn import region_proposal
+from sleap.nn import model
 from sleap.nn import utils
 
 
@@ -334,7 +333,7 @@ class RegionPeakSet:
 
 @attr.s(auto_attribs=True, eq=False)
 class ConfmapPeakFinder:
-    confmap_model: inference.InferenceModel
+    confmap_model: model.InferenceModel
     batch_size: int = 16
     rps_batch_size: int = 64
     smoothing_kernel_size: int = 5
@@ -396,7 +395,7 @@ class ConfmapPeakFinder:
         else:
             return tf.concat([peaks, tf.expand_dims(peak_vals, axis=1)], axis=1)
 
-    def predict_rps(self, rps: region_proposal.RegionProposalSet) -> RegionPeakSet:
+    def predict_rps(self, rps: "sleap.nn.region_proposal.RegionProposalSet") -> RegionPeakSet:
 
         # We also batch here to minimize retracing since we have many
         # irregular batch sizes when using region proposals.

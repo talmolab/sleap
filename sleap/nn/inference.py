@@ -5,8 +5,6 @@ import os
 import json
 import logging
 
-logger = logging.getLogger(__name__)
-
 import numpy as np
 import pandas as pd
 import h5py
@@ -47,6 +45,8 @@ from sleap.nn.peakmatching import (
     instances_nms,
 )
 from sleap.nn.util import batch, batch_count, save_visual_outputs
+
+logger = logging.getLogger(__name__)
 
 
 @attr.s(auto_attribs=True)

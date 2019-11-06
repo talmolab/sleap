@@ -12,9 +12,9 @@ from collections import defaultdict
 import numpy as np
 import tensorflow as tf
 
-from sleap.nn import inference
 from sleap.nn import peak_finding
 from sleap.nn import utils
+from sleap.nn import model
 
 
 @attr.s(auto_attribs=True, slots=True)
@@ -241,7 +241,7 @@ def normalize_bboxes(bboxes: np.ndarray, img_height: int, img_width: int) -> np.
 
 @attr.s(auto_attribs=True, eq=False)
 class CentroidPredictor:
-    centroid_model: inference.InferenceModel
+    centroid_model: model.InferenceModel
     batch_size: int = 16
 
     def preproc(self, imgs):
