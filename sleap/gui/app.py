@@ -768,7 +768,9 @@ class MainWindow(QMainWindow):
         self.overlays["track_labels"] = TrackListOverlay(self.labels, self.player)
         self.overlays["negative"] = NegativeAnchorOverlay(self.labels, self.player)
         self.overlays["trails"] = TrackTrailOverlay(self.labels, self.player)
-        self.overlays["instance"] = InstanceOverlay(self.labels, self.player)
+        self.overlays["instance"] = InstanceOverlay(
+            self.labels, self.player, self.state
+        )
 
         def overlay_state_connect(overlay, state_key, overlay_attribute=None):
             overlay_attribute = overlay_attribute or state_key

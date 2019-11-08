@@ -15,11 +15,18 @@ class InstanceOverlay:
     Attributes:
         labels: The :class:`Labels` dataset from which to get overlay data.
         player: The video player in which to show overlay.
+        state: Object used to communicate with application.
     """
 
     labels: Labels = None
     player: QtVideoPlayer = None
-    state: GuiState = GuiState()
+    state: GuiState = None
+
+    def __attrs_post_init__(self):
+        if self.state is None:
+            raise ValueError(
+                "InstanceOverlay initialized without application GuiState."
+            )
 
     def add_to_scene(self, video, frame_idx):
         """Adds overlay for frame to player scene."""
