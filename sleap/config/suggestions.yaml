@@ -4,7 +4,7 @@ main:
   label: Method
   type: stacked
   default: " "
-  options: " ,image features,sample,proofreading"
+  options: " ,image features,sample,prediction score,velocity"
 
   " ":
 
@@ -142,7 +142,7 @@ main:
 #    type: int
 #    default: 5
 
-  proofreading:
+  "prediction score":
 
   - name: score_limit
     label: Low score (lt)
@@ -154,6 +154,17 @@ main:
     type: int
     default: 2
     range: 1,10
+
+  velocity:
+  - name: node_idx
+    label: Node Index
+    type: int
+    default: 0
+  - name: threshold
+    label: Velocity Threshold
+    type: double
+    default: 0.1
+    range: 0.1,1.0
 
 - name: generate_button
   label: Generate Suggestions

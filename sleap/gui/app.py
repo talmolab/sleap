@@ -819,7 +819,7 @@ class MainWindow(QMainWindow):
         has_labeled_frames = self.labels is not None and any(
             (lf.video == self.state["video"] for lf in self.labels)
         )
-        has_suggestions = self.labels is not None and (len(self.labels.suggestions) > 0)
+        has_suggestions = self.labels is not None and bool(self.labels.suggestions)
         has_tracks = self.labels is not None and (len(self.labels.tracks) > 0)
         has_multiple_instances = (
             self.state["labeled_frame"] is not None

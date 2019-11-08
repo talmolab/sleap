@@ -7,14 +7,13 @@ import itertools
 import numpy as np
 import random
 
-from typing import List, Optional
+from typing import Callable, List, Optional
 
 from sleap.io.video import Video
 from sleap.info.feature_suggestions import (
     FeatureSuggestionPipeline,
     ParallelFeaturePipeline,
 )
-
 
 GroupType = int
 
@@ -35,7 +34,7 @@ class VideoFrameSuggestions(object):
     Implements various algorithms as methods:
     * sample (either random or evenly spaced sample frames from each video)
     * image features (raw images/brisk -> pca -> k-means)
-    * proofreading (frames with number of instances below specified score)
+    * prediction_score (frames with number of instances below specified score)
 
     Each of algorithm method should accept `labels`; other parameters will be
     passed from the `params` dict given to :meth:`suggest`.
@@ -60,7 +59,8 @@ class VideoFrameSuggestions(object):
         method_functions = dict(
             sample=cls.basic_sample_suggestion_method,
             image_features=cls.image_feature_based_method,
-            proofreading=cls.proofreading,
+            prediction_score=cls.prediction_score,
+            velocity=cls.velocity,
         )
 
         method = str.replace(params["method"], " ", "_")
@@ -68,6 +68,7 @@ class VideoFrameSuggestions(object):
             return method_functions[method](labels=labels, **params)
         else:
             print(f"No {method} method found for generating suggestions.")
+            return []
 
     # Functions corresponding to "method" param
 
@@ -140,19 +141,22 @@ class VideoFrameSuggestions(object):
             return suggestions
 
     @classmethod
-    def proofreading(cls, labels: "Labels", score_limit, instance_limit, **kwargs):
-        """Method to generate suggestions for proofreading."""
+    def prediction_score(cls, labels: "Labels", score_limit, instance_limit, **kwargs):
+        """
+        Method to generate suggestions for proofreading frames with low score.
+        """
         score_limit = float(score_limit)
         instance_limit = int(instance_limit)
 
         suggestions = []
         for video in labels.videos:
             suggestions.extend(
-                cls._proofreading_video(video, labels, score_limit, instance_limit)
+                cls._prediction_score_video(video, labels, score_limit, instance_limit)
             )
+        return suggestions
 
     @classmethod
-    def _proofreading_video(
+    def _prediction_score_video(
         cls, video: "Video", labels: "Labels", score_limit: float, instance_limit: int
     ):
         lfs = labels.find(video)
@@ -179,6 +183,44 @@ class VideoFrameSuggestions(object):
         result = idxs[low_instances >= instance_limit].tolist()
 
         return cls.idx_list_to_frame_list(result, video)
+
+    @classmethod
+    def velocity(cls, labels: "Labels", node_idx: int, threshold: float, **kwargs):
+        """
+        Finds frames for proofreading with high node velocity.
+        """
+
+        try:
+            node_name = labels.skeletons[0].nodes[node_idx]
+        except IndexError:
+            node_name = ""
+
+        suggestions = []
+        for video in labels.videos:
+            suggestions.extend(cls._velocity_video(video, labels, node_name, threshold))
+        return suggestions
+
+    @classmethod
+    def _velocity_video(
+        cls, video: "Video", labels: "Labels", node_name: str, threshold: float
+    ):
+        from sleap.info.summary import StatisticSeries
+
+        displacements = StatisticSeries(labels).get_primary_point_displacement_series(
+            video=video, reduction="sum", primary_node=node_name
+        )
+        data_range = np.ptp(displacements)
+        data_min = np.min(displacements)
+        frame_idxs = list(
+            map(
+                int,
+                np.squeeze(
+                    np.argwhere(displacements - data_min > data_range * threshold)
+                ),
+            )
+        )
+
+        return cls.idx_list_to_frame_list(frame_idxs, video)
 
     # Utility functions
 
