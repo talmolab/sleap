@@ -81,7 +81,7 @@ class QtVideoPlayer(QWidget):
         self.color_manager = color_manager or ColorManager()
         self.state = state or GuiState()
         self.context = context
-        self.view = GraphicsView(self.state)
+        self.view = GraphicsView(self.state, self)
         self.video = None
 
         self.seekbar = VideoSlider(color_manager=self.color_manager)
@@ -101,6 +101,9 @@ class QtVideoPlayer(QWidget):
         if self.context:
             self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
             self.customContextMenuRequested.connect(self.show_contextual_menu)
+            self.is_menu_enabled = True
+        else:
+            self.is_menu_enabled = False
 
         self.seekbar.valueChanged.connect(
             lambda e: self.state.set("frame_idx", self.seekbar.value())
@@ -127,6 +130,9 @@ class QtVideoPlayer(QWidget):
             self.load_video(video)
 
     def show_contextual_menu(self, where: QtCore.QPoint):
+        if not self.is_menu_enabled:
+            return
+
         scene_pos = self.view.mapToScene(where)
         menu = QtWidgets.QMenu()
 
@@ -499,13 +505,16 @@ class GraphicsView(QGraphicsView):
     leftMouseButtonDoubleClicked = QtCore.Signal(float, float)
     rightMouseButtonDoubleClicked = QtCore.Signal(float, float)
 
-    def __init__(self, state=None, *args, **kwargs):
+    def __init__(self, state=None, player=None, *args, **kwargs):
         """ https://github.com/marcel-goldschen-ohm/PyQtImageViewer/blob/master/QtImageViewer.py """
         QGraphicsView.__init__(self)
         self.state = state or GuiState()
+
+        self.player = player
+
         self.scene = QGraphicsScene()
         self.setScene(self.scene)
-        # brush = QBrush(QColor.black())
+
         self.scene.setBackgroundBrush(QBrush(QColor(Qt.black)))
 
         self._pixmapHandle = None
@@ -706,6 +715,11 @@ class GraphicsView(QGraphicsView):
         """
         QGraphicsView.mouseReleaseEvent(self, event)
         scenePos = self.mapToScene(event.pos())
+
+        # re-enable contextual menu if necessary
+        if self.player:
+            self.player.is_menu_enabled = True
+
         # check if mouse moved during click
         has_moved = event.pos() != self._down_pos
         if event.button() == Qt.LeftButton:
@@ -1022,10 +1036,11 @@ class QtNode(QGraphicsEllipseItem):
         **kwargs,
     ):
         self._parent_instance = parent
+        self.player = player
         self.point = point
         self.node = node
         self.radius = radius
-        self.color_manager = player.color_manager
+        self.color_manager = self.player.color_manager
         self.color = self.color_manager.get_item_color(
             self.node, self._parent_instance.instance
         )
@@ -1164,6 +1179,10 @@ class QtNode(QGraphicsEllipseItem):
         elif event.button() == Qt.RightButton:
             # Right-click to toggle node as missing from this instance
             self.toggleVisibility()
+
+            # Disable contextual menu for right clicks on node
+            self.player.is_menu_enabled = False
+
             self.point.complete = True  # FIXME: move to command
             self.updatePoint(user_change=True)
         elif event.button() == Qt.MidButton:
