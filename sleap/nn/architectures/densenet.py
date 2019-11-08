@@ -59,7 +59,7 @@ class DenseNet121:
         # Automatically downloads weights
         backbone_model = applications.densenet.DenseNet121(
             include_top=False,
-            input_shape=(int(x_in.shape[-3]), int(x_in.shape[-2]), 3),
+            input_shape=x.shape[1:],
             weights="imagenet" if self.pretrained else None,
             pooling=None,
             backend=tf.keras.backend,
@@ -144,7 +144,7 @@ class DenseNet169:
         # Automatically downloads weights
         backbone_model = applications.densenet.DenseNet169(
             include_top=False,
-            input_shape=(int(x_in.shape[-3]), int(x_in.shape[-2]), 3),
+            input_shape=x.shape[1:],
             weights="imagenet" if self.pretrained else None,
             pooling=None,
             backend=tf.keras.backend,
@@ -229,7 +229,7 @@ class DenseNet201:
         # Automatically downloads weights
         backbone_model = applications.densenet.DenseNet201(
             include_top=False,
-            input_shape=(int(x_in.shape[-3]), int(x_in.shape[-2]), 3),
+            input_shape=x.shape[1:],
             weights="imagenet" if self.pretrained else None,
             pooling=None,
             backend=tf.keras.backend,

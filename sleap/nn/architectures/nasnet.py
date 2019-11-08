@@ -59,7 +59,7 @@ class NASNetMobile:
         # Automatically downloads weights
         backbone_model = applications.nasnet.NASNetMobile(
             include_top=False,
-            input_shape=(int(x_in.shape[-3]), int(x_in.shape[-2]), 3),
+            input_shape=x.shape[1:],
             weights="imagenet" if self.pretrained else None,
             pooling=None,
             backend=tf.keras.backend,
@@ -144,7 +144,7 @@ class NASNetLarge:
         # Automatically downloads weights
         backbone_model = applications.nasnet.NASNetLarge(
             include_top=False,
-            input_shape=(int(x_in.shape[-3]), int(x_in.shape[-2]), 3),
+            input_shape=x.shape[1:],
             weights="imagenet" if self.pretrained else None,
             pooling=None,
             backend=tf.keras.backend,

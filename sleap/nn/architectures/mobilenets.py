@@ -73,7 +73,7 @@ class MobileNetV1:
         # Automatically downloads weights
         backbone_model = applications.mobilenet.MobileNet(
             include_top=False,
-            input_shape=(int(x_in.shape[-3]), int(x_in.shape[-2]), 3),
+            input_shape=x.shape[1:],
             weights="imagenet" if self.pretrained else None,
             depth_multiplier=self.depth_multiplier,
             alpha=self.alpha,
@@ -168,7 +168,7 @@ class MobileNetV2:
         # Automatically downloads weights
         backbone_model = applications.mobilenet_v2.MobileNetV2(
             include_top=False,
-            input_shape=(int(x_in.shape[-3]), int(x_in.shape[-2]), 3),
+            input_shape=x.shape[1:],
             weights="imagenet" if self.pretrained else None,
             alpha=self.alpha,
             pooling=None,
