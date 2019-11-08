@@ -1108,13 +1108,17 @@ class Labels(MutableSequence):
 
         skeleton_cattr = Skeleton.make_cattr(idx_to_node)
 
+        # Make attr for tracks so that we save as tuples rather than dicts;
+        # this can save a lot of space when there are lots of tracks.
+        track_cattr = cattr.Converter(unstruct_strat=cattr.UnstructureStrategy.AS_TUPLE)
+
         # Serialize the skeletons, videos, and labels
         dicts = {
             "version": LABELS_JSON_FILE_VERSION,
             "skeletons": skeleton_cattr.unstructure(self.skeletons),
             "nodes": cattr.unstructure(self.nodes),
             "videos": Video.cattr().unstructure(self.videos),
-            "tracks": cattr.unstructure(self.tracks),
+            "tracks": track_cattr.unstructure(self.tracks),
             "suggestions": label_cattr.unstructure(self.suggestions),
             "negative_anchors": label_cattr.unstructure(self.negative_anchors),
         }
@@ -1274,7 +1278,19 @@ class Labels(MutableSequence):
             dicts["skeletons"], List[Skeleton]
         )
         videos = Video.cattr().structure(dicts["videos"], List[Video])
-        tracks = cattr.structure(dicts["tracks"], List[Track])
+
+        try:
+            # First try unstructuring tuple (newer format)
+            track_cattr = cattr.Converter(
+                unstruct_strat=cattr.UnstructureStrategy.AS_TUPLE
+            )
+            tracks = track_cattr.structure(dicts["tracks"], List[Track])
+        except:
+            # Then try unstructuring dict (older format)
+            try:
+                tracks = cattr.structure(dicts["tracks"], List[Track])
+            except:
+                raise ValueError("Unable to load tracks as tuple or dict!")
 
         # if we're given a Labels object to match, use its objects when they match
         if match_to is not None:

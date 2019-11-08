@@ -369,6 +369,8 @@ class MainWindow(QMainWindow):
             "None",
             "Point Displacement (sum)",
             "Point Displacement (max)",
+            "Primary Point Displacement (sum)",
+            "Primary Point Displacement (max)",
             "Instance Score (sum)",
             "Instance Score (min)",
             "Point Score (sum)",
@@ -766,7 +768,9 @@ class MainWindow(QMainWindow):
         self.overlays["track_labels"] = TrackListOverlay(self.labels, self.player)
         self.overlays["negative"] = NegativeAnchorOverlay(self.labels, self.player)
         self.overlays["trails"] = TrackTrailOverlay(self.labels, self.player)
-        self.overlays["instance"] = InstanceOverlay(self.labels, self.player)
+        self.overlays["instance"] = InstanceOverlay(
+            self.labels, self.player, self.state
+        )
 
         def overlay_state_connect(overlay, state_key, overlay_attribute=None):
             overlay_attribute = overlay_attribute or state_key
@@ -779,14 +783,13 @@ class MainWindow(QMainWindow):
             )
 
         overlay_state_connect(self.overlays["trails"], "show trails", "show")
-        overlay_state_connect(
-            self.overlays["instance"], "color predicted", "color_predicted"
-        )
         overlay_state_connect(self.overlays["trails"], "trail_length")
 
         overlay_state_connect(self.color_manager, "palette")
         overlay_state_connect(self.color_manager, "distinctly_color")
+        overlay_state_connect(self.color_manager, "color predicted", "color_predicted")
         self.state.connect("palette", lambda x: self.updateSeekbarMarks())
+
         # update the skeleton tables since we may want to redraw colors
         self.state.connect(
             "palette", lambda x: self.on_data_update([UpdateTopic.skeleton])
@@ -797,6 +800,11 @@ class MainWindow(QMainWindow):
 
         # Set defaults
         self.state["trail_length"] = 4
+
+        # Emit signals for default that may have been set earlier
+        self.state.emit("palette")
+        self.state.emit("distinctly_color")
+        self.state.emit("color predicted")
 
     def _update_gui_state(self):
         """Enable/disable gui items based on current state."""
@@ -811,7 +819,7 @@ class MainWindow(QMainWindow):
         has_labeled_frames = self.labels is not None and any(
             (lf.video == self.state["video"] for lf in self.labels)
         )
-        has_suggestions = self.labels is not None and (len(self.labels.suggestions) > 0)
+        has_suggestions = self.labels is not None and bool(self.labels.suggestions)
         has_tracks = self.labels is not None and (len(self.labels.tracks) > 0)
         has_multiple_instances = (
             self.state["labeled_frame"] is not None
@@ -1061,6 +1069,8 @@ class MainWindow(QMainWindow):
         header_functions = {
             "Point Displacement (sum)": data_obj.get_point_displacement_series,
             "Point Displacement (max)": data_obj.get_point_displacement_series,
+            "Primary Point Displacement (sum)": data_obj.get_primary_point_displacement_series,
+            "Primary Point Displacement (max)": data_obj.get_primary_point_displacement_series,
             "Instance Score (sum)": data_obj.get_instance_score_series,
             "Instance Score (min)": data_obj.get_instance_score_series,
             "Point Score (sum)": data_obj.get_point_score_series,

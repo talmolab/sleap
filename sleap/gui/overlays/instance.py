@@ -15,14 +15,18 @@ class InstanceOverlay:
     Attributes:
         labels: The :class:`Labels` dataset from which to get overlay data.
         player: The video player in which to show overlay.
-        color_predicted: Whether to show predicted instances in color (
-            rather than all in gray/yellow).
+        state: Object used to communicate with application.
     """
 
     labels: Labels = None
     player: QtVideoPlayer = None
-    color_predicted: bool = False
-    state: GuiState = GuiState()
+    state: GuiState = None
+
+    def __attrs_post_init__(self):
+        if self.state is None:
+            raise ValueError(
+                "InstanceOverlay initialized without application GuiState."
+            )
 
     def add_to_scene(self, video, frame_idx):
         """Adds overlay for frame to player scene."""

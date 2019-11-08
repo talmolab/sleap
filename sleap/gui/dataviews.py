@@ -364,6 +364,7 @@ class SuggestionsTableModel(GenericTableModel):
         video_string = f"{labels.videos.index(item.video)}: {os.path.basename(item.video.filename)}"
 
         item_dict["group"] = str(item.group) if item.group is not None else ""
+        item_dict["group_int"] = item.group if item.group is not None else -1
         item_dict["video"] = video_string
         item_dict["frame"] = int(item.frame_idx) + 1  # start at frame 1 rather than 0
 
@@ -389,34 +390,42 @@ class SuggestionsTableModel(GenericTableModel):
         prop = self.properties[column_idx]
         reverse = order == QtCore.Qt.SortOrder.DescendingOrder
 
-        if prop != "group" or not reverse:
+        if prop != "group":
             super(SuggestionsTableModel, self).sort(column_idx, order)
         else:
-            # Instead of a reverse sort order on groups, we'll interleave the
-            # items so that we get the earliest item from each group, then the
-            # second item from each group, and so on.
 
-            # Make a decorated list of items with positions in group (plus the
-            # secondary sort keys: group, video, and frame)
-            self._data.sort(key=itemgetter("group"))
-            decorated_data = []
-            last_group = object()
-            for item in self._data:
-                if last_group != item["group"]:
-                    group_i = 0
-                decorated_data.append(
-                    (group_i, item["group"], item["video"], item["frame"], item)
-                )
-                last_group = item["group"]
-                group_i += 1
+            if not reverse:
+                # Use group_int (int) instead of group (str).
+                self.beginResetModel()
+                self._data.sort(key=itemgetter("group_int"))
+                self.endResetModel()
 
-            # Sort decorated list
-            decorated_data.sort()
+            else:
+                # Instead of a reverse sort order on groups, we'll interleave the
+                # items so that we get the earliest item from each group, then the
+                # second item from each group, and so on.
 
-            # Undecorate the list and update table
-            self.beginResetModel()
-            self._data = [item for (*_, item) in decorated_data]
-            self.endResetModel()
+                # Make a decorated list of items with positions in group (plus the
+                # secondary sort keys: group, video, and frame)
+                self._data.sort(key=itemgetter("group_int"))
+                decorated_data = []
+                last_group = object()
+                for item in self._data:
+                    if last_group != item["group_int"]:
+                        group_i = 0
+                    decorated_data.append(
+                        (group_i, item["group_int"], item["video"], item["frame"], item)
+                    )
+                    last_group = item["group_int"]
+                    group_i += 1
+
+                # Sort decorated list
+                decorated_data.sort()
+
+                # Undecorate the list and update table
+                self.beginResetModel()
+                self._data = [item for (*_, item) in decorated_data]
+                self.endResetModel()
 
         # Update order in project (so order can be saved and affects what we
         # consider previous/next suggestion for navigation).

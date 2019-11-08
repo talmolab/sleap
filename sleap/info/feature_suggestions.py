@@ -6,16 +6,225 @@ Module for generating lists of frames using frame features, pca, kmeans, etc.
 import attr
 import cattr
 import itertools
+import logging
 import numpy as np
 import random
-from typing import Dict, List, Optional
+from time import time
+from typing import Dict, List, Optional, Tuple
 
 import cv2
 
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
 
+from skimage import draw
+from skimage.feature import hog
+from skimage.util.shape import view_as_windows
+
 from sleap.io.video import Video
+
+logger = logging.getLogger(__name__)
+
+
+@attr.s(auto_attribs=True)
+class BriskVec:
+
+    brisk_threshold: int
+    vocab_size: int
+    debug: bool = False
+
+    def __attrs_post_init__(self):
+        self._brisk = cv2.BRISK_create(thresh=self.brisk_threshold)
+
+    def get_vecs(self, imgs):
+        all_descs = []
+        row_img = []
+
+        # Create matrix with multiple brisk descriptors for each image.
+        for i, img in enumerate(imgs):
+            kps, descs = self._brisk.detectAndCompute(img, None)
+
+            # Brisk descriptor is 512 bits, but opencv returns this as 16 uint8's,
+            # so we'll convert it to discrete numbers.
+            descs = np.unpackbits(descs, axis=1)
+
+            # Make list with all brisk descriptors (or all images) and map which
+            # tells us which descriptor goes with which image
+            row_img.extend([i] * len(descs))
+            all_descs.append(descs)
+
+        # Convert to single matrix of descriptors
+        all_descs = np.concatenate(all_descs)
+
+        # Convert to single matrix of row (individual descriptor) -> image index
+        row_img = np.array(row_img)
+
+        # Create a bag of features for each image by clustering the brisk image
+        # descriptors (these clusters will be the "words" in a bag of words for
+        # each image), then generate vocab-length vector for each image which
+        # represents whether the "word" (i.e., brisk feature in some cluster)
+        # is present in the image.
+
+        kmeans = KMeans(n_clusters=self.vocab_size).fit(all_descs)
+        return self.clusters_to_vecs(kmeans.labels_, row_img, len(imgs))
+        # img_bags = np.zeros((len(imgs), self.vocab_size), dtype="bool")
+        #
+        # for i in range(len(imgs)):
+        #     img_words = kmeans.labels_[row_img == i]
+        #     img_bags[(i,), img_words] = 1
+        #
+        # return img_bags
+
+    def clusters_to_vecs(self, cluster_labels, ownership, img_count):
+
+        # Make helper function that builds bag of features vector for a single
+        # image by looking up all the descriptors for an image and counting
+        # how many there are for each cluster (vocab word).
+        def img_bof_vec(img_idx):
+            return np.bincount(
+                cluster_labels[ownership == img_idx], minlength=self.vocab_size
+            )
+
+        # Now make the matrix with a bag of features vector for each image
+        return np.stack([img_bof_vec(i) for i in range(img_count)])
+
+
+@attr.s(auto_attribs=True)
+class HogVec:
+
+    brisk_threshold: int
+    vocab_size: int
+    debug: bool = False
+
+    def __attrs_post_init__(self):
+        self._brisk = cv2.BRISK_create(thresh=self.brisk_threshold)
+        self.points_list = []
+        self.cmap = [
+            [31, 120, 180],
+            [51, 160, 44],
+            [227, 26, 28],
+            [255, 127, 0],
+            [106, 61, 154],
+            [177, 89, 40],
+            [166, 206, 227],
+            [178, 223, 138],
+            [251, 154, 153],
+            [253, 191, 111],
+            [202, 178, 214],
+            [255, 255, 153],
+        ]
+
+    def get_vecs(self, imgs):
+        # Get matrix of hog descriptors for all images, and array which says
+        # which image is the source for each row.
+        descs, ownership = self.get_hogs(imgs)
+
+        # Cluster the descriptors into a vocabulary for bag of features
+        kmeans = KMeans(n_clusters=self.vocab_size).fit(descs)
+
+        if self.debug:
+            if imgs.shape[-1] == 1:
+                new_shape = (imgs.shape[0], imgs.shape[1], imgs.shape[2], 3)
+
+                self.vis = np.empty(new_shape, dtype=imgs.dtype)
+                self.vis[..., 0] = imgs[..., 0]
+                self.vis[..., 1] = imgs[..., 0]
+                self.vis[..., 2] = imgs[..., 0]
+            else:
+                self.vis = np.copy(imgs)
+
+            for i, img in enumerate(self.vis):
+                img_desc_clusters = kmeans.labels_[ownership == i]
+                img_points = self.points_list[i]
+                for point, cluster in zip(img_points, img_desc_clusters):
+                    color = self.cmap[cluster % len(self.cmap)]
+                    cv2.circle(img, tuple(point), 3, color, lineType=cv2.LINE_AA)
+
+        return self.clusters_to_vecs(kmeans.labels_, ownership, len(imgs))
+
+    def clusters_to_vecs(self, cluster_labels, ownership, img_count):
+
+        # Make helper function that builds bag of features vector for a single
+        # image by looking up all the descriptors for an image and counting
+        # how many there are for each cluster (vocab word).
+        def img_bof_vec(img_idx):
+            return np.bincount(
+                cluster_labels[ownership == img_idx], minlength=self.vocab_size
+            )
+
+        # Now make the matrix with a bag of features vector for each image
+        return np.stack([img_bof_vec(i) for i in range(img_count)])
+
+    def get_hogs(self, imgs):
+        """Returns descriptors and corresponding image for all images."""
+        per_image_hog_descriptors = [self.get_image_hog(img) for img in imgs]
+        descs = np.concatenate(
+            [image_descs for image_descs in per_image_hog_descriptors]
+        )
+        ownership = np.array(
+            list(
+                itertools.chain.from_iterable(
+                    [
+                        [i] * len(image_descs)
+                        for i, image_descs in enumerate(per_image_hog_descriptors)
+                    ]
+                )
+            )
+        )
+        return descs, ownership
+
+    def get_image_hog(self, img):
+        """Returns hog descriptor for all brisk keypoints on single image."""
+        points = self.get_brisk_keypoints_as_points(img)
+        center_points = points + np.array([8, 8])
+
+        crops = self.get_image_crops(img, center_points)
+        multichannel = img.ndim > 2
+
+        img_descs = np.stack(
+            [
+                hog(
+                    crop,
+                    orientations=8,
+                    pixels_per_cell=(16, 16),
+                    cells_per_block=(1, 1),
+                    visualize=False,
+                    multichannel=multichannel,
+                )
+                for crop in crops
+            ]
+        )
+        return img_descs
+
+    def get_image_crops(self, img, points):
+        """Returns stack of windows around keypoints on single image."""
+        W = view_as_windows(img, (16, 16, img.shape[-1]))[..., 0, :, :, :]
+
+        max_y = W.shape[1] - 1
+        max_x = W.shape[0] - 1
+
+        xs = points[:, 0]
+        ys = points[:, 1]
+
+        # Shift crops for keypoints that are too close to edges
+        # TODO: is this how we should handle this case?
+        xs[xs > max_x] = max_x
+        ys[ys > max_y] = max_y
+
+        return W[xs, ys]
+
+    def get_brisk_keypoints_as_points(self, img):
+        """Returns matrix of brisk keypoints for single image."""
+        kps = self._brisk.detect(img)
+        points = self.keypoints_to_points_matrix(kps)
+        return points
+
+    def keypoints_to_points_matrix(self, kps):
+        points = np.round(np.array([kps[idx].pt for idx in range(0, len(kps))])).astype(
+            np.int
+        )
+        self.points_list.append(points)
+        return points
 
 
 @attr.s(auto_attribs=True, frozen=True)
@@ -231,31 +440,15 @@ class ItemStack(object):
         row_size = np.product(meta["shape"])
         self.data = np.reshape(self.data, (row_count, row_size))
 
-    def brisk(self, threshold=30):
-        """Transforms data from raw images to brisk features."""
-        meta = dict(action="brisk")
-        self.meta.append(meta)
+    def brisk_bag_of_features(self, brisk_threshold=40, vocab_size=20):
+        """Transform data using bag of features based on brisk features."""
+        brisk = BriskVec(brisk_threshold=brisk_threshold, vocab_size=vocab_size)
+        self.data = brisk.get_vecs(self.data)
 
-        brisk = cv2.BRISK_create(thresh=threshold)
-
-        brisk_data = None
-        brisk_ownership = []
-        # start_i = 0
-        for item in self.items:
-            img = self.get_item_data(item)[0]
-
-            kps, descs = brisk.detectAndCompute(img, None)
-
-            if descs is not None:
-                if brisk_data is None:
-                    brisk_data = descs
-                else:
-                    brisk_data = np.concatenate((brisk_data, descs))
-
-                self.extend_ownership(brisk_ownership, row_count=descs.shape[0])
-
-        self.data = brisk_data
-        self.ownership = brisk_ownership
+    def hog_bag_of_features(self, brisk_threshold=40, vocab_size=20):
+        """Transforms data into bag of features vector of hog descriptors."""
+        hog = HogVec(brisk_threshold=brisk_threshold, vocab_size=vocab_size)
+        self.data = hog.get_vecs(self.data)
 
     def pca(self, n_components: int):
         """Transforms data by applying PCA."""
@@ -329,7 +522,19 @@ class ItemStack(object):
             )
             self.group_sets.append(new_groupset)
 
-    def to_suggestion_frames(self, group_offset: int = 0):
+    def to_suggestion_tuples(
+        self, videos, group_offset: int = 0, video_offset: int = 0
+    ) -> List[Tuple[int, int, int]]:
+        tuples = []
+        for frame in self.items:
+            group = self.current_groupset.get_item_group(frame)
+            if group is not None:
+                group += group_offset
+            video_idx = videos.index(frame.video) + video_offset
+            tuples.append((video_idx, frame.frame_idx, group))
+        return tuples
+
+    def to_suggestion_frames(self, group_offset: int = 0) -> List["SuggestionFrame"]:
         from sleap.gui.suggestions import SuggestionFrame
 
         suggestions = []
@@ -350,46 +555,146 @@ class FeatureSuggestionPipeline(object):
     n_components: int
     n_clusters: int
     per_cluster: int
-    brisk_threshold: int = 80
+    brisk_threshold: int = 40
+    vocab_size: int = 20
+    frame_data: Optional[ItemStack] = None
 
-    def run(self, videos):
-        frame_data = ItemStack()
+    def run_disk_stage(self, videos):
+        self.frame_data = ItemStack()
 
         # Make the list of frames, sampling from each video
-        frame_data.make_sample_group(
+        self.frame_data.make_sample_group(
             videos, samples_per_video=self.per_video, sample_method=self.sample_method
         )
-        frame_data.get_all_items_from_group()
+        self.frame_data.get_all_items_from_group()
 
         # Load the frame images
-        frame_data.get_raw_images(scale=self.scale)
+        self.frame_data.get_raw_images(scale=self.scale)
+
+    def run_processing_state(self):
+        if self.frame_data is None:
+            raise ValueError(
+                "Processing state called before disk stage (frame_data is None)"
+            )
 
         # Generate feature data for each frame
         if self.feature_type == "brisk":
-            # Get brisk descriptors for keypoints in each image.
-            # This will result in multiple rows of data for each image
-            # (the ImageStack object handles this behinds the scenes).
-            frame_data.brisk(threshold=self.brisk_threshold)
+            # Get bag of features vector for each image from brisk descriptors
+            # for brisk keypoints on each image.
+            self.frame_data.brisk_bag_of_features(
+                brisk_threshold=self.brisk_threshold, vocab_size=self.vocab_size
+            )
+        elif self.feature_type == "hog":
+            # Get bag of features vector for each image from hog descriptors
+            # at brisk keypoints.
+            self.frame_data.hog_bag_of_features(
+                brisk_threshold=self.brisk_threshold, vocab_size=self.vocab_size
+            )
         else:
             # Flatten the raw image matrix for each image
-            frame_data.flatten()
+            self.frame_data.flatten()
 
         # Transform data using PCA
-        frame_data.pca(n_components=self.n_components)
+        self.frame_data.pca(n_components=self.n_components)
 
         # Generate groups of frames using k-means
-        frame_data.kmeans(n_clusters=self.n_clusters)
+        self.frame_data.kmeans(n_clusters=self.n_clusters)
 
         # Limit the number of items in each group
-        frame_data.sample_groups(samples_per_group=self.per_cluster)
+        self.frame_data.sample_groups(samples_per_group=self.per_cluster)
 
         # Finally, make the list of items across all the groups
-        frame_data.get_all_items_from_group()
+        self.frame_data.get_all_items_from_group()
 
-        return frame_data
+        return self.frame_data
+
+    def run(self, videos):
+        # Only run disk stage is we're running from scratch; otherwise, we
+        # assume that the disk stage was already run.
+        if self.frame_data is None:
+            self.run_disk_stage(videos)
+        self.run_processing_state()
+        return self.frame_data
+
+    def reset(self):
+        self.frame_data = None
 
     def get_suggestion_frames(self, videos, group_offset=0):
         return self.run(videos).to_suggestion_frames(group_offset)
+
+    def get_suggestion_tuples(self, videos, group_offset=0, video_offset=0):
+        return self.run(videos).to_suggestion_tuples(videos, group_offset, video_offset)
+
+
+@attr.s(auto_attribs=True, slots=True)
+class ParallelFeaturePipeline(object):
+    """
+    Enables easy per-video pipeline parallelization for feature suggestions.
+
+    Create a `FeatureSuggestionPipeline` with the desired parameters, and
+    then call `ParallelFeaturePipeline.run()` with the pipeline and the list
+    of videos to process in parallel. This will take care of serializing the
+    videos, running the pipelines in a process pool, and then deserializing
+    the results back into a single list of `SuggestionFrame` objects.
+    """
+
+    pipeline: FeatureSuggestionPipeline
+    videos_as_dicts: List[Dict]
+
+    def get(self, video_idx):
+        """Apply pipeline to single video by idx. Can be called in process."""
+        video_dict = self.videos_as_dicts[video_idx]
+        video = cattr.structure(video_dict, Video)
+        group_offset = video_idx * self.pipeline.n_clusters
+
+        # t0 = time()
+        # logger.info(f"starting {video_idx}")
+
+        result = self.pipeline.get_suggestion_tuples(
+            videos=[video], group_offset=group_offset, video_offset=video_idx
+        )
+        self.pipeline.reset()
+
+        # logger.info(f"done with {video_idx} in {time() - t0} s for {len(result)} suggestions")
+        return result
+
+    @classmethod
+    def make(cls, pipeline, videos):
+        """Make class object from pipeline and list of videos."""
+        videos_as_dicts = cattr.unstructure(videos)
+        return cls(pipeline, videos_as_dicts)
+
+    @classmethod
+    def tuples_to_suggestions(cls, tuples, videos):
+        """Converts serialized data from processes back into SuggestionFrames."""
+        from sleap.gui.suggestions import SuggestionFrame
+
+        suggestions = []
+        for (video_idx, frame_idx, group) in tuples:
+            video = videos[video_idx]
+            suggestions.append(SuggestionFrame(video, frame_idx, group))
+        return suggestions
+
+    @classmethod
+    def run(cls, pipeline, videos, parallel=True):
+        """Runs pipeline on all videos in parallel and returns suggestions."""
+        from multiprocessing import Pool, Lock
+
+        pp = cls.make(pipeline, videos)
+        video_idxs = list(range(len(videos)))
+
+        if parallel:
+
+            pool = Pool()
+
+            per_video_tuples = pool.map(pp.get, video_idxs)
+
+        else:
+            per_video_tuples = map(pp.get, video_idxs)
+
+        tuples = list(itertools.chain.from_iterable(per_video_tuples))
+
+        return pp.tuples_to_suggestions(tuples, videos)
 
 
 def demo_pipeline():
@@ -401,16 +706,17 @@ def demo_pipeline():
     ]
 
     pipeline = FeatureSuggestionPipeline(
-        per_video=100,
+        per_video=10,
         scale=0.25,
-        sample_method="stride",
-        feature_type="raw",
-        brisk_threshold=80,
+        sample_method="random",
+        feature_type="hog",
+        brisk_threshold=120,
         n_components=5,
         n_clusters=5,
         per_cluster=5,
     )
-    suggestions = pipeline.get_suggestion_frames(vids)
+
+    suggestions = ParallelFeaturePipeline.run(pipeline, vids, parallel=False)
 
     print(suggestions)
 

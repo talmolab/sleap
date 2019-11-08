@@ -54,7 +54,7 @@ def get_occupancy_and_points_matrices(
         * occupancy matrix with shape (tracks, frames)
         * point location matrix with shape (frames, nodes, 2, tracks)
     """
-    track_count = len(labels.tracks)
+    track_count = len(labels.tracks) or 1
     node_count = len(labels.skeletons[0].nodes)
 
     frame_idxs = [lf.frame_idx for lf in labels]
@@ -78,7 +78,14 @@ def get_occupancy_and_points_matrices(
 
     for lf, inst in [(lf, inst) for lf in labels for inst in lf.instances]:
         frame_i = lf.frame_idx - first_frame_idx
-        track_i = labels.tracks.index(inst.track)
+        if inst.track is None:
+            # We could use lf.instances.index(inst) but then we'd need
+            # to calculate the number of "tracks" based on the max number of
+            # instances in any frame, so for now we'll assume that there's
+            # a single instance if we aren't using tracks.
+            track_i = 0
+        else:
+            track_i = labels.tracks.index(inst.track)
 
         occupancy_matrix[track_i, frame_i] = 1
 

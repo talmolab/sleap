@@ -540,7 +540,7 @@ def test_instance_access():
     assert len(list(labels.instances(video=dummy_video2))) == 30
 
 
-def test_suggestions(small_robot_mp4_vid):
+def test_basic_suggestions(small_robot_mp4_vid):
     dummy_video = small_robot_mp4_vid
     dummy_skeleton = Skeleton()
     dummy_instance = Instance(dummy_skeleton)
