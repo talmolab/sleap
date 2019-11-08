@@ -326,6 +326,20 @@ class Skeleton:
         return [(src.name, dst.name) for src, dst in self.edges]
 
     @property
+    def edge_inds(self) -> List[Tuple[int, int]]:
+        """Get a list of edges as node indices.
+
+        Returns:
+            A list of (src_node_ind, dst_node_ind), where indices are subscripts into
+            the Skeleton.nodes list.
+        """
+
+        return [
+        (self.nodes.index(src_node), self.nodes.index(dst_node))
+        for src_node, dst_node in self.edges
+        ]
+
+    @property
     def edges_full(self) -> List[Tuple[Node, Node, Any, Any]]:
         """Get a list of edge tuples with keys and attributes.
 
