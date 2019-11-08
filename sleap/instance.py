@@ -827,10 +827,12 @@ class PredictedInstance(Instance):
     A predicted instance is an output of the inference procedure.
 
     Args:
-        score: The instance-level prediction score.
+        score: The instance-level grouping prediction score.
+        tracking_score: The instance-level track matching score.
     """
 
     score: float = attr.ib(default=0.0, converter=float)
+    tracking_score: float = attr.ib(default=0.0, converter=float)
 
     # The underlying Point array type that this instances point array should be.
     _point_array_type = PredictedPointArray
