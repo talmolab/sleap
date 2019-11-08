@@ -218,6 +218,25 @@ def resize_imgs(
     return imgs
 
 
+def compute_pairwise_distances(x: np.ndarray, y: np.ndarray) -> np.ndarray:
+    """Computes the Euclidean distance matrix for a pair of matrices.
+    
+    Args:
+        x: np.ndarray of shape (M, D).
+        y: np.ndarray of shape (N, D).
+    
+    Returns:
+        A distance matrix dists of shape (M, N), such that dists[i, j] contains the
+        Euclidean distance between x[i] and y[j].
+    """
+    return np.sqrt(
+        np.sum(
+            (np.expand_dims(x, 1) - np.expand_dims(y, 0)) ** 2,
+            axis=-1
+        )
+    )
+
+
 @attr.s(auto_attribs=True)
 class VideoLoader:
     filename: str

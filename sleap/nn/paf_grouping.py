@@ -22,11 +22,13 @@ References:
 """
 
 from collections import defaultdict
-from typing import Dict, List, Union, Tuple
+from typing import Dict, DefaultDict, List, Union, Tuple
 import attr
 import tensorflow as tf
 import numpy as np
 
+from sleap.nn import model
+from sleap.nn import utils
 from sleap.instance import PredictedPoint, PredictedInstance
 from sleap.skeleton import Skeleton
 
@@ -57,233 +59,350 @@ class EdgeConnection:
     score: float
 
 
-def make_peaks_table(peaks: np.ndarray, peak_vals: np.ndarray) -> Dict[int, List[Peak]]:
-    """Creates a lookup table that maps node indices to peaks.
-
+def find_peak_pairs(
+    peaks: np.ndarray,
+    edge_types: List[EdgeType],
+    min_pair_distance: float = 0
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Finds all combinations of peak pairs that define valid connections for grouping.
+    
     Args:
-        peaks: Numpy array of shape (n_peaks, 4) where subscripts of peak locations are
-            specified in each row as [sample, row, col, channel]. The sample indices are
-            ignored since this function expects to operate on single samples.
-        peak_vals: Numpy array of shape (n_peaks,) corresponding to the values at the
-            peaks. These are interpreted as scores for each peak.
-
+        peaks: Peak coordinates with shape (N, 4) in subscript form, where each row
+            specifies a peak as (sample, row, col, channel).
+        edge_types: List of EdgeType instances defining the directed graph.
+        min_pair_distance: Minimum Euclidean distance between a pair of peaks in order
+            to consider it valid. If nonzero, this filters out closely located points
+            that would have no support under PAF integrals.
+            
     Returns:
-        A dictionary mapping node indices (channel) to a list of Peak instances.
+        A tuple of src_peak_inds, dst_peak_inds, edge_type_inds.
+        
+        These are all numpy array vectors of length n_pairs, denoting the indices
+        associated with each pairing.
+        
+        src_peak_inds and dst_peak_inds are indices into the rows of the peaks matrix.
+        
+        edge_type_inds is an index into the edge_types list.
     """
-
-    peaks_table = defaultdict(list)
-    for (_, y, x, node_ind), peak_val in zip(peaks, peak_vals):
-        peaks_table[int(node_ind)].append(Peak(x, y, peak_val))
-
-    return peaks_table
-
-
-def find_edge_connections(
-    src_peaks: List[Peak],
-    dst_peaks: List[Peak],
-    paf_x: np.ndarray,
-    paf_y: np.ndarray,
-    paf_x_offset: float = 0.0,
-    paf_y_offset: float = 0.0,
-    paf_scale: float = 1.0,
-    n_edge_samples: int = 10,
-    min_edge_score: float = 0.05,
-    min_samples_correct: float = 0.8,
-    max_edge_length: float = 0.5,
-) -> List[EdgeConnection]:
-    """Finds valid connections for an edge by using PAF scoring.
-
-    This function implements the core PAF algorithm described in [1].
-
-    Args:
-        src_peaks: A list of Peaks for the source node type.
-        dst_peaks: A list of Peaks for the destination node type.
-        paf_x: A numpy array of shape (height, width) corresponding to the x channel
-            component of the PAFs associated with this edge type.
-        paf_y: A numpy array of shape (height, width) corresponding to the y channel
-            component of the PAFs associated with this edge type.
-        paf_x_offset: The x coordinate of left side of the image region from which the
-            PAFs were predicted. This must be specified when using region proposals in
-            order to adjust the peak coordinates from absolute image coordinates to
-            their location within the PAF array.
-        paf_y_offset: The y coordinate of top side of the image region from which the
-            PAFs were predicted. This must be specified when using region proposals in
-            order to adjust the peak coordinates from absolute image coordinates to
-            their location within the PAF array.
-        paf_scale: The scaling factor of the image from which the PAFs were predicted.
-            This must be specified when the output scale of the PAF inference model is
-            not equal to 1.0, i.e., when the PAF arrays are at a different resolution
-            than the image. This is needed in order to adjust the peak coordinates from
-            absolute image coordinates to their location within the PAF array.
-        n_edge_samples: Number of PAF points to sample along the line segment defined by
-            the edge.
-        min_edge_score: Minimum score to count a sampled point as correct.
-        min_samples_correct: Fraction of samples that must be correct in order to
-            consider a connection as valid.
-        max_edge_length: Maximum length of edge before being penalized, expressed
-            as a fraction of PAF height height (accounting for scale).
-
-    Returns:
-        A list of valid EdgeConnections.
-
-    References:
-        .. [1] Zhe Cao, Tomas Simon, Shih-En Wei, Yaser Sheikh. Realtime Multi-Person 2D
-           Pose Estimation using Part Affinity Fields. In _CVPR_, 2017.
-    """
-
-    # Score each pair of candidates.
-    edge_connection_candidates = []
-    for src_peak_ind, src_peak in enumerate(src_peaks):
-        for dst_peak_ind, dst_peak in enumerate(dst_peaks):
-
-            # Compute spatial edge vector from peak coordinates.
-            spatial_vec = np.array([dst_peak.x - src_peak.x, dst_peak.y - src_peak.y])
-            spatial_vec_length = np.sqrt(np.sum(spatial_vec ** 2)) + 1e-9
-            spatial_unit_vec = spatial_vec / spatial_vec_length
-
-            # Sample the along the line integral on the PAF slices.
-            line_x_inds = np.clip(
-                np.round(
-                    (
-                        np.linspace(src_peak.x, dst_peak.x, num=n_edge_samples)
-                        - paf_x_offset
-                    )
-                    * paf_scale
-                ),
-                0,
-                paf_x.shape[1] - 1,
-            ).astype(int)
-            line_y_inds = np.clip(
-                np.round(
-                    (
-                        np.linspace(src_peak.y, dst_peak.y, num=n_edge_samples)
-                        - paf_y_offset
-                    )
-                    * paf_scale
-                ),
-                0,
-                paf_x.shape[0] - 1,
-            ).astype(int)
-            line_paf = np.stack(
-                [paf_x[line_y_inds, line_x_inds], paf_y[line_y_inds, line_x_inds]],
-                axis=1,
-            )
-
-            # Compute scores.
-            score_line = np.dot(line_paf, spatial_unit_vec)
-            score_line_avg = score_line.mean()
-            dist_penalty = min(
-                0,
-                (max_edge_length * paf_x.shape[0] / spatial_vec_length * paf_scale) - 1,
-            )
-            score_with_dist_penalty = score_line_avg + dist_penalty
-
-            # Criterion 1: There are sufficient sampled points along the line integral
-            # that are above the minimum threshold.
-            fraction_correct = (score_line > min_edge_score).mean()
-            enough_correct_samples = fraction_correct > min_samples_correct
-            if not enough_correct_samples:
-                continue
-
-            # Criterion 2: Average score with length penalty is positive.
-            positive_score = score_with_dist_penalty > 0
-            if not positive_score:
-                continue
-
-            # Add the candidates as a connection candidate for the current edge.
-            edge_connection_candidates.append(
-                EdgeConnection(
-                    src_peak_ind,
-                    dst_peak_ind,
-                    score_with_dist_penalty + src_peak.score + dst_peak.score,
-                )
-            )
-
-    # Sort candidates by descending score.
-    candidate_inds = np.argsort(
-        [connection.score for connection in edge_connection_candidates]
-    )[::-1]
-
-    # Find maximum number of possible connections.
-    max_connections = min(len(src_peaks), len(dst_peaks))
-
-    # Keep connections by greedily assigning edges with unused nodes.
-    edge_connections = []
-    used_src_peaks = set()
-    used_dst_peaks = set()
-    for candidate_ind in candidate_inds:
-        connection = edge_connection_candidates[candidate_ind]
-
-        if (
-            connection.src_peak_ind not in used_src_peaks
-            and connection.dst_peak_ind not in used_dst_peaks
-        ):
-
-            edge_connections.append(connection)
-            used_src_peaks.add(connection.src_peak_ind)
-            used_dst_peaks.add(connection.dst_peak_ind)
-
-            if len(edge_connections) >= max_connections:
-                break
-
-    return edge_connections
-
-
-def connect_edges(
-    peaks_table: Dict[int, List[Peak]],
-    pafs: np.ndarray,
-    edges: List[EdgeType],
-    **kwargs
-) -> Dict[EdgeType, List[EdgeConnection]]:
-    """Connects peaks via PAF scoring and groups them by edge type.
-
-    Args:
-        peaks_table: A dictionary mapping node indices (channel) to a list of Peak
-            instances. This can be generated by make_peaks_table.
-        pafs: Rank-3 numpy array of PAFs with shape (height, width, n_edges * 2).
-        edges: List of edge types whose order corresponds to the PAF channels.
-
-        This function also supports keyword-only args that are passed through to
-            find_edge_connections.
-
-    Returns:
-        The connected_edges, a table that maps EdgeType(src_node_ind, dst_node_ind)
-        to a list of EdgeConnections found through edge-wise PAF matching.
-    """
-
-    connected_edges = defaultdict(list)
-    for edge_ind, edge in enumerate(edges):
-
-        # Pull out peak data for this edge.
-        src_peaks = peaks_table[edge.src_node_ind]
-        dst_peaks = peaks_table[edge.dst_node_ind]
-
-        # Skip if no peaks detected for either node on this edge.
-        if len(src_peaks) == 0 or len(dst_peaks) == 0:
-            continue
-
-        # Pull out PAF slices.
-        paf_x = pafs[..., 2 * edge_ind]
-        paf_y = pafs[..., (2 * edge_ind) + 1]
-
-        # Find connections for this edge.
-        connected_edges[edge] = find_edge_connections(
-            src_peaks, dst_peaks, paf_x, paf_y, **kwargs
+    
+    # Group peaks by sample.
+    peak_inds = np.arange(len(peaks))
+    peak_samples = peaks[:, 0]
+    sample_grouped_peak_inds = utils.group_array(peak_inds, peak_samples)
+    
+    # Find peak pairs that define edge candidates within each sample.
+    src_peak_inds = []
+    dst_peak_inds = []
+    edge_type_inds = []
+    for sample_peak_inds in sample_grouped_peak_inds.values():
+        
+        # Group peaks in this sample by skeleton node (confmap channel).
+        node_grouped_peak_inds = utils.group_array(
+            sample_peak_inds,
+            peaks[sample_peak_inds, 3]
         )
+    
+        # Find valid connections for each edge type.
+        for edge_type_ind, edge_type in enumerate(edge_types):
 
-    return connected_edges
+            # Skip if no peaks detected for either node on this edge.
+            if (edge_type.src_node_ind not in node_grouped_peak_inds or
+                edge_type.dst_node_ind not in node_grouped_peak_inds
+               ):
+                continue
+            
+            # Pull out data for this edge type.
+            edge_src_peak_inds = node_grouped_peak_inds[edge_type.src_node_ind]
+            edge_dst_peak_inds = node_grouped_peak_inds[edge_type.dst_node_ind]
+
+            # Compute distances between every possible pair of peaks.
+            dists = utils.compute_pairwise_distances(
+                peaks[edge_src_peak_inds, 1:3],
+                peaks[edge_dst_peak_inds, 1:3])
+
+            # Find the pairs that are not too close.
+            valid_src_sub_inds, valid_dst_sub_inds = np.nonzero(dists >= min_pair_distance)
+            
+            # Save valid pairs.
+            for src_peak_ind, dst_peak_ind in zip(
+                edge_src_peak_inds[valid_src_sub_inds],
+                edge_dst_peak_inds[valid_dst_sub_inds]
+                ):
+                src_peak_inds.append(src_peak_ind)
+                dst_peak_inds.append(dst_peak_ind)
+                edge_type_inds.append(edge_type_ind)
+                
+    # Convert to numpy arrays and return.
+    return np.array(src_peak_inds), np.array(dst_peak_inds), np.array(edge_type_inds)
 
 
-def group_to_instances(
-    connected_edges: Dict[EdgeType, List[EdgeConnection]],
+def make_line_segments(src_peaks: np.ndarray, dst_peaks: np.ndarray,
+                       edge_type_inds: np.ndarray,
+                       n_edge_samples: int = 5
+                      ) -> np.ndarray:
+    """Interpolates coordinates along the line formed by each pair of peaks.
+    
+    Args:
+        src_peaks: Peak coordinates with shape (n_pairs, 4) in subscript form.
+        dst_peaks: Peak coordinates with shape (n_pairs, 4) in subscript form.
+        edge_type_inds: Array of shape (n_pairs,) specifying the edge indices that each
+            pair of peaks corresponds to.
+        n_edge_samples: Number of points to sample between each pair of peaks.
+
+    Returns:
+        line_segments: A numpy array of shape (n_pairs * n_edge_samples, 4) such that
+        each row specifies the coordinates of a point in a sampled line segment in the
+        form:
+            sample_ind, row_ind, col_ind, edge_type_ind = line_segments[i]
+    """
+    # Sample line segments along each pair of peaks.
+    line_segments = np.linspace(
+        src_peaks[:, 1:3],
+        dst_peaks[:, 1:3],
+        num=n_edge_samples,
+        dtype="float32",
+        axis=1,
+    )  # (n_pairs, n_edge_samples, 2)
+
+    # Discretize to the PAF image space.
+    line_segments = np.round(line_segments).astype("int64")
+
+    # Concatenate the sample and edge subscripts so the coordinates are fully specified.
+    sample_inds = src_peaks[:, 0]
+    line_segments = np.concatenate([
+        np.tile(sample_inds.astype("int64").reshape(-1, 1, 1), (1, n_edge_samples, 1)),
+        line_segments,
+        np.tile(edge_type_inds.astype("int64").reshape(-1, 1, 1), (1, n_edge_samples, 1))
+    ], axis=-1)  # (n_pairs, n_edge_samples, 4)
+
+    # Flatten into (n_pairs * n_edge_samples, 4).
+    line_segments = line_segments.reshape(-1, 4)
+
+    return line_segments
+
+
+@tf.function(experimental_relax_shapes=True)
+def gather_line_vectors(pafs: tf.Tensor,
+                        line_segments: np.ndarray,
+                        n_edge_samples: int) -> tf.Tensor:
+    """Gathers the PAF vectors along the points defined by line segments.
+    
+    This function is especially useful for sampling the values in the inferred PAFs
+    without having to transfer the entire tensor back to the CPU after inference.
+    
+    Args:
+        pafs: Part affinity fields output by a model with shape
+            (samples, height, width, 2 * n_edge_types).
+        line_segments: The (fully specified) subscripts that define the line segments
+            between pairs of points in the form (sample, row, col, edge_type_ind). This
+            can be generated by the make_line_segments function. This array has the
+            shape: (n_pairs * n_edge_samples, 4).
+        n_edge_samples: Number of samples that form each line segment. This should be
+            the same value specified when generating the line_segments.
+        
+    Returns:
+        paf_vals: a tensor of shape (n_pairs, n_edge_samples, 2), where each row
+        contains the n_edge_samples vectors sampled along the line segment. The last
+        dimension contains the y and x components of the PAF corresponding to the line
+        segment formed by the pair, e.g., for the i-th pair of peaks:
+            [[paf_y_0, paf_x_0], [paf_y_1, paf_x_1], ...] = paf_vals[i]
+    """
+    
+    # Split into x and y components.
+    pafs_x = pafs[:, :, :, ::2]
+    pafs_y = pafs[:, :, :, 1::2]
+    
+    # Gather PAF values along line segments.
+    paf_vals_x = tf.gather_nd(pafs_x, line_segments)
+    paf_vals_y = tf.gather_nd(pafs_y, line_segments)
+    
+    # Stack into (n_pairs, n_edge_samples, 2).
+    paf_vals = tf.stack([
+        tf.reshape(paf_vals_y, [-1, n_edge_samples]),
+        tf.reshape(paf_vals_x, [-1, n_edge_samples]),
+    ], axis=-1)
+    
+    return paf_vals
+
+
+def score_connection_candidates(
+    src_peaks: np.ndarray,
+    dst_peaks: np.ndarray,
+    paf_vals: tf.Tensor,
+    max_edge_length: float = 256.,
+    min_edge_score: float = 0.05
+) -> Tuple[tf.Tensor, tf.Tensor]:
+    """Computes the connection score for each line formed by pairs of peaks.
+    
+    Args:
+        src_peaks: Peak coordinates with shape (n_pairs, 4) in subscript form.
+        dst_peaks: Peak coordinates with shape (n_pairs, 4) in subscript form.
+        paf_vals: PAF vectors sampled along the lines formed by each pair as a tensor
+            of shape (n_pairs, n_edge_samples, 2), where the last axis specifies the
+            (y, x) components of each PAF vector. These can be extracted by the
+            gather_line_vectors function.
+        max_edge_length: The maximum length of a potential connection in the same units
+            as the coordinates in src_peaks and dst_peaks. Connections that form a line
+            longer than this value are penalized.
+        min_edge_score: The minimum connection score (before distance penalization)
+            required in order to consider a connection as correct.
+            
+    Returns:
+        A tuple of score_with_dist_penalty, fraction_correct.
+        
+        score_with_dist_penalty is a tensor float32 vector of length n_pairs, specifying
+        the connection score for each pair of points. Higher values indicate a better
+        connection score (max of 1.0).
+        
+        fraction_correct is a tensor float32 vector of length n_pairs, specifying the
+        proportion of sampled points (n_edge_samples) that were above the min_edge_score
+        threshold before applying the distance penalty.
+        
+    Note:
+        The connection score is computed as follows:
+        
+        Given a pair of source and destination points (e.g., peak coordinates), let the
+        directed line segment (i.e., Euclidean vector) formed between them define a
+        potential connection from source to destination.
+        
+        The spatial vector for this connection is calculated as the relative offset
+        (i.e., displacement) of the destination point relative to the source point.
+        
+        The unit spatial vector is the spatial vector divided by the length of the line,
+        such that it has a magnitude (length) equal to 1.
+        
+        Given a particular PAF vector, sampled from the points along this line from the
+        inferred PAFs, the connection score is simply the dot product between the unit
+        spatial vector and the PAF vector.
+        
+        The overall connection score is then the average of the dot products for all
+        points sampled from the line that forms the connection, possibly penalized for
+        absolute distance.
+        
+        The connection score is a real-valued scalar in the range [-1, 1].
+    """
+    
+    # Compute spatial vectors.
+    spatial_vec = dst_peaks[:, 1:3] - src_peaks[:, 1:3]
+    spatial_vec = tf.cast(spatial_vec, tf.float32)
+    spatial_vec_length = tf.sqrt(tf.reduce_sum(spatial_vec ** 2, axis=1))
+    spatial_vec /= tf.expand_dims(spatial_vec_length, axis=1)
+
+    # Compute line scores for all connection pairs.
+    line_scores = tf.squeeze(paf_vals @ tf.expand_dims(spatial_vec, axis=2), axis=-1)
+    
+    # Compute average line scores with distance penalty.
+    dist_penalty = (tf.cast(max_edge_length, tf.float32) / spatial_vec_length) - 1
+    score_with_dist_penalty = tf.reduce_mean(line_scores, axis=1) + tf.minimum(dist_penalty, 0)
+    
+    # Compute fraction of connections above threshold.
+    fraction_correct = tf.reduce_mean(tf.cast(line_scores > min_edge_score, tf.float32), axis=1)
+    
+    return score_with_dist_penalty, fraction_correct
+
+
+def filter_connection_candidates(
+    src_peak_inds: np.ndarray,
+    dst_peak_inds: np.ndarray,
+    connection_scores: np.ndarray,
+    edge_type_inds: np.ndarray,
+    edge_types: List[EdgeType],
+) -> Dict[EdgeType, List[EdgeConnection]]:
+    """Greedily forms connections from candidate peak pairs without reusing peaks.
+
+    This function creates EdgeConnections for each EdgeType by greedily assigning peak
+    pairs by their connection scores in descending order, such that higher scoring
+    connections are formed first.
+    
+    Args:
+        src_peak_inds: A vector of n_pairs indices or unique identifiers for source
+            peaks of each connection candidate. These should only correspond to
+            connections within the same frame.
+        dst_peak_inds: A vector of n_pairs indices or unique identifiers for destination
+            peaks of each connection candidate. These should only correspond to
+            connections within the same frame.
+        connection_scores: A vector of n_pairs scores associated with each connection
+            candidate. Connections will be formed in order of descending connection
+            score. These should only correspond to connections within the same frame.
+        edge_type_inds: A vector of n_pairs indices associated with each connection
+            candidate indicating the edge type index within the edge_types list.
+        edge_types: List of EdgeType instances defining the directed graph.
+    
+    Returns:
+        connections, a dictionary mapping EdgeTypes to a list of valid EdgeConnections
+        after filtering.
+        
+        An EdgeConnection is a tuple of (src_peak_ind, dst_peak_ind, connection_score),
+        where the indices are a subset of the input src_peak_inds and dst_peak_inds.
+        
+        The output of this function can be provided as input to the
+        assign_connections_to_instances function which will group the connections into
+        distinct instances (i.e., disconnected subgraphs of the connections).
+
+    Notes:
+        This function should be applied to connection candidates within the same sample
+        or frame!
+    """
+    
+    # We'll group the filtered connections by edge type.
+    connections = dict()
+        
+    # Group by edge type.
+    candidate_inds = np.arange(len(src_peak_inds))
+    edge_grouped_inds = utils.group_array(candidate_inds, edge_type_inds)
+    for edge_type_ind, edge_candidate_inds in edge_grouped_inds.items():
+
+        # Get data for this edge type.
+        edge_connection_scores = connection_scores[edge_candidate_inds]
+        edge_src_peak_inds = src_peak_inds[edge_candidate_inds]
+        edge_dst_peak_inds = dst_peak_inds[edge_candidate_inds]
+
+        # Sort edge connections by descending score.
+        score_sorted_edge_sub_inds = np.argsort(edge_connection_scores)[::-1]
+
+        # Keep connections by greedily assigning edges with unused nodes.
+        edge_connections = []
+        used_edge_src_peak_inds = set()
+        used_edge_dst_peak_inds = set()
+        for edge_sub_ind in score_sorted_edge_sub_inds:
+            edge_src_peak_ind = edge_src_peak_inds[edge_sub_ind]
+            edge_dst_peak_ind = edge_dst_peak_inds[edge_sub_ind]
+
+            if (
+                edge_src_peak_ind not in used_edge_src_peak_inds and
+                edge_dst_peak_ind not in used_edge_dst_peak_inds
+            ):
+
+                # Create a new connection with the peak inds.
+                edge_connections.append(
+                    EdgeConnection(
+                        edge_src_peak_ind,
+                        edge_dst_peak_ind,
+                        edge_connection_scores[edge_sub_ind]
+                    )
+                )
+                
+                # Keep track of the peak inds used in connections so far.
+                used_edge_src_peak_inds.add(edge_src_peak_ind)
+                used_edge_dst_peak_inds.add(edge_dst_peak_ind)
+
+        # Save to the connections table.
+        connections[edge_types[edge_type_ind]] = edge_connections
+        
+    return connections
+
+
+def assign_connections_to_instances(
+    connections: Dict[EdgeType, List[EdgeConnection]],
     min_instance_peaks: Union[int, float] = 0,
     n_nodes: int = None,
 ) -> Dict[PeakID, int]:
-    """Groups connected edges into instances via greedy graph partitioning.
+    """Assigns connected edges to instances via greedy graph partitioning.
 
     Args:
-        connected_edges: A table that maps EdgeType(src_node_ind, dst_node_ind) to a
-            list of EdgeConnections found through matching.
+        connections: A dict that maps EdgeType to a list of EdgeConnections found
+            through connection scoring. This can be generated by the
+            filter_connection_candidates function.
         min_instance_peaks: If this is greater than 0, grouped instances with fewer
             assigned peaks than this threshold will be excluded. If a float in the
             range (0., 1.] is provided, this is interpreted as a fraction of the total
@@ -291,22 +410,28 @@ def group_to_instances(
             absolute minimum number of peaks.
         n_nodes: Total node type count. Used to convert min_instance_peaks to an
             absolute number when a fraction is specified. If not provided, the node
-            count is inferred from the unique node inds in connected_edges.
+            count is inferred from the unique node inds in connections.
 
     Returns:
-        instance_assignments: a dict mapping each PeakID(node_ind, peak_ind) to a unique
-        instance ID specified as an integer.
+        instance_assignments: A dict mapping PeakID to a unique instance ID specified
+        as an integer.
+
+        A PeakID is a tuple of (node_type_ind, peak_ind), where the peak_ind is the
+        index or identifier specified in a EdgeConnection as a src_peak_ind or
+        dst_peak_ind.
 
     Note:
         Instance IDs are not necessarily consecutive since some instances may be
         filtered out during the partitioning or filtering.
+
+        This function expects connections from a single sample/frame!
     """
 
     # Grouping table that maps PeakID(node_ind, peak_ind) to an instance_id.
     instance_assignments = dict()
 
     # Loop through edge types.
-    for edge_type, edge_connections in connected_edges.items():
+    for edge_type, edge_connections in connections.items():
 
         # Loop through connections for the current edge.
         for connection in edge_connections:
@@ -361,7 +486,7 @@ def group_to_instances(
             if n_nodes is None:
                 # Infer number of nodes if not specified.
                 all_node_types = set()
-                for edge_type in connected_edges:
+                for edge_type in connections:
                     all_node_types.add(edge_type.src_node_ind)
                     all_node_types.add(edge_type.dst_node_ind)
                 n_nodes = len(all_node_types)
@@ -389,48 +514,53 @@ def group_to_instances(
 
 
 def create_predicted_instances(
-    peaks_table: Dict[int, List[Peak]],
-    connected_edges: Dict[EdgeType, List[EdgeConnection]],
+    peaks: np.ndarray,
+    peak_vals: np.ndarray,
+    connections: Dict[EdgeType, List[EdgeConnection]],
     instance_assignments: Dict[PeakID, int],
-    skeleton: Skeleton,
+    skeleton: Skeleton
 ) -> List[PredictedInstance]:
-    """Assembles grouping associations to generate a list of PredictedInstances.
-
-    This function effectively serves as postprocessing to all of the grouping logic
-    implemented in the other methods of this module.
-
+    """Creates PredictedInstances from a set of peaks and instance assignments.
+    
     Args:
-        peaks_table: A dictionary mapping node indices (channel) to a list of Peak
-            instances. This can be generated by make_peaks_table.
-        connected_edges: A dictionary that maps EdgeType(src_node_ind, dst_node_ind)
-            to a list of EdgeConnections found through edge-wise PAF matching. This can
-            be generated by connect_edges.
-        instance_assignments: A dictionary mapping each PeakID(node_ind, peak_ind) to a
-            unique instance ID specified as an integer. This can be generated by
-            group_to_instances.
+        peaks: Peak coordinates with shape (n_peaks, 4) in subscript form.
+        peak_vals: Values at the peak coordinates, typically the confidence map score.
+        connections: A dict that maps EdgeType to a list of EdgeConnections found
+            through connection scoring. This can be generated by the
+            filter_connection_candidates function.
+        instance_assignments: A dict mapping PeakID to a unique instance ID specified
+            as an integer. This can be generated by the assign_connections_to_instances
+            function. The indices specified in the PeakIDs should index into peaks.
         skeleton: The Skeleton object to use for associating to the resulting predicted
             instances.
-
+    
     Returns:
-        A list of PredictedInstances created from the detection and grouping data.
+        A list of PredictedInstances after instance assignment.
+        
+        Each PredictedInstance will be composed of PredictedPoints with the score
+        specified in peak_vals.
+        
+        The total instance score will be the sum of the scores for all connections
+        within an instance, normalized by the total number of edges in the skeleton.
     """
-
+    
     # Create predicted points and group by instance and node.
     instance_points = defaultdict(dict)
     for peak_id, instance_ind in instance_assignments.items():
         node_ind, peak_ind = attr.astuple(peak_id)
 
-        # Get the original peak data.
-        peak = peaks_table[node_ind][peak_ind]
-
         # Update instance with the peak as a PredictedPoint.
         node_name = skeleton.node_names[node_ind]
-        instance_points[instance_ind][node_name] = PredictedPoint(**attr.asdict(peak))
+        instance_points[instance_ind][node_name] = PredictedPoint(
+            x=peaks[peak_ind, 2],
+            y=peaks[peak_ind, 1],
+            score=peak_vals[peak_ind],
+        )
 
     # Accumulate instance scores by looping through the connections.
     instance_scores = defaultdict(int)
-    for edge, edge_connections in connected_edges.items():
-        src_node_ind, dst_node_ind = attr.astuple(edge)
+    for edge_type, edge_connections in connections.items():
+        src_node_ind, dst_node_ind = attr.astuple(edge_type)
 
         for connection in edge_connections:
 
@@ -449,8 +579,209 @@ def create_predicted_instances(
             PredictedInstance(
                 skeleton=skeleton,
                 points=instance_points[instance_ind],
-                score=instance_scores[instance_ind],
+                score=instance_scores[instance_ind] / len(skeleton.edges),
             )
         )
 
     return predicted_instances
+
+
+@attr.s(auto_attribs=True, eq=False)
+class PAFGrouper:
+    paf_model: model.InferenceModel
+    batch_size: int = 8
+    n_edge_samples: int = 5
+    min_pair_distance: float = 1.
+    max_edge_length: float = 256.
+    min_edge_score: float = 0.05
+    min_edge_samples_correct: float = 0.8
+    min_instance_peaks: int = 2
+        
+    _paf_scale: float = attr.ib(init=False)
+    _skeleton: Skeleton = attr.ib(init=False)
+    _edge_types: List[EdgeType] = attr.ib(init=False)
+    
+    @property
+    def paf_scale(self):
+        return self._paf_scale
+    
+    @property
+    def skeleton(self):
+        return self._skeleton
+    
+    @property
+    def edge_types(self):
+        return self._edge_types
+    
+    def __attrs_post_init__(self):
+        self._paf_scale = self.paf_model.output_scale
+        self._skeleton = self.paf_model.skeleton
+        self._edge_types = [EdgeType(src_node_ind, dst_node_ind)
+                            for src_node_ind, dst_node_ind in self.skeleton.edge_inds]
+    
+    def preproc(self, imgs):
+        # Scale to model input size.
+        imgs = utils.resize_imgs(
+            imgs, self.paf_model.input_scale,
+            common_divisor=2 ** self.paf_model.down_blocks
+        )
+
+        # Convert to float32 and scale values to [0., 1.].
+        imgs = utils.normalize_imgs(imgs)
+
+        return imgs
+    
+    @tf.function
+    def inference(self, imgs):
+        # Model inference
+        pafs = self.paf_model.keras_model(imgs)
+
+        return pafs
+
+    def batched_inference(self, imgs, batch_size=None):
+        if batch_size is None:
+            batch_size = self.batch_size
+
+        pafs = utils.batched_call(self.inference, imgs, batch_size=batch_size)
+
+        return pafs
+    
+    def postproc(self, paf_peaks, paf_peak_vals, pafs):
+        
+        # Find all possible connections formed by pairs of peak.
+        src_peak_inds, dst_peak_inds, edge_type_inds = find_peak_pairs(
+            paf_peaks, self.edge_types, self.min_pair_distance
+        )
+        
+        # Interpolate between pairs to form the line segments.
+        line_segments = make_line_segments(
+            src_peaks=paf_peaks[src_peak_inds],
+            dst_peaks=paf_peaks[dst_peak_inds],
+            edge_type_inds=edge_type_inds,
+            n_edge_samples=self.n_edge_samples,
+        )
+        
+        # Gather the PAF vectors along each line segment.
+        paf_vals = gather_line_vectors(pafs, line_segments, self.n_edge_samples)
+        
+        # Compute connection scores for each line segment.
+        score_with_dist_penalty, fraction_correct = score_connection_candidates(
+            src_peaks=paf_peaks[src_peak_inds],
+            dst_peaks=paf_peaks[dst_peak_inds],
+            paf_vals=paf_vals,
+            max_edge_length=self.max_edge_length,
+            min_edge_score=self.min_edge_score,
+        )
+        
+        # Criterion 1: There are sufficient sampled points along the line integral
+        # that are above the minimum threshold.
+        enough_correct_samples = fraction_correct > self.min_edge_samples_correct
+
+        # Criterion 2: Average score with length penalty is positive.
+        positive_score = score_with_dist_penalty > 0
+
+        # Find all valid connection candidates.
+        valid_connection_inds = tf.where(
+            enough_correct_samples & positive_score
+        ).numpy().squeeze()
+
+        # Copy scores to CPU.
+        score_with_dist_penalty = score_with_dist_penalty.numpy()
+        
+        # Assign connection candidates to instances by sample.
+        samples = paf_peaks[src_peak_inds, 0].astype("int32")
+        sample_grouped_valid_connection_inds = utils.group_array(
+            valid_connection_inds, samples[valid_connection_inds]
+        )
+        sample_grouped_connections = dict()
+        sample_grouped_instance_assignments = dict()
+        for sample, connection_inds in sample_grouped_valid_connection_inds.items():
+            
+            # Include peak scores in the connection scores.
+            connection_scores = (
+                score_with_dist_penalty[connection_inds] + 
+                paf_peak_vals[src_peak_inds[connection_inds]] +
+                paf_peak_vals[dst_peak_inds[connection_inds]]
+            ) / 3.
+            
+            # Assign peaks to unique connections for each edge type by score.
+            connections = filter_connection_candidates(
+                src_peak_inds=src_peak_inds[connection_inds],
+                dst_peak_inds=dst_peak_inds[connection_inds],
+                connection_scores=connection_scores,
+                edge_type_inds=edge_type_inds[connection_inds],
+                edge_types=self.edge_types,
+            )
+            
+            # Now that peak pairs are disjoint with respect to edge type-wise bipartite
+            # graphs, assign them to instances to form disjoint subgraphs.
+            instance_assignments = assign_connections_to_instances(
+                connections=connections,
+                min_instance_peaks=self.min_instance_peaks,
+                n_nodes=len(self.skeleton.nodes),
+            )
+            
+            # Save results for this sample.
+            sample_grouped_connections[sample] = connections
+            sample_grouped_instance_assignments[sample] = instance_assignments
+            
+        return sample_grouped_connections, sample_grouped_instance_assignments
+        
+        
+    def predict(self, imgs, peaks, peak_vals, bboxes=None, batch_size=None):
+        
+        # Do the heavy lifting.
+        imgs = self.preproc(imgs)
+        pafs = self.batched_inference(imgs, batch_size=batch_size)
+        
+        # We'll need to adjust the peaks, so let's keep the originals unmodified.
+        paf_peaks = np.copy(peaks)
+        
+        if bboxes is not None:
+            # Adjust peak coordinates to within-bounding box subscripts if needed.
+            paf_peaks[:, 1:3] -= bboxes[:, 0:2]
+        
+        # Adjust peaks to the PAF output scale.
+        paf_peaks *= np.array([[1, self.paf_scale, self.paf_scale, 1]])
+        
+        # Perform the PAF-based peak grouping.
+        sample_grouped_connections, sample_grouped_instance_assignments = self.postproc(
+            paf_peaks, peak_vals, pafs
+        )
+        
+        # Generate predicted instances grouped by sample.
+        sample_grouped_predicted_instances = dict()
+        for sample in sample_grouped_connections:
+            sample_grouped_predicted_instances[sample] = create_predicted_instances(
+                peaks=peaks,
+                peak_vals=peak_vals,
+                connections=sample_grouped_connections[sample],
+                instance_assignments=sample_grouped_instance_assignments[sample],
+                skeleton=self.skeleton,
+            )
+        
+        return sample_grouped_predicted_instances
+    
+    def predict_rps(self, region_proposal_set, region_peaks, batch_size=None):
+        
+        # Pull out peaks with patch-based indexing.
+        patch_peaks = region_peaks.peaks_with_patch_inds
+        
+        # Predict PAFs and instances.
+        patch_grouped_predicted_instances = self.predict(
+            imgs=region_proposal_set.patches,
+            peaks=patch_peaks,
+            peak_vals=region_peaks.peak_vals,
+            bboxes=region_proposal_set.bboxes[region_peaks.patch_inds],
+            batch_size=batch_size
+        )
+        
+        # Regroup predicted instances by samples instead of patches.
+        sample_grouped_predicted_instances = defaultdict(list)
+        for patch_ind, predicted_instances in patch_grouped_predicted_instances.items():
+            sample_ind = region_proposal_set.sample_inds[patch_ind]
+            sample_grouped_predicted_instances[sample_ind].extend(predicted_instances)
+            
+        # TODO: Merge/suppress overlaps after regrouping?
+        
+        return sample_grouped_predicted_instances
