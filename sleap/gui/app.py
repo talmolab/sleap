@@ -369,6 +369,8 @@ class MainWindow(QMainWindow):
             "None",
             "Point Displacement (sum)",
             "Point Displacement (max)",
+            "Primary Point Displacement (sum)",
+            "Primary Point Displacement (max)",
             "Instance Score (sum)",
             "Instance Score (min)",
             "Point Score (sum)",
@@ -1065,6 +1067,8 @@ class MainWindow(QMainWindow):
         header_functions = {
             "Point Displacement (sum)": data_obj.get_point_displacement_series,
             "Point Displacement (max)": data_obj.get_point_displacement_series,
+            "Primary Point Displacement (sum)": data_obj.get_primary_point_displacement_series,
+            "Primary Point Displacement (max)": data_obj.get_primary_point_displacement_series,
             "Instance Score (sum)": data_obj.get_instance_score_series,
             "Instance Score (min)": data_obj.get_instance_score_series,
             "Point Score (sum)": data_obj.get_point_score_series,
