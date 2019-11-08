@@ -5,7 +5,6 @@ main:
   type: stacked
   default: " "
   options: " ,image features,sample,proofreading"
-  #removing hog for now since it's not implemented correctly
 
   " ":
 
@@ -44,8 +43,16 @@ main:
     - name: feature_type
       label: Image Feature Type
       type: list
-      options: raw images,brisk
+      options: raw images,brisk,hog
       default: raw images
+    - name: brisk_threshold
+      label: Brisk Keypoint Threshold
+      type: int
+      default: 40
+    - name: vocab_size
+      label: Bag of Features Vocab Size
+      type: int
+      default: 20
     - name: pca_components
       label: PCA Components
       type: int

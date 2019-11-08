@@ -17,9 +17,214 @@ import cv2
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
 
+from skimage import draw
+from skimage.feature import hog
+from skimage.util.shape import view_as_windows
+
 from sleap.io.video import Video
 
 logger = logging.getLogger(__name__)
+
+
+@attr.s(auto_attribs=True)
+class BriskVec:
+
+    brisk_threshold: int
+    vocab_size: int
+    debug: bool = False
+
+    def __attrs_post_init__(self):
+        self._brisk = cv2.BRISK_create(thresh=self.brisk_threshold)
+
+    def get_vecs(self, imgs):
+        all_descs = []
+        row_img = []
+
+        # Create matrix with multiple brisk descriptors for each image.
+        for i, img in enumerate(imgs):
+            kps, descs = self._brisk.detectAndCompute(img, None)
+
+            # Brisk descriptor is 512 bits, but opencv returns this as 16 uint8's,
+            # so we'll convert it to discrete numbers.
+            descs = np.unpackbits(descs, axis=1)
+
+            # Make list with all brisk descriptors (or all images) and map which
+            # tells us which descriptor goes with which image
+            row_img.extend([i] * len(descs))
+            all_descs.append(descs)
+
+        # Convert to single matrix of descriptors
+        all_descs = np.concatenate(all_descs)
+
+        # Convert to single matrix of row (individual descriptor) -> image index
+        row_img = np.array(row_img)
+
+        # Create a bag of features for each image by clustering the brisk image
+        # descriptors (these clusters will be the "words" in a bag of words for
+        # each image), then generate vocab-length vector for each image which
+        # represents whether the "word" (i.e., brisk feature in some cluster)
+        # is present in the image.
+
+        kmeans = KMeans(n_clusters=self.vocab_size).fit(all_descs)
+        return self.clusters_to_vecs(kmeans.labels_, row_img, len(imgs))
+        # img_bags = np.zeros((len(imgs), self.vocab_size), dtype="bool")
+        #
+        # for i in range(len(imgs)):
+        #     img_words = kmeans.labels_[row_img == i]
+        #     img_bags[(i,), img_words] = 1
+        #
+        # return img_bags
+
+    def clusters_to_vecs(self, cluster_labels, ownership, img_count):
+
+        # Make helper function that builds bag of features vector for a single
+        # image by looking up all the descriptors for an image and counting
+        # how many there are for each cluster (vocab word).
+        def img_bof_vec(img_idx):
+            return np.bincount(
+                cluster_labels[ownership == img_idx], minlength=self.vocab_size
+            )
+
+        # Now make the matrix with a bag of features vector for each image
+        return np.stack([img_bof_vec(i) for i in range(img_count)])
+
+
+@attr.s(auto_attribs=True)
+class HogVec:
+
+    brisk_threshold: int
+    vocab_size: int
+    debug: bool = False
+
+    def __attrs_post_init__(self):
+        self._brisk = cv2.BRISK_create(thresh=self.brisk_threshold)
+        self.points_list = []
+        self.cmap = [
+            [31, 120, 180],
+            [51, 160, 44],
+            [227, 26, 28],
+            [255, 127, 0],
+            [106, 61, 154],
+            [177, 89, 40],
+            [166, 206, 227],
+            [178, 223, 138],
+            [251, 154, 153],
+            [253, 191, 111],
+            [202, 178, 214],
+            [255, 255, 153],
+        ]
+
+    def get_vecs(self, imgs):
+        # Get matrix of hog descriptors for all images, and array which says
+        # which image is the source for each row.
+        descs, ownership = self.get_hogs(imgs)
+
+        # Cluster the descriptors into a vocabulary for bag of features
+        kmeans = KMeans(n_clusters=self.vocab_size).fit(descs)
+
+        if self.debug:
+            if imgs.shape[-1] == 1:
+                new_shape = (imgs.shape[0], imgs.shape[1], imgs.shape[2], 3)
+
+                self.vis = np.empty(new_shape, dtype=imgs.dtype)
+                self.vis[..., 0] = imgs[..., 0]
+                self.vis[..., 1] = imgs[..., 0]
+                self.vis[..., 2] = imgs[..., 0]
+            else:
+                self.vis = np.copy(imgs)
+
+            for i, img in enumerate(self.vis):
+                img_desc_clusters = kmeans.labels_[ownership == i]
+                img_points = self.points_list[i]
+                for point, cluster in zip(img_points, img_desc_clusters):
+                    color = self.cmap[cluster % len(self.cmap)]
+                    cv2.circle(img, tuple(point), 3, color, lineType=cv2.LINE_AA)
+
+        return self.clusters_to_vecs(kmeans.labels_, ownership, len(imgs))
+
+    def clusters_to_vecs(self, cluster_labels, ownership, img_count):
+
+        # Make helper function that builds bag of features vector for a single
+        # image by looking up all the descriptors for an image and counting
+        # how many there are for each cluster (vocab word).
+        def img_bof_vec(img_idx):
+            return np.bincount(
+                cluster_labels[ownership == img_idx], minlength=self.vocab_size
+            )
+
+        # Now make the matrix with a bag of features vector for each image
+        return np.stack([img_bof_vec(i) for i in range(img_count)])
+
+    def get_hogs(self, imgs):
+        """Returns descriptors and corresponding image for all images."""
+        per_image_hog_descriptors = [self.get_image_hog(img) for img in imgs]
+        descs = np.concatenate(
+            [image_descs for image_descs in per_image_hog_descriptors]
+        )
+        ownership = np.array(
+            list(
+                itertools.chain.from_iterable(
+                    [
+                        [i] * len(image_descs)
+                        for i, image_descs in enumerate(per_image_hog_descriptors)
+                    ]
+                )
+            )
+        )
+        return descs, ownership
+
+    def get_image_hog(self, img):
+        """Returns hog descriptor for all brisk keypoints on single image."""
+        points = self.get_brisk_keypoints_as_points(img)
+        center_points = points + np.array([8, 8])
+
+        crops = self.get_image_crops(img, center_points)
+        multichannel = img.ndim > 2
+
+        img_descs = np.stack(
+            [
+                hog(
+                    crop,
+                    orientations=8,
+                    pixels_per_cell=(16, 16),
+                    cells_per_block=(1, 1),
+                    visualize=False,
+                    multichannel=multichannel,
+                )
+                for crop in crops
+            ]
+        )
+        return img_descs
+
+    def get_image_crops(self, img, points):
+        """Returns stack of windows around keypoints on single image."""
+        W = view_as_windows(img, (16, 16, img.shape[-1]))[..., 0, :, :, :]
+
+        max_y = W.shape[1] - 1
+        max_x = W.shape[0] - 1
+
+        xs = points[:, 0]
+        ys = points[:, 1]
+
+        # Shift crops for keypoints that are too close to edges
+        # TODO: is this how we should handle this case?
+        xs[xs > max_x] = max_x
+        ys[ys > max_y] = max_y
+
+        return W[xs, ys]
+
+    def get_brisk_keypoints_as_points(self, img):
+        """Returns matrix of brisk keypoints for single image."""
+        kps = self._brisk.detect(img)
+        points = self.keypoints_to_points_matrix(kps)
+        return points
+
+    def keypoints_to_points_matrix(self, kps):
+        points = np.round(np.array([kps[idx].pt for idx in range(0, len(kps))])).astype(
+            np.int
+        )
+        self.points_list.append(points)
+        return points
 
 
 @attr.s(auto_attribs=True, frozen=True)
@@ -235,47 +440,15 @@ class ItemStack(object):
         row_size = np.product(meta["shape"])
         self.data = np.reshape(self.data, (row_count, row_size))
 
-    def brisk_bag_of_features(self, brisk_threshold=120, brisk_vocab_size=60):
+    def brisk_bag_of_features(self, brisk_threshold=40, vocab_size=20):
         """Transform data using bag of features based on brisk features."""
-        all_descs = []
-        row_img = []
+        brisk = BriskVec(brisk_threshold=brisk_threshold, vocab_size=vocab_size)
+        self.data = brisk.get_vecs(self.data)
 
-        brisk = cv2.BRISK_create(thresh=brisk_threshold)
-
-        # Create matrix with multiple brisk descriptors for each image.
-        for i, item in enumerate(self.items):
-            img = self.get_item_data(item)[0]
-            kps, descs = brisk.detectAndCompute(img, None)
-
-            # Brisk descriptor is 512 bits, but opencv returns this as 16 uint8's,
-            # so we'll convert it to discrete numbers.
-            descs = np.unpackbits(descs, axis=1)
-
-            # Make list with all brisk descriptors (or all images) and map which
-            # tells us which descriptor goes with which image
-            row_img.extend([i] * len(descs))
-            all_descs.append(descs)
-
-        # Convert to single matrix of descriptors
-        all_descs = np.concatenate(all_descs)
-
-        # Convert to single matrix of row (individual descriptor) -> image index
-        row_img = np.array(row_img)
-
-        # Create a bag of features for each image by clustering the brisk image
-        # descriptors (these clusters will be the "words" in a bag of words for
-        # each image), then generate vocab-length vector for each image which
-        # represents whether the "word" (i.e., brisk feature in some cluster)
-        # is present in the image.
-
-        kmeans = KMeans(n_clusters=brisk_vocab_size).fit(all_descs)
-        img_bags = np.zeros((len(self.items), brisk_vocab_size), dtype="bool")
-
-        for i in range(len(self.items)):
-            img_words = kmeans.labels_[row_img == i]
-            img_bags[(i,), img_words] = 1
-
-        self.data = img_bags
+    def hog_bag_of_features(self, brisk_threshold=40, vocab_size=20):
+        """Transforms data into bag of features vector of hog descriptors."""
+        hog = HogVec(brisk_threshold=brisk_threshold, vocab_size=vocab_size)
+        self.data = hog.get_vecs(self.data)
 
     def pca(self, n_components: int):
         """Transforms data by applying PCA."""
@@ -382,7 +555,8 @@ class FeatureSuggestionPipeline(object):
     n_components: int
     n_clusters: int
     per_cluster: int
-    brisk_threshold: int = 80
+    brisk_threshold: int = 40
+    vocab_size: int = 20
     frame_data: Optional[ItemStack] = None
 
     def run_disk_stage(self, videos):
@@ -405,10 +579,17 @@ class FeatureSuggestionPipeline(object):
 
         # Generate feature data for each frame
         if self.feature_type == "brisk":
-            # Get brisk descriptors for keypoints in each image.
-            # This will result in multiple rows of data for each image
-            # (the ImageStack object handles this behinds the scenes).
-            self.frame_data.brisk_bag_of_features(brisk_threshold=self.brisk_threshold)
+            # Get bag of features vector for each image from brisk descriptors
+            # for brisk keypoints on each image.
+            self.frame_data.brisk_bag_of_features(
+                brisk_threshold=self.brisk_threshold, vocab_size=self.vocab_size
+            )
+        elif self.feature_type == "hog":
+            # Get bag of features vector for each image from hog descriptors
+            # at brisk keypoints.
+            self.frame_data.hog_bag_of_features(
+                brisk_threshold=self.brisk_threshold, vocab_size=self.vocab_size
+            )
         else:
             # Flatten the raw image matrix for each image
             self.frame_data.flatten()
@@ -525,17 +706,17 @@ def demo_pipeline():
     ]
 
     pipeline = FeatureSuggestionPipeline(
-        per_video=100,
+        per_video=10,
         scale=0.25,
         sample_method="random",
-        feature_type="brisk",
+        feature_type="hog",
         brisk_threshold=120,
         n_components=5,
         n_clusters=5,
         per_cluster=5,
     )
 
-    suggestions = ParallelFeaturePipeline.run(pipeline, vids, parallel=True)
+    suggestions = ParallelFeaturePipeline.run(pipeline, vids, parallel=False)
 
     print(suggestions)
 

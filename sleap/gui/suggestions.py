@@ -116,32 +116,24 @@ class VideoFrameSuggestions(object):
         """
 
         brisk_threshold = kwargs.get("brisk_threshold", 80)
+        vocab_size = kwargs.get("vocab_size", 20)
+
+        pipeline = FeatureSuggestionPipeline(
+            per_video=per_video,
+            scale=scale,
+            sample_method=sample_method,
+            feature_type=feature_type,
+            brisk_threshold=brisk_threshold,
+            vocab_size=vocab_size,
+            n_components=pca_components,
+            n_clusters=n_clusters,
+            per_cluster=per_cluster,
+        )
 
         if merge_video_features == "across all videos":
             # Run single pipeline with all videos
-            return FeatureSuggestionPipeline(
-                per_video=per_video,
-                scale=scale,
-                sample_method=sample_method,
-                feature_type=feature_type,
-                brisk_threshold=brisk_threshold,
-                n_components=pca_components,
-                n_clusters=n_clusters,
-                per_cluster=per_cluster,
-            ).get_suggestion_frames(videos=labels.videos)
+            return pipeline.get_suggestion_frames(videos=labels.videos)
         else:
-            # Build pipeline
-            pipeline = FeatureSuggestionPipeline(
-                per_video=per_video,
-                scale=scale,
-                sample_method=sample_method,
-                feature_type=feature_type,
-                brisk_threshold=brisk_threshold,
-                n_components=pca_components,
-                n_clusters=n_clusters,
-                per_cluster=per_cluster,
-            )
-
             # Run pipeline separately (in parallel) for each video
             suggestions = ParallelFeaturePipeline.run(pipeline, labels.videos)
 
