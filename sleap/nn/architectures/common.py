@@ -2,6 +2,7 @@ import numpy as np
 import collections
 from functools import wraps
 
+import tensorflow as tf
 from tensorflow.keras.layers import Conv2D, BatchNormalization, Add
 
 
@@ -27,6 +28,16 @@ def expand_to_n(x, n):
         raise ValueError("Variable to expand must be scalar.")
 
     return x
+
+
+def scale_input(X):
+    """Rescale input to [-1, 1]."""
+    return (X * 2) - 1
+
+
+def tile_channels(X):
+    """Tiles single channel to 3 channel."""
+    return tf.tile(X, [1, 1, 1, 3])
 
 
 def conv(num_filters, kernel_size=(3, 3), activation="relu", **kwargs):
@@ -136,3 +147,23 @@ def residual_block(x_in, num_filters=None, batch_norm=True):
     x_out = Add()([x_identity, x])
 
     return x_out
+
+
+def upsampling_blocks(x: tf.Tensor, up_blocks: int, upsampling_layers: bool = False, interp: str = "bilinear", refine_conv_up: bool = False, conv_filters: int = 64) -> tf.Tensor:
+
+    for i in range(up_blocks):
+        if upsampling_layers:
+            x = tf.keras.layers.UpSampling2D(size=(2, 2), interpolation=interp)(x)
+        else:
+            x = tf.keras.layers.Conv2DTranspose(
+                conv_filters,
+                kernel_size=3,
+                strides=2,
+                padding="same",
+                kernel_initializer="glorot_normal",
+            )(x)
+
+        if refine_conv_up:
+            x = tf.keras.layers.Conv2D(conv_filters, kernel_size=1, padding="same", activation="relu")(x)
+
+    return x
