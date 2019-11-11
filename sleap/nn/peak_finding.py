@@ -260,7 +260,7 @@ def find_offsets_local_direction(
         >>> find_offsets_local_direction(np.array(
         ...     [[0., 1., 0.],
         ...      [1., 3., 2.],
-        ...      [0., 1., 0.]]).reshape(1, 3, 3, 1))
+        ...      [0., 1., 0.]]).reshape(1, 3, 3, 1), 0.25)
         <tf.Tensor: id=21250, shape=(1, 2), dtype=float64, numpy=array([[0.  , 0.25]])>
     """
 
