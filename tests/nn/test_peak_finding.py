@@ -1,6 +1,37 @@
+import attr
 import numpy as np
 import tensorflow as tf
 from sleap.nn import peak_finding
+from sleap.nn import model
+
+
+@attr.s(auto_attribs=True)
+class PassthroughModel(model.InferenceModel):
+    job: "sleap.nn.training.TrainingJob" = None
+
+    def __attrs_post_init__(self):
+        from sleap.nn import training
+        from sleap.nn.architectures.leap import LeapCNN as backbone
+
+        self._keras_model = lambda x: x
+
+        training_model = training.Model(
+            output_type=training.ModelOutputType.CONFIDENCE_MAP,
+            backbone=backbone(),
+            skeletons=[],
+        )
+
+        train_run = training.TrainingJob(
+            model=training_model,
+            trainer=training.Trainer(),
+            save_dir="foo",
+            run_name="foo",
+        )
+
+        self.job = train_run
+
+    def predict(self, X, *args, **kwargs):
+        return X
 
 
 class PeakFindingTests(tf.test.TestCase):
@@ -309,3 +340,32 @@ class PeakFindingTests(tf.test.TestCase):
         )
 
         self.assertAllEqual(refined, refined_gt)
+
+    def test_peaking_finding_integration(self):
+        img_shape = [2, 8, 8, 3]
+        peak_subs = tf.constant(
+            [
+                [0, 1, 1, 0],  # (stop black from reformatting matrix)
+                [0, 1, 2, 0],
+                [0, 0, 0, 1],
+                [1, 1, 2, 1],
+                [1, 2, 3, 2],
+            ],
+        )
+        peak_vals = tf.ones(peak_subs.shape[0])
+
+        img = tf.scatter_nd(peak_subs, peak_vals, img_shape)
+
+        x, y = peak_finding.ConfmapPeakFinder(PassthroughModel()).predict(img * 100)
+
+        gt = np.array(
+            [
+                [0.0, 0.25, 0.25, 1.0],
+                [0.0, 1.0, 1.25, 0.0],
+                [0.0, 1.0, 1.75, 0.0],
+                [1.0, 1.0, 2.0, 1.0],
+                [1.0, 2.0, 3.0, 2.0],
+            ]
+        )
+
+        self.assertAllEqual(x, gt)
