@@ -243,6 +243,11 @@ def normalize_bboxes(bboxes: np.ndarray, img_height: int, img_width: int) -> np.
 class CentroidPredictor:
     centroid_model: model.InferenceModel
     batch_size: int = 16
+    smooth_confmaps: bool = False
+    smoothing_kernel_size: int = 5
+    smoothing_sigma: float = 3.
+    peak_thresh: float = 0.3
+    refine_peaks: bool = True
 
     def preproc(self, imgs):
         # Scale to model input size.
@@ -257,26 +262,37 @@ class CentroidPredictor:
 
         return imgs
 
+    @tf.function
     def inference(self, imgs):
         # Model inference
-        confmaps = utils.batched_call(
-            self.centroid_model.keras_model, imgs, batch_size=self.batch_size
-        )
+        confmaps = self.centroid_model.keras_model(imgs)
+
+        if self.smooth_confmaps:
+            confmaps = peak_finding.smooth_imgs(
+                confmaps,
+                kernel_size=self.smoothing_kernel_size,
+                sigma=self.smoothing_sigma
+            )
 
         return confmaps
 
     def postproc(self, centroid_confmaps):
         # Peak finding
-        centroids, centroid_vals = peak_finding.find_local_peaks(centroid_confmaps)
+        centroids, centroid_vals = peak_finding.find_local_peaks(
+            centroid_confmaps, min_val=self.peak_thresh)
+
+        if self.refine_peaks:
+            centroids = peak_finding.refine_peaks_local_direction(centroid_confmaps, centroids)
+
         centroids /= tf.constant(
             [[1, self.centroid_model.output_scale, self.centroid_model.output_scale, 1]]
         )
         return centroids, centroid_vals
 
-    @tf.function
+    
     def predict(self, imgs):
         imgs = self.preproc(imgs)
-        confmaps = self.inference(imgs)
+        confmaps = utils.batched_call(self.inference, imgs, batch_size=self.batch_size)
         return self.postproc(confmaps)
 
 
