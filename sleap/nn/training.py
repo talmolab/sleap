@@ -204,12 +204,16 @@ class Trainer:
 
         # FIXME: We need to handle multiple skeletons.
         skeleton = labels.skeletons[0]
+        print("Skeleton:")
+        for i, node_name in enumerate(skeleton.node_names):
+            print(f"  node[{i}]: {node_name}")
 
         # Modify the model to add the skeletons, not sure if skeletons should be
         # on the Model class or on TrainingJob instead. Oh well.
         model.skeletons = labels.skeletons
 
         # Generate CENTROID training data
+        print("Model output type:", model.output_type)
         if model.output_type == ModelOutputType.CENTROIDS:
             imgs = generate_images(labels, scale=self.scale)
             points = generate_centroid_points(generate_points(labels, scale=self.scale))
@@ -669,6 +673,9 @@ class TrainingJob:
         Returns:
             A TrainingJob instance constructed from JSON in filename.
         """
+
+        if os.path.isdir(filename):
+            filename = os.path.join(filename, "training_job.json")
 
         # Open and parse the JSON in filename
         with open(filename, "r") as f:
