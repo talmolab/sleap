@@ -20,6 +20,7 @@ from sleap.nn import model
 from sleap.nn import utils
 
 
+@tf.function
 def find_global_peaks(img: tf.Tensor) -> tf.Tensor:
     """Finds the global maximum for each sample and channel.
 
@@ -59,6 +60,7 @@ def find_global_peaks(img: tf.Tensor) -> tf.Tensor:
     return tf.cast(peak_subs, tf.float32), peak_vals
 
 
+@tf.function
 def find_local_peaks(
     img: tf.Tensor, min_val: float = 0.3
 ) -> Tuple[tf.Tensor, tf.Tensor]:
@@ -80,15 +82,24 @@ def find_local_peaks(
         subscripts indicated by peak_subs within img.
     """
 
-    # Max filter to find local maxima.
-    max_img = tf.nn.max_pool2d(
-        img, ksize=[1, 3, 3, 1], strides=[1, 1, 1, 1], padding="SAME"
-    )
+    # Build custom local NMS kernel.
+    kernel = tf.reshape(
+        tf.constant([[0, 0, 0], [0, -1, 0], [0, 0, 0]], dtype=tf.float32),
+        (3, 3, 1))
+    
+    # Perform dilation filtering to find local maxima per channel.
+    img_channels = tf.split(img, tf.ones([tf.shape(img)[-1]], dtype=tf.int32), axis=-1)
+    max_img = []
+    for img_channel in img_channels:
+        max_img.append(
+            tf.nn.dilation2d(
+                img_channel, kernel, [1, 1, 1, 1],
+                "SAME", "NHWC", [1, 1, 1, 1])
+        )
+    max_img = tf.concat(max_img, axis=-1)
 
-    # Filter pixels by equality to max filtered image and threshold.
-    argmax_img = img == max_img
-    thresh_img = img > min_val
-    argmax_and_thresh_img = argmax_img & thresh_img
+    # Filter for maxima and threshold.
+    argmax_and_thresh_img = tf.greater(img, max_img) & tf.greater(img, min_val)
 
     # Convert to subscripts.
     peak_subs = tf.where(argmax_and_thresh_img)
@@ -355,20 +366,14 @@ class ConfmapPeakFinder:
 
     @tf.function
     def inference(self, imgs):
+
         # Model inference
         confmaps = self.confmap_model.keras_model(imgs)
 
         if self.smoothing_sigma > 0:
             # Smooth
-            confmaps = smooth_imgs(confmaps, kernel_size=self.smoothing_kernel_size,)
-
-        return confmaps
-
-    def batched_inference(self, imgs, batch_size=None):
-        if batch_size is None:
-            batch_size = self.batch_size
-
-        confmaps = utils.batched_call(self.inference, imgs, batch_size=batch_size)
+            confmaps = smooth_imgs(confmaps, kernel_size=self.smoothing_kernel_size,
+                sigma=self.smoothing_sigma)
 
         return confmaps
 
@@ -376,50 +381,41 @@ class ConfmapPeakFinder:
     def postproc(self, confmaps):
 
         # Peak finding
-        peaks, peak_vals = find_local_peaks(confmaps, min_val=self.min_peak_threshold)
-        peaks = refine_peaks_local_direction(confmaps, peaks)
-        peaks /= tf.constant(
+        peak_subs, peak_vals = find_local_peaks(confmaps, min_val=self.min_peak_threshold)
+        peak_subs = refine_peaks_local_direction(confmaps, peak_subs)
+        peak_subs /= tf.constant(
             [[1, self.confmap_model.output_scale, self.confmap_model.output_scale, 1]]
         )
 
-        return peaks, peak_vals
+        return tf.concat([peak_subs, tf.expand_dims(peak_vals, axis=1)], axis=1)
 
-    def predict(self, imgs, concat=False):
+    def predict_rps(self, rps) -> RegionPeakSet:
 
-        imgs = self.preproc(imgs)
-        confmaps = self.batched_inference(imgs)
-        peaks, peak_vals = self.postproc(confmaps)
+        imgs = self.preproc(rps.patches)
 
-        if not concat:
-            return peaks, peak_vals
-        else:
-            return tf.concat([peaks, tf.expand_dims(peak_vals, axis=1)], axis=1)
+        confmaps = utils.batched_call(
+            self.inference,
+            imgs,
+            batch_size=self.batch_size)
 
-    def predict_rps(self, rps: "sleap.nn.region_proposal.RegionProposalSet") -> RegionPeakSet:
-
-        # We also batch here to minimize retracing since we have many
-        # irregular batch sizes when using region proposals.
-        peaks_and_vals, batch_inds = utils.batched_call(
-            lambda patches: self.predict(patches, concat=True),
-            rps.patches,
-            batch_size=self.rps_batch_size,
-            return_batch_inds=True,
-        )
-
-        # Copy to CPU.
-        peaks_and_vals = peaks_and_vals.numpy()
+        peak_subs_and_vals, batch_inds = utils.batched_call(
+            self.postproc,
+            confmaps,
+            batch_size=self.batch_size,
+            return_batch_inds=True)
 
         # Split.
-        peaks = peaks_and_vals[:, :4]
-        peak_vals = peaks_and_vals[:, 4].squeeze()
+        peaks, peak_vals = tf.split(peak_subs_and_vals, [4, 1], axis=1)
 
-        # Pull out indices of peaks within the patches in this set.
-        patch_inds = peaks[:, 0].astype(int)
+        # Pull out patch indices and adjust for batching.
+        patch_inds = tf.cast(peaks[:, 0] + (batch_inds * self.batch_size), tf.int32)
 
-        # Adjust for the region proposal set batching.
-        patch_inds += batch_inds * self.rps_batch_size
+        # Copy everything to CPU.
+        peaks = peaks.numpy()
+        peak_vals = peak_vals.numpy().squeeze()
+        patch_inds = patch_inds.numpy()
 
-        # Update subscripts with the sample indices.
+        # Update subscripts with the sample indices and adjust to image coords.
         peaks[:, 0] = rps.sample_inds[patch_inds]
         peaks[:, 1] += rps.bboxes[patch_inds, 0]
         peaks[:, 2] += rps.bboxes[patch_inds, 1]
