@@ -369,3 +369,12 @@ class PeakFindingTests(tf.test.TestCase):
         )
 
         self.assertAllEqual(x, gt)
+
+    def test_peak_finding_zeros(self):
+        img_shape = [2, 8, 8, 3]
+        img = tf.zeros(img_shape)
+
+        x, y = peak_finding.ConfmapPeakFinder(PassthroughModel()).predict(img)
+
+        # Make sure there are no peaks when image is all zeros
+        self.assertEmpty(x)
