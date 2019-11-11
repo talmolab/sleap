@@ -263,7 +263,7 @@ class VideoLoader:
 
     @property
     def n_chunks(self):
-        return int(np.ceil(self.frames / self.chunk_size))
+        return int(np.ceil(self.n_frames / self.chunk_size))
 
     def __len__(self):
         return self.n_chunks
