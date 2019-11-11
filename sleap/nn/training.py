@@ -3,8 +3,6 @@ import json
 
 import logging
 
-logger = logging.getLogger(__name__)
-
 import numpy as np
 import attr
 import cattr
@@ -53,6 +51,9 @@ from sleap.nn.datagen import (
     generate_points,
     generate_centroid_points,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 @attr.s(auto_attribs=True)
@@ -204,12 +205,16 @@ class Trainer:
 
         # FIXME: We need to handle multiple skeletons.
         skeleton = labels.skeletons[0]
+        print("Skeleton:")
+        for i, node_name in enumerate(skeleton.node_names):
+            print(f"  node[{i}]: {node_name}")
 
         # Modify the model to add the skeletons, not sure if skeletons should be
         # on the Model class or on TrainingJob instead. Oh well.
         model.skeletons = labels.skeletons
 
         # Generate CENTROID training data
+        print("Model output type:", model.output_type)
         if model.output_type == ModelOutputType.CENTROIDS:
             imgs = generate_images(labels, scale=self.scale)
             points = generate_centroid_points(generate_points(labels, scale=self.scale))
@@ -596,7 +601,6 @@ class Trainer:
 
         return callbacks
 
-
 @attr.s(auto_attribs=True)
 class TrainingJob:
     """
@@ -628,6 +632,29 @@ class TrainingJob:
     best_model_filename: Union[str, None] = None
     newest_model_filename: Union[str, None] = None
     final_model_filename: Union[str, None] = None
+
+    @property
+    def model_path(self):
+        """Returns a path to an existing model, with preference for best model if it exists.
+
+        Raises:
+            ValueError: if neither the best model or final model could be found.
+        """
+
+        # Try the best model first.
+        model_path = os.path.join(self.save_dir, self.best_model_filename)
+
+        # Try the final model if that didn't exist.
+        if not os.path.exists(model_path):
+            model_path = os.path.join(
+                self.save_dir, self.final_model_filename
+            )
+
+        # Raise error if both fail.
+        if not os.path.exists(model_path):
+            raise ValueError(f"Could not find a saved model in job directory: {self.save_dir}")
+
+        return model_path
 
     @property
     def is_trained(self):
@@ -670,6 +697,10 @@ class TrainingJob:
             A TrainingJob instance constructed from JSON in filename.
         """
 
+        # Check for training job file if save directory specified.
+        if os.path.isdir(filename):
+            filename = os.path.join(filename, "training_job.json")
+
         # Open and parse the JSON in filename
         with open(filename, "r") as f:
             dicts = json.load(f)
@@ -711,6 +742,7 @@ class TrainingJob:
             if path.find("\\"):
                 path = Path(PureWindowsPath(path))
         return path
+
 
 
 class TrainingControllerZMQ(keras.callbacks.Callback):

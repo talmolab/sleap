@@ -38,7 +38,8 @@ def expand_to_4d(img: tf.Tensor) -> tf.Tensor:
 
 
 def batched_call(
-    fn: Callable[[tf.Tensor], tf.Tensor], x: tf.Tensor,
+    fn: Callable[[tf.Tensor], tf.Tensor],
+    x: tf.Tensor,
     batch_size: int = 8,
     call_with_batch_ind: bool = False,
     return_batch_inds: bool = False,
@@ -81,8 +82,7 @@ def batched_call(
 
     # Split indices into batches.
     sample_inds = np.arange(len(x))
-    batched_sample_inds = np.split(sample_inds,
-        sample_inds[batch_size::batch_size])
+    batched_sample_inds = np.split(sample_inds, sample_inds[batch_size::batch_size])
 
     # Evaluate each batch.
     outputs = []
@@ -99,14 +99,80 @@ def batched_call(
 
         outputs.append(batch_outputs)
         if return_batch_inds:
-            output_batch_inds.append(np.full(len(batch_outputs), batch_ind,
-                dtype=np.int32))
+            output_batch_inds.append(
+                np.full(len(batch_outputs), batch_ind, dtype=np.int32)
+            )
 
     # Return concatenated outputs.
     if return_batch_inds:
         return tf.concat(outputs, axis=0), np.concatenate(output_batch_inds, axis=0)
     else:
         return tf.concat(outputs, axis=0)
+
+
+def batched_call_slices(
+    fn: Callable,
+    X: Union[np.ndarray, tf.Tensor],
+    batch_size: int = 8,
+    return_numpy: bool = None,
+):
+    """Returns the output of calling a function with automatic batching.
+
+    This function is a little less complex than batched_call and deals with automatic
+    casting to and from numpy arrays and dealing with multiple outputs, but may not be
+    as fast.
+
+    This function is designed to transparently replace the functionality provided by
+    tf.keras.Model.predict() while using tensor inputs.
+
+    Args:
+        fn: Any callable that returns tensors.
+        X: A numpy array of tensor.
+        batch_size: Slices of X to batch at a time.
+        return_numpy: If True, outputs are converted to numpy arrays. If not set, this
+            is inferred from whether X is a numpy array or tensor.
+
+    Returns:
+        Y: A tensor/numpy array, or list of tensors/numpy arrays equivalent to calling
+            fn(X) without batching.
+    """
+
+    if return_numpy is None:
+        return_numpy = isinstance(X, np.ndarray)
+
+    is_single_output = True
+    Y = []
+    for x in tf.data.Dataset.from_tensor_slices(X).batch(batch_size):
+        y = fn(x)
+
+    if tf.is_tensor(y):
+        if return_numpy:
+            y = y.numpy()
+        Y.append(y)
+
+    else:
+        is_single_output = False
+        while len(Y) < len(y):
+            Y.append([])
+
+        for i in range(len(y)):
+            y_i = y[i]
+        if return_numpy:
+            y_i = y_i.numpy()
+        Y[i].append(y_i)
+
+    # Now concatenate everything.
+    if is_single_output:
+        if return_numpy:
+            return np.concatenate(Y, axis=0)
+        else:
+            return tf.concat(Y, axis=0)
+
+    else:
+        if return_numpy:
+            return [np.concatenate(y, axis=0) for y in Y]
+        else:
+            return [tf.concat(y, axis=0) for y in Y]
 
 
 def group_array(
@@ -199,12 +265,16 @@ def resize_imgs(
         divisible_height = tf.cast(
             tf.math.ceil(
                 tf.cast(target_height, tf.float32) / tf.cast(common_divisor, tf.float32)
-            ) * common_divisor, tf.int32
+            )
+            * common_divisor,
+            tf.int32,
         )
         divisible_width = tf.cast(
             tf.math.ceil(
                 tf.cast(target_width, tf.float32) / tf.cast(common_divisor, tf.float32)
-            ) * common_divisor, tf.int32
+            )
+            * common_divisor,
+            tf.int32,
         )
         if divisible_height != target_height or divisible_width != target_width:
             # Pad bottom/right as needed.
@@ -229,12 +299,7 @@ def compute_pairwise_distances(x: np.ndarray, y: np.ndarray) -> np.ndarray:
         A distance matrix dists of shape (M, N), such that dists[i, j] contains the
         Euclidean distance between x[i] and y[j].
     """
-    return np.sqrt(
-        np.sum(
-            (np.expand_dims(x, 1) - np.expand_dims(y, 0)) ** 2,
-            axis=-1
-        )
-    )
+    return np.sqrt(np.sum((np.expand_dims(x, 1) - np.expand_dims(y, 0)) ** 2, axis=-1))
 
 
 @attr.s(auto_attribs=True)
@@ -263,7 +328,7 @@ class VideoLoader:
 
     @property
     def n_chunks(self):
-        return int(np.ceil(self.frames / self.chunk_size))
+        return int(np.ceil(self.n_frames / self.chunk_size))
 
     def __len__(self):
         return self.n_chunks
@@ -337,3 +402,37 @@ class VideoLoader:
 
     def __iter__(self):
         return self.iter_chunks()
+
+
+def compute_iou(bbox1: np.ndarray, bbox2: np.ndarray) -> float:
+    """Computes the intersection over union for a pair of bounding boxes.
+
+    Args:
+        bbox1: Bounding box specified by corner coordinates [y1, x1, y2, x2].
+        bbox2: Bounding box specified by corner coordinates [y1, x1, y2, x2].
+
+    Returns:
+        A float scalar calculated as the ratio between the areas of the intersection
+        and the union of the two bounding boxes.
+    """
+
+    bbox1_y1, bbox1_x1, bbox1_y2, bbox1_x2 = bbox1
+    bbox2_y1, bbox2_x1, bbox2_y2, bbox2_x2 = bbox2
+
+    intersection_y1 = max(bbox1_y1, bbox2_y1)
+    intersection_x1 = max(bbox1_x1, bbox2_x1)
+    intersection_y2 = min(bbox1_y2, bbox2_y2)
+    intersection_x2 = min(bbox1_x2, bbox2_x2)
+
+    intersection_area = max(intersection_x2 - intersection_x1 + 1, 0) * max(
+        intersection_y2 - intersection_y1 + 1, 0
+    )
+
+    bbox1_area = (bbox1_x2 - bbox1_x1 + 1) * (bbox1_y2 - bbox1_y1 + 1)
+    bbox2_area = (bbox2_x2 - bbox2_x1 + 1) * (bbox2_y2 - bbox2_y1 + 1)
+
+    union_area = bbox1_area + bbox2_area - intersection_area
+
+    iou = intersection_area / union_area
+
+    return iou
