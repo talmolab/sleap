@@ -8,7 +8,6 @@ from enum import Enum
 from typing import List, Text, Callable, Tuple, Dict, Union
 import logging
 
-# from sleap.nn.training import TrainingJob
 from sleap.skeleton import Skeleton
 from sleap.nn.augmentation import Augmenter
 from sleap.nn.architectures import *
@@ -226,11 +225,12 @@ class InferenceModel:
     keras_model: keras.Model = None
 
     @classmethod
-    def from_training_job(cls, training_job: Union[TrainingJob, Text]):
+    def from_training_job(cls, training_job: Union["sleap.nn.training.TrainingJob", Text]):
         """Create an InferenceModel from a TrainingJob or path to json file."""
 
         if isinstance(training_job, str):
-            training_job = training_job.load_json(training_job)
+            from sleap.nn.training import TrainingJob
+            training_job = TrainingJob.load_json(training_job)
 
         return cls(
             skeleton=training_job.model.skeletons[0],
@@ -270,8 +270,8 @@ class InferenceModel:
         """Create model with the specified input/output tensors."""
 
         self.keras_model = keras.Model(
-            self.keras_model.inputs[self.input_ind],
-            self.keras_model.outputs[self.output_ind])
+            self.keras_model.inputs[self.input_tensor_ind],
+            self.keras_model.outputs[self.output_tensor_ind])
 
     @property
     def input_tensor(self) -> tf.Tensor:

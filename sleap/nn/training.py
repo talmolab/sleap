@@ -3,8 +3,6 @@ import json
 
 import logging
 
-logger = logging.getLogger(__name__)
-
 import numpy as np
 import attr
 import cattr
@@ -53,6 +51,9 @@ from sleap.nn.datagen import (
     generate_points,
     generate_centroid_points,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 @attr.s(auto_attribs=True)
@@ -600,7 +601,6 @@ class Trainer:
 
         return callbacks
 
-
 @attr.s(auto_attribs=True)
 class TrainingJob:
     """
@@ -655,7 +655,6 @@ class TrainingJob:
             raise ValueError(f"Could not find a saved model in job directory: {self.save_dir}")
 
         return model_path
-    
 
     @property
     def is_trained(self):
@@ -743,6 +742,7 @@ class TrainingJob:
             if path.find("\\"):
                 path = Path(PureWindowsPath(path))
         return path
+
 
 
 class TrainingControllerZMQ(keras.callbacks.Callback):
