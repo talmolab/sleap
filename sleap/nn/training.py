@@ -634,6 +634,30 @@ class TrainingJob:
     final_model_filename: Union[str, None] = None
 
     @property
+    def model_path(self):
+        """Returns a path to an existing model, with preference for best model if it exists.
+
+        Raises:
+            ValueError: if neither the best model or final model could be found.
+        """
+
+        # Try the best model first.
+        model_path = os.path.join(self.save_dir, self.best_model_filename)
+
+        # Try the final model if that didn't exist.
+        if not os.path.exists(model_path):
+            model_path = os.path.join(
+                self.save_dir, self.final_model_filename
+            )
+
+        # Raise error if both fail.
+        if not os.path.exists(model_path):
+            raise ValueError(f"Could not find a saved model in job directory: {self.save_dir}")
+
+        return model_path
+    
+
+    @property
     def is_trained(self):
         if self.final_model_filename is not None:
             path = os.path.join(self.save_dir, self.final_model_filename)
@@ -674,6 +698,7 @@ class TrainingJob:
             A TrainingJob instance constructed from JSON in filename.
         """
 
+        # Check for training job file if save directory specified.
         if os.path.isdir(filename):
             filename = os.path.join(filename, "training_job.json")
 

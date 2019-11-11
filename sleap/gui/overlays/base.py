@@ -21,7 +21,7 @@ class HDF5Data(HDF5Video):
 
 @attr.s(auto_attribs=True)
 class ModelData:
-    inference_model: "sleap.nn.inference.InferenceModel"
+    inference_model: "sleap.nn.model.InferenceModel"
     video: Video
     do_rescale: bool = False
     output_scale: float = 1.0
@@ -43,7 +43,6 @@ class ModelData:
         inference_transform = DataTransform()
         if self.do_rescale:
             # Scale input image if model trained on scaled images
-            self.inference_model.load_model()
             print("trained_input_shape:", self.inference_model.trained_input_shape)
             frame_img = inference_transform.scale_to(
                 imgs=frame_img, target_size=self.inference_model.trained_input_shape[1:3]
@@ -153,13 +152,12 @@ class DataOverlay:
 
     @classmethod
     def from_model(cls, filename, video, **kwargs):
-        from sleap.nn.model import ModelOutputType
-        from sleap.nn.inference import InferenceModel
+        from sleap.nn.model import ModelOutputType, InferenceModel
         from sleap.nn.training import TrainingJob
 
         # Load the trained model
         training_job = TrainingJob.load_json(filename)
-        inference_model = InferenceModel(training_job)
+        inference_model = InferenceModel.from_training_job(training_job)
 
         size_reduction = 2 ** (inference_model.down_blocks)
         input_size = (
