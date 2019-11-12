@@ -207,6 +207,7 @@ class FlowTracker:
     similarity_function: Callable = instance_similarity
     matching_function: Callable = greedy_matching
     min_shifted_points: int = 0
+    min_new_track_points: int = 0
     img_scale: float = 1.0
     of_window_size: int = 21
     of_max_levels: int = 3
@@ -368,6 +369,10 @@ class FlowTracker:
             if i in tracked_inds:
                 continue
 
+            # Skip if this instance is too small to spawn a new track with.
+            if inst.n_visible_points < self.min_new_track_points:
+                continue
+
             # Spawn new track.
             new_track = Track(spawned_on=t, name=f"track_{len(self.spawned_tracks)}")
             self.spawned_tracks.append(new_track)
@@ -393,6 +398,7 @@ class SimpleTracker:
     similarity_function: Callable = instance_iou
     matching_function: Callable = hungarian_matching
     min_instance_points: int = 0
+    min_new_track_points: int = 0
 
     track_matching_queue: Deque[
         Tuple[int, np.ndarray, List[InstanceType]]
@@ -527,6 +533,10 @@ class SimpleTracker:
 
             # Skip if this instance was tracked.
             if i in tracked_inds:
+                continue
+
+            # Skip if this instance is too small to spawn a new track with.
+            if inst.n_visible_points < self.min_new_track_points:
                 continue
 
             # Spawn new track.
