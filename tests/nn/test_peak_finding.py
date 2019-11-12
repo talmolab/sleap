@@ -29,11 +29,10 @@ class PeakFindingTests(tf.test.TestCase):
     def test_close_local_peaks(self):
         img_shape = [2, 8, 8, 3]
 
-        # FIXME: this test is failing, but I think find_local_peaks is now wrong
         peak_subs = tf.constant(
             [
-                [0, 1, 1, 0],  # (stop black from reformatting matrix)
-                [0, 1, 2, 0],
+                [0, 1, 1, 0],
+                [0, 1, 2, 0],  # plateau (not considered local peak)
                 [0, 7, 7, 1],
                 [1, 1, 2, 1],
                 [1, 2, 3, 2],
@@ -44,7 +43,7 @@ class PeakFindingTests(tf.test.TestCase):
         img = tf.scatter_nd(peak_subs, peak_vals, img_shape)
         peaks, _ = peak_finding.find_local_peaks(img)
 
-        self.assertLen(peaks, 4)
+        self.assertLen(peaks, 3)
 
     def test_no_local_peaks(self):
 
@@ -293,8 +292,8 @@ class PeakRefinementTests(tf.test.TestCase):
         img_shape = [2, 8, 8, 3]
         peak_subs = tf.constant(
             [
-                [0, 1, 1, 0],  # (stop black from reformatting matrix)
-                [0, 1, 2, 0],
+                [0, 1, 1, 0],
+                [0, 1, 2, 0],  # make this higher so it's not a plateau
                 [0, 2, 1, 0],
                 [0, 2, 2, 0],
                 [0, 7, 7, 1],
@@ -302,7 +301,7 @@ class PeakRefinementTests(tf.test.TestCase):
                 [1, 2, 3, 2],
             ],
         )
-        peak_vals = tf.ones(peak_subs.shape[0])
+        peak_vals = tf.constant([1, 1.1, 1, 1, 1, 1, 1])
 
         self.img = tf.scatter_nd(peak_subs, peak_vals, img_shape)
         self.peaks, _ = peak_finding.find_local_peaks(self.img)
@@ -310,11 +309,9 @@ class PeakRefinementTests(tf.test.TestCase):
     def test_refine_peaks_local_direction(self):
         refined = peak_finding.refine_peaks_local_direction(self.img, self.peaks)
 
-        # FIXME: what should this return?
         refined_gt = np.array(
             [
-                # [0.0, 1.0, 1.25, 0.0],
-                # [0.0, 1.0, 1.75, 0.0],
+                [0.0, 1.25, 1.75, 0.0],  # FIXME: is this right?
                 [0.0, 7.0, 7.0, 1.0],
                 [1.0, 1.0, 2.0, 1.0],
                 [1.0, 2.0, 3.0, 2.0],
@@ -328,11 +325,9 @@ class PeakRefinementTests(tf.test.TestCase):
             self.img, self.peaks, delta=0.5
         )
 
-        # FIXME: what should this return?
         refined_gt = np.array(
             [
-                # [0.0, 1.0, 1.5, 0.0],
-                # [0.0, 1.5, 1.5, 0.0],
+                [0.0, 1.5, 1.5, 0.0],  # FIXME: is this right?
                 [0.0, 7.0, 7.0, 1.0],
                 [1.0, 1.0, 2.0, 1.0],
                 [1.0, 2.0, 3.0, 2.0],
