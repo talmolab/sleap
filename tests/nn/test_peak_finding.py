@@ -311,7 +311,7 @@ class PeakRefinementTests(tf.test.TestCase):
 
         refined_gt = np.array(
             [
-                [0.0, 1.25, 1.75, 0.0],  # FIXME: is this right?
+                [0.0, 1.25, 1.75, 0.0],
                 [0.0, 7.0, 7.0, 1.0],
                 [1.0, 1.0, 2.0, 1.0],
                 [1.0, 2.0, 3.0, 2.0],
@@ -327,7 +327,7 @@ class PeakRefinementTests(tf.test.TestCase):
 
         refined_gt = np.array(
             [
-                [0.0, 1.5, 1.5, 0.0],  # FIXME: is this right?
+                [0.0, 1.5, 1.5, 0.0],
                 [0.0, 7.0, 7.0, 1.0],
                 [1.0, 1.0, 2.0, 1.0],
                 [1.0, 2.0, 3.0, 2.0],
