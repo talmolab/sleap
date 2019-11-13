@@ -5,7 +5,7 @@ Main GUI application for labeling, training/inference, and proofreading.
 
 import re
 import os
-
+import random
 
 from typing import Callable, Dict, Iterator, List, Optional
 
@@ -1126,13 +1126,7 @@ class MainWindow(QMainWindow):
         }
 
         selection["random"] = {
-            video: remove_user_labeled(
-                video,
-                [
-                    frame.frame_idx
-                    for frame in VideoFrameSuggestions.random(video=video)
-                ],
-            )
+            video: remove_user_labeled(video, random.sample(range(video.frames), 20))
             for video in self.labels.videos
         }
 
