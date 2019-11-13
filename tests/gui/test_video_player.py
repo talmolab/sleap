@@ -24,7 +24,7 @@ def test_gui_video_instances(qtbot, small_robot_mp4_vid, centered_pair_labels):
 
     def plot_instances(vp, idx):
         for instance in labeled_frames[test_frame_idx].instances:
-            vp.addInstance(instance=instance, color=(0, 0, 128))
+            vp.addInstance(instance=instance)
 
     vp.changedPlot.connect(plot_instances)
     vp.view.updatedViewer.emit()
@@ -34,6 +34,9 @@ def test_gui_video_instances(qtbot, small_robot_mp4_vid, centered_pair_labels):
 
     # Check that all instances are included in viewer
     assert len(vp.instances) == len(labeled_frames[test_frame_idx].instances)
+
+    # All instances should be selectable
+    assert vp.selectable_instances == vp.instances
 
     vp.zoomToFit()
 
@@ -46,11 +49,15 @@ def test_gui_video_instances(qtbot, small_robot_mp4_vid, centered_pair_labels):
     assert vp.instances[0].childItems()[3].point.complete
 
     # Check that selection via keyboard works
-    assert vp.view.getSelection() == None
+    assert vp.view.getSelectionIndex() is None
     qtbot.keyClick(vp, QtCore.Qt.Key_1)
-    assert vp.view.getSelection() == 0
-    qtbot.keyClick(vp, QtCore.Qt.Key_QuoteLeft)
-    assert vp.view.getSelection() == 1
+    assert vp.view.getSelectionIndex() == 0
+    qtbot.keyClick(vp, QtCore.Qt.Key_2)
+    assert vp.view.getSelectionIndex() == 1
+
+    # Check that updatedSelection signal is emitted
+    with qtbot.waitSignal(vp.view.updatedSelection, timeout=10):
+        qtbot.keyClick(vp, QtCore.Qt.Key_1)
 
     # Check that selection by Instance works
     for inst in labeled_frames[test_frame_idx].instances:
@@ -59,10 +66,13 @@ def test_gui_video_instances(qtbot, small_robot_mp4_vid, centered_pair_labels):
 
     # Check that sequence selection works
     with qtbot.waitCallback() as cb:
-        vp.view.clearSelection()
+        vp.view.selectInstance(None)
         vp.onSequenceSelect(2, cb)
         qtbot.keyClick(vp, QtCore.Qt.Key_2)
         qtbot.keyClick(vp, QtCore.Qt.Key_1)
-    assert cb.args[0] == [1, 0]
+
+    inst_1 = vp.selectable_instances[1].instance
+    inst_0 = vp.selectable_instances[0].instance
+    assert cb.args[0] == [inst_1, inst_0]
 
     assert vp.close()

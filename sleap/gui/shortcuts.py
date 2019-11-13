@@ -7,7 +7,8 @@ from PySide2.QtGui import QKeySequence
 import yaml
 
 from typing import Dict, List, Union
-from pkg_resources import Requirement, resource_filename
+
+from sleap.util import get_config_file
 
 
 class ShortcutDialog(QtWidgets.QDialog):
@@ -140,9 +141,7 @@ class Shortcuts(object):
     )
 
     def __init__(self):
-        shortcut_yaml = resource_filename(
-            Requirement.parse("sleap"), "sleap/config/shortcuts.yaml"
-        )
+        shortcut_yaml = get_config_file("shortcuts.yaml")
         with open(shortcut_yaml, "r") as f:
             shortcuts = yaml.load(f, Loader=yaml.SafeLoader)
 
@@ -159,9 +158,7 @@ class Shortcuts(object):
 
     def save(self):
         """Saves all shortcuts to shortcut file."""
-        shortcut_yaml = resource_filename(
-            Requirement.parse("sleap"), "sleap/config/shortcuts.yaml"
-        )
+        shortcut_yaml = get_config_file("shortcuts.yaml")
         with open(shortcut_yaml, "w") as f:
             yaml.dump(self._shortcuts, f)
 

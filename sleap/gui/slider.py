@@ -5,7 +5,7 @@ Drop-in replacement for QSlider with additional features.
 from PySide2 import QtCore, QtWidgets
 from PySide2.QtGui import QPen, QBrush, QColor, QKeyEvent, QPolygonF, QPainterPath
 
-from sleap.gui.overlays.tracks import TrackColorManager
+from sleap.gui.color import ColorManager
 
 import attr
 import itertools
@@ -42,7 +42,7 @@ class SliderMark:
     @property
     def color(self):
         """Returns color of mark."""
-        colors = dict(simple="black", filled="blue", open="blue", predicted="red")
+        colors = dict(simple="black", filled="blue", open="blue", predicted="yellow")
 
         if self.type in colors:
             return colors[self.type]
@@ -84,7 +84,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
             this can be either
             * list of values to mark
             * list of (track, value)-tuples to mark
-        color_manager: A :class:`TrackColorManager` which determines the
+        color_manager: A :class:`ColorManager` which determines the
             color to use for "track"-type marks
 
     Signals:
@@ -114,7 +114,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
         max=100,
         val=0,
         marks=None,
-        color_manager: Optional[TrackColorManager] = None,
+        color_manager: Optional[ColorManager] = None,
         *args,
         **kwargs
     ):
@@ -131,6 +131,8 @@ class VideoSlider(QtWidgets.QGraphicsView):
         )  # ScrollBarAsNeeded
 
         self._color_manager = color_manager
+
+        self.zoom_factor = 1
 
         self._track_rows = 0
         self._track_height = 3
@@ -196,7 +198,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
         """
 
         if self._color_manager is None:
-            self._color_manager = TrackColorManager(labels=labels)
+            self._color_manager = ColorManager(labels=labels)
 
         lfs = labels.find(video)
 
@@ -214,7 +216,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
                             val=occupancy_range[0],
                             end_val=occupancy_range[1],
                             row=track_row,
-                            color=self._color_manager.get_color(track),
+                            color=self._color_manager.get_track_color(track),
                         )
                     )
                 track_row += 1
@@ -561,20 +563,42 @@ class VideoSlider(QtWidgets.QGraphicsView):
 
             self._mark_items[mark].setRect(rect)
 
+    def _get_header_series_len(self):
+        if hasattr(self.headerSeries, "keys"):
+            series_frame_max = max(self.headerSeries.keys())
+        else:
+            series_frame_max = len(self.headerSeries)
+        return series_frame_max
+
+    @property
+    def _header_series_items(self):
+        """Uields (frame idx, val) for header series items."""
+        if hasattr(self.headerSeries, "items"):
+            for key, val in self.headerSeries.items():
+                yield key, val
+        else:
+            for key in range(len(self.headerSeries)):
+                val = self.headerSeries[key]
+                yield key, val
+
     def drawHeader(self):
         """Draw the header graph."""
         if len(self.headerSeries) == 0 or self._header_height == 0:
             self.poly.setPath(QPainterPath())
             return
 
-        step = max(self.headerSeries.keys()) // int(self._sliderWidth())
-        step = max(step, 1)
-        count = max(self.headerSeries.keys()) // step * step
+        series_frame_max = self._get_header_series_len()
 
-        sampled = np.full((count), 0.0)
-        for key, val in self.headerSeries.items():
+        step = series_frame_max // int(self._sliderWidth())
+        step = max(step, 1)
+        count = series_frame_max // step * step
+
+        sampled = np.full((count), 0.0, dtype=np.float)
+
+        for key, val in self._header_series_items:
             if key < count:
                 sampled[key] = val
+
         sampled = np.max(sampled.reshape(count // step, step), axis=1)
         series = {i * step: sampled[i] for i in range(count // step)}
 
@@ -647,7 +671,8 @@ class VideoSlider(QtWidgets.QGraphicsView):
 
         outline_rect.setHeight(height - 3)
         if event is not None:
-            outline_rect.setWidth(event.size().width() - 1)
+            visual_width = event.size().width() - 1
+            outline_rect.setWidth(visual_width * self.zoom_factor)
         self.outlineBox.setRect(outline_rect)
 
         handle_rect.setTop(self._handleTop())

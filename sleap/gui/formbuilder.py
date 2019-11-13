@@ -17,6 +17,9 @@ from typing import Any, Dict, List, Optional
 
 from PySide2 import QtWidgets, QtCore
 
+from sleap.gui.filedialog import FileDialog
+from sleap.util import get_package_file
+
 
 class YamlFormWidget(QtWidgets.QGroupBox):
     """
@@ -53,6 +56,25 @@ class YamlFormWidget(QtWidgets.QGroupBox):
     def __setitem__(self, key, val):
         """Set value for specified form field."""
         FormBuilderLayout.set_widget_value(self.fields[key], val)
+
+    @classmethod
+    def from_name(cls, form_name: str, *args, **kwargs) -> "YamlFormWidget":
+        """
+        Instantiate class from the short name of form (e.g., "suggestions").
+
+        Short name is converted to path to yaml file, and then class is
+        instantiated using this path.
+
+        Args:
+            form_name: Short name of form, corresponds to name of yaml file.
+            args: Positional args passed to class initializer.
+            kwargs: Named args passed to class initializer.
+
+        Returns:
+            Instance of `YamlFormWidget` class.
+        """
+        yaml_path = get_package_file(f"sleap/config/{form_name}.yaml")
+        return cls(yaml_path, *args, **kwargs)
 
     @property
     def buttons(self):
@@ -199,6 +221,8 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
         Returns:
             None.
         """
+        if not items_to_create:
+            return
         for item in items_to_create:
             # double: show spinbox (number w/ up/down controls)
             if item["type"] == "double":
@@ -280,7 +304,7 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
             # Define function for button to trigger
             def select_file(*args, x=field):
                 filter = item.get("filter", "Any File (*.*)")
-                filename, _ = QtWidgets.QFileDialog.getOpenFileName(
+                filename, _ = FileDialog.open(
                     None, directory=None, caption="Open File", filter=filter
                 )
                 if len(filename):
@@ -290,9 +314,7 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
         elif item["type"].split("_")[-1] == "dir":
             # Define function for button to trigger
             def select_file(*args, x=field):
-                filename = QtWidgets.QFileDialog.getExistingDirectory(
-                    None, directory=None, caption="Open File"
-                )
+                filename = FileDialog.openDir(None, directory=None, caption="Open File")
                 if len(filename):
                     x.setText(filename)
                 self.valueChanged.emit()
@@ -319,17 +341,18 @@ class StackBuilderWidget(QtWidgets.QWidget):
     def __init__(self, stack_data, *args, **kwargs):
         super(StackBuilderWidget, self).__init__(*args, **kwargs)
 
+        self.option_list = stack_data["options"].split(",")
+
         multi_layout = QtWidgets.QFormLayout()
+        multi_layout.setFormAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
         self.combo_box = QtWidgets.QComboBox()
         self.stacked_widget = ResizingStackedWidget()
 
-        self.combo_box.activated.connect(
-            lambda x: self.stacked_widget.setCurrentIndex(x)
-        )
+        self.combo_box.activated.connect(self.switch_to_idx)
 
         self.page_layouts = dict()
 
-        for page in stack_data["options"].split(","):
+        for page in self.option_list:
 
             # add page
             self.page_layouts[page] = FormBuilderLayout(stack_data[page])
@@ -350,15 +373,30 @@ class StackBuilderWidget(QtWidgets.QWidget):
         multi_layout.addRow(combo_label, self.combo_box)
         multi_layout.addRow(self.stacked_widget)
 
-        default_page = stack_data["options"].split(",").index(stack_data["default"])
-        self.combo_box.setCurrentIndex(default_page)
-        self.stacked_widget.setCurrentIndex(default_page)
+        self.setValue(stack_data["default"])
 
         self.setLayout(multi_layout)
+
+    def switch_to_idx(self, idx):
+        """Switch currently shown widget from stack."""
+        self.stacked_widget.setCurrentIndex(idx)
+        # Only show if the widget contains more than an empty layout
+        if len(self.stacked_widget.currentWidget().children()) > 1:
+            self.stacked_widget.show()
+        else:
+            self.stacked_widget.hide()
 
     def value(self):
         """Returns value of menu."""
         return self.combo_box.currentText()
+
+    def setValue(self, value):
+        """Sets value of menu."""
+        if value not in self.option_list:
+            return
+        idx = self.option_list.index(value)
+        self.combo_box.setCurrentIndex(idx)
+        self.switch_to_idx(idx)
 
     def get_data(self):
         """Returns value from currently shown subform."""
