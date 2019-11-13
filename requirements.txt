@@ -1,6 +1,6 @@
 attrs
 cattrs==1.0.0rc
-jsonpickle==1.1
+jsonpickle==1.2
 networkx
 tensorflow-gpu==2.0
 h5py

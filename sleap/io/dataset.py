@@ -42,8 +42,11 @@ from sleap.instance import (
     PredictedPointArray,
 )
 
+from sleap.io import pathutils
 from sleap.io.legacy import load_labels_json_old
 from sleap.io.video import Video
+from sleap.gui.suggestions import SuggestionFrame
+from sleap.gui.missingfiles import MissingFilesDialog
 from sleap.rangelist import RangeList
 from sleap.util import uniquify, weak_filename_match, json_dumps, json_loads
 
@@ -72,11 +75,9 @@ class Labels(MutableSequence):
         skeletons: A list of :class:`Skeleton` objects (again, that may or may
             not be referenced by an :class:`Instance` in labeled frame).
         tracks: A list of :class:`Track` that instances can belong to.
-        suggestions: Dictionary that stores "suggested" frames for
+        suggestions: List that stores "suggested" frames for
             videos in project. These can be suggested frames for user
             to label or suggested frames for user to review.
-            Dictionary key is :class:`Video`, value is list of frame
-            indices.
         negative_anchors: Dictionary that stores center-points around
             which to crop as negative samples when training.
             Dictionary key is :class:`Video`, value is list of
@@ -88,7 +89,7 @@ class Labels(MutableSequence):
     skeletons: List[Skeleton] = attr.ib(default=attr.Factory(list))
     nodes: List[Node] = attr.ib(default=attr.Factory(list))
     tracks: List[Track] = attr.ib(default=attr.Factory(list))
-    suggestions: Dict[Video, list] = attr.ib(default=attr.Factory(dict))
+    suggestions: List["SuggestionFrame"] = attr.ib(default=attr.Factory(list))
     negative_anchors: Dict[Video, list] = attr.ib(default=attr.Factory(dict))
 
     def __attrs_post_init__(self):
@@ -584,10 +585,10 @@ class Labels(MutableSequence):
             None.
         """
         # Get ranges in track occupancy cache
-        _, within_old, _ = self._track_occupancy[video][old_track].cut_range(
+        _, within_old, _ = self._get_track_occupany(video, old_track).cut_range(
             frame_range
         )
-        _, within_new, _ = self._track_occupancy[video][new_track].cut_range(
+        _, within_new, _ = self._get_track_occupany(video, new_track).cut_range(
             frame_range
         )
 
@@ -669,6 +670,16 @@ class Labels(MutableSequence):
                 tracks[instance.track].add(frame_idx)
         return tracks
 
+    def _get_track_occupany(self, video: Video, track: Track) -> RangeList:
+        """
+        Accessor for track occupancy cache that adds video/track as needed.
+        """
+        if video not in self._track_occupancy:
+            self._track_occupancy[video] = dict()
+        if track not in self._track_occupancy[video]:
+            self._track_occupancy[video][track] = RangeList()
+        return self._track_occupancy[video][track]
+
     def find_track_occupancy(
         self, video: Video, track: Union[Track, int], frame_range=None
     ) -> List[Instance]:
@@ -714,73 +725,80 @@ class Labels(MutableSequence):
         Returns the list of suggested frames for the specified video
         or suggestions for all videos (if no video specified).
         """
-        return self.suggestions.get(video, list())
+        return [item.frame_idx for item in self.suggestions if item.video == video]
 
     def get_suggestions(self) -> list:
-        """Return all suggestions as a list of (video, frame) tuples."""
-        suggestion_list = [
-            (video, frame_idx)
-            for video in self.videos
-            for frame_idx in self.get_video_suggestions(video)
+        """Return all suggestions as a list of SuggestionFrame items."""
+        return self.suggestions
+
+    def find_suggestion(self, video, frame_idx):
+        """Find SuggestionFrame by video and frame index."""
+        matches = [
+            item
+            for item in self.suggestions
+            if item.video == video and item.frame_idx == frame_idx
         ]
-        return suggestion_list
+
+        if matches:
+            return matches[0]
+
+        return None
 
     def get_next_suggestion(self, video, frame_idx, seek_direction=1) -> list:
         """Returns a (video, frame_idx) tuple seeking from given frame."""
         # make sure we have valid seek_direction
         if seek_direction not in (-1, 1):
-            return (None, None)
+            raise ValueError("seek_direction should be -1 or 1.")
         # make sure the video belongs to this Labels object
         if video not in self.videos:
-            return (None, None)
+            return None
 
         all_suggestions = self.get_suggestions()
 
         # If we're currently on a suggestion, then follow order of list
-        if (video, frame_idx) in all_suggestions:
-            suggestion_idx = all_suggestions.index((video, frame_idx))
+        match = self.find_suggestion(video, frame_idx)
+        if match is not None:
+            suggestion_idx = all_suggestions.index(match)
             new_idx = (suggestion_idx + seek_direction) % len(all_suggestions)
-            video, frame_suggestion = all_suggestions[new_idx]
+            return all_suggestions[new_idx]
 
-        # Otherwise, find the prev/next suggestion sorted by frame order
-        else:
-            # look for next (or previous) suggestion in current video
-            if seek_direction == 1:
-                frame_suggestion = min(
-                    (i for i in self.get_video_suggestions(video) if i > frame_idx),
-                    default=None,
-                )
-            else:
-                frame_suggestion = max(
-                    (i for i in self.get_video_suggestions(video) if i < frame_idx),
-                    default=None,
-                )
-            if frame_suggestion is not None:
-                return (video, frame_suggestion)
-            # if we didn't find suggestion in current video,
-            # then we want earliest frame in next video with suggestions
-            next_video_idx = (self.videos.index(video) + seek_direction) % len(
-                self.videos
+        # Otherwise, find the prev/next suggestion sorted by frame order...
+
+        # Look for next (or previous) suggestion in current video.
+        if seek_direction == 1:
+            frame_suggestion = min(
+                (i for i in self.get_video_suggestions(video) if i > frame_idx),
+                default=None,
             )
-            video = self.videos[next_video_idx]
-            if seek_direction == 1:
-                frame_suggestion = min(
-                    (i for i in self.get_video_suggestions(video)), default=None
-                )
-            else:
-                frame_suggestion = max(
-                    (i for i in self.get_video_suggestions(video)), default=None
-                )
-        return (video, frame_suggestion)
+        else:
+            frame_suggestion = max(
+                (i for i in self.get_video_suggestions(video) if i < frame_idx),
+                default=None,
+            )
+        if frame_suggestion is not None:
+            return self.find_suggestion(video, frame_suggestion)
 
-    def set_suggestions(self, suggestions: Dict[Video, list]):
+        # If we didn't find suggestion in current video, then we want earliest
+        # frame in next video with suggestions.
+        next_video_idx = (self.videos.index(video) + seek_direction) % len(self.videos)
+        video = self.videos[next_video_idx]
+        if seek_direction == 1:
+            frame_suggestion = min(
+                (i for i in self.get_video_suggestions(video)), default=None
+            )
+        else:
+            frame_suggestion = max(
+                (i for i in self.get_video_suggestions(video)), default=None
+            )
+        return self.find_suggestion(video, frame_suggestion)
+
+    def set_suggestions(self, suggestions: List["SuggestionFrame"]):
         """Sets the suggested frames."""
         self.suggestions = suggestions
 
     def delete_suggestions(self, video):
         """Deletes suggestions for specified video."""
-        if video in self.suggestions:
-            del self.suggestions[video]
+        self.suggestions = [item for item in self.suggestions if item.video != video]
 
     # Methods for videos
 
@@ -962,7 +980,7 @@ class Labels(MutableSequence):
             base_labels._build_lookup_caches()
 
         # Merge suggestions and negative anchors
-        cls.merge_container_dicts(base_labels.suggestions, new_labels.suggestions)
+        base_labels.suggestions.extend(new_labels.suggestions)
         cls.merge_container_dicts(
             base_labels.negative_anchors, new_labels.negative_anchors
         )
@@ -1090,13 +1108,17 @@ class Labels(MutableSequence):
 
         skeleton_cattr = Skeleton.make_cattr(idx_to_node)
 
+        # Make attr for tracks so that we save as tuples rather than dicts;
+        # this can save a lot of space when there are lots of tracks.
+        track_cattr = cattr.Converter(unstruct_strat=cattr.UnstructureStrategy.AS_TUPLE)
+
         # Serialize the skeletons, videos, and labels
         dicts = {
             "version": LABELS_JSON_FILE_VERSION,
             "skeletons": skeleton_cattr.unstructure(self.skeletons),
             "nodes": cattr.unstructure(self.nodes),
             "videos": Video.cattr().unstructure(self.videos),
-            "tracks": cattr.unstructure(self.tracks),
+            "tracks": track_cattr.unstructure(self.tracks),
             "suggestions": label_cattr.unstructure(self.suggestions),
             "negative_anchors": label_cattr.unstructure(self.negative_anchors),
         }
@@ -1256,7 +1278,19 @@ class Labels(MutableSequence):
             dicts["skeletons"], List[Skeleton]
         )
         videos = Video.cattr().structure(dicts["videos"], List[Video])
-        tracks = cattr.structure(dicts["tracks"], List[Track])
+
+        try:
+            # First try unstructuring tuple (newer format)
+            track_cattr = cattr.Converter(
+                unstruct_strat=cattr.UnstructureStrategy.AS_TUPLE
+            )
+            tracks = track_cattr.structure(dicts["tracks"], List[Track])
+        except:
+            # Then try unstructuring dict (older format)
+            try:
+                tracks = cattr.structure(dicts["tracks"], List[Track])
+            except:
+                raise ValueError("Unable to load tracks as tuple or dict!")
 
         # if we're given a Labels object to match, use its objects when they match
         if match_to is not None:
@@ -1280,16 +1314,35 @@ class Labels(MutableSequence):
                         videos[idx] = old_vid
                         break
 
+        suggestions = []
         if "suggestions" in dicts:
             suggestions_cattr = cattr.Converter()
             suggestions_cattr.register_structure_hook(
                 Video, lambda x, type: videos[int(x)]
             )
-            suggestions = suggestions_cattr.structure(
-                dicts["suggestions"], Dict[Video, List]
-            )
-        else:
-            suggestions = dict()
+            try:
+                suggestions = suggestions_cattr.structure(
+                    dicts["suggestions"], List[SuggestionFrame]
+                )
+            except:
+                try:
+                    # Convert old suggestion format to new format.
+                    # Old format: {video: list of frame indices}
+                    # New format: [SuggestionFrames]
+                    old_suggestions = suggestions_cattr.structure(
+                        dicts["suggestions"], Dict[Video, List]
+                    )
+                    for video in old_suggestions.keys():
+                        suggestions.extend(
+                            [
+                                SuggestionFrame(video, idx)
+                                for idx in old_suggestions[video]
+                            ]
+                        )
+                except:
+                    print("Error while loading suggestions")
+                    print(e)
+                    pass
 
         if "negative_anchors" in dicts:
             negative_anchors_cattr = cattr.Converter()
@@ -1428,7 +1481,9 @@ class Labels(MutableSequence):
 
                 # Use the callback if given to handle missing videos
                 if callable(video_callback):
-                    video_callback(dicts["videos"])
+                    abort = video_callback(dicts["videos"])
+                    if abort:
+                        raise FileNotFoundError
 
                 # Try to load the labels filename.
                 try:
@@ -1593,7 +1648,7 @@ class Labels(MutableSequence):
             )
 
             num_instances = len(labels.all_instances)
-            max_skeleton_size = max([len(s.nodes) for s in labels.skeletons])
+            max_skeleton_size = max([len(s.nodes) for s in labels.skeletons], default=0)
 
             # Initialize data arrays for serialization
             points = np.zeros(num_instances * max_skeleton_size, dtype=Point.dtype)
@@ -1895,6 +1950,10 @@ class Labels(MutableSequence):
         Returns:
             None.
         """
+        # Make sure that all directories for path exist
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+
+        # Detect filetype and use appropriate save method
         if not filename.endswith((".json", ".zip", ".h5")) and default_suffix:
             filename += f".{default_suffix}"
         if filename.endswith((".json", ".zip")):
@@ -2203,6 +2262,8 @@ class Labels(MutableSequence):
         allows the user to find videos which have been moved (or have
         paths from a different system).
 
+        The callback function returns True to signal "abort".
+
         Args:
             search_paths: If specified, this is a list of paths where
                 we'll automatically try to find the missing videos.
@@ -2213,65 +2274,45 @@ class Labels(MutableSequence):
         search_paths = search_paths or []
 
         def gui_video_callback(video_list, new_paths=search_paths):
-            import os
-            from PySide2.QtWidgets import QFileDialog, QMessageBox
+            filenames = [item["backend"]["filename"] for item in video_list]
+            missing = pathutils.list_file_missing(filenames)
 
-            basename_list = []
+            # First check for file in search_path directories
+            if sum(missing) and new_paths:
+                for i, filename in enumerate(filenames):
+                    fixed_path = find_path_using_paths(filename, new_paths)
+                    if fixed_path != filename:
+                        filenames[i] = fixed_path
+                        missing[i] = False
 
-            # Check each video
-            for video_item in video_list:
-                if "backend" in video_item and "filename" in video_item["backend"]:
-                    current_filename = video_item["backend"]["filename"]
-                    # check if we can find video
-                    if not os.path.exists(current_filename):
-                        is_found = False
+            # If there are still missing paths, prompt user
+            if sum(missing):
+                okay = MissingFilesDialog(filenames, missing).exec_()
+                if not okay:
+                    return True  # True for stop
 
-                        current_basename = os.path.basename(current_filename)
-                        # handle unix, windows, or mixed paths
-                        if current_basename.find("/") > -1:
-                            current_basename = current_basename.split("/")[-1]
-                        if current_basename.find("\\") > -1:
-                            current_basename = current_basename.split("\\")[-1]
-
-                        # First see if we can find the file in another directory,
-                        # and if not, prompt the user to find the file.
-
-                        # We'll check in the current working directory, and if the user has
-                        # already found any missing videos, check in the directory of those.
-                        if current_basename not in basename_list:
-                            for path_dir in new_paths:
-                                check_path = os.path.join(path_dir, current_basename)
-                                if os.path.exists(check_path):
-                                    # we found the file in a different directory
-                                    video_item["backend"]["filename"] = check_path
-                                    is_found = True
-                                    break
-
-                        # if we found this file, then move on to the next file
-                        if is_found:
-                            continue
-
-                        # Since we couldn't find the file on our own, prompt the user.
-                        print(f"Unable to find: {current_filename}")
-                        QMessageBox(
-                            text=f"We're unable to locate one or more video files for this project. Please locate {current_filename}."
-                        ).exec_()
-
-                        current_root, current_ext = os.path.splitext(current_basename)
-                        caption = f"Please locate {current_basename}..."
-                        filters = [
-                            f"{current_root} file (*{current_ext})",
-                            "Any File (*.*)",
-                        ]
-                        dir = None if len(new_paths) == 0 else new_paths[-1]
-                        new_filename, _ = QFileDialog.getOpenFileName(
-                            None, dir=dir, caption=caption, filter=";;".join(filters)
-                        )
-                        # if we got an answer, then update filename for video
-                        if len(new_filename):
-                            video_item["backend"]["filename"] = new_filename
-                            # keep track of the directory chosen by user
-                            new_paths.append(os.path.dirname(new_filename))
-                            basename_list.append(current_basename)
+            # Replace the video filenames with changes by user
+            for i, item in enumerate(video_list):
+                item["backend"]["filename"] = filenames[i]
 
         return gui_video_callback
+
+
+def find_path_using_paths(missing_path, search_paths):
+
+    # Get basename (filename with directories) using current os path format
+    current_basename = os.path.basename(missing_path)
+
+    # Handle unix, windows, or mixed paths
+    if current_basename.find("/") > -1:
+        current_basename = current_basename.split("/")[-1]
+    if current_basename.find("\\") > -1:
+        current_basename = current_basename.split("\\")[-1]
+
+    # Look for file with that name in each of the search path directories
+    for path_dir in search_paths:
+        check_path = os.path.join(path_dir, current_basename)
+        if os.path.exists(check_path):
+            return check_path
+
+    return missing_path

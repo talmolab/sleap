@@ -1,5 +1,5 @@
 """
-Module for running active learning (or just inference) from GUI.
+Module for running training and inference from the main gui application.
 """
 
 import os
@@ -7,11 +7,11 @@ import cattr
 
 from datetime import datetime
 from functools import reduce
-from pkg_resources import Requirement, resource_filename
 from typing import Dict, List, Optional, Tuple
 
 from sleap.io.dataset import Labels
 from sleap.io.video import Video
+from sleap.gui.filedialog import FileDialog
 from sleap.gui.training_editor import TrainingEditor
 from sleap.gui.formbuilder import YamlFormWidget
 from sleap.nn.model import ModelOutputType
@@ -19,22 +19,23 @@ from sleap.nn.training import TrainingJob
 
 from PySide2 import QtWidgets, QtCore
 
+from sleap.util import get_config_file, get_package_file
 
 SELECT_FILE_OPTION = "Select a training profile file..."
 
 
-class ActiveLearningDialog(QtWidgets.QDialog):
-    """Active learning dialog.
+class InferenceDialog(QtWidgets.QDialog):
+    """Training/inference dialog.
 
     The dialog can be used in different modes:
-    * simplified active learning (fewer controls)
-    * expert active learning (full controls)
+    * simplified training + inference (fewer controls)
+    * expert training + inference (full controls)
     * inference only
 
     Arguments:
         labels_filename: Path to the dataset where we'll get training data.
         labels: The dataset where we'll get training data and add predictions.
-        mode: String which specified mode ("active", "expert", or "inference").
+        mode: String which specified mode ("learning", "expert", or "inference").
     """
 
     learningFinished = QtCore.Signal()
@@ -48,7 +49,7 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         **kwargs,
     ):
 
-        super(ActiveLearningDialog, self).__init__(*args, **kwargs)
+        super(InferenceDialog, self).__init__(*args, **kwargs)
 
         self.labels_filename = labels_filename
         self.labels = labels
@@ -61,19 +62,18 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         print(f"Number of frames to train on: {len(labels.user_labeled_frames)}")
 
         title = dict(
-            learning="Active Learning",
+            learning="Training and Inference",
             inference="Inference",
             expert="Inference Pipeline",
         )
 
-        learning_yaml = resource_filename(
-            Requirement.parse("sleap"), "sleap/config/active.yaml"
-        )
-        self.form_widget = YamlFormWidget(
-            yaml_file=learning_yaml,
+        self.form_widget = YamlFormWidget.from_name(
+            form_name="inference_forms",
             which_form=self.mode,
             title=title[self.mode] + " Settings",
         )
+
+        self.setWindowTitle(title[self.mode])
 
         # form ui
 
@@ -157,16 +157,15 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         Rebuilds list of profile options (checking for new profile files).
         """
         # load list of job profiles from directory
-        profile_dir = resource_filename(
-            Requirement.parse("sleap"), "sleap/training_profiles"
-        )
-        labels_dir = os.path.join(os.path.dirname(self.labels_filename), "models")
+        profile_dir = get_package_file("sleap/training_profiles")
 
         self.job_options = dict()
 
         # list any profiles from previous runs
-        if os.path.exists(labels_dir):
-            find_saved_jobs(labels_dir, self.job_options)
+        if self.labels_filename:
+            labels_dir = os.path.join(os.path.dirname(self.labels_filename), "models")
+            if os.path.exists(labels_dir):
+                find_saved_jobs(labels_dir, self.job_options)
         # list default profiles
         find_saved_jobs(profile_dir, self.job_options)
 
@@ -220,6 +219,8 @@ class ActiveLearningDialog(QtWidgets.QDialog):
             prediction_options = []
 
             def count_total_frames(videos_frames):
+                if not videos_frames:
+                    return 0
                 return reduce(lambda x, y: x + y, map(len, videos_frames.values()))
 
             # Determine which options are available given _frame_selection
@@ -231,6 +232,8 @@ class ActiveLearningDialog(QtWidgets.QDialog):
 
             # Build list of options
 
+            if self.mode != "inference":
+                prediction_options.append("nothing")
             prediction_options.append("current frame")
 
             option = f"random frames ({total_random} total frames)"
@@ -255,7 +258,7 @@ class ActiveLearningDialog(QtWidgets.QDialog):
 
     def show(self):
         """Shows dialog (we hide rather than close to maintain settings)."""
-        super(ActiveLearningDialog, self).show()
+        super(InferenceDialog, self).show()
 
         # TODO: keep selection and any items added from training editor
 
@@ -363,11 +366,23 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         types_to_use.append(ModelOutputType.CONFIDENCE_MAP)
 
         # by default we want to use part affinity fields
-        if not form_data.get("_dont_use_pafs", False):
+        do_use_pafs = True
+        if form_data.get("_dont_use_pafs", False):
+            do_use_pafs = False
+        elif form_data.get("_multi_instance_mode", "") == "single-instance":
+            do_use_pafs = False
+
+        if do_use_pafs:
             types_to_use.append(ModelOutputType.PART_AFFINITY_FIELD)
 
         # by default we want to use centroids
-        if form_data.get("_use_centroids", True):
+        do_use_centroids = True
+        if not form_data.get("_use_centroids", True):
+            do_use_centroids = False
+        elif form_data.get("_region_proposal_mode", "") == "full_frame":
+            do_use_centroids = False
+
+        if do_use_centroids:
             types_to_use.append(ModelOutputType.CENTROIDS)
 
         return types_to_use
@@ -404,7 +419,7 @@ class ActiveLearningDialog(QtWidgets.QDialog):
         return training_jobs
 
     def run(self):
-        """Run active learning (or inference) with current dialog settings."""
+        """Run training (or inference) with current dialog settings."""
         # Collect TrainingJobs and params from form
         form_data = self.form_widget.get_form_data()
         training_jobs = self._get_current_training_jobs()
@@ -428,27 +443,23 @@ class ActiveLearningDialog(QtWidgets.QDialog):
             with_tracking = True
         else:
             frames_to_predict = dict()
-        save_confmaps_pafs = False
-        # Disable save_confmaps_pafs since not currently working.
-        # The problem is that we can't put data for different crop sizes
-        # all into a single h5 datasource. It's now possible to view live
-        # predicted confmap and paf in the gui, so this isn't high priority.
-        # If you want to enable, uncomment this:
-        # save_confmaps_pafs = form_data.get("_save_confmaps_pafs", False)
 
-        # Run active learning pipeline using the TrainingJobs
-        new_counts = run_active_learning_pipeline(
+        save_predictions = form_data.get("_save_predictions", False)
+
+        # Run training/inference pipeline using the TrainingJobs
+        new_counts = run_learning_pipeline(
             labels_filename=self.labels_filename,
             labels=self.labels,
             training_jobs=training_jobs,
             frames_to_predict=frames_to_predict,
             with_tracking=with_tracking,
+            save_predictions=save_predictions,
         )
 
         self.learningFinished.emit()
 
         QtWidgets.QMessageBox(
-            text=f"Active learning has finished. Instances were predicted on {new_counts} frames."
+            text=f"Inference has finished. Instances were predicted on {new_counts} frames."
         ).exec_()
 
     def view_datagen(self):
@@ -526,7 +537,7 @@ class ActiveLearningDialog(QtWidgets.QDialog):
 
     def _add_job_file(self, model_type):
         """Allow user to add training profile for given model type."""
-        filename, _ = QtWidgets.QFileDialog.getOpenFileName(
+        filename, _ = FileDialog.open(
             None,
             dir=None,
             caption="Select training profile...",
@@ -683,13 +694,11 @@ def find_saved_jobs(
         try:
             # try to load json as TrainingJob
             job = TrainingJob.load_json(full_filename)
-        except ValueError:
-            # couldn't load as TrainingJob so just ignore this json file
-            # probably it's a json file for something else
-            pass
         except:
-            # but do raise any other type of error
-            raise
+            # Couldn't load as TrainingJob so just ignore this json file
+            # probably it's a json file for something else (or an json for a
+            # older version of the object with different class attributes).
+            pass
         else:
             # we loaded the json as a TrainingJob, so see what type of model it's for
             model_type = job.model.output_type
@@ -700,12 +709,13 @@ def find_saved_jobs(
     return jobs
 
 
-def run_active_learning_pipeline(
+def run_learning_pipeline(
     labels_filename: str,
     labels: Labels,
     training_jobs: Dict["ModelOutputType", "TrainingJob"] = None,
     frames_to_predict: Dict[Video, List[int]] = None,
     with_tracking: bool = False,
+    save_predictions: bool = False,
 ) -> int:
     """Run training (as needed) and inference.
 
@@ -716,6 +726,7 @@ def run_active_learning_pipeline(
         frames_to_predict: Dict that gives list of frame indices for each video.
         with_tracking: Whether to run tracking code after we predict instances.
             This should be used only when predicting on continuous set of frames.
+        save_predictions: Whether to save new predictions in separate file.
 
     Returns:
         Number of new frames added to labels.
@@ -724,7 +735,7 @@ def run_active_learning_pipeline(
 
     # Prepare our TrainingJobs
 
-    # Load the defaults we use for active learning
+    # Load the defaults we use for training
     if training_jobs is None:
         training_jobs = make_default_training_jobs()
 
@@ -732,24 +743,43 @@ def run_active_learning_pipeline(
     for job in training_jobs.values():
         job.labels_filename = labels_filename
 
+    if labels_filename:
         save_dir = os.path.join(os.path.dirname(labels_filename), "models")
 
+    # If there are jobs to train and no path to save them, ask for path
+    if (has_jobs_to_train or save_predictions) and not labels_filename:
+        save_dir = FileDialog.openDir(
+            None, directory=None, caption="Please select directory for saving files..."
+        )
+
+        if not save_dir:
+            raise ValueError("No valid directory for saving files.")
+
     # Train the TrainingJobs
-    trained_jobs = run_active_training(labels, training_jobs, save_dir)
+    trained_jobs = run_gui_training(labels, training_jobs, save_dir)
 
     # Check that all the models were trained
     if None in trained_jobs.values():
         return 0
 
+    # Clear save_dir if we don't want to save predictions in new file
+    if not save_predictions:
+        save_dir = ""
+
     # Run the Predictor for suggested frames
-    new_labeled_frame_count = run_active_inference(
+    new_labeled_frame_count = run_gui_inference(
         labels, trained_jobs, save_dir, frames_to_predict, with_tracking
     )
 
     return new_labeled_frame_count
 
 
-def run_active_training(
+def has_jobs_to_train(training_jobs: Dict["ModelOutputType", "TrainingJob"]):
+    """Returns whether any of the jobs need to be trained."""
+    return any(not getattr(job, "use_trained_model", False) for job in training_jobs)
+
+
+def run_gui_training(
     labels: Labels,
     training_jobs: Dict["ModelOutputType", "TrainingJob"],
     save_dir: str,
@@ -831,7 +861,7 @@ def run_active_training(
     return trained_jobs
 
 
-def run_active_inference(
+def run_gui_inference(
     labels: Labels,
     training_jobs: Dict["ModelOutputType", "TrainingJob"],
     save_dir: str,
@@ -855,20 +885,8 @@ def run_active_inference(
     """
     from sleap.nn.inference import Predictor
 
-    # from multiprocessing import Pool
-
-    # total_new_lf_count = 0
-    timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
-    inference_output_path = os.path.join(save_dir, f"{timestamp}.inference.h5")
-
     # Create Predictor from the results of training
-    # pool = Pool(processes=1)
-    predictor = Predictor(
-        training_jobs=training_jobs,
-        with_tracking=with_tracking,
-        # output_path=inference_output_path,
-        # pool=pool
-    )
+    predictor = Predictor(training_jobs=training_jobs, with_tracking=with_tracking)
 
     if gui:
         # show message while running inference
@@ -921,9 +939,14 @@ def run_active_inference(
     # Remove any frames without instances
     new_lfs = list(filter(lambda lf: len(lf.instances), new_lfs))
 
-    # Create and save dataset with predictions
+    # Create dataset with predictions
     new_labels = Labels(new_lfs)
-    Labels.save_file(new_labels, inference_output_path)
+
+    # Save dataset of predictions (if desired)
+    if save_dir:
+        timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
+        inference_output_path = os.path.join(save_dir, f"{timestamp}.inference.h5")
+        Labels.save_file(new_labels, inference_output_path)
 
     # Merge predictions into current labels dataset
     _, _, new_conflicts = Labels.complex_merge_between(labels, new_labels)
@@ -947,7 +970,7 @@ if __name__ == "__main__":
     labels = Labels.load_json(labels_filename)
 
     app = QtWidgets.QApplication()
-    win = ActiveLearningDialog(labels=labels, labels_filename=labels_filename)
+    win = InferenceDialog(labels=labels, labels_filename=labels_filename)
     win.show()
     app.exec_()
 

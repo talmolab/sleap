@@ -1,16 +1,6 @@
-import numpy as np
-import attr
 import pytest
 
-from typing import List, Dict
-
-from sleap.util import (
-    json_dumps,
-    json_loads,
-    attr_to_dtype,
-    frame_list,
-    weak_filename_match,
-)
+from sleap.util import *
 
 
 def test_json():
@@ -71,3 +61,10 @@ def test_weak_match():
     assert not weak_filename_match("one/two/three", "two/three")
     assert not weak_filename_match("one/two/three.mp4", "one/two/three.avi")
     assert not weak_filename_match("foo.mp4", "bar.mp4")
+
+
+def test_config():
+    import os
+
+    filename = get_config_file("shortcuts.yaml")
+    assert os.path.exists(filename)

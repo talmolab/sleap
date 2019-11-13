@@ -6,15 +6,15 @@ from sleap.instance import Instance, Point, LabeledFrame, PredictedInstance
 from sleap.io.video import Video
 from sleap.io.dataset import Labels
 from sleap.nn.model import ModelOutputType
-from sleap.gui.active import (
-    ActiveLearningDialog,
+from sleap.gui.inference import (
+    InferenceDialog,
     make_default_training_jobs,
     find_saved_jobs,
 )
 
 
 def test_active_gui(qtbot, centered_pair_labels):
-    win = ActiveLearningDialog(
+    win = InferenceDialog(
         labels_filename="foo.json", labels=centered_pair_labels, mode="expert"
     )
     win.show()
@@ -32,7 +32,7 @@ def test_active_gui(qtbot, centered_pair_labels):
 
 
 def test_inference_gui(qtbot, centered_pair_labels):
-    win = ActiveLearningDialog(
+    win = InferenceDialog(
         labels_filename="foo.json", labels=centered_pair_labels, mode="inference"
     )
     win.show()
@@ -42,6 +42,31 @@ def test_inference_gui(qtbot, centered_pair_labels):
     # inference
     jobs = win._get_current_training_jobs()
     assert len(jobs) == 0
+
+
+def test_training_gui(qtbot, centered_pair_labels):
+    win = InferenceDialog(
+        labels_filename="foo.json", labels=centered_pair_labels, mode="learning"
+    )
+    win.show()
+    qtbot.addWidget(win)
+
+    # Make sure we include pafs and centroids by default
+    jobs = win._get_current_training_jobs()
+    assert ModelOutputType.PART_AFFINITY_FIELD in jobs
+    assert ModelOutputType.CENTROIDS in jobs
+
+    # Test option to not include pafs
+    assert "_multi_instance_mode" in win.form_widget.fields
+    win.form_widget.set_form_data(dict(_multi_instance_mode="single-instance"))
+    jobs = win._get_current_training_jobs()
+    assert ModelOutputType.PART_AFFINITY_FIELD not in jobs
+
+    # Test option to not include centroids
+    assert "_region_proposal_mode" in win.form_widget.fields
+    win.form_widget.set_form_data(dict(_region_proposal_mode="full_frame"))
+    jobs = win._get_current_training_jobs()
+    assert ModelOutputType.CENTROIDS not in jobs
 
 
 def test_make_default_training_jobs():

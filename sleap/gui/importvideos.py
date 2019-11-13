@@ -33,6 +33,7 @@ from PySide2.QtWidgets import (
 
 from sleap.gui.video import GraphicsView
 from sleap.io.video import Video
+from sleap.gui.filedialog import FileDialog
 
 import h5py
 import qimage2ndarray
@@ -55,17 +56,14 @@ class ImportVideos:
         Returns:
             List with dict of the parameters for each file to import.
         """
-        dialog = QFileDialog()
-        # dialog.setOption(QFileDialog.Option.DontUseNativeDialogs, True)
-        file_names, filter = dialog.getOpenFileNames(
+        filenames, filter = FileDialog.openMultiple(
             None,
             "Select videos to import...",  # dialogue title
             ".",  # initial path
-            "Any Video (*.h5 *.hd5v *.mp4 *.avi *.json);;HDF5 (*.h5 *.hd5v);;ImgStore (*.json);;Media Video (*.mp4 *.avi);;Any File (*.*)",  # filters
-            # options=QFileDialog.DontUseNativeDialog
+            "Any Video (*.h5 *.hd5v *.mp4 *.avi *.json);;HDF5 (*.h5 *.hd5v);;ImgStore (*.json);;Media Video (*.mp4 *.avi);;Any File (*.*)",
         )
-        if len(file_names) > 0:
-            importer = ImportParamDialog(file_names)
+        if len(filenames) > 0:
+            importer = ImportParamDialog(filenames)
             importer.accepted.connect(lambda: importer.get_data(self.result))
             importer.exec_()
         return self.result
@@ -75,10 +73,10 @@ class ImportParamDialog(QDialog):
     """Dialog for selecting parameters with preview when importing video.
     
     Args:
-        file_names (list): List of files we want to import.
+        filenames (list): List of files we want to import.
     """
 
-    def __init__(self, file_names: list, *args, **kwargs):
+    def __init__(self, filenames: list, *args, **kwargs):
         super(ImportParamDialog, self).__init__(*args, **kwargs)
 
         self.import_widgets = []
@@ -101,6 +99,7 @@ class ImportParamDialog(QDialog):
                         "name": "input_format",
                         "type": "radio",
                         "options": "channels_first,channels_last",
+                        "required": True,  # we can't currently auto-detect
                     },
                 ],
             },
@@ -133,7 +132,7 @@ class ImportParamDialog(QDialog):
 
         scroll_items_widget = QWidget()
         scroll_layout = QVBoxLayout()
-        for file_name in file_names:
+        for file_name in filenames:
             if file_name:
                 this_type = None
                 for import_type in self.import_types:
@@ -262,7 +261,7 @@ class ImportItemWidget(QFrame):
         }
         return video_data
 
-    def update_video(self, initial=False):
+    def update_video(self, initial: bool = False):
         """Update preview video using current param values.
 
         Args:

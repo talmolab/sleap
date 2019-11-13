@@ -3,13 +3,14 @@ name: sleap
 dependencies:
 - python=3.6
 - attrs
-- jsonpickle=1.1
+- jsonpickle=1.2
 - networkx
 - cudatoolkit=10.0.*
 - cudnn
 - scikit-learn
 - h5py
 - pandas
+- Pillow
 - Shapely
 - psutil
 - pyzmq

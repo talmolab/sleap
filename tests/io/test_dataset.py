@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 
 from sleap.skeleton import Skeleton
-from sleap.instance import Instance, Point, LabeledFrame, PredictedInstance
+from sleap.instance import Instance, Point, LabeledFrame, PredictedInstance, Track
 from sleap.io.video import Video, MediaVideo
 from sleap.io.dataset import Labels
 from sleap.io.legacy import load_labels_json_old
@@ -540,7 +540,7 @@ def test_instance_access():
     assert len(list(labels.instances(video=dummy_video2))) == 30
 
 
-def test_suggestions(small_robot_mp4_vid):
+def test_basic_suggestions(small_robot_mp4_vid):
     dummy_video = small_robot_mp4_vid
     dummy_skeleton = Skeleton()
     dummy_instance = Instance(dummy_skeleton)
@@ -549,13 +549,45 @@ def test_suggestions(small_robot_mp4_vid):
     labels = Labels()
     labels.append(dummy_frame)
 
-    suggestions = dict()
-    suggestions[dummy_video] = VideoFrameSuggestions.suggest(
-        dummy_video, params=dict(method="random", per_video=13)
+    suggestions = VideoFrameSuggestions.suggest(
+        labels=labels, params=dict(method="sample", per_video=13)
     )
     labels.set_suggestions(suggestions)
 
     assert len(labels.get_video_suggestions(dummy_video)) == 13
+
+
+def test_deserialize_suggestions(small_robot_mp4_vid, tmpdir):
+    dummy_video = small_robot_mp4_vid
+    dummy_skeleton = Skeleton()
+    dummy_instance = Instance(dummy_skeleton)
+    dummy_frame = LabeledFrame(dummy_video, frame_idx=0, instances=[dummy_instance])
+
+    labels = Labels()
+    labels.append(dummy_frame)
+
+    suggestions = VideoFrameSuggestions.suggest(
+        labels=labels, params=dict(method="sample", per_video=13)
+    )
+    labels.set_suggestions(suggestions)
+
+    filename = os.path.join(tmpdir, "new_suggestions.h5")
+    Labels.save_file(filename=filename, labels=labels)
+
+    new_suggestion_labels = Labels.load_file(filename)
+    assert len(suggestions) == len(new_suggestion_labels.suggestions)
+    assert [frame.frame_idx for frame in suggestions] == [
+        frame.frame_idx for frame in new_suggestion_labels.suggestions
+    ]
+
+    old_suggestions = {dummy_video: [2, 5, 7]}
+    labels.set_suggestions(old_suggestions)
+
+    filename = os.path.join(tmpdir, "old_suggestions.h5")
+    Labels.save_file(filename=filename, labels=labels)
+    old_suggestion_labels = Labels.load_file(filename)
+    assert len(old_suggestion_labels.suggestions) == 3
+    assert [frame.frame_idx for frame in old_suggestion_labels.suggestions] == [2, 5, 7]
 
 
 def test_negative_anchors():
@@ -713,3 +745,42 @@ def test_hdf5_from_predicted(multi_skel_vid_labels, tmpdir):
     for frame_num, frame in enumerate(loaded_labels):
         if frame_num % 20 == 0:
             assert frame.instances[0].from_predicted.score == float(frame_num)
+
+
+def test_hdf5_empty_save(tmpdir):
+    labels = Labels()
+    filename = os.path.join(tmpdir, "test.h5")
+    Labels.save_hdf5(filename=filename, labels=labels)
+
+    dummy_video = Video.from_filename("foo.mp4")
+    labels.videos.append(dummy_video)
+    Labels.save_hdf5(filename=filename, labels=labels)
+
+
+def test_makedirs(tmpdir):
+    labels = Labels()
+    filename = os.path.join(tmpdir, "new/dirs/test.h5")
+    Labels.save_file(filename=filename, labels=labels)
+
+
+def test_multivideo_tracks():
+    vid_a = Video.from_filename("foo.mp4")
+    vid_b = Video.from_filename("bar.mp4")
+
+    skeleton = Skeleton.load_json("tests/data/skeleton/fly_skeleton_legs.json")
+
+    track_a = Track(spawned_on=2, name="A")
+    track_b = Track(spawned_on=3, name="B")
+
+    inst_a = Instance(track=track_a, skeleton=skeleton)
+    inst_b = Instance(track=track_b, skeleton=skeleton)
+
+    lf_a = LabeledFrame(vid_a, frame_idx=2, instances=[inst_a])
+    lf_b = LabeledFrame(vid_b, frame_idx=3, instances=[inst_b])
+
+    labels = Labels(labeled_frames=[lf_a, lf_b])
+
+    # Try setting video B instance to track used in video A
+    labels.track_swap(vid_b, new_track=track_a, old_track=track_b, frame_range=(3, 4))
+
+    assert inst_b.track == track_a

@@ -5,6 +5,9 @@ unless they really have no other place.
 
 import os
 import re
+import shutil
+
+from pkg_resources import Requirement, resource_filename
 
 import h5py as h5
 import numpy as np
@@ -231,3 +234,49 @@ def dict_cut(d: Dict, a: int, b: int) -> Dict:
         A dictionary that contains a subset of the items in the original dict.
     """
     return dict(list(d.items())[a:b])
+
+
+def get_package_file(filename: str) -> str:
+    """Returns full path to specified file within sleap package."""
+    package_path = Requirement.parse("sleap")
+    result = resource_filename(package_path, filename)
+    return result
+
+
+def get_config_file(shortname: str) -> str:
+    """
+    Returns the full path to the specified config file.
+
+    The config file will be at ~/.sleap/<shortname>
+
+    If that file doesn't yet exist, we'll look for a <shortname> file inside
+    the package config directory (sleap/config) and copy the file into the
+    user's config directory (creating the directory if needed).
+
+    Args:
+        shortname: The short filename, e.g., shortcuts.yaml
+
+    Raises:
+        FileNotFoundError: If the specified config file cannot be found.
+
+    Returns:
+        The full path to the specified config file.
+    """
+    desired_path = os.path.expanduser(f"~/.sleap/{shortname}")
+    if not os.path.exists(desired_path):
+        package_path = get_package_file(f"sleap/config/{shortname}")
+        if not os.path.exists(package_path):
+            return FileNotFoundError(
+                f"Cannot locate {shortname} config file at {desired_path} or {package_path}."
+            )
+        # Make sure there's a ~/.sleap/ directory to store user version of the
+        # config file.
+        try:
+            os.makedirs(os.path.expanduser("~/.sleap"))
+        except FileExistsError as e:
+            pass
+
+        # Copy package version of config file into user config directory.
+        shutil.copy(package_path, desired_path)
+
+    return desired_path

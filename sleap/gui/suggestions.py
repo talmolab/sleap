@@ -2,120 +2,163 @@
 Module for generating lists of suggested frames (for labeling or reviewing).
 """
 
-import numpy as np
+import attr
 import itertools
+import numpy as np
+import random
 
-from skimage.transform import rescale
-from sklearn.decomposition import PCA
-from sklearn.cluster import KMeans
-
-import cv2
-
-from typing import List, Tuple
+from typing import Callable, List, Optional
 
 from sleap.io.video import Video
+from sleap.info.feature_suggestions import (
+    FeatureSuggestionPipeline,
+    ParallelFeaturePipeline,
+)
+
+GroupType = int
 
 
-class VideoFrameSuggestions:
+@attr.s(auto_attribs=True, slots=True)
+class SuggestionFrame:
+    """Object for storing a single suggested frame item."""
+
+    video: Video
+    frame_idx: int
+    group: Optional[GroupType] = None
+
+
+class VideoFrameSuggestions(object):
     """
     Class for generating lists of suggested frames.
 
     Implements various algorithms as methods:
-    * strides
-    * random
-    * pca_cluster
-    * brisk
-    * proofreading
+    * sample (either random or evenly spaced sample frames from each video)
+    * image features (raw images/brisk -> pca -> k-means)
+    * prediction_score (frames with number of instances below specified score)
 
-    Each of algorithm method should accept `video`; other parameters will be
+    Each of algorithm method should accept `labels`; other parameters will be
     passed from the `params` dict given to :meth:`suggest`.
-
     """
 
-    rescale = True
-    rescale_below = 512
-
     @classmethod
-    def suggest(cls, video: Video, params: dict, labels: "Labels" = None) -> List[int]:
+    def suggest(cls, params: dict, labels: "Labels" = None) -> List[SuggestionFrame]:
         """
         This is the main entry point for generating lists of suggested frames.
 
         Args:
-            video: A `Video` object for which we're generating suggestions.
             params: A dictionary with all params to control how we generate
                 suggestions, minimally this will have a "method" key with
                 the name of one of the class methods.
             labels: A `Labels` object for which we are generating suggestions.
 
         Returns:
-            List of suggested frame indices.
+            List of `SuggestionFrame` objects.
         """
 
         # map from method param value to corresponding class method
         method_functions = dict(
-            strides=cls.strides,
-            random=cls.random,
-            pca=cls.pca_cluster,
-            # hog=cls.hog,
-            brisk=cls.brisk,
-            proofreading=cls.proofreading,
+            sample=cls.basic_sample_suggestion_method,
+            image_features=cls.image_feature_based_method,
+            prediction_score=cls.prediction_score,
+            velocity=cls.velocity,
         )
 
-        method = params["method"]
+        method = str.replace(params["method"], " ", "_")
         if method_functions.get(method, None) is not None:
-            return method_functions[method](video=video, labels=labels, **params)
+            return method_functions[method](labels=labels, **params)
         else:
             print(f"No {method} method found for generating suggestions.")
+            return []
 
     # Functions corresponding to "method" param
 
     @classmethod
-    def strides(cls, video, per_video=20, **kwargs):
-        """Method to generate suggestions by taking strides through video."""
-        suggestions = list(range(0, video.frames, video.frames // per_video))
-        suggestions = suggestions[:per_video]
-        return suggestions
-
-    @classmethod
-    def random(cls, video, per_video=20, **kwargs):
-        """Method to generate suggestions by taking random frames in video."""
-        import random
-
-        suggestions = random.sample(range(video.frames), per_video)
-        return suggestions
-
-    @classmethod
-    def pca_cluster(cls, video, initial_samples, **kwargs):
-        """Method to generate suggestions by using PCA clusters."""
-        sample_step = video.frames // initial_samples
-        feature_stack, frame_idx_map = cls.frame_feature_stack(video, sample_step)
-
-        result = cls.feature_stack_to_suggestions(
-            feature_stack, frame_idx_map, **kwargs
-        )
-
-        return result
-
-    @classmethod
-    def brisk(cls, video, initial_samples, **kwargs):
-        """Method to generate suggestions using PCA on Brisk features."""
-        sample_step = video.frames // initial_samples
-        feature_stack, frame_idx_map = cls.brisk_feature_stack(video, sample_step)
-
-        result = cls.feature_stack_to_suggestions(
-            feature_stack, frame_idx_map, **kwargs
-        )
-
-        return result
-
-    @classmethod
-    def proofreading(
-        cls, video: Video, labels: "Labels", score_limit, instance_limit, **kwargs
+    def basic_sample_suggestion_method(
+        cls, labels, per_video: int = 20, sampling_method: str = "random", **kwargs
     ):
-        """Method to generate suggestions for proofreading."""
+        """Method to generate suggestions by taking strides through video."""
+        suggestions = []
+
+        for video in labels.videos:
+            if sampling_method == "stride":
+                vid_suggestions = list(
+                    range(0, video.frames, video.frames // per_video)
+                )[:per_video]
+            else:
+                # random sampling
+                vid_suggestions = random.sample(range(video.frames), per_video)
+
+            group = labels.videos.index(video)
+            suggestions.extend(
+                cls.idx_list_to_frame_list(vid_suggestions, video, group)
+            )
+
+        return suggestions
+
+    @classmethod
+    def image_feature_based_method(
+        cls,
+        labels,
+        per_video,
+        sample_method,
+        scale,
+        merge_video_features,
+        feature_type,
+        pca_components,
+        n_clusters,
+        per_cluster,
+        **kwargs,
+    ):
+        """
+        Method to generate suggestions based on image features.
+
+        This is a wrapper for `feature_suggestion_pipeline` implemented in
+        `sleap.info.feature_suggestions`.
+        """
+
+        brisk_threshold = kwargs.get("brisk_threshold", 80)
+        vocab_size = kwargs.get("vocab_size", 20)
+
+        pipeline = FeatureSuggestionPipeline(
+            per_video=per_video,
+            scale=scale,
+            sample_method=sample_method,
+            feature_type=feature_type,
+            brisk_threshold=brisk_threshold,
+            vocab_size=vocab_size,
+            n_components=pca_components,
+            n_clusters=n_clusters,
+            per_cluster=per_cluster,
+        )
+
+        if merge_video_features == "across all videos":
+            # Run single pipeline with all videos
+            return pipeline.get_suggestion_frames(videos=labels.videos)
+        else:
+            # Run pipeline separately (in parallel) for each video
+            suggestions = ParallelFeaturePipeline.run(pipeline, labels.videos)
+
+            return suggestions
+
+    @classmethod
+    def prediction_score(cls, labels: "Labels", score_limit, instance_limit, **kwargs):
+        """
+        Method to generate suggestions for proofreading frames with low score.
+        """
         score_limit = float(score_limit)
         instance_limit = int(instance_limit)
 
+        suggestions = []
+        for video in labels.videos:
+            suggestions.extend(
+                cls._prediction_score_video(video, labels, score_limit, instance_limit)
+            )
+        return suggestions
+
+    @classmethod
+    def _prediction_score_video(
+        cls, video: "Video", labels: "Labels", score_limit: float, instance_limit: int
+    ):
         lfs = labels.find(video)
 
         frames = len(lfs)
@@ -139,293 +182,83 @@ class VideoFrameSuggestions:
         # Find all the frames with at least <instance_limit> low scoring instances
         result = idxs[low_instances >= instance_limit].tolist()
 
-        return result
-
-    # Functions for building "feature stack", the (samples * features) matrix
-    # These are specific to the suggestion method
+        return cls.idx_list_to_frame_list(result, video)
 
     @classmethod
-    def frame_feature_stack(
-        cls, video: Video, sample_step: int = 5
-    ) -> Tuple[np.ndarray, List[int]]:
-        """Generates matrix of sampled video frame images."""
-        sample_count = video.frames // sample_step
-
-        factor = cls.get_scale_factor(video)
-
-        frame_idx_map = []
-        flat_stack = []
-
-        for i in range(sample_count):
-            frame_idx = i * sample_step
-
-            img = video[frame_idx].squeeze()
-            multichannel = video.channels > 1
-            img = rescale(img, scale=0.5, anti_aliasing=True, multichannel=multichannel)
-
-            flat_img = img.flatten()
-
-            flat_stack.append(flat_img)
-            frame_idx_map.append(frame_idx)
-
-        flat_stack = np.stack(flat_stack, axis=0)
-        return (flat_stack, frame_idx_map)
-
-    @classmethod
-    def brisk_feature_stack(
-        cls, video: Video, sample_step: int = 5
-    ) -> Tuple[np.ndarray, List[int]]:
-        """Generates Brisk features from sampled video frames."""
-        brisk = cv2.BRISK_create()
-
-        factor = cls.get_scale_factor(video)
-
-        feature_stack = None
-        frame_idx_map = []
-        for frame_idx in range(0, video.frames, sample_step):
-            img = video[frame_idx][0]
-            img = cls.resize(img, factor)
-            kps, descs = brisk.detectAndCompute(img, None)
-
-            # img2 = cv2.drawKeypoints(img, kps, None, color=(0,255,0), flags=0)
-            if descs is not None:
-                if feature_stack is None:
-                    feature_stack = descs
-                else:
-                    feature_stack = np.concatenate((feature_stack, descs))
-                frame_idx_map.extend([frame_idx] * descs.shape[0])
-
-        return (feature_stack, frame_idx_map)
-
-    # Functions for making suggestions based on "feature stack"
-    # These are common for all suggestion methods
-
-    @staticmethod
-    def to_frame_idx_list(
-        selected_list: List[int], frame_idx_map: List[int]
-    ) -> List[int]:
-        """Convert list of row indexes to list of frame indexes."""
-        return list(map(lambda x: frame_idx_map[x], selected_list))
-
-    @classmethod
-    def feature_stack_to_suggestions(
-        cls,
-        feature_stack: np.ndarray,
-        frame_idx_map: List[int],
-        return_clusters: bool = False,
-        **kwargs,
-    ) -> List[int]:
+    def velocity(cls, labels: "Labels", node_idx: int, threshold: float, **kwargs):
         """
-        Turns a feature stack matrix into a list of suggested frames.
-
-        Args:
-            feature_stack: (n * features) matrix.
-            frame_idx_map: List indexed by rows of feature stack which gives
-                frame index for each row in feature_stack. This allows a
-                single frame to correspond to multiple rows in feature_stack.
-            return_clusters: Whether to return the intermediate result for
-                debugging, i.e., a list that gives the list of suggested
-                frames for each cluster.
-
-        Returns:
-            List of frame index suggestions.
+        Finds frames for proofreading with high node velocity.
         """
 
-        selected_by_cluster = cls.feature_stack_to_clusters(
-            feature_stack=feature_stack, frame_idx_map=frame_idx_map, **kwargs
+        try:
+            node_name = labels.skeletons[0].nodes[node_idx]
+        except IndexError:
+            node_name = ""
+
+        suggestions = []
+        for video in labels.videos:
+            suggestions.extend(cls._velocity_video(video, labels, node_name, threshold))
+        return suggestions
+
+    @classmethod
+    def _velocity_video(
+        cls, video: "Video", labels: "Labels", node_name: str, threshold: float
+    ):
+        from sleap.info.summary import StatisticSeries
+
+        displacements = StatisticSeries(labels).get_primary_point_displacement_series(
+            video=video, reduction="sum", primary_node=node_name
+        )
+        data_range = np.ptp(displacements)
+        data_min = np.min(displacements)
+        frame_idxs = list(
+            map(
+                int,
+                np.squeeze(
+                    np.argwhere(displacements - data_min > data_range * threshold)
+                ),
+            )
         )
 
-        if return_clusters:
-            return selected_by_cluster
-
-        selected_list = cls.clusters_to_list(
-            selected_by_cluster=selected_by_cluster, **kwargs
-        )
-
-        return selected_list
-
-    @classmethod
-    def feature_stack_to_clusters(
-        cls,
-        feature_stack: np.ndarray,
-        frame_idx_map: List[int],
-        clusters: int = 5,
-        per_cluster: int = 5,
-        pca_components: int = 50,
-        **kwargs,
-    ) -> List[int]:
-        """
-        Runs PCA to generate clusters of frames based on given features.
-
-        Args:
-            feature_stack: (n * features) matrix.
-            frame_idx_map: List indexed by rows of feature stack which gives
-                frame index for each row in feature_stack. This allows a
-                single frame to correspond to multiple rows in feature_stack.
-            clusters: number of clusters
-            per_cluster: How many suggestions (at most) to take from each
-                cluster.
-            pca_components: Number of PCA components, for reducing feature
-                space before clustering
-
-        Returns:
-            A list of lists:
-            * for each cluster, a list of frame indices.
-        """
-
-        stack_height = feature_stack.shape[0]
-
-        # limit number of components by number of samples
-        pca_components = min(pca_components, stack_height)
-
-        # get features for each frame
-        pca = PCA(n_components=pca_components)
-        flat_small = pca.fit_transform(feature_stack)
-
-        # cluster based on features
-        kmeans = KMeans(n_clusters=clusters)
-        row_labels = kmeans.fit_predict(flat_small)
-
-        # take samples from each cluster
-        selected_by_cluster = []
-        selected_set = set()
-        for i in range(clusters):
-            cluster_items, = np.where(row_labels == i)
-
-            # convert from row indexes to frame indexes
-            cluster_items = cls.to_frame_idx_list(cluster_items, frame_idx_map)
-
-            # remove items from cluster_items if they've already been sampled for another cluster
-            # TODO: should this be controlled by a param?
-            cluster_items = list(set(cluster_items) - selected_set)
-
-            # pick [per_cluster] items from this cluster
-            samples_from_bin = np.random.choice(
-                cluster_items, min(len(cluster_items), per_cluster), False
-            )
-            samples_from_bin.sort()
-            selected_by_cluster.append(samples_from_bin)
-            selected_set = selected_set.union(set(samples_from_bin))
-
-        return selected_by_cluster
-
-    @classmethod
-    def clusters_to_list(
-        cls, selected_by_cluster: List[List[int]], interleave: bool = True, **kwargs
-    ) -> list:
-        """
-        Merges per cluster suggestion lists into single list for entire video.
-
-        Args:
-            selected_by_cluster: The list of lists of row indexes.
-            interleave: Whether to interleave suggestions from clusters.
-
-        Returns:
-            List of frame indices.
-        """
-
-        if interleave:
-            # cycle clusters
-            all_selected = itertools.chain.from_iterable(
-                itertools.zip_longest(*selected_by_cluster)
-            )
-            # remove Nones and convert back to list
-            all_selected = list(filter(lambda x: x is not None, all_selected))
-        else:
-            all_selected = list(itertools.chain.from_iterable(selected_by_cluster))
-            all_selected.sort()
-
-        all_selected = [int(x) for x in all_selected]
-
-        return all_selected
+        return cls.idx_list_to_frame_list(frame_idxs, video)
 
     # Utility functions
 
-    @classmethod
-    def get_scale_factor(cls, video: "Video") -> int:
-        """
-        Determines how much we need to scale to get video within size.
-
-        Size is specified by :attr:`rescale_below`.
-        """
-        factor = 1
-        if cls.rescale:
-            largest_dim = max(video.height, video.width)
-            factor = 1
-            while largest_dim / factor > cls.rescale_below:
-                factor += 1
-        return factor
-
     @staticmethod
-    def resize(img: np.ndarray, factor: float) -> np.ndarray:
-        """Resizes frame image by scaling factor."""
-        h, w, _ = img.shape
-        if factor != 1:
-            return cv2.resize(img, (h // factor, w // factor))
-        else:
-            return img
+    def idx_list_to_frame_list(
+        idx_list, video: "Video", group: Optional[GroupType] = None
+    ) -> List[SuggestionFrame]:
+        return [SuggestionFrame(video, frame_idx, group) for frame_idx in idx_list]
+
+
+def demo_gui():
+    from sleap.gui.formbuilder import YamlFormWidget
+    from sleap import Labels
+    from PySide2.QtWidgets import QApplication
+
+    labels = Labels.load_file(
+        "tests/data/json_format_v2/centered_pair_predictions.json"
+    )
+
+    app = QApplication()
+    win = YamlFormWidget.from_name("suggestions", title="Generate Suggestions")
+
+    def demo_suggestions(params):
+        print(params)
+        x = VideoFrameSuggestions.suggest(params=params, labels=labels)
+
+        for suggested_frame in x:
+            print(
+                suggested_frame.video.backend.filename,
+                suggested_frame.frame_idx,
+                suggested_frame.group,
+            )
+
+    win.mainAction.connect(demo_suggestions)
+    win.show()
+
+    app.exec_()
 
 
 if __name__ == "__main__":
-    # load some images
-    filename = "tests/data/videos/centered_pair_small.mp4"
-    filename = "files/190605_1509_frame23000_24000.sf.mp4"
-    video = Video.from_filename(filename)
-
-    debug = False
-
-    x = VideoFrameSuggestions.hog(
-        video=video, sample_step=20, clusters=5, per_cluster=5, return_clusters=debug
-    )
-    print(x)
-
-    if debug:
-
-        import matplotlib.pyplot as plt
-
-        rows = len(x)
-        cols = max((len(r) for r in x))
-
-        fig, ax = plt.subplots(rows, cols)
-        for r in range(rows):
-            for c in range(cols):
-                if c < len(x[r]):
-                    frame_idx = x[r][c]
-                    frame = video[frame_idx]
-                    ax[r, c].imshow(frame[0].squeeze(), cmap="gray")
-                    ax[r, c].set_title(f"frame {frame_idx}")
-                ax[r, c].axis("off")
-        plt.show()
-
-    # brisk = cv2.BRISK_create()
-
-    # feature_stack = None
-    # frame_idx_map = []
-    # for frame_idx in range(1, video.frames, 200):
-    #     img = video[frame_idx][0]
-
-    #     kps, descs = brisk.detectAndCompute(img, None)
-
-    #     # img2 = cv2.drawKeypoints(img, kps, None, color=(0,255,0), flags=0)
-
-    #     if feature_stack is None:
-    #         feature_stack = descs
-    #     else:
-    #         feature_stack = np.concatenate((feature_stack, descs))
-    #     frame_idx_map.extend([frame_idx] * descs.shape[0])
-
-    # print(f"final result: {feature_stack.shape}")
-    # print(frame_idx_map)
-
-# for a,b in zip(kps,descs):
-#   print(f"{a}: {b}")
-# print(len(kps))
-# print(len(descs))
-
-# foo = cv2.FeatureDetector_create("SIFT")
-# surf = cv2.xfeatures2d.SURF_create(400)
-# kp, des = surf.detectAndCompute(video[13], None)
-# print(len(kp))
-# print(des.shape)
-
-# print(VideoFrameSuggestions.suggest(video, dict(method="pca")))
+    demo_gui()
