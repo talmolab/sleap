@@ -155,6 +155,11 @@ learning:
 
   full_frame:
 
+- name: scale
+  label: Image rescaling factor
+  type: double
+  default: 1
+
 - name: batch_size
   label: Batch Size
   type: int
