@@ -48,10 +48,21 @@ def centroid_distance(
     return -np.linalg.norm(a - b)
 
 
-def instance_iou(ref_instance: InstanceType, query_instance: InstanceType) -> float:
+def instance_iou(
+    ref_instance: InstanceType, query_instance: InstanceType, cache: dict = dict()
+) -> float:
     """Computes IOU between bounding boxes of instances."""
 
-    return utils.compute_iou(ref_instance.bounding_box, query_instance.bounding_box)
+    if ref_instance not in cache:
+        cache[ref_instance] = ref_instance.bounding_box
+
+    if query_instance not in cache:
+        cache[query_instance] = query_instance.bounding_box
+
+    a = cache[ref_instance]
+    b = cache[query_instance]
+
+    return utils.compute_iou(a, b)
 
 
 def hungarian_matching(cost_matrix: np.ndarray) -> List[Tuple[int, int]]:
@@ -160,7 +171,9 @@ class FlowCandidateMaker:
         Tuple[int, int], List[ShiftedInstance]  # keyed by (src_t, dst_t)
     ] = attr.ib(factory=dict)
 
-    def get_candidates(self, track_matching_queue, t, img):
+    def get_candidates(
+        self, track_matching_queue: Deque[MatchedInstance], t: int, img: np.ndarray
+    ) -> List[ShiftedInstance]:
         candidate_instances = []
         for matched_item in track_matching_queue:
             ref_t, ref_img, ref_instances = (
@@ -284,7 +297,9 @@ class SimpleCandidateMaker:
 
     min_points: int = 0
 
-    def get_candidates(self, track_matching_queue, *args, **kwargs):
+    def get_candidates(
+        self, track_matching_queue: Deque[MatchedInstance], *args, **kwargs
+    ) -> List[InstanceType]:
         # Build a pool of matchable candidate instances.
         candidate_instances = []
         for matched_item in track_matching_queue:
@@ -486,7 +501,7 @@ class Tracker:
 
 @attr.s(auto_attribs=True)
 class FlowTracker(Tracker):
-    """A Tracker pre-configured to use flow shift."""
+    """A Tracker pre-configured to use optical flow shifted candidates."""
 
     similarity_function: Callable = instance_similarity
     matching_function: Callable = greedy_matching
@@ -495,7 +510,7 @@ class FlowTracker(Tracker):
 
 @attr.s(auto_attribs=True)
 class SimpleTracker(Tracker):
-    """A Tracker pre-configured to use simple instance matching."""
+    """A Tracker pre-configured to use simple, non-image-based candidates."""
 
     similarity_function: Callable = instance_iou
     matching_function: Callable = hungarian_matching
