@@ -2371,7 +2371,7 @@ class Labels(MutableSequence):
             track_count, frame_count, node_count, _ = pose_matrix.shape
 
             tracks = [Track(0, f"Track {i}") for i in range(track_count)]
-            for frame_idx in range(0, frame_count, 90):
+            for frame_idx in range(frame_count):
                 lf_instances = []
                 for track_idx in range(track_count):
                     points_array = pose_matrix[track_idx, frame_idx, :, :]
