@@ -23,6 +23,7 @@ from sleap.io.video import Video
 from sleap.io.dataset import Labels
 from sleap.gui.importvideos import ImportVideos
 from sleap.gui.filedialog import FileDialog
+from sleap.gui.missingfiles import MissingFilesDialog
 
 from sleap.gui.merge import MergeDialog
 
@@ -190,6 +191,14 @@ class CommandContext(object):
             None.
         """
         self.execute(OpenProject, first_open=first_open)
+
+    def importDPK(self):
+        """Imports DeepPoseKit datasets."""
+        self.execute(ImportDeepPoseKit)
+
+    def importCoco(self):
+        """Imports COCO datasets."""
+        self.execute(ImportCoco)
 
     def saveProject(self):
         """Show gui to save project (or save as if not yet saved)."""
@@ -415,9 +424,9 @@ class OpenProject(AppCommand):
         if OPEN_IN_NEW and not params.get("first_open", False):
             new_window = context.app.__class__()
             new_window.showMaximized()
-            new_window.loadProject(filename)
+            new_window.loadProjectFile(filename)
         else:
-            context.app.loadProject(filename)
+            context.app.loadProjectFile(filename)
 
     @staticmethod
     def ask(context: "CommandContext", params: dict) -> bool:
@@ -439,6 +448,99 @@ class OpenProject(AppCommand):
             return False
 
         params["filename"] = filename
+        return True
+
+
+class ImportDeepPoseKit(AppCommand):
+    @staticmethod
+    def do_action(context: "CommandContext", params: dict):
+
+        labels = Labels.from_deepposekit(
+            filename=params["filename"],
+            video_path=params["video_path"],
+            skeleton_path=params["skeleton_path"],
+        )
+
+        new_window = context.app.__class__()
+        new_window.showMaximized()
+        new_window.loadLabelsObject(labels=labels)
+
+    @staticmethod
+    def ask(context: "CommandContext", params: dict) -> bool:
+        filters = ["HDF5 (*.h5 *.hdf5)"]
+
+        filename, selected_filter = FileDialog.open(
+            context.app,
+            dir=None,
+            caption="Import DeepPoseKit dataset...",
+            filter=";;".join(filters),
+        )
+
+        if len(filename) == 0:
+            return False
+
+        file_dir = os.path.dirname(filename)
+        paths = [
+            os.path.join(file_dir, "video.mp4"),
+            os.path.join(file_dir, "skeleton.csv"),
+        ]
+
+        missing = [not os.path.exists(path) for path in paths]
+
+        if sum(missing):
+            okay = MissingFilesDialog(filenames=paths, missing=missing).exec_()
+
+            if not okay or sum(missing):
+                return False
+
+        params["filename"] = filename
+        params["video_path"] = paths[0]
+        params["skeleton_path"] = paths[1]
+
+        return True
+
+
+class ImportCoco(AppCommand):
+    @staticmethod
+    def do_action(context: "CommandContext", params: dict):
+
+        labels = Labels.load_coco(
+            filename=params["filename"], img_dir=params["img_dir"], use_missing_gui=True
+        )
+
+        new_window = context.app.__class__()
+        new_window.showMaximized()
+        new_window.loadLabelsObject(labels=labels)
+
+    @staticmethod
+    def ask(context: "CommandContext", params: dict) -> bool:
+        filters = ["JSON (*.json)"]
+
+        filename, selected_filter = FileDialog.open(
+            context.app,
+            dir=None,
+            caption="Import COCO dataset...",
+            filter=";;".join(filters),
+        )
+
+        if len(filename) == 0:
+            return False
+
+        # QtWidgets.QMessageBox(
+        #     text="Please locate the directory with image files for this dataset."
+        # ).exec_()
+        #
+        # img_dir = FileDialog.openDir(
+        #     None,
+        #     directory=os.path.dirname(filename),
+        #     caption="Open Image Directory"
+        # )
+        # if len(img_dir) == 0:
+        #     return False
+
+        params["filename"] = filename
+        params["img_dir"] = os.path.dirname(filename)
+
         return True
 
 
