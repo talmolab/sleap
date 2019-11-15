@@ -614,36 +614,51 @@ class ImgStoreVideo:
 @attr.s(auto_attribs=True, cmp=False)
 class SingleImageVideo:
     """
-    Video wrapper for individual image file.
+    Video wrapper for individual image files.
 
     Args:
-        filename: File to load as video.
+        filenames: Files to load as video.
     """
 
-    filename: attr.ib()
+    filename: Optional[str] = attr.ib(default=None)
+    filenames: Optional[List[str]] = attr.ib(factory=list)
     height_: Optional[int] = attr.ib(default=None)
     width_: Optional[int] = attr.ib(default=None)
     channels_: Optional[int] = attr.ib(default=None)
 
     def __attrs_post_init__(self):
-        self.__data = None
+        if not self.filename and self.filenames:
+            self.filename = self.filenames[0]
+        elif self.filename and not self.filenames:
+            self.filenames = [self.filename]
 
-    def _load(self):
-        if self.__data is None:
-            img = cv2.imread(self.filename)
+        self.__data = dict()
+        self.__test_frame = None
 
-            if img.shape[2] == 3:
-                # OpenCV channels are in BGR order, so we should convert to RGB
-                img = img[:, :, ::-1]
+    def _load_idx(self, idx):
+        img = cv2.imread(self.filenames[idx])
 
-            self.__data = img
+        if img.shape[2] == 3:
+            # OpenCV channels are in BGR order, so we should convert to RGB
+            img = img[:, :, ::-1]
+        return img
+
+    def _load_test_frame(self):
+        if self.__test_frame is None:
+            self.__test_frame = self._load_idx(0)
 
             if self.height_ is None:
-                self.height_ = self.__data.shape[0]
+                self.height_ = self.__test_frame.shape[0]
             if self.width_ is None:
-                self.width_ = self.__data.shape[1]
+                self.width_ = self.__test_frame.shape[1]
             if self.channels_ is None:
-                self.channels_ = self.__data.shape[2]
+                self.channels_ = self.__test_frame.shape[2]
+
+    def get_idx_from_filename(self, filename: str) -> int:
+        try:
+            return self.filenames.index(filename)
+        except IndexError as e:
+            return None
 
     # The properties and methods below complete our contract with the
     # higher level Video interface.
@@ -658,18 +673,18 @@ class SingleImageVideo:
         Returns:
             True if attributes match, False otherwise.
         """
-        return np.all(self.__data == other.__data)
+        return self.filenames == other.filenames
 
     @property
     def frames(self):
         """See :class:`Video`."""
-        return 1
+        return len(self.filenames)
 
     @property
     def channels(self):
         """See :class:`Video`."""
         if self.channels_ is None:
-            self._load()
+            self._load_test_frame()
 
         return self.channels_
 
@@ -677,7 +692,7 @@ class SingleImageVideo:
     def width(self):
         """See :class:`Video`."""
         if self.width_ is None:
-            self._load()
+            self._load_test_frame()
 
         return self.width_
 
@@ -689,7 +704,7 @@ class SingleImageVideo:
     def height(self):
         """See :class:`Video`."""
         if self.height_ is None:
-            self._load()
+            self._load_test_frame()
 
         return self.height_
 
@@ -704,10 +719,10 @@ class SingleImageVideo:
 
     def get_frame(self, idx):
         """See :class:`Video`."""
-        if self.__data is None:
-            self._load()
+        if idx not in self.__data:
+            self.__data[idx] = self._load_idx(idx)
 
-        return self.__data
+        return self.__data[idx]
 
 
 @attr.s(auto_attribs=True, cmp=False)
@@ -895,17 +910,16 @@ class Video:
         return cls(backend=backend)
 
     @classmethod
-    def from_image(
+    def from_image_filenames(
         cls,
-        filename: str,
+        filenames: List[str],
         height: Optional[int] = None,
         width: Optional[int] = None,
         *args,
         **kwargs,
     ) -> "Video":
-        """Create an instance of a SingleImageVideo from an image file."""
-        filename = Video.fixup_path(filename)
-        backend = SingleImageVideo(filename=filename)
+        """Create an instance of a SingleImageVideo from individual image file(s)."""
+        backend = SingleImageVideo(filenames=filenames)
         if height:
             backend.height = height
         if width:

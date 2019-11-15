@@ -2242,6 +2242,10 @@ class Labels(MutableSequence):
 
         # Make videos from "images"
 
+        # Remove images that aren't referenced in the annotations
+        img_refs = [annotation["image_id"] for annotation in dicts["annotations"]]
+        dicts["images"] = list(filter(lambda im: im["id"] in img_refs, dicts["images"]))
+
         # Key in JSON file should be "file_name", but sometimes it's "filename",
         # so we have to check both.
         img_filename_key = "file_name"
@@ -2272,23 +2276,50 @@ class Labels(MutableSequence):
             image[img_filename_key] = path
 
         # Create the video objects for the image files
-        video_map = dict()
+        image_video_map = dict()
+
+        vid_id_video_map = dict()
         for image in dicts["images"]:
-            video_id = image["id"]
-            video = Video.from_image(
-                filename=image[img_filename_key],
-                width=image["width"],
-                height=image["height"],
-            )
-            video_map[video_id] = video
+            image_id = image["id"]
+            image_filename = image[img_filename_key]
+
+            # Sometimes images have a vid_id which links multiple images
+            # together as one video. If so, we'll use that as the video key.
+            # But if there isn't a vid_id, we'll treat each images as a
+            # distinct video and use the image id as the video id.
+            vid_id = image.get("vid_id", image_id)
+
+            if vid_id not in vid_id_video_map:
+                kwargs = dict(filenames=[image_filename])
+                for key in ("width", "height"):
+                    if key in image:
+                        kwargs[key] = image[key]
+
+                video = Video.from_image_filenames(**kwargs)
+                vid_id_video_map[vid_id] = video
+                frame_idx = 0
+            else:
+                video = vid_id_video_map[vid_id]
+                frame_idx = video.num_frames
+                video.backend.filenames.append(image_filename)
+
+            image_video_map[image_id] = (video, frame_idx)
 
         # Make instances from "annotations"
         lf_map = dict()
+        track_map = dict()
         for annotation in dicts["annotations"]:
             skeleton = skeleton_map[annotation["category_id"]]
-            video_id = annotation["image_id"]
-            video = video_map[video_id]
+            image_id = annotation["image_id"]
+            video, frame_idx = image_video_map[image_id]
             keypoints = np.array(annotation["keypoints"], dtype="int").reshape(-1, 3)
+
+            track = None
+            if "track_id" in annotation:
+                track_id = annotation["track_id"]
+                if track_id not in track_map:
+                    track_map[track_id] = Track(frame_idx, str(track_id))
+                track = track_map[track_id]
 
             points = dict()
             for i in range(len(keypoints)):
@@ -2303,12 +2334,12 @@ class Labels(MutableSequence):
                 points[node] = Point(x, y, is_visible)
 
             if points:
-                inst = Instance(skeleton=skeleton, points=points)
+                inst = Instance(skeleton=skeleton, points=points, track=track)
 
-                if video_id not in lf_map:
-                    lf_map[video_id] = LabeledFrame(video, 0)
+                if image_id not in lf_map:
+                    lf_map[image_id] = LabeledFrame(video, frame_idx)
 
-                lf_map[video_id].insert(0, inst)
+                lf_map[image_id].insert(0, inst)
 
         return cls(labeled_frames=list(lf_map.values()))
 
