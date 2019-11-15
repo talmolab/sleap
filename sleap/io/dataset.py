@@ -2322,6 +2322,7 @@ class Labels(MutableSequence):
                 track = track_map[track_id]
 
             points = dict()
+            any_visible = False
             for i in range(len(keypoints)):
                 node = skeleton.nodes[i]
                 x, y, flag = keypoints[i]
@@ -2331,9 +2332,16 @@ class Labels(MutableSequence):
                     continue
 
                 is_visible = flag == 2
+                any_visible = any_visible or is_visible
                 points[node] = Point(x, y, is_visible)
 
             if points:
+                # If none of the points had 2 has the "visible" flag, we'll
+                # assume this incorrect and just mark all as visible.
+                if not any_visible:
+                    for point in points.values():
+                        point.visible = True
+
                 inst = Instance(skeleton=skeleton, points=points, track=track)
 
                 if image_id not in lf_map:
