@@ -11,7 +11,7 @@ import attr
 import cattr
 import logging
 
-from typing import Iterable, Union, List, Tuple
+from typing import Iterable, List, Optional, Tuple, Union
 
 logger = logging.getLogger(__name__)
 
@@ -612,6 +612,105 @@ class ImgStoreVideo:
 
 
 @attr.s(auto_attribs=True, cmp=False)
+class SingleImageVideo:
+    """
+    Video wrapper for individual image file.
+
+    Args:
+        filename: File to load as video.
+    """
+
+    filename: attr.ib()
+    height_: Optional[int] = attr.ib(default=None)
+    width_: Optional[int] = attr.ib(default=None)
+    channels_: Optional[int] = attr.ib(default=None)
+
+    def __attrs_post_init__(self):
+        self.__data = None
+
+    def _load(self):
+        if self.__data is None:
+            img = cv2.imread(self.filename)
+
+            if img.shape[2] == 3:
+                # OpenCV channels are in BGR order, so we should convert to RGB
+                img = img[:, :, ::-1]
+
+            self.__data = img
+
+            if self.height_ is None:
+                self.height_ = self.__data.shape[0]
+            if self.width_ is None:
+                self.width_ = self.__data.shape[1]
+            if self.channels_ is None:
+                self.channels_ = self.__data.shape[2]
+
+    # The properties and methods below complete our contract with the
+    # higher level Video interface.
+
+    def matches(self, other: "SingleImageVideo") -> np.ndarray:
+        """
+        Check if attributes match those of another video.
+
+        Args:
+            other: The other video to compare with.
+
+        Returns:
+            True if attributes match, False otherwise.
+        """
+        return np.all(self.__data == other.__data)
+
+    @property
+    def frames(self):
+        """See :class:`Video`."""
+        return 1
+
+    @property
+    def channels(self):
+        """See :class:`Video`."""
+        if self.channels_ is None:
+            self._load()
+
+        return self.channels_
+
+    @property
+    def width(self):
+        """See :class:`Video`."""
+        if self.width_ is None:
+            self._load()
+
+        return self.width_
+
+    @width.setter
+    def width(self, val):
+        self.width_ = val
+
+    @property
+    def height(self):
+        """See :class:`Video`."""
+        if self.height_ is None:
+            self._load()
+
+        return self.height_
+
+    @height.setter
+    def height(self, val):
+        self.height_ = val
+
+    @property
+    def dtype(self):
+        """See :class:`Video`."""
+        return self.__data.dtype
+
+    def get_frame(self, idx):
+        """See :class:`Video`."""
+        if self.__data is None:
+            self._load()
+
+        return self.__data
+
+
+@attr.s(auto_attribs=True, cmp=False)
 class Video:
     """
     The top-level interface to any Video data used by SLEAP.
@@ -651,7 +750,9 @@ class Video:
 
     """
 
-    backend: Union[HDF5Video, NumpyVideo, MediaVideo, ImgStoreVideo] = attr.ib()
+    backend: Union[
+        HDF5Video, NumpyVideo, MediaVideo, ImgStoreVideo, SingleImageVideo
+    ] = attr.ib()
 
     # Delegate to the backend
     def __getattr__(self, item):
@@ -791,6 +892,24 @@ class Video:
         """
         filename = Video.fixup_path(filename)
         backend = MediaVideo(filename=filename, *args, **kwargs)
+        return cls(backend=backend)
+
+    @classmethod
+    def from_image(
+        cls,
+        filename: str,
+        height: Optional[int] = None,
+        width: Optional[int] = None,
+        *args,
+        **kwargs,
+    ) -> "Video":
+        """Create an instance of a SingleImageVideo from an image file."""
+        filename = Video.fixup_path(filename)
+        backend = SingleImageVideo(filename=filename)
+        if height:
+            backend.height = height
+        if width:
+            backend.width = width
         return cls(backend=backend)
 
     @classmethod

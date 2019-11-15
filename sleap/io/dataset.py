@@ -2207,6 +2207,151 @@ class Labels(MutableSequence):
         return cls(labels)
 
     @classmethod
+    def load_coco(
+        cls, filename: str, img_dir: str, use_missing_gui: bool = False
+    ) -> "Labels":
+        with open(filename, "r") as file:
+            json_str = file.read()
+            dicts = json_loads(json_str)
+
+        # Make skeletons from "categories"
+        skeleton_map = dict()
+        for category in dicts["categories"]:
+            skeleton = Skeleton(name=category["name"])
+            skeleton_id = category["id"]
+            node_names = category["keypoints"]
+            skeleton.add_nodes(node_names)
+
+            try:
+                for src_idx, dst_idx in category["skeleton"]:
+                    skeleton.add_edge(node_names[src_idx], node_names[dst_idx])
+            except IndexError as e:
+                # According to the COCO data format specifications[^1], the edges
+                # are supposed to be 1-indexed. But in some of their own
+                # dataset the edges are 1-indexed! So we'll try.
+                # [1]: http://cocodataset.org/#format-data
+
+                # Clear any edges we already created using 0-indexing
+                skeleton.clear_edges()
+
+                # Add edges
+                for src_idx, dst_idx in category["skeleton"]:
+                    skeleton.add_edge(node_names[src_idx - 1], node_names[dst_idx - 1])
+
+            skeleton_map[skeleton_id] = skeleton
+
+        # Make videos from "images"
+
+        # Key in JSON file should be "file_name", but sometimes it's "filename",
+        # so we have to check both.
+        img_filename_key = "file_name"
+        if img_filename_key not in dicts["images"][0].keys():
+            img_filename_key = "filename"
+
+        # First add the img_dir to each image filename
+        img_paths = [
+            os.path.join(img_dir, image[img_filename_key]) for image in dicts["images"]
+        ]
+
+        # See if there are any missing files
+        img_missing = [not os.path.exists(path) for path in img_paths]
+
+        if sum(img_missing):
+            if use_missing_gui:
+                okay = MissingFilesDialog(img_paths, img_missing).exec_()
+
+                if not okay:
+                    return None
+            else:
+                raise FileNotFoundError(
+                    f"Images for COCO dataset could not be found in {img_dir}."
+                )
+
+        # Update the image paths (with img_dir or user selected path)
+        for image, path in zip(dicts["images"], img_paths):
+            image[img_filename_key] = path
+
+        # Create the video objects for the image files
+        video_map = dict()
+        for image in dicts["images"]:
+            video_id = image["id"]
+            video = Video.from_image(
+                filename=image[img_filename_key],
+                width=image["width"],
+                height=image["height"],
+            )
+            video_map[video_id] = video
+
+        # Make instances from "annotations"
+        lf_map = dict()
+        for annotation in dicts["annotations"]:
+            skeleton = skeleton_map[annotation["category_id"]]
+            video_id = annotation["image_id"]
+            video = video_map[video_id]
+            keypoints = np.array(annotation["keypoints"], dtype="int").reshape(-1, 3)
+
+            points = dict()
+            for i in range(len(keypoints)):
+                node = skeleton.nodes[i]
+                x, y, flag = keypoints[i]
+
+                if flag == 0:
+                    # node not labeled for this instance
+                    continue
+
+                is_visible = flag == 2
+                points[node] = Point(x, y, is_visible)
+
+            if points:
+                inst = Instance(skeleton=skeleton, points=points)
+
+                if video_id not in lf_map:
+                    lf_map[video_id] = LabeledFrame(video, 0)
+
+                lf_map[video_id].insert(0, inst)
+
+        return cls(labeled_frames=list(lf_map.values()))
+
+    @classmethod
+    def from_deepposekit(cls, filename: str, video_path: str, skeleton_path: str):
+        video = Video.from_filename(video_path)
+
+        skeleton_data = pd.read_csv(skeleton_path, header=0)
+        skeleton = Skeleton()
+        skeleton.add_nodes(skeleton_data["name"])
+        nodes = skeleton.nodes
+
+        for name, parent, swap in skeleton_data.itertuples(index=False, name=None):
+            if parent is not np.nan:
+                skeleton.add_edge(parent, name)
+
+        lfs = []
+        with h5.File(filename, "r") as f:
+            pose_matrix = f["pose"][:]
+
+            track_count, frame_count, node_count, _ = pose_matrix.shape
+
+            tracks = [Track(0, f"Track {i}") for i in range(track_count)]
+            for frame_idx in range(0, frame_count, 90):
+                lf_instances = []
+                for track_idx in range(track_count):
+                    points_array = pose_matrix[track_idx, frame_idx, :, :]
+                    points = dict()
+                    for p in range(len(points_array)):
+                        x, y, score = points_array[p]
+                        points[nodes[p]] = Point(x, y)  # TODO: score
+
+                    inst = Instance(
+                        skeleton=skeleton, track=tracks[track_idx], points=points
+                    )
+                    lf_instances.append(inst)
+                lfs.append(
+                    LabeledFrame(video, frame_idx=frame_idx, instances=lf_instances)
+                )
+
+        return cls(labeled_frames=lfs)
+
+    @classmethod
     def make_video_callback(cls, search_paths: Optional[List] = None) -> Callable:
         """
         Create a non-GUI callback for finding missing videos.
