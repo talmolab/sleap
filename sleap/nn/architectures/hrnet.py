@@ -604,7 +604,10 @@ class HigherHRNet:
         """
 
         hrnet_backbone = make_hrnet_backbone(
-            x_in, C=32, initial_downsampling_steps=2, bottleneck=False
+            x_in,
+            C=self.C,
+            initial_downsampling_steps=self.initial_downsampling_steps,
+            bottleneck=self.bottleneck,
         )
 
         higher_hrnet_model = make_higher_hrnet_heads(
