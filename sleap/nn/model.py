@@ -2,14 +2,12 @@ import os
 import attr
 import cattr
 import tensorflow as tf
-from tensorflow import keras
 import numpy as np
 from enum import Enum
 from typing import List, Text, Callable, Tuple, Dict, Union
 import logging
 
-from sleap.skeleton import Skeleton
-from sleap.nn.augmentation import Augmenter
+from sleap import Skeleton
 from sleap.nn.architectures import *
 from sleap.nn import utils
 
@@ -118,8 +116,10 @@ class Model:
         # If we need to, figure out how many output channels we will have
         if num_output_channels is None:
             if self.skeletons is not None:
-                if (self.output_type == ModelOutputType.CONFIDENCE_MAP or
-                    self.output_type == ModelOutputType.TOPDOWN_CONFIDENCE_MAP):
+                if (
+                    self.output_type == ModelOutputType.CONFIDENCE_MAP or
+                    self.output_type == ModelOutputType.TOPDOWN_CONFIDENCE_MAP
+                ):
                     num_outputs_channels = len(self.skeletons[0].nodes)
                 elif self.output_type == ModelOutputType.PART_AFFINITY_FIELD:
                     num_outputs_channels = len(self.skeleton[0].edges) * 2
@@ -225,11 +225,12 @@ class InferenceModel:
     keras_model: keras.Model = None
 
     @classmethod
-    def from_training_job(cls, training_job: Union["sleap.nn.training.TrainingJob", Text]):
+    def from_training_job(cls, training_job: Union["sleap.nn.job.TrainingJob", Text]):
         """Create an InferenceModel from a TrainingJob or path to json file."""
 
         if isinstance(training_job, str):
-            from sleap.nn.training import TrainingJob
+            from sleap.nn.job import TrainingJob
+
             training_job = TrainingJob.load_json(training_job)
 
         return cls(
@@ -239,8 +240,8 @@ class InferenceModel:
             input_tensor_ind=0,
             output_tensor_ind=-1,
             down_blocks=training_job.model.down_blocks,
-            model_path=training_job.model_path
-            )
+            model_path=training_job.model_path,
+        )
 
     def __attrs_post_init__(self):
 
@@ -261,7 +262,9 @@ class InferenceModel:
             raise ValueError("Model path was not specified.")
 
         # Load from disk.
-        self.keras_model = keras.models.load_model(model_path, custom_objects={"tf": tf})
+        self.keras_model = tf.keras.models.load_model(
+            model_path, custom_objects={"tf": tf}
+        )
 
         # Store the path to the current model.
         self.model_path = model_path
@@ -271,13 +274,14 @@ class InferenceModel:
 
         self.keras_model = keras.Model(
             self.keras_model.inputs[self.input_tensor_ind],
-            self.keras_model.outputs[self.output_tensor_ind])
+            self.keras_model.outputs[self.output_tensor_ind],
+        )
 
     @property
     def input_tensor(self) -> tf.Tensor:
         """Returns the input tensor to the model."""
         return self.keras_model.input
-    
+
     @property
     def output_tensor(self) -> tf.Tensor:
         """Returns the output tensor from the model."""
@@ -295,10 +299,7 @@ class InferenceModel:
 
     def predict(self, X: np.ndarray, batch_size: int = 8) -> np.ndarray:
         """Runs inference on input data."""
-        
+
         return utils.batched_call_slices(
-            self.keras_model,
-            X,
-            batch_size=batch_size,
-            return_numpy=True)
-    
+            self.keras_model, X, batch_size=batch_size, return_numpy=True
+        )

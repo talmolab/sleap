@@ -20,7 +20,7 @@ import scipy.io as sio
 import h5py as h5
 
 from collections import MutableSequence
-from typing import Callable, List, Union, Dict, Optional
+from typing import Callable, List, Union, Dict, Optional, Tuple, Text
 
 try:
     from typing import ForwardRef
@@ -2296,6 +2296,178 @@ class Labels(MutableSequence):
                 item["backend"]["filename"] = filenames[i]
 
         return gui_video_callback
+
+    def export_training_data(self, save_path: Text):
+        """Exports a set of images and points for training with minimal metadata.
+
+        Args:
+            save_path: Path to HDF5 that training data will be saved to.
+
+        Notes:
+            The exported HDF5 file will contain no SLEAP-specific metadata or
+            dependencies for serialization. These files cannot be read back in for
+            labeling, but are useful when training on environments where it is hard to
+            install complex dependencies.
+        """
+
+        # Skeleton
+        node_names = np.string_(self.skeletons[0].node_names)
+        edge_inds = np.array(self.skeletons[0].edge_inds)
+
+        # Videos metadata
+        video_paths = []
+        video_datasets = []
+        video_shapes = []
+        video_image_data_format = []
+        for video in self.videos:
+            video_paths.append(video.backend.filename)
+            if hasattr(video.backend, "dataset"):
+                video_datasets.append(video.backend.dataset)
+            else:
+                video_datasets.append("")
+            video_shapes.append(video.shape)
+            video_image_data_format.append(video.backend.input_format)
+
+        video_paths = np.string_(video_paths)
+        video_datasets = np.string_(video_datasets)
+        video_shapes = np.array(video_shapes)
+        video_image_data_format = np.string_(video_image_data_format)
+
+        # Main labeling data
+        video_inds = []
+        frame_inds = []
+        imgs = []
+        peaks = []
+        peak_samples = []
+        peak_instances = []
+        peak_channels = []
+        peak_tracks = []
+
+        # Main labeling data.
+        labeled_frames_with_instances = [
+            lf for lf in self.labeled_frames if lf.has_user_instances
+        ]
+
+        for sample_ind, lf in enumerate(labeled_frames_with_instances):
+
+            # Video index into the videos metadata
+            video_ind = self.videos.index(lf.video)
+
+            # Frame index into the original images array
+            frame_ind = lf.frame_idx
+            if hasattr(lf.video.backend, "_HDF5Video__original_to_current_frame_idx"):
+                frame_ind = lf.video.backend._HDF5Video__original_to_current_frame_idx[
+                    lf.frame_idx
+                ]
+
+            # Actual image data
+            img = lf.video[lf.frame_idx]
+
+            frame_peaks = []
+            frame_peak_samples = []
+            frame_peak_instances = []
+            frame_peak_channels = []
+            frame_peak_tracks = []
+            for instance_ind, instance in enumerate(lf.user_instances):
+                instance_peaks = instance.points_array.astype("float32")
+                frame_peaks.append(instance_peaks)
+                frame_peak_samples.append(np.full((len(instance_peaks),), sample_ind))
+                frame_peak_instances.append(
+                    np.full((len(instance_peaks),), instance_ind)
+                )
+                frame_peak_channels.append(np.arange(len(instance_peaks)))
+                track_ind = np.nan
+                if instance.track is not None:
+                    track_ind = self.tracks.index(instance.track)
+                frame_peak_tracks.append(np.full((len(instance_peaks),), track_ind))
+
+            # Concatenate into (n_peaks, 2) -> x, y = frame_peaks[i]
+            frame_peaks = np.concatenate(frame_peaks, axis=0)
+
+            # Concatenate metadata
+            frame_peak_samples = np.concatenate(frame_peak_samples)
+            frame_peak_instances = np.concatenate(frame_peak_instances)
+            frame_peak_channels = np.concatenate(frame_peak_channels)
+            frame_peak_tracks = np.concatenate(frame_peak_tracks)
+
+            video_inds.append(video_ind)
+            frame_inds.append(frame_ind)
+            imgs.append(img)
+            peaks.append(frame_peaks)
+            peak_samples.append(frame_peak_samples)
+            peak_instances.append(frame_peak_instances)
+            peak_channels.append(frame_peak_channels)
+            peak_tracks.append(peak_tracks)
+
+        video_inds = np.array(video_inds)
+        frame_inds = np.array(frame_inds)
+        imgs = np.concatenate(imgs, axis=0)
+        peaks = np.concatenate(peaks, axis=0)
+        peak_samples = np.concatenate(peak_samples, axis=0).astype("int32")
+        peak_instances = np.concatenate(peak_instances, axis=0).astype("int32")
+        peak_channels = np.concatenate(peak_channels, axis=0).astype("int32")
+        peak_tracks = np.concatenate(peak_channels, axis=0)
+
+        with h5.File(save_path, "w") as f:
+            f.create_dataset("skeleton/node_names", data=node_names)
+            f.create_dataset("skeleton/n_nodes", data=len(node_names))
+            f.create_dataset("skeleton/edges", data=edge_inds)
+
+            f.create_dataset("videos/filepath", data=video_paths)
+            f.create_dataset("videos/dataset", data=video_datasets)
+            f.create_dataset("videos/shape", data=video_shapes)
+            f.create_dataset("videos/image_data_format", data=video_image_data_format)
+
+            f.create_dataset(
+                "imgs",
+                data=imgs,
+                chunks=(1,) + imgs.shape[1:],
+                compression="gzip",
+                compression_opts=1,
+            )
+            f.create_dataset("peaks/xy", data=peaks)
+            f.create_dataset("peaks/sample", data=peak_samples)
+            f.create_dataset("peaks/instance", data=peak_instances)
+            f.create_dataset("peaks/channel", data=peak_channels)
+            f.create_dataset("peaks/track", data=peak_tracks)
+
+    def generate_training_data(
+        self,
+    ) -> Tuple[Union[np.ndarray, List[np.ndarray]], List[np.ndarray]]:
+        """Generates images and points for training.
+
+        Returns:
+            A tuple of (imgs, points).
+
+            imgs: Array of shape (n_samples, height, width, channels) containing the
+            image data for all frames with user labels. If frames are of variable size,
+            imgs is a list of length n_samples with elements of shape
+            (height, width, channels).
+
+            points: List of length n_samples with elements of shape
+            (n_instances, n_nodes, 2), containing all user labeled instances in the
+            frame, with NaN-padded xy coordinates for each visible body part.
+        """
+
+        imgs = []
+        points = []
+
+        for lf in self.labeled_frames:
+            if lf.has_user_instances:
+                continue
+
+            imgs.append(lf.video[lf.frame_idx][0])
+            points.append(
+                np.stack([inst.points_array for inst in lf.user_instances], axis=0)
+            )
+
+        # Try to stack all images into a single 4D array.
+        first_shape = imgs[0].shape
+        can_stack = all([img.shape == first_shape for img in imgs])
+        if can_stack:
+            imgs = np.stack(imgs, axis=0)
+
+        return imgs, points
 
 
 def find_path_using_paths(missing_path, search_paths):
