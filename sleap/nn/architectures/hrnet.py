@@ -526,6 +526,7 @@ def make_higher_hrnet_heads(
     n_output_channels,
     n_deconv_modules,
     bottleneck=False,
+    deconv_filters=256,
     bilinear_upsampling=False,
 ):
 
@@ -550,6 +551,7 @@ def make_higher_hrnet_heads(
             deconv_inputs,
             output_filters=n_output_channels,
             bottleneck=bottleneck,
+            deconv_filters=deconv_filters,
             bilinear_upsampling=bilinear_upsampling,
             output_name="deconv_output",
             name_prefix=f"deconv_module{deconv_module + 1}",
@@ -581,6 +583,8 @@ class HigherHRNet:
             equal to initial_downsampling_steps, the output will be at the same scale as
             the input.
         bottleneck: If True, uses bottleneck blocks instead of simple residual blocks.
+        deconv_filters: Number of filters to use in deconv blocks if using transposed
+            convolutions.
         bilinear_upsampling: Use bilinear upsampling instead of transposed convolutions
             at the output heads.
     """
@@ -589,6 +593,7 @@ class HigherHRNet:
     initial_downsampling_steps: int = 1
     n_deconv_modules: int = 1
     bottleneck: bool = False
+    deconv_filters: int = 256
     bilinear_upsampling: bool = False
 
     def output(self, x_in, n_output_channels):
@@ -615,6 +620,7 @@ class HigherHRNet:
             n_output_channels,
             self.n_deconv_modules,
             bottleneck=self.bottleneck,
+            deconv_filters=self.deconv_filters,
             bilinear_upsampling=self.bilinear_upsampling,
         )
 
