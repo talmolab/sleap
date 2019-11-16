@@ -18,7 +18,7 @@ class MobileNetV1:
     At depth_multiplier = 1, this backbone has:
         ~0.2M params @ alpha = 0.25
         ~0.8M params @ alpha = 0.5
-        ~1.8M params @ alpha = 0.5
+        ~1.8M params @ alpha = 0.75
         ~3.2M params @ alpha = 1.0
 
     Parameter counts scale proportionally with the depth_multiplier, e.g., at

@@ -53,13 +53,13 @@ class NASNetMobile:
             # Input should be rescaled from [0, 1] to [-1, 1] and needs to be 3 channels (RGB)
             x = tf.keras.layers.Lambda(common.scale_input)(x)
 
-            if x_in.shape[-1] == 1:
+            if x.shape[-1] == 1:
                 x = tf.keras.layers.Lambda(common.tile_channels)(x)
 
         # Automatically downloads weights
         backbone_model = applications.nasnet.NASNetMobile(
             include_top=False,
-            input_shape=x.shape[1:],
+            input_shape=(224, 224, 3) if self.pretrained else x.shape[1:],
             weights="imagenet" if self.pretrained else None,
             pooling=None,
             backend=tf.keras.backend,
