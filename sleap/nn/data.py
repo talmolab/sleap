@@ -6,9 +6,11 @@ import tensorflow as tf
 import imgaug as ia
 import imgaug.augmenters as iaa
 from sklearn.model_selection import train_test_split
-
 import attr
 from typing import Union, List, Tuple, Text
+
+from sleap.nn import utils
+
 
 ArrayLike = Union[np.ndarray, tf.Tensor]
 
@@ -93,6 +95,15 @@ class TrainingData:
 
         return cls(images=imgs, points=points, skeleton=skeleton)
 
+    def to_ds(self) -> tf.data.Dataset:
+        """Returns a tf.data.Dataset that contains tuples of images and points."""
+
+        ds_img = make_image_dataset(self.images)
+        ds_pts = make_points_dataset(self.points)
+        ds_img_and_pts = tf.data.Dataset.zip((ds_img, ds_pts))
+
+        return ds_img_and_pts
+
 
 def split_training_data(
     training_data: TrainingData, first_split_fraction: float = 0.1
@@ -122,6 +133,39 @@ def split_training_data(
     )
 
     return training_data_split1, training_data_split2
+
+
+def estimate_instance_crop_size(
+    points: List[ArrayLike], min_multiple: int = 32, padding: int = 0
+) -> int:
+    """Estimates the bounding box size for instance cropping from data.
+
+    Args:
+        points: List of arrays containg points of shape (n_instances, n_nodes, 2).
+        min_multiple: Bounding box size will be the smallest multiple of this number.
+            This is useful when using models with multiple downsampling steps.
+        padding: If greater than 0, this number is added to the maximum instance size so
+            that the crop size also incorporates some additional spatial context or in
+            case there are few points to get a reliable estimate.
+
+    Returns:
+        An integer representing the bounding box size (width/length) that fits all
+        instances in the input points and is a multiple of min_multiple.
+    """
+
+    # Compute instance-wise bounds.
+    # (n_total_instances, 2)
+    points_ptp = np.concatenate(
+        [np.nanmax(p, axis=1) - np.nanmin(p, axis=1) for p in points], axis=0
+    )
+
+    # Reduce and include padding.
+    max_instance_size = np.nanmax(points_ptp) + padding
+
+    # Account for minimum multiple constraint.
+    min_crop_size = np.ceil(max_instance_size / min_multiple) * min_multiple
+
+    return int(min_crop_size)
 
 
 def make_image_dataset(images: Union[ArrayLike, List[ArrayLike]]) -> tf.data.Dataset:
@@ -194,9 +238,72 @@ def make_points_dataset(points: Union[ArrayLike, List[ArrayLike]]) -> tf.data.Da
         raise ValueError("Invalid points type provided.")
 
 
+def adjust_dataset_input_scale(
+    ds_img_and_pts: tf.data.Dataset,
+    input_scale: float,
+    min_multiple: int = 32,
+    normalize_image: bool = True,
+) -> tf.data.Dataset:
+    """Resizes images and points generated in a dataset to account for input scaling.
+
+    Args:
+        ds_img_and_pts: A tf.data.Dataset that generates tuples of (image, points).
+        input_scale: Fraction of original size to rescale data to.
+        min_multiple: Output image size will be the smallest multiple of this number.
+            Images will be padded on the right/bottom after resizing to ensure that the
+            coordinate system will not change. This is useful when using models with
+            multiple downsampling steps.
+        normalize_image: If True, the resized images will be cast to float32 and divided
+            by 255. Set to False if the input image is already in the range [0, 1].
+
+    Returns:
+        A tf.data.Dataset with the images and points rescaled to the input_scale.
+    """
+
+    def scale_fn(img, pt):
+        img = utils.resize_imgs(
+            tf.expand_dims(img, 0), scale=input_scale, common_divisor=min_multiple
+        )
+        pt *= input_scale
+
+        if normalize_image:
+            img = tf.cast(img, tf.float32) / 255.0
+
+        return img[0], pt
+
+    ds_scaled = ds_img_and_pts.map(
+        scale_fn, num_parallel_calls=tf.data.experimental.AUTOTUNE,
+    )
+
+    return ds_scaled
+
+
+def normalize_dataset(
+    ds_img_and_pts: tf.data.Dataset,
+) -> tf.data.Dataset:
+    """Normalizes images of a paired dataset.
+
+    Args:
+        ds_img_and_pts: A tf.data.Dataset that generates tuples of (image, points).
+
+    Returns:
+        A tf.data.Dataset with (image, points) elements where the images are cast to
+        float32 and divided by 255.
+    """
+
+    def normalize_fn(img, pt):
+        img = tf.cast(img, tf.float32) / 255.0
+        return img, pt
+
+    ds_normalized = ds_img_and_pts.map(
+        normalize_fn, num_parallel_calls=tf.data.experimental.AUTOTUNE,
+    )
+
+    return ds_normalized
+
+
 def augment_dataset(
-    ds_images: tf.data.Dataset,
-    ds_points: tf.data.Dataset,
+    ds_img_and_pts: tf.data.Dataset,
     rotate: bool = True,
     rotation_min_angle: float = -180,
     rotation_max_angle: float = 180,
@@ -213,8 +320,7 @@ def augment_dataset(
     """Augments a pair of image and points dataset.
 
     Args:
-        ds_images: tf.data.Dataset
-        ds_points: tf.data.Dataset
+        ds_img_and_pts: A tf.data.Dataset that generates tuples of (image, points).
         rotate: bool = True
         rotation_min_angle: float = -180
         scale: bool = False
@@ -241,12 +347,14 @@ def augment_dataset(
         aug_stack.append(iaa.Affine(scale=(scale_min, scale_max)))
 
     if uniform_noise:
-        aug_stack.append(iaa.AddElementwise(value=(min_noise_val, max_noise_val)))
+        aug_stack.append(
+            iaa.AddElementwise(value=(min_noise_val * 255, max_noise_val * 255))
+        )
 
     if gaussian_noise:
         aug_stack.append(
             iaa.AdditiveGaussianNoise(
-                loc=gaussian_noise_mean, scale=gaussian_noise_stddev
+                loc=gaussian_noise_mean * 255, scale=gaussian_noise_stddev * 255
             )
         )
 
@@ -261,9 +369,6 @@ def augment_dataset(
         pt = aug_det.augment_keypoints(kps).to_xy_array()
 
         return img, pt
-
-    # Zip both streams
-    ds_img_and_pts = tf.data.Dataset.zip((ds_images, ds_points))
 
     # Augment
     ds_aug = ds_img_and_pts.map(
@@ -469,7 +574,7 @@ def instance_crop(
     use_ctr_node: bool = False,
     ctr_node_ind: int = 0,
     normalize_image: bool = True,
-) -> tf.Tensor:
+) -> Tuple[tf.Tensor, tf.Tensor, tf.Tensor]:
     """Crops an image around the instances in pts.
 
     This function serves as a convenience wrapper around low level processing functions
@@ -523,6 +628,62 @@ def instance_crop(
     instance_ctr_points = tf.gather_nd(instance_points, ctr_inds)
 
     return instance_images, instance_points, instance_ctr_points
+
+
+def instance_crop_dataset(
+    ds_img_and_pts: tf.data.Dataset,
+    box_height: int,
+    box_width: int,
+    use_ctr_node: bool = False,
+    ctr_node_ind: int = 0,
+    normalize_image: bool = True,
+) -> tf.data.Dataset:
+    """Resizes images and points generated in a dataset to account for input scaling.
+
+    Args:
+        ds_img_and_pts: A tf.data.Dataset that generates tuples of (image, points).
+        box_width: Scalar int specifying the width of the bounding box.
+        box_height: Scalar int specifying the height of the bounding box.
+        use_ctr_node: If True, the coordinate of the node specified by ctr_node_ind will
+            be used as the centroid whenever it is visible.
+        ctr_node_ind: Scalar int indexing into axis 1 of points.
+        normalize_image: If True, the cropped patches will be divided by 255. This
+            parameter is useful if the input image is of dtype uint8 since the output
+            after cropping is automatically cast to float32. Set to False if the input
+            image is already in the range [0, 1].
+
+    Returns:
+        A tf.data.Dataset with the images cropped around instances and the points
+        adjusted to the bounding box coordinates.
+
+        Elements are a tuple of (instance_images, instance_points, instance_ctr_points).
+        Be sure to account for this if feeding the returned dataset to other dataset
+        transformation functions that do not expect 3 inputs.
+
+        See instance_crop for more information on the format of these outputs.
+    """
+
+    def instance_crop_fn(img, pt):
+        instance_images, instance_points, instance_ctr_points = instance_crop(
+            image=img,
+            points=pt,
+            box_height=box_height,
+            box_width=box_width,
+            use_ctr_node=use_ctr_node,
+            ctr_node_ind=ctr_node_ind,
+            normalize_image=normalize_image,
+        )
+
+        return instance_images, instance_points, instance_ctr_points
+
+    ds_cropped = ds_img_and_pts.map(
+        instance_crop_fn, num_parallel_calls=tf.data.experimental.AUTOTUNE,
+    )
+
+    # "Flatten" back into a single image per element.
+    ds_cropped = ds_cropped.unbatch()
+
+    return ds_cropped
 
 
 def make_confmaps(
@@ -705,7 +866,7 @@ def make_pafs(
     return pafs
 
 
-def make_confmap_ds(
+def make_confmap_dataset(
     ds_img_and_pts: tf.data.Dataset, sigma: float = 3.0, output_scale: float = 1.0
 ) -> tf.data.Dataset:
     """Creates a confmaps dataset with confmaps from all points.
@@ -721,7 +882,7 @@ def make_confmap_ds(
         all points. If more than one instance is present, they are max-reduced by node.
     """
 
-    def gen_cm_fn(img, pts):
+    def gen_cm_fn(img, pts, ctr_pts=None):
 
         # Instance-wise confmaps of shape (n_instances, height, width, n_nodes).
         instance_cms = make_confmaps(
@@ -745,13 +906,13 @@ def make_confmap_ds(
     return ds_cms
 
 
-def make_instance_confmap_ds(
+def make_instance_confmap_dataset(
     ds_img_and_pts: tf.data.Dataset,
     sigma: float = 3.0,
     output_scale: float = 1.0,
     with_instance_cms: bool = False,
-    with_all_peaks: bool = True,
-    with_ctr_peaks: bool = False,
+    with_all_peaks: bool = False,
+    with_ctr_peaks: bool = True,
 ) -> tf.data.Dataset:
     """Creates a confmaps dataset with optionally instance-wise confmaps.
 
@@ -824,7 +985,7 @@ def make_instance_confmap_ds(
     return ds_cms
 
 
-def make_paf_ds(
+def make_paf_dataset(
     ds_img_and_pts: tf.data.Dataset,
     edges: np.ndarray,
     output_scale: float = 1.0,

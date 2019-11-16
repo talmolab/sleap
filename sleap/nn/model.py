@@ -159,6 +159,12 @@ class Model:
             return 0
 
     @property
+    def input_min_multiple(self):
+        """Returns the minimum multiple that the input data must be of."""
+
+        return 2 ** self.down_blocks
+
+    @property
     def output_scale(self):
         """Calculates output scale relative to input."""
 

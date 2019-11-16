@@ -19,6 +19,9 @@ class TrainerConfig:
     sigma: float = 5.0
     instance_crop: bool = False
     bounding_box_size: int = 0
+    instance_crop_use_ctr_node: bool = False
+    instance_crop_ctr_node_ind: int = 0
+    instance_crop_padding: int = 0
 
     # Training loop:
     batch_size: int = 8
@@ -27,9 +30,17 @@ class TrainerConfig:
     val_steps_per_epoch: int = 20
 
     # Augmentation:
+    augment_rotate: bool = True
     augment_rotation: float = 180.0
-    augment_scale_min: float = 1.0
-    augment_scale_max: float = 1.0
+    augment_scale: bool = False
+    augment_scale_min: float = 0.9
+    augment_scale_max: float = 1.1
+    augment_uniform_noise: bool = False
+    augment_uniform_noise_min_val: float = 0.0
+    augment_uniform_noise_max_val: float = 0.1
+    augment_gaussian_noise: bool = False
+    augment_gaussian_noise_mean: float = 0.05
+    augment_gaussian_noise_stddev: float = 0.1
 
     # Optimization:
     optimizer: str = "adam"

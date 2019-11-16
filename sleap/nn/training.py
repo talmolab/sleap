@@ -78,28 +78,163 @@ class Trainer:
         if test is not None and isinstance(test, str):
             test = data.TrainingData.load_file(test)
 
-        img_shape = (
-            int(train.images.shape[1] * self.training_job.input_scale),
-            int(train.images.shape[2] * self.training_job.input_scale),
-            int(train.images.shape[3]),
+        # Setup initial zipped datasets.
+        ds_train = train.to_ds()
+        ds_val = val.to_ds()
+        ds_test = None
+        if test is not None:
+            ds_test = test.to_ds()
+
+        # Adjust for input scaling and add padding to the model's minimum multiple.
+        ds_train = data.adjust_dataset_input_scale(
+            ds_train,
+            input_scale=self.training_job.input_scale,
+            min_multiple=self.training_job.model.input_min_multiple,
+            normalize_image=False,
+        )
+        ds_val = data.adjust_dataset_input_scale(
+            ds_val,
+            input_scale=self.training_job.input_scale,
+            min_multiple=self.training_job.model.input_min_multiple,
+            normalize_image=False,
         )
 
-        if self.training_job.model.output_type == model.ModelOutputType.CONFIDENCE_MAP:
+        if ds_test is not None:
+            ds_test = data.adjust_dataset_input_scale(
+                ds_test,
+                input_scale=self.training_job.input_scale,
+                min_multiple=self.training_job.model.input_min_multiple,
+                normalize_image=False,
+            )
+
+        # Cache the data with the current transformations.
+        # ds_train = ds_train.cache()
+        # ds_val = ds_val.cache()
+        # if ds_test is not None:
+        #     ds_test = ds_test.cache()
+
+        # Apply augmentations.
+        aug_params = dict(
+            rotate=self.training_job.trainer.augment_rotate,
+            rotation_min_angle=-self.training_job.trainer.augment_rotation,
+            rotation_max_angle=self.training_job.trainer.augment_rotation,
+            scale=self.training_job.trainer.augment_scale,
+            scale_min=self.training_job.trainer.augment_scale_min,
+            scale_max=self.training_job.trainer.augment_scale_max,
+            uniform_noise=self.training_job.trainer.augment_uniform_noise,
+            min_noise_val=self.training_job.trainer.augment_uniform_noise_min_val,
+            max_noise_val=self.training_job.trainer.augment_uniform_noise_max_val,
+            gaussian_noise=self.training_job.trainer.augment_gaussian_noise,
+            gaussian_noise_mean=self.training_job.trainer.augment_gaussian_noise_mean,
+            gaussian_noise_stddev=self.training_job.trainer.augment_gaussian_noise_stddev,
+        )
+        ds_train = data.augment_dataset(ds_train, **aug_params)
+        ds_val = data.augment_dataset(ds_val, **aug_params)
+
+        if self.training_job.trainer.instance_crop:
+            # Crop around instances.
+
+            if (
+                self.training_job.trainer.bounding_box_size is None
+                or self.training_job.trainer.bounding_box_size == 0
+            ):
+                # Estimate bounding box size from the data if not specified.
+                # TODO: Do this earlier with more points if available.
+                box_size = data.estimate_instance_crop_size(
+                    train.points,
+                    min_multiple=self.training_job.model.input_min_multiple,
+                    padding=self.training_job.trainer.instance_crop_padding,
+                )
+                self.training_job.trainer.bounding_box_size = box_size
+
+            crop_params = dict(
+                box_height=self.training_job.trainer.bounding_box_size,
+                box_width=self.training_job.trainer.bounding_box_size,
+                use_ctr_node=self.training_job.trainer.instance_crop_use_ctr_node,
+                ctr_node_ind=self.training_job.trainer.instance_crop_ctr_node_ind,
+                normalize_image=True,
+            )
+            ds_train = data.instance_crop_dataset(ds_train, **crop_params)
+            ds_val = data.instance_crop_dataset(ds_val, **crop_params)
+            if ds_test is not None:
+                ds_test = data.instance_crop_dataset(ds_test, **crop_params)
+
+        else:
+            # We're not instance cropping, so at this point the images are still not
+            # normalized. Let's account for that before moving on.
+            ds_train = data.normalize_dataset(ds_train)
+            ds_val = data.normalize_dataset(ds_val)
+            if ds_test is not None:
+                ds_test = data.normalize_dataset(ds_test)
+
+        # Setup remaining pipeline by output type.
+        rel_output_scale = (
+            self.training_job.model.output_scale / self.training_job.input_scale
+        )
+        output_type = self.training_job.model.output_type
+        if output_type == model.ModelOutputType.CONFIDENCE_MAP:
+            ds_train = data.make_confmap_dataset(
+                ds_train,
+                output_scale=rel_output_scale,
+                sigma=self.training_job.trainer.sigma,
+            )
+            ds_val = data.make_confmap_dataset(
+                ds_val,
+                output_scale=rel_output_scale,
+                sigma=self.training_job.trainer.sigma,
+            )
+            if ds_test is not None:
+                ds_test = data.make_confmap_dataset(
+                    ds_test,
+                    output_scale=rel_output_scale,
+                    sigma=self.training_job.trainer.sigma,
+                )
             n_output_channels = train.skeleton.n_nodes
 
-        elif (
-            self.training_job.model.output_type ==
-            model.ModelOutputType.TOPDOWN_CONFIDENCE_MAP
-        ):
+        elif output_type == model.ModelOutputType.TOPDOWN_CONFIDENCE_MAP:
+            if not self.training_job.trainer.instance_crop:
+                raise ValueError(
+                    "Cannot train a topddown model without instance cropping enabled."
+                )
+
+            # TODO: Parametrize multiple heads in the training configuration.
+            cm_params = dict(
+                sigma=self.training_job.trainer.sigma,
+                output_scale=rel_output_scale,
+                with_instance_cms=False,
+                with_all_peaks=False,
+                with_ctr_peaks=True,
+            )
+            ds_train = data.make_instance_confmap_dataset(ds_train, **cm_params)
+            ds_val = data.make_instance_confmap_dataset(ds_val, **cm_params)
+            if ds_test is not None:
+                ds_test = data.make_instance_confmap_dataset(ds_test, **cm_params)
             n_output_channels = train.skeleton.n_nodes
 
-        elif (
-            self.training_job.model.output_type ==
-            model.ModelOutputType.PART_AFFINITY_FIELD
-        ):
+        elif output_type == model.ModelOutputType.PART_AFFINITY_FIELD:
+            ds_train = data.make_paf_dataset(
+                ds_train,
+                train.skeleton.edges,
+                output_scale=rel_output_scale,
+                distance_threshold=self.training_job.trainer.sigma,
+            )
+            ds_val = data.make_paf_dataset(
+                ds_val,
+                train.skeleton.edges,
+                output_scale=rel_output_scale,
+                distance_threshold=self.training_job.trainer.sigma,
+            )
+            if ds_test is not None:
+                ds_test = data.make_paf_dataset(
+                    ds_test,
+                    train.skeleton.edges,
+                    output_scale=rel_output_scale,
+                    distance_threshold=self.training_job.trainer.sigma,
+                )
             n_output_channels = train.skeleton.n_edges * 2
 
-        elif self.training_job.model.output_type == model.ModelOutputType.CENTROIDS:
+        elif output_type == model.ModelOutputType.CENTROIDS:
+            # TODO: Implement make_centroid_dataset
             n_output_channels = 1
 
         else:
@@ -107,9 +242,8 @@ class Trainer:
                 f"Invalid model output type specified ({self.training_job.model.output_type})."
             )
 
-        ds_train = None
-        ds_val = None
-        ds_test = None
+        # Get image shape after all the dataset transformations are applied.
+        img_shape = tuple(list(ds_val.take(1))[0][0][0].shape)
 
         return ds_train, ds_val, ds_test, img_shape, n_output_channels
 

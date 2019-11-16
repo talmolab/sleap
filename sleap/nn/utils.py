@@ -237,7 +237,8 @@ def resize_imgs(
         The resized imgs tensor.
 
     Note:
-        The returned imgs will be on the GPU (if available) regardless of the initial device.
+        The returned imgs will be on the GPU (if available) regardless of the initial
+        device.
     """
 
     # Get input image dimensions.
@@ -265,15 +266,13 @@ def resize_imgs(
         divisible_height = tf.cast(
             tf.math.ceil(
                 tf.cast(target_height, tf.float32) / tf.cast(common_divisor, tf.float32)
-            )
-            * common_divisor,
+            ) * common_divisor,
             tf.int32,
         )
         divisible_width = tf.cast(
             tf.math.ceil(
                 tf.cast(target_width, tf.float32) / tf.cast(common_divisor, tf.float32)
-            )
-            * common_divisor,
+            ) * common_divisor,
             tf.int32,
         )
         if divisible_height != target_height or divisible_width != target_width:
@@ -290,11 +289,11 @@ def resize_imgs(
 
 def compute_pairwise_distances(x: np.ndarray, y: np.ndarray) -> np.ndarray:
     """Computes the Euclidean distance matrix for a pair of matrices.
-    
+
     Args:
         x: np.ndarray of shape (M, D).
         y: np.ndarray of shape (N, D).
-    
+
     Returns:
         A distance matrix dists of shape (M, N), such that dists[i, j] contains the
         Euclidean distance between x[i] and y[j].
