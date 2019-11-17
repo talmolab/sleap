@@ -278,9 +278,9 @@ class Trainer:
 
         # Get image shape after all the dataset transformations are applied.
         img_shape = list(ds_val.take(1))[0][0][0].shape
-        cm_shape = list(ds_val.take(1))[0][1][0].shape
+        # cm_shape = list(ds_val.take(1))[0][1][0].shape
         print("img_shape:", img_shape)
-        print("cm_shape:", cm_shape)
+        # print("cm_shape:", cm_shape)
 
         return ds_train, ds_val, ds_test, img_shape, n_output_channels
 
@@ -298,7 +298,7 @@ class Trainer:
                     min_lr=self.training_job.trainer.reduce_lr_min_lr,
                     monitor=self.training_job.trainer.monitor_metric_name,
                     mode="auto",
-                    verbose=1,
+                    verbose=self.verbosity,
                 )
             )
 
@@ -308,7 +308,7 @@ class Trainer:
                     monitor=self.training_job.trainer.monitor_metric_name,
                     min_delta=self.training_job.trainer.early_stopping_min_delta,
                     patience=self.training_job.trainer.early_stopping_patience,
-                    verbose=1,
+                    verbose=self.verbosity,
                 )
             )
 
@@ -393,6 +393,12 @@ class Trainer:
         keras_model = tf.keras.Model(
             input_layer, outputs, name=self.training_job.model.backbone_name
         )
+
+        print(f"Model: {keras_model.name}")
+        print(f"  Input: {keras_model.input_shape}")
+        print(f"  Output: {keras_model.output_shape}")
+        print(f"  Layers: {len(keras_model.layers)}")
+        print(f"  Params: {keras_model.count_params():3,}")
 
         return keras_model
 

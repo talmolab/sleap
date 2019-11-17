@@ -129,7 +129,19 @@ class Model:
                     "Cannot infer num output channels."
                 )
 
-        return self.backbone.output(input_tensor, num_output_channels)
+        backbone_output = self.backbone.output(input_tensor, num_output_channels)
+
+        if isinstance(backbone_output, tf.keras.Model):
+            backbone_output = backbone_output.outputs
+
+        if isinstance(backbone_output, list):
+            if len(backbone_output) == 1:
+                backbone_output = backbone_output[0]
+
+            else:
+                raise NotImplementedError("Multi-head output not yet implemented.")
+
+        return backbone_output
 
     @property
     def name(self):
