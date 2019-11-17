@@ -22,7 +22,7 @@ class Trainer:
     zmq: bool = False
     control_zmq_port: int = 9000
     progress_report_zmq_port: int = 9001
-    verbosity: int = 1
+    verbosity: int = 2
 
     def setup_data(
         self,
@@ -59,7 +59,7 @@ class Trainer:
             val = data_val
         if val is not None and isinstance(val, str):
             val = data.TrainingData.load_file(val)
-        if val is None and self.val_size is not None:
+        if val is None and self.training_job.trainer.val_size is not None:
             train, val = data.split_training_data(
                 train, first_split_fraction=self.training_job.trainer.val_size
             )
@@ -168,9 +168,14 @@ class Trainer:
                 ds_test = data.normalize_dataset(ds_test)
 
         # Setup remaining pipeline by output type.
-        rel_output_scale = (
-            self.training_job.model.output_scale / self.training_job.input_scale
-        )
+        # rel_output_scale = (
+            # self.training_job.model.output_scale / self.training_job.input_scale
+        # )
+        # TODO: Update this to the commented calculation above when model config
+        # includes metadata about absolute input scale.
+        rel_output_scale = self.training_job.model.output_scale
+        print("model.output_scale:", self.training_job.model.output_scale)
+        print("training_job.input_scale:", self.training_job.input_scale)
         output_type = self.training_job.model.output_type
         if output_type == model.ModelOutputType.CONFIDENCE_MAP:
             ds_train = data.make_confmap_dataset(
@@ -234,7 +239,18 @@ class Trainer:
             n_output_channels = train.skeleton.n_edges * 2
 
         elif output_type == model.ModelOutputType.CENTROIDS:
-            # TODO: Implement make_centroid_dataset
+            cm_params = dict(
+                sigma=self.training_job.trainer.sigma,
+                output_scale=rel_output_scale,
+                use_ctr_node=self.training_job.trainer.instance_crop_use_ctr_node,
+                ctr_node_ind=self.training_job.trainer.instance_crop_ctr_node_ind,
+            )
+
+            ds_train = data.make_centroid_confmap_dataset(ds_train, **cm_params)
+            ds_val = data.make_centroid_confmap_dataset(ds_val, **cm_params)
+            if ds_test is not None:
+                ds_test = data.make_centroid_confmap_dataset(ds_test, **cm_params)
+
             n_output_channels = 1
 
         else:
@@ -242,8 +258,29 @@ class Trainer:
                 f"Invalid model output type specified ({self.training_job.model.output_type})."
             )
 
+        # Set up shuffling, batching, repeating and prefetching.
+        ds_train = (
+            ds_train.shuffle(len(train.images))
+            .repeat(-1)
+            .batch(self.training_job.trainer.batch_size)
+            .prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
+        )
+        ds_val = (
+            ds_val.shuffle(len(val.images))
+            .repeat(-1)
+            .batch(self.training_job.trainer.batch_size)
+            .prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
+        )
+        if ds_test is not None:
+            ds_test = ds_val.batch(self.training_job.trainer.batch_size).prefetch(
+                buffer_size=tf.data.experimental.AUTOTUNE
+            )
+
         # Get image shape after all the dataset transformations are applied.
-        img_shape = tuple(list(ds_val.take(1))[0][0][0].shape)
+        img_shape = list(ds_val.take(1))[0][0][0].shape
+        cm_shape = list(ds_val.take(1))[0][1][0].shape
+        print("img_shape:", img_shape)
+        print("cm_shape:", cm_shape)
 
         return ds_train, ds_val, ds_test, img_shape, n_output_channels
 
@@ -361,14 +398,12 @@ class Trainer:
 
     def train(
         self,
-        *args,
         labels_train: Union[Labels, Text] = None,
         labels_val: Union[Labels, Text] = None,
         labels_test: Union[Labels, Text] = None,
         data_train: Union[data.TrainingData, Text] = None,
         data_val: Union[data.TrainingData, Text] = None,
         data_test: Union[data.TrainingData, Text] = None,
-        **kwargs,
     ) -> tf.keras.Model:
 
         ds_train, ds_val, ds_test, img_shape, n_output_channels = self.setup_data(
@@ -386,7 +421,7 @@ class Trainer:
 
         history = keras_model.fit(
             ds_train,
-            epochs=self.training_job.trainer.epochs,
+            epochs=self.training_job.trainer.num_epochs,
             callbacks=training_callbacks,
             validation_data=ds_val,
             steps_per_epoch=self.training_job.trainer.steps_per_epoch,

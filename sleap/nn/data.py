@@ -122,7 +122,7 @@ def split_training_data(
     """
 
     imgs_1, imgs_2, points_1, points_2 = train_test_split(
-        training_data.imgs, training_data.points, test_size=first_split_fraction
+        training_data.images, training_data.points, test_size=first_split_fraction
     )
 
     training_data_split1 = TrainingData(
@@ -219,11 +219,18 @@ def make_points_dataset(points: Union[ArrayLike, List[ArrayLike]]) -> tf.data.Da
             return tf.data.Dataset.from_generator(
                 lambda: (tf.expand_dims(p, 0) for p in points),
                 output_types=points[0].dtype,
+                output_shapes=tf.TensorShape(
+                    [None, points[0].shape[-2], points[0].shape[-1]]
+                ),
             )
 
         elif points[0].ndim == 3:
             return tf.data.Dataset.from_generator(
-                lambda: points, output_types=points[0].dtype
+                lambda: points,
+                output_types=points[0].dtype,
+                output_shapes=tf.TensorShape(
+                    [None, points[0].shape[-2], points[0].shape[-1]]
+                ),
             )
 
         else:
@@ -272,15 +279,13 @@ def adjust_dataset_input_scale(
         return img[0], pt
 
     ds_scaled = ds_img_and_pts.map(
-        scale_fn, num_parallel_calls=tf.data.experimental.AUTOTUNE,
+        scale_fn, num_parallel_calls=tf.data.experimental.AUTOTUNE
     )
 
     return ds_scaled
 
 
-def normalize_dataset(
-    ds_img_and_pts: tf.data.Dataset,
-) -> tf.data.Dataset:
+def normalize_dataset(ds_img_and_pts: tf.data.Dataset,) -> tf.data.Dataset:
     """Normalizes images of a paired dataset.
 
     Args:
@@ -296,7 +301,7 @@ def normalize_dataset(
         return img, pt
 
     ds_normalized = ds_img_and_pts.map(
-        normalize_fn, num_parallel_calls=tf.data.experimental.AUTOTUNE,
+        normalize_fn, num_parallel_calls=tf.data.experimental.AUTOTUNE
     )
 
     return ds_normalized
@@ -361,21 +366,31 @@ def augment_dataset(
     aug = iaa.Sequential(aug_stack)
 
     # Define augmentation function to map over each sample.
-    def aug_fn(img, pt):
+    def aug_fn(img, pts):
         aug_det = aug.to_deterministic()
-        kps = ia.KeypointsOnImage.from_xy_array(pt.numpy(), tuple(img.shape))
+        aug_img = aug_det.augment_image(img.numpy())
 
-        img = aug_det.augment_image(img.numpy())
-        pt = aug_det.augment_keypoints(kps).to_xy_array()
+        aug_pts = []
+        for pt in pts:
+            kps = ia.KeypointsOnImage.from_xy_array(pt.numpy(), tuple(img.shape))
+            aug_pt = aug_det.augment_keypoints(kps).to_xy_array()
+            aug_pts.append(aug_pt)
+        aug_pts = np.stack(aug_pts, axis=0)
 
-        return img, pt
+        return aug_img, aug_pts
+
+    def aug_tf_fn(img, pts):
+        aug_img, aug_pts = tf.py_function(
+            func=aug_fn, inp=[img, pts], Tout=[tf.uint8, tf.float32]
+        )
+        aug_img.set_shape(img.get_shape())
+        aug_pts.set_shape(pts.get_shape())
+
+        return aug_img, aug_pts
 
     # Augment
     ds_aug = ds_img_and_pts.map(
-        lambda img, pt: tf.py_function(
-            func=aug_fn, inp=[img, pt], Tout=[tf.uint8, tf.float32]
-        ),
-        num_parallel_calls=tf.data.experimental.AUTOTUNE,
+        aug_tf_fn, num_parallel_calls=tf.data.experimental.AUTOTUNE
     )
 
     return ds_aug
@@ -405,7 +420,9 @@ def get_bbox_centroid(points: tf.Tensor) -> tf.Tensor:
     pts_max = tf.reduce_max(masked_pts, axis=1)
     centroids = 0.5 * (pts_max + pts_min)
 
-    return centroids.to_tensor()
+    if isinstance(centroids, tf.RaggedTensor):
+        centroids = centroids.to_tensor()
+    return centroids
 
 
 def get_bbox_centroid_from_node_ind(points: tf.Tensor, node_ind: int) -> tf.Tensor:
@@ -887,14 +904,66 @@ def make_confmap_dataset(
         # Instance-wise confmaps of shape (n_instances, height, width, n_nodes).
         instance_cms = make_confmaps(
             pts,
-            tf.shape(img)[0],
-            tf.shape(img)[1],
+            image_height=tf.shape(img)[0],
+            image_width=tf.shape(img)[1],
             output_scale=output_scale,
             sigma=sigma,
         )
 
         # Confmaps with peaks from all instances.
         # (height, width, n_nodes)
+        cms_all = tf.reduce_max(instance_cms, axis=0)
+
+        return img, cms_all
+
+    ds_cms = ds_img_and_pts.map(
+        gen_cm_fn, num_parallel_calls=tf.data.experimental.AUTOTUNE
+    )
+
+    return ds_cms
+
+
+def make_centroid_confmap_dataset(
+    ds_img_and_pts: tf.data.Dataset,
+    sigma: float = 3.0,
+    output_scale: float = 1.0,
+    use_ctr_node: bool = False,
+    ctr_node_ind: int = 0,
+) -> tf.data.Dataset:
+    """Creates a confmaps dataset with confmaps from all points.
+
+    Args:
+        ds_img_and_pts: A tf.data.Dataset that generates tuples of (image, points).
+        sigma: Gaussian kernel width around each point.
+        output_scale: Relative scaling of the output confmaps.
+        use_ctr_node: If True, the coordinate of the node specified by ctr_node_ind will
+            be used as the centroid whenever it is visible.
+        ctr_node_ind: Scalar int indexing into axis 1 of points.
+
+    Returns:
+        ds_cms: A tf.data.Dataset that returns elements that are tuples of
+        (image, confmaps), where confmaps contains the confidence maps generated from
+        the centroid points. If more than one instance is present, they are max-reduced.
+    """
+
+    def gen_cm_fn(img, pts):
+
+        if use_ctr_node:
+            centroids = get_bbox_centroid_from_node_ind(pts, ctr_node_ind)
+        else:
+            centroids = get_bbox_centroid(pts)
+
+        # Instance-wise confmaps of shape (n_instances, height, width, 1).
+        instance_cms = make_confmaps(
+            tf.expand_dims(centroids, 1),
+            image_height=tf.shape(img)[0],
+            image_width=tf.shape(img)[1],
+            output_scale=output_scale,
+            sigma=sigma,
+        )
+
+        # Confmaps with peaks from all instances.
+        # (height, width, 1)
         cms_all = tf.reduce_max(instance_cms, axis=0)
 
         return img, cms_all
@@ -946,8 +1015,8 @@ def make_instance_confmap_dataset(
             # Instance-wise confmaps of shape (n_instances, height, width, n_nodes).
             instance_cms = make_confmaps(
                 pts,
-                tf.shape(img)[0],
-                tf.shape(img)[1],
+                image_height=tf.shape(img)[0],
+                image_width=tf.shape(img)[1],
                 output_scale=output_scale,
                 sigma=sigma,
             )
@@ -967,8 +1036,8 @@ def make_instance_confmap_dataset(
                 tf.reduce_max(
                     make_confmaps(
                         tf.expand_dims(ctr_pts, axis=0),
-                        tf.shape(img)[0],
-                        tf.shape(img)[1],
+                        image_height=tf.shape(img)[0],
+                        image_width=tf.shape(img)[1],
                         output_scale=output_scale,
                         sigma=sigma,
                     ),

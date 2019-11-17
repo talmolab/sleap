@@ -67,7 +67,7 @@ class Model:
             skeletons:
             backbone: A class with an output method that returns a
             tf.Tensor of the output of the backbone block. This tensor
-            will be set as the outputs of the keras.Model that is constructed.
+            will be set as the outputs of the tf.keras.Model that is constructed.
             See sleap.nn.architectures for example backbone block classes.
             backbone_name: The name of the backbone architecture, this defaults
             to self.backbone.__name__ when set to None. In general, the user should
@@ -228,7 +228,7 @@ class InferenceModel:
     output_tensor_ind: int = -1
     down_blocks: int = 5
     model_path: Text = None
-    keras_model: keras.Model = None
+    keras_model: tf.keras.Model = None
 
     @classmethod
     def from_training_job(cls, training_job: Union["sleap.nn.job.TrainingJob", Text]):
@@ -278,7 +278,7 @@ class InferenceModel:
     def _setup_input_output_tensors(self):
         """Create model with the specified input/output tensors."""
 
-        self.keras_model = keras.Model(
+        self.keras_model = tf.keras.Model(
             self.keras_model.inputs[self.input_tensor_ind],
             self.keras_model.outputs[self.output_tensor_ind],
         )
