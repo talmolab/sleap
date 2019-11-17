@@ -169,7 +169,7 @@ class Trainer:
 
         # Setup remaining pipeline by output type.
         # rel_output_scale = (
-            # self.training_job.model.output_scale / self.training_job.input_scale
+        # self.training_job.model.output_scale / self.training_job.input_scale
         # )
         # TODO: Update this to the commented calculation above when model config
         # includes metadata about absolute input scale.
@@ -439,3 +439,39 @@ class Trainer:
         # TODO: Evaluate final test set performance if available
 
         return keras_model
+
+
+if __name__ == "__main__":
+    import argparse
+    from pkg_resources import Requirement, resource_filename
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("labels_path", help="Path to labels file.")
+    parser.add_argument("profile_path", help="Path to training job profile file.")
+    parser.add_argument(
+        "--tensorboard",
+        help="Enables TensorBoard logging to the run path.",
+        action="store_true",
+    )
+
+    args = parser.parse_args()
+
+    job_filename = args.profile_path
+    if not os.path.exists(job_filename):
+        profile_dir = resource_filename(
+            Requirement.parse("sleap"), "sleap/training_profiles"
+        )
+        if os.path.exists(os.path.join(profile_dir, job_filename)):
+            job_filename = os.path.join(profile_dir, job_filename)
+        else:
+            raise FileNotFoundError(f"Could not find training profile: {job_filename}")
+
+    print(f"Training labels file: {args.labels_path}")
+    print(f"Training profile: {job_filename}")
+
+    training_job = job.TrainingJob.load_json(job_filename)
+    training_job.labels_filename = args.labels_path
+    save_dir = os.path.join(os.path.dirname(training_job.labels_filename), "models")
+
+    trainer = Trainer(training_job)
+    trained_model = trainer.train(tensorboard=args.tensorboard, zmq=False, verbosity=2)
