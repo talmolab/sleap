@@ -379,10 +379,12 @@ class GeneralizedDenseNet:
         return 1 / (2 ** (self.down_blocks - self.up_blocks))
 
 
-def make_backbone(x_in, blocks, stem_stride=1, return_mid_feats=False):
+def make_backbone(x_in, blocks, stem_stride=1, stem_filters=64, return_mid_feats=False):
 
     x = tf.keras.layers.ZeroPadding2D(padding=((3, 3), (3, 3)))(x_in)
-    x = tf.keras.layers.Conv2D(64, 7, strides=1, use_bias=False, name="conv1/conv")(x)
+    x = tf.keras.layers.Conv2D(
+        stem_filters, 7, strides=1, use_bias=False, name="conv1/conv"
+    )(x)
     x = tf.keras.layers.BatchNormalization(epsilon=1.001e-5, name="conv1/bn")(x)
     x = tf.keras.layers.Activation("relu", name="conv1/relu")(x)
     x = tf.keras.layers.ZeroPadding2D(padding=((1, 1), (1, 1)))(x)
@@ -459,16 +461,21 @@ class UDenseNet:
     """UDenseNet backbone, a UNet-like architecture with skip connections to heads.
 
     Attributes:
-        upsampling_layers: Use upsampling instead of transposed convolutions.
-        interp: Method to use for interpolation when upsampling smaller features.
-        up_blocks: Number of upsampling steps to perform. The backbone reduces
-            the output scale by 1/32. If set to 5, outputs will be upsampled to the
-            input resolution.
-        refine_conv_up: If true, applies a 1x1 conv after each upsampling step.
+        stem_stride: Initial downsampling stride in the stem block.
+        stem_filters: Initial number of conv filters in the stem block.
+        dense_blocks: List of integers defining the size of each dense block. Can be of
+            any length > 0.
+        output_scale: Scale of the output tensor relative to the input.
+        n_heads: Number of heads to produce. Intermediate heads will pass features from
+            every scale to the next head, starting from the first backbone with dense
+            blocks and transitions.
+        head_filters: Filters to use in each head block after concatenation with
+            previous filters.
     """
 
     stem_stride: int = 1
-    dense_blocks: Tuple[int] = (2, 4, 6, 8)
+    stem_filters: int = 64
+    dense_blocks: List[int] = [2, 4, 6, 8]
     output_scale: float = 1.0
     n_heads: int = 1
     head_filters: int = 64
@@ -486,7 +493,11 @@ class UDenseNet:
         """
 
         backbone, backbone_mid_feats = make_backbone(
-            x_in, self.dense_blocks, stem_stride=self.stem_stride, return_mid_feats=True
+            x_in,
+            self.dense_blocks,
+            stem_stride=self.stem_stride,
+            stem_filters=self.stem_filters,
+            return_mid_feats=True,
         )
 
         output_size = int(x_in.shape[1] * self.output_scale)
@@ -495,7 +506,7 @@ class UDenseNet:
         x = backbone.output
         mid_feats = backbone_mid_feats
         outputs = []
-        for head in self.n_heads:
+        for head in range(self.n_heads):
             x, mid_feats = make_head(
                 x,
                 n_output_channels,
