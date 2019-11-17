@@ -2361,7 +2361,7 @@ class Labels(MutableSequence):
                 ]
 
             # Actual image data
-            img = lf.video[lf.frame_idx]
+            img = lf.image
 
             frame_peaks = []
             frame_peak_samples = []
@@ -2453,10 +2453,10 @@ class Labels(MutableSequence):
         points = []
 
         for lf in self.labeled_frames:
-            if lf.has_user_instances:
+            if not lf.has_user_instances:
                 continue
 
-            imgs.append(lf.video[lf.frame_idx][0])
+            imgs.append(lf.image)
             points.append(
                 np.stack([inst.points_array for inst in lf.user_instances], axis=0)
             )

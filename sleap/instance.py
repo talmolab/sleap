@@ -1384,3 +1384,8 @@ class LabeledFrame:
         )
 
         return merged_instances, extra_base, extra_new
+
+    @property
+    def image(self) -> np.ndarray:
+        """Returns the image for this frame of shape (height, width, channels)."""
+        return self.video.get_frame(self.frame_idx)
