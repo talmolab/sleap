@@ -2,6 +2,8 @@
 
 import os
 import attr
+import argparse
+from pkg_resources import Requirement, resource_filename
 from typing import Union, Dict, List, Text
 
 import tensorflow as tf
@@ -441,13 +443,12 @@ class Trainer:
         return keras_model
 
 
-if __name__ == "__main__":
-    import argparse
-    from pkg_resources import Requirement, resource_filename
+def main():
+    """CLI for training."""
 
     parser = argparse.ArgumentParser()
     parser.add_argument("labels_path", help="Path to labels file.")
-    parser.add_argument("profile_path", help="Path to training job profile file.")
+    parser.add_argument("training_job_path", help="Path to training job profile file.")
     parser.add_argument(
         "--tensorboard",
         help="Enables TensorBoard logging to the run path.",
@@ -456,7 +457,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    job_filename = args.profile_path
+    job_filename = args.training_job_path
     if not os.path.exists(job_filename):
         profile_dir = resource_filename(
             Requirement.parse("sleap"), "sleap/training_profiles"
@@ -475,3 +476,7 @@ if __name__ == "__main__":
 
     trainer = Trainer(training_job)
     trained_model = trainer.train(tensorboard=args.tensorboard, zmq=False, verbosity=2)
+
+
+if __name__ == "__main__":
+    main()
