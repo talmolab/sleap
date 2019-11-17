@@ -6,6 +6,7 @@ import argparse
 from pkg_resources import Requirement, resource_filename
 from typing import Union, Dict, List, Text
 
+import numpy as np
 import tensorflow as tf
 
 from sleap import Labels, Skeleton
@@ -176,8 +177,8 @@ class Trainer:
         # TODO: Update this to the commented calculation above when model config
         # includes metadata about absolute input scale.
         rel_output_scale = self.training_job.model.output_scale
-        print("model.output_scale:", self.training_job.model.output_scale)
         print("training_job.input_scale:", self.training_job.input_scale)
+        print("model.output_scale:", self.training_job.model.output_scale)
         output_type = self.training_job.model.output_type
         if output_type == model.ModelOutputType.CONFIDENCE_MAP:
             ds_train = data.make_confmap_dataset(
@@ -260,29 +261,37 @@ class Trainer:
                 f"Invalid model output type specified ({self.training_job.model.output_type})."
             )
 
+        if self.training_job.trainer.steps_per_epoch <= 0:
+            self.training_job.trainer.steps_per_epoch = int(
+                len(train.images) // self.training_job.trainer.batch_size
+            )
+        if self.training_job.trainer.val_steps_per_epoch <= 0:
+            self.training_job.trainer.val_steps_per_epoch = int(
+                np.ceil(len(val.images) / self.training_job.trainer.batch_size)
+            )
+
         # Set up shuffling, batching, repeating and prefetching.
         ds_train = (
             ds_train.shuffle(len(train.images))
             .repeat(-1)
-            .batch(self.training_job.trainer.batch_size)
-            .prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
+            .batch(self.training_job.trainer.batch_size, drop_remainder=True)
+            .prefetch(buffer_size=self.training_job.trainer.steps_per_epoch)
+            # .prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
         )
         ds_val = (
-            ds_val.shuffle(len(val.images))
-            .repeat(-1)
+            ds_val.repeat(-1)
             .batch(self.training_job.trainer.batch_size)
             .prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
         )
         if ds_test is not None:
             ds_test = ds_val.batch(self.training_job.trainer.batch_size).prefetch(
-                buffer_size=tf.data.experimental.AUTOTUNE
+                buffer_size=self.training_job.trainer.val_steps_per_epoch
+                # buffer_size=tf.data.experimental.AUTOTUNE
             )
 
         # Get image shape after all the dataset transformations are applied.
         img_shape = list(ds_val.take(1))[0][0][0].shape
-        # cm_shape = list(ds_val.take(1))[0][1][0].shape
         print("img_shape:", img_shape)
-        # print("cm_shape:", cm_shape)
 
         return ds_train, ds_val, ds_test, img_shape, n_output_channels
 
