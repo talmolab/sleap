@@ -832,10 +832,10 @@ def make_pafs(
 
     # Create sampling grid vectors and broadcast to full grid shape.
     yv = tf.reshape(
-        tf.range(0, image_height, 1.0 / output_scale, dtype=tf.float32), [1, 1, -1, 1]
+        tf.range(0, image_height, 1.0 / output_scale, dtype=tf.float32), [1, -1, 1, 1]
     )
     xv = tf.reshape(
-        tf.range(0, image_width, 1.0 / output_scale, dtype=tf.float32), [1, -1, 1, 1]
+        tf.range(0, image_width, 1.0 / output_scale, dtype=tf.float32), [1, 1, -1, 1]
     )
     grid_shape = tf.reduce_max(tf.stack([xv.shape, yv.shape], axis=0), axis=0)
 
