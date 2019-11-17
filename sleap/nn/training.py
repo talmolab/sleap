@@ -138,7 +138,7 @@ class Trainer:
 
             if (
                 self.training_job.trainer.bounding_box_size is None
-                or self.training_job.trainer.bounding_box_size == 0
+                or self.training_job.trainer.bounding_box_size <= 0
             ):
                 # Estimate bounding box size from the data if not specified.
                 # TODO: Do this earlier with more points if available.

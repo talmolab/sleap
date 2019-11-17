@@ -452,15 +452,15 @@ def get_bbox_centroid_from_node_ind(points: tf.Tensor, node_ind: int) -> tf.Tens
 
 
 def get_centered_bboxes(
-    centroids: tf.Tensor, box_width: int, box_height: int
+    centroids: tf.Tensor, box_height: int, box_width: int
 ) -> tf.Tensor:
     """Compute centered bounding boxes from centroids and box dimensions.
 
     Args:
         centroids: Tensor of shape (n_instances, 2) representing the center of
             the bounding boxes.
-        box_width: Scalar int specifying the width of the bounding box.
         box_height: Scalar int specifying the height of the bounding box.
+        box_width: Scalar int specifying the width of the bounding box.
 
     Returns:
         bboxes: Tensor of shape (n_instances, 4) in the format [y1, x1, y2, x2] in
@@ -475,7 +475,9 @@ def get_centered_bboxes(
     return bboxes
 
 
-def normalize_bboxes(bboxes: tf.Tensor, img_height: int, img_width: int) -> tf.Tensor:
+def normalize_bboxes(
+    bboxes: tf.Tensor, image_height: int, image_width: int
+) -> tf.Tensor:
     """Normalize bboxes from absolute to relative coords.
 
     This function is useful for computing the expected representation for TensorFlow
@@ -484,19 +486,20 @@ def normalize_bboxes(bboxes: tf.Tensor, img_height: int, img_width: int) -> tf.T
     Args:
         bboxes: Tensor of shape (n_boxes, 4) in the format [y1, x1, y2, x2] in
             absolute image coordinates.
-        img_height: Scalar int specifying the height of the full image.
-        img_width: Scalar int specifying the width of the full image.
+        image_height: Scalar int specifying the height of the full image.
+        image_width: Scalar int specifying the width of the full image.
 
     Returns:
         normalized_bboxes: Tensor of shape (n_boxes, 4) in the format [y1, x1, y2, x2]
         in normalized image coordinates. These values will be in the range [0, 1],
-        computed by dividing x coordinates by (img_width - 1) and y coordinates by
-        [img_height - 1].
+        computed by dividing x coordinates by (image_width - 1) and y coordinates by
+        [image_height - 1].
     """
-    img_bounds_norm = tf.cast(
-        [[img_height - 1, img_width - 1, img_height - 1, img_width - 1]], tf.float32
+    image_bounds_norm = tf.cast(
+        [[image_height - 1, image_width - 1, image_height - 1, image_width - 1]],
+        tf.float32,
     )
-    normalized_bboxes = bboxes / img_bounds_norm
+    normalized_bboxes = bboxes / image_bounds_norm
     return normalized_bboxes
 
 
@@ -528,8 +531,10 @@ def pts_to_bbox(points: tf.Tensor, bboxes: tf.Tensor) -> tf.Tensor:
 def crop_bboxes(
     image: tf.Tensor,
     bboxes: tf.Tensor,
-    box_width: int,
+    image_height: int,
+    image_width: int,
     box_height: int,
+    box_width: int,
     normalize_image: bool = True,
 ) -> tf.Tensor:
     """Crop bounding boxes within an image.
@@ -539,12 +544,14 @@ def crop_bboxes(
             uint8. See notes below about normalization if the image is uint8.
         bboxes: Tensor of shape (n_boxes, 4) in the format [y1, x1, y2, x2] in
             absolute image coordinates.
-        box_width: Scalar int specifying the width of the bounding box. If this
-            is not the same as the width of the coordinates in bboxes, the image patch
-            will be resized to this width.
+        image_height: Scalar int specifying the height of the full image.
+        image_width: Scalar int specifying the width of the full image.
         box_height: Scalar int specifying the height of the bounding box. If this
             is not the same as the height of the coordinates in bboxes, the image patch
             will be resized to this height.
+        box_width: Scalar int specifying the width of the bounding box. If this
+            is not the same as the width of the coordinates in bboxes, the image patch
+            will be resized to this width.
         normalize_image: If True, the cropped patches will be divided by 255. This
             parameter is useful if the input image is of dtype uint8 since the output
             after cropping is automatically cast to float32. Set to False if the input
@@ -563,8 +570,9 @@ def crop_bboxes(
     """
 
     # Normalize bboxes to relative coordinates in [0, 1].
-    img_height, img_width, _ = image.shape
-    normalized_bboxes = normalize_bboxes(bboxes, img_height, img_width)
+    normalized_bboxes = normalize_bboxes(
+        bboxes, image_height=image_height, image_width=image_width
+    )
 
     # Crop.
     box_indices = tf.zeros_like(bboxes[:, 0], dtype=tf.int32)
@@ -586,13 +594,15 @@ def crop_bboxes(
 def instance_crop(
     image: tf.Tensor,
     points: tf.Tensor,
+    image_height: int,
+    image_width: int,
     box_height: int,
     box_width: int,
     use_ctr_node: bool = False,
     ctr_node_ind: int = 0,
     normalize_image: bool = True,
 ) -> Tuple[tf.Tensor, tf.Tensor, tf.Tensor]:
-    """Crops an image around the instances in pts.
+    """Crops an image around the instances in points.
 
     This function serves as a convenience wrapper around low level processing functions
     that enable centroid-based cropping. It is a useful target for tf.data.Dataset.map.
@@ -603,6 +613,8 @@ def instance_crop(
         points: Tensor of shape (n_instances, n_nodes, 2) representing the x and y
             coordinates of instances within a frame. Missing or not visible points
             should be denoted by NaNs.
+        image_height: Scalar int specifying the height of the full image.
+        image_width: Scalar int specifying the width of the full image.
         box_width: Scalar int specifying the width of the bounding box.
         box_height: Scalar int specifying the height of the bounding box.
         use_ctr_node: If True, the coordinate of the node specified by ctr_node_ind will
@@ -634,9 +646,18 @@ def instance_crop(
         centroids = get_bbox_centroid_from_node_ind(points, ctr_node_ind)
     else:
         centroids = get_bbox_centroid(points)
-        instance_bboxes = get_centered_bboxes(centroids, (box_height, box_width))
+        instance_bboxes = get_centered_bboxes(
+            centroids, box_height=box_height, box_width=box_width
+        )
         instance_points = pts_to_bbox(points, instance_bboxes)
-        instance_images = crop_bboxes(image, instance_bboxes, (box_height, box_width))
+        instance_images = crop_bboxes(
+            image,
+            instance_bboxes,
+            image_height=image_height,
+            image_width=image_width,
+            box_height=box_height,
+            box_width=box_width,
+        )
 
     # Pull out the "diagonal" of instance_points.
     ctr_inds = ctr_inds = tf.tile(
@@ -684,6 +705,8 @@ def instance_crop_dataset(
         instance_images, instance_points, instance_ctr_points = instance_crop(
             image=img,
             points=pt,
+            image_height=tf.shape(img)[-3],
+            image_width=tf.shape(img)[-2],
             box_height=box_height,
             box_width=box_width,
             use_ctr_node=use_ctr_node,
