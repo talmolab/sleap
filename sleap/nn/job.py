@@ -176,7 +176,7 @@ class TrainingJob:
             file.write(json_str)
 
     @classmethod
-    def load_json(cls, filename: str):
+    def load_json(cls, filename: str = None, json_string: str = None):
         """
         Load a training run from a JSON file.
 
@@ -187,13 +187,21 @@ class TrainingJob:
             A TrainingJob instance constructed from JSON in filename.
         """
 
-        # Check for training job file if save directory specified.
-        if os.path.isdir(filename):
-            filename = os.path.join(filename, "training_job.json")
+        if filename is not None:
 
-        # Open and parse the JSON in filename
-        with open(filename, "r") as f:
-            dicts = json.load(f)
+            # Check for training job file if save directory specified.
+            if os.path.isdir(filename):
+                filename = os.path.join(filename, "training_job.json")
+
+            # Open and parse the JSON in filename
+            with open(filename, "r") as f:
+                dicts = json.load(f)
+
+        elif json_string is not None:
+            dicts = json.loads(json_string)
+
+        else:
+            raise ValueError("Filename to JSON file or a JSON string must be provided.")
 
         # We have some skeletons to deal with, make sure to setup a Skeleton cattr.
         converter = Skeleton.make_cattr()
@@ -214,8 +222,8 @@ class TrainingJob:
         # Build classes.
         run = converter.structure(dicts, cls)
 
-        # if we can't find save_dir for job, set it to path of json we're loading
-        if run.save_dir is not None:
+        # If we can't find save_dir for job, set it to path of json we're loading.
+        if run.save_dir is not None and filename is not None:
             if not os.path.exists(run.save_dir):
                 run.save_dir = os.path.dirname(filename)
 
