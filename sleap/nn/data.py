@@ -955,6 +955,37 @@ def make_confmap_dataset(
     return ds_cms
 
 
+def make_centroid_dataset(
+    ds_img_and_pts: tf.data.Dataset, use_ctr_node: bool = False, ctr_node_ind: int = 0
+) -> tf.data.Dataset:
+    """Creates a dataset with points and centroids.
+
+    Args:
+        ds_img_and_pts: A tf.data.Dataset that generates tuples of (image, points).
+        use_ctr_node: If True, the coordinate of the node specified by ctr_node_ind will
+            be used as the centroid whenever it is visible.
+        ctr_node_ind: Scalar int indexing into axis 1 of points.
+
+    Returns:
+        A dataset that returns elements that are tuples of (image, points, centroids).
+    """
+
+    def gen_fn(img, pts):
+
+        pts = tf.cast(pts, tf.float32)
+
+        if use_ctr_node:
+            centroids = get_bbox_centroid_from_node_ind(pts, ctr_node_ind)
+        else:
+            centroids = get_bbox_centroid(pts)
+
+        return img, pts, centroids
+
+    ds = ds_img_and_pts.map(gen_fn, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+
+    return ds
+
+
 def make_centroid_confmap_dataset(
     ds_img_and_pts: tf.data.Dataset,
     sigma: float = 3.0,
