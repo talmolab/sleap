@@ -38,6 +38,7 @@ class Trainer:
     _ds_train: tf.data.Dataset = None
     _ds_val: tf.data.Dataset = None
     _ds_test: tf.data.Dataset = None
+    _simple_skeleton: data.SimpleSkeleton = None
     _model: tf.keras.Model = None
     _optimizer: tf.keras.optimizers.Optimizer = None
     _loss_fn: tf.keras.losses.Loss = None
@@ -75,6 +76,10 @@ class Trainer:
     @property
     def ds_test(self):
         return self._ds_test
+
+    @property
+    def simple_skeleton(self):
+        return self._simple_skeleton
 
     @property
     def model(self):
@@ -383,12 +388,27 @@ class Trainer:
         self._ds_train = ds_train
         self._ds_val = ds_val
         self._ds_test = ds_test
+        self._simple_skeleton = train.skeleton
+
+        if (
+            self.training_job.model.skeletons is None
+            or len(self.training_job.model.skeletons) == 0
+        ):
+            # Save skeleton to training job/model config if none were already stored.
+            skeleton = Skeleton.from_names_and_edge_inds(
+                node_names=self.simple_skeleton.node_names,
+                edge_inds=self.simple_skeleton.edge_inds,
+            )
+            self.training_job.model.skeletons = [skeleton]
 
         if self.verbosity > 0:
             print("Data:")
             print("  Input scale:", self.training_job.input_scale)
             print("  Relative output scale:", self.training_job.model.output_scale)
-            print("  Output scale:", self.training_job.input_scale * self.training_job.model.output_scale)
+            print(
+                "  Output scale:",
+                self.training_job.input_scale * self.training_job.model.output_scale,
+            )
             print("  Training data:", self.data_train.images.shape)
             print("  Validation data:", self.data_val.images.shape)
             if self.data_test is not None:
@@ -397,6 +417,7 @@ class Trainer:
                 print("  Test data: N/A")
             print("  Image shape:", self.img_shape)
             print("  Output channels:", self.n_output_channels)
+            print("  Skeleton:", self.simple_skeleton)
             print()
 
         return ds_train, ds_val, ds_test
@@ -508,7 +529,7 @@ class Trainer:
 
         elif self.training_job.trainer.optimizer.lower() == "rmsprop":
             optimizer = tf.keras.optimizers.Adam(
-                learning_rate=self.training_job.trainer.learning_rate,
+                learning_rate=self.training_job.trainer.learning_rate
             )
 
         else:
@@ -626,27 +647,27 @@ def main():
     parser.add_argument(
         "--val_labels",
         "--val",
-        help="Path to labels file to use for validation (overrides training job path if set)."
+        help="Path to labels file to use for validation (overrides training job path if set).",
     )
     parser.add_argument(
         "--test_labels",
         "--test",
-        help="Path to labels file to use for test (overrides training job path if set)."
+        help="Path to labels file to use for test (overrides training job path if set).",
     )
     parser.add_argument(
         "--tensorboard",
         action="store_true",
-        help="Enables TensorBoard logging to the run path."
+        help="Enables TensorBoard logging to the run path.",
     )
     parser.add_argument(
         "--prefix",
         action="append",
-        help="Prefix to append to run name. Can be specified multiple times."
+        help="Prefix to append to run name. Can be specified multiple times.",
     )
     parser.add_argument(
         "--suffix",
         action="append",
-        help="Suffix to append to run name. Can be specified multiple times."
+        help="Suffix to append to run name. Can be specified multiple times.",
     )
 
     args = parser.parse_args()

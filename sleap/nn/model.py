@@ -117,8 +117,8 @@ class Model:
         if num_output_channels is None:
             if self.skeletons is not None:
                 if (
-                    self.output_type == ModelOutputType.CONFIDENCE_MAP or
-                    self.output_type == ModelOutputType.TOPDOWN_CONFIDENCE_MAP
+                    self.output_type == ModelOutputType.CONFIDENCE_MAP
+                    or self.output_type == ModelOutputType.TOPDOWN_CONFIDENCE_MAP
                 ):
                     num_outputs_channels = len(self.skeletons[0].nodes)
                 elif self.output_type == ModelOutputType.PART_AFFINITY_FIELD:
@@ -243,7 +243,11 @@ class InferenceModel:
     keras_model: tf.keras.Model = None
 
     @classmethod
-    def from_training_job(cls, training_job: Union["sleap.nn.job.TrainingJob", Text]):
+    def from_training_job(
+        cls,
+        training_job: Union["sleap.nn.job.TrainingJob", Text],
+        skeleton: Skeleton = None,
+    ):
         """Create an InferenceModel from a TrainingJob or path to json file."""
 
         if isinstance(training_job, str):
@@ -251,8 +255,17 @@ class InferenceModel:
 
             training_job = TrainingJob.load_json(training_job)
 
+        if skeleton is None:
+            if (
+                training_job.model.skeletons is not None
+                and len(training_job.model.skeletons) > 0
+            ):
+                skeleton = training_job.model.skeletons[0]
+            else:
+                raise ValueError("No skeleton in training model or provided.")
+
         return cls(
-            skeleton=training_job.model.skeletons[0],
+            skeleton=skeleton,
             input_scale=training_job.trainer.scale,
             output_scale=training_job.trainer.scale * training_job.model.output_scale,
             input_tensor_ind=0,

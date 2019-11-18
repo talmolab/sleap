@@ -20,7 +20,11 @@ class SimpleSkeleton:
     """Simplified skeleton class with minimal metadata for training and inference."""
 
     node_names: List[Text]
-    edges: np.ndarray
+    edge_inds: List[Tuple[int, int]]
+
+    @property
+    def edges(self):
+        return np.array(self.edge_inds)
 
     @property
     def n_nodes(self):
@@ -32,7 +36,7 @@ class SimpleSkeleton:
 
     @classmethod
     def from_skeleton(cls, skeleton: "sleap.Skeleton"):
-        return cls(node_names=skeleton.node_names, edges=np.array(skeleton.edge_inds))
+        return cls(node_names=skeleton.node_names, edge_inds=skeleton.edge_inds)
 
 
 @attr.s(auto_attribs=True)
@@ -82,7 +86,7 @@ class TrainingData:
             peaks_sample = np.stack(peaks_sample, axis=0)
             peaks.append(peaks_sample)
 
-        skeleton = SimpleSkeleton([n.decode() for n in node_names], edges)
+        skeleton = SimpleSkeleton([n.decode() for n in node_names], edges.tolist())
 
         return cls(images=imgs, points=peaks, skeleton=skeleton)
 

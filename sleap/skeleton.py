@@ -16,7 +16,7 @@ import copy
 
 from enum import Enum
 from itertools import count
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union, Text
 
 import networkx as nx
 from networkx.readwrite import json_graph
@@ -865,6 +865,26 @@ class Skeleton:
 
         """
         return Skeleton.from_json(json.dumps(d), node_to_idx)
+
+    @classmethod
+    def from_names_and_edge_inds(cls, node_names: List[Text], edge_inds: List[Tuple[int, int]] = None) -> "Skeleton":
+        """Create skeleton from a list of node names and edge indices.
+
+        Args:
+            node_names: List of strings defining the nodes.
+            edge_inds: List of tuples in the form (src_node_ind, dst_node_ind). If not
+                specified, the resulting skeleton will have no edges.
+
+        Returns:
+            The instantiated skeleton.
+        """
+
+        skeleton = cls()
+        skeleton.add_nodes(node_names)
+        if edge_inds is not None:
+            for src, dst in edge_inds:
+                skeleton.add_edge(node_names[src], node_names[dst])
+        return skeleton
 
     def to_json(self, node_to_idx: Optional[Dict[Node, int]] = None) -> str:
         """
