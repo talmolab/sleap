@@ -755,7 +755,7 @@ def make_confmaps(
     xv = tf.range(0, image_width, 1.0 / output_scale, dtype=tf.float32)
 
     # Splits [n, c, 2] -> ([n, c, 1], [n, c, 1]).
-    x, y = tf.split(points, 2, axis=-1)
+    x, y = tf.split(tf.cast(points, tf.float32), 2, axis=-1)
 
     # Reshape into [n, 1, 1, c].
     x = tf.squeeze(tf.expand_dims(tf.expand_dims(x, 1), 1), axis=-1)
@@ -767,7 +767,7 @@ def make_confmaps(
             (tf.reshape(xv, [1, 1, -1, 1]) - x) ** 2
             + (tf.reshape(yv, [1, -1, 1, 1]) - y) ** 2
         )
-        / (2 * sigma ** 2)
+        / (2 * tf.cast(sigma, tf.float32) ** 2)
     )
 
     # Replace NaNs with 0 for channels with missing peaks.
@@ -808,7 +808,7 @@ def make_pafs(
 
     # Pull out source and destination points points for each edge.
     # (n_instances, n_edges, 2 [src, dst], 2 [x, y])
-    edge_points = tf.gather(points, edges, axis=1)
+    edge_points = tf.cast(tf.gather(points, edges, axis=1), tf.float32)
 
     # Compute displacement of dest points relative to source.
     # (n_instances, n_edges, 2)
@@ -876,11 +876,11 @@ def make_pafs(
 
     # Create binary mask over pixels that each edge PAF should be defined in based on
     # parallel and perpendicular distances.
-    after_edge_source = parallel_distance >= -distance_threshold
+    after_edge_source = parallel_distance >= tf.cast(-distance_threshold, tf.float32)
     before_edge_dest = parallel_distance <= (
         distance_threshold + tf.expand_dims(tf.expand_dims(edge_lengths, 1), 1)
     )
-    within_edge_width = perpendicular_distance <= distance_threshold
+    within_edge_width = perpendicular_distance <= tf.cast(distance_threshold, tf.float32)
 
     # Final PAF mask is the combination of all criteria.
     # (n_instances, height, width, n_edges, 1)
