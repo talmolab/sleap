@@ -403,10 +403,10 @@ class ImportParamWidget(QWidget):
         for param in param_list:
             name = param["name"]
             type = param["type"]
-            print(name, type)
+
             if hasattr(video, name):
                 val = getattr(video, name)
-                print(name, val)
+
                 widget = self.widget_elements[name]
                 if hasattr(widget, "isChecked"):
                     widget.setChecked(val)
