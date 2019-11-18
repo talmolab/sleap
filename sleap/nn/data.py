@@ -702,6 +702,7 @@ def instance_crop_dataset(
     """
 
     def instance_crop_fn(img, pt):
+        pt = tf.cast(pt, tf.float32)
         instance_images, instance_points, instance_ctr_points = instance_crop(
             image=img,
             points=pt,
@@ -717,7 +718,7 @@ def instance_crop_dataset(
         return instance_images, instance_points, instance_ctr_points
 
     ds_cropped = ds_img_and_pts.map(
-        instance_crop_fn, num_parallel_calls=tf.data.experimental.AUTOTUNE,
+        instance_crop_fn, num_parallel_calls=tf.data.experimental.AUTOTUNE
     )
 
     # "Flatten" back into a single image per element.
@@ -880,7 +881,9 @@ def make_pafs(
     before_edge_dest = parallel_distance <= (
         distance_threshold + tf.expand_dims(tf.expand_dims(edge_lengths, 1), 1)
     )
-    within_edge_width = perpendicular_distance <= tf.cast(distance_threshold, tf.float32)
+    within_edge_width = perpendicular_distance <= tf.cast(
+        distance_threshold, tf.float32
+    )
 
     # Final PAF mask is the combination of all criteria.
     # (n_instances, height, width, n_edges, 1)
@@ -924,9 +927,11 @@ def make_confmap_dataset(
 
     def gen_cm_fn(img, pts, ctr_pts=None):
 
+        pts = tf.cast(pts, tf.float32)
+
         # Instance-wise confmaps of shape (n_instances, height, width, n_nodes).
         instance_cms = make_confmaps(
-            pts,
+            tf.cast(pts, tf.float32),
             image_height=tf.shape(img)[0],
             image_width=tf.shape(img)[1],
             output_scale=output_scale,
@@ -970,6 +975,8 @@ def make_centroid_confmap_dataset(
     """
 
     def gen_cm_fn(img, pts):
+
+        pts = tf.cast(pts, tf.float32)
 
         if use_ctr_node:
             centroids = get_bbox_centroid_from_node_ind(pts, ctr_node_ind)
@@ -1032,6 +1039,9 @@ def make_instance_confmap_dataset(
     """
 
     def gen_cm_fn(img, pts, ctr_pts):
+
+        pts = tf.cast(pts, tf.float32)
+        ctr_pts = tf.cast(ctr_pts, tf.float32)
 
         outputs = []
         if with_instance_cms or with_all_peaks:
@@ -1102,6 +1112,8 @@ def make_paf_dataset(
     """
 
     def gen_paf_fn(img, pts, ctr_pts=None):
+
+        pts = tf.cast(pts, tf.float32)
 
         pafs = make_pafs(
             pts,
