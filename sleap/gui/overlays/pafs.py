@@ -260,9 +260,9 @@ def demo_pafs(pafs, video, decimation=4, standalone=False):
 
     win.show()
 
-    def plot_fields(parent, i):
-        if parent.frame_idx < pafs.shape[0]:
-            frame_pafs = pafs[parent.frame_idx, ...]
+    def plot_fields(parent, frame_idx):
+        if frame_idx < pafs.shape[0]:
+            frame_pafs = pafs[frame_idx, ...]
             decimation = decimation_size_bar.value()
             aff_fields_item = MultiQuiverPlot(
                 frame_pafs, show=None, decimation=decimation
@@ -280,66 +280,7 @@ def demo_pafs(pafs, video, decimation=4, standalone=False):
 
 if __name__ == "__main__":
 
-    from video import *
-
-    # data_path = "training.scale=1.00,sigma=5.h5"
-
     data_path = "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"
     input_format = "channels_first"
 
-    data_path = "/Volumes/fileset-mmurthy/nat/nyu-mouse/predict.h5"
-    input_format = "channels_last"
-
     show_pafs_from_h5(data_path, input_format=input_format, standalone=True)
-
-
-def foo():
-
-    vid = HDF5Video(data_path, "/box", input_format=input_format)
-    overlay_data = HDF5Video(
-        data_path, "/pafs", input_format=input_format, convert_range=False
-    )
-    print(
-        f"{overlay_data.frames}, {overlay_data.height}, {overlay_data.width}, {overlay_data.channels}"
-    )
-    app = QtWidgets.QApplication([])
-    window = QtVideoPlayer(video=vid)
-
-    field_count = overlay_data.get_frame(1).shape[-1] // 2 - 1
-    # show the first, middle, and last fields
-    show_fields = [0, field_count // 2, field_count]
-
-    field_check_groupbox = MultiCheckWidget(
-        count=field_count, selected=show_fields, title="Affinity Field Channel"
-    )
-    field_check_groupbox.selectionChanged.connect(window.plot)
-    window.layout.addWidget(field_check_groupbox)
-
-    # show one arrow for each decimation*decimation box
-    default_decimation = 9
-
-    decimation_size_bar = QSlider(QtCore.Qt.Horizontal)
-    decimation_size_bar.valueChanged.connect(lambda evt: window.plot())
-    decimation_size_bar.setValue(default_decimation)
-    decimation_size_bar.setMinimum(1)
-    decimation_size_bar.setMaximum(21)
-    decimation_size_bar.setEnabled(True)
-    window.layout.addWidget(decimation_size_bar)
-
-    def plot_fields(parent, i):
-        # build list of checked boxes to determine which affinity fields to show
-        selected = field_check_groupbox.getSelected()
-        # get decimation size from slider
-        decimation = decimation_size_bar.value()
-        # show affinity fields
-        frame_data = overlay_data.get_frame(parent.frame_idx)
-        aff_fields_item = MultiQuiverPlot(frame_data, selected, decimation)
-
-        window.view.scene.addItem(aff_fields_item)
-
-    window.changedPlot.connect(plot_fields)
-
-    window.show()
-    window.plot()
-
-    app.exec_()

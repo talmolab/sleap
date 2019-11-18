@@ -5,7 +5,7 @@ Main GUI application for labeling, training/inference, and proofreading.
 
 import re
 import os
-
+import random
 
 from typing import Callable, Dict, Iterator, List, Optional
 
@@ -98,7 +98,7 @@ class MainWindow(QMainWindow):
         self._initialize_gui()
 
         if labels_path:
-            self.loadProject(labels_path)
+            self.loadProjectFile(labels_path)
 
     def setWindowTitle(self, value):
         """Sets window title (if value is not None)."""
@@ -249,10 +249,25 @@ class MainWindow(QMainWindow):
         fileMenu = self.menuBar().addMenu("File")
         add_menu_item(fileMenu, "new", "New Project", self.commands.newProject)
         add_menu_item(fileMenu, "open", "Open Project...", self.commands.openProject)
+
+        import_types_menu = fileMenu.addMenu("Import...")
+        add_menu_item(
+            import_types_menu,
+            "import_coco",
+            "COCO dataset...",
+            self.commands.importCoco,
+        )
+        add_menu_item(
+            import_types_menu,
+            "import_dpk",
+            "DeepPoseKit dataset...",
+            self.commands.importDPK,
+        )
+
         add_menu_item(
             fileMenu,
             "import predictions",
-            "Import Labels...",
+            "Merge into Project...",
             self.commands.importPredictions,
         )
 
@@ -992,7 +1007,7 @@ class MainWindow(QMainWindow):
 
         self.statusBar().showMessage(message)
 
-    def loadProject(self, filename: Optional[str] = None):
+    def loadProjectFile(self, filename: Optional[str] = None):
         """
         Loads given labels file into GUI.
 
@@ -1024,24 +1039,38 @@ class MainWindow(QMainWindow):
                 print(e)
                 QMessageBox(text=f"Unable to load {filename}.").exec_()
 
+        if has_loaded:
+            self.loadLabelsObject(labels, filename)
+
+    def loadLabelsObject(self, labels: Labels, filename: Optional[str] = None):
+        """
+        Loads a `Labels` object into the GUI, replacing any currently loaded.
+
+        Args:
+            labels: The `Labels` object to load.
+            filename: The filename where this file is saved, if any.
+
+        Returns:
+            None.
+
+        """
         self.state["labels"] = labels
         self.state["filename"] = filename
 
-        if has_loaded:
-            self.commands.changestack_clear()
-            self.color_manager.labels = self.labels
-            self.color_manager.set_palette(self.state["palette"])
+        self.commands.changestack_clear()
+        self.color_manager.labels = self.labels
+        self.color_manager.set_palette(self.state["palette"])
 
-            self.load_overlays()
+        self.load_overlays()
 
-            if len(self.labels.skeletons):
-                self.state["skeleton"] = self.labels.skeletons[0]
+        if len(self.labels.skeletons):
+            self.state["skeleton"] = self.labels.skeletons[0]
 
-            # Load first video
-            if len(self.labels.videos):
-                self.state["video"] = self.labels.videos[0]
+        # Load first video
+        if len(self.labels.videos):
+            self.state["video"] = self.labels.videos[0]
 
-            self.on_data_update([UpdateTopic.project, UpdateTopic.all])
+        self.on_data_update([UpdateTopic.project, UpdateTopic.all])
 
     def updateTrackMenu(self):
         """Updates track menu options."""
@@ -1127,11 +1156,7 @@ class MainWindow(QMainWindow):
 
         selection["random"] = {
             video: remove_user_labeled(
-                video,
-                [
-                    frame.frame_idx
-                    for frame in VideoFrameSuggestions.random(video=video)
-                ],
+                video, random.sample(range(video.frames), min(20, video.frames))
             )
             for video in self.labels.videos
         }

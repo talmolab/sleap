@@ -591,6 +591,12 @@ class Skeleton:
 
         self._graph.remove_edge(source_node, destination_node)
 
+    def clear_edges(self):
+        """Deletes all edges in skeleton."""
+
+        for src, dst in self.edges:
+            self.delete_edge(src, dst)
+
     def add_symmetry(self, node1: str, node2: str):
         """Specify that two parts (nodes) in skeleton are symmetrical.
 

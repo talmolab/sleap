@@ -166,9 +166,9 @@ def demo_confmaps(confmaps, video, standalone=False, callback=None):
     win.setWindowTitle("confmaps")
     win.show()
 
-    def plot_confmaps(parent, item_idx):
-        if parent.frame_idx < confmaps.shape[0]:
-            frame_conf_map = ConfMapsPlot(confmaps[parent.frame_idx, ...])
+    def plot_confmaps(parent, frame_idx):
+        if frame_idx < confmaps.shape[0]:
+            frame_conf_map = ConfMapsPlot(confmaps[frame_idx, ...])
             win.view.scene.addItem(frame_conf_map)
 
     win.changedPlot.connect(plot_confmaps)
