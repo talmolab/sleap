@@ -4,7 +4,6 @@ import os
 import attr
 import argparse
 import json
-from pkg_resources import Requirement, resource_filename
 from typing import Union, Dict, List, Text, Tuple
 from time import time
 from datetime import datetime
@@ -13,6 +12,7 @@ import numpy as np
 import tensorflow as tf
 
 from sleap import Labels, Skeleton
+from sleap.util import get_package_file
 from sleap.nn import callbacks
 from sleap.nn import data
 from sleap.nn import job
@@ -662,7 +662,7 @@ def main():
     parser.add_argument(
         "--prefix",
         action="append",
-        help="Prefix to append to run name. Can be specified multiple times.",
+        help="Prefix to prepend to run name. Can be specified multiple times.",
     )
     parser.add_argument(
         "--suffix",
@@ -674,9 +674,8 @@ def main():
 
     job_filename = args.training_job_path
     if not os.path.exists(job_filename):
-        profile_dir = resource_filename(
-            Requirement.parse("sleap"), "sleap/training_profiles"
-        )
+        profile_dir = get_package_file("sleap/training_profiles")
+
         if os.path.exists(os.path.join(profile_dir, job_filename)):
             job_filename = os.path.join(profile_dir, job_filename)
         else:
