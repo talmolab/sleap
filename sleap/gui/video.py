@@ -1168,7 +1168,7 @@ class QtNode(QGraphicsEllipseItem):
                 self.parentObject().setTransformOriginPoint(self.scenePos())
                 self.parentObject().mousePressEvent(event)
             # Shift-click to mark all points as complete
-            elif event.modifiers() == Qt.AltModifier:
+            elif event.modifiers() == Qt.ShiftModifier:
                 self.parentObject().updatePoints(complete=True, user_change=True)
             else:
                 self.dragParent = False
