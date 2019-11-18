@@ -5,7 +5,8 @@ import pytest
 from sleap.nn.model import Model, ModelOutputType
 from sleap.nn.architectures import *
 from sleap.nn.architectures.leap import leap_cnn
-from sleap.nn.training import Trainer, TrainingJob
+from sleap.nn.training import Trainer
+from sleap.nn.job import TrainingJob
 
 
 def test_model_fail_non_available_backbone(multi_skel_vid_labels):
@@ -28,7 +29,7 @@ def test_training_job_json(tmpdir, multi_skel_vid_labels, backbone):
     )
 
     train_run = TrainingJob(
-        model=model, trainer=Trainer(), save_dir=os.path.join(tmpdir), run_name=run_name
+        model=model, save_dir=os.path.join(tmpdir), run_name=run_name
     )
 
     # Create and serialize training info
