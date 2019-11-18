@@ -7,6 +7,7 @@ import json
 from pkg_resources import Requirement, resource_filename
 from typing import Union, Dict, List, Text, Tuple
 from time import time
+from datetime import datetime
 
 import numpy as np
 import tensorflow as tf
@@ -109,12 +110,16 @@ class Trainer:
         if train is None:
             train = self.training_job.train_set_filename
         if train is not None and isinstance(train, str):
+            if self.verbosity > 0:
+                print(f"Loading labels: {train}")
             train = Labels.load_file(train)
         if train is not None:
             train = data.TrainingData.from_labels(train)
         if train is None:
             train = data_train
         if train is not None and isinstance(train, str):
+            if self.verbosity > 0:
+                print(f"Loading data: {train}")
             train = data.TrainingData.load_file(train)
         if train is None:
             raise ValueError("Training data was not specified.")
@@ -123,12 +128,16 @@ class Trainer:
         if val is None:
             val = self.training_job.val_set_filename
         if val is not None and isinstance(val, str):
+            if self.verbosity > 0:
+                print(f"Loading labels: {val}")
             val = Labels.load_file(val)
         if val is not None:
             val = data.TrainingData.from_labels(val)
         if val is None:
             val = data_val
         if val is not None and isinstance(val, str):
+            if self.verbosity > 0:
+                print(f"Loading data: {val}")
             val = data.TrainingData.load_file(val)
         if val is None and self.training_job.trainer.val_size is not None:
             train, val = data.split_training_data(
@@ -141,12 +150,16 @@ class Trainer:
         if test is None:
             test = self.training_job.test_set_filename
         if test is not None and isinstance(test, str):
+            if self.verbosity > 0:
+                print(f"Loading labels: {test}")
             test = Labels.load_file(test)
         if test is not None:
             test = data.TrainingData.from_labels(test)
         if test is None:
             test = data_test
         if test is not None and isinstance(test, str):
+            if self.verbosity > 0:
+                print(f"Loading data: {test}")
             test = data.TrainingData.load_file(test)
 
         # Setup initial zipped datasets.
@@ -360,7 +373,6 @@ class Trainer:
 
         # Get image shape after all the dataset transformations are applied.
         img_shape = list(ds_val.take(1))[0][0][0].shape
-        print("img_shape:", img_shape)
 
         # Update internal attributes.
         self._img_shape = img_shape
@@ -579,7 +591,10 @@ class Trainer:
         self.setup_callbacks()
         self.model.compile(optimizer=self.optimizer, loss=self.loss_fn)
 
-        t0 = time()
+        t0 = datetime.now()
+        if self.verbosity > 0:
+            print(f"Training started: {str(t0)}")
+
         self._history = self.model.fit(
             self.ds_train,
             epochs=self.training_job.trainer.num_epochs,
@@ -589,10 +604,11 @@ class Trainer:
             validation_steps=self.training_job.trainer.val_steps_per_epoch,
             verbose=self.verbosity,
         )
-
-        elapsed = time() - t0
+        t1 = datetime.now()
+        elapsed = t1 - t0
         if self.verbosity > 0:
-            print(f"Finished training. Total runtime: {elapsed/60:.2f} mins")
+            print(f"Training finished: {str(t1)}")
+            print(f"Total runtime: {str(elapsed)}")
 
         # TODO: Evaluate final test set performance if available
 
@@ -683,6 +699,7 @@ def main():
     print(json.dumps(job.TrainingJob._to_dicts(training_job), indent=4))
     print()
 
+    print("Initializing training...")
     # Create a trainer and run!
     trainer = Trainer(
         training_job, tensorboard=args.tensorboard, zmq=False, verbosity=2
