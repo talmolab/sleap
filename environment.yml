@@ -25,3 +25,4 @@ dependencies:
     - qimage2ndarray==1.8
     - imgstore
     - tensorflow-gpu==2.0
+    - jsmin

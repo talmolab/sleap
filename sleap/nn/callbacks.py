@@ -12,6 +12,7 @@ from tensorflow.keras.callbacks import (
     TensorBoard,
     LambdaCallback,
     ModelCheckpoint,
+    CSVLogger
 )
 
 logger = logging.getLogger(__name__)
@@ -160,3 +161,29 @@ class ProgressReporterZMQ(tf.keras.callbacks.Callback):
         self.socket.send_string(
             jsonpickle.encode(dict(what=self.what, event="train_end", logs=logs))
         )
+
+
+class ModelCheckpointOnEvent(tf.keras.callbacks.Callback):
+    """Callback for model checkpointing on a fixed event.
+
+    Attributes:
+        filepath: Path to save model to.
+        event: Event to trigger model saving ("train_start" or "train_end").
+    """
+
+    def __init__(self, filepath: str, event: str = "train_end"):
+        self.filepath = filepath
+        self.event = event
+
+        # Callback initialization
+        super().__init__()
+
+    def on_train_begin(self, logs=None):
+        """Called at the start of training."""
+        if self.event == "train_begin":
+            self.model.save(self.filepath)
+
+    def on_train_end(self, logs=None):
+        """Called at the end of training."""
+        if self.event == "train_end":
+            self.model.save(self.filepath)

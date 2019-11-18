@@ -2,7 +2,9 @@
 
 import os
 import json
+from jsmin import jsmin
 import attr
+from datetime import datetime
 from typing import Union, List
 from pathlib import Path, PureWindowsPath
 
@@ -15,6 +17,7 @@ class TrainerConfig:
     # Data generation:
     val_size: float = 0.1
     shuffle: bool = True
+    shuffle_buffer_size: int = -1
     scale: float = 1.0
     sigma: float = 5.0
     instance_crop: bool = False
@@ -26,8 +29,8 @@ class TrainerConfig:
     # Training loop:
     batch_size: int = 8
     num_epochs: int = 100
-    steps_per_epoch: int = 200
-    val_steps_per_epoch: int = 20
+    steps_per_epoch: int = -1
+    val_steps_per_epoch: int = -1
 
     # Augmentation:
     augment_rotate: bool = True
@@ -56,12 +59,15 @@ class TrainerConfig:
     reduce_lr_min_lr: float = 1e-8
     early_stopping: bool = True
     early_stopping_min_delta: float = 1e-8
-    early_stopping_patience: float = 3
+    early_stopping_patience: float = 15
     monitor_metric_name: str = "val_loss"
 
     # Checkpointing callbacks:
+    csv_logging: bool = False
+    csv_log_filename: str = "training_log.csv"
     save_every_epoch: bool = False
     save_best_val: bool = True
+    save_final_model: bool = True
 
     # Deprecated:
     shuffle_initially: bool = True
@@ -102,8 +108,8 @@ class TrainingJob:
     labels_filename: Union[str, None] = None
     val_set_filename: Union[str, None] = None
     test_set_filename: Union[str, None] = None
-    run_name: Union[str, None] = None
     save_dir: Union[str, None] = None
+    run_name: Union[str, None] = None
     best_model_filename: Union[str, None] = None
     newest_model_filename: Union[str, None] = None
     final_model_filename: Union[str, None] = None
@@ -117,6 +123,59 @@ class TrainingJob:
         return self.trainer.input_scale
 
     @property
+    def run_path(self):
+        if self.save_dir is not None and self.run_name is not None:
+            return os.path.join(self.save_dir, self.run_name)
+        else:
+            return None
+
+    def new_run_name(
+        self,
+        prefix=None,
+        timestamp=True,
+        backbone=True,
+        output_type=True,
+        suffix=None,
+        check_existing=False,
+    ) -> str:
+        """Generates a new run name."""
+
+        name_tokens = []
+        if prefix is not None:
+            if isinstance(prefix, str):
+                prefix = [prefix]
+            name_tokens.extend(prefix)
+
+        if timestamp:
+            name_tokens.append(datetime.now().strftime("%y%m%d_%H%M%S"))
+
+        if backbone:
+            name_tokens.append(self.model.backbone_name)
+
+        if output_type:
+            name_tokens.append(str(self.model.output_type))
+
+        if suffix is not None:
+            if isinstance(suffix, str):
+                suffix = [suffix]
+            name_tokens.extend(suffix)
+
+        run_name = ".".join(name_tokens)
+
+        if check_existing:
+            if self.save_dir is None:
+                raise ValueError(
+                    "Cannot check for run path existance if save_dir is not set."
+                )
+
+            i = 0
+            while os.path.exists(os.path.join(self.save_dir, run_name)):
+                i += 1
+                run_name = ".".join(name_tokens + [f"{i}"])
+
+        return run_name
+
+    @property
     def model_path(self):
         """Returns a path to an existing model, with preference for best model if it exists.
 
@@ -124,35 +183,59 @@ class TrainingJob:
             ValueError: if neither the best model or final model could be found.
         """
 
+        if self.run_path is None:
+            raise ValueError("Training job has no run path specified.")
+
         # Try the best model first.
-        model_path = os.path.join(self.save_dir, self.best_model_filename)
+        if self.best_model_filename is not None:
+            model_path = os.path.join(self.run_path, self.best_model_filename)
+            if os.path.exists(model_path):
+                return model_path
 
-        # Try the final model if that didn't exist.
-        if not os.path.exists(model_path):
+            model_path = os.path.join(self.save_dir, self.best_model_filename)
+            if os.path.exists(model_path):
+                return model_path
+
+        # Then the newest model.
+        if self.newest_model_filename is not None:
+            model_path = os.path.join(self.run_path, self.newest_model_filename)
+            if os.path.exists(model_path):
+                return model_path
+
+            model_path = os.path.join(self.save_dir, self.newest_model_filename)
+            if os.path.exists(model_path):
+                return model_path
+
+        # Then the final model.
+        if self.final_model_filename is not None:
+            model_path = os.path.join(self.run_path, self.final_model_filename)
+            if os.path.exists(model_path):
+                return model_path
+
             model_path = os.path.join(self.save_dir, self.final_model_filename)
+            if os.path.exists(model_path):
+                return model_path
 
-        # Raise error if both fail.
-        if not os.path.exists(model_path):
-            raise ValueError(
-                f"Could not find a saved model in job directory: {self.save_dir}"
-            )
-
-        return model_path
-
-    @property
-    def run_path(self):
-        if self.save_dir is not None and self.run_name is not None:
-            return os.path.join(self.save_dir, self.run_name)
-        else:
-            return None
+        # Raise error if all fail.
+        raise ValueError(f"Could not find a saved model in run path: {self.run_path}")
 
     @property
     def is_trained(self):
+        # TODO: fix this to use model_path
         if self.final_model_filename is not None:
             path = os.path.join(self.save_dir, self.final_model_filename)
             if os.path.exists(path):
                 return True
         return False
+
+    @staticmethod
+    def _to_dicts(training_job: "TrainingJob"):
+
+        # We have some skeletons to deal with, make sure to setup a Skeleton cattr.
+        my_cattr = Skeleton.make_cattr()
+        dicts = my_cattr.unstructure(training_job)
+
+        return dicts
 
     @staticmethod
     def save_json(training_job: "TrainingJob", filename: str):
@@ -162,18 +245,16 @@ class TrainingJob:
         Args:
             training_job: The TrainingJob instance to save.
             filename: The filename to save the JSON to.
-
-        Returns:
-            None
         """
 
         with open(filename, "w") as file:
-
-            # We have some skeletons to deal with, make sure to setup a Skeleton cattr.
-            my_cattr = Skeleton.make_cattr()
-            dicts = my_cattr.unstructure(training_job)
-            json_str = json.dumps(dicts)
+            dicts = TrainingJob._to_dicts(training_job)
+            json_str = json.dumps(dicts, indent=4)
             file.write(json_str)
+
+    def save(self, filename: str):
+        """Save this training job to a JSON file."""
+        TrainingJob.save_json(self, filename=filename)
 
     @classmethod
     def load_json(cls, filename: str = None, json_string: str = None):
@@ -195,10 +276,10 @@ class TrainingJob:
 
             # Open and parse the JSON in filename
             with open(filename, "r") as f:
-                dicts = json.load(f)
+                dicts = json.loads(jsmin(f.read()))
 
         elif json_string is not None:
-            dicts = json.loads(json_string)
+            dicts = json.loads(jsmin(json_string))
 
         else:
             raise ValueError("Filename to JSON file or a JSON string must be provided.")
@@ -207,8 +288,11 @@ class TrainingJob:
         converter = Skeleton.make_cattr()
 
         # Structure the nested skeletons if we have any.
-        if ("model" in dicts) and ("skeletons" in dicts["model"]):
-            if dicts["model"]["skeletons"]:
+        if "model" in dicts:
+            if (
+                "skeletons" in dicts["model"]
+                and dicts["model"]["skeletons"] is not None
+            ):
                 dicts["model"]["skeletons"] = converter.structure(
                     dicts["model"]["skeletons"], List[Skeleton]
                 )
@@ -223,13 +307,30 @@ class TrainingJob:
         run = converter.structure(dicts, cls)
 
         # If we can't find save_dir for job, set it to path of json we're loading.
-        if run.save_dir is not None and filename is not None:
-            if not os.path.exists(run.save_dir):
-                run.save_dir = os.path.dirname(filename)
+        if run.run_path is not None and filename is not None:
+            if not os.path.exists(run.run_path):
 
-                run.final_model_filename = cls._fix_path(run.final_model_filename)
-                run.best_model_filename = cls._fix_path(run.best_model_filename)
-                run.newest_model_filename = cls._fix_path(run.newest_model_filename)
+                # First try the standard pattern:
+                # {save_dir}/{run_name}/{job_json} -> run_path = {save_dir}/{run_name}/
+                save_dir, run_name = os.path.split(os.path.dirname(filename))
+                if os.path.exists(os.path.join(save_dir, run_name)):
+                    run.save_dir = save_dir
+                    run.run_name = run_name
+
+                else:
+                    # Next, try the old pattern:
+                    # {save_dir}/{run_name}.json -> run_path = {save_dir}/{run_name}/
+                    save_dir, run_name = os.path.split(os.path.splitext(filename)[0])
+                    if os.path.exists(os.path.join(save_dir, run_name)):
+                        run.save_dir = save_dir
+                        run.run_name = run_name
+
+        if run.best_model_filename is not None:
+            run.best_model_filename = cls._fix_path(run.best_model_filename)
+        if run.newest_model_filename is not None:
+            run.newest_model_filename = cls._fix_path(run.newest_model_filename)
+        if run.final_model_filename is not None:
+            run.final_model_filename = cls._fix_path(run.final_model_filename)
 
         return run
 

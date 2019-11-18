@@ -77,8 +77,8 @@ class Model:
 
     output_type: ModelOutputType
     backbone: BackboneType
-    skeletons: Union[None, List[Skeleton]] = None
     backbone_name: str = None
+    skeletons: Union[None, List[Skeleton]] = None
 
     def __attrs_post_init__(self):
 

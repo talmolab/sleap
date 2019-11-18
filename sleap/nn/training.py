@@ -3,8 +3,10 @@
 import os
 import attr
 import argparse
+import json
 from pkg_resources import Requirement, resource_filename
-from typing import Union, Dict, List, Text
+from typing import Union, Dict, List, Text, Tuple
+from time import time
 
 import numpy as np
 import tensorflow as tf
@@ -26,6 +28,72 @@ class Trainer:
     control_zmq_port: int = 9000
     progress_report_zmq_port: int = 9001
     verbosity: int = 2
+
+    _img_shape: Tuple[int, int, int] = None
+    _n_output_channels: int = None
+    _train: data.TrainingData = None
+    _val: data.TrainingData = None
+    _test: data.TrainingData = None
+    _ds_train: tf.data.Dataset = None
+    _ds_val: tf.data.Dataset = None
+    _ds_test: tf.data.Dataset = None
+    _model: tf.keras.Model = None
+    _optimizer: tf.keras.optimizers.Optimizer = None
+    _loss_fn: tf.keras.losses.Loss = None
+    _training_callbacks: List[tf.keras.callbacks.Callback] = None
+    _history: dict = None
+
+    @property
+    def img_shape(self):
+        return self._img_shape
+
+    @property
+    def n_output_channels(self):
+        return self._n_output_channels
+
+    @property
+    def data_train(self):
+        return self._train
+
+    @property
+    def data_val(self):
+        return self._val
+
+    @property
+    def data_test(self):
+        return self._test
+
+    @property
+    def ds_train(self):
+        return self._ds_train
+
+    @property
+    def ds_val(self):
+        return self._ds_val
+
+    @property
+    def ds_test(self):
+        return self._ds_test
+
+    @property
+    def model(self):
+        return self._model
+
+    @property
+    def optimizer(self):
+        return self._optimizer
+
+    @property
+    def loss_fn(self):
+        return self._loss_fn
+
+    @property
+    def training_callbacks(self):
+        return self._training_callbacks
+
+    @property
+    def history(self):
+        return self._history
 
     def setup_data(
         self,
@@ -177,8 +245,6 @@ class Trainer:
         # TODO: Update this to the commented calculation above when model config
         # includes metadata about absolute input scale.
         rel_output_scale = self.training_job.model.output_scale
-        print("training_job.input_scale:", self.training_job.input_scale)
-        print("model.output_scale:", self.training_job.model.output_scale)
         output_type = self.training_job.model.output_type
         if output_type == model.ModelOutputType.CONFIDENCE_MAP:
             ds_train = data.make_confmap_dataset(
@@ -271,8 +337,11 @@ class Trainer:
             )
 
         # Set up shuffling, batching, repeating and prefetching.
+        shuffle_buffer_size = self.training_job.trainer.shuffle_buffer_size
+        if shuffle_buffer_size is None or shuffle_buffer_size <= 0:
+            shuffle_buffer_size = len(train.images)
         ds_train = (
-            ds_train.shuffle(len(train.images))
+            ds_train.shuffle(shuffle_buffer_size)
             .repeat(-1)
             .batch(self.training_job.trainer.batch_size, drop_remainder=True)
             .prefetch(buffer_size=self.training_job.trainer.steps_per_epoch)
@@ -293,7 +362,32 @@ class Trainer:
         img_shape = list(ds_val.take(1))[0][0][0].shape
         print("img_shape:", img_shape)
 
-        return ds_train, ds_val, ds_test, img_shape, n_output_channels
+        # Update internal attributes.
+        self._img_shape = img_shape
+        self._n_output_channels = n_output_channels
+        self._train = train
+        self._val = val
+        self._test = test
+        self._ds_train = ds_train
+        self._ds_val = ds_val
+        self._ds_test = ds_test
+
+        if self.verbosity > 0:
+            print("Data:")
+            print("  Input scale:", self.training_job.input_scale)
+            print("  Relative output scale:", self.training_job.model.output_scale)
+            print("  Output scale:", self.training_job.input_scale * self.training_job.model.output_scale)
+            print("  Training data:", self.data_train.images.shape)
+            print("  Validation data:", self.data_val.images.shape)
+            if self.data_test is not None:
+                print("  Test data:", self.data_test.images.shape)
+            else:
+                print("  Test data: N/A")
+            print("  Image shape:", self.img_shape)
+            print("  Output channels:", self.n_output_channels)
+            print()
+
+        return ds_train, ds_val, ds_test
 
     def setup_callbacks(self) -> List[tf.keras.callbacks.Callback]:
 
@@ -325,49 +419,71 @@ class Trainer:
 
         if self.training_job.run_path is not None:
 
+            if self.training_job.trainer.csv_logging:
+                callback_list.append(
+                    callbacks.CSVLogger(
+                        filename=os.path.join(
+                            self.training_job.run_path,
+                            self.training_job.trainer.csv_log_filename,
+                        )
+                    )
+                )
+
             if self.training_job.trainer.save_every_epoch:
                 if self.training_job.newest_model_filename is None:
-                    full_path = os.path.join(
-                        self.training_job.run_path, "newest_model.h5"
-                    )
-                    self.training_job.newest_model_filename = os.path.relpath(
-                        full_path, self.training_job.save_dir
-                    )
+                    self.training_job.newest_model_filename = "newest_model.h5"
 
                 callback_list.append(
                     callbacks.ModelCheckpoint(
-                        filepath=self.training_job.newest_model_filename,
+                        filepath=os.path.join(
+                            self.training_job.run_path,
+                            self.training_job.newest_model_filename,
+                        ),
                         monitor=self.training_job.trainer.monitor_metric_name,
                         save_best_only=False,
                         save_weights_only=False,
                         save_freq="epoch",
+                        verbose=self.verbosity,
                     )
                 )
 
-            if self.save_best_val:
+            if self.training_job.trainer.save_best_val:
                 if self.training_job.best_model_filename is None:
-                    full_path = os.path.join(
-                        self.training_job.run_path, "best_model.h5"
-                    )
-                    self.training_job.best_model_filename = os.path.relpath(
-                        full_path, self.training_job.save_dir
-                    )
+                    self.training_job.best_model_filename = "best_model.h5"
 
                 callback_list.append(
                     callbacks.ModelCheckpoint(
-                        filepath=self.training_job.best_model_filename,
+                        filepath=os.path.join(
+                            self.training_job.run_path,
+                            self.training_job.best_model_filename,
+                        ),
                         monitor=self.training_job.trainer.monitor_metric_name,
                         save_best_only=True,
                         save_weights_only=False,
                         save_freq="epoch",
+                        verbose=self.verbosity,
                     )
                 )
 
-            job.TrainingJob.save_json(
-                self.training_job,
-                os.path.join(self.training_job.run_path, "training_job.json"),
+            if self.training_job.trainer.save_final_model:
+                if self.training_job.final_model_filename is None:
+                    self.training_job.final_model_filename = "final_model.h5"
+
+                callback_list.append(
+                    callbacks.ModelCheckpointOnEvent(
+                        filepath=os.path.join(
+                            self.training_job.run_path,
+                            self.training_job.final_model_filename,
+                        ),
+                        event="train_end",
+                    )
+                )
+
+            self.training_job.save(
+                os.path.join(self.training_job.run_path, "training_job.json")
             )
 
+        self._training_callbacks = callback_list
         return callback_list
 
     def setup_optimization(self):
@@ -390,10 +506,18 @@ class Trainer:
             )
 
         loss_fn = tf.keras.losses.MeanSquaredError()
+        self._optimizer = optimizer
+        self._loss_fn = loss_fn
 
         return optimizer, loss_fn
 
-    def setup_model(self, img_shape, n_output_channels):
+    def setup_model(self, img_shape=None, n_output_channels=None):
+
+        if img_shape is None:
+            img_shape = self.img_shape
+
+        if n_output_channels is None:
+            n_output_channels = self.n_output_channels
 
         input_layer = tf.keras.layers.Input(img_shape, name="input")
 
@@ -405,11 +529,14 @@ class Trainer:
             input_layer, outputs, name=self.training_job.model.backbone_name
         )
 
-        print(f"Model: {keras_model.name}")
-        print(f"  Input: {keras_model.input_shape}")
-        print(f"  Output: {keras_model.output_shape}")
-        print(f"  Layers: {len(keras_model.layers)}")
-        print(f"  Params: {keras_model.count_params():3,}")
+        if self.verbosity > 0:
+            print(f"Model: {keras_model.name}")
+            print(f"  Input: {keras_model.input_shape}")
+            print(f"  Output: {keras_model.output_shape}")
+            print(f"  Layers: {len(keras_model.layers)}")
+            print(f"  Params: {keras_model.count_params():3,}")
+
+        self._model = keras_model
 
         return keras_model
 
@@ -423,7 +550,7 @@ class Trainer:
         data_test: Union[data.TrainingData, Text] = None,
     ) -> tf.keras.Model:
 
-        ds_train, ds_val, ds_test, img_shape, n_output_channels = self.setup_data(
+        self.setup_data(
             labels_train=labels_train,
             labels_val=labels_val,
             labels_test=labels_test,
@@ -431,37 +558,79 @@ class Trainer:
             data_val=data_val,
             data_test=data_test,
         )
-        optimizer, loss_fn = self.setup_optimization()
-        training_callbacks = self.setup_callbacks()
-        keras_model = self.setup_model(img_shape, n_output_channels)
-        keras_model.compile(optimizer=optimizer, loss=loss_fn)
+        self.setup_model()
+        self.setup_optimization()
 
-        history = keras_model.fit(
-            ds_train,
+        if (
+            self.training_job.save_dir is not None
+            and self.training_job.run_name is None
+        ):
+            # Generate new run name if save_dir specified but not the run name.
+            self.training_job.run_name = self.training_job.new_run_name(
+                suffix=f"n={len(self.data_train.images)}"
+            )
+
+        if self.training_job.run_path is not None:
+            if not os.path.exists(self.training_job.run_path):
+                os.makedirs(self.training_job.run_path, exist_ok=True)
+            if self.verbosity > 0:
+                print(f"Run path: {self.training_job.run_path}")
+
+        self.setup_callbacks()
+        self.model.compile(optimizer=self.optimizer, loss=self.loss_fn)
+
+        t0 = time()
+        self._history = self.model.fit(
+            self.ds_train,
             epochs=self.training_job.trainer.num_epochs,
-            callbacks=training_callbacks,
-            validation_data=ds_val,
+            callbacks=self.training_callbacks,
+            validation_data=self.ds_val,
             steps_per_epoch=self.training_job.trainer.steps_per_epoch,
             validation_steps=self.training_job.trainer.val_steps_per_epoch,
             verbose=self.verbosity,
         )
 
-        # TODO: Save training history
+        elapsed = time() - t0
+        if self.verbosity > 0:
+            print(f"Finished training. Total runtime: {elapsed/60:.2f} mins")
+
         # TODO: Evaluate final test set performance if available
 
-        return keras_model
+        return self.model
 
 
 def main():
     """CLI for training."""
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("labels_path", help="Path to labels file.")
-    parser.add_argument("training_job_path", help="Path to training job profile file.")
+    parser.add_argument(
+        "training_job_path", help="Path to training job profile JSON file."
+    )
+    parser.add_argument("labels_path", help="Path to labels file to use for training.")
+    parser.add_argument(
+        "--val_labels",
+        "--val",
+        help="Path to labels file to use for validation (overrides training job path if set)."
+    )
+    parser.add_argument(
+        "--test_labels",
+        "--test",
+        help="Path to labels file to use for test (overrides training job path if set)."
+    )
     parser.add_argument(
         "--tensorboard",
-        help="Enables TensorBoard logging to the run path.",
         action="store_true",
+        help="Enables TensorBoard logging to the run path."
+    )
+    parser.add_argument(
+        "--prefix",
+        action="append",
+        help="Prefix to append to run name. Can be specified multiple times."
+    )
+    parser.add_argument(
+        "--suffix",
+        action="append",
+        help="Suffix to append to run name. Can be specified multiple times."
     )
 
     args = parser.parse_args()
@@ -476,15 +645,49 @@ def main():
         else:
             raise FileNotFoundError(f"Could not find training profile: {job_filename}")
 
-    print(f"Training labels file: {args.labels_path}")
+    labels_train_path = args.labels_path
+
+    print(f"Training labels file: {labels_train_path}")
     print(f"Training profile: {job_filename}")
 
     training_job = job.TrainingJob.load_json(job_filename)
-    training_job.labels_filename = args.labels_path
-    save_dir = os.path.join(os.path.dirname(training_job.labels_filename), "models")
 
-    trainer = Trainer(training_job)
-    trained_model = trainer.train(tensorboard=args.tensorboard, zmq=False, verbosity=2)
+    # Set data paths in job.
+    training_job.labels_filename = labels_train_path
+    if args.val_labels is not None:
+        training_job.val_set_filename = args.val_labels
+    if args.test_labels is not None:
+        training_job.test_set_filename = args.test_labels
+
+    if training_job.save_dir is None:
+        # Default save dir to models subdir of training labels.
+        training_job.save_dir = os.path.join(
+            os.path.dirname(labels_train_path), "models"
+        )
+
+    prefixes = args.prefix
+    if training_job.run_name is not None:
+        # Add run name specified in file to prefixes.
+        prefixes.append(training_job.run_name)
+
+    # Create new run name.
+    training_job.run_name = training_job.new_run_name(
+        prefix=prefixes, suffix=args.suffix, check_existing=True
+    )
+
+    # Log configuration to console.
+    print("Arguments:")
+    print(json.dumps(vars(args), indent=4))
+    print()
+    print("Training job:")
+    print(json.dumps(job.TrainingJob._to_dicts(training_job), indent=4))
+    print()
+
+    # Create a trainer and run!
+    trainer = Trainer(
+        training_job, tensorboard=args.tensorboard, zmq=False, verbosity=2
+    )
+    trained_model = trainer.train()
 
 
 if __name__ == "__main__":
