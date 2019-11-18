@@ -289,6 +289,7 @@ class RegionProposalExtractor:
     Attributes:
         instance_box_length: Scalar int specifying the width and height of bounding
             boxes centered on individual instances (detected by centroids).
+        merge_overlapping: If True, will merge bounding boxes if overlapping.
         merged_box_length: Scalar int specifing the width and height of the bounding
             boxes that will be attempted to be created when merging overlapping
             instances. This should be >= instance_box_length.
@@ -299,7 +300,8 @@ class RegionProposalExtractor:
     """
 
     instance_box_length: int
-    merged_box_length: int
+    merge_overlapping: bool = True
+    merged_box_length: int = 0
     merge_iou_threshold: float = 0.1
     nms_iou_threshold: float = 0.25
 
@@ -390,19 +392,26 @@ class RegionProposalExtractor:
 
         return region_proposal_sets
 
-    def extract(self, imgs, centroids, centroid_vals):
+    def extract(self, imgs, centroids, centroid_vals=None):
 
         if tf.is_tensor(centroids):
             centroids = centroids.numpy()
 
-        if tf.is_tensor(centroid_vals):
-            centroid_vals = centroid_vals.numpy()
-
         all_bboxes = self.generate_initial_proposals(centroids)
-        merged_bboxes = self.merge_all_bboxes(centroids, centroid_vals, all_bboxes)
-        size_grouped_bboxes, size_grouped_sample_inds = self.size_group_bboxes(
-            merged_bboxes
-        )
+
+        if self.merge_overlapping:
+            if tf.is_tensor(centroid_vals):
+                centroid_vals = centroid_vals.numpy()
+
+            merged_bboxes = self.merge_all_bboxes(centroids, centroid_vals, all_bboxes)
+            size_grouped_bboxes, size_grouped_sample_inds = self.size_group_bboxes(
+                merged_bboxes
+            )
+
+        else:
+            size_grouped_bboxes = {self.instance_box_length: all_bboxes}
+            size_grouped_sample_inds = {self.instance_box_length: centroids[:, 0].astype(int)}
+
         region_proposal_sets = self.extract_region_proposal_sets(
             imgs, size_grouped_bboxes, size_grouped_sample_inds
         )
