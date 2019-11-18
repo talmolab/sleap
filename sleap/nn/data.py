@@ -650,21 +650,22 @@ def instance_crop(
         centroids = get_bbox_centroid_from_node_ind(points, ctr_node_ind)
     else:
         centroids = get_bbox_centroid(points)
-        instance_bboxes = get_centered_bboxes(
-            centroids, box_height=box_height, box_width=box_width
-        )
-        instance_points = pts_to_bbox(points, instance_bboxes)
-        instance_images = crop_bboxes(
-            image,
-            instance_bboxes,
-            image_height=image_height,
-            image_width=image_width,
-            box_height=box_height,
-            box_width=box_width,
-        )
+
+    instance_bboxes = get_centered_bboxes(
+        centroids, box_height=box_height, box_width=box_width
+    )
+    instance_points = pts_to_bbox(points, instance_bboxes)
+    instance_images = crop_bboxes(
+        image,
+        instance_bboxes,
+        image_height=image_height,
+        image_width=image_width,
+        box_height=box_height,
+        box_width=box_width,
+    )
 
     # Pull out the "diagonal" of instance_points.
-    ctr_inds = ctr_inds = tf.tile(
+    ctr_inds = tf.tile(
         tf.expand_dims(tf.range(tf.shape(instance_points)[0]), 1), [1, 2]
     )
     instance_ctr_points = tf.gather_nd(instance_points, ctr_inds)
