@@ -356,7 +356,7 @@ class RegionProposalExtractor:
             for bbox in sample_bboxes:
 
                 # Compute (height, width) of bounding box.
-                box_size = (int(bbox[2] - bbox[0]), int(bbox[3] - bbox[1]))
+                box_size = (int(np.round(bbox[2] - bbox[0])), int(np.round(bbox[3] - bbox[1])))
 
                 # Add to the size group.
                 size_grouped_bboxes[box_size].append(bbox)
