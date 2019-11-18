@@ -4,7 +4,7 @@ import attr
 import tensorflow as tf
 import numpy as np
 from collections import defaultdict
-from typing import Callable, Dict, Tuple, Union
+from typing import Callable, Dict, Tuple, Union, List
 from sleap.io.video import Video
 
 
@@ -266,13 +266,15 @@ def resize_imgs(
         divisible_height = tf.cast(
             tf.math.ceil(
                 tf.cast(target_height, tf.float32) / tf.cast(common_divisor, tf.float32)
-            ) * common_divisor,
+            )
+            * common_divisor,
             tf.int32,
         )
         divisible_width = tf.cast(
             tf.math.ceil(
                 tf.cast(target_width, tf.float32) / tf.cast(common_divisor, tf.float32)
-            ) * common_divisor,
+            )
+            * common_divisor,
             tf.int32,
         )
         if divisible_height != target_height or divisible_width != target_width:
@@ -435,3 +437,34 @@ def compute_iou(bbox1: np.ndarray, bbox2: np.ndarray) -> float:
     iou = intersection_area / union_area
 
     return iou
+
+
+def points_list_to_subs(
+    points: List[np.ndarray], initial_sample_ind: int = 0
+) -> np.ndarray:
+    """Convert list of points to subscripts form.
+    
+    Args:
+        points: list of (n_instances, n_nodes, 2). If rank-2, will be assumed to be
+            (n_instances, 2) with a single node.
+        initial_sample_ind: Integer offset for sample indices.
+    
+    Returns:
+        An array of shape (n_points, 4), where rows are in the form
+        (sample_ind, row, col, channel_ind).
+    """
+
+    subs = []
+    for sample, pts in enumerate(points):
+
+        if pts.ndim == 2:
+            pts = np.expand_dims(pts, axis=1)
+
+        for inst_pts in pts:
+            for channel, pt in enumerate(inst_pts):
+                if ~np.isnan(pt).any():
+                    subs.append([sample + initial_sample_ind, pt[1], pt[0], channel])
+
+    subs = np.array(subs)
+
+    return subs
