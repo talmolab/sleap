@@ -24,7 +24,8 @@ class Trainer:
     training_job: job.TrainingJob
 
     tensorboard: bool = False
-    tensorboard_dir: Union[str, None] = None
+    tensorboard_freq: Union[Text, int] = "epoch"
+    tensorboard_dir: Union[Text, None] = None
     zmq: bool = False
     control_zmq_port: int = 9000
     progress_report_zmq_port: int = 9001
@@ -462,6 +463,16 @@ class Trainer:
                     )
                 )
 
+            if self.tensorboard:
+                if self.tensorboard_dir is None:
+                    self.tensorboard_dir = self.training_job.run_path
+                callback_list.append(
+                    callbacks.TensorBoard(
+                        log_dir=self.tensorboard_dir,
+                        update_freq=self.tensorboard_freq,
+                        )
+                    )
+
             if self.training_job.trainer.save_every_epoch:
                 if self.training_job.newest_model_filename is None:
                     self.training_job.newest_model_filename = "newest_model.h5"
@@ -568,6 +579,7 @@ class Trainer:
             print(f"  Output: {keras_model.output_shape}")
             print(f"  Layers: {len(keras_model.layers)}")
             print(f"  Params: {keras_model.count_params():3,}")
+            print()
 
         self._model = keras_model
 
@@ -608,6 +620,9 @@ class Trainer:
                 os.makedirs(self.training_job.run_path, exist_ok=True)
             if self.verbosity > 0:
                 print(f"Run path: {self.training_job.run_path}")
+        else:
+            if self.verbosity > 0:
+                print(f"Run path: Not provided, nothing will be saved to disk.")
 
         self.setup_callbacks()
         self.model.compile(optimizer=self.optimizer, loss=self.loss_fn)
