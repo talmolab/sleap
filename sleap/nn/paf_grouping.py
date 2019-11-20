@@ -670,6 +670,10 @@ class PAFGrouper:
             paf_peaks, self.edge_types, self.min_pair_distance
         )
 
+        # Stop if we didn't find any pairs of peaks
+        if not len(src_peak_inds):
+            return dict(), dict()
+
         # Interpolate between pairs to form the line segments.
         line_segments = make_line_segments(
             src_peaks=paf_peaks[src_peak_inds],
@@ -701,6 +705,10 @@ class PAFGrouper:
         valid_connection_inds = (
             tf.where(enough_correct_samples & positive_score).numpy().squeeze()
         )
+
+        # Make sure we have vector rather than single value (from squeeze)
+        if valid_connection_inds.ndim == 0:
+            valid_connection_inds = valid_connection_inds.reshape((-1))
 
         # Copy scores to CPU.
         score_with_dist_penalty = score_with_dist_penalty.numpy()
