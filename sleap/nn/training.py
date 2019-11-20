@@ -593,6 +593,7 @@ class Trainer:
         data_train: Union[data.TrainingData, Text] = None,
         data_val: Union[data.TrainingData, Text] = None,
         data_test: Union[data.TrainingData, Text] = None,
+        extra_callbacks: List[tf.keras.callbacks.Callback] = None,
     ) -> tf.keras.Model:
 
         self.setup_data(
@@ -625,6 +626,8 @@ class Trainer:
                 print(f"Run path: Not provided, nothing will be saved to disk.")
 
         self.setup_callbacks()
+        if extra_callbacks is not None:
+            self.training_callbacks.extend(extra_callbacks)
         self.model.compile(optimizer=self.optimizer, loss=self.loss_fn)
 
         t0 = datetime.now()

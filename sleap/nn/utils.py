@@ -306,6 +306,8 @@ def compute_pairwise_distances(x: np.ndarray, y: np.ndarray) -> np.ndarray:
 @attr.s(auto_attribs=True)
 class VideoLoader:
     filename: str
+    dataset: str = None
+    input_format: str = None
     chunk_size: int = 32
     prefetch_chunks: int = 1
 
@@ -348,14 +350,18 @@ class VideoLoader:
 
     def __attrs_post_init__(self):
 
-        self._video = Video.from_filename(self.filename)
+        self._video = Video.from_filename(
+            self.filename, dataset=self.dataset, input_format=self.input_format
+        )
         self._shape = self.video.shape
         self._np_dtype = self.video.dtype
         self._tf_dtype = tf.dtypes.as_dtype(self.np_dtype)
         self._ds = self.make_ds()
 
     def load_frames(self, frame_inds):
-        local_vid = Video.from_filename(self.video.filename)
+        local_vid = Video.from_filename(
+            self.video.filename, dataset=self.dataset, input_format=self.input_format
+        )
         imgs = local_vid[np.array(frame_inds).astype("int64")]
         return imgs
 
