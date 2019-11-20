@@ -190,17 +190,6 @@ class Predictor:
                         help=help_string,
                     )
 
-        def add_tracker_args(parser, arg_scope: str):
-
-            for arg in tracking.Tracker.get_by_name_factory_options():
-                help_string = arg.get("help", "")
-                if arg.get("options", ""):
-                    help_string += " Options: " + ", ".join(arg["options"])
-                help_string += f" (default: {arg['default']})"
-                parser.add_argument(
-                    f"--{arg_scope}.{arg['name']}", type=arg["type"], help=help_string,
-                )
-
         def frame_list(frame_str: str):
 
             # Handle ranges of frames. Must be of the form "1-200"
@@ -248,7 +237,7 @@ class Predictor:
         for name, attrs_class in POLICY_CLASSES.items():
             add_class_args(parser, attrs_class, name, exclude_args)
 
-        add_tracker_args(parser, arg_scope="tracking")
+        tracking.Tracker.add_cli_parser_args(parser, arg_scope="tracking")
 
         return parser
 

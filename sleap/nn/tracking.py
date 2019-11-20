@@ -507,6 +507,12 @@ class Tracker:
 
         return tracked_instances
 
+    def get_name(self):
+        tracker_name = self.candidate_maker.__class__.__name__
+        similarity_name = self.similarity_function.__name__
+        match_name = self.matching_function.__name__
+        return f"{tracker_name}.{similarity_name}.{match_name}"
+
     @classmethod
     def make_tracker_by_name(
         cls,
@@ -519,6 +525,7 @@ class Tracker:
         img_scale: float = 1.0,
         of_window_size: int = 21,
         of_max_levels: int = 3,
+        **kwargs,
     ) -> "Tracker":
 
         if tracker not in tracker_policies:
@@ -605,6 +612,23 @@ class Tracker:
 
         return options
 
+    @classmethod
+    def add_cli_parser_args(cls, parser, arg_scope: str = ""):
+        for arg in cls.get_by_name_factory_options():
+            help_string = arg.get("help", "")
+            if arg.get("options", ""):
+                help_string += " Options: " + ", ".join(arg["options"])
+            help_string += f" (default: {arg['default']})"
+
+            if arg_scope:
+                arg_name = arg_scope + "." + arg["name"]
+            else:
+                arg_name = arg["name"]
+
+            parser.add_argument(
+                f"--{arg_name}", type=arg["type"], help=help_string,
+            )
+
 
 @attr.s(auto_attribs=True)
 class FlowTracker(Tracker):
@@ -622,3 +646,92 @@ class SimpleTracker(Tracker):
     similarity_function: Callable = instance_iou
     matching_function: Callable = hungarian_matching
     candidate_maker: object = attr.ib(factory=SimpleCandidateMaker)
+
+
+def run_tracker(frames, tracker):
+    import inspect
+    import time
+    from sleap import Labels
+
+    sig = inspect.signature(tracker.track)
+    takes_img = "img" in sig.parameters
+
+    t0 = time.time()
+
+    new_lfs = []
+
+    # Run tracking on every frame
+    for lf in frames:
+
+        # Clear the tracks
+        for inst in lf.instances:
+            inst.track = None
+
+        track_args = dict(untracked_instances=lf.instances)
+        if takes_img:
+            track_args["img"] = lf.video[lf.frame_idx]
+        else:
+            track_args["img"] = None
+
+        new_lf = LabeledFrame(
+            frame_idx=lf.frame_idx,
+            video=lf.video,
+            instances=tracker.track(**track_args),
+        )
+        new_lfs.append(new_lf)
+
+        if lf.frame_idx % 100 == 0:
+            print(lf.frame_idx, time.time() - t0)
+
+    print(time.time() - t0)
+
+    new_labels = Labels(labeled_frames=new_lfs)
+    return new_labels
+
+
+def retrack():
+    import argparse
+    import operator
+    import os
+
+    from sleap import Labels
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("data_path", help="Path to SLEAP project file")
+    parser.add_argument(
+        "-o",
+        "--output",
+        type=str,
+        default=None,
+        help="The output filename to use for the predicted data.",
+    )
+
+    Tracker.add_cli_parser_args(parser)
+
+    args = parser.parse_args()
+
+    tracker_args = {key: val for key, val in vars(args).items() if val is not None}
+
+    tracker = Tracker.make_tracker_by_name(**tracker_args)
+
+    print(tracker)
+
+    labels = Labels.load_file(args.data_path)
+    frames = sorted(labels.labeled_frames, key=operator.attrgetter("frame_idx"))
+
+    new_labels = run_tracker(frames=frames, tracker=tracker)
+
+    if args.output:
+        output_path = args.output
+    else:
+        out_dir = os.path.dirname(args.data_path)
+        out_name = os.path.basename(args.data_path) + f".{tracker.get_name()}.h5"
+        output_path = os.path.join(out_dir, out_name)
+
+    print(f"Saving: {output_path}")
+    Labels.save_file(new_labels, output_path)
+
+
+if __name__ == "__main__":
+    retrack()
