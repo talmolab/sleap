@@ -5,7 +5,7 @@ https://arxiv.org/abs/1608.06993
 """
 
 import attr
-from typing import List, Tuple
+from typing import List, Tuple, Union
 from sleap.nn.architectures import common
 import tensorflow as tf
 import numpy as np
@@ -476,9 +476,9 @@ class UDenseNet:
     stem_stride: int = 1
     stem_filters: int = 64
     dense_blocks: List[int] = [2, 4, 6, 8]
-    output_scale: float = 1.0
+    output_scale: Union[float, List[float]] = 1.0
     n_heads: int = 1
-    head_filters: int = 64
+    head_filters: Union[int, List[int]] = 64
 
     def output(self, x_in, n_output_channels):
         """Builds the layers for this backbone and return the output tensor.
@@ -500,22 +500,48 @@ class UDenseNet:
             return_mid_feats=True,
         )
 
-        output_size = int(x_in.shape[1] * self.output_scale)
-        up_blocks = int(np.log(output_size / backbone.output_shape[1]) / np.log(2))
+        output_scales = self.output_scale
+        if not isinstance(output_scales, list):
+            output_scales = [output_scales] * self.n_heads
 
-        x = backbone.output
-        mid_feats = backbone_mid_feats
+        heads_filters = self.head_filters
+        if not isinstance(heads_filters, list):
+            heads_filters = [heads_filters] * self.n_heads
+
+        head_input = backbone.output
+        mid_feats = backbone_mid_feats[::-1]
         outputs = []
-        for head in range(self.n_heads):
-            x, mid_feats = make_head(
-                x,
+        for head, (output_scale, head_filters) in enumerate(
+            zip(output_scales, heads_filters)
+        ):
+            output_size = int(x_in.shape[1] * output_scale)
+            up_blocks = int(np.log(output_size / backbone.output_shape[1]) / np.log(2))
+
+            x, head_mid_feats = make_head(
+                head_input,
                 n_output_channels,
                 up_blocks,
-                filters=self.head_filters,
+                filters=head_filters,
                 mid_feats=mid_feats,
                 name=f"head{head + 1}",
             )
             outputs.append(x)
+
+            # Update middle features by scale.
+            old_mid_feat_sizes = [f.shape[1] for f in mid_feats]
+            new_mid_feat_sizes = [f.shape[1] for f in head_mid_feats]
+            all_mid_feat_sizes = np.unique(old_mid_feat_sizes + new_mid_feat_sizes)
+            next_mid_feats = []
+            for feat_size in all_mid_feat_sizes:
+                if feat_size in new_mid_feat_sizes:
+                    next_mid_feats.append(
+                        head_mid_feats[new_mid_feat_sizes.index(feat_size)]
+                    )
+                else:
+                    next_mid_feats.append(
+                        mid_feats[old_mid_feat_sizes.index(feat_size)]
+                    )
+            mid_feats = next_mid_feats
 
         return tf.keras.Model(x_in, outputs, name="UDenseNet")
 
