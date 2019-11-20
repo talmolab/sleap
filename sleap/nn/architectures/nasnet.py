@@ -144,7 +144,7 @@ class NASNetLarge:
         # Automatically downloads weights
         backbone_model = applications.nasnet.NASNetLarge(
             include_top=False,
-            input_shape=x.shape[1:],
+            input_shape=(331, 331, 3) if self.pretrained else x.shape[1:],
             weights="imagenet" if self.pretrained else None,
             pooling=None,
             backend=tf.keras.backend,
