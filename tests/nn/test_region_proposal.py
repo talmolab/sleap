@@ -5,6 +5,20 @@ from sleap.nn import region_proposal
 
 
 class RegionProposalTests(tf.test.TestCase):
+    def test_validator(self):
+        with self.assertRaises(ValueError) as er:
+            region_proposal.RegionProposalExtractor(
+                instance_box_length=10, merge_overlapping=True, merged_box_length=0
+            )
+
+        region_proposal.RegionProposalExtractor(
+            instance_box_length=10, merge_overlapping=False, merged_box_length=0
+        )
+
+        region_proposal.RegionProposalExtractor(
+            instance_box_length=10, merge_overlapping=True, merged_box_length=20
+        )
+
     def test_make_centered_bboxes(self):
         centroids = np.array(
             [[10, 10], [20, 30], [0, 0],], dtype="float"
@@ -71,9 +85,7 @@ class RegionProposalTests(tf.test.TestCase):
         box_scores = np.ones(len(boxes))
 
         merged_boxes, merged_scores = region_proposal.generate_merged_bboxes(
-            boxes,
-            box_scores,
-            merged_box_length=20,
+            boxes, box_scores, merged_box_length=20,
         )
 
         # Make sure first four boxes match

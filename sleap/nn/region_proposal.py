@@ -310,9 +310,17 @@ class RegionProposalExtractor:
 
     instance_box_length: int
     merge_overlapping: bool = True
-    merged_box_length: int = 0
+    merged_box_length: int = attr.ib(default=0)
     merge_iou_threshold: float = 0.1
     nms_iou_threshold: float = 0.25
+
+    @merged_box_length.validator
+    def _check_merged_box_length(self, attribute, value):
+        if self.merge_overlapping:
+            if value == 0:
+                raise ValueError(
+                    "merged_box_length must be > 0 if merge_overlapping is True."
+                )
 
     def generate_initial_proposals(self, centroids):
         # Create initial region proposals from bounding boxes centered on the centroids.
