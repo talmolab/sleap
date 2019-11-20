@@ -412,7 +412,7 @@ def make_deconv_module(
 
     if bilinear_upsampling:
         x = tf.keras.layers.Concatenate(name=name_prefix + "concat_in")(inputs)
-        deconv_feats = tf.keras.UpSampling2D(
+        deconv_feats = tf.keras.layers.UpSampling2D(
             interpolation="bilinear", name=name_prefix + "upsample"
         )(x)
 
@@ -492,9 +492,9 @@ def make_first_stage(
     return x
 
 
-def make_hrnet_backbone(x_in, C=32, initial_downsampling_steps=2, bottleneck=False):
+def make_hrnet_backbone(x_in, C=32, initial_downsampling_steps=2, stem_filters=64, bottleneck=False):
 
-    x = make_stem(x_in, filters=64, downsampling_steps=initial_downsampling_steps)
+    x = make_stem(x_in, filters=stem_filters, downsampling_steps=initial_downsampling_steps)
 
     x = make_first_stage(
         x, bottleneck=False, block_filters=64, blocks=4, output_filters=C
@@ -595,6 +595,7 @@ class HigherHRNet:
     bottleneck: bool = False
     deconv_filters: int = 256
     bilinear_upsampling: bool = False
+    stem_filters: int = 64
 
     def output(self, x_in, n_output_channels):
         """Builds the layers for this backbone and return the output tensor.
@@ -613,6 +614,7 @@ class HigherHRNet:
             C=self.C,
             initial_downsampling_steps=self.initial_downsampling_steps,
             bottleneck=self.bottleneck,
+            stem_filters=self.stem_filters,
         )
 
         higher_hrnet_model = make_higher_hrnet_heads(
@@ -636,4 +638,4 @@ class HigherHRNet:
     def output_scale(self):
         """Returns relative scaling factor of this backbone."""
 
-        return 1 / (2 ** (self.down_blocks - self.n_deconv_modules))
+        return 1 / (2 ** (self.initial_downsampling_steps - self.n_deconv_modules))
