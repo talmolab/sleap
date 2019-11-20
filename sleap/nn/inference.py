@@ -279,6 +279,11 @@ class Predictor:
                     "instance_box_length"
                 ] = training_job.trainer.bounding_box_size
 
+        if not policy_args["region"].get("merged_box_length", 0):
+            policy_args["region"]["merged_box_length"] = (
+                policy_args["region"]["instance_box_length"] * 2
+            )
+
         if "topdown" in policies:
             policy_args["region"]["merge_overlapping"] = False
 
