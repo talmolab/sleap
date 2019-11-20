@@ -9,6 +9,7 @@ import logging
 
 from sleap import Skeleton
 from sleap.nn.architectures import *
+from sleap.nn.architectures import common
 from sleap.nn import utils
 
 logger = logging.getLogger(__name__)
@@ -79,6 +80,7 @@ class Model:
     backbone: BackboneType
     backbone_name: str = None
     skeletons: Union[None, List[Skeleton]] = None
+    average_multi_output: bool = True
 
     def __attrs_post_init__(self):
 
@@ -138,6 +140,9 @@ class Model:
             if len(backbone_output) == 1:
                 backbone_output = backbone_output[0]
 
+            elif self.average_multi_output:
+                backbone_output = common.upsampled_average_block(backbone_output)
+
             else:
                 raise NotImplementedError("Multi-head output not yet implemented.")
 
@@ -181,7 +186,14 @@ class Model:
         """Calculates output scale relative to input."""
 
         if hasattr(self.backbone, "output_scale"):
-            return self.backbone.output_scale
+            output_scale = self.backbone.output_scale
+            if isinstance(output_scale, list):
+                if self.average_multi_output:
+                    output_scale = max(output_scale)
+                else:
+                    raise NotImplementedError("Multi-head output not yet implemented.")
+
+            return output_scale
 
         elif hasattr(self.backbone, "down_blocks") and hasattr(
             self.backbone, "up_blocks"
