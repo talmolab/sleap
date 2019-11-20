@@ -24,6 +24,7 @@ class ModelOutputType(Enum):
     skeleton node within an image. Models with this type will output a tensor
     that contains N channels, where N is the number of unique nodes across all
     skeletons for the model.
+
     PART_AFFINITY_FIELDS: A nonparametric representation made up from a set of
     "2D vector fields that encode the location and orientation of limbs over
     the image domain". Models with this type will output a tensor that contains
@@ -31,6 +32,11 @@ class ModelOutputType(Enum):
     the model.
     See "Realtime Multi-Person 2D Pose Estimation using Part Affinity Fields"
     by Cao et al.
+
+    CENTROIDS: Confidence maps trained to detect instance centroids.
+
+    TOPDOWN_CONFIDENCE_MAP: Confidence maps trained to detect skeleton nodes
+    for the instance at the center of the image.
 
     """
 

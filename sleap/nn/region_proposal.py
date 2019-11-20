@@ -207,11 +207,11 @@ def normalize_bboxes(bboxes: np.ndarray, img_height: int, img_width: int) -> np.
 
 @attr.s(auto_attribs=True, eq=False)
 class CentroidPredictor:
-    centroid_model: model.InferenceModel
+    inference_model: model.InferenceModel
     batch_size: int = 16
     smooth_confmaps: bool = False
     smoothing_kernel_size: int = 5
-    smoothing_sigma: float = 3.
+    smoothing_sigma: float = 3.0
     peak_thresh: float = 0.3
     refine_peaks: bool = True
 
@@ -219,8 +219,8 @@ class CentroidPredictor:
         # Scale to model input size.
         imgs = utils.resize_imgs(
             imgs,
-            self.centroid_model.input_scale,
-            common_divisor=2 ** self.centroid_model.down_blocks,
+            self.inference_model.input_scale,
+            common_divisor=2 ** self.inference_model.down_blocks,
         )
 
         # Convert to float32 and scale values to [0., 1.].
@@ -231,13 +231,13 @@ class CentroidPredictor:
     @tf.function
     def inference(self, imgs):
         # Model inference
-        confmaps = self.centroid_model.keras_model(imgs)
+        confmaps = self.inference_model.keras_model(imgs)
 
         if self.smooth_confmaps:
             confmaps = peak_finding.smooth_imgs(
                 confmaps,
                 kernel_size=self.smoothing_kernel_size,
-                sigma=self.smoothing_sigma
+                sigma=self.smoothing_sigma,
             )
 
         return confmaps
@@ -245,17 +245,26 @@ class CentroidPredictor:
     def postproc(self, centroid_confmaps):
         # Peak finding
         centroids, centroid_vals = peak_finding.find_local_peaks(
-            centroid_confmaps, min_val=self.peak_thresh)
+            centroid_confmaps, min_val=self.peak_thresh
+        )
 
         if self.refine_peaks:
-            centroids = peak_finding.refine_peaks_local_direction(centroid_confmaps, centroids)
+            centroids = peak_finding.refine_peaks_local_direction(
+                centroid_confmaps, centroids
+            )
 
         centroids /= tf.constant(
-            [[1, self.centroid_model.output_scale, self.centroid_model.output_scale, 1]]
+            [
+                [
+                    1,
+                    self.inference_model.output_scale,
+                    self.inference_model.output_scale,
+                    1,
+                ]
+            ]
         )
         return centroids, centroid_vals
 
-    
     def predict(self, imgs):
         imgs = self.preproc(imgs)
         confmaps = utils.batched_call(self.inference, imgs, batch_size=self.batch_size)
@@ -356,7 +365,10 @@ class RegionProposalExtractor:
             for bbox in sample_bboxes:
 
                 # Compute (height, width) of bounding box.
-                box_size = (int(np.round(bbox[2] - bbox[0])), int(np.round(bbox[3] - bbox[1])))
+                box_size = (
+                    int(np.round(bbox[2] - bbox[0])),
+                    int(np.round(bbox[3] - bbox[1])),
+                )
 
                 # Add to the size group.
                 size_grouped_bboxes[box_size].append(bbox)
@@ -410,7 +422,9 @@ class RegionProposalExtractor:
 
         else:
             size_grouped_bboxes = {self.instance_box_length: all_bboxes}
-            size_grouped_sample_inds = {self.instance_box_length: centroids[:, 0].astype(int)}
+            size_grouped_sample_inds = {
+                self.instance_box_length: centroids[:, 0].astype(int)
+            }
 
         region_proposal_sets = self.extract_region_proposal_sets(
             imgs, size_grouped_bboxes, size_grouped_sample_inds

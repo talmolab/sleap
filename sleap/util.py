@@ -7,6 +7,7 @@ import os
 import re
 import shutil
 
+from collections import defaultdict
 from pkg_resources import Requirement, resource_filename
 
 import h5py as h5
@@ -280,3 +281,28 @@ def get_config_file(shortname: str) -> str:
         shutil.copy(package_path, desired_path)
 
     return desired_path
+
+
+def make_scoped_dictionary(
+    flat_dict: Dict[str, Any], exclude_nones: bool = True
+) -> Dict[str, Dict[str, Any]]:
+    """Converts dictionary with scoped keys to dictionary of dictionaries.
+
+    Args:
+        flat_dict: The dictionary to convert. Keys should be strings with
+            `scope.foo` format.
+        exclude_nodes: Whether to exclude items where value is None.
+
+    Returns:
+        Dictionary in which keys are `scope` and values are dictionary with
+            `foo` (etc) as keys and original value of `scope.foo` as value.
+    """
+    scoped_dict = defaultdict(dict)
+
+    for key, val in flat_dict.items():
+        if "." in key and (not exclude_nones or val is not None):
+            scope, subkey = key.split(".")
+
+            scoped_dict[scope][subkey] = val
+
+    return scoped_dict

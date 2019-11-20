@@ -310,6 +310,15 @@ class SimpleCandidateMaker:
         return candidate_instances
 
 
+tracker_policies = dict(simple=SimpleCandidateMaker, flow=FlowCandidateMaker,)
+
+similarity_policies = dict(
+    instance=instance_similarity, centroid=centroid_distance, iou=instance_iou,
+)
+
+match_policies = dict(hungarian=hungarian_matching, greedy=greedy_matching,)
+
+
 @attr.s(auto_attribs=True)
 class Tracker:
     """
@@ -498,6 +507,128 @@ class Tracker:
 
         return tracked_instances
 
+    def get_name(self):
+        tracker_name = self.candidate_maker.__class__.__name__
+        similarity_name = self.similarity_function.__name__
+        match_name = self.matching_function.__name__
+        return f"{tracker_name}.{similarity_name}.{match_name}"
+
+    @classmethod
+    def make_tracker_by_name(
+        cls,
+        tracker: str = "flow",
+        similarity: str = "instance",
+        match: str = "greedy",
+        track_window: int = 5,
+        min_new_track_points: int = 0,
+        min_match_points: int = 0,
+        img_scale: float = 1.0,
+        of_window_size: int = 21,
+        of_max_levels: int = 3,
+        **kwargs,
+    ) -> "Tracker":
+
+        if tracker not in tracker_policies:
+            raise ValueError(f"{tracker} is not a valid tracker.")
+
+        if similarity not in similarity_policies:
+            raise ValueError(
+                f"{similarity} is not a valid tracker similarity function."
+            )
+
+        if match not in match_policies:
+            raise ValueError(f"{match} is not a valid tracker matching function.")
+
+        candidate_maker = tracker_policies[tracker](min_points=min_match_points)
+        similarity_function = similarity_policies[similarity]
+        matching_function = match_policies[match]
+
+        if tracker == "flow":
+            candidate_maker.img_scale = img_scale
+            candidate_maker.of_window_size = of_window_size
+            candidate_maker.of_max_levels = of_max_levels
+
+        return cls(
+            track_window=track_window,
+            min_new_track_points=min_new_track_points,
+            similarity_function=similarity_function,
+            matching_function=matching_function,
+            candidate_maker=candidate_maker,
+        )
+
+    @classmethod
+    def get_by_name_factory_options(cls):
+
+        options = []
+
+        option = dict(name="tracker", default="None")
+        option["type"] = str
+        option["options"] = list(tracker_policies.keys()) + [
+            "None",
+        ]
+        options.append(option)
+
+        option = dict(name="similarity", default="instance")
+        option["type"] = str
+        option["options"] = list(similarity_policies.keys())
+        options.append(option)
+
+        option = dict(name="match", default="greedy")
+        option["type"] = str
+        option["options"] = list(match_policies.keys())
+        options.append(option)
+
+        option = dict(name="track_window", default=5)
+        option["type"] = int
+        option["help"] = "How many frames back to look for matches"
+        options.append(option)
+
+        option = dict(name="min_new_track_points", default=0)
+        option["type"] = int
+        option["help"] = "Minimum number of instance points for spawning new track"
+        options.append(option)
+
+        option = dict(name="min_match_points", default=0)
+        option["type"] = int
+        option["help"] = "Minimum points for match candidates"
+        options.append(option)
+
+        option = dict(name="img_scale", default=1.0)
+        option["type"] = float
+        option["help"] = "For optical-flow: Image scale"
+        options.append(option)
+
+        option = dict(name="of_window_size", default=21)
+        option["type"] = int
+        option[
+            "help"
+        ] = "For optical-flow: Optical flow window size to consider at each pyramid scale level"
+        options.append(option)
+
+        option = dict(name="of_max_levels", default=3)
+        option["type"] = int
+        option["help"] = "For optical-flow: Number of pyramid scale levels to consider"
+        options.append(option)
+
+        return options
+
+    @classmethod
+    def add_cli_parser_args(cls, parser, arg_scope: str = ""):
+        for arg in cls.get_by_name_factory_options():
+            help_string = arg.get("help", "")
+            if arg.get("options", ""):
+                help_string += " Options: " + ", ".join(arg["options"])
+            help_string += f" (default: {arg['default']})"
+
+            if arg_scope:
+                arg_name = arg_scope + "." + arg["name"]
+            else:
+                arg_name = arg["name"]
+
+            parser.add_argument(
+                f"--{arg_name}", type=arg["type"], help=help_string,
+            )
+
 
 @attr.s(auto_attribs=True)
 class FlowTracker(Tracker):
@@ -515,3 +646,92 @@ class SimpleTracker(Tracker):
     similarity_function: Callable = instance_iou
     matching_function: Callable = hungarian_matching
     candidate_maker: object = attr.ib(factory=SimpleCandidateMaker)
+
+
+def run_tracker(frames, tracker):
+    import inspect
+    import time
+    from sleap import Labels
+
+    sig = inspect.signature(tracker.track)
+    takes_img = "img" in sig.parameters
+
+    t0 = time.time()
+
+    new_lfs = []
+
+    # Run tracking on every frame
+    for lf in frames:
+
+        # Clear the tracks
+        for inst in lf.instances:
+            inst.track = None
+
+        track_args = dict(untracked_instances=lf.instances)
+        if takes_img:
+            track_args["img"] = lf.video[lf.frame_idx]
+        else:
+            track_args["img"] = None
+
+        new_lf = LabeledFrame(
+            frame_idx=lf.frame_idx,
+            video=lf.video,
+            instances=tracker.track(**track_args),
+        )
+        new_lfs.append(new_lf)
+
+        if lf.frame_idx % 100 == 0:
+            print(lf.frame_idx, time.time() - t0)
+
+    print(time.time() - t0)
+
+    new_labels = Labels(labeled_frames=new_lfs)
+    return new_labels
+
+
+def retrack():
+    import argparse
+    import operator
+    import os
+
+    from sleap import Labels
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("data_path", help="Path to SLEAP project file")
+    parser.add_argument(
+        "-o",
+        "--output",
+        type=str,
+        default=None,
+        help="The output filename to use for the predicted data.",
+    )
+
+    Tracker.add_cli_parser_args(parser)
+
+    args = parser.parse_args()
+
+    tracker_args = {key: val for key, val in vars(args).items() if val is not None}
+
+    tracker = Tracker.make_tracker_by_name(**tracker_args)
+
+    print(tracker)
+
+    labels = Labels.load_file(args.data_path)
+    frames = sorted(labels.labeled_frames, key=operator.attrgetter("frame_idx"))
+
+    new_labels = run_tracker(frames=frames, tracker=tracker)
+
+    if args.output:
+        output_path = args.output
+    else:
+        out_dir = os.path.dirname(args.data_path)
+        out_name = os.path.basename(args.data_path) + f".{tracker.get_name()}.h5"
+        output_path = os.path.join(out_dir, out_name)
+
+    print(f"Saving: {output_path}")
+    Labels.save_file(new_labels, output_path)
+
+
+if __name__ == "__main__":
+    retrack()

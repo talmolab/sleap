@@ -35,9 +35,7 @@ def make_predicted_instance(points_array, peak_vals, skeleton):
     instance_score /= len(skeleton.node_names)
 
     predicted_instance = PredictedInstance(
-        skeleton=skeleton,
-        points=predicted_points,
-        score=instance_score
+        skeleton=skeleton, points=predicted_points, score=instance_score
     )
 
     return predicted_instance
@@ -62,7 +60,7 @@ def make_sample_grouped_predicted_instances(
 
 @attr.s(auto_attribs=True, eq=False)
 class TopDownPeakFinder:
-    confmap_model: model.InferenceModel
+    inference_model: model.InferenceModel
     batch_size: int = 8
     smooth_confmaps: bool = False
     smoothing_kernel_size: int = 5
@@ -74,8 +72,8 @@ class TopDownPeakFinder:
         # Scale to model input size.
         imgs = utils.resize_imgs(
             imgs,
-            self.confmap_model.input_scale,
-            common_divisor=2 ** self.confmap_model.down_blocks,
+            self.inference_model.input_scale,
+            common_divisor=2 ** self.inference_model.down_blocks,
         )
 
         # Convert to float32 and scale values to [0., 1.].
@@ -85,7 +83,7 @@ class TopDownPeakFinder:
 
     @tf.function
     def inference(self, imgs):
-        cms = self.confmap_model.keras_model(imgs)
+        cms = self.inference_model.keras_model(imgs)
 
         if self.smooth_confmaps:
             cms = peak_finding.smooth_imgs(
@@ -101,7 +99,14 @@ class TopDownPeakFinder:
 
     def postproc(self, peak_subs, peak_vals):
         peak_subs /= tf.constant(
-            [[1, self.confmap_model.output_scale, self.confmap_model.output_scale, 1]]
+            [
+                [
+                    1,
+                    self.inference_model.output_scale,
+                    self.inference_model.output_scale,
+                    1,
+                ]
+            ]
         )
         peak_pts = tf.reverse(peak_subs[:, 1:3], axis=[-1])
         peak_pts = peak_pts.numpy()
@@ -114,10 +119,7 @@ class TopDownPeakFinder:
         imgs = self.preproc(rps.patches)
 
         peak_subs_and_vals, batch_inds = utils.batched_call(
-            self.inference,
-            imgs,
-            batch_size=self.batch_size,
-            return_batch_inds=True,
+            self.inference, imgs, batch_size=self.batch_size, return_batch_inds=True,
         )
         peak_subs, peak_vals = tf.split(peak_subs_and_vals, [4, 1], axis=1)
         peak_pts = self.postproc(peak_subs, peak_vals)

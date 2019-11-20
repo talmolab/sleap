@@ -229,6 +229,10 @@ class MediaVideo:
     filename: str = attr.ib()
     grayscale: bool = attr.ib()
     bgr: bool = attr.ib(default=True)
+
+    dataset: str = attr.ib(default="")  # unused, for compatibility with HDF5Video
+    input_format: str = attr.ib(default="")  # unused, for compatibility with HDF5Video
+
     _detect_grayscale = False
     _reader_ = None
     _test_frame_ = None
