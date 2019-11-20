@@ -68,3 +68,25 @@ def test_config():
 
     filename = get_config_file("shortcuts.yaml")
     assert os.path.exists(filename)
+
+
+def test_scoped_dict():
+    d = {"foo.x": 3, "foo.y": 5, "foo.z": None, "bar.z": 7}
+
+    scoped_dict = make_scoped_dictionary(d, exclude_nones=False)
+
+    assert "foo" in scoped_dict
+    assert "bar" in scoped_dict
+    assert scoped_dict["foo"]["x"] == 3
+    assert scoped_dict["foo"]["y"] == 5
+    assert scoped_dict["foo"]["z"] == None
+    assert scoped_dict["bar"]["z"] == 7
+
+    scoped_dict = make_scoped_dictionary(d, exclude_nones=True)
+
+    assert "foo" in scoped_dict
+    assert "bar" in scoped_dict
+    assert scoped_dict["foo"]["x"] == 3
+    assert scoped_dict["foo"]["y"] == 5
+    assert "z" not in scoped_dict["foo"]
+    assert scoped_dict["bar"]["z"] == 7

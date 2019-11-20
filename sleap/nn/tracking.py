@@ -310,6 +310,15 @@ class SimpleCandidateMaker:
         return candidate_instances
 
 
+tracker_policies = dict(simple=SimpleCandidateMaker, flow=FlowCandidateMaker,)
+
+similarity_policies = dict(
+    instance=instance_similarity, centroid=centroid_distance, iou=instance_iou,
+)
+
+match_policies = dict(hungarian=hungarian_matching, greedy=greedy_matching,)
+
+
 @attr.s(auto_attribs=True)
 class Tracker:
     """
@@ -497,6 +506,104 @@ class Tracker:
             self.tracked_instances[t] = tracked_instances
 
         return tracked_instances
+
+    @classmethod
+    def make_tracker_by_name(
+        cls,
+        tracker: str = "flow",
+        similarity: str = "instance",
+        match: str = "greedy",
+        track_window: int = 5,
+        min_new_track_points: int = 0,
+        min_match_points: int = 0,
+        img_scale: float = 1.0,
+        of_window_size: int = 21,
+        of_max_levels: int = 3,
+    ) -> "Tracker":
+
+        if tracker not in tracker_policies:
+            raise ValueError(f"{tracker} is not a valid tracker.")
+
+        if similarity not in similarity_policies:
+            raise ValueError(
+                f"{similarity} is not a valid tracker similarity function."
+            )
+
+        if match not in match_policies:
+            raise ValueError(f"{match} is not a valid tracker matching function.")
+
+        candidate_maker = tracker_policies[tracker](min_points=min_match_points)
+        similarity_function = similarity_policies[similarity]
+        matching_function = match_policies[match]
+
+        if tracker == "flow":
+            candidate_maker.img_scale = img_scale
+            candidate_maker.of_window_size = of_window_size
+            candidate_maker.of_max_levels = of_max_levels
+
+        return cls(
+            track_window=track_window,
+            min_new_track_points=min_new_track_points,
+            similarity_function=similarity_function,
+            matching_function=matching_function,
+            candidate_maker=candidate_maker,
+        )
+
+    @classmethod
+    def get_by_name_factory_options(cls):
+
+        options = []
+
+        option = dict(name="tracker", default="None")
+        option["type"] = str
+        option["options"] = list(tracker_policies.keys()) + [
+            "None",
+        ]
+        options.append(option)
+
+        option = dict(name="similarity", default="instance")
+        option["type"] = str
+        option["options"] = list(similarity_policies.keys())
+        options.append(option)
+
+        option = dict(name="match", default="greedy")
+        option["type"] = str
+        option["options"] = list(match_policies.keys())
+        options.append(option)
+
+        option = dict(name="track_window", default=5)
+        option["type"] = int
+        option["help"] = "How many frames back to look for matches"
+        options.append(option)
+
+        option = dict(name="min_new_track_points", default=0)
+        option["type"] = int
+        option["help"] = "Minimum number of instance points for spawning new track"
+        options.append(option)
+
+        option = dict(name="min_match_points", default=0)
+        option["type"] = int
+        option["help"] = "Minimum points for match candidates"
+        options.append(option)
+
+        option = dict(name="img_scale", default=1.0)
+        option["type"] = float
+        option["help"] = "For optical-flow: Image scale"
+        options.append(option)
+
+        option = dict(name="of_window_size", default=21)
+        option["type"] = int
+        option[
+            "help"
+        ] = "For optical-flow: Optical flow window size to consider at each pyramid scale level"
+        options.append(option)
+
+        option = dict(name="of_max_levels", default=3)
+        option["type"] = int
+        option["help"] = "For optical-flow: Number of pyramid scale levels to consider"
+        options.append(option)
+
+        return options
 
 
 @attr.s(auto_attribs=True)

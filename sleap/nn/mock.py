@@ -80,7 +80,7 @@ class MockConfmapPeakFinder:
 
 @attr.s
 class MockPAFGrouper(paf_grouping.PAFGrouper):
-    paf_model = attr.ib(default=None)
+    inference_model = attr.ib(default=None)
     _skeleton = attr.ib(default=None)
 
     output_scale = attr.ib(default=1.0)

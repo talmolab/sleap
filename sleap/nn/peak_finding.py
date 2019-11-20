@@ -84,17 +84,17 @@ def find_local_peaks(
 
     # Build custom local NMS kernel.
     kernel = tf.reshape(
-        tf.constant([[0, 0, 0], [0, -1, 0], [0, 0, 0]], dtype=tf.float32),
-        (3, 3, 1))
-    
+        tf.constant([[0, 0, 0], [0, -1, 0], [0, 0, 0]], dtype=tf.float32), (3, 3, 1)
+    )
+
     # Perform dilation filtering to find local maxima per channel.
     img_channels = tf.split(img, tf.ones([tf.shape(img)[-1]], dtype=tf.int32), axis=-1)
     max_img = []
     for img_channel in img_channels:
         max_img.append(
             tf.nn.dilation2d(
-                img_channel, kernel, [1, 1, 1, 1],
-                "SAME", "NHWC", [1, 1, 1, 1])
+                img_channel, kernel, [1, 1, 1, 1], "SAME", "NHWC", [1, 1, 1, 1]
+            )
         )
     max_img = tf.concat(max_img, axis=-1)
 
@@ -193,8 +193,8 @@ def make_gaussian_kernel(size: int, sigma: float) -> tf.Tensor:
 
     # Generate kernel and broadcast to 2D.
     kernel = tf.exp(
-        -(tf.reshape(gv, (1, -1)) ** 2 + tf.reshape(gv, (-1, 1)) ** 2) /
-        (2 * sigma ** 2)
+        -(tf.reshape(gv, (1, -1)) ** 2 + tf.reshape(gv, (-1, 1)) ** 2)
+        / (2 * sigma ** 2)
     )
 
     return kernel
@@ -344,7 +344,8 @@ class RegionPeakSet:
 
 @attr.s(auto_attribs=True, eq=False)
 class ConfmapPeakFinder:
-    confmap_model: model.InferenceModel
+
+    inference_model: model.InferenceModel
     batch_size: int = 16
     rps_batch_size: int = 64
     smoothing_kernel_size: int = 5
@@ -355,8 +356,8 @@ class ConfmapPeakFinder:
         # Scale to model input size.
         imgs = utils.resize_imgs(
             imgs,
-            self.confmap_model.input_scale,
-            common_divisor=2 ** self.confmap_model.down_blocks,
+            self.inference_model.input_scale,
+            common_divisor=2 ** self.inference_model.down_blocks,
         )
 
         # Convert to float32 and scale values to [0., 1.].
@@ -368,12 +369,15 @@ class ConfmapPeakFinder:
     def inference(self, imgs):
 
         # Model inference
-        confmaps = self.confmap_model.keras_model(imgs)
+        confmaps = self.inference_model.keras_model(imgs)
 
         if self.smoothing_sigma > 0:
             # Smooth
-            confmaps = smooth_imgs(confmaps, kernel_size=self.smoothing_kernel_size,
-                sigma=self.smoothing_sigma)
+            confmaps = smooth_imgs(
+                confmaps,
+                kernel_size=self.smoothing_kernel_size,
+                sigma=self.smoothing_sigma,
+            )
 
         return confmaps
 
@@ -381,28 +385,32 @@ class ConfmapPeakFinder:
     def postproc(self, confmaps):
 
         # Peak finding
-        peak_subs, peak_vals = find_local_peaks(confmaps, min_val=self.min_peak_threshold)
+        peak_subs, peak_vals = find_local_peaks(
+            confmaps, min_val=self.min_peak_threshold
+        )
         peak_subs = refine_peaks_local_direction(confmaps, peak_subs)
         peak_subs /= tf.constant(
-            [[1, self.confmap_model.output_scale, self.confmap_model.output_scale, 1]]
+            [
+                [
+                    1,
+                    self.inference_model.output_scale,
+                    self.inference_model.output_scale,
+                    1,
+                ]
+            ]
         )
 
         return tf.concat([peak_subs, tf.expand_dims(peak_vals, axis=1)], axis=1)
 
-    def predict_rps(self, rps) -> RegionPeakSet:
+    def predict_rps(self, rps: "RegionProposalSet") -> RegionPeakSet:
 
         imgs = self.preproc(rps.patches)
 
-        confmaps = utils.batched_call(
-            self.inference,
-            imgs,
-            batch_size=self.batch_size)
+        confmaps = utils.batched_call(self.inference, imgs, batch_size=self.batch_size)
 
         peak_subs_and_vals, batch_inds = utils.batched_call(
-            self.postproc,
-            confmaps,
-            batch_size=self.batch_size,
-            return_batch_inds=True)
+            self.postproc, confmaps, batch_size=self.batch_size, return_batch_inds=True
+        )
 
         # Split.
         peaks, peak_vals = tf.split(peak_subs_and_vals, [4, 1], axis=1)

@@ -4,7 +4,7 @@ import attr
 import tensorflow as tf
 import numpy as np
 from collections import defaultdict
-from typing import Callable, Dict, Tuple, Union, List
+from typing import Callable, Dict, List, Optional, Tuple, Union
 from sleap.io.video import Video
 
 
@@ -308,6 +308,7 @@ class VideoLoader:
     filename: str
     chunk_size: int = 32
     prefetch_chunks: int = 1
+    frame_inds: Optional[List[int]] = None
 
     _video: Video = attr.ib(init=False, repr=False)
     _shape: Tuple[int, int, int, int] = attr.ib(init=False)
@@ -366,7 +367,11 @@ class VideoLoader:
         return frame_inds, imgs
 
     def make_ds(self):
-        ds = tf.data.Dataset.range(self.n_frames)
+        if self.frame_inds is not None:
+            ds = tf.data.Dataset.from_tensor_slices(np.array(self.frame_inds))
+        else:
+            ds = tf.data.Dataset.range(self.n_frames)
+
         ds = ds.batch(self.chunk_size, drop_remainder=False)
         ds = ds.map(
             self.tf_load_frames, num_parallel_calls=tf.data.experimental.AUTOTUNE
