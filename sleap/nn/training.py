@@ -26,6 +26,7 @@ class Trainer:
     tensorboard: bool = False
     tensorboard_freq: Union[Text, int] = "epoch"
     tensorboard_dir: Union[Text, None] = None
+    tensorboard_profiling: bool = False
     zmq: bool = False
     control_zmq_port: int = 9000
     progress_report_zmq_port: int = 9001
@@ -470,6 +471,7 @@ class Trainer:
                     callbacks.TensorBoard(
                         log_dir=self.tensorboard_dir,
                         update_freq=self.tensorboard_freq,
+                        profile_batch=2 if self.tensorboard_profiling else 0
                         )
                     )
 
