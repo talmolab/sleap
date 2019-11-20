@@ -716,10 +716,6 @@ class GraphicsView(QGraphicsView):
         QGraphicsView.mouseReleaseEvent(self, event)
         scenePos = self.mapToScene(event.pos())
 
-        # re-enable contextual menu if necessary
-        if self.player:
-            self.player.is_menu_enabled = True
-
         # check if mouse moved during click
         has_moved = event.pos() != self._down_pos
         if event.button() == Qt.LeftButton:
@@ -759,6 +755,12 @@ class GraphicsView(QGraphicsView):
 
             self.setDragMode(QGraphicsView.NoDrag)
             self.rightMouseButtonReleased.emit(scenePos.x(), scenePos.y())
+
+    def mouseMoveEvent(self, event):
+        # re-enable contextual menu if necessary
+        if self.player:
+            self.player.is_menu_enabled = True
+        QGraphicsView.mouseMoveEvent(self, event)
 
     def zoomToRect(self, zoom_rect: QRectF):
         """
@@ -1179,7 +1181,6 @@ class QtNode(QGraphicsEllipseItem):
         elif event.button() == Qt.RightButton:
             # Right-click to toggle node as missing from this instance
             self.toggleVisibility()
-
             # Disable contextual menu for right clicks on node
             self.player.is_menu_enabled = False
 
