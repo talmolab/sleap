@@ -24,9 +24,8 @@ from sleap.io.dataset import Labels
 from sleap.gui.importvideos import ImportVideos
 from sleap.gui.filedialog import FileDialog
 from sleap.gui.missingfiles import MissingFilesDialog
-
 from sleap.gui.merge import MergeDialog
-
+from sleap.gui.message import MessageDialog
 from sleap.gui.suggestions import VideoFrameSuggestions
 from sleap.gui.state import GuiState
 
@@ -1426,11 +1425,15 @@ class GenerateSuggestions(EditCommand):
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
 
+        win = MessageDialog("Generating list of suggested frames...", context.app)
+
         new_suggestions = VideoFrameSuggestions.suggest(
             labels=context.labels, params=params
         )
 
         context.labels.set_suggestions(new_suggestions)
+
+        win.hide()
 
 
 class MergeProject(EditCommand):
