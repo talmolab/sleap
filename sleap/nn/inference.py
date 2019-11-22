@@ -243,11 +243,14 @@ class Predictor:
 
     @classmethod
     def cli_args_to_policies(cls, args):
-
         policy_args = util.make_scoped_dictionary(vars(args), exclude_nones=True)
+        return cls.from_policy_args(policy_args)
 
-        policy_args["region"]["instance_box_length"] = 160
+    @classmethod
+    def from_policy_args(cls, policy_args):
         policy_args["region"]["merge_overlapping"] = True
+
+        inferred_box_length = 160  # default if not set by user or inferrable
 
         policies = dict()
 
@@ -271,13 +274,9 @@ class Predictor:
 
             policies[policy_key] = policy_object
 
-            if (
-                training_job.trainer.bounding_box_size is not None
-                and training_job.trainer.bounding_box_size > 0
-            ):
-                policy_args["region"][
-                    "instance_box_length"
-                ] = training_job.trainer.bounding_box_size
+            if training_job.trainer.bounding_box_size is not None:
+                if training_job.trainer.bounding_box_size > 0:
+                    inferred_box_length = training_job.trainer.bounding_box_size
 
         if not policy_args["region"].get("merged_box_length", 0):
             policy_args["region"]["merged_box_length"] = (
@@ -286,6 +285,9 @@ class Predictor:
 
         if "topdown" in policies:
             policy_args["region"]["merge_overlapping"] = False
+
+        if "instance_box_length" not in policy_args["region"]:
+            policy_args["region"]["instance_box_length"] = inferred_box_length
 
         # Add non-model policy classes
         non_model_policy_keys = [
