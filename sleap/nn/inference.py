@@ -244,10 +244,10 @@ class Predictor:
     @classmethod
     def cli_args_to_policies(cls, args):
         policy_args = util.make_scoped_dictionary(vars(args), exclude_nones=True)
-        return cls.from_policy_args(policy_args)
+        return cls.from_paths_and_policy_args(args.models, policy_args)
 
     @classmethod
-    def from_policy_args(cls, policy_args):
+    def from_paths_and_policy_args(cls, model_paths: List[str], policy_args: dict):
         policy_args["region"]["merge_overlapping"] = True
 
         inferred_box_length = 160  # default if not set by user or inferrable
@@ -262,7 +262,7 @@ class Predictor:
         }
 
         # Add policy classes which depend on models
-        for model_path in args.models:
+        for model_path in model_paths:
             training_job = job.TrainingJob.load_json(model_path)
             inference_model = model.InferenceModel.from_training_job(training_job)
 
@@ -335,7 +335,7 @@ if __name__ == "__main__":
 
     predictor, args = Predictor.from_cli_args()
 
-    lfs = predictor.predict(video_filename=args.data_path, frames=args.frames)
+    lfs = predictor.predict(video_filename=args.data_path, frames=args.frames,)
 
     if args.output:
         output_path = args.output
