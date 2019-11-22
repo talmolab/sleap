@@ -221,11 +221,10 @@ class TrainingJob:
 
     @property
     def is_trained(self):
-        # TODO: fix this to use model_path
-        if self.final_model_filename is not None:
-            path = os.path.join(self.save_dir, self.final_model_filename)
-            if os.path.exists(path):
-                return True
+        if self.run_path is None:
+            return False
+        if os.path.exists(self.model_path):
+            return True
         return False
 
     @staticmethod
