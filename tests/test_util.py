@@ -90,3 +90,12 @@ def test_scoped_dict():
     assert scoped_dict["foo"]["y"] == 5
     assert "z" not in scoped_dict["foo"]
     assert scoped_dict["bar"]["z"] == 7
+
+
+def test_find_files_by_suffix():
+
+    files = find_files_by_suffix("tests/data", ".json")
+    assert len(files) == 0
+
+    files = find_files_by_suffix("tests/data", ".json", depth=1)
+    assert "centered_pair.json" in [file.name for file in files]

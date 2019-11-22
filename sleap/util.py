@@ -306,3 +306,33 @@ def make_scoped_dictionary(
             scoped_dict[scope][subkey] = val
 
     return scoped_dict
+
+
+def find_files_by_suffix(
+    root_dir: str, suffix: str, depth: int = 0
+) -> List[os.DirEntry]:
+    """
+    Returns list of files matching suffix, optionally searching in subdirs.
+
+    Args:
+        root_dir: Path to directory where we start searching
+        suffix: File suffix to match (e.g., '.json')
+        depth: How many subdirectories deep to keep searching
+
+    Returns:
+        List of os.DirEntry objects.
+    """
+
+    with os.scandir(root_dir) as file_iterator:
+        files = [file for file in file_iterator]
+
+    subdir_paths = [file.path for file in files if file.is_dir()]
+    matching_files = [
+        file for file in files if file.is_file() and file.name.endswith(suffix)
+    ]
+
+    if depth:
+        for subdir in subdir_paths:
+            matching_files.extend(find_files_by_suffix(subdir, suffix, depth=depth - 1))
+
+    return matching_files
