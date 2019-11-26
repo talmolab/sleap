@@ -16,6 +16,7 @@ The HDF5 file has these datasets:
 * "track_occupancy"     shape: tracks * frames
 * "tracks"              shape: frames * nodes * 2 * tracks
 * "track_names"         shape: tracks
+* "node_names"         shape: nodes
 
 Note: the datasets are stored column-major as expected by MATLAB.
 """
@@ -33,6 +34,11 @@ from sleap.io.dataset import Labels
 def get_tracks_as_np_strings(labels: Labels) -> List[np.string_]:
     """Get list of track names as `np.string_`."""
     return [np.string_(track.name) for track in labels.tracks]
+
+
+def get_nodes_as_np_strings(labels: Labels) -> List[np.string_]:
+    """Get list of node names as `np.string_`."""
+    return [np.string_(node.name) for node in labels.skeletons[0].nodes]
 
 
 def get_occupancy_and_points_matrices(
@@ -197,6 +203,7 @@ def main(labels: Labels, output_path: str, all_frames: bool = True):
 
     data_dict = dict(
         track_names=track_names,
+        node_names=get_nodes_as_np_strings(labels),
         tracks=locations_matrix,
         track_occupancy=occupancy_matrix,
     )
