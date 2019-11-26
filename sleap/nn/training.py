@@ -546,7 +546,7 @@ class Trainer:
                 callback_list.append(
                     callbacks.ProgressReporterZMQ(
                         port=self.progress_report_zmq_port,
-                        what=self.training_job.model.output_type,
+                        what=str(self.training_job.model.output_type),
                     )
                 )
 
