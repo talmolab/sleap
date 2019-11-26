@@ -35,7 +35,7 @@ def test_gui_import(qtbot):
     assert len(importer.get_data()) == 2
 
 
-def test_video_import_detect_params():
+def test_video_import_detect_grayscale():
     importer = ImportParamDialog(
         [
             "tests/data/videos/centered_pair_small.mp4",
@@ -46,3 +46,18 @@ def test_video_import_detect_params():
 
     assert data[0]["params"]["grayscale"] == True
     assert data[1]["params"]["grayscale"] == False
+
+
+def test_video_import_detect_h5_shape():
+    importer = ImportParamDialog(
+        ["tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"]
+    )
+    data = importer.get_data()
+
+    assert data[0]["params"]["input_format"] == "channels_first"
+
+    assert importer.import_widgets[0].video is not None
+    assert importer.import_widgets[0].video.num_frames == 42
+    assert importer.import_widgets[0].video.height == 512
+    assert importer.import_widgets[0].video.width == 512
+    assert importer.import_widgets[0].video.channels == 1

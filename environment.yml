@@ -5,11 +5,12 @@ dependencies:
 - attrs
 - jsonpickle=1.2
 - networkx
-- tensorflow-gpu=1.13
-- keras
+- cudatoolkit=10.0.*
+- cudnn
 - scikit-learn
 - h5py
 - pandas
+- Pillow
 - Shapely
 - psutil
 - pyzmq
@@ -23,3 +24,5 @@ dependencies:
     - cattrs==1.0.0rc0
     - qimage2ndarray==1.8
     - imgstore
+    - tensorflow-gpu==2.0
+    - jsmin

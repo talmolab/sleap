@@ -805,6 +805,20 @@ class Instance:
         return centroid
 
     @property
+    def bounding_box(self) -> np.ndarray:
+        """Returns the instance's containing bounding box in [y1, x1, y2, x2] format."""
+        points = self.points_array
+        bbox = np.concatenate(
+            [np.nanmin(points, axis=0)[::-1], np.nanmax(points, axis=0)[::-1]]
+        )
+        return bbox
+
+    @property
+    def n_visible_points(self) -> int:
+        """Returns the count of points that are visible in this instance."""
+        return sum(~np.isnan(self.points_array[:, 0]))
+
+    @property
     def frame_idx(self) -> Optional[int]:
         """
         Get the index of the frame that this instance was found on.
@@ -827,10 +841,12 @@ class PredictedInstance(Instance):
     A predicted instance is an output of the inference procedure.
 
     Args:
-        score: The instance-level prediction score.
+        score: The instance-level grouping prediction score.
+        tracking_score: The instance-level track matching score.
     """
 
     score: float = attr.ib(default=0.0, converter=float)
+    tracking_score: float = attr.ib(default=0.0, converter=float)
 
     # The underlying Point array type that this instances point array should be.
     _point_array_type = PredictedPointArray
@@ -1256,9 +1272,11 @@ class LabeledFrame:
             else:
                 # There's a corresponding frame in the base labels,
                 # so try merging the data.
-                merged_instances, extra_base_frame, extra_new_frame = cls.complex_frame_merge(
-                    base_lfs[0], new_frame
-                )
+                (
+                    merged_instances,
+                    extra_base_frame,
+                    extra_new_frame,
+                ) = cls.complex_frame_merge(base_lfs[0], new_frame)
                 if extra_base_frame:
                     extra_base.append(extra_base_frame)
                 if extra_new_frame:
@@ -1366,3 +1384,8 @@ class LabeledFrame:
         )
 
         return merged_instances, extra_base, extra_new
+
+    @property
+    def image(self) -> np.ndarray:
+        """Returns the image for this frame of shape (height, width, channels)."""
+        return self.video.get_frame(self.frame_idx)

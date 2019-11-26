@@ -5,6 +5,10 @@ unless they really have no other place.
 
 import os
 import re
+import shutil
+
+from collections import defaultdict
+from pkg_resources import Requirement, resource_filename
 
 import h5py as h5
 import numpy as np
@@ -231,3 +235,104 @@ def dict_cut(d: Dict, a: int, b: int) -> Dict:
         A dictionary that contains a subset of the items in the original dict.
     """
     return dict(list(d.items())[a:b])
+
+
+def get_package_file(filename: str) -> str:
+    """Returns full path to specified file within sleap package."""
+    package_path = Requirement.parse("sleap")
+    result = resource_filename(package_path, filename)
+    return result
+
+
+def get_config_file(shortname: str) -> str:
+    """
+    Returns the full path to the specified config file.
+
+    The config file will be at ~/.sleap/<shortname>
+
+    If that file doesn't yet exist, we'll look for a <shortname> file inside
+    the package config directory (sleap/config) and copy the file into the
+    user's config directory (creating the directory if needed).
+
+    Args:
+        shortname: The short filename, e.g., shortcuts.yaml
+
+    Raises:
+        FileNotFoundError: If the specified config file cannot be found.
+
+    Returns:
+        The full path to the specified config file.
+    """
+    desired_path = os.path.expanduser(f"~/.sleap/{shortname}")
+    if not os.path.exists(desired_path):
+        package_path = get_package_file(f"sleap/config/{shortname}")
+        if not os.path.exists(package_path):
+            return FileNotFoundError(
+                f"Cannot locate {shortname} config file at {desired_path} or {package_path}."
+            )
+        # Make sure there's a ~/.sleap/ directory to store user version of the
+        # config file.
+        try:
+            os.makedirs(os.path.expanduser("~/.sleap"))
+        except FileExistsError as e:
+            pass
+
+        # Copy package version of config file into user config directory.
+        shutil.copy(package_path, desired_path)
+
+    return desired_path
+
+
+def make_scoped_dictionary(
+    flat_dict: Dict[str, Any], exclude_nones: bool = True
+) -> Dict[str, Dict[str, Any]]:
+    """Converts dictionary with scoped keys to dictionary of dictionaries.
+
+    Args:
+        flat_dict: The dictionary to convert. Keys should be strings with
+            `scope.foo` format.
+        exclude_nodes: Whether to exclude items where value is None.
+
+    Returns:
+        Dictionary in which keys are `scope` and values are dictionary with
+            `foo` (etc) as keys and original value of `scope.foo` as value.
+    """
+    scoped_dict = defaultdict(dict)
+
+    for key, val in flat_dict.items():
+        if "." in key and (not exclude_nones or val is not None):
+            scope, subkey = key.split(".")
+
+            scoped_dict[scope][subkey] = val
+
+    return scoped_dict
+
+
+def find_files_by_suffix(
+    root_dir: str, suffix: str, depth: int = 0
+) -> List[os.DirEntry]:
+    """
+    Returns list of files matching suffix, optionally searching in subdirs.
+
+    Args:
+        root_dir: Path to directory where we start searching
+        suffix: File suffix to match (e.g., '.json')
+        depth: How many subdirectories deep to keep searching
+
+    Returns:
+        List of os.DirEntry objects.
+    """
+
+    with os.scandir(root_dir) as file_iterator:
+        files = [file for file in file_iterator]
+
+    subdir_paths = [file.path for file in files if file.is_dir()]
+    matching_files = [
+        file for file in files if file.is_file() and file.name.endswith(suffix)
+    ]
+
+    if depth:
+        for subdir in subdir_paths:
+            matching_files.extend(find_files_by_suffix(subdir, suffix, depth=depth - 1))
+
+    return matching_files

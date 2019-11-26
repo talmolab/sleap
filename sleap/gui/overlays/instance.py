@@ -3,6 +3,7 @@ Module with overlay for showing instances.
 """
 import attr
 
+from sleap.gui.state import GuiState
 from sleap.gui.video import QtVideoPlayer
 from sleap.io.dataset import Labels
 
@@ -14,13 +15,18 @@ class InstanceOverlay:
     Attributes:
         labels: The :class:`Labels` dataset from which to get overlay data.
         player: The video player in which to show overlay.
-        color_predicted: Whether to show predicted instances in color (
-            rather than all in gray/yellow).
+        state: Object used to communicate with application.
     """
 
     labels: Labels = None
     player: QtVideoPlayer = None
-    color_predicted: bool = False
+    state: GuiState = None
+
+    def __attrs_post_init__(self):
+        if self.state is None:
+            raise ValueError(
+                "InstanceOverlay initialized without application GuiState."
+            )
 
     def add_to_scene(self, video, frame_idx):
         """Adds overlay for frame to player scene."""
@@ -29,21 +35,8 @@ class InstanceOverlay:
 
         lf = self.labels.find(video, frame_idx, return_new=True)[0]
 
-        count_no_track = 0
-        for i, instance in enumerate(lf.instances_to_show):
+        for instance in lf.instances_to_show:
+            self.player.addInstance(instance=instance)
 
-            if instance.track in self.labels.tracks:
-                pseudo_track = instance.track
-            else:
-                # Instance without track
-                pseudo_track = len(self.labels.tracks) + count_no_track
-                count_no_track += 1
-
-            is_predicted = hasattr(instance, "score")
-
-            self.player.addInstance(
-                instance=instance,
-                color=self.player.color_manager.get_color(pseudo_track),
-                predicted=is_predicted,
-                color_predicted=self.color_predicted,
-            )
+        self.player.showLabels(self.state.get("show labels", default=True))
+        self.player.showEdges(self.state.get("show edges", default=True))

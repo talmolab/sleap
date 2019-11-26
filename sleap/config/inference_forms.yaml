@@ -1,0 +1,311 @@
+expert:
+
+- name: _conf_job
+  label: Node (confmap) Training Profile
+  type: list
+  default: a
+  options: a,b,c
+
+- name: _view_conf
+  label: View Node Profile...
+  type: button
+
+- name: _use_trained_confmaps
+  label: Use trained confmap model
+  type: bool
+  default: False
+
+- name: _paf_job
+  label: Edge (paf) Training Profile
+  type: list
+  default: a
+  options: a,b,c
+
+- name: _use_trained_pafs
+  label: Use trained paf model
+  type: bool
+  default: False
+
+- name: _dont_use_pafs
+  label: Single-instance mode (without pafs)
+  type: bool
+  default: False
+
+- name: _view_paf
+  label: View Edge Profile...
+  type: button
+
+- name: _centroid_job
+  label: Centroid Training Profile
+  type: list
+  default: a
+  options: a,b,c
+
+- name: _view_centoids
+  label: View Centroid Profile...
+  type: button
+
+- name: _use_trained_centroids
+  label: Use trained centroid model
+  type: bool
+  default: False
+
+- name: instance_crop
+  label: Crop images to instances (for training)
+  type: bool
+  default: False
+
+- name: _use_centroids
+  label: Centroid detection (for inference)
+  type: bool
+  default: False
+
+- name: min_crop_size
+  label: Minimum crop size
+  type: list
+  dtype: int
+  options: 0,64,128,256,512
+  default: 0
+
+#- name: negative_samples
+#  label: Negative samples (if cropping)
+#  type: int
+#  default: 0
+#  range: 0,1000
+
+- name: batch_size
+  label: Batch Size
+  type: int
+  default: 2
+
+- name: scale
+  label: Image rescaling factor
+  type: double
+  default: 1
+
+- name: sigma_confmaps
+  label: Sigma for confmaps
+  type: double
+  default: 5.0
+
+- name: sigma_pafs
+  label: Sigma for pafs
+  type: double
+  default: 5.0
+
+- name: _predict_frames
+  label: Predict On
+  type: list
+  options: current frame,random frames
+  default: current frame
+
+- name: _save_predictions
+  label: Save Predictions in Separate File
+  type: bool
+  default: False
+
+- name: _view_datagen
+  label: View Training Image Inputs...
+  type: button
+
+learning:
+
+- name: _multi_instance_mode
+  label: Animal Instances per Frame
+  type: stacked
+  default: multiple
+  options: multiple,single
+
+  multiple:
+  - name: sigma_confmaps
+    label: Sigma for Nodes (confidence maps)
+    type: double
+    default: 5.0
+
+  - name: _grouping_method
+    label: Instance Grouping Method
+    type: stacked
+    default: part affinity fields
+    options: part affinity fields,topdown confidence maps
+
+    part affinity fields:
+      - name: sigma_pafs
+        label: Sigma for Edges (part affinity fields)
+        type: double
+        default: 5.0
+
+    topdown confidence maps:
+    # nothing
+
+  single:
+  - name: sigma_confmaps
+    label: Sigma for Nodes (confidence maps)
+    type: double
+    default: 5.0
+
+- name: _region_proposal_mode
+  label: Region Proposal Mode
+  type: stacked
+  default: crop
+  options: crop,full frame
+
+  crop:
+  - name: bounding_box_size
+    label: Crop Size (0 for auto-detect)
+    type: list
+    dtype: int
+    options: 0,64,128,256,512
+    default: 0
+
+#  - name: negative_samples
+#    label: Negative Samples
+#    type: int
+#    default: 20
+#    range: 0,1000
+
+  full frame:
+  # no suboptions for full_frame mode
+
+- name: scale
+  label: Image Rescaling Factor
+  type: double
+  default: 1
+
+- name: batch_size
+  label: Training Batch Size
+  type: int
+  default: 8
+
+- name: _predict_frames
+  label: Predict On
+  type: list
+  options: current frame,random frames
+  default: current frame
+
+- name: _save_predictions
+  label: Save Predictions in Separate File
+  type: bool
+  default: False
+
+- name: _view_datagen
+  label: View Training Image Inputs...
+  type: button
+
+inference:
+
+#- name: _multi_instance_mode
+#  label: Animal Instances per Frame
+#  type: stacked
+#  default: multiple
+#  options: multiple,single
+#
+#  multiple:
+#
+#  - name: _grouping_method
+#    label: Instance Grouping Method
+#    type: stacked
+#    default: part affinity fields
+#    options: part affinity fields,topdown confidence maps
+#
+#    part affinity fields:
+#    - name: _conf_job
+#      label: Node (confidence map) Model
+#      type: list
+#      default: a
+#      options: a,b,c
+#    - name: _paf_job
+#      label: Edge (part affinity field) Model
+#      type: list
+#      default: a
+#      options: a,b,c
+#
+#    topdown confidence maps:
+#    - name: _topdown_job
+#      label: Node (confidence map) Model
+#      type: list
+#      default: a
+#      options: a,b,c
+#
+#  single:
+#  - name: _conf_job
+#    label: Node (confidence map) Model
+#    type: list
+#    default: a
+#    options: a,b,c
+#
+#- name: _region_proposal_mode
+#  label: Region Proposal Mode
+#  type: stacked
+#  default: crop
+#  options: crop,full frame
+#
+#  crop:
+#  - name: _centroid_job
+#    label: Region Proposal (centroid) Model
+#    type: list
+#    default: a
+#    options: a,b,c
+#
+#  full frame:
+#  # no suboptions for full_frame mode
+
+- name: _centroid_job
+  label: Region Proposal (centroid) Model
+  type: list
+  default: a
+  options: a,b,c
+
+- name: _conf_job
+  label: Node (confidence map) Model
+  type: list
+  default: a
+  options: a,b,c
+
+- name: _paf_job
+  label: Edge (part affinity field) Model
+  type: list
+  default: a
+  options: a,b,c
+
+- name: tracking.tracker
+  label: Tracker (cross-frame identity) Method
+  type: stacked
+  default: none
+  options: none,flow,simple
+
+  none:
+
+  flow:
+    - name: tracking.similarity
+      label: Similarity Method
+      type: list
+      default: instance
+      options: instance,centroid,iou
+    - name: tracking.matching
+      label: Matching Method
+      type: list
+      default: greedy
+      options: greedy,hungarian
+
+  simple:
+    - name: tracking.similarity
+      label: Similarity Method
+      type: list
+      default: iou
+      options: instance,centroid,iou
+    - name: tracking.matching
+      label: Matching Method
+      type: list
+      default: hungarian
+      options: greedy,hungarian
+
+- name: _predict_frames
+  label: Predict On
+  type: list
+  options: current frame,random frames
+  default: current frame
+
+#- name: _save_predictions
+#  label: Save Predictions in Separate File
+#  type: bool
+#  default: False

@@ -278,16 +278,21 @@ class LossViewer(QtWidgets.QMainWindow):
         self.is_running = False
 
     def update_runtime(self):
-        if self.t0 is not None and self.is_running:
+        if self.is_timer_running():
             dt = time() - self.t0
             dt_min, dt_sec = divmod(dt, 60)
-            title = f"Training Epoch <b>{self.epoch}</b> / "
+            title = f"Training Epoch <b>{self.epoch+1}</b> / "
             title += f"Runtime: <b>{int(dt_min):02}:{int(dt_sec):02}</b>"
             if self.last_epoch_val_loss is not None:
                 title += f"<br />Last Epoch Validation Loss: <b>{self.last_epoch_val_loss:.3e}</b>"
             self.chart.setTitle(title)
 
-    def check_messages(self, timeout=10):
+    def is_timer_running(self):
+        return self.t0 is not None and self.is_running
+
+    def check_messages(
+        self, timeout=10, times_to_check: int = 10, do_update: bool = True
+    ):
         if self.sub and self.sub.poll(timeout, zmq.POLLIN):
             msg = jsonpickle.decode(self.sub.recv_string())
 
@@ -299,6 +304,11 @@ class LossViewer(QtWidgets.QMainWindow):
 
             # make sure message matches current training job
             if msg.get("what", "") == self.current_job_output_type:
+
+                if not self.is_timer_running():
+                    # We must have missed the train_begin message, so start timer now
+                    self.set_start_time(time())
+
                 if msg["event"] == "train_end":
                     self.set_end()
                 elif msg["event"] == "epoch_begin":
@@ -324,7 +334,14 @@ class LossViewer(QtWidgets.QMainWindow):
                         msg["logs"]["loss"],
                     )
 
-        self.update_runtime()
+            # Check for messages again (up to times_to_check times)
+            if times_to_check:
+                self.check_messages(
+                    timeout=timeout, times_to_check=times_to_check - 1, do_update=False
+                )
+
+        if do_update:
+            self.update_runtime()
 
 
 if __name__ == "__main__":

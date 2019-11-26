@@ -99,6 +99,7 @@ class ImportParamDialog(QDialog):
                         "name": "input_format",
                         "type": "radio",
                         "options": "channels_first,channels_last",
+                        "required": True,  # we can't currently auto-detect
                     },
                 ],
             },
@@ -260,7 +261,7 @@ class ImportItemWidget(QFrame):
         }
         return video_data
 
-    def update_video(self, initial=False):
+    def update_video(self, initial: bool = False):
         """Update preview video using current param values.
 
         Args:
@@ -402,10 +403,10 @@ class ImportParamWidget(QWidget):
         for param in param_list:
             name = param["name"]
             type = param["type"]
-            print(name, type)
+
             if hasattr(video, name):
                 val = getattr(video, name)
-                print(name, val)
+
                 widget = self.widget_elements[name]
                 if hasattr(widget, "isChecked"):
                     widget.setChecked(val)

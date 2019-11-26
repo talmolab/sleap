@@ -1,16 +1,6 @@
-import numpy as np
-import attr
 import pytest
 
-from typing import List, Dict
-
-from sleap.util import (
-    json_dumps,
-    json_loads,
-    attr_to_dtype,
-    frame_list,
-    weak_filename_match,
-)
+from sleap.util import *
 
 
 def test_json():
@@ -71,3 +61,41 @@ def test_weak_match():
     assert not weak_filename_match("one/two/three", "two/three")
     assert not weak_filename_match("one/two/three.mp4", "one/two/three.avi")
     assert not weak_filename_match("foo.mp4", "bar.mp4")
+
+
+def test_config():
+    import os
+
+    filename = get_config_file("shortcuts.yaml")
+    assert os.path.exists(filename)
+
+
+def test_scoped_dict():
+    d = {"foo.x": 3, "foo.y": 5, "foo.z": None, "bar.z": 7}
+
+    scoped_dict = make_scoped_dictionary(d, exclude_nones=False)
+
+    assert "foo" in scoped_dict
+    assert "bar" in scoped_dict
+    assert scoped_dict["foo"]["x"] == 3
+    assert scoped_dict["foo"]["y"] == 5
+    assert scoped_dict["foo"]["z"] == None
+    assert scoped_dict["bar"]["z"] == 7
+
+    scoped_dict = make_scoped_dictionary(d, exclude_nones=True)
+
+    assert "foo" in scoped_dict
+    assert "bar" in scoped_dict
+    assert scoped_dict["foo"]["x"] == 3
+    assert scoped_dict["foo"]["y"] == 5
+    assert "z" not in scoped_dict["foo"]
+    assert scoped_dict["bar"]["z"] == 7
+
+
+def test_find_files_by_suffix():
+
+    files = find_files_by_suffix("tests/data", ".json")
+    assert len(files) == 0
+
+    files = find_files_by_suffix("tests/data", ".json", depth=1)
+    assert "centered_pair.json" in [file.name for file in files]

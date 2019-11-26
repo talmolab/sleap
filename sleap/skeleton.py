@@ -16,7 +16,7 @@ import copy
 
 from enum import Enum
 from itertools import count
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union, Text
 
 import networkx as nx
 from networkx.readwrite import json_graph
@@ -326,6 +326,20 @@ class Skeleton:
         return [(src.name, dst.name) for src, dst in self.edges]
 
     @property
+    def edge_inds(self) -> List[Tuple[int, int]]:
+        """Get a list of edges as node indices.
+
+        Returns:
+            A list of (src_node_ind, dst_node_ind), where indices are subscripts into
+            the Skeleton.nodes list.
+        """
+
+        return [
+        (self.nodes.index(src_node), self.nodes.index(dst_node))
+        for src_node, dst_node in self.edges
+        ]
+
+    @property
     def edges_full(self) -> List[Tuple[Node, Node, Any, Any]]:
         """Get a list of edge tuples with keys and attributes.
 
@@ -390,6 +404,16 @@ class Skeleton:
             return node_list.index(node)
         except ValueError:
             return node_list.index(self.find_node(node))
+
+    def edge_to_index(self, source: NodeRef, destination: NodeRef):
+        """Returns the index of edge from source to destination."""
+        source = self.find_node(source)
+        destination = self.find_node(destination)
+        edge = (source, destination)
+        if edge in self.edges:
+            return self.edges.index(edge)
+
+        return -1
 
     def add_node(self, name: str):
         """Add a node representing an animal part to the skeleton.
@@ -566,6 +590,12 @@ class Skeleton:
             )
 
         self._graph.remove_edge(source_node, destination_node)
+
+    def clear_edges(self):
+        """Deletes all edges in skeleton."""
+
+        for src, dst in self.edges:
+            self.delete_edge(src, dst)
 
     def add_symmetry(self, node1: str, node2: str):
         """Specify that two parts (nodes) in skeleton are symmetrical.
@@ -841,6 +871,26 @@ class Skeleton:
 
         """
         return Skeleton.from_json(json.dumps(d), node_to_idx)
+
+    @classmethod
+    def from_names_and_edge_inds(cls, node_names: List[Text], edge_inds: List[Tuple[int, int]] = None) -> "Skeleton":
+        """Create skeleton from a list of node names and edge indices.
+
+        Args:
+            node_names: List of strings defining the nodes.
+            edge_inds: List of tuples in the form (src_node_ind, dst_node_ind). If not
+                specified, the resulting skeleton will have no edges.
+
+        Returns:
+            The instantiated skeleton.
+        """
+
+        skeleton = cls()
+        skeleton.add_nodes(node_names)
+        if edge_inds is not None:
+            for src, dst in edge_inds:
+                skeleton.add_edge(node_names[src], node_names[dst])
+        return skeleton
 
     def to_json(self, node_to_idx: Optional[Dict[Node, int]] = None) -> str:
         """

@@ -1,15 +1,18 @@
+import os
 import attr
 import cattr
-import keras
-
+import tensorflow as tf
+import numpy as np
 from enum import Enum
-from typing import List
+from typing import List, Text, Callable, Tuple, Dict, Union
+import logging
 
-from sleap.skeleton import Skeleton
-from sleap.nn.augmentation import Augmenter
+from sleap import Skeleton
 from sleap.nn.architectures import *
+from sleap.nn.architectures import common
+from sleap.nn import utils
 
-from typing import Callable, Tuple, Dict, Union
+logger = logging.getLogger(__name__)
 
 
 class ModelOutputType(Enum):
@@ -21,6 +24,7 @@ class ModelOutputType(Enum):
     skeleton node within an image. Models with this type will output a tensor
     that contains N channels, where N is the number of unique nodes across all
     skeletons for the model.
+
     PART_AFFINITY_FIELDS: A nonparametric representation made up from a set of
     "2D vector fields that encode the location and orientation of limbs over
     the image domain". Models with this type will output a tensor that contains
@@ -29,11 +33,17 @@ class ModelOutputType(Enum):
     See "Realtime Multi-Person 2D Pose Estimation using Part Affinity Fields"
     by Cao et al.
 
+    CENTROIDS: Confidence maps trained to detect instance centroids.
+
+    TOPDOWN_CONFIDENCE_MAP: Confidence maps trained to detect skeleton nodes
+    for the instance at the center of the image.
+
     """
 
     CONFIDENCE_MAP = 0
     PART_AFFINITY_FIELD = 1
     CENTROIDS = 2
+    TOPDOWN_CONFIDENCE_MAP = 3
 
     def __str__(self):
         if self == ModelOutputType.CONFIDENCE_MAP:
@@ -42,6 +52,8 @@ class ModelOutputType(Enum):
             return "pafs"
         elif self == ModelOutputType.CENTROIDS:
             return "centroids"
+        elif self == ModelOutputType.TOPDOWN_CONFIDENCE_MAP:
+            return "topdown_confidence_maps"
         else:
             # This shouldn't ever happen I don't think.
             raise NotImplementedError(
@@ -62,7 +74,7 @@ class Model:
             skeletons:
             backbone: A class with an output method that returns a
             tf.Tensor of the output of the backbone block. This tensor
-            will be set as the outputs of the keras.Model that is constructed.
+            will be set as the outputs of the tf.keras.Model that is constructed.
             See sleap.nn.architectures for example backbone block classes.
             backbone_name: The name of the backbone architecture, this defaults
             to self.backbone.__name__ when set to None. In general, the user should
@@ -72,8 +84,9 @@ class Model:
 
     output_type: ModelOutputType
     backbone: BackboneType
-    skeletons: Union[None, List[Skeleton]] = None
     backbone_name: str = None
+    skeletons: Union[None, List[Skeleton]] = None
+    average_multi_output: bool = True
 
     def __attrs_post_init__(self):
 
@@ -111,7 +124,10 @@ class Model:
         # If we need to, figure out how many output channels we will have
         if num_output_channels is None:
             if self.skeletons is not None:
-                if self.output_type == ModelOutputType.CONFIDENCE_MAP:
+                if (
+                    self.output_type == ModelOutputType.CONFIDENCE_MAP
+                    or self.output_type == ModelOutputType.TOPDOWN_CONFIDENCE_MAP
+                ):
                     num_outputs_channels = len(self.skeletons[0].nodes)
                 elif self.output_type == ModelOutputType.PART_AFFINITY_FIELD:
                     num_outputs_channels = len(self.skeleton[0].edges) * 2
@@ -121,7 +137,22 @@ class Model:
                     "Cannot infer num output channels."
                 )
 
-        return self.backbone.output(input_tensor, num_output_channels)
+        backbone_output = self.backbone.output(input_tensor, num_output_channels)
+
+        if isinstance(backbone_output, tf.keras.Model):
+            backbone_output = backbone_output.outputs
+
+        if isinstance(backbone_output, list):
+            if len(backbone_output) == 1:
+                backbone_output = backbone_output[0]
+
+            elif self.average_multi_output:
+                backbone_output = common.upsampled_average_block(backbone_output)
+
+            else:
+                raise NotImplementedError("Multi-head output not yet implemented.")
+
+        return backbone_output
 
     @property
     def name(self):
@@ -151,11 +182,24 @@ class Model:
             return 0
 
     @property
+    def input_min_multiple(self):
+        """Returns the minimum multiple that the input data must be of."""
+
+        return 2 ** self.down_blocks
+
+    @property
     def output_scale(self):
         """Calculates output scale relative to input."""
 
         if hasattr(self.backbone, "output_scale"):
-            return self.backbone.output_scale
+            output_scale = self.backbone.output_scale
+            if isinstance(output_scale, list):
+                if self.average_multi_output:
+                    output_scale = max(output_scale)
+                else:
+                    raise NotImplementedError("Multi-head output not yet implemented.")
+
+            return output_scale
 
         elif hasattr(self.backbone, "down_blocks") and hasattr(
             self.backbone, "up_blocks"
@@ -199,4 +243,112 @@ class Model:
             backbone=backbone_cls(**model_dict["backbone"]),
             output_type=ModelOutputType(model_dict["output_type"]),
             skeletons=model_dict["skeletons"],
+        )
+
+
+@attr.s(auto_attribs=True)
+class InferenceModel:
+    """This class provides convenience metadata and methods for running inference from
+    a trained model."""
+
+    skeleton: Skeleton
+    input_scale: float = 1.0
+    output_scale: float = 1.0
+    input_tensor_ind: int = 0
+    output_tensor_ind: int = -1
+    down_blocks: int = 5
+    model_path: Text = None
+    keras_model: tf.keras.Model = None
+
+    @classmethod
+    def from_training_job(
+        cls,
+        training_job: Union["sleap.nn.job.TrainingJob", Text],
+        skeleton: Skeleton = None,
+    ):
+        """Create an InferenceModel from a TrainingJob or path to json file."""
+
+        if isinstance(training_job, str):
+            from sleap.nn.job import TrainingJob
+
+            training_job = TrainingJob.load_json(training_job)
+
+        if skeleton is None:
+            if (
+                training_job.model.skeletons is not None
+                and len(training_job.model.skeletons) > 0
+            ):
+                skeleton = training_job.model.skeletons[0]
+            else:
+                raise ValueError("No skeleton in training model or provided.")
+
+        return cls(
+            skeleton=skeleton,
+            input_scale=training_job.trainer.scale,
+            output_scale=training_job.trainer.scale * training_job.model.output_scale,
+            input_tensor_ind=0,
+            output_tensor_ind=-1,
+            down_blocks=training_job.model.down_blocks,
+            model_path=training_job.model_path,
+        )
+
+    def __attrs_post_init__(self):
+
+        # Load model if needed.
+        if self.keras_model is None:
+            self.load_model()
+
+        self._setup_input_output_tensors()
+
+    def load_model(self, model_path: Text = None):
+        """Loads a saved model with specified settings."""
+
+        # Use attribute-stored model path if a new one was not specified.
+        if model_path is None:
+            model_path = self.model_path
+
+        if model_path is None:
+            raise ValueError("Model path was not specified.")
+
+        # Load from disk.
+        self.keras_model = tf.keras.models.load_model(
+            model_path, custom_objects={"tf": tf}
+        )
+
+        # Store the path to the current model.
+        self.model_path = model_path
+
+    def _setup_input_output_tensors(self):
+        """Create model with the specified input/output tensors."""
+
+        self.keras_model = tf.keras.Model(
+            self.keras_model.inputs[self.input_tensor_ind],
+            self.keras_model.outputs[self.output_tensor_ind],
+        )
+
+    @property
+    def input_tensor(self) -> tf.Tensor:
+        """Returns the input tensor to the model."""
+        return self.keras_model.input
+
+    @property
+    def output_tensor(self) -> tf.Tensor:
+        """Returns the output tensor from the model."""
+        return self.keras_model.output
+
+    @property
+    def output_relative_scale(self) -> float:
+        """Returns the scale of the model outputs relative to the inputs."""
+        return self.output_scale / self.input_scale
+
+    @property
+    def trained_input_shape(self) -> Tuple[int]:
+        """Returns the shape of the input tensor."""
+        return tuple(self.input_tensor.shape)
+
+    def predict(self, X: np.ndarray, batch_size: int = 8) -> np.ndarray:
+        """Runs inference on input data."""
+
+        return utils.batched_call_slices(
+            self.keras_model, X, batch_size=batch_size, return_numpy=True
         )

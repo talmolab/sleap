@@ -1,6 +1,6 @@
 import attr
 from sleap.nn.architectures.common import conv, expand_to_n
-from keras.layers import Conv2DTranspose, Concatenate, MaxPool2D, UpSampling2D
+from tensorflow.keras.layers import Conv2DTranspose, Concatenate, MaxPool2D, UpSampling2D
 
 
 @attr.s(auto_attribs=True)

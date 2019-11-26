@@ -28,6 +28,7 @@ requirements:
     - scikit-learn
     - h5py
     - pandas
+    - Pillow
     - Shapely
     - psutil
     - pyzmq
@@ -46,6 +47,7 @@ requirements:
     - scikit-learn
     - h5py
     - pandas
+    - Pillow
     - Shapely
     - psutil
     - pyzmq
@@ -53,3 +55,5 @@ requirements:
     - python-rapidjson
     - pip
 
+  run_constrained:
+    - pyqt ==9999999999

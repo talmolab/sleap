@@ -6,11 +6,10 @@ import attr
 import cattr
 from typing import Optional
 
-from pkg_resources import Requirement, resource_filename
-
 from PySide2 import QtWidgets
 
 from sleap.gui.formbuilder import YamlFormWidget
+from sleap.util import get_config_file
 
 
 class TrainingEditor(QtWidgets.QDialog):
@@ -32,9 +31,7 @@ class TrainingEditor(QtWidgets.QDialog):
     ):
         super(TrainingEditor, self).__init__()
 
-        form_yaml = resource_filename(
-            Requirement.parse("sleap"), "sleap/config/training_editor.yaml"
-        )
+        form_yaml = get_config_file("training_editor.yaml")
 
         self.form_widgets = dict()
         self.form_widgets["model"] = YamlFormWidget(

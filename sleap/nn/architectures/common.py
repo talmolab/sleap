@@ -2,7 +2,9 @@ import numpy as np
 import collections
 from functools import wraps
 
-from keras.layers import Conv2D, BatchNormalization, Add
+from typing import List, Text
+import tensorflow as tf
+from tensorflow.keras.layers import Conv2D, BatchNormalization, Add
 
 
 def expand_to_n(x, n):
@@ -27,6 +29,16 @@ def expand_to_n(x, n):
         raise ValueError("Variable to expand must be scalar.")
 
     return x
+
+
+def scale_input(X):
+    """Rescale input to [-1, 1]."""
+    return (X * 2) - 1
+
+
+def tile_channels(X):
+    """Tiles single channel to 3 channel."""
+    return tf.tile(X, [1, 1, 1, 3])
 
 
 def conv(num_filters, kernel_size=(3, 3), activation="relu", **kwargs):
@@ -136,3 +148,72 @@ def residual_block(x_in, num_filters=None, batch_norm=True):
     x_out = Add()([x_identity, x])
 
     return x_out
+
+
+def upsampling_blocks(
+    x: tf.Tensor,
+    up_blocks: int,
+    upsampling_layers: bool = False,
+    interp: str = "bilinear",
+    refine_conv_up: bool = False,
+    conv_filters: int = 64,
+) -> tf.Tensor:
+
+    for i in range(up_blocks):
+        if upsampling_layers:
+            x = tf.keras.layers.UpSampling2D(size=(2, 2), interpolation=interp)(x)
+        else:
+            x = tf.keras.layers.Conv2DTranspose(
+                conv_filters,
+                kernel_size=3,
+                strides=2,
+                padding="same",
+                kernel_initializer="glorot_normal",
+            )(x)
+
+        if refine_conv_up:
+            x = tf.keras.layers.Conv2D(
+                conv_filters, kernel_size=1, padding="same", activation="relu"
+            )(x)
+
+    return x
+
+
+def upsampled_average_block(
+    tensors: List[tf.Tensor], target_size: int = None, interp: Text = "bilinear"
+) -> tf.Tensor:
+    """Upsamples tensors to a common size and reduce by averaging.
+
+    Args:
+        tensors: A list of tensors of possibly different heights/widths, but the same
+            number of channels.
+        target_size: Size that the tensors be upsampled to. If None, this is set to the
+            size of the largest tensor in the list.
+        interp: Interpolation method ("nearest" or "bilinear").
+
+    Returns:
+        A single tensor with the target size that is the average of all of the input
+        tensors.
+    """
+
+    if target_size is None:
+        # Find biggest output.
+        largest_tensor = tensors[0]
+        for x in tensors[1:]:
+            if x.shape[1] > largest_tensor.shape[1]:
+                largest_tensor = x
+        target_size = largest_tensor.shape[1]
+
+    # Now collect all outputs with upsampling if needed.
+    outputs = []
+    for x in tensors:
+        if x.shape[1] < target_size:
+            x = tf.keras.layers.UpSampling2D(
+                size=int(target_size / x.shape[1]), interpolation=interp
+            )(x)
+        outputs.append(x)
+
+    # Now average everything.
+    averaged_output = tf.keras.layers.Average()(outputs)
+
+    return averaged_output

@@ -1,465 +1,737 @@
-import functools
-import logging
-
-from attr import __init__
-
-logger = logging.getLogger(__name__)
-
-from typing import List, Tuple, Dict, Union
-
-import numpy as np
-import h5py as h5
-import cv2
+from collections import deque, defaultdict
 import attr
-
+import numpy as np
+import cv2
 from scipy.optimize import linear_sum_assignment
+from typing import Callable, Deque, Dict, List, Optional, Tuple, TypeVar
 
-from sleap.instance import Instance, Track, LabeledFrame
-from sleap.io.dataset import Labels
+from sleap.nn import utils
+from sleap.instance import Instance, PredictedInstance, Track
+from sleap.io.dataset import LabeledFrame
+from sleap.skeleton import Skeleton
+
+InstanceType = TypeVar("InstanceType", Instance, PredictedInstance)
 
 
-@attr.s(cmp=False, slots=True)
+def instance_similarity(
+    ref_instance: InstanceType, query_instance: InstanceType
+) -> float:
+    """Computes similarity between instances."""
+
+    ref_visible = ~(np.isnan(ref_instance.points_array).any(axis=1))
+    dists = np.sum(
+        (query_instance.points_array - ref_instance.points_array) ** 2, axis=1
+    )
+    similarity = np.nansum(np.exp(-dists)) / np.sum(ref_visible)
+
+    return similarity
+
+
+def centroid_distance(
+    ref_instance: InstanceType, query_instance: InstanceType, cache: dict = dict()
+) -> float:
+    """Returns the negative distance between the centroids of two instances.
+
+    Uses `cache` dictionary (created with function so it persists between calls)
+    since without cache this method is significantly slower than others.
+    """
+
+    if ref_instance not in cache:
+        cache[ref_instance] = ref_instance.centroid
+
+    if query_instance not in cache:
+        cache[query_instance] = query_instance.centroid
+
+    a = cache[ref_instance]
+    b = cache[query_instance]
+
+    return -np.linalg.norm(a - b)
+
+
+def instance_iou(
+    ref_instance: InstanceType, query_instance: InstanceType, cache: dict = dict()
+) -> float:
+    """Computes IOU between bounding boxes of instances."""
+
+    if ref_instance not in cache:
+        cache[ref_instance] = ref_instance.bounding_box
+
+    if query_instance not in cache:
+        cache[query_instance] = query_instance.bounding_box
+
+    a = cache[ref_instance]
+    b = cache[query_instance]
+
+    return utils.compute_iou(a, b)
+
+
+def hungarian_matching(cost_matrix: np.ndarray) -> List[Tuple[int, int]]:
+    """Wrapper for Hungarian matching algorithm in scipy."""
+
+    row_ind, col_ind = linear_sum_assignment(cost_matrix)
+    return list(zip(row_ind, col_ind))
+
+
+def greedy_matching(cost_matrix: np.ndarray) -> List[Tuple[int, int]]:
+    """Performs greedy bipartite matching."""
+
+    # Sort edges by ascending cost.
+    rows, cols = np.unravel_index(np.argsort(cost_matrix, axis=None), cost_matrix.shape)
+    unassigned_edges = list(zip(rows, cols))
+
+    # Greedily assign edges.
+    assignments = []
+    while len(unassigned_edges) > 0:
+        # Assign the lowest cost edge.
+        row_ind, col_ind = unassigned_edges.pop(0)
+        assignments.append((row_ind, col_ind))
+
+        # Remove all other edges that contain either node (in reverse order).
+        for i in range(len(unassigned_edges) - 1, -1, -1):
+            if unassigned_edges[i][0] == row_ind or unassigned_edges[i][1] == col_ind:
+                del unassigned_edges[i]
+
+    return assignments
+
+
+@attr.s(eq=False, slots=True, auto_attribs=True)
 class ShiftedInstance:
-    """
-    During tracking, optical flow shifted instances are represented to help track instances
-    across frames. This class encapsulates an Instance object that has been optical flow
-    shifted.
 
-    Args:
-        parent: The Instance that this optical flow shifted instance is derived from.
-    """
-
-    parent: Union[Instance, "ShiftedInstance"] = attr.ib()
-    frame: Union[LabeledFrame, None] = attr.ib()
-    points: np.ndarray = attr.ib()
+    points_array: np.ndarray = attr.ib()
+    skeleton: Skeleton = attr.ib()
+    frame: LabeledFrame = attr.ib()
+    track: Track = attr.ib()
+    shift_score: np.ndarray = attr.ib()
 
     @property
-    @functools.lru_cache()
-    def source(self) -> "Instance":
-        """
-        Recursively discover root instance to a chain of flow shifted instances.
-
-        Returns:
-            The root InstanceArray of a flow shifted instance.
-        """
-        if isinstance(self.parent, Instance):
-            return self.parent
-        else:
-            return self.parent.source
+    def points(self):
+        return self.points_array
 
     @property
-    def track(self) -> Track:
-        """
-        Get the track object for root flow shifted instance.
-
-        Returns:
-            The track object of the root flow shifted instance.
-        """
-        return self.source.track
+    def centroid(self):
+        """Copy of Instance method."""
+        points = self.points_array
+        centroid = np.nanmedian(points, axis=0)
+        return centroid
 
     @property
-    def frame_idx(self) -> int:
-        """
-        A convenience method to return the frame index this instance is
-        assigned to last.
+    def bounding_box(self):
+        """Copy of Instance method."""
+        points = self.points_array
+        bbox = np.concatenate(
+            [np.nanmin(points, axis=0)[::-1], np.nanmax(points, axis=0)[::-1]]
+        )
+        return bbox
 
-        Returns:
-            The frame index.
-        """
-        return self.frame.frame_idx
-
-    def get_points_array(self, *args, **kwargs):
-        """
-        Return the ShiftedInstance as a numpy array. ShiftedInstance stores its
-        points as an array always, unlike the Instance class. This method provides
-        and identical interface to the points_array method inf Instance.
-
-        Returns:
-            The instances points as a Nx2 numpy array. Where N is the number of
-            skeleton nodes. Each row represents a point.
-        """
-        return self.points
-
-
-@attr.s(slots=True)
-class Tracks:
-    instances: Dict[int, list] = attr.ib(default=attr.Factory(dict))
-    tracks: List[Track] = attr.ib(factory=list)
-    last_known_instance: Dict[Track, Instance] = attr.ib(factory=dict)
-
-    def get_frame_instances(self, frame_idx: int, max_shift=None):
-
-        instances = self.instances.get(frame_idx, [])
-
-        # Filter
-        if max_shift is not None:
-            instances = [
-                instance
-                for instance in instances
-                if isinstance(instance, Instance)
-                or (
-                    isinstance(instance, ShiftedInstance)
-                    and ((frame_idx - instance.source.frame_idx) <= max_shift)
-                )
-            ]
-
-        return instances
-
-    def add_instance(
-        self, instance: Union[Instance, "ShiftedInstance"], frame_index: int
+    @classmethod
+    def from_instance(
+        cls,
+        ref_instance: InstanceType,
+        new_points_array: np.ndarray = None,
+        shift_score: float = 0.0,
+        with_skeleton: bool = False,
     ):
-        frame_instances = self.instances.get(frame_index, [])
-        frame_instances.append(instance)
-        self.instances[frame_index] = frame_instances
-        if instance.track not in self.tracks:
-            self.tracks.append(instance.track)
 
-    def add_instances(self, instances: list, frame_index: int):
-        for instance in instances:
-            self.add_instance(instance, frame_index)
+        points_array = new_points_array
+        if points_array is None:
+            points_array = ref_instance.points_array
 
-    def get_last_known(self, curr_frame_index: int = None, max_shift: int = None):
-        if curr_frame_index is None:
-            return list(self.last_known_instance.values())
-        else:
-            if max_shift is None:
-                return [
-                    i
-                    for i in self.last_known_instance.values()
-                    if i.track == curr_frame_index
-                ]
-            else:
-                return [
-                    i
-                    for i in self.last_known_instance.values()
-                    if (curr_frame_index - i.frame_idx) < max_shift
-                ]
+        skeleton = None
+        if with_skeleton:
+            skeleton = ref_instance.skeleton
 
-    def update_track_last_known(self, frame: LabeledFrame, max_shift: int = None):
-        for i in frame.instances:
-            assert i.track is not None
-            self.last_known_instance[i.track] = i
+        return cls(
+            points_array=points_array,
+            skeleton=skeleton,
+            frame=ref_instance.frame,
+            track=ref_instance.track,
+            shift_score=shift_score,
+        )
 
-        # Remove tracks from the dict that have exceeded the max_shift horizon
-        if max_shift is not None:
-            del_tracks = [
-                track
-                for track, instance in self.last_known_instance.items()
-                if (frame.frame_idx - instance.frame_idx) > max_shift
-            ]
-            for key in del_tracks:
-                del self.last_known_instance[key]
+
+@attr.s(auto_attribs=True, slots=True)
+class MatchedInstance:
+
+    t: int
+    instances_t: List[InstanceType]
+    img_t: Optional[np.ndarray] = None
 
 
 @attr.s(auto_attribs=True)
-class FlowShiftTracker:
-    """
-    The FlowShiftTracker class represents and interface to the flow shift
-    tracking algorithm. This algorithm allows tracking matched instances
-    of animals/objects across multiple frames in a video.
+class FlowCandidateMaker:
+    """Class for producing optical flow shift matching candidates."""
 
-    Args:
-        window: The number of frames to look back into for instance id tracking.
-        of_win_size: The dimensions in pixels of the window to apply optical flow.
-        of_max_level: The number of Gaussian pyramid levels to run optical flow on.
-        of_max_count: The maximum amount of iterations for optical flow.
-        of_epsilon: The error tolerance for optical flow convergence.
-        img_scale: The image scale factor to apply to images.
-        verbosity: The verbosity of logging for this module, the higher the level,
-        the more informative.
-        tracks: A Tracks object that stores tracks (animal instances through time/frames)
-    """
-
-    window: int = 10
-    of_win_size: Tuple = (21, 21)
-    of_max_level: int = 3
-    of_max_count: int = 30
-    of_epsilon: float = 0.01
+    min_points: int = 0
     img_scale: float = 1.0
-    verbosity: int = 0
-    tracks: Tracks = attr.ib(default=attr.Factory(Tracks))
+    of_window_size: int = 21
+    of_max_levels: int = 3
 
-    def __attrs_post_init__(self):
-        self.tracks = Tracks()
-        self.last_img = None
-        self.last_frame_index = None
+    save_shifted_instances: bool = False
+    shifted_instances: Dict[
+        Tuple[int, int], List[ShiftedInstance]  # keyed by (src_t, dst_t)
+    ] = attr.ib(factory=dict)
 
-    def _fix_img(self, img: np.ndarray):
-        # Drop single channel dimension and convert to uint8 in [0, 255] range
-        curr_img = (np.squeeze(img) * 255).astype(np.uint8)
-        np.clip(curr_img, 0, 255)
+    def get_candidates(
+        self, track_matching_queue: Deque[MatchedInstance], t: int, img: np.ndarray
+    ) -> List[ShiftedInstance]:
+        candidate_instances = []
+        for matched_item in track_matching_queue:
+            ref_t, ref_img, ref_instances = (
+                matched_item.t,
+                matched_item.img_t,
+                matched_item.instances_t,
+            )
 
-        # If we still have 3 dimensions the image is color, need to convert
-        # to grayscale for optical flow.
-        if len(curr_img.shape) == 3:
-            curr_img = cv2.cvtColor(curr_img, cv2.COLOR_RGB2GRAY)
+            if len(ref_instances) > 0:
+                # Flow shift reference instances to current frame.
+                shifted_instances = self.flow_shift_instances(
+                    ref_instances,
+                    ref_img,
+                    img,
+                    min_shifted_points=self.min_points,
+                    scale=self.img_scale,
+                    window_size=self.of_window_size,
+                    max_levels=self.of_max_levels,
+                )
 
-        return curr_img
+                # Add to candidate pool.
+                candidate_instances.extend(shifted_instances)
 
-    def process(self, imgs: np.ndarray, labeled_frames: List[LabeledFrame]):
-        """
-        Flow shift track a batch of frames with matched instances for each frame represented as
-        a list of LabeledFrame's.
+                # Save shifted instances.
+                if self.save_shifted_instances:
+                    self.shifted_instances[(ref_t, t)] = shifted_instances
+        return candidate_instances
+
+    @staticmethod
+    def flow_shift_instances(
+        ref_instances: List[InstanceType],
+        ref_img: np.ndarray,
+        new_img: np.ndarray,
+        min_shifted_points: int = 0,
+        scale: float = 1.0,
+        window_size: int = 21,
+        max_levels: int = 3,
+    ) -> List[ShiftedInstance]:
+        """Generates instances in a new frame by applying optical flow displacements.
 
         Args:
-            imgs: A 4D array containing a batch of image frames to run tracking on.
-            labeled_frames: A list of labeled frames containing matched instances from
-            the inference pipeline. This list must be the same length as imgs. img[i] and
-            matched_instances[i] correspond to the same frame.
+            ref_instances: Reference instances in the previous frame.
+            ref_img: Previous frame image as a numpy array.
+            new_img: New frame image as a numpy array.
+            min_shifted_points: Minimum number of points that must be detected in the new
+                frame in order to generate a new shifted instance.
+            scale: Factor to scale the images by when computing optical flow. Decrease this
+                to increase performance at the cost of finer accuracy. Sometimes decreasing
+                the image scale can improve performance with fast movements.
+            window_size: Optical flow window size to consider at each pyramid scale level.
+            max_levels: Number of pyramid scale levels to consider. This is different from
+                the scale parameter, which determines the initial image scaling.
 
         Returns:
-            None
+            A list of ShiftedInstances with the optical flow displacements applied to the
+            reference instance points. Points that are not found will be represented as
+            NaNs in the points array for each shifted instance.
+
+        Notes:
+            This function relies on the Lucas-Kanade method for optical flow estimation.
         """
 
-        # Labels.save_json(Labels(labeled_frames), filename='/tigress/dmturner/sleap/inference_debug/tracking_bug3.json',
-        #                  save_frame_data=True)
+        # Convert RGB to grayscale.
+        if ref_img.ndim > 2 and ref_img.shape[-1] == 3:
+            ref_img = cv2.cvtColor(ref_img, cv2.COLOR_BGR2GRAY)
+            new_img = cv2.cvtColor(new_img, cv2.COLOR_BGR2GRAY)
 
-        # Convert img_scale to an array for use later
-        img_scale = np.array(self.img_scale).astype("float32")
+        # Ensure images are rank 2 in case there is a singleton channel dimension.
+        if ref_img.ndim > 2:
+            ref_img = np.squeeze(ref_img)
+            new_img = np.squeeze(new_img)
 
-        # Set logging to DEBUG if the user has set verbosity > 0
-        curr_log_level = logger.getEffectiveLevel()
-        if self.verbosity > 0:
-            logger.setLevel(logging.DEBUG)
+        # Input image scaling.
+        if scale != 1:
+            ref_img = cv2.resize(ref_img, None, None, scale, scale)
+            new_img = cv2.resize(new_img, None, None, scale, scale)
 
-        # Go through each labeled frame and track all the instances
-        # present.
-        t = self.last_frame_index
-        for img_idx, frame in enumerate(labeled_frames):
+        # Gather reference points.
+        ref_pts = [inst.points_array for inst in ref_instances]
 
-            # Update the data structures in Tracks that keep the last
-            # known instance for each track. Do this for the last frame and
-            # skip on the first frame.
-            if img_idx > 0:
-                self.tracks.update_track_last_known(
-                    labeled_frames[img_idx - 1], max_shift=None
-                )
+        # Compute optical flow at all points.
+        shifted_pts, status, errs = cv2.calcOpticalFlowPyrLK(
+            ref_img,
+            new_img,
+            (np.concatenate(ref_pts, axis=0)).astype("float32") * scale,
+            None,
+            winSize=(window_size, window_size),
+            maxLevel=max_levels,
+            criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 30, 0.01,),
+        )
+        shifted_pts /= scale
 
-            # Copy the actual frame index for this labeled frame, we will
-            # use this a lot.
-            self.last_frame_index = t
-            t = frame.frame_idx
+        # Split results by instances.
+        sections = np.cumsum([len(x) for x in ref_pts])[:-1]
+        shifted_pts = np.split(shifted_pts, sections, axis=0)
+        status = np.split(status, sections, axis=0)
+        status_sum = [np.sum(x) for x in status]
+        errs = np.split(errs, sections, axis=0)
 
-            instances_pts = [i.get_points_array() for i in frame.instances]
+        # Create shifted instances.
+        shifted_instances = []
+        for ref, pts, found, err in zip(ref_instances, shifted_pts, status, errs):
+            if found.sum() > min_shifted_points:
+                # Exclude points that weren't found by optical flow.
+                found = found.squeeze().astype(bool)
+                pts[~found] = np.nan
 
-            # If we do not have any active tracks, we will spawn one for each
-            # matched instance and continue to the next frame.
-            if len(self.tracks.tracks) == 0:
-                if len(frame.instances) > 0:
-                    for i, instance in enumerate(frame.instances):
-                        instance.track = Track(spawned_on=t, name=f"{i}")
-                        self.tracks.add_instance(instance, frame_index=t)
-
-                    logger.debug(
-                        f"[t = {t}] Created {len(self.tracks.tracks)} initial tracks"
+                # Create a shifted instance.
+                shifted_instances.append(
+                    ShiftedInstance.from_instance(
+                        ref, new_points_array=pts, shift_score=-np.mean(err[found])
                     )
-
-                self.last_img = self._fix_img(imgs[img_idx].copy())
-
-                continue
-
-            # Get all points in reference frame
-            instances_ref = self.tracks.get_frame_instances(
-                self.last_frame_index, max_shift=self.window - 1
-            )
-            pts_ref = [instance.get_points_array() for instance in instances_ref]
-
-            tmp = min(
-                [instance.frame_idx for instance in instances_ref]
-                + [
-                    instance.source.frame_idx
-                    for instance in instances_ref
-                    if isinstance(instance, ShiftedInstance)
-                ]
-            )
-            logger.debug(f"[t = {t}] Using {len(instances_ref)} refs back to t = {tmp}")
-
-            curr_img = self._fix_img(imgs[img_idx].copy())
-
-            pts_fs, status, err = cv2.calcOpticalFlowPyrLK(
-                self.last_img,
-                curr_img,
-                (np.concatenate(pts_ref, axis=0)).astype("float32"),
-                None,
-                winSize=self.of_win_size,
-                maxLevel=self.of_max_level,
-                criteria=(
-                    cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,
-                    self.of_max_count,
-                    self.of_epsilon,
-                ),
-            )
-            self.last_img = curr_img
-
-            # Split by instance
-            sections = np.cumsum([len(x) for x in pts_ref])[:-1]
-            pts_fs = np.split(pts_fs, sections, axis=0)
-            status = np.split(status, sections, axis=0)
-            status_sum = [np.sum(x) for x in status]
-            err = np.split(err, sections, axis=0)
-
-            # Store shifted instances with metadata
-            shifted_instances = [
-                ShiftedInstance(parent=ref, points=pts, frame=frame)
-                for ref, pts, found in zip(instances_ref, pts_fs, status)
-                if np.sum(found) > 0
-            ]
-
-            # Get the track present in the shifted instances
-            shifted_tracks = list({instance.track for instance in shifted_instances})
-
-            last_known = self.tracks.get_last_known(
-                curr_frame_index=t, max_shift=self.window
-            )
-            alive_tracks = {i.track for i in last_known}
-
-            # If we didn't get any shifted instances from the reference frame, use the last
-            # know positions for each track.
-            if len(shifted_instances) == 0:
-                logger.debug(
-                    f"[t = {t}] Optical flow failed, using last known positions for each track."
                 )
-                shifted_instances = self.tracks.get_last_known()
-                shifted_tracks = list(
-                    {instance.track for instance in shifted_instances}
-                )
+
+        return shifted_instances
+
+
+@attr.s(auto_attribs=True)
+class SimpleCandidateMaker:
+    """Class for producing list of matching candidates from prior frames."""
+
+    min_points: int = 0
+
+    def get_candidates(
+        self, track_matching_queue: Deque[MatchedInstance], *args, **kwargs
+    ) -> List[InstanceType]:
+        # Build a pool of matchable candidate instances.
+        candidate_instances = []
+        for matched_item in track_matching_queue:
+            ref_t, ref_instances = matched_item.t, matched_item.instances_t
+            for ref_instance in ref_instances:
+                if ref_instance.n_visible_points >= self.min_points:
+                    candidate_instances.append(ref_instance)
+        return candidate_instances
+
+
+tracker_policies = dict(simple=SimpleCandidateMaker, flow=FlowCandidateMaker,)
+
+similarity_policies = dict(
+    instance=instance_similarity, centroid=centroid_distance, iou=instance_iou,
+)
+
+match_policies = dict(hungarian=hungarian_matching, greedy=greedy_matching,)
+
+
+@attr.s(auto_attribs=True)
+class Tracker:
+    """
+    Instance pose tracker.
+
+    Use by instantiated with the desired parameters and then calling the
+    `track` method for each frame.
+
+    Attributes:
+        track_window: How many frames back to look for candidate instances to
+            match instances in the current frame against.
+        similarity_function: A function that returns a numeric pairwise
+            instance similarity value.
+        matching_function: A function that takes a matrix of pairwise similarities
+            and determines the matches to use.
+        candidate_maker: An class instance with a `get_candidates` method
+            which returns a list of Instances-like objects  which we can match
+            the predicted instances in a frame against.
+        min_new_track_points: We won't spawn a new track for an instance with
+            fewer than this many points.
+    """
+
+    track_window: int = 5
+    similarity_function: Callable = instance_similarity
+    matching_function: Callable = greedy_matching
+    candidate_maker: object = attr.ib(factory=FlowCandidateMaker)
+    min_new_track_points: int = 0
+
+    track_matching_queue: Deque[MatchedInstance] = attr.ib()
+
+    spawned_tracks: List[Track] = attr.ib(factory=list)
+
+    save_tracked_instances: bool = False
+    tracked_instances: Dict[int, List[InstanceType]] = attr.ib(
+        factory=dict
+    )  # keyed by t
+
+    @track_matching_queue.default
+    def _init_matching_queue(self):
+        """Factory for instantiating default matching queue with specified size."""
+        return deque(maxlen=self.track_window)
+
+    @property
+    def unique_tracks_in_queue(self) -> List[Track]:
+        """Returns the unique tracks in the matching queue."""
+
+        unique_tracks = set()
+        for match_item in self.track_matching_queue:
+            for instance in match_item.instances_t:
+                unique_tracks.add(instance.track)
+
+        return list(unique_tracks)
+
+    def track(
+        self,
+        untracked_instances: List[InstanceType],
+        img: Optional[np.ndarray] = None,
+        t: int = None,
+    ) -> List[InstanceType]:
+        """Performs a single step of tracking.
+
+        Args:
+            untracked_instances: List of instances to assign to tracks.
+            img: Image data of the current frame for flow shifting.
+            t: Current timestep. If not provided, increments from the internal queue.
+
+        Returns:
+            A list of the instances that were tracked.
+        """
+
+        # Infer timestep if not provided.
+        if t is None:
+            if len(self.track_matching_queue) > 0:
+
+                # Default to last timestep + 1 if available.
+                t = self.track_matching_queue[-1].t + 1
+
             else:
-                # We might have got some shifted instances, but make sure we aren't missing any
-                # tracks
-                for track in alive_tracks:
-                    if track in shifted_tracks:
-                        continue
-                    shifted_tracks.append(track)
-                    shifted_instances.append(self.tracks.last_known_instance[track])
+                t = 0
 
-            self.tracks.add_instances(shifted_instances, frame_index=t)
+        # Initialize containers for tracked instances at the current timestep.
+        tracked_instances = []
+        tracked_inds = []
 
-            if len(frame.instances) == 0:
-                logger.debug(f"[t = {t}] No matched instances to assign to tracks")
-                continue
+        # Make cache so similarity function doesn't have to recompute everything.
+        # similarity_cache = dict()
 
-            # Reduce distances by track
-            unassigned_pts = np.stack(instances_pts, axis=0)  # instances x nodes x 2
-            logger.debug(
-                f"[t = {t}] Flow shift matching {len(unassigned_pts)} "
-                f"instances to {len(shifted_tracks)} ref tracks"
+        # Process untracked instances.
+        if len(untracked_instances) > 0:
+
+            # Build a pool of matchable candidate instances.
+            candidate_instances = self.candidate_maker.get_candidates(
+                track_matching_queue=self.track_matching_queue, t=t, img=img,
             )
 
-            cost_matrix = np.full((len(unassigned_pts), len(shifted_tracks)), np.nan)
-            for i, track in enumerate(shifted_tracks):
-                # Get shifted points for current track
-                track_pts = np.stack(
-                    [
-                        instance.get_points_array()
-                        for instance in shifted_instances
-                        if instance.track == track
-                    ],
-                    axis=0,
-                )  # track_instances x nodes x 2
+            if len(candidate_instances) > 0:
 
-                # Compute pairwise distances between points
-                distances = np.sqrt(
-                    np.sum(
-                        (
-                            np.expand_dims(unassigned_pts / img_scale, axis=1)
-                            - np.expand_dims(track_pts, axis=0)
+                # Group candidate instances by track.
+                candidate_instances_by_track = defaultdict(list)
+                for instance in candidate_instances:
+                    candidate_instances_by_track[instance.track].append(instance)
+
+                # Compute similarity matrix between untracked instances and best
+                # candidate for each track.
+                candidate_tracks = list(candidate_instances_by_track.keys())
+                matching_similarities = np.full(
+                    (len(untracked_instances), len(candidate_tracks)), np.nan
+                )
+                matching_candidates = []
+
+                for i, untracked_instance in enumerate(untracked_instances):
+                    matching_candidates.append([])
+
+                    for j, candidate_track in enumerate(candidate_tracks):
+
+                        # Compute similarity between untracked instance and all track
+                        # candidates.
+                        track_instances = candidate_instances_by_track[candidate_track]
+                        track_matching_similarities = [
+                            self.similarity_function(
+                                untracked_instance,
+                                candidate_instance,
+                                # cache=similarity_cache
+                            )
+                            for candidate_instance in track_instances
+                        ]
+
+                        # Keep the best scoring instance for this track.
+                        best_ind = np.argmax(track_matching_similarities)
+                        matching_candidates[i].append(track_instances[best_ind])
+
+                        # Use the best similarity score for matching.
+                        best_similarity = track_matching_similarities[best_ind]
+                        matching_similarities[i, j] = best_similarity
+
+                # Perform matching between untracked instances and candidates.
+                cost = -matching_similarities
+                cost[np.isnan(cost)] = np.inf
+                matches = self.matching_function(cost)
+
+                # Assign each matched instance.
+                for i, j in matches:
+                    # Pull out matched pair.
+                    matched_instance = untracked_instances[i]
+                    ref_instance = matching_candidates[i][j]
+
+                    # Save matching score.
+                    match_similarity = matching_similarities[i, j]
+
+                    # Assign to track and save.
+                    tracked_instances.append(
+                        attr.evolve(
+                            matched_instance,
+                            track=ref_instance.track,
+                            tracking_score=match_similarity,
                         )
-                        ** 2,
-                        axis=-1,
                     )
-                )  # unassigned_instances x track_instances x nodes
 
-                # Reduce over nodes and instances
-                distances = -np.nansum(np.exp(-distances), axis=(1, 2))
+                    # Keep track of the assigned instances.
+                    tracked_inds.append(i)
 
-                # Save
-                cost_matrix[:, i] = distances
+        # Spawn a new track for each remaining untracked instance.
+        for i, inst in enumerate(untracked_instances):
 
-            # Hungarian matching
-            assigned_ind, track_ind = linear_sum_assignment(cost_matrix)
+            # Skip if this instance was tracked.
+            if i in tracked_inds:
+                continue
 
-            # Save assigned instances
-            for i, j in zip(assigned_ind, track_ind):
-                frame.instances[i].track = shifted_tracks[j]
-                self.tracks.add_instance(frame.instances[i], frame_index=t)
+            # Skip if this instance is too small to spawn a new track with.
+            if inst.n_visible_points < self.min_new_track_points:
+                continue
 
-                logger.debug(
-                    f"[t = {t}] Assigned instance {i} to existing track "
-                    f"{shifted_tracks[j].name} (cost = {cost_matrix[i,j]})"
-                )
+            # Spawn new track.
+            new_track = Track(spawned_on=t, name=f"track_{len(self.spawned_tracks)}")
+            self.spawned_tracks.append(new_track)
 
-            # Spawn new tracks for unassigned instances
-            for i, pts in enumerate(unassigned_pts):
-                if i in assigned_ind:
-                    continue
-                instance = frame.instances[i]
-                instance.track = Track(spawned_on=t, name=f"{len(self.tracks.tracks)}")
-                self.tracks.add_instance(instance, frame_index=t)
-                logger.debug(
-                    f"[t = {t}] Assigned remaining instance {i} to newly "
-                    f"spawned track {instance.track.name} "
-                    f"(best cost = {cost_matrix[i,:].min()})"
-                )
+            # Assign instance to the new track and save.
+            tracked_instances.append(attr.evolve(inst, track=new_track))
 
-        # Update the last know data structures for the last frame.
-        self.tracks.update_track_last_known(labeled_frames[img_idx - 1], max_shift=None)
+        # Add the tracked instances to the matching buffer.
+        self.track_matching_queue.append(MatchedInstance(t, tracked_instances, img))
 
-        # Reset the logging level
-        logger.setLevel(curr_log_level)
+        # Save tracked instances internally.
+        if self.save_tracked_instances:
+            self.tracked_instances[t] = tracked_instances
 
-    def occupancy(self):
-        """ Compute occupancy matrix """
-        num_frames = max(self.tracks.instances.keys()) + 1
-        occ = np.zeros((len(self.tracks.tracks), int(num_frames)), dtype="bool")
-        for t in range(int(num_frames)):
-            instances = self.tracks.get_frame_instances(t)
-            instances = [
-                instance for instance in instances if isinstance(instance, Instance)
-            ]
-            for instance in instances:
-                occ[self.tracks.tracks.index(instance.track), t] = True
+        return tracked_instances
 
-        return occ
+    def get_name(self):
+        tracker_name = self.candidate_maker.__class__.__name__
+        similarity_name = self.similarity_function.__name__
+        match_name = self.matching_function.__name__
+        return f"{tracker_name}.{similarity_name}.{match_name}"
 
-    def generate_tracks(self):
-        """ Serializes tracking data into a dict """
-        # return attr.asdict(self.tracks) # grr, doesn't work with savemat
+    @classmethod
+    def make_tracker_by_name(
+        cls,
+        tracker: str = "flow",
+        similarity: str = "instance",
+        match: str = "greedy",
+        track_window: int = 5,
+        min_new_track_points: int = 0,
+        min_match_points: int = 0,
+        img_scale: float = 1.0,
+        of_window_size: int = 21,
+        of_max_levels: int = 3,
+        **kwargs,
+    ) -> "Tracker":
 
-        num_tracks = len(self.tracks.tracks)
-        num_frames = int(max(self.tracks.instances.keys()) + 1)
-        num_nodes = len(self.tracks.instances[0][0].points)
+        if tracker not in tracker_policies:
+            raise ValueError(f"{tracker} is not a valid tracker.")
 
-        instance_tracks = np.full((num_frames, num_nodes, 2, num_tracks), np.nan)
-        for t in range(num_frames):
-            instances = self.tracks.get_frame_instances(t)
-            instances = [
-                instance for instance in instances if isinstance(instance, Instance)
-            ]
+        if similarity not in similarity_policies:
+            raise ValueError(
+                f"{similarity} is not a valid tracker similarity function."
+            )
 
-            for instance in instances:
-                instance_tracks[
-                    t, :, :, self.tracks.tracks.index(instance.track)
-                ] = instance.points
+        if match not in match_policies:
+            raise ValueError(f"{match} is not a valid tracker matching function.")
 
-        return instance_tracks
+        candidate_maker = tracker_policies[tracker](min_points=min_match_points)
+        similarity_function = similarity_policies[similarity]
+        matching_function = match_policies[match]
 
-    def generate_shifted_data(self):
-        """ Generate arrays with all shifted instance data """
+        if tracker == "flow":
+            candidate_maker.img_scale = img_scale
+            candidate_maker.of_window_size = of_window_size
+            candidate_maker.of_max_levels = of_max_levels
 
-        shifted_instances = [
-            y
-            for x in self.tracks.instances.values()
-            for y in x
-            if isinstance(y, ShiftedInstance)
+        return cls(
+            track_window=track_window,
+            min_new_track_points=min_new_track_points,
+            similarity_function=similarity_function,
+            matching_function=matching_function,
+            candidate_maker=candidate_maker,
+        )
+
+    @classmethod
+    def get_by_name_factory_options(cls):
+
+        options = []
+
+        option = dict(name="tracker", default="None")
+        option["type"] = str
+        option["options"] = list(tracker_policies.keys()) + [
+            "None",
         ]
+        options.append(option)
 
-        track_id = np.array(
-            [self.tracks.tracks.index(instance.track) for instance in shifted_instances]
-        )
-        frame_idx = np.array([instance.frame_idx for instance in shifted_instances])
-        frame_idx_source = np.array(
-            [instance.source.frame_idx for instance in shifted_instances]
-        )
-        points = np.stack([instance.points for instance in shifted_instances], axis=0)
+        option = dict(name="similarity", default="instance")
+        option["type"] = str
+        option["options"] = list(similarity_policies.keys())
+        options.append(option)
 
-        return track_id, frame_idx, frame_idx_source, points
+        option = dict(name="match", default="greedy")
+        option["type"] = str
+        option["options"] = list(match_policies.keys())
+        options.append(option)
+
+        option = dict(name="track_window", default=5)
+        option["type"] = int
+        option["help"] = "How many frames back to look for matches"
+        options.append(option)
+
+        option = dict(name="min_new_track_points", default=0)
+        option["type"] = int
+        option["help"] = "Minimum number of instance points for spawning new track"
+        options.append(option)
+
+        option = dict(name="min_match_points", default=0)
+        option["type"] = int
+        option["help"] = "Minimum points for match candidates"
+        options.append(option)
+
+        option = dict(name="img_scale", default=1.0)
+        option["type"] = float
+        option["help"] = "For optical-flow: Image scale"
+        options.append(option)
+
+        option = dict(name="of_window_size", default=21)
+        option["type"] = int
+        option[
+            "help"
+        ] = "For optical-flow: Optical flow window size to consider at each pyramid scale level"
+        options.append(option)
+
+        option = dict(name="of_max_levels", default=3)
+        option["type"] = int
+        option["help"] = "For optical-flow: Number of pyramid scale levels to consider"
+        options.append(option)
+
+        return options
+
+    @classmethod
+    def add_cli_parser_args(cls, parser, arg_scope: str = ""):
+        for arg in cls.get_by_name_factory_options():
+            help_string = arg.get("help", "")
+            if arg.get("options", ""):
+                help_string += " Options: " + ", ".join(arg["options"])
+            help_string += f" (default: {arg['default']})"
+
+            if arg_scope:
+                arg_name = arg_scope + "." + arg["name"]
+            else:
+                arg_name = arg["name"]
+
+            parser.add_argument(
+                f"--{arg_name}", type=arg["type"], help=help_string,
+            )
+
+
+@attr.s(auto_attribs=True)
+class FlowTracker(Tracker):
+    """A Tracker pre-configured to use optical flow shifted candidates."""
+
+    similarity_function: Callable = instance_similarity
+    matching_function: Callable = greedy_matching
+    candidate_maker: object = attr.ib(factory=FlowCandidateMaker)
+
+
+@attr.s(auto_attribs=True)
+class SimpleTracker(Tracker):
+    """A Tracker pre-configured to use simple, non-image-based candidates."""
+
+    similarity_function: Callable = instance_iou
+    matching_function: Callable = hungarian_matching
+    candidate_maker: object = attr.ib(factory=SimpleCandidateMaker)
+
+
+def run_tracker(frames, tracker):
+    import inspect
+    import time
+    from sleap import Labels
+
+    sig = inspect.signature(tracker.track)
+    takes_img = "img" in sig.parameters
+
+    t0 = time.time()
+
+    new_lfs = []
+
+    # Run tracking on every frame
+    for lf in frames:
+
+        # Clear the tracks
+        for inst in lf.instances:
+            inst.track = None
+
+        track_args = dict(untracked_instances=lf.instances)
+        if takes_img:
+            track_args["img"] = lf.video[lf.frame_idx]
+        else:
+            track_args["img"] = None
+
+        new_lf = LabeledFrame(
+            frame_idx=lf.frame_idx,
+            video=lf.video,
+            instances=tracker.track(**track_args),
+        )
+        new_lfs.append(new_lf)
+
+        if lf.frame_idx % 100 == 0:
+            print(lf.frame_idx, time.time() - t0)
+
+    print(time.time() - t0)
+
+    new_labels = Labels(labeled_frames=new_lfs)
+    return new_labels
+
+
+def retrack():
+    import argparse
+    import operator
+    import os
+
+    from sleap import Labels
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("data_path", help="Path to SLEAP project file")
+    parser.add_argument(
+        "-o",
+        "--output",
+        type=str,
+        default=None,
+        help="The output filename to use for the predicted data.",
+    )
+
+    Tracker.add_cli_parser_args(parser)
+
+    args = parser.parse_args()
+
+    tracker_args = {key: val for key, val in vars(args).items() if val is not None}
+
+    tracker = Tracker.make_tracker_by_name(**tracker_args)
+
+    print(tracker)
+
+    labels = Labels.load_file(args.data_path)
+    frames = sorted(labels.labeled_frames, key=operator.attrgetter("frame_idx"))
+
+    new_labels = run_tracker(frames=frames, tracker=tracker)
+
+    if args.output:
+        output_path = args.output
+    else:
+        out_dir = os.path.dirname(args.data_path)
+        out_name = os.path.basename(args.data_path) + f".{tracker.get_name()}.h5"
+        output_path = os.path.join(out_dir, out_name)
+
+    print(f"Saving: {output_path}")
+    Labels.save_file(new_labels, output_path)
+
+
+if __name__ == "__main__":
+    retrack()

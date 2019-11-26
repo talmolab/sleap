@@ -18,13 +18,6 @@ class ConfmapOverlay(DataOverlay):
     """Overlay to show confidence maps."""
 
     @classmethod
-    def from_h5(cls, filename, input_format="channels_last", **kwargs):
-        """Create object with hdf5 as datasource."""
-        return DataOverlay.from_h5(
-            filename, "/confmaps", input_format, overlay_class=ConfMapsPlot, **kwargs
-        )
-
-    @classmethod
     def from_model(cls, filename, video, **kwargs):
         """Create object with live predictions from model as datasource."""
         return DataOverlay.from_model(
@@ -166,9 +159,9 @@ def demo_confmaps(confmaps, video, standalone=False, callback=None):
     win.setWindowTitle("confmaps")
     win.show()
 
-    def plot_confmaps(parent, item_idx):
-        if parent.frame_idx < confmaps.shape[0]:
-            frame_conf_map = ConfMapsPlot(confmaps[parent.frame_idx, ...])
+    def plot_confmaps(parent, frame_idx):
+        if frame_idx < confmaps.shape[0]:
+            frame_conf_map = ConfMapsPlot(confmaps[frame_idx, ...])
             win.view.scene.addItem(frame_conf_map)
 
     win.changedPlot.connect(plot_confmaps)

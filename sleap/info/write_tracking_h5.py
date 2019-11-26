@@ -16,6 +16,7 @@ The HDF5 file has these datasets:
 * "track_occupancy"     shape: tracks * frames
 * "tracks"              shape: frames * nodes * 2 * tracks
 * "track_names"         shape: tracks
+* "node_names"         shape: nodes
 
 Note: the datasets are stored column-major as expected by MATLAB.
 """
@@ -33,6 +34,11 @@ from sleap.io.dataset import Labels
 def get_tracks_as_np_strings(labels: Labels) -> List[np.string_]:
     """Get list of track names as `np.string_`."""
     return [np.string_(track.name) for track in labels.tracks]
+
+
+def get_nodes_as_np_strings(labels: Labels) -> List[np.string_]:
+    """Get list of node names as `np.string_`."""
+    return [np.string_(node.name) for node in labels.skeletons[0].nodes]
 
 
 def get_occupancy_and_points_matrices(
@@ -54,7 +60,7 @@ def get_occupancy_and_points_matrices(
         * occupancy matrix with shape (tracks, frames)
         * point location matrix with shape (frames, nodes, 2, tracks)
     """
-    track_count = len(labels.tracks)
+    track_count = len(labels.tracks) or 1
     node_count = len(labels.skeletons[0].nodes)
 
     frame_idxs = [lf.frame_idx for lf in labels]
@@ -78,7 +84,14 @@ def get_occupancy_and_points_matrices(
 
     for lf, inst in [(lf, inst) for lf in labels for inst in lf.instances]:
         frame_i = lf.frame_idx - first_frame_idx
-        track_i = labels.tracks.index(inst.track)
+        if inst.track is None:
+            # We could use lf.instances.index(inst) but then we'd need
+            # to calculate the number of "tracks" based on the max number of
+            # instances in any frame, so for now we'll assume that there's
+            # a single instance if we aren't using tracks.
+            track_i = 0
+        else:
+            track_i = labels.tracks.index(inst.track)
 
         occupancy_matrix[track_i, frame_i] = 1
 
@@ -190,6 +203,7 @@ def main(labels: Labels, output_path: str, all_frames: bool = True):
 
     data_dict = dict(
         track_names=track_names,
+        node_names=get_nodes_as_np_strings(labels),
         tracks=locations_matrix,
         track_occupancy=occupancy_matrix,
     )

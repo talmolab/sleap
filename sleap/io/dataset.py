@@ -20,7 +20,7 @@ import scipy.io as sio
 import h5py as h5
 
 from collections import MutableSequence
-from typing import Callable, List, Union, Dict, Optional
+from typing import Callable, List, Union, Dict, Optional, Tuple, Text
 
 try:
     from typing import ForwardRef
@@ -45,6 +45,7 @@ from sleap.instance import (
 from sleap.io import pathutils
 from sleap.io.legacy import load_labels_json_old
 from sleap.io.video import Video
+from sleap.gui.suggestions import SuggestionFrame
 from sleap.gui.missingfiles import MissingFilesDialog
 from sleap.rangelist import RangeList
 from sleap.util import uniquify, weak_filename_match, json_dumps, json_loads
@@ -74,11 +75,9 @@ class Labels(MutableSequence):
         skeletons: A list of :class:`Skeleton` objects (again, that may or may
             not be referenced by an :class:`Instance` in labeled frame).
         tracks: A list of :class:`Track` that instances can belong to.
-        suggestions: Dictionary that stores "suggested" frames for
+        suggestions: List that stores "suggested" frames for
             videos in project. These can be suggested frames for user
             to label or suggested frames for user to review.
-            Dictionary key is :class:`Video`, value is list of frame
-            indices.
         negative_anchors: Dictionary that stores center-points around
             which to crop as negative samples when training.
             Dictionary key is :class:`Video`, value is list of
@@ -90,7 +89,7 @@ class Labels(MutableSequence):
     skeletons: List[Skeleton] = attr.ib(default=attr.Factory(list))
     nodes: List[Node] = attr.ib(default=attr.Factory(list))
     tracks: List[Track] = attr.ib(default=attr.Factory(list))
-    suggestions: Dict[Video, list] = attr.ib(default=attr.Factory(dict))
+    suggestions: List["SuggestionFrame"] = attr.ib(default=attr.Factory(list))
     negative_anchors: Dict[Video, list] = attr.ib(default=attr.Factory(dict))
 
     def __attrs_post_init__(self):
@@ -586,10 +585,10 @@ class Labels(MutableSequence):
             None.
         """
         # Get ranges in track occupancy cache
-        _, within_old, _ = self._track_occupancy[video][old_track].cut_range(
+        _, within_old, _ = self._get_track_occupany(video, old_track).cut_range(
             frame_range
         )
-        _, within_new, _ = self._track_occupancy[video][new_track].cut_range(
+        _, within_new, _ = self._get_track_occupany(video, new_track).cut_range(
             frame_range
         )
 
@@ -671,6 +670,16 @@ class Labels(MutableSequence):
                 tracks[instance.track].add(frame_idx)
         return tracks
 
+    def _get_track_occupany(self, video: Video, track: Track) -> RangeList:
+        """
+        Accessor for track occupancy cache that adds video/track as needed.
+        """
+        if video not in self._track_occupancy:
+            self._track_occupancy[video] = dict()
+        if track not in self._track_occupancy[video]:
+            self._track_occupancy[video][track] = RangeList()
+        return self._track_occupancy[video][track]
+
     def find_track_occupancy(
         self, video: Video, track: Union[Track, int], frame_range=None
     ) -> List[Instance]:
@@ -716,73 +725,80 @@ class Labels(MutableSequence):
         Returns the list of suggested frames for the specified video
         or suggestions for all videos (if no video specified).
         """
-        return self.suggestions.get(video, list())
+        return [item.frame_idx for item in self.suggestions if item.video == video]
 
     def get_suggestions(self) -> list:
-        """Return all suggestions as a list of (video, frame) tuples."""
-        suggestion_list = [
-            (video, frame_idx)
-            for video in self.videos
-            for frame_idx in self.get_video_suggestions(video)
+        """Return all suggestions as a list of SuggestionFrame items."""
+        return self.suggestions
+
+    def find_suggestion(self, video, frame_idx):
+        """Find SuggestionFrame by video and frame index."""
+        matches = [
+            item
+            for item in self.suggestions
+            if item.video == video and item.frame_idx == frame_idx
         ]
-        return suggestion_list
+
+        if matches:
+            return matches[0]
+
+        return None
 
     def get_next_suggestion(self, video, frame_idx, seek_direction=1) -> list:
         """Returns a (video, frame_idx) tuple seeking from given frame."""
         # make sure we have valid seek_direction
         if seek_direction not in (-1, 1):
-            return (None, None)
+            raise ValueError("seek_direction should be -1 or 1.")
         # make sure the video belongs to this Labels object
         if video not in self.videos:
-            return (None, None)
+            return None
 
         all_suggestions = self.get_suggestions()
 
         # If we're currently on a suggestion, then follow order of list
-        if (video, frame_idx) in all_suggestions:
-            suggestion_idx = all_suggestions.index((video, frame_idx))
+        match = self.find_suggestion(video, frame_idx)
+        if match is not None:
+            suggestion_idx = all_suggestions.index(match)
             new_idx = (suggestion_idx + seek_direction) % len(all_suggestions)
-            video, frame_suggestion = all_suggestions[new_idx]
+            return all_suggestions[new_idx]
 
-        # Otherwise, find the prev/next suggestion sorted by frame order
-        else:
-            # look for next (or previous) suggestion in current video
-            if seek_direction == 1:
-                frame_suggestion = min(
-                    (i for i in self.get_video_suggestions(video) if i > frame_idx),
-                    default=None,
-                )
-            else:
-                frame_suggestion = max(
-                    (i for i in self.get_video_suggestions(video) if i < frame_idx),
-                    default=None,
-                )
-            if frame_suggestion is not None:
-                return (video, frame_suggestion)
-            # if we didn't find suggestion in current video,
-            # then we want earliest frame in next video with suggestions
-            next_video_idx = (self.videos.index(video) + seek_direction) % len(
-                self.videos
+        # Otherwise, find the prev/next suggestion sorted by frame order...
+
+        # Look for next (or previous) suggestion in current video.
+        if seek_direction == 1:
+            frame_suggestion = min(
+                (i for i in self.get_video_suggestions(video) if i > frame_idx),
+                default=None,
             )
-            video = self.videos[next_video_idx]
-            if seek_direction == 1:
-                frame_suggestion = min(
-                    (i for i in self.get_video_suggestions(video)), default=None
-                )
-            else:
-                frame_suggestion = max(
-                    (i for i in self.get_video_suggestions(video)), default=None
-                )
-        return (video, frame_suggestion)
+        else:
+            frame_suggestion = max(
+                (i for i in self.get_video_suggestions(video) if i < frame_idx),
+                default=None,
+            )
+        if frame_suggestion is not None:
+            return self.find_suggestion(video, frame_suggestion)
 
-    def set_suggestions(self, suggestions: Dict[Video, list]):
+        # If we didn't find suggestion in current video, then we want earliest
+        # frame in next video with suggestions.
+        next_video_idx = (self.videos.index(video) + seek_direction) % len(self.videos)
+        video = self.videos[next_video_idx]
+        if seek_direction == 1:
+            frame_suggestion = min(
+                (i for i in self.get_video_suggestions(video)), default=None
+            )
+        else:
+            frame_suggestion = max(
+                (i for i in self.get_video_suggestions(video)), default=None
+            )
+        return self.find_suggestion(video, frame_suggestion)
+
+    def set_suggestions(self, suggestions: List["SuggestionFrame"]):
         """Sets the suggested frames."""
         self.suggestions = suggestions
 
     def delete_suggestions(self, video):
         """Deletes suggestions for specified video."""
-        if video in self.suggestions:
-            del self.suggestions[video]
+        self.suggestions = [item for item in self.suggestions if item.video != video]
 
     # Methods for videos
 
@@ -964,7 +980,7 @@ class Labels(MutableSequence):
             base_labels._build_lookup_caches()
 
         # Merge suggestions and negative anchors
-        cls.merge_container_dicts(base_labels.suggestions, new_labels.suggestions)
+        base_labels.suggestions.extend(new_labels.suggestions)
         cls.merge_container_dicts(
             base_labels.negative_anchors, new_labels.negative_anchors
         )
@@ -1092,13 +1108,17 @@ class Labels(MutableSequence):
 
         skeleton_cattr = Skeleton.make_cattr(idx_to_node)
 
+        # Make attr for tracks so that we save as tuples rather than dicts;
+        # this can save a lot of space when there are lots of tracks.
+        track_cattr = cattr.Converter(unstruct_strat=cattr.UnstructureStrategy.AS_TUPLE)
+
         # Serialize the skeletons, videos, and labels
         dicts = {
             "version": LABELS_JSON_FILE_VERSION,
             "skeletons": skeleton_cattr.unstructure(self.skeletons),
             "nodes": cattr.unstructure(self.nodes),
             "videos": Video.cattr().unstructure(self.videos),
-            "tracks": cattr.unstructure(self.tracks),
+            "tracks": track_cattr.unstructure(self.tracks),
             "suggestions": label_cattr.unstructure(self.suggestions),
             "negative_anchors": label_cattr.unstructure(self.negative_anchors),
         }
@@ -1258,7 +1278,19 @@ class Labels(MutableSequence):
             dicts["skeletons"], List[Skeleton]
         )
         videos = Video.cattr().structure(dicts["videos"], List[Video])
-        tracks = cattr.structure(dicts["tracks"], List[Track])
+
+        try:
+            # First try unstructuring tuple (newer format)
+            track_cattr = cattr.Converter(
+                unstruct_strat=cattr.UnstructureStrategy.AS_TUPLE
+            )
+            tracks = track_cattr.structure(dicts["tracks"], List[Track])
+        except:
+            # Then try unstructuring dict (older format)
+            try:
+                tracks = cattr.structure(dicts["tracks"], List[Track])
+            except:
+                raise ValueError("Unable to load tracks as tuple or dict!")
 
         # if we're given a Labels object to match, use its objects when they match
         if match_to is not None:
@@ -1282,16 +1314,35 @@ class Labels(MutableSequence):
                         videos[idx] = old_vid
                         break
 
+        suggestions = []
         if "suggestions" in dicts:
             suggestions_cattr = cattr.Converter()
             suggestions_cattr.register_structure_hook(
                 Video, lambda x, type: videos[int(x)]
             )
-            suggestions = suggestions_cattr.structure(
-                dicts["suggestions"], Dict[Video, List]
-            )
-        else:
-            suggestions = dict()
+            try:
+                suggestions = suggestions_cattr.structure(
+                    dicts["suggestions"], List[SuggestionFrame]
+                )
+            except:
+                try:
+                    # Convert old suggestion format to new format.
+                    # Old format: {video: list of frame indices}
+                    # New format: [SuggestionFrames]
+                    old_suggestions = suggestions_cattr.structure(
+                        dicts["suggestions"], Dict[Video, List]
+                    )
+                    for video in old_suggestions.keys():
+                        suggestions.extend(
+                            [
+                                SuggestionFrame(video, idx)
+                                for idx in old_suggestions[video]
+                            ]
+                        )
+                except:
+                    print("Error while loading suggestions")
+                    print(e)
+                    pass
 
         if "negative_anchors" in dicts:
             negative_anchors_cattr = cattr.Converter()
@@ -2156,6 +2207,190 @@ class Labels(MutableSequence):
         return cls(labels)
 
     @classmethod
+    def load_coco(
+        cls, filename: str, img_dir: str, use_missing_gui: bool = False
+    ) -> "Labels":
+        with open(filename, "r") as file:
+            json_str = file.read()
+            dicts = json_loads(json_str)
+
+        # Make skeletons from "categories"
+        skeleton_map = dict()
+        for category in dicts["categories"]:
+            skeleton = Skeleton(name=category["name"])
+            skeleton_id = category["id"]
+            node_names = category["keypoints"]
+            skeleton.add_nodes(node_names)
+
+            try:
+                for src_idx, dst_idx in category["skeleton"]:
+                    skeleton.add_edge(node_names[src_idx], node_names[dst_idx])
+            except IndexError as e:
+                # According to the COCO data format specifications[^1], the edges
+                # are supposed to be 1-indexed. But in some of their own
+                # dataset the edges are 1-indexed! So we'll try.
+                # [1]: http://cocodataset.org/#format-data
+
+                # Clear any edges we already created using 0-indexing
+                skeleton.clear_edges()
+
+                # Add edges
+                for src_idx, dst_idx in category["skeleton"]:
+                    skeleton.add_edge(node_names[src_idx - 1], node_names[dst_idx - 1])
+
+            skeleton_map[skeleton_id] = skeleton
+
+        # Make videos from "images"
+
+        # Remove images that aren't referenced in the annotations
+        img_refs = [annotation["image_id"] for annotation in dicts["annotations"]]
+        dicts["images"] = list(filter(lambda im: im["id"] in img_refs, dicts["images"]))
+
+        # Key in JSON file should be "file_name", but sometimes it's "filename",
+        # so we have to check both.
+        img_filename_key = "file_name"
+        if img_filename_key not in dicts["images"][0].keys():
+            img_filename_key = "filename"
+
+        # First add the img_dir to each image filename
+        img_paths = [
+            os.path.join(img_dir, image[img_filename_key]) for image in dicts["images"]
+        ]
+
+        # See if there are any missing files
+        img_missing = [not os.path.exists(path) for path in img_paths]
+
+        if sum(img_missing):
+            if use_missing_gui:
+                okay = MissingFilesDialog(img_paths, img_missing).exec_()
+
+                if not okay:
+                    return None
+            else:
+                raise FileNotFoundError(
+                    f"Images for COCO dataset could not be found in {img_dir}."
+                )
+
+        # Update the image paths (with img_dir or user selected path)
+        for image, path in zip(dicts["images"], img_paths):
+            image[img_filename_key] = path
+
+        # Create the video objects for the image files
+        image_video_map = dict()
+
+        vid_id_video_map = dict()
+        for image in dicts["images"]:
+            image_id = image["id"]
+            image_filename = image[img_filename_key]
+
+            # Sometimes images have a vid_id which links multiple images
+            # together as one video. If so, we'll use that as the video key.
+            # But if there isn't a vid_id, we'll treat each images as a
+            # distinct video and use the image id as the video id.
+            vid_id = image.get("vid_id", image_id)
+
+            if vid_id not in vid_id_video_map:
+                kwargs = dict(filenames=[image_filename])
+                for key in ("width", "height"):
+                    if key in image:
+                        kwargs[key] = image[key]
+
+                video = Video.from_image_filenames(**kwargs)
+                vid_id_video_map[vid_id] = video
+                frame_idx = 0
+            else:
+                video = vid_id_video_map[vid_id]
+                frame_idx = video.num_frames
+                video.backend.filenames.append(image_filename)
+
+            image_video_map[image_id] = (video, frame_idx)
+
+        # Make instances from "annotations"
+        lf_map = dict()
+        track_map = dict()
+        for annotation in dicts["annotations"]:
+            skeleton = skeleton_map[annotation["category_id"]]
+            image_id = annotation["image_id"]
+            video, frame_idx = image_video_map[image_id]
+            keypoints = np.array(annotation["keypoints"], dtype="int").reshape(-1, 3)
+
+            track = None
+            if "track_id" in annotation:
+                track_id = annotation["track_id"]
+                if track_id not in track_map:
+                    track_map[track_id] = Track(frame_idx, str(track_id))
+                track = track_map[track_id]
+
+            points = dict()
+            any_visible = False
+            for i in range(len(keypoints)):
+                node = skeleton.nodes[i]
+                x, y, flag = keypoints[i]
+
+                if flag == 0:
+                    # node not labeled for this instance
+                    continue
+
+                is_visible = flag == 2
+                any_visible = any_visible or is_visible
+                points[node] = Point(x, y, is_visible)
+
+            if points:
+                # If none of the points had 2 has the "visible" flag, we'll
+                # assume this incorrect and just mark all as visible.
+                if not any_visible:
+                    for point in points.values():
+                        point.visible = True
+
+                inst = Instance(skeleton=skeleton, points=points, track=track)
+
+                if image_id not in lf_map:
+                    lf_map[image_id] = LabeledFrame(video, frame_idx)
+
+                lf_map[image_id].insert(0, inst)
+
+        return cls(labeled_frames=list(lf_map.values()))
+
+    @classmethod
+    def from_deepposekit(cls, filename: str, video_path: str, skeleton_path: str):
+        video = Video.from_filename(video_path)
+
+        skeleton_data = pd.read_csv(skeleton_path, header=0)
+        skeleton = Skeleton()
+        skeleton.add_nodes(skeleton_data["name"])
+        nodes = skeleton.nodes
+
+        for name, parent, swap in skeleton_data.itertuples(index=False, name=None):
+            if parent is not np.nan:
+                skeleton.add_edge(parent, name)
+
+        lfs = []
+        with h5.File(filename, "r") as f:
+            pose_matrix = f["pose"][:]
+
+            track_count, frame_count, node_count, _ = pose_matrix.shape
+
+            tracks = [Track(0, f"Track {i}") for i in range(track_count)]
+            for frame_idx in range(frame_count):
+                lf_instances = []
+                for track_idx in range(track_count):
+                    points_array = pose_matrix[track_idx, frame_idx, :, :]
+                    points = dict()
+                    for p in range(len(points_array)):
+                        x, y, score = points_array[p]
+                        points[nodes[p]] = Point(x, y)  # TODO: score
+
+                    inst = Instance(
+                        skeleton=skeleton, track=tracks[track_idx], points=points
+                    )
+                    lf_instances.append(inst)
+                lfs.append(
+                    LabeledFrame(video, frame_idx=frame_idx, instances=lf_instances)
+                )
+
+        return cls(labeled_frames=lfs)
+
+    @classmethod
     def make_video_callback(cls, search_paths: Optional[List] = None) -> Callable:
         """
         Create a non-GUI callback for finding missing videos.
@@ -2245,6 +2480,178 @@ class Labels(MutableSequence):
                 item["backend"]["filename"] = filenames[i]
 
         return gui_video_callback
+
+    def export_training_data(self, save_path: Text):
+        """Exports a set of images and points for training with minimal metadata.
+
+        Args:
+            save_path: Path to HDF5 that training data will be saved to.
+
+        Notes:
+            The exported HDF5 file will contain no SLEAP-specific metadata or
+            dependencies for serialization. These files cannot be read back in for
+            labeling, but are useful when training on environments where it is hard to
+            install complex dependencies.
+        """
+
+        # Skeleton
+        node_names = np.string_(self.skeletons[0].node_names)
+        edge_inds = np.array(self.skeletons[0].edge_inds)
+
+        # Videos metadata
+        video_paths = []
+        video_datasets = []
+        video_shapes = []
+        video_image_data_format = []
+        for video in self.videos:
+            video_paths.append(video.backend.filename)
+            if hasattr(video.backend, "dataset"):
+                video_datasets.append(video.backend.dataset)
+            else:
+                video_datasets.append("")
+            video_shapes.append(video.shape)
+            video_image_data_format.append(video.backend.input_format)
+
+        video_paths = np.string_(video_paths)
+        video_datasets = np.string_(video_datasets)
+        video_shapes = np.array(video_shapes)
+        video_image_data_format = np.string_(video_image_data_format)
+
+        # Main labeling data
+        video_inds = []
+        frame_inds = []
+        imgs = []
+        peaks = []
+        peak_samples = []
+        peak_instances = []
+        peak_channels = []
+        peak_tracks = []
+
+        # Main labeling data.
+        labeled_frames_with_instances = [
+            lf for lf in self.labeled_frames if lf.has_user_instances
+        ]
+
+        for sample_ind, lf in enumerate(labeled_frames_with_instances):
+
+            # Video index into the videos metadata
+            video_ind = self.videos.index(lf.video)
+
+            # Frame index into the original images array
+            frame_ind = lf.frame_idx
+            if hasattr(lf.video.backend, "_HDF5Video__original_to_current_frame_idx"):
+                frame_ind = lf.video.backend._HDF5Video__original_to_current_frame_idx[
+                    lf.frame_idx
+                ]
+
+            # Actual image data
+            img = lf.image
+
+            frame_peaks = []
+            frame_peak_samples = []
+            frame_peak_instances = []
+            frame_peak_channels = []
+            frame_peak_tracks = []
+            for instance_ind, instance in enumerate(lf.user_instances):
+                instance_peaks = instance.points_array.astype("float32")
+                frame_peaks.append(instance_peaks)
+                frame_peak_samples.append(np.full((len(instance_peaks),), sample_ind))
+                frame_peak_instances.append(
+                    np.full((len(instance_peaks),), instance_ind)
+                )
+                frame_peak_channels.append(np.arange(len(instance_peaks)))
+                track_ind = np.nan
+                if instance.track is not None:
+                    track_ind = self.tracks.index(instance.track)
+                frame_peak_tracks.append(np.full((len(instance_peaks),), track_ind))
+
+            # Concatenate into (n_peaks, 2) -> x, y = frame_peaks[i]
+            frame_peaks = np.concatenate(frame_peaks, axis=0)
+
+            # Concatenate metadata
+            frame_peak_samples = np.concatenate(frame_peak_samples)
+            frame_peak_instances = np.concatenate(frame_peak_instances)
+            frame_peak_channels = np.concatenate(frame_peak_channels)
+            frame_peak_tracks = np.concatenate(frame_peak_tracks)
+
+            video_inds.append(video_ind)
+            frame_inds.append(frame_ind)
+            imgs.append(img)
+            peaks.append(frame_peaks)
+            peak_samples.append(frame_peak_samples)
+            peak_instances.append(frame_peak_instances)
+            peak_channels.append(frame_peak_channels)
+            peak_tracks.append(peak_tracks)
+
+        video_inds = np.array(video_inds)
+        frame_inds = np.array(frame_inds)
+        imgs = np.concatenate(imgs, axis=0)
+        peaks = np.concatenate(peaks, axis=0)
+        peak_samples = np.concatenate(peak_samples, axis=0).astype("int32")
+        peak_instances = np.concatenate(peak_instances, axis=0).astype("int32")
+        peak_channels = np.concatenate(peak_channels, axis=0).astype("int32")
+        peak_tracks = np.concatenate(peak_channels, axis=0)
+
+        with h5.File(save_path, "w") as f:
+            f.create_dataset("skeleton/node_names", data=node_names)
+            f.create_dataset("skeleton/n_nodes", data=len(node_names))
+            f.create_dataset("skeleton/edges", data=edge_inds)
+
+            f.create_dataset("videos/filepath", data=video_paths)
+            f.create_dataset("videos/dataset", data=video_datasets)
+            f.create_dataset("videos/shape", data=video_shapes)
+            f.create_dataset("videos/image_data_format", data=video_image_data_format)
+
+            f.create_dataset(
+                "imgs",
+                data=imgs,
+                chunks=(1,) + imgs.shape[1:],
+                compression="gzip",
+                compression_opts=1,
+            )
+            f.create_dataset("peaks/xy", data=peaks)
+            f.create_dataset("peaks/sample", data=peak_samples)
+            f.create_dataset("peaks/instance", data=peak_instances)
+            f.create_dataset("peaks/channel", data=peak_channels)
+            f.create_dataset("peaks/track", data=peak_tracks)
+
+    def generate_training_data(
+        self,
+    ) -> Tuple[Union[np.ndarray, List[np.ndarray]], List[np.ndarray]]:
+        """Generates images and points for training.
+
+        Returns:
+            A tuple of (imgs, points).
+
+            imgs: Array of shape (n_samples, height, width, channels) containing the
+            image data for all frames with user labels. If frames are of variable size,
+            imgs is a list of length n_samples with elements of shape
+            (height, width, channels).
+
+            points: List of length n_samples with elements of shape
+            (n_instances, n_nodes, 2), containing all user labeled instances in the
+            frame, with NaN-padded xy coordinates for each visible body part.
+        """
+
+        imgs = []
+        points = []
+
+        for lf in self.labeled_frames:
+            if not lf.has_user_instances:
+                continue
+
+            imgs.append(lf.image)
+            points.append(
+                np.stack([inst.points_array for inst in lf.user_instances], axis=0)
+            )
+
+        # Try to stack all images into a single 4D array.
+        first_shape = imgs[0].shape
+        can_stack = all([img.shape == first_shape for img in imgs])
+        if can_stack:
+            imgs = np.stack(imgs, axis=0)
+
+        return imgs, points
 
 
 def find_path_using_paths(missing_path, search_paths):
