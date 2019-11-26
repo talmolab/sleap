@@ -18,13 +18,6 @@ class ConfmapOverlay(DataOverlay):
     """Overlay to show confidence maps."""
 
     @classmethod
-    def from_h5(cls, filename, input_format="channels_last", **kwargs):
-        """Create object with hdf5 as datasource."""
-        return DataOverlay.from_h5(
-            filename, "/confmaps", input_format, overlay_class=ConfMapsPlot, **kwargs
-        )
-
-    @classmethod
     def from_model(cls, filename, video, **kwargs):
         """Create object with live predictions from model as datasource."""
         return DataOverlay.from_model(
