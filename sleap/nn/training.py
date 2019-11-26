@@ -4,7 +4,7 @@ import os
 import attr
 import argparse
 import json
-from typing import Union, Dict, List, Text, Tuple
+from typing import Callable, Dict, List, Optional, Text, Tuple, Union
 from time import time
 from datetime import datetime
 
@@ -471,9 +471,9 @@ class Trainer:
                     callbacks.TensorBoard(
                         log_dir=self.tensorboard_dir,
                         update_freq=self.tensorboard_freq,
-                        profile_batch=2 if self.tensorboard_profiling else 0
-                        )
+                        profile_batch=2 if self.tensorboard_profiling else 0,
                     )
+                )
 
             if self.training_job.trainer.save_every_epoch:
                 if self.training_job.newest_model_filename is None:
@@ -655,6 +655,61 @@ class Trainer:
 
         return self.model
 
+    @classmethod
+    def train_subprocess(
+        cls,
+        training_job: job.TrainingJob,
+        labels_filename: str,
+        waiting_callback: Optional[Callable] = None,
+    ):
+        """Runs training inside subprocess."""
+        import subprocess as sub
+        import time
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+
+            # Write a temporary file of the TrainingJob so that we can respect
+            # any changed made to the job attributes after it was loaded.
+            temp_filename = (
+                datetime.now().strftime("%y%m%d_%H%M%S") + "_training_job.json"
+            )
+            training_job_path = os.path.join(temp_dir, temp_filename)
+
+            print(training_job)
+
+            job.TrainingJob.save_json(training_job, training_job_path)
+
+            # Build CLI arguments for training
+            cli_args = [
+                "python",
+                "-m",
+                "sleap.nn.training",
+                training_job_path,
+                labels_filename,
+            ]
+
+            print(cli_args)
+
+            # Run training in a subprocess
+            with sub.Popen(cli_args, stdout=sub.PIPE) as proc:
+
+                # Wait till training is done, calling a callback if given.
+                while proc.poll() is None:
+                    if waiting_callback is not None:
+                        if waiting_callback() == -1:
+                            # -1 signals user cancellation
+                            return "", False
+                    time.sleep(0.1)
+
+                success = proc.returncode == 0
+
+                # We need to know the path to the newly trained TrainingJob.
+                # This should be the first line of STDOUT from training.
+                run_path = proc.stdout.readline().decode().strip()
+
+        return run_path, success
+
 
 def main():
     """CLI for training."""
@@ -690,7 +745,7 @@ def main():
         help="Suffix to append to run name. Can be specified multiple times.",
     )
 
-    args = parser.parse_args()
+    args, _ = parser.parse_known_args()
 
     job_filename = args.training_job_path
     if not os.path.exists(job_filename):
@@ -702,9 +757,6 @@ def main():
             raise FileNotFoundError(f"Could not find training profile: {job_filename}")
 
     labels_train_path = args.labels_path
-
-    print(f"Training labels file: {labels_train_path}")
-    print(f"Training profile: {job_filename}")
 
     training_job = job.TrainingJob.load_json(job_filename)
 
@@ -721,7 +773,7 @@ def main():
             os.path.dirname(labels_train_path), "models"
         )
 
-    prefixes = args.prefix
+    prefixes = args.prefix or []
     if training_job.run_name is not None:
         # Add run name specified in file to prefixes.
         prefixes.append(training_job.run_name)
@@ -730,6 +782,18 @@ def main():
     training_job.run_name = training_job.new_run_name(
         prefix=prefixes, suffix=args.suffix, check_existing=True
     )
+
+    # Print path to training job run.
+
+    # NOTE: This must be first line printed to stdout, otherwise we won't be
+    # able to access it when running training in subprocess via Popen.
+
+    print(training_job.run_path)
+    print()
+
+    print(f"Training labels file: {labels_train_path}")
+    print(f"Training profile: {job_filename}")
+    print()
 
     # Log configuration to console.
     print("Arguments:")

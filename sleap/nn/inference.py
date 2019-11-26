@@ -1,9 +1,14 @@
 import argparse
 import attr
+import datetime
 import os
 import numpy as np
 from collections import defaultdict
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
+
+import subprocess as sub
+import tempfile
+import time
 
 from sleap import Labels, LabeledFrame, util
 from sleap.nn import job
@@ -39,11 +44,19 @@ class Predictor:
             self._tracker_takes_img = "img" in function_sig.parameters
 
     def predict(
-        self, video_filename: str, frames: Optional[List[int]] = None
+        self,
+        video_filename: str,
+        frames: Optional[List[int]] = None,
+        video_kwargs: Optional[dict] = None,
     ) -> List[LabeledFrame]:
         """Runs entire inference pipeline on frames from a video file."""
 
-        video_ds = utils.VideoLoader(filename=video_filename, frame_inds=frames,)
+        if video_kwargs is None:
+            video_kwargs = dict()
+
+        video_ds = utils.VideoLoader(
+            filename=video_filename, frame_inds=frames, **video_kwargs,
+        )
 
         predicted_frames = []
 
@@ -153,7 +166,7 @@ class Predictor:
     @classmethod
     def from_cli_args(cls):
         parser = cls.make_cli_parser()
-        args = parser.parse_args()
+        args, _ = parser.parse_known_args()
         policies = cls.cli_args_to_policies(args)
 
         cls.check_valid_policies(policies)
@@ -231,6 +244,22 @@ class Predictor:
             help="The output filename to use for the predicted data.",
         )
 
+        # TODO: better video parameters
+
+        parser.add_argument(
+            "--video.dataset",
+            type=str,
+            default="",
+            help="The dataset for HDF5 videos.",
+        )
+
+        parser.add_argument(
+            "--video.input_format",
+            type=str,
+            default="",
+            help="The input_format for HDF5 videos.",
+        )
+
         # Class attributes to exclude from cli
         exclude_args = dict(region=("merge_overlapping",),)
 
@@ -278,16 +307,16 @@ class Predictor:
                 if training_job.trainer.bounding_box_size > 0:
                     inferred_box_length = training_job.trainer.bounding_box_size
 
-        if not policy_args["region"].get("merged_box_length", 0):
-            policy_args["region"]["merged_box_length"] = (
-                policy_args["region"]["instance_box_length"] * 2
-            )
-
         if "topdown" in policies:
             policy_args["region"]["merge_overlapping"] = False
 
         if "instance_box_length" not in policy_args["region"]:
             policy_args["region"]["instance_box_length"] = inferred_box_length
+
+        if not policy_args["region"].get("merged_box_length", 0):
+            policy_args["region"]["merged_box_length"] = (
+                policy_args["region"]["instance_box_length"] * 2
+            )
 
         # Add non-model policy classes
         non_model_policy_keys = [
@@ -298,11 +327,74 @@ class Predictor:
         for key in non_model_policy_keys:
             policies[key] = POLICY_CLASSES[key](**policy_args[key])
 
-        policies["tracking"] = tracking.Tracker.make_tracker_by_name(
-            **policy_args["tracking"]
-        )
+        tracker_name = "None"
+        if "tracking" in policy_args:
+            tracker_name = policy_args["tracking"].get("tracker", "None")
+
+        if tracker_name.lower() != "none":
+            policies["tracking"] = tracking.Tracker.make_tracker_by_name(
+                **policy_args["tracking"]
+            )
 
         return policies
+
+    @classmethod
+    def predict_subprocess(
+        cls,
+        video: "Video",
+        trained_job_paths: List[str],
+        kwargs: Dict[str, str],
+        frames: Optional[List[int]] = None,
+        waiting_callback: Optional[Callable] = None,
+    ):
+
+        cli_args = ["python", "-m", "sleap.nn.inference", video.filename]
+
+        # TODO: better support for video params
+        if hasattr(video.backend, "dataset"):
+            cli_args.extend(("--video.dataset", video.backend.dataset))
+
+        if hasattr(video.backend, "input_format"):
+            cli_args.extend(("--video.input_format", video.backend.input_format))
+
+        # Make path where we'll save predictions
+        output_path = ".".join(
+            (
+                video.filename,
+                datetime.datetime.now().strftime("%y%m%d_%H%M%S"),
+                "predictions.h5",
+            )
+        )
+
+        for job_path in trained_job_paths:
+            cli_args.extend(("-m", job_path))
+
+        for key, val in kwargs.items():
+            if not key.startswith("_"):
+                cli_args.extend((f"--{key}", val))
+
+        cli_args.extend(("--frames", ",".join(map(str, frames))))
+
+        cli_args.extend(("-o", output_path))
+
+        print("Command line call:")
+        print("\n".join(cli_args))
+        print()
+
+        with sub.Popen(cli_args) as proc:
+            while proc.poll() is None:
+                if waiting_callback is not None:
+
+                    if waiting_callback() == -1:
+                        # -1 signals user cancellation
+                        return "", False
+
+                time.sleep(0.1)
+
+            print(f"Process return code: {proc.returncode}")
+            success = proc.returncode == 0
+
+        return output_path, success
 
     @classmethod
     def check_valid_policies(cls, policies: dict) -> bool:
@@ -335,7 +427,15 @@ if __name__ == "__main__":
 
     predictor, args = Predictor.from_cli_args()
 
-    lfs = predictor.predict(video_filename=args.data_path, frames=args.frames,)
+    # TODO: better support for video params
+    video_kwargs = dict(
+        dataset=vars(args).get("video.dataset"),
+        input_format=vars(args).get("video.input_format"),
+    )
+
+    lfs = predictor.predict(
+        video_filename=args.data_path, frames=args.frames, video_kwargs=video_kwargs,
+    )
 
     if args.output:
         output_path = args.output

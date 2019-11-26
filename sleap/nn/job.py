@@ -338,5 +338,5 @@ class TrainingJob:
         # convert from Windows path if necessary
         if path is not None:
             if path.find("\\"):
-                path = Path(PureWindowsPath(path))
+                path = str(Path(PureWindowsPath(path)))
         return path
