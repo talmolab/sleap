@@ -7,6 +7,7 @@ dependencies:
 - networkx
 - cudatoolkit=10.0.*
 - cudnn
+- tensorflow-gpu=2.0
 - scikit-learn
 - h5py
 - pandas
@@ -24,5 +25,4 @@ dependencies:
     - cattrs==1.0.0rc0
     - qimage2ndarray==1.8
     - imgstore
-    - tensorflow-gpu==2.0
     - jsmin
