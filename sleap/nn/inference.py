@@ -371,7 +371,7 @@ class Predictor:
 
         for key, val in kwargs.items():
             if not key.startswith("_"):
-                cli_args.extend((f"--{key}", val))
+                cli_args.extend((f"--{key}", str(val)))
 
         cli_args.extend(("--frames", ",".join(map(str, frames))))
 

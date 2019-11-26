@@ -529,6 +529,27 @@ class Trainer:
                 os.path.join(self.training_job.run_path, "training_job.json")
             )
 
+        if self.zmq:
+            # Callbacks: ZMQ control
+            if self.control_zmq_port is not None:
+                callback_list.append(
+                    callbacks.TrainingControllerZMQ(
+                        address="tcp://127.0.0.1",
+                        port=self.control_zmq_port,
+                        topic="",
+                        poll_timeout=10,
+                    )
+                )
+
+            # Callbacks: ZMQ progress reporter
+            if self.progress_report_zmq_port is not None:
+                callback_list.append(
+                    callbacks.ProgressReporterZMQ(
+                        port=self.progress_report_zmq_port,
+                        what=self.training_job.model.output_type,
+                    )
+                )
+
         self._training_callbacks = callback_list
         return callback_list
 
@@ -676,8 +697,14 @@ class Trainer:
             )
             training_job_path = os.path.join(temp_dir, temp_filename)
 
-            print(training_job)
+            training_job.save_dir = os.path.join(
+                os.path.dirname(labels_filename), "models"
+            )
 
+            run_name = training_job.new_run_name(check_existing=True)
+            run_path = os.path.join(training_job.save_dir, run_name)
+
+            print(training_job)
             job.TrainingJob.save_json(training_job, training_job_path)
 
             # Build CLI arguments for training
@@ -687,12 +714,16 @@ class Trainer:
                 "sleap.nn.training",
                 training_job_path,
                 labels_filename,
+                "--zmq",
+                "--run_name",
+                run_name,
             ]
 
             print(cli_args)
 
             # Run training in a subprocess
-            with sub.Popen(cli_args, stdout=sub.PIPE) as proc:
+            # with sub.Popen(cli_args, stdout=sub.PIPE) as proc:
+            with sub.Popen(cli_args) as proc:
 
                 # Wait till training is done, calling a callback if given.
                 while proc.poll() is None:
@@ -703,10 +734,6 @@ class Trainer:
                     time.sleep(0.1)
 
                 success = proc.returncode == 0
-
-                # We need to know the path to the newly trained TrainingJob.
-                # This should be the first line of STDOUT from training.
-                run_path = proc.stdout.readline().decode().strip()
 
         return run_path, success
 
@@ -733,6 +760,14 @@ def main():
         "--tensorboard",
         action="store_true",
         help="Enables TensorBoard logging to the run path.",
+    )
+    parser.add_argument(
+        "--zmq", action="store_true", help="Enables ZMQ logging (for GUI).",
+    )
+    parser.add_argument(
+        "--run_name",
+        default="",
+        help="Run name to use when saving file, overrides other run name settings.",
     )
     parser.add_argument(
         "--prefix",
@@ -773,15 +808,18 @@ def main():
             os.path.dirname(labels_train_path), "models"
         )
 
-    prefixes = args.prefix or []
-    if training_job.run_name is not None:
-        # Add run name specified in file to prefixes.
-        prefixes.append(training_job.run_name)
+    if args.run_name:
+        training_job.run_name = args.run_name
+    else:
+        prefixes = args.prefix or []
+        if training_job.run_name is not None:
+            # Add run name specified in file to prefixes.
+            prefixes.append(training_job.run_name)
 
-    # Create new run name.
-    training_job.run_name = training_job.new_run_name(
-        prefix=prefixes, suffix=args.suffix, check_existing=True
-    )
+        # Create new run name.
+        training_job.run_name = training_job.new_run_name(
+            prefix=prefixes, suffix=args.suffix, check_existing=True
+        )
 
     # Print path to training job run.
 
@@ -806,7 +844,7 @@ def main():
     print("Initializing training...")
     # Create a trainer and run!
     trainer = Trainer(
-        training_job, tensorboard=args.tensorboard, zmq=False, verbosity=2
+        training_job, tensorboard=args.tensorboard, zmq=args.zmq, verbosity=2
     )
     trained_model = trainer.train()
 
