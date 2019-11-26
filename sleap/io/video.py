@@ -44,6 +44,8 @@ class HDF5Video:
     def __attrs_post_init__(self):
         """Called by attrs after __init__()."""
 
+        self._test_frame_ = None
+
         self.__original_to_current_frame_idx = dict()
 
         # Handle cases where the user feeds in h5.File objects instead of filename
@@ -97,6 +99,16 @@ class HDF5Video:
             self.__channel_idx = 3
             self.__width_idx = 2
             self.__height_idx = 1
+
+    @property
+    def __test_frame(self):
+        # Load if not already loaded
+        if self._test_frame_ is None:
+            # Lets grab a test frame to help us figure things out about the video
+            self._test_frame_ = self.get_frame(self.last_frame_idx)
+
+        # Return stored test frame
+        return self._test_frame_
 
     def matches(self, other: "HDF5Video") -> bool:
         """
@@ -160,7 +172,7 @@ class HDF5Video:
     @property
     def dtype(self):
         """See :class:`Video`."""
-        return self.__dataset_h5.dtype
+        return self.__test_frame.dtype
 
     @property
     def last_frame_idx(self) -> int:
@@ -191,6 +203,7 @@ class HDF5Video:
             if idx in self.__original_to_current_frame_idx:
                 idx = self.__original_to_current_frame_idx[idx]
             else:
+                print(self.__original_to_current_frame_idx)
                 raise ValueError(f"Frame index {idx} not in original index.")
 
         frame = self.__dataset_h5[idx]
