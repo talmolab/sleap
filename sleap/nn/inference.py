@@ -156,9 +156,13 @@ class Predictor:
         self, instances_chunk, frame_inds, video
     ) -> List[LabeledFrame]:
         """Makes LabeledFrame objects for all predictions in chunk."""
+
+        # Make a list of the instances from each frame, sorted by sample index
+        sorted_frame_instances = [val for (key, val) in sorted(instances_chunk.items())]
+
         frames = [
             LabeledFrame(frame_idx=frame_idx, instances=instances, video=video)
-            for frame_idx, instances in zip(frame_inds, instances_chunk.values())
+            for frame_idx, instances in zip(frame_inds, sorted_frame_instances)
             if instances
         ]
         return frames
@@ -373,7 +377,7 @@ class Predictor:
             if not key.startswith("_"):
                 cli_args.extend((f"--{key}", str(val)))
 
-        cli_args.extend(("--frames", ",".join(map(str, frames))))
+        cli_args.extend(("--frames", ",".join(map(str, sorted(frames)))))
 
         cli_args.extend(("-o", output_path))
 
