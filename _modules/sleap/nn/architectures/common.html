@@ -154,9 +154,11 @@
   <h1>Source code for sleap.nn.architectures.common</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">collections</span>
-<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">wraps</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">wraps</span>
 
-<span class="kn">from</span> <span class="nn">keras.layers</span> <span class="k">import</span> <span class="n">Conv2D</span><span class="p">,</span> <span class="n">BatchNormalization</span><span class="p">,</span> <span class="n">Add</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Text</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">from</span> <span class="nn">tensorflow.keras.layers</span> <span class="kn">import</span> <span class="n">Conv2D</span><span class="p">,</span> <span class="n">BatchNormalization</span><span class="p">,</span> <span class="n">Add</span>
 
 
 <div class="viewcode-block" id="expand_to_n"><a class="viewcode-back" href="../../../../training.html#sleap.nn.architectures.common.expand_to_n">[docs]</a><span class="k">def</span> <span class="nf">expand_to_n</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
@@ -181,6 +183,16 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Variable to expand must be scalar.&quot;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">x</span></div>
+
+
+<div class="viewcode-block" id="scale_input"><a class="viewcode-back" href="../../../../training.html#sleap.nn.architectures.common.scale_input">[docs]</a><span class="k">def</span> <span class="nf">scale_input</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Rescale input to [-1, 1].&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">X</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span></div>
+
+
+<div class="viewcode-block" id="tile_channels"><a class="viewcode-back" href="../../../../training.html#sleap.nn.architectures.common.tile_channels">[docs]</a><span class="k">def</span> <span class="nf">tile_channels</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Tiles single channel to 3 channel.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span></div>
 
 
 <div class="viewcode-block" id="conv"><a class="viewcode-back" href="../../../../training.html#sleap.nn.architectures.common.conv">[docs]</a><span class="k">def</span> <span class="nf">conv</span><span class="p">(</span><span class="n">num_filters</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;relu&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -290,6 +302,75 @@
     <span class="n">x_out</span> <span class="o">=</span> <span class="n">Add</span><span class="p">()([</span><span class="n">x_identity</span><span class="p">,</span> <span class="n">x</span><span class="p">])</span>
 
     <span class="k">return</span> <span class="n">x_out</span></div>
+
+
+<span class="k">def</span> <span class="nf">upsampling_blocks</span><span class="p">(</span>
+    <span class="n">x</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">up_blocks</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">upsampling_layers</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">interp</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bilinear&quot;</span><span class="p">,</span>
+    <span class="n">refine_conv_up</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">conv_filters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">64</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">up_blocks</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">upsampling_layers</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">UpSampling2D</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">interpolation</span><span class="o">=</span><span class="n">interp</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2DTranspose</span><span class="p">(</span>
+                <span class="n">conv_filters</span><span class="p">,</span>
+                <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                <span class="n">strides</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
+                <span class="n">kernel_initializer</span><span class="o">=</span><span class="s2">&quot;glorot_normal&quot;</span><span class="p">,</span>
+            <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">refine_conv_up</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">(</span>
+                <span class="n">conv_filters</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;relu&quot;</span>
+            <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">x</span>
+
+
+<div class="viewcode-block" id="upsampled_average_block"><a class="viewcode-back" href="../../../../training.html#sleap.nn.architectures.common.upsampled_average_block">[docs]</a><span class="k">def</span> <span class="nf">upsampled_average_block</span><span class="p">(</span>
+    <span class="n">tensors</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">target_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">interp</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;bilinear&quot;</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Upsamples tensors to a common size and reduce by averaging.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        tensors: A list of tensors of possibly different heights/widths, but the same</span>
+<span class="sd">            number of channels.</span>
+<span class="sd">        target_size: Size that the tensors be upsampled to. If None, this is set to the</span>
+<span class="sd">            size of the largest tensor in the list.</span>
+<span class="sd">        interp: Interpolation method (&quot;nearest&quot; or &quot;bilinear&quot;).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A single tensor with the target size that is the average of all of the input</span>
+<span class="sd">        tensors.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">target_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Find biggest output.</span>
+        <span class="n">largest_tensor</span> <span class="o">=</span> <span class="n">tensors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">tensors</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">largest_tensor</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="n">largest_tensor</span> <span class="o">=</span> <span class="n">x</span>
+        <span class="n">target_size</span> <span class="o">=</span> <span class="n">largest_tensor</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="c1"># Now collect all outputs with upsampling if needed.</span>
+    <span class="n">outputs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">tensors</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">target_size</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">UpSampling2D</span><span class="p">(</span>
+                <span class="n">size</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">target_size</span> <span class="o">/</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">interpolation</span><span class="o">=</span><span class="n">interp</span>
+            <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="c1"># Now average everything.</span>
+    <span class="n">averaged_output</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Average</span><span class="p">()(</span><span class="n">outputs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">averaged_output</span></div>
 </pre></div>
 
            </div>

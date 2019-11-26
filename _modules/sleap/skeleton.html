@@ -168,13 +168,13 @@
 <span class="kn">import</span> <span class="nn">h5py</span> <span class="k">as</span> <span class="nn">h5</span>
 <span class="kn">import</span> <span class="nn">copy</span>
 
-<span class="kn">from</span> <span class="nn">enum</span> <span class="k">import</span> <span class="n">Enum</span>
-<span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">count</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">count</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Text</span>
 
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
-<span class="kn">from</span> <span class="nn">networkx.readwrite</span> <span class="k">import</span> <span class="n">json_graph</span>
-<span class="kn">from</span> <span class="nn">scipy.io</span> <span class="k">import</span> <span class="n">loadmat</span>
+<span class="kn">from</span> <span class="nn">networkx.readwrite</span> <span class="kn">import</span> <span class="n">json_graph</span>
+<span class="kn">from</span> <span class="nn">scipy.io</span> <span class="kn">import</span> <span class="n">loadmat</span>
 
 <span class="n">NodeRef</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;Node&quot;</span><span class="p">]</span>
 <span class="n">H5FileRef</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">h5</span><span class="o">.</span><span class="n">File</span><span class="p">]</span>
@@ -245,7 +245,7 @@
 
     <span class="n">_skeleton_idx</span> <span class="o">=</span> <span class="n">count</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize an empty skeleton object.</span>
 
@@ -395,7 +395,7 @@
             <span class="s2">&quot;Cannot change Skeleton name, it is immutable since &quot;</span>
             <span class="o">+</span> <span class="s2">&quot;it is used for hashing. Create a copy of the skeleton &quot;</span>
             <span class="o">+</span> <span class="s2">&quot;with new name using &quot;</span>
-            <span class="o">+</span> <span class="n">f</span><span class="s2">&quot;new_skeleton = Skeleton.rename(skeleton, &#39;</span><span class="si">{name}</span><span class="s2">&#39;))&quot;</span>
+            <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;new_skeleton = Skeleton.rename(skeleton, &#39;</span><span class="si">{name}</span><span class="s2">&#39;))&quot;</span>
         <span class="p">)</span>
 
 <div class="viewcode-block" id="Skeleton.rename_skeleton"><a class="viewcode-back" href="../../skeleton.html#sleap.skeleton.Skeleton.rename_skeleton">[docs]</a>    <span class="nd">@classmethod</span>
@@ -480,6 +480,20 @@
         <span class="k">return</span> <span class="p">[(</span><span class="n">src</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">dst</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">src</span><span class="p">,</span> <span class="n">dst</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="p">]</span>
 
     <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">edge_inds</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Get a list of edges as node indices.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A list of (src_node_ind, dst_node_ind), where indices are subscripts into</span>
+<span class="sd">            the Skeleton.nodes list.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="p">[</span>
+        <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">src_node</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">dst_node</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">src_node</span><span class="p">,</span> <span class="n">dst_node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">edges</span>
+        <span class="p">]</span>
+
+    <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">edges_full</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Node</span><span class="p">,</span> <span class="n">Node</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
         <span class="sd">&quot;&quot;&quot;Get a list of edge tuples with keys and attributes.</span>
 
@@ -544,6 +558,16 @@
             <span class="k">return</span> <span class="n">node_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">node_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">node</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Skeleton.edge_to_index"><a class="viewcode-back" href="../../skeleton.html#sleap.skeleton.Skeleton.edge_to_index">[docs]</a>    <span class="k">def</span> <span class="nf">edge_to_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">NodeRef</span><span class="p">,</span> <span class="n">destination</span><span class="p">:</span> <span class="n">NodeRef</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the index of edge from source to destination.&quot;&quot;&quot;</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+        <span class="n">destination</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">destination</span><span class="p">)</span>
+        <span class="n">edge</span> <span class="o">=</span> <span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">destination</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">edge</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">edge</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span></div>
 
 <div class="viewcode-block" id="Skeleton.add_node"><a class="viewcode-back" href="../../skeleton.html#sleap.skeleton.Skeleton.add_node">[docs]</a>    <span class="k">def</span> <span class="nf">add_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Add a node representing an animal part to the skeleton.</span>
@@ -721,6 +745,12 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">remove_edge</span><span class="p">(</span><span class="n">source_node</span><span class="p">,</span> <span class="n">destination_node</span><span class="p">)</span></div>
 
+<div class="viewcode-block" id="Skeleton.clear_edges"><a class="viewcode-back" href="../../skeleton.html#sleap.skeleton.Skeleton.clear_edges">[docs]</a>    <span class="k">def</span> <span class="nf">clear_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Deletes all edges in skeleton.&quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">src</span><span class="p">,</span> <span class="n">dst</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">delete_edge</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">)</span></div>
+
 <div class="viewcode-block" id="Skeleton.add_symmetry"><a class="viewcode-back" href="../../skeleton.html#sleap.skeleton.Skeleton.add_symmetry">[docs]</a>    <span class="k">def</span> <span class="nf">add_symmetry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node1</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">node2</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Specify that two parts (nodes) in skeleton are symmetrical.</span>
 
@@ -749,12 +779,12 @@
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_symmetry</span><span class="p">(</span><span class="n">node1</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="n">f</span><span class="s2">&quot;</span><span class="si">{node1}</span><span class="s2"> is already symmetric with {self.get_symmetry(node1)}.&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{node1}</span><span class="s2"> is already symmetric with {self.get_symmetry(node1)}.&quot;</span>
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_symmetry</span><span class="p">(</span><span class="n">node2</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="n">f</span><span class="s2">&quot;</span><span class="si">{node2}</span><span class="s2"> is already symmetric with {self.get_symmetry(node2)}.&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{node2}</span><span class="s2"> is already symmetric with {self.get_symmetry(node2)}.&quot;</span>
             <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">node1_node</span><span class="p">,</span> <span class="n">node2_node</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">EdgeType</span><span class="o">.</span><span class="n">SYMMETRY</span><span class="p">)</span>
@@ -781,7 +811,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">get_symmetry</span><span class="p">(</span><span class="n">node1</span><span class="p">)</span> <span class="o">!=</span> <span class="n">node2_node</span>
             <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_symmetry</span><span class="p">(</span><span class="n">node2</span><span class="p">)</span> <span class="o">!=</span> <span class="n">node1_node</span>
         <span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Nodes </span><span class="si">{node1}</span><span class="s2">, </span><span class="si">{node2}</span><span class="s2"> are not symmetric.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Nodes </span><span class="si">{node1}</span><span class="s2">, </span><span class="si">{node2}</span><span class="s2"> are not symmetric.&quot;</span><span class="p">)</span>
 
         <span class="n">edges</span> <span class="o">=</span> <span class="p">[</span>
             <span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
@@ -818,7 +848,7 @@
         <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">symmetry</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">symmetry</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{node}</span><span class="s2"> has more than one symmetry.&quot;</span><span class="p">)</span></div>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{node}</span><span class="s2"> has more than one symmetry.&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Skeleton.get_symmetry_name"><a class="viewcode-back" href="../../skeleton.html#sleap.skeleton.Skeleton.get_symmetry_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_symmetry_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">NodeRef</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -833,7 +863,7 @@
         <span class="n">symmetric_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_symmetry</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">symmetric_node</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">symmetric_node</span><span class="o">.</span><span class="n">name</span></div>
 
-    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Retrieves the node data associated with skeleton node.</span>
 
@@ -849,11 +879,11 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">node_name</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Skeleton does not have node named &#39;</span><span class="si">{node_name}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Skeleton does not have node named &#39;</span><span class="si">{node_name}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">data</span><span class="p">()[</span><span class="n">node</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Checks if specified node exists in skeleton.</span>
 
@@ -995,6 +1025,26 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">Skeleton</span><span class="o">.</span><span class="n">from_json</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">d</span><span class="p">),</span> <span class="n">node_to_idx</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Skeleton.from_names_and_edge_inds"><a class="viewcode-back" href="../../skeleton.html#sleap.skeleton.Skeleton.from_names_and_edge_inds">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_names_and_edge_inds</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">node_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">],</span> <span class="n">edge_inds</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Skeleton&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create skeleton from a list of node names and edge indices.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            node_names: List of strings defining the nodes.</span>
+<span class="sd">            edge_inds: List of tuples in the form (src_node_ind, dst_node_ind). If not</span>
+<span class="sd">                specified, the resulting skeleton will have no edges.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The instantiated skeleton.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">skeleton</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">()</span>
+        <span class="n">skeleton</span><span class="o">.</span><span class="n">add_nodes</span><span class="p">(</span><span class="n">node_names</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">edge_inds</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">src</span><span class="p">,</span> <span class="n">dst</span> <span class="ow">in</span> <span class="n">edge_inds</span><span class="p">:</span>
+                <span class="n">skeleton</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">node_names</span><span class="p">[</span><span class="n">src</span><span class="p">],</span> <span class="n">node_names</span><span class="p">[</span><span class="n">dst</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">skeleton</span></div>
 
 <div class="viewcode-block" id="Skeleton.to_json"><a class="viewcode-back" href="../../skeleton.html#sleap.skeleton.Skeleton.to_json">[docs]</a>    <span class="k">def</span> <span class="nf">to_json</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_to_idx</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="n">Node</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1269,10 +1319,10 @@
 
         <span class="k">return</span> <span class="n">skeleton</span></div>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">(name=</span><span class="si">%r</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Construct a hash from skeleton id.</span>
 <span class="sd">        &quot;&quot;&quot;</span>

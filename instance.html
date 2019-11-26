@@ -193,6 +193,12 @@ instances are added to <a class="reference internal" href="#sleap.instance.Label
 </dd>
 </dl>
 <dl class="method">
+<dt id="sleap.instance.Instance.bounding_box">
+<em class="property">property </em><code class="sig-name descname">bounding_box</code><a class="headerlink" href="#sleap.instance.Instance.bounding_box" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the instance’s containing bounding box in [y1, x1, y2, x2] format.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.instance.Instance.centroid">
 <em class="property">property </em><code class="sig-name descname">centroid</code><a class="headerlink" href="#sleap.instance.Instance.centroid" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns instance centroid as (x,y) numpy row vector.</p>
@@ -251,6 +257,12 @@ have NaNs present.</p>
 <dd class="field-even"><p>True if match, False otherwise.</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.instance.Instance.n_visible_points">
+<em class="property">property </em><code class="sig-name descname">n_visible_points</code><a class="headerlink" href="#sleap.instance.Instance.n_visible_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the count of points that are visible in this instance.</p>
 </dd></dl>
 
 <dl class="method">
@@ -388,6 +400,12 @@ None. If track is -1, then we’ll match any track.</p></li>
 <dt id="sleap.instance.LabeledFrame.has_user_instances">
 <em class="property">property </em><code class="sig-name descname">has_user_instances</code><a class="headerlink" href="#sleap.instance.LabeledFrame.has_user_instances" title="Permalink to this definition">¶</a></dt>
 <dd><p>Whether the frame contains any user instances.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.instance.LabeledFrame.image">
+<em class="property">property </em><code class="sig-name descname">image</code><a class="headerlink" href="#sleap.instance.LabeledFrame.image" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the image for this frame of shape (height, width, channels).</p>
 </dd></dl>
 
 <dl class="method">
@@ -547,11 +565,14 @@ a <code class="xref py py-class docutils literal notranslate"><span class="pre">
 
 <dl class="class">
 <dt id="sleap.instance.PredictedInstance">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.instance.</code><code class="sig-name descname">PredictedInstance</code><span class="sig-paren">(</span><em class="sig-param">skeleton: sleap.skeleton.Skeleton</em>, <em class="sig-param">track: sleap.instance.Track = None</em>, <em class="sig-param">from_predicted: Optional[PredictedInstance] = None</em>, <em class="sig-param">points: sleap.instance.PointArray = None</em>, <em class="sig-param">nodes: List = None</em>, <em class="sig-param">frame: Optional[LabeledFrame] = None</em>, <em class="sig-param">score=0.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/instance.html#PredictedInstance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.PredictedInstance" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.instance.</code><code class="sig-name descname">PredictedInstance</code><span class="sig-paren">(</span><em class="sig-param">skeleton: sleap.skeleton.Skeleton</em>, <em class="sig-param">track: sleap.instance.Track = None</em>, <em class="sig-param">from_predicted: Optional[PredictedInstance] = None</em>, <em class="sig-param">points: sleap.instance.PointArray = None</em>, <em class="sig-param">nodes: List = None</em>, <em class="sig-param">frame: Optional[LabeledFrame] = None</em>, <em class="sig-param">score=0.0</em>, <em class="sig-param">tracking_score=0.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/instance.html#PredictedInstance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.PredictedInstance" title="Permalink to this definition">¶</a></dt>
 <dd><p>A predicted instance is an output of the inference procedure.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>score</strong> – The instance-level prediction score.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>score</strong> – The instance-level grouping prediction score.</p></li>
+<li><p><strong>tracking_score</strong> – The instance-level track matching score.</p></li>
+</ul>
 </dd>
 </dl>
 <dl class="method">

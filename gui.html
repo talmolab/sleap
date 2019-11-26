@@ -92,7 +92,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">GUI</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#module-sleap.gui.video">Video Player</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#dialogs">Dialogs</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#module-sleap.gui.active">Active Learning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#active-learning">Active Learning</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-sleap.gui.importvideos">Video Importer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-sleap.gui.merge">Merging</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-sleap.gui.shortcuts">Shortcuts</a></li>
@@ -185,7 +185,7 @@
             
   <div class="section" id="module-sleap.gui.app">
 <span id="gui"></span><h1>GUI<a class="headerlink" href="#module-sleap.gui.app" title="Permalink to this headline">¶</a></h1>
-<p>Main GUI application for labeling, active learning, and proofreading.</p>
+<p>Main GUI application for labeling, training/inference, and proofreading.</p>
 <dl class="class">
 <dt id="sleap.gui.app.MainWindow">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.gui.app.</code><code class="sig-name descname">MainWindow</code><span class="sig-paren">(</span><em class="sig-param">labels_path: Optional[str] = None</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow" title="Permalink to this definition">¶</a></dt>
@@ -200,144 +200,16 @@ have its own <cite>MainWindow</cite> object.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="sleap.gui.app.MainWindow.skeleton">
-<code class="sig-name descname">skeleton</code><a class="headerlink" href="#sleap.gui.app.MainWindow.skeleton" title="Permalink to this definition">¶</a></dt>
-<dd><p>The active <code class="xref py py-class docutils literal notranslate"><span class="pre">Skeleton</span></code> for the project in the gui</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="sleap.gui.app.MainWindow.video">
-<code class="sig-name descname">video</code><a class="headerlink" href="#sleap.gui.app.MainWindow.video" title="Permalink to this definition">¶</a></dt>
-<dd><p>The active <code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code> in view in the gui</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.activateSelectedVideo">
-<code class="sig-name descname">activateSelectedVideo</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.activateSelectedVideo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.activateSelectedVideo" title="Permalink to this definition">¶</a></dt>
-<dd><p>Activates video selected in table.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.addTrack">
-<code class="sig-name descname">addTrack</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.addTrack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.addTrack" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates new track and moves selected instance into this track.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.addVideo">
-<code class="sig-name descname">addVideo</code><span class="sig-paren">(</span><em class="sig-param">filename: Optional[str] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.addVideo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.addVideo" title="Permalink to this definition">¶</a></dt>
-<dd><p>Shows gui for adding video to project.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>filename</strong> – If given, then we just load this video. If not given,
-then we show dialog for importing videos.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>None.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.changestack_clear">
-<code class="sig-name descname">changestack_clear</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.changestack_clear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.changestack_clear" title="Permalink to this definition">¶</a></dt>
-<dd><p>Clears stack of changes.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.changestack_end_atomic">
-<code class="sig-name descname">changestack_end_atomic</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.changestack_end_atomic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.changestack_end_atomic" title="Permalink to this definition">¶</a></dt>
-<dd><p>Marks that we want finished the set of changes to track together.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.changestack_has_changes">
-<code class="sig-name descname">changestack_has_changes</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.changestack_has_changes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.changestack_has_changes" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns whether there are any unsaved changes.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.changestack_push">
-<code class="sig-name descname">changestack_push</code><span class="sig-paren">(</span><em class="sig-param">change: bool = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.changestack_push"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.changestack_push" title="Permalink to this definition">¶</a></dt>
-<dd><p>Adds to stack of changes made by user.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.changestack_savepoint">
-<code class="sig-name descname">changestack_savepoint</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.changestack_savepoint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.changestack_savepoint" title="Permalink to this definition">¶</a></dt>
-<dd><p>Marks that project was just saved.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.changestack_start_atomic">
-<code class="sig-name descname">changestack_start_atomic</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.changestack_start_atomic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.changestack_start_atomic" title="Permalink to this definition">¶</a></dt>
-<dd><p>Marks that we want to track a set of changes as a single change.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.clearFrameNegativeAnchors">
-<code class="sig-name descname">clearFrameNegativeAnchors</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.clearFrameNegativeAnchors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.clearFrameNegativeAnchors" title="Permalink to this definition">¶</a></dt>
-<dd><p>Removes negative training sample anchors on current frame.</p>
+<dt id="sleap.gui.app.MainWindow.state">
+<code class="sig-name descname">state</code><a class="headerlink" href="#sleap.gui.app.MainWindow.state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Object that holds GUI state, e.g., current video, frame,
+whether to show node labels, etc.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="sleap.gui.app.MainWindow.closeEvent">
 <code class="sig-name descname">closeEvent</code><span class="sig-paren">(</span><em class="sig-param">event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.closeEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.closeEvent" title="Permalink to this definition">¶</a></dt>
 <dd><p>Closes application window, prompting for saving as needed.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.deleteAreaPredictions">
-<code class="sig-name descname">deleteAreaPredictions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.deleteAreaPredictions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.deleteAreaPredictions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gui for deleting instances within some rect on frame images.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.deleteClipPredictions">
-<code class="sig-name descname">deleteClipPredictions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.deleteClipPredictions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.deleteClipPredictions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Deletes all instances within selected range of video frames.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.deleteEdge">
-<code class="sig-name descname">deleteEdge</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.deleteEdge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.deleteEdge" title="Permalink to this definition">¶</a></dt>
-<dd><p>Removes (currently selected) edge from skeleton.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.deleteFrameLimitPredictions">
-<code class="sig-name descname">deleteFrameLimitPredictions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.deleteFrameLimitPredictions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.deleteFrameLimitPredictions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gui for deleting instances beyond some number in each frame.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.deleteLowScorePredictions">
-<code class="sig-name descname">deleteLowScorePredictions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.deleteLowScorePredictions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.deleteLowScorePredictions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gui for deleting instances below some score threshold.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.deleteNode">
-<code class="sig-name descname">deleteNode</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.deleteNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.deleteNode" title="Permalink to this definition">¶</a></dt>
-<dd><p>Removes (currently selected) node from skeleton.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.deletePredictions">
-<code class="sig-name descname">deletePredictions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.deletePredictions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.deletePredictions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Deletes all predicted instances in project.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.deleteSelectedInstance">
-<code class="sig-name descname">deleteSelectedInstance</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.deleteSelectedInstance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.deleteSelectedInstance" title="Permalink to this definition">¶</a></dt>
-<dd><p>Deletes currently selected instance.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.deleteSelectedInstanceTrack">
-<code class="sig-name descname">deleteSelectedInstanceTrack</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.deleteSelectedInstanceTrack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.deleteSelectedInstanceTrack" title="Permalink to this definition">¶</a></dt>
-<dd><p>Deletes all instances from track of currently selected instance.</p>
 </dd></dl>
 
 <dl class="method">
@@ -371,56 +243,31 @@ event handler would return.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="sleap.gui.app.MainWindow.exportLabeledClip">
-<code class="sig-name descname">exportLabeledClip</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.exportLabeledClip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.exportLabeledClip" title="Permalink to this definition">¶</a></dt>
-<dd><p>Shows gui for exporting clip with visual annotations.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.exportLabeledFrames">
-<code class="sig-name descname">exportLabeledFrames</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.exportLabeledFrames"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.exportLabeledFrames" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gui for exporting the training dataset of labels/frame images.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.filename">
-<em class="property">property </em><code class="sig-name descname">filename</code><a class="headerlink" href="#sleap.gui.app.MainWindow.filename" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns filename for current project.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.generateSuggestions">
-<code class="sig-name descname">generateSuggestions</code><span class="sig-paren">(</span><em class="sig-param">params: Dict</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.generateSuggestions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.generateSuggestions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generates suggestions using given params dictionary.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.gotoFrame">
-<code class="sig-name descname">gotoFrame</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.gotoFrame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.gotoFrame" title="Permalink to this definition">¶</a></dt>
-<dd><p>Shows gui to go to frame by number.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.gotoVideoAndFrame">
-<code class="sig-name descname">gotoVideoAndFrame</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em>, <em class="sig-param">frame_idx: int</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.gotoVideoAndFrame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.gotoVideoAndFrame" title="Permalink to this definition">¶</a></dt>
-<dd><p>Activates video and goes to frame.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.importPredictions">
-<code class="sig-name descname">importPredictions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.importPredictions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.importPredictions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Starts gui for importing another dataset into currently one.</p>
-</dd></dl>
-
-<dl class="method">
 <dt id="sleap.gui.app.MainWindow.learningFinished">
 <code class="sig-name descname">learningFinished</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.learningFinished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.learningFinished" title="Permalink to this definition">¶</a></dt>
-<dd><p>Called when active learning (or inference) finishes.</p>
+<dd><p>Called when inference finishes.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="sleap.gui.app.MainWindow.loadProject">
-<code class="sig-name descname">loadProject</code><span class="sig-paren">(</span><em class="sig-param">filename: Optional[str] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.loadProject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.loadProject" title="Permalink to this definition">¶</a></dt>
+<dt id="sleap.gui.app.MainWindow.loadLabelsObject">
+<code class="sig-name descname">loadLabelsObject</code><span class="sig-paren">(</span><em class="sig-param">labels: sleap.io.dataset.Labels</em>, <em class="sig-param">filename: Optional[str] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.loadLabelsObject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.loadLabelsObject" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads a <cite>Labels</cite> object into the GUI, replacing any currently loaded.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>labels</strong> – The <cite>Labels</cite> object to load.</p></li>
+<li><p><strong>filename</strong> – The filename where this file is saved, if any.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.app.MainWindow.loadProjectFile">
+<code class="sig-name descname">loadProjectFile</code><span class="sig-paren">(</span><em class="sig-param">filename: Optional[str] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.loadProjectFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.loadProjectFile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Loads given labels file into GUI.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -437,81 +284,9 @@ then don’t do anything.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="sleap.gui.app.MainWindow.loadVideo">
-<code class="sig-name descname">loadVideo</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em>, <em class="sig-param">video_idx: int = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.loadVideo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.loadVideo" title="Permalink to this definition">¶</a></dt>
-<dd><p>Activates video in gui.</p>
-</dd></dl>
-
-<dl class="method">
 <dt id="sleap.gui.app.MainWindow.load_overlays">
 <code class="sig-name descname">load_overlays</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.load_overlays"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.load_overlays" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load all standard video overlays.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.markNegativeAnchor">
-<code class="sig-name descname">markNegativeAnchor</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.markNegativeAnchor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.markNegativeAnchor" title="Permalink to this definition">¶</a></dt>
-<dd><p>Allows user to add negative training sample anchor.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.newEdge">
-<code class="sig-name descname">newEdge</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.newEdge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.newEdge" title="Permalink to this definition">¶</a></dt>
-<dd><p>Adds new edge to skeleton.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.newInstance">
-<code class="sig-name descname">newInstance</code><span class="sig-paren">(</span><em class="sig-param">copy_instance: Optional[sleap.instance.Instance] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.newInstance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.newInstance" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates a new instance, copying node coordinates as appropriate.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>copy_instance</strong> – The <code class="xref py py-class docutils literal notranslate"><span class="pre">Instance</span></code> (or
-<code class="xref py py-class docutils literal notranslate"><span class="pre">PredictedInstance</span></code>) which we want to copy.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.newNode">
-<code class="sig-name descname">newNode</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.newNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.newNode" title="Permalink to this definition">¶</a></dt>
-<dd><p>Adds new node to skeleton.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.newProject">
-<code class="sig-name descname">newProject</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.newProject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.newProject" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a new project in a new window.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.nextLabeledFrame">
-<code class="sig-name descname">nextLabeledFrame</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.nextLabeledFrame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.nextLabeledFrame" title="Permalink to this definition">¶</a></dt>
-<dd><p>Goes to labeled frame after current frame.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.nextSuggestedFrame">
-<code class="sig-name descname">nextSuggestedFrame</code><span class="sig-paren">(</span><em class="sig-param">seek_direction=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.nextSuggestedFrame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.nextSuggestedFrame" title="Permalink to this definition">¶</a></dt>
-<dd><p>Goes to next (or previous) suggested frame.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.nextTrackFrame">
-<code class="sig-name descname">nextTrackFrame</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.nextTrackFrame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.nextTrackFrame" title="Permalink to this definition">¶</a></dt>
-<dd><p>Goes to next frame on which a track starts.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.nextUserLabeledFrame">
-<code class="sig-name descname">nextUserLabeledFrame</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.nextUserLabeledFrame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.nextUserLabeledFrame" title="Permalink to this definition">¶</a></dt>
-<dd><p>Goes to next labeled frame with user instances.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.nextVideo">
-<code class="sig-name descname">nextVideo</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.nextVideo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.nextVideo" title="Permalink to this definition">¶</a></dt>
-<dd><p>Activates next video in project.</p>
 </dd></dl>
 
 <dl class="method">
@@ -521,79 +296,15 @@ then don’t do anything.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="sleap.gui.app.MainWindow.openProject">
-<code class="sig-name descname">openProject</code><span class="sig-paren">(</span><em class="sig-param">first_open: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.openProject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.openProject" title="Permalink to this definition">¶</a></dt>
-<dd><p>Allows use to select and then open a saved project.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>first_open</strong> – Whether this is the first window opened. If True,
-then the new project is loaded into the current window
-rather than a new application window.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>None.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.openSkeleton">
-<code class="sig-name descname">openSkeleton</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.openSkeleton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.openSkeleton" title="Permalink to this definition">¶</a></dt>
-<dd><p>Shows gui for loading saved skeleton into project.</p>
-</dd></dl>
-
-<dl class="method">
 <dt id="sleap.gui.app.MainWindow.plotFrame">
 <code class="sig-name descname">plotFrame</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.plotFrame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.plotFrame" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plots (or replots) current frame.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="sleap.gui.app.MainWindow.previousLabeledFrame">
-<code class="sig-name descname">previousLabeledFrame</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.previousLabeledFrame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.previousLabeledFrame" title="Permalink to this definition">¶</a></dt>
-<dd><p>Goes to labeled frame prior to current frame.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.previousVideo">
-<code class="sig-name descname">previousVideo</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.previousVideo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.previousVideo" title="Permalink to this definition">¶</a></dt>
-<dd><p>Activates previous video in project.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.removeVideo">
-<code class="sig-name descname">removeVideo</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.removeVideo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.removeVideo" title="Permalink to this definition">¶</a></dt>
-<dd><p>Removes video (selected in table) from project.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.saveProject">
-<code class="sig-name descname">saveProject</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.saveProject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.saveProject" title="Permalink to this definition">¶</a></dt>
-<dd><p>Show gui to save project (or save as if not yet saved).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.saveProjectAs">
-<code class="sig-name descname">saveProjectAs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.saveProjectAs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.saveProjectAs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Show gui to save project as a new file.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.saveSkeleton">
-<code class="sig-name descname">saveSkeleton</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.saveSkeleton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.saveSkeleton" title="Permalink to this definition">¶</a></dt>
-<dd><p>Shows gui for saving skeleton from project.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.setInstanceTrack">
-<code class="sig-name descname">setInstanceTrack</code><span class="sig-paren">(</span><em class="sig-param">new_track: sleap.instance.Track</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.setInstanceTrack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.setInstanceTrack" title="Permalink to this definition">¶</a></dt>
-<dd><p>Sets track for selected instance.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.setPalette">
-<code class="sig-name descname">setPalette</code><span class="sig-paren">(</span><em class="sig-param">palette: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.setPalette"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.setPalette" title="Permalink to this definition">¶</a></dt>
-<dd><p>Sets color palette used for track colors.</p>
+<dt id="sleap.gui.app.MainWindow.process_events_then">
+<code class="sig-name descname">process_events_then</code><span class="sig-paren">(</span><em class="sig-param">action: Callable</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.process_events_then"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.process_events_then" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorates a function with a call to first process events.</p>
 </dd></dl>
 
 <dl class="method">
@@ -603,15 +314,15 @@ rather than a new application window.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="sleap.gui.app.MainWindow.setTrailLength">
-<code class="sig-name descname">setTrailLength</code><span class="sig-paren">(</span><em class="sig-param">trail_length: int</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.setTrailLength"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.setTrailLength" title="Permalink to this definition">¶</a></dt>
-<dd><p>Sets length of track trails to show in video overlay.</p>
+<dt id="sleap.gui.app.MainWindow.setWindowTitle">
+<code class="sig-name descname">setWindowTitle</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.setWindowTitle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.setWindowTitle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets window title (if value is not None).</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="sleap.gui.app.MainWindow.showLearningDialog">
 <code class="sig-name descname">showLearningDialog</code><span class="sig-paren">(</span><em class="sig-param">mode: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.showLearningDialog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.showLearningDialog" title="Permalink to this definition">¶</a></dt>
-<dd><p>Helper function to show active learning dialog in given mode.</p>
+<dd><p>Helper function to show learning dialog in given mode.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -625,51 +336,6 @@ rather than a new application window.</p>
 <dd class="field-even"><p>None.</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.toggleAutoZoom">
-<code class="sig-name descname">toggleAutoZoom</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.toggleAutoZoom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.toggleAutoZoom" title="Permalink to this definition">¶</a></dt>
-<dd><p>Toggles whether to zoom viewer to fit labeled instances.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.toggleColorPredicted">
-<code class="sig-name descname">toggleColorPredicted</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.toggleColorPredicted"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.toggleColorPredicted" title="Permalink to this definition">¶</a></dt>
-<dd><p>Toggles whether predicted instances are shown in track colors.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.toggleEdges">
-<code class="sig-name descname">toggleEdges</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.toggleEdges"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.toggleEdges" title="Permalink to this definition">¶</a></dt>
-<dd><p>Toggles whether skeleton edges are shown in video overlay.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.toggleLabels">
-<code class="sig-name descname">toggleLabels</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.toggleLabels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.toggleLabels" title="Permalink to this definition">¶</a></dt>
-<dd><p>Toggles whether skeleton node labels are shown in video overlay.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.toggleTrails">
-<code class="sig-name descname">toggleTrails</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.toggleTrails"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.toggleTrails" title="Permalink to this definition">¶</a></dt>
-<dd><p>Toggles whether track trails are shown in video overlay.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.transposeInstance">
-<code class="sig-name descname">transposeInstance</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.transposeInstance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.transposeInstance" title="Permalink to this definition">¶</a></dt>
-<dd><p>Transposes tracks for two instances.</p>
-<p>If there are only two instances, then this swaps tracks.
-Otherwise, it allows user to select the instances for which we want
-to swap tracks.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.app.MainWindow.updateEdges">
-<code class="sig-name descname">updateEdges</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.updateEdges"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.updateEdges" title="Permalink to this definition">¶</a></dt>
-<dd><p>Called when edges in skeleton have been changed.</p>
 </dd></dl>
 
 <dl class="method">
@@ -721,7 +387,7 @@ to swap tracks.</p>
 </dl>
 <dl class="class">
 <dt id="sleap.gui.video.GraphicsView">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.video.</code><code class="sig-name descname">GraphicsView</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#GraphicsView"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.GraphicsView" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.video.</code><code class="sig-name descname">GraphicsView</code><span class="sig-paren">(</span><em class="sig-param">state=None</em>, <em class="sig-param">player=None</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#GraphicsView"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.GraphicsView" title="Permalink to this definition">¶</a></dt>
 <dd><p>Custom <cite>QGraphicsView</cite> used by <cite>QtVideoPlayer</cite>.</p>
 <p>This contains elements for display of video and event handlers for zoom
 and selection of instances in view.</p>
@@ -771,29 +437,29 @@ and selection of instances in view.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="sleap.gui.video.GraphicsView.clearSelection">
-<code class="sig-name descname">clearSelection</code><span class="sig-paren">(</span><em class="sig-param">signal=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#GraphicsView.clearSelection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.GraphicsView.clearSelection" title="Permalink to this definition">¶</a></dt>
-<dd><p>Clear instance skeleton selection.</p>
-</dd></dl>
-
-<dl class="method">
 <dt id="sleap.gui.video.GraphicsView.clearZoom">
 <code class="sig-name descname">clearZoom</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#GraphicsView.clearZoom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.GraphicsView.clearZoom" title="Permalink to this definition">¶</a></dt>
 <dd><p>Clear zoom stack. Doesn’t update display.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="sleap.gui.video.GraphicsView.getSelection">
-<code class="sig-name descname">getSelection</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="_modules/sleap/gui/video.html#GraphicsView.getSelection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.GraphicsView.getSelection" title="Permalink to this definition">¶</a></dt>
+<dt id="sleap.gui.video.GraphicsView.getSelectionIndex">
+<code class="sig-name descname">getSelectionIndex</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Optional[int]<a class="reference internal" href="_modules/sleap/gui/video.html#GraphicsView.getSelectionIndex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.GraphicsView.getSelectionIndex" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the index of the currently selected instance.
 If no instance selected, returns None.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="sleap.gui.video.GraphicsView.getSelectionInstance">
-<code class="sig-name descname">getSelectionInstance</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; sleap.instance.Instance<a class="reference internal" href="_modules/sleap/gui/video.html#GraphicsView.getSelectionInstance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.GraphicsView.getSelectionInstance" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getSelectionInstance</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Optional[sleap.instance.Instance]<a class="reference internal" href="_modules/sleap/gui/video.html#GraphicsView.getSelectionInstance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.GraphicsView.getSelectionInstance" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the currently selected instance.
 If no instance selected, returns None.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.GraphicsView.getTopInstanceAt">
+<code class="sig-name descname">getTopInstanceAt</code><span class="sig-paren">(</span><em class="sig-param">scenePos</em><span class="sig-paren">)</span> &#x2192; Optional[sleap.instance.Instance]<a class="reference internal" href="_modules/sleap/gui/video.html#GraphicsView.getTopInstanceAt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.GraphicsView.getTopInstanceAt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns topmost instance at position in scene.</p>
 </dd></dl>
 
 <dl class="method">
@@ -854,12 +520,6 @@ If no instance selected, returns None.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="sleap.gui.video.GraphicsView.nextSelection">
-<code class="sig-name descname">nextSelection</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#GraphicsView.nextSelection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.GraphicsView.nextSelection" title="Permalink to this definition">¶</a></dt>
-<dd><p>Select next instance (or first, if none currently selected).</p>
-</dd></dl>
-
-<dl class="method">
 <dt id="sleap.gui.video.GraphicsView.predicted_instances">
 <em class="property">property </em><code class="sig-name descname">predicted_instances</code><a class="headerlink" href="#sleap.gui.video.GraphicsView.predicted_instances" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a list of predicted instances.</p>
@@ -874,14 +534,11 @@ If no instance selected, returns None.</p>
 
 <dl class="method">
 <dt id="sleap.gui.video.GraphicsView.selectInstance">
-<code class="sig-name descname">selectInstance</code><span class="sig-paren">(</span><em class="sig-param">select: Union[sleap.instance.Instance, int], signal=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#GraphicsView.selectInstance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.GraphicsView.selectInstance" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">selectInstance</code><span class="sig-paren">(</span><em class="sig-param">select: Union[sleap.instance.Instance, int]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#GraphicsView.selectInstance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.GraphicsView.selectInstance" title="Permalink to this definition">¶</a></dt>
 <dd><p>Select a particular instance in view.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>select</strong> – Either <cite>Instance</cite> or index of instance in view.</p></li>
-<li><p><strong>signal</strong> – Whether to emit  updatedSelection.</p></li>
-</ul>
+<dd class="field-odd"><p><strong>select</strong> – Either <cite>Instance</cite> or index of instance in view.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>None</p>
@@ -943,7 +600,7 @@ given in absolute coordinates for displayed frame.</p>
 
 <dl class="class">
 <dt id="sleap.gui.video.QtEdge">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.video.</code><code class="sig-name descname">QtEdge</code><span class="sig-paren">(</span><em class="sig-param">parent: PySide2.QtWidgets.QGraphicsObject</em>, <em class="sig-param">src: sleap.gui.video.QtNode</em>, <em class="sig-param">dst: sleap.gui.video.QtNode</em>, <em class="sig-param">color: tuple</em>, <em class="sig-param">show_non_visible: bool = True</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtEdge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtEdge" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.video.</code><code class="sig-name descname">QtEdge</code><span class="sig-paren">(</span><em class="sig-param">parent: PySide2.QtWidgets.QGraphicsObject</em>, <em class="sig-param">player: sleap.gui.video.QtVideoPlayer</em>, <em class="sig-param">src: sleap.gui.video.QtNode</em>, <em class="sig-param">dst: sleap.gui.video.QtNode</em>, <em class="sig-param">show_non_visible: bool = True</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtEdge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtEdge" title="Permalink to this definition">¶</a></dt>
 <dd><p>QGraphicsLineItem to handle display of edge between skeleton instance nodes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -951,7 +608,6 @@ given in absolute coordinates for displayed frame.</p>
 <li><p><strong>parent</strong> – <cite>QGraphicsObject</cite> which will contain this item.</p></li>
 <li><p><strong>src</strong> – The <cite>QtNode</cite> source node for the edge.</p></li>
 <li><p><strong>dst</strong> – The <cite>QtNode</cite> destination node for the edge.</p></li>
-<li><p><strong>color</strong> – Color as (r, g, b) tuple.</p></li>
 <li><p><strong>show_non_visible</strong> – Whether to show “non-visible” nodes/edges.</p></li>
 </ul>
 </dd>
@@ -1002,7 +658,7 @@ given in absolute coordinates for displayed frame.</p>
 
 <dl class="class">
 <dt id="sleap.gui.video.QtInstance">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.video.</code><code class="sig-name descname">QtInstance</code><span class="sig-paren">(</span><em class="sig-param">instance: sleap.instance.Instance = None</em>, <em class="sig-param">predicted=False</em>, <em class="sig-param">color_predicted=False</em>, <em class="sig-param">color=(0</em>, <em class="sig-param">114</em>, <em class="sig-param">189)</em>, <em class="sig-param">markerRadius=4</em>, <em class="sig-param">show_non_visible=True</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtInstance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtInstance" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.video.</code><code class="sig-name descname">QtInstance</code><span class="sig-paren">(</span><em class="sig-param">instance: sleap.instance.Instance = None</em>, <em class="sig-param">player: Optional[sleap.gui.video.QtVideoPlayer] = None</em>, <em class="sig-param">markerRadius=4</em>, <em class="sig-param">show_non_visible=True</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtInstance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtInstance" title="Permalink to this definition">¶</a></dt>
 <dd><p>QGraphicsObject for skeleton instances.</p>
 <p>This object stores the data for one skeleton instance
 and handles the events to manipulate the skeleton within
@@ -1015,9 +671,6 @@ a video frame (i.e., moving, rotating, marking nodes).</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>instance</strong> – The <code class="xref py py-class docutils literal notranslate"><span class="pre">Instance</span></code> to show.</p></li>
-<li><p><strong>predicted</strong> – Whether this is a predicted instance.</p></li>
-<li><p><strong>color_predicted</strong> – Whether to show predicted instance in color.</p></li>
-<li><p><strong>color</strong> – Color of the visual item.</p></li>
 <li><p><strong>markerRadius</strong> – Radius of nodes.</p></li>
 <li><p><strong>show_non_visible</strong> – Whether to show “non-visible” nodes/edges.</p></li>
 </ul>
@@ -1049,7 +702,7 @@ a video frame (i.e., moving, rotating, marking nodes).</p>
 
 <dl class="method">
 <dt id="sleap.gui.video.QtInstance.showEdges">
-<code class="sig-name descname">showEdges</code><span class="sig-paren">(</span><em class="sig-param">show=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtInstance.showEdges"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtInstance.showEdges" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">showEdges</code><span class="sig-paren">(</span><em class="sig-param">show: bool</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtInstance.showEdges"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtInstance.showEdges" title="Permalink to this definition">¶</a></dt>
 <dd><p>Draws/hides the edges for this skeleton instance.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1067,18 +720,6 @@ a video frame (i.e., moving, rotating, marking nodes).</p>
 <dd class="field-odd"><p><strong>show</strong> – Show labels if True, hide them otherwise.</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.video.QtInstance.toggleEdges">
-<code class="sig-name descname">toggleEdges</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtInstance.toggleEdges"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtInstance.toggleEdges" title="Permalink to this definition">¶</a></dt>
-<dd><p>Toggle whether or not edges are shown for this skeleton instance.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.video.QtInstance.toggleLabels">
-<code class="sig-name descname">toggleLabels</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtInstance.toggleLabels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtInstance.toggleLabels" title="Permalink to this definition">¶</a></dt>
-<dd><p>Toggle whether or not labels are shown for this skeleton instance.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1114,7 +755,7 @@ user.</p></li>
 
 <dl class="class">
 <dt id="sleap.gui.video.QtNode">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.video.</code><code class="sig-name descname">QtNode</code><span class="sig-paren">(</span><em class="sig-param">parent: PySide2.QtWidgets.QGraphicsObject</em>, <em class="sig-param">node: sleap.skeleton.Node</em>, <em class="sig-param">point: sleap.instance.Point</em>, <em class="sig-param">radius: float</em>, <em class="sig-param">color: list</em>, <em class="sig-param">predicted=False</em>, <em class="sig-param">color_predicted=False</em>, <em class="sig-param">show_non_visible=True</em>, <em class="sig-param">callbacks=None</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtNode" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.video.</code><code class="sig-name descname">QtNode</code><span class="sig-paren">(</span><em class="sig-param">parent: PySide2.QtWidgets.QGraphicsObject</em>, <em class="sig-param">player: sleap.gui.video.QtVideoPlayer</em>, <em class="sig-param">node: sleap.skeleton.Node</em>, <em class="sig-param">point: sleap.instance.Point</em>, <em class="sig-param">radius: float</em>, <em class="sig-param">predicted=False</em>, <em class="sig-param">show_non_visible=True</em>, <em class="sig-param">callbacks=None</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtNode" title="Permalink to this definition">¶</a></dt>
 <dd><p>QGraphicsEllipseItem to handle display of skeleton instance node.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1125,9 +766,7 @@ user.</p></li>
 Note that this is a mutable object so we’re able to directly access
 the very same <cite>Point</cite> object that’s defined outside our class.</p></li>
 <li><p><strong>radius</strong> – Radius of the visual node item.</p></li>
-<li><p><strong>color</strong> – Color of the visual node item.</p></li>
 <li><p><strong>predicted</strong> – Whether this point is predicted.</p></li>
-<li><p><strong>color_predicted</strong> – Whether to color predicted points.</p></li>
 <li><p><strong>show_non_visible</strong> – Whether to show points where <cite>visible</cite> is False.</p></li>
 <li><p><strong>callbacks</strong> – List of functions to call after we update to the <cite>Point</cite>.</p></li>
 </ul>
@@ -1165,7 +804,7 @@ the very same <cite>Point</cite> object that’s defined outside our class.</p><
 
 <dl class="method">
 <dt id="sleap.gui.video.QtNode.updatePoint">
-<code class="sig-name descname">updatePoint</code><span class="sig-paren">(</span><em class="sig-param">user_change: bool = True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtNode.updatePoint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtNode.updatePoint" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">updatePoint</code><span class="sig-paren">(</span><em class="sig-param">user_change: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtNode.updatePoint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtNode.updatePoint" title="Permalink to this definition">¶</a></dt>
 <dd><p>Method to update data for node/edge when node position is manipulated.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1271,12 +910,11 @@ the very same <cite>Point</cite> object that’s defined outside our class.</p><
 
 <dl class="class">
 <dt id="sleap.gui.video.QtVideoPlayer">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.video.</code><code class="sig-name descname">QtVideoPlayer</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video = None</em>, <em class="sig-param">color_manager=None</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtVideoPlayer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtVideoPlayer" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.video.</code><code class="sig-name descname">QtVideoPlayer</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video = None</em>, <em class="sig-param">color_manager=None</em>, <em class="sig-param">state=None</em>, <em class="sig-param">context=None</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtVideoPlayer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtVideoPlayer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Main QWidget for displaying video with skeleton instances.</p>
 <dl class="simple">
 <dt>Signals:</dt><dd><ul class="simple">
 <li><p>changedPlot: Emitted whenever the plot is redrawn</p></li>
-<li><p>changedData: Emitted whenever data is changed by user</p></li>
 </ul>
 </dd>
 </dl>
@@ -1289,7 +927,7 @@ the very same <cite>Point</cite> object that’s defined outside our class.</p><
 <dl class="attribute">
 <dt id="sleap.gui.video.QtVideoPlayer.color_manager">
 <code class="sig-name descname">color_manager</code><a class="headerlink" href="#sleap.gui.video.QtVideoPlayer.color_manager" title="Permalink to this definition">¶</a></dt>
-<dd><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">TrackColorManager</span></code> object which determines
+<dd><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">ColorManager</span></code> object which determines
 which color to show the instances.</p>
 </dd></dl>
 
@@ -1305,6 +943,12 @@ which color to show the instances.</p>
 </ul>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.QtVideoPlayer.getVisibleRect">
+<code class="sig-name descname">getVisibleRect</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtVideoPlayer.getVisibleRect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtVideoPlayer.getVisibleRect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns <cite>QRectF</cite> with currently visible portion of frame image.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1327,23 +971,16 @@ which color to show the instances.</p>
 
 <dl class="method">
 <dt id="sleap.gui.video.QtVideoPlayer.load_video">
-<code class="sig-name descname">load_video</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em>, <em class="sig-param">initial_frame=0</em>, <em class="sig-param">plot=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtVideoPlayer.load_video"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtVideoPlayer.load_video" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">load_video</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em>, <em class="sig-param">plot=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtVideoPlayer.load_video"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtVideoPlayer.load_video" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load video into viewer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>video</strong> – the <code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code> to display</p></li>
-<li><p><strong>initial_frame</strong> (<em>optional</em>) – display this frame of video</p></li>
 <li><p><strong>plot</strong> – If True, plot the video frame. Otherwise, just load the data.</p></li>
 </ul>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.video.QtVideoPlayer.nextFrame">
-<code class="sig-name descname">nextFrame</code><span class="sig-paren">(</span><em class="sig-param">dt=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtVideoPlayer.nextFrame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtVideoPlayer.nextFrame" title="Permalink to this definition">¶</a></dt>
-<dd><p>Go to next frame.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1387,7 +1024,7 @@ selection), the <cite>on_failure</cite> callback is called (if given).</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>If successful, we call
-&gt;&gt;&gt; on_success(sequence_of_selected_instance_indexes)</p>
+&gt;&gt;&gt; on_success(list_of_instances)</p>
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1405,25 +1042,14 @@ enough instances.</p></li>
 
 <dl class="method">
 <dt id="sleap.gui.video.QtVideoPlayer.plot">
-<code class="sig-name descname">plot</code><span class="sig-paren">(</span><em class="sig-param">idx: Optional[int] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtVideoPlayer.plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtVideoPlayer.plot" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">plot</code><span class="sig-paren">(</span><em class="sig-param">*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtVideoPlayer.plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtVideoPlayer.plot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Do the actual plotting of the video frame.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>idx</strong> – Go to frame idx. If None, stay on current frame.</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="sleap.gui.video.QtVideoPlayer.predicted_instances">
 <em class="property">property </em><code class="sig-name descname">predicted_instances</code><a class="headerlink" href="#sleap.gui.video.QtVideoPlayer.predicted_instances" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns list of predicted <cite>QtInstance</cite> objects in view.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.video.QtVideoPlayer.prevFrame">
-<code class="sig-name descname">prevFrame</code><span class="sig-paren">(</span><em class="sig-param">dt=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtVideoPlayer.prevFrame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtVideoPlayer.prevFrame" title="Permalink to this definition">¶</a></dt>
-<dd><p>Go to previous frame.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1442,6 +1068,12 @@ enough instances.</p></li>
 <dt id="sleap.gui.video.QtVideoPlayer.selectable_instances">
 <em class="property">property </em><code class="sig-name descname">selectable_instances</code><a class="headerlink" href="#sleap.gui.video.QtVideoPlayer.selectable_instances" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns list of selectable <cite>QtInstance</cite> objects in view.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.video.QtVideoPlayer.setFitZoom">
+<code class="sig-name descname">setFitZoom</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtVideoPlayer.setFitZoom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtVideoPlayer.setFitZoom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Zooms or unzooms current view to fit all instances.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1467,21 +1099,9 @@ enough instances.</p></li>
 </dd></dl>
 
 <dl class="method">
-<dt id="sleap.gui.video.QtVideoPlayer.toggleEdges">
-<code class="sig-name descname">toggleEdges</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtVideoPlayer.toggleEdges"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtVideoPlayer.toggleEdges" title="Permalink to this definition">¶</a></dt>
-<dd><p>Toggle current show/hide state of edges for all instances.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.video.QtVideoPlayer.toggleLabels">
-<code class="sig-name descname">toggleLabels</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtVideoPlayer.toggleLabels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtVideoPlayer.toggleLabels" title="Permalink to this definition">¶</a></dt>
-<dd><p>Toggle current show/hide state of node labels for all instances.</p>
-</dd></dl>
-
-<dl class="method">
 <dt id="sleap.gui.video.QtVideoPlayer.zoomToFit">
 <code class="sig-name descname">zoomToFit</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtVideoPlayer.zoomToFit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtVideoPlayer.zoomToFit" title="Permalink to this definition">¶</a></dt>
-<dd><p>Zoom view to fit all instances</p>
+<dd><p>Zoom view to fit all instances.</p>
 </dd></dl>
 
 </dd></dl>
@@ -1501,154 +1121,8 @@ enough instances.</p></li>
 </div>
 <div class="section" id="dialogs">
 <h2>Dialogs<a class="headerlink" href="#dialogs" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="module-sleap.gui.active">
-<span id="active-learning"></span><h3>Active Learning<a class="headerlink" href="#module-sleap.gui.active" title="Permalink to this headline">¶</a></h3>
-<p>Module for running active learning (or just inference) from GUI.</p>
-<dl class="class">
-<dt id="sleap.gui.active.ActiveLearningDialog">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.active.</code><code class="sig-name descname">ActiveLearningDialog</code><span class="sig-paren">(</span><em class="sig-param">labels_filename: str</em>, <em class="sig-param">labels: sleap.io.dataset.Labels</em>, <em class="sig-param">mode: str = 'expert'</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/active.html#ActiveLearningDialog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.active.ActiveLearningDialog" title="Permalink to this definition">¶</a></dt>
-<dd><p>Active learning dialog.</p>
-<p>The dialog can be used in different modes:
-* simplified active learning (fewer controls)
-* expert active learning (full controls)
-* inference only</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>labels_filename</strong> – Path to the dataset where we’ll get training data.</p></li>
-<li><p><strong>labels</strong> – The dataset where we’ll get training data and add predictions.</p></li>
-<li><p><strong>mode</strong> – String which specified mode (“active”, “expert”, or “inference”).</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="method">
-<dt id="sleap.gui.active.ActiveLearningDialog.frame_selection">
-<em class="property">property </em><code class="sig-name descname">frame_selection</code><a class="headerlink" href="#sleap.gui.active.ActiveLearningDialog.frame_selection" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns dictionary with frames that user has selected for inference.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.active.ActiveLearningDialog.run">
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/active.html#ActiveLearningDialog.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.active.ActiveLearningDialog.run" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run active learning (or inference) with current dialog settings.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.active.ActiveLearningDialog.show">
-<code class="sig-name descname">show</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/active.html#ActiveLearningDialog.show"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.active.ActiveLearningDialog.show" title="Permalink to this definition">¶</a></dt>
-<dd><p>Shows dialog (we hide rather than close to maintain settings).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.active.ActiveLearningDialog.update_gui">
-<code class="sig-name descname">update_gui</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/active.html#ActiveLearningDialog.update_gui"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.active.ActiveLearningDialog.update_gui" title="Permalink to this definition">¶</a></dt>
-<dd><p>Updates gui state after user changes to options.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.active.ActiveLearningDialog.view_datagen">
-<code class="sig-name descname">view_datagen</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/active.html#ActiveLearningDialog.view_datagen"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.active.ActiveLearningDialog.view_datagen" title="Permalink to this definition">¶</a></dt>
-<dd><p>Shows windows with sample visual data that will be used training.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="function">
-<dt id="sleap.gui.active.find_saved_jobs">
-<code class="sig-prename descclassname">sleap.gui.active.</code><code class="sig-name descname">find_saved_jobs</code><span class="sig-paren">(</span><em class="sig-param">job_dir: str</em>, <em class="sig-param">jobs=None</em><span class="sig-paren">)</span> &#x2192; Dict[sleap.nn.model.ModelOutputType, List[Tuple[str, sleap.nn.training.TrainingJob]]]<a class="reference internal" href="_modules/sleap/gui/active.html#find_saved_jobs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.active.find_saved_jobs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Find all the TrainingJob json files in a given directory.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>job_dir</strong> – the directory in which to look for json files</p></li>
-<li><p><strong>jobs</strong> – If given, then the found jobs will be added to this object,
-rather than creating new dict.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>list of (filename, TrainingJob) tuples}</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>dict of {ModelOutputType</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="sleap.gui.active.has_jobs_to_train">
-<code class="sig-prename descclassname">sleap.gui.active.</code><code class="sig-name descname">has_jobs_to_train</code><span class="sig-paren">(</span><em class="sig-param">training_jobs: Dict[ModelOutputType, TrainingJob]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/active.html#has_jobs_to_train"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.active.has_jobs_to_train" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns whether any of the jobs need to be trained.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="sleap.gui.active.make_default_training_jobs">
-<code class="sig-prename descclassname">sleap.gui.active.</code><code class="sig-name descname">make_default_training_jobs</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Dict[sleap.nn.model.ModelOutputType, sleap.nn.training.TrainingJob]<a class="reference internal" href="_modules/sleap/gui/active.html#make_default_training_jobs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.active.make_default_training_jobs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates TrainingJobs with some default settings.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="sleap.gui.active.run_active_inference">
-<code class="sig-prename descclassname">sleap.gui.active.</code><code class="sig-name descname">run_active_inference</code><span class="sig-paren">(</span><em class="sig-param">labels: sleap.io.dataset.Labels, training_jobs: Dict[ModelOutputType, TrainingJob], save_dir: str, frames_to_predict: Dict[sleap.io.video.Video, List[int]], with_tracking: bool, gui: bool = True</em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="_modules/sleap/gui/active.html#run_active_inference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.active.run_active_inference" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run inference on specified frames using models from training_jobs.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>labels</strong> – The current labels object; results will be added to this.</p></li>
-<li><p><strong>training_jobs</strong> – The TrainingJobs with trained models to use.</p></li>
-<li><p><strong>save_dir</strong> – Path to the directory where we’ll save inference results.</p></li>
-<li><p><strong>frames_to_predict</strong> – Dict that gives list of frame indices for each video.</p></li>
-<li><p><strong>with_tracking</strong> – Whether to run tracking code after we predict instances.
-This should be used only when predicting on continuous set of frames.</p></li>
-<li><p><strong>gui</strong> – Whether to show gui windows and process gui events.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Number of new frames added to labels.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="sleap.gui.active.run_active_learning_pipeline">
-<code class="sig-prename descclassname">sleap.gui.active.</code><code class="sig-name descname">run_active_learning_pipeline</code><span class="sig-paren">(</span><em class="sig-param">labels_filename: str</em>, <em class="sig-param">labels: sleap.io.dataset.Labels</em>, <em class="sig-param">training_jobs: Dict[ModelOutputType</em>, <em class="sig-param">TrainingJob] = None</em>, <em class="sig-param">frames_to_predict: Dict[sleap.io.video.Video</em>, <em class="sig-param">List[int]] = None</em>, <em class="sig-param">with_tracking: bool = False</em>, <em class="sig-param">save_predictions: bool = False</em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="_modules/sleap/gui/active.html#run_active_learning_pipeline"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.active.run_active_learning_pipeline" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run training (as needed) and inference.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>labels_filename</strong> – Path to already saved current labels object.</p></li>
-<li><p><strong>labels</strong> – The current labels object; results will be added to this.</p></li>
-<li><p><strong>training_jobs</strong> – The TrainingJobs with params/hyperparams for training.</p></li>
-<li><p><strong>frames_to_predict</strong> – Dict that gives list of frame indices for each video.</p></li>
-<li><p><strong>with_tracking</strong> – Whether to run tracking code after we predict instances.
-This should be used only when predicting on continuous set of frames.</p></li>
-<li><p><strong>save_predictions</strong> – Whether to save new predictions in separate file.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Number of new frames added to labels.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="sleap.gui.active.run_active_training">
-<code class="sig-prename descclassname">sleap.gui.active.</code><code class="sig-name descname">run_active_training</code><span class="sig-paren">(</span><em class="sig-param">labels: sleap.io.dataset.Labels, training_jobs: Dict[ModelOutputType, TrainingJob], save_dir: str, gui: bool = True</em><span class="sig-paren">)</span> &#x2192; Dict[sleap.nn.model.ModelOutputType, sleap.nn.training.TrainingJob]<a class="reference internal" href="_modules/sleap/gui/active.html#run_active_training"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.active.run_active_training" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run training for each training job.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>labels</strong> – Labels object from which we’ll get training data.</p></li>
-<li><p><strong>training_jobs</strong> – Dict of the jobs to train.</p></li>
-<li><p><strong>save_dir</strong> – Path to the directory where we’ll save inference results.</p></li>
-<li><p><strong>gui</strong> – Whether to show gui windows and process gui events.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Dict of trained jobs corresponding with input training jobs.</p>
-</dd>
-</dl>
-</dd></dl>
-
+<div class="section" id="active-learning">
+<h3>Active Learning<a class="headerlink" href="#active-learning" title="Permalink to this headline">¶</a></h3>
 </div>
 <div class="section" id="module-sleap.gui.importvideos">
 <span id="video-importer"></span><h3>Video Importer<a class="headerlink" href="#module-sleap.gui.importvideos" title="Permalink to this headline">¶</a></h3>
@@ -1721,7 +1195,7 @@ We only want to import enabled items.</p>
 
 <dl class="method">
 <dt id="sleap.gui.importvideos.ImportItemWidget.update_video">
-<code class="sig-name descname">update_video</code><span class="sig-paren">(</span><em class="sig-param">initial=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/importvideos.html#ImportItemWidget.update_video"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.importvideos.ImportItemWidget.update_video" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">update_video</code><span class="sig-paren">(</span><em class="sig-param">initial: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/importvideos.html#ImportItemWidget.update_video"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.importvideos.ImportItemWidget.update_video" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update preview video using current param values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -2119,149 +1593,48 @@ See <code class="xref py py-meth docutils literal notranslate"><span class="pre"
 <span id="suggestions"></span><h3>Suggestions<a class="headerlink" href="#module-sleap.gui.suggestions" title="Permalink to this headline">¶</a></h3>
 <p>Module for generating lists of suggested frames (for labeling or reviewing).</p>
 <dl class="class">
+<dt id="sleap.gui.suggestions.SuggestionFrame">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.suggestions.</code><code class="sig-name descname">SuggestionFrame</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em>, <em class="sig-param">frame_idx: int</em>, <em class="sig-param">group: Optional[int] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/suggestions.html#SuggestionFrame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.suggestions.SuggestionFrame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Object for storing a single suggested frame item.</p>
+</dd></dl>
+
+<dl class="class">
 <dt id="sleap.gui.suggestions.VideoFrameSuggestions">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.gui.suggestions.</code><code class="sig-name descname">VideoFrameSuggestions</code><a class="reference internal" href="_modules/sleap/gui/suggestions.html#VideoFrameSuggestions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.suggestions.VideoFrameSuggestions" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class for generating lists of suggested frames.</p>
 <p>Implements various algorithms as methods:
-* strides
-* random
-* pca_cluster
-* brisk
-* proofreading</p>
-<p>Each of algorithm method should accept <cite>video</cite>; other parameters will be
+* sample (either random or evenly spaced sample frames from each video)
+* image features (raw images/brisk -&gt; pca -&gt; k-means)
+* prediction_score (frames with number of instances below specified score)</p>
+<p>Each of algorithm method should accept <cite>labels</cite>; other parameters will be
 passed from the <cite>params</cite> dict given to <a class="reference internal" href="#sleap.gui.suggestions.VideoFrameSuggestions.suggest" title="sleap.gui.suggestions.VideoFrameSuggestions.suggest"><code class="xref py py-meth docutils literal notranslate"><span class="pre">suggest()</span></code></a>.</p>
 <dl class="method">
-<dt id="sleap.gui.suggestions.VideoFrameSuggestions.brisk">
-<em class="property">classmethod </em><code class="sig-name descname">brisk</code><span class="sig-paren">(</span><em class="sig-param">video</em>, <em class="sig-param">initial_samples</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/suggestions.html#VideoFrameSuggestions.brisk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.suggestions.VideoFrameSuggestions.brisk" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method to generate suggestions using PCA on Brisk features.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.suggestions.VideoFrameSuggestions.brisk_feature_stack">
-<em class="property">classmethod </em><code class="sig-name descname">brisk_feature_stack</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em>, <em class="sig-param">sample_step: int = 5</em><span class="sig-paren">)</span> &#x2192; Tuple[numpy.ndarray, List[int]]<a class="reference internal" href="_modules/sleap/gui/suggestions.html#VideoFrameSuggestions.brisk_feature_stack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.suggestions.VideoFrameSuggestions.brisk_feature_stack" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generates Brisk features from sampled video frames.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.suggestions.VideoFrameSuggestions.clusters_to_list">
-<em class="property">classmethod </em><code class="sig-name descname">clusters_to_list</code><span class="sig-paren">(</span><em class="sig-param">selected_by_cluster: List[List[int]], interleave: bool = True, **kwargs</em><span class="sig-paren">)</span> &#x2192; list<a class="reference internal" href="_modules/sleap/gui/suggestions.html#VideoFrameSuggestions.clusters_to_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.suggestions.VideoFrameSuggestions.clusters_to_list" title="Permalink to this definition">¶</a></dt>
-<dd><p>Merges per cluster suggestion lists into single list for entire video.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>selected_by_cluster</strong> – The list of lists of row indexes.</p></li>
-<li><p><strong>interleave</strong> – Whether to interleave suggestions from clusters.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>List of frame indices.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.suggestions.VideoFrameSuggestions.feature_stack_to_clusters">
-<em class="property">classmethod </em><code class="sig-name descname">feature_stack_to_clusters</code><span class="sig-paren">(</span><em class="sig-param">feature_stack: numpy.ndarray, frame_idx_map: List[int], clusters: int = 5, per_cluster: int = 5, pca_components: int = 50, **kwargs</em><span class="sig-paren">)</span> &#x2192; List[int]<a class="reference internal" href="_modules/sleap/gui/suggestions.html#VideoFrameSuggestions.feature_stack_to_clusters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.suggestions.VideoFrameSuggestions.feature_stack_to_clusters" title="Permalink to this definition">¶</a></dt>
-<dd><p>Runs PCA to generate clusters of frames based on given features.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>feature_stack</strong> – (n * features) matrix.</p></li>
-<li><p><strong>frame_idx_map</strong> – List indexed by rows of feature stack which gives
-frame index for each row in feature_stack. This allows a
-single frame to correspond to multiple rows in feature_stack.</p></li>
-<li><p><strong>clusters</strong> – number of clusters</p></li>
-<li><p><strong>per_cluster</strong> – How many suggestions (at most) to take from each
-cluster.</p></li>
-<li><p><strong>pca_components</strong> – Number of PCA components, for reducing feature
-space before clustering</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><ul class="simple">
-<li><p>for each cluster, a list of frame indices.</p></li>
-</ul>
-</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>A list of lists</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.suggestions.VideoFrameSuggestions.feature_stack_to_suggestions">
-<em class="property">classmethod </em><code class="sig-name descname">feature_stack_to_suggestions</code><span class="sig-paren">(</span><em class="sig-param">feature_stack: numpy.ndarray, frame_idx_map: List[int], return_clusters: bool = False, **kwargs</em><span class="sig-paren">)</span> &#x2192; List[int]<a class="reference internal" href="_modules/sleap/gui/suggestions.html#VideoFrameSuggestions.feature_stack_to_suggestions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.suggestions.VideoFrameSuggestions.feature_stack_to_suggestions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Turns a feature stack matrix into a list of suggested frames.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>feature_stack</strong> – (n * features) matrix.</p></li>
-<li><p><strong>frame_idx_map</strong> – List indexed by rows of feature stack which gives
-frame index for each row in feature_stack. This allows a
-single frame to correspond to multiple rows in feature_stack.</p></li>
-<li><p><strong>return_clusters</strong> – Whether to return the intermediate result for
-debugging, i.e., a list that gives the list of suggested
-frames for each cluster.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>List of frame index suggestions.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.suggestions.VideoFrameSuggestions.frame_feature_stack">
-<em class="property">classmethod </em><code class="sig-name descname">frame_feature_stack</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em>, <em class="sig-param">sample_step: int = 5</em><span class="sig-paren">)</span> &#x2192; Tuple[numpy.ndarray, List[int]]<a class="reference internal" href="_modules/sleap/gui/suggestions.html#VideoFrameSuggestions.frame_feature_stack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.suggestions.VideoFrameSuggestions.frame_feature_stack" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generates matrix of sampled video frame images.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.suggestions.VideoFrameSuggestions.get_scale_factor">
-<em class="property">classmethod </em><code class="sig-name descname">get_scale_factor</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="_modules/sleap/gui/suggestions.html#VideoFrameSuggestions.get_scale_factor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.suggestions.VideoFrameSuggestions.get_scale_factor" title="Permalink to this definition">¶</a></dt>
-<dd><p>Determines how much we need to scale to get video within size.</p>
-<p>Size is specified by <code class="xref py py-attr docutils literal notranslate"><span class="pre">rescale_below</span></code>.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.suggestions.VideoFrameSuggestions.pca_cluster">
-<em class="property">classmethod </em><code class="sig-name descname">pca_cluster</code><span class="sig-paren">(</span><em class="sig-param">video</em>, <em class="sig-param">initial_samples</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/suggestions.html#VideoFrameSuggestions.pca_cluster"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.suggestions.VideoFrameSuggestions.pca_cluster" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method to generate suggestions by using PCA clusters.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.suggestions.VideoFrameSuggestions.proofreading">
-<em class="property">classmethod </em><code class="sig-name descname">proofreading</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em>, <em class="sig-param">labels: Labels</em>, <em class="sig-param">score_limit</em>, <em class="sig-param">instance_limit</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/suggestions.html#VideoFrameSuggestions.proofreading"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.suggestions.VideoFrameSuggestions.proofreading" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method to generate suggestions for proofreading.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.suggestions.VideoFrameSuggestions.random">
-<em class="property">classmethod </em><code class="sig-name descname">random</code><span class="sig-paren">(</span><em class="sig-param">video</em>, <em class="sig-param">per_video=20</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/suggestions.html#VideoFrameSuggestions.random"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.suggestions.VideoFrameSuggestions.random" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method to generate suggestions by taking random frames in video.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.suggestions.VideoFrameSuggestions.resize">
-<em class="property">static </em><code class="sig-name descname">resize</code><span class="sig-paren">(</span><em class="sig-param">img: numpy.ndarray</em>, <em class="sig-param">factor: float</em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="_modules/sleap/gui/suggestions.html#VideoFrameSuggestions.resize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.suggestions.VideoFrameSuggestions.resize" title="Permalink to this definition">¶</a></dt>
-<dd><p>Resizes frame image by scaling factor.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.suggestions.VideoFrameSuggestions.strides">
-<em class="property">classmethod </em><code class="sig-name descname">strides</code><span class="sig-paren">(</span><em class="sig-param">video</em>, <em class="sig-param">per_video=20</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/suggestions.html#VideoFrameSuggestions.strides"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.suggestions.VideoFrameSuggestions.strides" title="Permalink to this definition">¶</a></dt>
+<dt id="sleap.gui.suggestions.VideoFrameSuggestions.basic_sample_suggestion_method">
+<em class="property">classmethod </em><code class="sig-name descname">basic_sample_suggestion_method</code><span class="sig-paren">(</span><em class="sig-param">labels</em>, <em class="sig-param">per_video: int = 20</em>, <em class="sig-param">sampling_method: str = 'random'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/suggestions.html#VideoFrameSuggestions.basic_sample_suggestion_method"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.suggestions.VideoFrameSuggestions.basic_sample_suggestion_method" title="Permalink to this definition">¶</a></dt>
 <dd><p>Method to generate suggestions by taking strides through video.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="sleap.gui.suggestions.VideoFrameSuggestions.image_feature_based_method">
+<em class="property">classmethod </em><code class="sig-name descname">image_feature_based_method</code><span class="sig-paren">(</span><em class="sig-param">labels</em>, <em class="sig-param">per_video</em>, <em class="sig-param">sample_method</em>, <em class="sig-param">scale</em>, <em class="sig-param">merge_video_features</em>, <em class="sig-param">feature_type</em>, <em class="sig-param">pca_components</em>, <em class="sig-param">n_clusters</em>, <em class="sig-param">per_cluster</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/suggestions.html#VideoFrameSuggestions.image_feature_based_method"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.suggestions.VideoFrameSuggestions.image_feature_based_method" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to generate suggestions based on image features.</p>
+<p>This is a wrapper for <cite>feature_suggestion_pipeline</cite> implemented in
+<cite>sleap.info.feature_suggestions</cite>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.suggestions.VideoFrameSuggestions.prediction_score">
+<em class="property">classmethod </em><code class="sig-name descname">prediction_score</code><span class="sig-paren">(</span><em class="sig-param">labels: Labels</em>, <em class="sig-param">score_limit</em>, <em class="sig-param">instance_limit</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/suggestions.html#VideoFrameSuggestions.prediction_score"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.suggestions.VideoFrameSuggestions.prediction_score" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to generate suggestions for proofreading frames with low score.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.gui.suggestions.VideoFrameSuggestions.suggest">
-<em class="property">classmethod </em><code class="sig-name descname">suggest</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em>, <em class="sig-param">params: dict</em>, <em class="sig-param">labels: Labels = None</em><span class="sig-paren">)</span> &#x2192; List[int]<a class="reference internal" href="_modules/sleap/gui/suggestions.html#VideoFrameSuggestions.suggest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.suggestions.VideoFrameSuggestions.suggest" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">suggest</code><span class="sig-paren">(</span><em class="sig-param">params: dict</em>, <em class="sig-param">labels: Labels = None</em><span class="sig-paren">)</span> &#x2192; List[sleap.gui.suggestions.SuggestionFrame]<a class="reference internal" href="_modules/sleap/gui/suggestions.html#VideoFrameSuggestions.suggest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.suggestions.VideoFrameSuggestions.suggest" title="Permalink to this definition">¶</a></dt>
 <dd><p>This is the main entry point for generating lists of suggested frames.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>video</strong> – A <cite>Video</cite> object for which we’re generating suggestions.</p></li>
 <li><p><strong>params</strong> – A dictionary with all params to control how we generate
 suggestions, minimally this will have a “method” key with
 the name of one of the class methods.</p></li>
@@ -2269,15 +1642,15 @@ the name of one of the class methods.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>List of suggested frame indices.</p>
+<dd class="field-even"><p>List of <cite>SuggestionFrame</cite> objects.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="method">
-<dt id="sleap.gui.suggestions.VideoFrameSuggestions.to_frame_idx_list">
-<em class="property">static </em><code class="sig-name descname">to_frame_idx_list</code><span class="sig-paren">(</span><em class="sig-param">selected_list: List[int], frame_idx_map: List[int]</em><span class="sig-paren">)</span> &#x2192; List[int]<a class="reference internal" href="_modules/sleap/gui/suggestions.html#VideoFrameSuggestions.to_frame_idx_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.suggestions.VideoFrameSuggestions.to_frame_idx_list" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert list of row indexes to list of frame indexes.</p>
+<dt id="sleap.gui.suggestions.VideoFrameSuggestions.velocity">
+<em class="property">classmethod </em><code class="sig-name descname">velocity</code><span class="sig-paren">(</span><em class="sig-param">labels: Labels</em>, <em class="sig-param">node_idx: int</em>, <em class="sig-param">threshold: float</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/suggestions.html#VideoFrameSuggestions.velocity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.suggestions.VideoFrameSuggestions.velocity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds frames for proofreading with high node velocity.</p>
 </dd></dl>
 
 </dd></dl>
@@ -2467,6 +1840,18 @@ passed to <a class="reference internal" href="#sleap.gui.formbuilder.FormBuilder
 </dd></dl>
 
 <dl class="method">
+<dt id="sleap.gui.formbuilder.StackBuilderWidget.setValue">
+<code class="sig-name descname">setValue</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/formbuilder.html#StackBuilderWidget.setValue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.formbuilder.StackBuilderWidget.setValue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets value of menu.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.formbuilder.StackBuilderWidget.switch_to_idx">
+<code class="sig-name descname">switch_to_idx</code><span class="sig-paren">(</span><em class="sig-param">idx</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/formbuilder.html#StackBuilderWidget.switch_to_idx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.formbuilder.StackBuilderWidget.switch_to_idx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Switch currently shown widget from stack.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.gui.formbuilder.StackBuilderWidget.value">
 <code class="sig-name descname">value</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/formbuilder.html#StackBuilderWidget.value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.formbuilder.StackBuilderWidget.value" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns value of menu.</p>
@@ -2499,6 +1884,26 @@ passed to <a class="reference internal" href="#sleap.gui.formbuilder.FormBuilder
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>Return a dict of {name</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.formbuilder.YamlFormWidget.from_name">
+<em class="property">classmethod </em><code class="sig-name descname">from_name</code><span class="sig-paren">(</span><em class="sig-param">form_name: str</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span> &#x2192; sleap.gui.formbuilder.YamlFormWidget<a class="reference internal" href="_modules/sleap/gui/formbuilder.html#YamlFormWidget.from_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.formbuilder.YamlFormWidget.from_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate class from the short name of form (e.g., “suggestions”).</p>
+<p>Short name is converted to path to yaml file, and then class is
+instantiated using this path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>form_name</strong> – Short name of form, corresponds to name of yaml file.</p></li>
+<li><p><strong>args</strong> – Positional args passed to class initializer.</p></li>
+<li><p><strong>kwargs</strong> – Named args passed to class initializer.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Instance of <cite>YamlFormWidget</cite> class.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2594,7 +1999,7 @@ passed to <a class="reference internal" href="#sleap.gui.formbuilder.FormBuilder
 
 <dl class="class">
 <dt id="sleap.gui.slider.VideoSlider">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.slider.</code><code class="sig-name descname">VideoSlider</code><span class="sig-paren">(</span><em class="sig-param">orientation=-1</em>, <em class="sig-param">min=0</em>, <em class="sig-param">max=100</em>, <em class="sig-param">val=0</em>, <em class="sig-param">marks=None</em>, <em class="sig-param">color_manager: Optional[sleap.gui.overlays.tracks.TrackColorManager] = None</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.slider.</code><code class="sig-name descname">VideoSlider</code><span class="sig-paren">(</span><em class="sig-param">orientation=-1</em>, <em class="sig-param">min=0</em>, <em class="sig-param">max=100</em>, <em class="sig-param">val=0</em>, <em class="sig-param">marks=None</em>, <em class="sig-param">color_manager: Optional[sleap.gui.color.ColorManager] = None</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider" title="Permalink to this definition">¶</a></dt>
 <dd><p>Drop-in replacement for QSlider with additional features.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -2607,7 +2012,7 @@ passed to <a class="reference internal" href="#sleap.gui.formbuilder.FormBuilder
 this can be either
 * list of values to mark
 * list of (track, value)-tuples to mark</p></li>
-<li><p><strong>color_manager</strong> – A <code class="xref py py-class docutils literal notranslate"><span class="pre">TrackColorManager</span></code> which determines the
+<li><p><strong>color_manager</strong> – A <code class="xref py py-class docutils literal notranslate"><span class="pre">ColorManager</span></code> which determines the
 color to use for “track”-type marks</p></li>
 </ul>
 </dd>
@@ -3012,7 +2417,7 @@ heightUpdated: triggered when the height of slider changes</p>
 <p>Module with overlay for showing instances.</p>
 <dl class="class">
 <dt id="sleap.gui.overlays.instance.InstanceOverlay">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.overlays.instance.</code><code class="sig-name descname">InstanceOverlay</code><span class="sig-paren">(</span><em class="sig-param">labels: sleap.io.dataset.Labels = None</em>, <em class="sig-param">player: sleap.gui.video.QtVideoPlayer = None</em>, <em class="sig-param">color_predicted: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/overlays/instance.html#InstanceOverlay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.overlays.instance.InstanceOverlay" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.overlays.instance.</code><code class="sig-name descname">InstanceOverlay</code><span class="sig-paren">(</span><em class="sig-param">labels: sleap.io.dataset.Labels = None</em>, <em class="sig-param">player: sleap.gui.video.QtVideoPlayer = None</em>, <em class="sig-param">state: sleap.gui.state.GuiState = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/overlays/instance.html#InstanceOverlay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.overlays.instance.InstanceOverlay" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class for adding instances as overlays on video frames.</p>
 <dl class="attribute">
 <dt id="sleap.gui.overlays.instance.InstanceOverlay.labels">
@@ -3027,10 +2432,9 @@ heightUpdated: triggered when the height of slider changes</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="sleap.gui.overlays.instance.InstanceOverlay.color_predicted">
-<code class="sig-name descname">color_predicted</code><a class="headerlink" href="#sleap.gui.overlays.instance.InstanceOverlay.color_predicted" title="Permalink to this definition">¶</a></dt>
-<dd><p>Whether to show predicted instances in color (
-rather than all in gray/yellow).</p>
+<dt id="sleap.gui.overlays.instance.InstanceOverlay.state">
+<code class="sig-name descname">state</code><a class="headerlink" href="#sleap.gui.overlays.instance.InstanceOverlay.state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Object used to communicate with application.</p>
 </dd></dl>
 
 <dl class="method">
@@ -3045,55 +2449,6 @@ rather than all in gray/yellow).</p>
 <div class="section" id="module-sleap.gui.overlays.tracks">
 <span id="tracks"></span><h3>Tracks<a class="headerlink" href="#module-sleap.gui.overlays.tracks" title="Permalink to this headline">¶</a></h3>
 <p>Module that handles track-related overlays (including track color).</p>
-<dl class="class">
-<dt id="sleap.gui.overlays.tracks.TrackColorManager">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.overlays.tracks.</code><code class="sig-name descname">TrackColorManager</code><span class="sig-paren">(</span><em class="sig-param">labels: sleap.io.dataset.Labels = None</em>, <em class="sig-param">palette: str = 'standard'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/overlays/tracks.html#TrackColorManager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.overlays.tracks.TrackColorManager" title="Permalink to this definition">¶</a></dt>
-<dd><p>Class to determine color to use for track.</p>
-<p>The color depends on the order of the tracks in <cite>Labels</cite> object,
-so we need to initialize with <cite>Labels</cite>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>labels</strong> – The <code class="xref py py-class docutils literal notranslate"><span class="pre">Labels</span></code> dataset which contains the tracks for
-which we want colors.</p></li>
-<li><p><strong>palette</strong> – String with the color palette name to use.</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="method">
-<dt id="sleap.gui.overlays.tracks.TrackColorManager.get_color">
-<code class="sig-name descname">get_color</code><span class="sig-paren">(</span><em class="sig-param">track: Union[sleap.instance.Track, int]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/overlays/tracks.html#TrackColorManager.get_color"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.overlays.tracks.TrackColorManager.get_color" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the color to use for a given track.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>track</strong> – <cite>Track</cite> object or an int</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>(r, g, b)-tuple</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.overlays.tracks.TrackColorManager.labels">
-<em class="property">property </em><code class="sig-name descname">labels</code><a class="headerlink" href="#sleap.gui.overlays.tracks.TrackColorManager.labels" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets or sets labels dataset for which we are coloring tracks.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.overlays.tracks.TrackColorManager.palette_names">
-<em class="property">property </em><code class="sig-name descname">palette_names</code><a class="headerlink" href="#sleap.gui.overlays.tracks.TrackColorManager.palette_names" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets list of palette names.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.overlays.tracks.TrackColorManager.set_palette">
-<code class="sig-name descname">set_palette</code><span class="sig-paren">(</span><em class="sig-param">palette</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/overlays/tracks.html#TrackColorManager.set_palette"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.overlays.tracks.TrackColorManager.set_palette" title="Permalink to this definition">¶</a></dt>
-<dd><p>Sets palette (by name).</p>
-</dd></dl>
-
-</dd></dl>
-
 <dl class="class">
 <dt id="sleap.gui.overlays.tracks.TrackListOverlay">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.gui.overlays.tracks.</code><code class="sig-name descname">TrackListOverlay</code><span class="sig-paren">(</span><em class="sig-param">labels: sleap.io.dataset.Labels = None</em>, <em class="sig-param">player: QtVideoPlayer = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/overlays/tracks.html#TrackListOverlay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.overlays.tracks.TrackListOverlay" title="Permalink to this definition">¶</a></dt>
@@ -3230,11 +2585,6 @@ objects to include in trail.</p></li>
 <div class="section" id="module-sleap.gui.overlays.base">
 <span id="datasource-classes"></span><h3>Datasource classes<a class="headerlink" href="#module-sleap.gui.overlays.base" title="Permalink to this headline">¶</a></h3>
 <p>Base class for overlays.</p>
-<dl class="class">
-<dt id="sleap.gui.overlays.base.HDF5Data">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.overlays.base.</code><code class="sig-name descname">HDF5Data</code><span class="sig-paren">(</span><em class="sig-param">filename: str = None</em>, <em class="sig-param">dataset: str = None</em>, <em class="sig-param">input_format: str = 'channels_last'</em>, <em class="sig-param">convert_range: bool = True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/overlays/base.html#HDF5Data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.overlays.base.HDF5Data" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
 </div>
 <div class="section" id="module-sleap.gui.overlays.confmaps">
 <span id="confidence-maps"></span><h3>Confidence maps<a class="headerlink" href="#module-sleap.gui.overlays.confmaps" title="Permalink to this headline">¶</a></h3>
@@ -3310,14 +2660,8 @@ Shape of array should be (channels, height, width).</p></li>
 
 <dl class="class">
 <dt id="sleap.gui.overlays.confmaps.ConfmapOverlay">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.overlays.confmaps.</code><code class="sig-name descname">ConfmapOverlay</code><span class="sig-paren">(</span><em class="sig-param">data: Sequence = None</em>, <em class="sig-param">player: sleap.gui.video.QtVideoPlayer = None</em>, <em class="sig-param">overlay_class: PySide2.QtWidgets.QGraphicsObject = None</em>, <em class="sig-param">transform: sleap.nn.transform.DataTransform = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/overlays/confmaps.html#ConfmapOverlay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.overlays.confmaps.ConfmapOverlay" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.overlays.confmaps.</code><code class="sig-name descname">ConfmapOverlay</code><span class="sig-paren">(</span><em class="sig-param">data: Sequence = None</em>, <em class="sig-param">player: sleap.gui.video.QtVideoPlayer = None</em>, <em class="sig-param">overlay_class: PySide2.QtWidgets.QGraphicsObject = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/overlays/confmaps.html#ConfmapOverlay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.overlays.confmaps.ConfmapOverlay" title="Permalink to this definition">¶</a></dt>
 <dd><p>Overlay to show confidence maps.</p>
-<dl class="method">
-<dt id="sleap.gui.overlays.confmaps.ConfmapOverlay.from_h5">
-<em class="property">classmethod </em><code class="sig-name descname">from_h5</code><span class="sig-paren">(</span><em class="sig-param">filename</em>, <em class="sig-param">input_format='channels_last'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/overlays/confmaps.html#ConfmapOverlay.from_h5"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.overlays.confmaps.ConfmapOverlay.from_h5" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create object with hdf5 as datasource.</p>
-</dd></dl>
-
 <dl class="method">
 <dt id="sleap.gui.overlays.confmaps.ConfmapOverlay.from_model">
 <em class="property">classmethod </em><code class="sig-name descname">from_model</code><span class="sig-paren">(</span><em class="sig-param">filename</em>, <em class="sig-param">video</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/overlays/confmaps.html#ConfmapOverlay.from_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.overlays.confmaps.ConfmapOverlay.from_model" title="Permalink to this definition">¶</a></dt>
@@ -3415,17 +2759,23 @@ Shape of array should be (channels, height, width).</p></li>
 <p>Data table widgets and view models used in GUI app.</p>
 <dl class="class">
 <dt id="sleap.gui.dataviews.GenericTableModel">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.dataviews.</code><code class="sig-name descname">GenericTableModel</code><span class="sig-paren">(</span><em class="sig-param">propList: List[str], itemList: Optional[list] = None, useCache: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#GenericTableModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.GenericTableModel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.dataviews.</code><code class="sig-name descname">GenericTableModel</code><span class="sig-paren">(</span><em class="sig-param">items: Optional[list] = None</em>, <em class="sig-param">properties: Optional[List[str]] = None</em>, <em class="sig-param">context: Optional[sleap.gui.commands.CommandContext] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#GenericTableModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.GenericTableModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generic table model to show a list of properties for some items.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>propList</strong> – The list of property names (table columns).</p></li>
-<li><p><strong>itemList</strong> – The list of items with said properties (rows).</p></li>
-<li><p><strong>useCache</strong> – Whether to build cache of property values for all items.</p></li>
+<li><p><strong>properties</strong> – The list of property names (table columns).</p></li>
+<li><p><strong>items</strong> – The list of items with said properties (rows).</p></li>
+<li><p><strong>context</strong> – A command context (required for editable items).</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="sleap.gui.dataviews.GenericTableModel.can_set">
+<code class="sig-name descname">can_set</code><span class="sig-paren">(</span><em class="sig-param">item</em>, <em class="sig-param">key</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#GenericTableModel.can_set"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.GenericTableModel.can_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Virtual method, returns whether table cell is editable.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="sleap.gui.dataviews.GenericTableModel.columnCount">
 <code class="sig-name descname">columnCount</code><span class="sig-paren">(</span><em class="sig-param">parent=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#GenericTableModel.columnCount"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.GenericTableModel.columnCount" title="Permalink to this definition">¶</a></dt>
@@ -3445,6 +2795,18 @@ Shape of array should be (channels, height, width).</p></li>
 </dd></dl>
 
 <dl class="method">
+<dt id="sleap.gui.dataviews.GenericTableModel.get_from_idx">
+<code class="sig-name descname">get_from_idx</code><span class="sig-paren">(</span><em class="sig-param">index: PySide2.QtCore.QModelIndex</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#GenericTableModel.get_from_idx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.GenericTableModel.get_from_idx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets item from QModelIndex.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.dataviews.GenericTableModel.get_item_color">
+<code class="sig-name descname">get_item_color</code><span class="sig-paren">(</span><em class="sig-param">item: Any</em>, <em class="sig-param">key: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#GenericTableModel.get_item_color"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.GenericTableModel.get_item_color" title="Permalink to this definition">¶</a></dt>
+<dd><p>Virtual method, returns color for given item.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.gui.dataviews.GenericTableModel.headerData">
 <code class="sig-name descname">headerData</code><span class="sig-paren">(</span><em class="sig-param">section</em>, <em class="sig-param">orientation: &lt;class 'PySide2.QtCore.Qt.Orientation'&gt;</em>, <em class="sig-param">role=PySide2.QtCore.Qt.ItemDataRole.DisplayRole</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#GenericTableModel.headerData"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.GenericTableModel.headerData" title="Permalink to this definition">¶</a></dt>
 <dd><p>Overrides Qt method, returns column (attribute) names.</p>
@@ -3457,9 +2819,27 @@ Shape of array should be (channels, height, width).</p></li>
 </dd></dl>
 
 <dl class="method">
+<dt id="sleap.gui.dataviews.GenericTableModel.object_to_items">
+<code class="sig-name descname">object_to_items</code><span class="sig-paren">(</span><em class="sig-param">item_list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#GenericTableModel.object_to_items"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.GenericTableModel.object_to_items" title="Permalink to this definition">¶</a></dt>
+<dd><p>Virtual method, convert object to list of items to show in rows.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.gui.dataviews.GenericTableModel.rowCount">
 <code class="sig-name descname">rowCount</code><span class="sig-paren">(</span><em class="sig-param">parent=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#GenericTableModel.rowCount"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.GenericTableModel.rowCount" title="Permalink to this definition">¶</a></dt>
 <dd><p>Overrides Qt method, returns number of rows (items).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.dataviews.GenericTableModel.setData">
+<code class="sig-name descname">setData</code><span class="sig-paren">(</span><em class="sig-param">index: PySide2.QtCore.QModelIndex</em>, <em class="sig-param">value: str</em>, <em class="sig-param">role=PySide2.QtCore.Qt.ItemDataRole.EditRole</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#GenericTableModel.setData"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.GenericTableModel.setData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overrides Qt method, dispatch for settable properties.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.dataviews.GenericTableModel.set_item">
+<code class="sig-name descname">set_item</code><span class="sig-paren">(</span><em class="sig-param">item</em>, <em class="sig-param">key</em>, <em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#GenericTableModel.set_item"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.GenericTableModel.set_item" title="Permalink to this definition">¶</a></dt>
+<dd><p>Virtual method, used to set value for item in table cell.</p>
 </dd></dl>
 
 <dl class="method">
@@ -3468,23 +2848,17 @@ Shape of array should be (channels, height, width).</p></li>
 <dd><p>Sorts table by given column and order.</p>
 </dd></dl>
 
-</dd></dl>
-
-<dl class="class">
-<dt id="sleap.gui.dataviews.LabeledFrameTable">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.dataviews.</code><code class="sig-name descname">LabeledFrameTable</code><span class="sig-paren">(</span><em class="sig-param">labeled_frame: sleap.instance.LabeledFrame = None</em>, <em class="sig-param">labels: sleap.io.dataset.Labels = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#LabeledFrameTable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.LabeledFrameTable" title="Permalink to this definition">¶</a></dt>
-<dd><p>Table view widget for listing instances in labeled frame.</p>
 <dl class="method">
-<dt id="sleap.gui.dataviews.LabeledFrameTable.selectionChanged">
-<code class="sig-name descname">selectionChanged</code><span class="sig-paren">(</span><em class="sig-param">new</em>, <em class="sig-param">old</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#LabeledFrameTable.selectionChanged"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.LabeledFrameTable.selectionChanged" title="Permalink to this definition">¶</a></dt>
-<dd><p>Custom event handler, emits selectionChangedSignal signal.</p>
+<dt id="sleap.gui.dataviews.GenericTableModel.uncached_items">
+<em class="property">property </em><code class="sig-name descname">uncached_items</code><a class="headerlink" href="#sleap.gui.dataviews.GenericTableModel.uncached_items" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets or sets the uncached items.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="sleap.gui.dataviews.LabeledFrameTableModel">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.dataviews.</code><code class="sig-name descname">LabeledFrameTableModel</code><span class="sig-paren">(</span><em class="sig-param">labeled_frame: sleap.instance.LabeledFrame</em>, <em class="sig-param">labels: sleap.io.dataset.Labels</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#LabeledFrameTableModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.LabeledFrameTableModel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.dataviews.</code><code class="sig-name descname">LabeledFrameTableModel</code><span class="sig-paren">(</span><em class="sig-param">items: Optional[list] = None</em>, <em class="sig-param">properties: Optional[List[str]] = None</em>, <em class="sig-param">context: Optional[sleap.gui.commands.CommandContext] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#LabeledFrameTableModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.LabeledFrameTableModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Table model for listing instances in labeled frame.</p>
 <p>Allows editing track names.</p>
 <dl class="field-list simple">
@@ -3496,80 +2870,45 @@ Shape of array should be (channels, height, width).</p></li>
 </dd>
 </dl>
 <dl class="method">
-<dt id="sleap.gui.dataviews.LabeledFrameTableModel.color_manager">
-<em class="property">property </em><code class="sig-name descname">color_manager</code><a class="headerlink" href="#sleap.gui.dataviews.LabeledFrameTableModel.color_manager" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets or sets object for determining track colors.</p>
+<dt id="sleap.gui.dataviews.LabeledFrameTableModel.can_set">
+<code class="sig-name descname">can_set</code><span class="sig-paren">(</span><em class="sig-param">item</em>, <em class="sig-param">key</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#LabeledFrameTableModel.can_set"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.LabeledFrameTableModel.can_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Virtual method, returns whether table cell is editable.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="sleap.gui.dataviews.LabeledFrameTableModel.columnCount">
-<code class="sig-name descname">columnCount</code><span class="sig-paren">(</span><em class="sig-param">parent</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#LabeledFrameTableModel.columnCount"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.LabeledFrameTableModel.columnCount" title="Permalink to this definition">¶</a></dt>
-<dd><p>Overrides Qt method, returns number of columns.</p>
+<dt id="sleap.gui.dataviews.LabeledFrameTableModel.get_item_color">
+<code class="sig-name descname">get_item_color</code><span class="sig-paren">(</span><em class="sig-param">item: Any</em>, <em class="sig-param">key: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#LabeledFrameTableModel.get_item_color"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.LabeledFrameTableModel.get_item_color" title="Permalink to this definition">¶</a></dt>
+<dd><p>Virtual method, returns color for given item.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="sleap.gui.dataviews.LabeledFrameTableModel.data">
-<code class="sig-name descname">data</code><span class="sig-paren">(</span><em class="sig-param">index: PySide2.QtCore.QModelIndex</em>, <em class="sig-param">role=PySide2.QtCore.Qt.ItemDataRole.DisplayRole</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#LabeledFrameTableModel.data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.LabeledFrameTableModel.data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Overrides Qt method, returns data to show in table.</p>
+<dt id="sleap.gui.dataviews.LabeledFrameTableModel.object_to_items">
+<code class="sig-name descname">object_to_items</code><span class="sig-paren">(</span><em class="sig-param">labeled_frame: sleap.instance.LabeledFrame</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#LabeledFrameTableModel.object_to_items"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.LabeledFrameTableModel.object_to_items" title="Permalink to this definition">¶</a></dt>
+<dd><p>Virtual method, convert object to list of items to show in rows.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="sleap.gui.dataviews.LabeledFrameTableModel.flags">
-<code class="sig-name descname">flags</code><span class="sig-paren">(</span><em class="sig-param">index: PySide2.QtCore.QModelIndex</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#LabeledFrameTableModel.flags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.LabeledFrameTableModel.flags" title="Permalink to this definition">¶</a></dt>
-<dd><p>Overrides Qt method, returns flags (editable etc).</p>
+<dt id="sleap.gui.dataviews.LabeledFrameTableModel.set_item">
+<code class="sig-name descname">set_item</code><span class="sig-paren">(</span><em class="sig-param">item</em>, <em class="sig-param">key</em>, <em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#LabeledFrameTableModel.set_item"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.LabeledFrameTableModel.set_item" title="Permalink to this definition">¶</a></dt>
+<dd><p>Virtual method, used to set value for item in table cell.</p>
 </dd></dl>
 
-<dl class="method">
-<dt id="sleap.gui.dataviews.LabeledFrameTableModel.headerData">
-<code class="sig-name descname">headerData</code><span class="sig-paren">(</span><em class="sig-param">section</em>, <em class="sig-param">orientation: &lt;class 'PySide2.QtCore.Qt.Orientation'&gt;</em>, <em class="sig-param">role=PySide2.QtCore.Qt.ItemDataRole.DisplayRole</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#LabeledFrameTableModel.headerData"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.LabeledFrameTableModel.headerData" title="Permalink to this definition">¶</a></dt>
-<dd><p>Overrides Qt method, returns column names.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.dataviews.LabeledFrameTableModel.labeled_frame">
-<em class="property">property </em><code class="sig-name descname">labeled_frame</code><a class="headerlink" href="#sleap.gui.dataviews.LabeledFrameTableModel.labeled_frame" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets or sets current labeled frame.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.dataviews.LabeledFrameTableModel.labels">
-<em class="property">property </em><code class="sig-name descname">labels</code><a class="headerlink" href="#sleap.gui.dataviews.LabeledFrameTableModel.labels" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets or sets current labels dataset object.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.dataviews.LabeledFrameTableModel.rowCount">
-<code class="sig-name descname">rowCount</code><span class="sig-paren">(</span><em class="sig-param">parent</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#LabeledFrameTableModel.rowCount"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.LabeledFrameTableModel.rowCount" title="Permalink to this definition">¶</a></dt>
-<dd><p>Overrides Qt method, returns number of rows.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.dataviews.LabeledFrameTableModel.setData">
-<code class="sig-name descname">setData</code><span class="sig-paren">(</span><em class="sig-param">index: PySide2.QtCore.QModelIndex</em>, <em class="sig-param">value: str</em>, <em class="sig-param">role=PySide2.QtCore.Qt.ItemDataRole.EditRole</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#LabeledFrameTableModel.setData"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.LabeledFrameTableModel.setData" title="Permalink to this definition">¶</a></dt>
-<dd><p>Overrides Qt method, sets data in labeled frame from user changes.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="sleap.gui.dataviews.SkeletonEdgesTable">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.dataviews.</code><code class="sig-name descname">SkeletonEdgesTable</code><span class="sig-paren">(</span><em class="sig-param">skeleton: sleap.skeleton.Skeleton</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#SkeletonEdgesTable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.SkeletonEdgesTable" title="Permalink to this definition">¶</a></dt>
-<dd><p>Table view widget for skeleton edges.</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="sleap.gui.dataviews.SkeletonEdgesTableModel">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.dataviews.</code><code class="sig-name descname">SkeletonEdgesTableModel</code><span class="sig-paren">(</span><em class="sig-param">skeleton: sleap.skeleton.Skeleton</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#SkeletonEdgesTableModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.SkeletonEdgesTableModel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.dataviews.</code><code class="sig-name descname">SkeletonEdgesTableModel</code><span class="sig-paren">(</span><em class="sig-param">items: Optional[list] = None</em>, <em class="sig-param">properties: Optional[List[str]] = None</em>, <em class="sig-param">context: Optional[sleap.gui.commands.CommandContext] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#SkeletonEdgesTableModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.SkeletonEdgesTableModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Table model for skeleton edges.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>skeleton</strong> – The skeleton to show in table.</p>
-</dd>
-</dl>
 <dl class="method">
-<dt id="sleap.gui.dataviews.SkeletonEdgesTableModel.skeleton">
-<em class="property">property </em><code class="sig-name descname">skeleton</code><a class="headerlink" href="#sleap.gui.dataviews.SkeletonEdgesTableModel.skeleton" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets or sets current skeleton.</p>
+<dt id="sleap.gui.dataviews.SkeletonEdgesTableModel.get_item_color">
+<code class="sig-name descname">get_item_color</code><span class="sig-paren">(</span><em class="sig-param">item: Any</em>, <em class="sig-param">key: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#SkeletonEdgesTableModel.get_item_color"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.SkeletonEdgesTableModel.get_item_color" title="Permalink to this definition">¶</a></dt>
+<dd><p>Virtual method, returns color for given item.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.dataviews.SkeletonEdgesTableModel.object_to_items">
+<code class="sig-name descname">object_to_items</code><span class="sig-paren">(</span><em class="sig-param">skeleton: sleap.skeleton.Skeleton</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#SkeletonEdgesTableModel.object_to_items"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.SkeletonEdgesTableModel.object_to_items" title="Permalink to this definition">¶</a></dt>
+<dd><p>Virtual method, convert object to list of items to show in rows.</p>
 </dd></dl>
 
 </dd></dl>
@@ -3623,82 +2962,49 @@ selected edge source node.</p></li>
 </dd></dl>
 
 <dl class="class">
-<dt id="sleap.gui.dataviews.SkeletonNodesTable">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.dataviews.</code><code class="sig-name descname">SkeletonNodesTable</code><span class="sig-paren">(</span><em class="sig-param">skeleton: sleap.skeleton.Skeleton</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#SkeletonNodesTable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.SkeletonNodesTable" title="Permalink to this definition">¶</a></dt>
-<dd><p>Table view widget for displaying and editing Skeleton nodes.</p>
-</dd></dl>
-
-<dl class="class">
 <dt id="sleap.gui.dataviews.SkeletonNodesTableModel">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.dataviews.</code><code class="sig-name descname">SkeletonNodesTableModel</code><span class="sig-paren">(</span><em class="sig-param">skeleton: sleap.skeleton.Skeleton</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#SkeletonNodesTableModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.SkeletonNodesTableModel" title="Permalink to this definition">¶</a></dt>
-<dd><p>Table model for skeleton nodes.</p>
-<dl class="method">
-<dt id="sleap.gui.dataviews.SkeletonNodesTableModel.columnCount">
-<code class="sig-name descname">columnCount</code><span class="sig-paren">(</span><em class="sig-param">parent</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#SkeletonNodesTableModel.columnCount"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.SkeletonNodesTableModel.columnCount" title="Permalink to this definition">¶</a></dt>
-<dd><p>Overrides Qt method, returns number of columns.</p>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.dataviews.</code><code class="sig-name descname">SkeletonNodesTableModel</code><span class="sig-paren">(</span><em class="sig-param">items: Optional[list] = None</em>, <em class="sig-param">properties: Optional[List[str]] = None</em>, <em class="sig-param">context: Optional[sleap.gui.commands.CommandContext] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#SkeletonNodesTableModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.SkeletonNodesTableModel" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="sleap.gui.dataviews.SkeletonNodesTableModel.can_set">
+<code class="sig-name descname">can_set</code><span class="sig-paren">(</span><em class="sig-param">item</em>, <em class="sig-param">key</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#SkeletonNodesTableModel.can_set"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.SkeletonNodesTableModel.can_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Virtual method, returns whether table cell is editable.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="sleap.gui.dataviews.SkeletonNodesTableModel.data">
-<code class="sig-name descname">data</code><span class="sig-paren">(</span><em class="sig-param">index: PySide2.QtCore.QModelIndex</em>, <em class="sig-param">role=PySide2.QtCore.Qt.ItemDataRole.DisplayRole</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#SkeletonNodesTableModel.data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.SkeletonNodesTableModel.data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Overrides Qt method, returns data to show in table.</p>
+<dt id="sleap.gui.dataviews.SkeletonNodesTableModel.get_item_color">
+<code class="sig-name descname">get_item_color</code><span class="sig-paren">(</span><em class="sig-param">item: Any</em>, <em class="sig-param">key: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#SkeletonNodesTableModel.get_item_color"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.SkeletonNodesTableModel.get_item_color" title="Permalink to this definition">¶</a></dt>
+<dd><p>Virtual method, returns color for given item.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="sleap.gui.dataviews.SkeletonNodesTableModel.flags">
-<code class="sig-name descname">flags</code><span class="sig-paren">(</span><em class="sig-param">index: PySide2.QtCore.QModelIndex</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#SkeletonNodesTableModel.flags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.SkeletonNodesTableModel.flags" title="Permalink to this definition">¶</a></dt>
-<dd><p>Overrides Qt method, returns flags (editable etc).</p>
+<dt id="sleap.gui.dataviews.SkeletonNodesTableModel.object_to_items">
+<code class="sig-name descname">object_to_items</code><span class="sig-paren">(</span><em class="sig-param">skeleton: sleap.skeleton.Skeleton</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#SkeletonNodesTableModel.object_to_items"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.SkeletonNodesTableModel.object_to_items" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts given skeleton to list of nodes to show in table.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="sleap.gui.dataviews.SkeletonNodesTableModel.headerData">
-<code class="sig-name descname">headerData</code><span class="sig-paren">(</span><em class="sig-param">section</em>, <em class="sig-param">orientation: &lt;class 'PySide2.QtCore.Qt.Orientation'&gt;</em>, <em class="sig-param">role=PySide2.QtCore.Qt.ItemDataRole.DisplayRole</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#SkeletonNodesTableModel.headerData"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.SkeletonNodesTableModel.headerData" title="Permalink to this definition">¶</a></dt>
-<dd><p>Overrides Qt method, returns column names.</p>
+<dt id="sleap.gui.dataviews.SkeletonNodesTableModel.set_item">
+<code class="sig-name descname">set_item</code><span class="sig-paren">(</span><em class="sig-param">item</em>, <em class="sig-param">key</em>, <em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#SkeletonNodesTableModel.set_item"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.SkeletonNodesTableModel.set_item" title="Permalink to this definition">¶</a></dt>
+<dd><p>Virtual method, used to set value for item in table cell.</p>
 </dd></dl>
 
-<dl class="method">
-<dt id="sleap.gui.dataviews.SkeletonNodesTableModel.rowCount">
-<code class="sig-name descname">rowCount</code><span class="sig-paren">(</span><em class="sig-param">parent</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#SkeletonNodesTableModel.rowCount"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.SkeletonNodesTableModel.rowCount" title="Permalink to this definition">¶</a></dt>
-<dd><p>Overrides Qt method, returns number of rows.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.dataviews.SkeletonNodesTableModel.setData">
-<code class="sig-name descname">setData</code><span class="sig-paren">(</span><em class="sig-param">index: PySide2.QtCore.QModelIndex</em>, <em class="sig-param">value: str</em>, <em class="sig-param">role=PySide2.QtCore.Qt.ItemDataRole.EditRole</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#SkeletonNodesTableModel.setData"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.SkeletonNodesTableModel.setData" title="Permalink to this definition">¶</a></dt>
-<dd><p>Overrides Qt method, updates skeleton with new data from user.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.dataviews.SkeletonNodesTableModel.skeleton">
-<em class="property">property </em><code class="sig-name descname">skeleton</code><a class="headerlink" href="#sleap.gui.dataviews.SkeletonNodesTableModel.skeleton" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets or sets current skeleton.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="sleap.gui.dataviews.SuggestionsTable">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.dataviews.</code><code class="sig-name descname">SuggestionsTable</code><span class="sig-paren">(</span><em class="sig-param">labels</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#SuggestionsTable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.SuggestionsTable" title="Permalink to this definition">¶</a></dt>
-<dd><p>Table view widget for showing frame suggestions.</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="sleap.gui.dataviews.SuggestionsTableModel">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.dataviews.</code><code class="sig-name descname">SuggestionsTableModel</code><span class="sig-paren">(</span><em class="sig-param">labels</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#SuggestionsTableModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.SuggestionsTableModel" title="Permalink to this definition">¶</a></dt>
-<dd><p>Table model for showing frame suggestions.</p>
-<dl class="method">
-<dt id="sleap.gui.dataviews.SuggestionsTableModel.labels">
-<em class="property">property </em><code class="sig-name descname">labels</code><a class="headerlink" href="#sleap.gui.dataviews.SuggestionsTableModel.labels" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets or sets current labels dataset.</p>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.dataviews.</code><code class="sig-name descname">SuggestionsTableModel</code><span class="sig-paren">(</span><em class="sig-param">items: Optional[list] = None</em>, <em class="sig-param">properties: Optional[List[str]] = None</em>, <em class="sig-param">context: Optional[sleap.gui.commands.CommandContext] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#SuggestionsTableModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.SuggestionsTableModel" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="sleap.gui.dataviews.SuggestionsTableModel.sort">
+<code class="sig-name descname">sort</code><span class="sig-paren">(</span><em class="sig-param">column_idx: int</em>, <em class="sig-param">order: &lt;class 'PySide2.QtCore.Qt.SortOrder'&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#SuggestionsTableModel.sort"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.SuggestionsTableModel.sort" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sorts table by given column and order.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="class">
-<dt id="sleap.gui.dataviews.VideosTable">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.dataviews.</code><code class="sig-name descname">VideosTable</code><span class="sig-paren">(</span><em class="sig-param">videos: list = []</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#VideosTable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.VideosTable" title="Permalink to this definition">¶</a></dt>
-<dd><p>Table view widget for listing videos in dataset.</p>
-</dd></dl>
+<dt id="sleap.gui.dataviews.VideosTableModel">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.dataviews.</code><code class="sig-name descname">VideosTableModel</code><span class="sig-paren">(</span><em class="sig-param">items: Optional[list] = None</em>, <em class="sig-param">properties: Optional[List[str]] = None</em>, <em class="sig-param">context: Optional[sleap.gui.commands.CommandContext] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#VideosTableModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.VideosTableModel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </div>
 </div>

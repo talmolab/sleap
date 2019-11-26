@@ -156,58 +156,53 @@
 <span class="sd">Data table widgets and view models used in GUI app.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">PySide2</span> <span class="k">import</span> <span class="n">QtCore</span><span class="p">,</span> <span class="n">QtWidgets</span><span class="p">,</span> <span class="n">QtGui</span>
+<span class="kn">from</span> <span class="nn">PySide2</span> <span class="kn">import</span> <span class="n">QtCore</span><span class="p">,</span> <span class="n">QtWidgets</span><span class="p">,</span> <span class="n">QtGui</span>
 
 <span class="kn">import</span> <span class="nn">os</span>
 
-<span class="kn">from</span> <span class="nn">operator</span> <span class="k">import</span> <span class="n">itemgetter</span>
+<span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">itemgetter</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Type</span>
 
-<span class="kn">from</span> <span class="nn">sleap.gui.overlays.tracks</span> <span class="k">import</span> <span class="n">TrackColorManager</span>
-<span class="kn">from</span> <span class="nn">sleap.io.dataset</span> <span class="k">import</span> <span class="n">Labels</span>
-<span class="kn">from</span> <span class="nn">sleap.instance</span> <span class="k">import</span> <span class="n">LabeledFrame</span><span class="p">,</span> <span class="n">Instance</span>
-<span class="kn">from</span> <span class="nn">sleap.skeleton</span> <span class="k">import</span> <span class="n">Skeleton</span>
-
-
-<div class="viewcode-block" id="VideosTable"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.VideosTable">[docs]</a><span class="k">class</span> <span class="nc">VideosTable</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QTableView</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Table view widget for listing videos in dataset.&quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">videos</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[]):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">VideosTable</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-
-        <span class="n">props</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;filename&quot;</span><span class="p">,</span> <span class="s2">&quot;frames&quot;</span><span class="p">,</span> <span class="s2">&quot;height&quot;</span><span class="p">,</span> <span class="s2">&quot;width&quot;</span><span class="p">,</span> <span class="s2">&quot;channels&quot;</span><span class="p">)</span>
-        <span class="n">model</span> <span class="o">=</span> <span class="n">GenericTableModel</span><span class="p">(</span><span class="n">props</span><span class="p">,</span> <span class="n">videos</span><span class="p">,</span> <span class="n">useCache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">setModel</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">setSelectionBehavior</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QAbstractItemView</span><span class="o">.</span><span class="n">SelectRows</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">setSelectionMode</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QAbstractItemView</span><span class="o">.</span><span class="n">SingleSelection</span><span class="p">)</span></div>
+<span class="kn">from</span> <span class="nn">sleap.gui.state</span> <span class="kn">import</span> <span class="n">GuiState</span>
+<span class="kn">from</span> <span class="nn">sleap.gui.commands</span> <span class="kn">import</span> <span class="n">CommandContext</span>
+<span class="kn">from</span> <span class="nn">sleap.gui.color</span> <span class="kn">import</span> <span class="n">ColorManager</span>
+<span class="kn">from</span> <span class="nn">sleap.io.dataset</span> <span class="kn">import</span> <span class="n">Labels</span>
+<span class="kn">from</span> <span class="nn">sleap.instance</span> <span class="kn">import</span> <span class="n">LabeledFrame</span><span class="p">,</span> <span class="n">Instance</span>
+<span class="kn">from</span> <span class="nn">sleap.skeleton</span> <span class="kn">import</span> <span class="n">Skeleton</span>
 
 
 <div class="viewcode-block" id="GenericTableModel"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.GenericTableModel">[docs]</a><span class="k">class</span> <span class="nc">GenericTableModel</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">QAbstractTableModel</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Generic table model to show a list of properties for some items.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        propList: The list of property names (table columns).</span>
-<span class="sd">        itemList: The list of items with said properties (rows).</span>
-<span class="sd">        useCache: Whether to build cache of property values for all items.</span>
+<span class="sd">        properties: The list of property names (table columns).</span>
+<span class="sd">        items: The list of items with said properties (rows).</span>
+<span class="sd">        context: A command context (required for editable items).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+    <span class="n">properties</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">propList</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-        <span class="n">itemList</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">useCache</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">items</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">properties</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">context</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CommandContext</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">GenericTableModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_use_cache</span> <span class="o">=</span> <span class="n">useCache</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_props</span> <span class="o">=</span> <span class="n">propList</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">properties</span> <span class="o">=</span> <span class="n">properties</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">properties</span> <span class="ow">or</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">context</span> <span class="o">=</span> <span class="n">context</span>
 
-        <span class="k">if</span> <span class="n">itemList</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">items</span> <span class="o">=</span> <span class="n">itemList</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uncached_items</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="n">items</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">items</span> <span class="o">=</span> <span class="n">items</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="GenericTableModel.object_to_items"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.GenericTableModel.object_to_items">[docs]</a>    <span class="k">def</span> <span class="nf">object_to_items</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item_list</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Virtual method, convert object to list of items to show in rows.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">item_list</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -215,33 +210,69 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span>
 
     <span class="nd">@items</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obj</span> <span class="o">=</span> <span class="n">obj</span>
+        <span class="n">item_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">object_to_items</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uncached_items</span> <span class="o">=</span> <span class="n">item_list</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">beginResetModel</span><span class="p">()</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_cache</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;item_to_data&quot;</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">val</span><span class="p">:</span>
-                <span class="n">item_data</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_props</span><span class="p">}</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">item_list</span><span class="p">:</span>
+                <span class="n">item_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">item_to_data</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item_data</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">val</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">item_list</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">endResetModel</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">uncached_items</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets or sets the uncached items.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uncached_items</span>
+
+    <span class="nd">@uncached_items</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">uncached_items</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_uncached_items</span> <span class="o">=</span> <span class="n">val</span>
+
+<div class="viewcode-block" id="GenericTableModel.get_item_color"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.GenericTableModel.get_item_color">[docs]</a>    <span class="k">def</span> <span class="nf">get_item_color</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Virtual method, returns color for given item.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
 <div class="viewcode-block" id="GenericTableModel.data"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.GenericTableModel.data">[docs]</a>    <span class="k">def</span> <span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QModelIndex</span><span class="p">,</span> <span class="n">role</span><span class="o">=</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">DisplayRole</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Overrides Qt method, returns data to show in table.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">role</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">DisplayRole</span> <span class="ow">and</span> <span class="n">index</span><span class="o">.</span><span class="n">isValid</span><span class="p">():</span>
-            <span class="n">idx</span> <span class="o">=</span> <span class="n">index</span><span class="o">.</span><span class="n">row</span><span class="p">()</span>
-            <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_props</span><span class="p">[</span><span class="n">index</span><span class="o">.</span><span class="n">column</span><span class="p">()]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">index</span><span class="o">.</span><span class="n">isValid</span><span class="p">():</span>
+            <span class="k">return</span> <span class="kc">None</span>
 
-            <span class="k">if</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">rowCount</span><span class="p">():</span>
-                <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">index</span><span class="o">.</span><span class="n">row</span><span class="p">()</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="n">index</span><span class="o">.</span><span class="n">column</span><span class="p">()]</span>
 
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">item</span><span class="p">:</span>
-                    <span class="k">return</span> <span class="n">item</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">idx</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rowCount</span><span class="p">():</span>
+            <span class="k">return</span> <span class="kc">None</span>
 
-                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
-                    <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">role</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">DisplayRole</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">item</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">item</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+                <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">role</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">ForegroundRole</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_item_color</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">uncached_items</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">key</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="GenericTableModel.setData"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.GenericTableModel.setData">[docs]</a>    <span class="k">def</span> <span class="nf">setData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QModelIndex</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">role</span><span class="o">=</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">EditRole</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Overrides Qt method, dispatch for settable properties.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">role</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">EditRole</span><span class="p">:</span>
+            <span class="n">item</span><span class="p">,</span> <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_from_idx</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">can_set</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">set_item</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dataChanged</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="kc">False</span></div>
 
 <div class="viewcode-block" id="GenericTableModel.rowCount"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.GenericTableModel.rowCount">[docs]</a>    <span class="k">def</span> <span class="nf">rowCount</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Overrides Qt method, returns number of rows (items).&quot;&quot;&quot;</span>
@@ -249,7 +280,7 @@
 
 <div class="viewcode-block" id="GenericTableModel.columnCount"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.GenericTableModel.columnCount">[docs]</a>    <span class="k">def</span> <span class="nf">columnCount</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Overrides Qt method, returns number of columns (attributes).&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_props</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="GenericTableModel.headerData"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.GenericTableModel.headerData">[docs]</a>    <span class="k">def</span> <span class="nf">headerData</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">section</span><span class="p">,</span> <span class="n">orientation</span><span class="p">:</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">Orientation</span><span class="p">,</span> <span class="n">role</span><span class="o">=</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">DisplayRole</span>
@@ -257,7 +288,7 @@
         <span class="sd">&quot;&quot;&quot;Overrides Qt method, returns column (attribute) names.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">role</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">DisplayRole</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">orientation</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">Horizontal</span><span class="p">:</span>
-                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_props</span><span class="p">[</span><span class="n">section</span><span class="p">]</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="n">section</span><span class="p">]</span>
             <span class="k">elif</span> <span class="n">orientation</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">Vertical</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">section</span>
 
@@ -265,193 +296,169 @@
 
 <div class="viewcode-block" id="GenericTableModel.sort"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.GenericTableModel.sort">[docs]</a>    <span class="k">def</span> <span class="nf">sort</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">order</span><span class="p">:</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">SortOrder</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Sorts table by given column and order.&quot;&quot;&quot;</span>
-        <span class="n">prop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_props</span><span class="p">[</span><span class="n">column_idx</span><span class="p">]</span>
+        <span class="n">prop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="n">column_idx</span><span class="p">]</span>
+        <span class="n">reverse</span> <span class="o">=</span> <span class="n">order</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">SortOrder</span><span class="o">.</span><span class="n">DescendingOrder</span>
 
         <span class="n">sort_function</span> <span class="o">=</span> <span class="n">itemgetter</span><span class="p">(</span><span class="n">prop</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">prop</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;video&quot;</span><span class="p">,</span> <span class="s2">&quot;frame&quot;</span><span class="p">):</span>
-            <span class="k">if</span> <span class="s2">&quot;video&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_props</span> <span class="ow">and</span> <span class="s2">&quot;frame&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_props</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;video&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">properties</span> <span class="ow">and</span> <span class="s2">&quot;frame&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="p">:</span>
                 <span class="n">sort_function</span> <span class="o">=</span> <span class="n">itemgetter</span><span class="p">(</span><span class="s2">&quot;video&quot;</span><span class="p">,</span> <span class="s2">&quot;frame&quot;</span><span class="p">)</span>
-
-        <span class="n">reverse</span> <span class="o">=</span> <span class="n">order</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">SortOrder</span><span class="o">.</span><span class="n">DescendingOrder</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">beginResetModel</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">sort_function</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="n">reverse</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">endResetModel</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="GenericTableModel.flags"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.GenericTableModel.flags">[docs]</a>    <span class="k">def</span> <span class="nf">flags</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QModelIndex</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Overrides Qt method, returns whether item is selectable etc.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">ItemIsEnabled</span> <span class="o">|</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">ItemIsSelectable</span></div></div>
+<div class="viewcode-block" id="GenericTableModel.get_from_idx"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.GenericTableModel.get_from_idx">[docs]</a>    <span class="k">def</span> <span class="nf">get_from_idx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QModelIndex</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets item from QModelIndex.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">index</span><span class="o">.</span><span class="n">isValid</span><span class="p">():</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">uncached_items</span><span class="p">[</span><span class="n">index</span><span class="o">.</span><span class="n">row</span><span class="p">()]</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="n">index</span><span class="o">.</span><span class="n">column</span><span class="p">()]</span>
+        <span class="k">return</span> <span class="n">item</span><span class="p">,</span> <span class="n">key</span></div>
 
-
-<div class="viewcode-block" id="SkeletonNodesTable"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.SkeletonNodesTable">[docs]</a><span class="k">class</span> <span class="nc">SkeletonNodesTable</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QTableView</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Table view widget for displaying and editing Skeleton nodes. &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">skeleton</span><span class="p">:</span> <span class="n">Skeleton</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">SkeletonNodesTable</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">setModel</span><span class="p">(</span><span class="n">SkeletonNodesTableModel</span><span class="p">(</span><span class="n">skeleton</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">setSelectionBehavior</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QAbstractItemView</span><span class="o">.</span><span class="n">SelectRows</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">setSelectionMode</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QAbstractItemView</span><span class="o">.</span><span class="n">SingleSelection</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="SkeletonNodesTableModel"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.SkeletonNodesTableModel">[docs]</a><span class="k">class</span> <span class="nc">SkeletonNodesTableModel</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">QAbstractTableModel</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Table model for skeleton nodes.&quot;&quot;&quot;</span>
-
-    <span class="n">_props</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;symmetry&quot;</span><span class="p">]</span>
-
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">skeleton</span><span class="p">:</span> <span class="n">Skeleton</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">SkeletonNodesTableModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_skeleton</span> <span class="o">=</span> <span class="n">skeleton</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">skeleton</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Gets or sets current skeleton.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_skeleton</span>
-
-    <span class="nd">@skeleton</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">skeleton</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">beginResetModel</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_skeleton</span> <span class="o">=</span> <span class="n">val</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">endResetModel</span><span class="p">()</span>
-
-<div class="viewcode-block" id="SkeletonNodesTableModel.data"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.SkeletonNodesTableModel.data">[docs]</a>    <span class="k">def</span> <span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QModelIndex</span><span class="p">,</span> <span class="n">role</span><span class="o">=</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">DisplayRole</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Overrides Qt method, returns data to show in table.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">role</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">DisplayRole</span> <span class="ow">and</span> <span class="n">index</span><span class="o">.</span><span class="n">isValid</span><span class="p">():</span>
-            <span class="n">node_idx</span> <span class="o">=</span> <span class="n">index</span><span class="o">.</span><span class="n">row</span><span class="p">()</span>
-            <span class="n">prop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_props</span><span class="p">[</span><span class="n">index</span><span class="o">.</span><span class="n">column</span><span class="p">()]</span>
-            <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_idx</span><span class="p">]</span>
-            <span class="n">node_name</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span>
-
-            <span class="k">if</span> <span class="n">prop</span> <span class="o">==</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">node_name</span>
-            <span class="k">elif</span> <span class="n">prop</span> <span class="o">==</span> <span class="s2">&quot;symmetry&quot;</span><span class="p">:</span>
-                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">get_symmetry_name</span><span class="p">(</span><span class="n">node_name</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="kc">None</span></div>
-
-<div class="viewcode-block" id="SkeletonNodesTableModel.rowCount"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.SkeletonNodesTableModel.rowCount">[docs]</a>    <span class="k">def</span> <span class="nf">rowCount</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Overrides Qt method, returns number of rows.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="SkeletonNodesTableModel.columnCount"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.SkeletonNodesTableModel.columnCount">[docs]</a>    <span class="k">def</span> <span class="nf">columnCount</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Overrides Qt method, returns number of columns.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">SkeletonNodesTableModel</span><span class="o">.</span><span class="n">_props</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="SkeletonNodesTableModel.headerData"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.SkeletonNodesTableModel.headerData">[docs]</a>    <span class="k">def</span> <span class="nf">headerData</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">section</span><span class="p">,</span> <span class="n">orientation</span><span class="p">:</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">Orientation</span><span class="p">,</span> <span class="n">role</span><span class="o">=</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">DisplayRole</span>
-    <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Overrides Qt method, returns column names.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">role</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">DisplayRole</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">orientation</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">Horizontal</span><span class="p">:</span>
-                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_props</span><span class="p">[</span><span class="n">section</span><span class="p">]</span>
-            <span class="k">elif</span> <span class="n">orientation</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">Vertical</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">section</span>
-
-        <span class="k">return</span> <span class="kc">None</span></div>
-
-<div class="viewcode-block" id="SkeletonNodesTableModel.setData"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.SkeletonNodesTableModel.setData">[docs]</a>    <span class="k">def</span> <span class="nf">setData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QModelIndex</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">role</span><span class="o">=</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">EditRole</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Overrides Qt method, updates skeleton with new data from user.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">role</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">EditRole</span><span class="p">:</span>
-            <span class="n">node_idx</span> <span class="o">=</span> <span class="n">index</span><span class="o">.</span><span class="n">row</span><span class="p">()</span>
-            <span class="n">prop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_props</span><span class="p">[</span><span class="n">index</span><span class="o">.</span><span class="n">column</span><span class="p">()]</span>
-            <span class="n">node_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_idx</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">prop</span> <span class="o">==</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span>
-                    <span class="c1"># Change node name (unless empty string)</span>
-                    <span class="k">if</span> <span class="n">value</span><span class="p">:</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_skeleton</span><span class="o">.</span><span class="n">relabel_node</span><span class="p">(</span><span class="n">node_name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
-                <span class="k">elif</span> <span class="n">prop</span> <span class="o">==</span> <span class="s2">&quot;symmetry&quot;</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">value</span><span class="p">:</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_skeleton</span><span class="o">.</span><span class="n">add_symmetry</span><span class="p">(</span><span class="n">node_name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="c1"># Value was cleared by user, so delete symmetry</span>
-                        <span class="n">symmetric_to</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_skeleton</span><span class="o">.</span><span class="n">get_symmetry</span><span class="p">(</span><span class="n">node_name</span><span class="p">)</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_skeleton</span><span class="o">.</span><span class="n">delete_symmetry</span><span class="p">(</span><span class="n">node_name</span><span class="p">,</span> <span class="n">symmetric_to</span><span class="p">)</span>
-
-                <span class="c1"># send signal that data has changed</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">dataChanged</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
-
-                <span class="k">return</span> <span class="kc">True</span>
-            <span class="k">except</span><span class="p">:</span>
-                <span class="c1"># TODO: display feedback on error?</span>
-                <span class="k">pass</span>
-
+<div class="viewcode-block" id="GenericTableModel.can_set"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.GenericTableModel.can_set">[docs]</a>    <span class="k">def</span> <span class="nf">can_set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Virtual method, returns whether table cell is editable.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="kc">False</span></div>
 
-<div class="viewcode-block" id="SkeletonNodesTableModel.flags"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.SkeletonNodesTableModel.flags">[docs]</a>    <span class="k">def</span> <span class="nf">flags</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QModelIndex</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Overrides Qt method, returns flags (editable etc).&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="p">(</span>
-            <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">ItemIsEnabled</span>
-            <span class="o">|</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">ItemIsSelectable</span>
-            <span class="o">|</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">ItemIsEditable</span>
-        <span class="p">)</span></div></div>
+<div class="viewcode-block" id="GenericTableModel.set_item"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.GenericTableModel.set_item">[docs]</a>    <span class="k">def</span> <span class="nf">set_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Virtual method, used to set value for item in table cell.&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="GenericTableModel.flags"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.GenericTableModel.flags">[docs]</a>    <span class="k">def</span> <span class="nf">flags</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QModelIndex</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Overrides Qt method, returns whether item is selectable etc.&quot;&quot;&quot;</span>
+        <span class="n">flags</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">ItemIsEnabled</span> <span class="o">|</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">ItemIsSelectable</span>
+
+        <span class="n">item</span><span class="p">,</span> <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_from_idx</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">can_set</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+            <span class="n">flags</span> <span class="o">|=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">ItemIsEditable</span>
+        <span class="k">return</span> <span class="n">flags</span></div></div>
 
 
-<div class="viewcode-block" id="SkeletonEdgesTable"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.SkeletonEdgesTable">[docs]</a><span class="k">class</span> <span class="nc">SkeletonEdgesTable</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QTableView</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Table view widget for skeleton edges.&quot;&quot;&quot;</span>
+<span class="k">class</span> <span class="nc">GenericTableView</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QTableView</span><span class="p">):</span>
+    <span class="n">row_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">name_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;selected_&quot;</span>
+    <span class="n">is_activatable</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">is_sortable</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">skeleton</span><span class="p">:</span> <span class="n">Skeleton</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">SkeletonEdgesTable</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">setModel</span><span class="p">(</span><span class="n">SkeletonEdgesTableModel</span><span class="p">(</span><span class="n">skeleton</span><span class="p">))</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">model</span><span class="p">:</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QAbstractTableModel</span><span class="p">,</span>
+        <span class="n">state</span><span class="p">:</span> <span class="n">GuiState</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">row_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">name_prefix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">is_sortable</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">is_activatable</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">GenericTableView</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="n">state</span> <span class="ow">or</span> <span class="n">GuiState</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">row_name</span> <span class="o">=</span> <span class="n">row_name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">row_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name_prefix</span> <span class="o">=</span> <span class="n">name_prefix</span> <span class="k">if</span> <span class="n">name_prefix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">name_prefix</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_sortable</span> <span class="o">=</span> <span class="n">is_sortable</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_sortable</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_activatable</span> <span class="o">=</span> <span class="n">is_activatable</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_activatable</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setModel</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">setSelectionBehavior</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QAbstractItemView</span><span class="o">.</span><span class="n">SelectRows</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">setSelectionMode</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QAbstractItemView</span><span class="o">.</span><span class="n">SingleSelection</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setSelectionMode</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QAbstractItemView</span><span class="o">.</span><span class="n">SingleSelection</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setSortingEnabled</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">is_sortable</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">doubleClicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">activateSelected</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">row_name</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name_prefix</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">row_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">selectRowItem</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">selectionChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new</span><span class="p">,</span> <span class="n">old</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Custom event handler.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">GenericTableView</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">selectionChanged</span><span class="p">(</span><span class="n">new</span><span class="p">,</span> <span class="n">old</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">row_name</span><span class="p">:</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getSelectedRowItem</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name_prefix</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">row_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span>
+
+    <span class="k">def</span> <span class="nf">activateSelected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Activates item selected in table.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_activatable</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">row_name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getSelectedRowItem</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">selectRowItem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">item</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">()</span><span class="o">.</span><span class="n">uncached_items</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="n">table_row_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">()</span><span class="o">.</span><span class="n">createIndex</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setCurrentIndex</span><span class="p">(</span><span class="n">table_row_idx</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">row_name</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name_prefix</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">row_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span>
+
+    <span class="k">def</span> <span class="nf">getSelectedRowItem</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">currentIndex</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">idx</span><span class="o">.</span><span class="n">isValid</span><span class="p">():</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">()</span><span class="o">.</span><span class="n">uncached_items</span><span class="p">[</span><span class="n">idx</span><span class="o">.</span><span class="n">row</span><span class="p">()]</span>
+
+
+<div class="viewcode-block" id="VideosTableModel"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.VideosTableModel">[docs]</a><span class="k">class</span> <span class="nc">VideosTableModel</span><span class="p">(</span><span class="n">GenericTableModel</span><span class="p">):</span>
+    <span class="n">properties</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;filename&quot;</span><span class="p">,</span> <span class="s2">&quot;frames&quot;</span><span class="p">,</span> <span class="s2">&quot;height&quot;</span><span class="p">,</span> <span class="s2">&quot;width&quot;</span><span class="p">,</span> <span class="s2">&quot;channels&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">item_to_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="SkeletonNodesTableModel"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.SkeletonNodesTableModel">[docs]</a><span class="k">class</span> <span class="nc">SkeletonNodesTableModel</span><span class="p">(</span><span class="n">GenericTableModel</span><span class="p">):</span>
+    <span class="n">properties</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;symmetry&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SkeletonNodesTableModel.object_to_items"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.SkeletonNodesTableModel.object_to_items">[docs]</a>    <span class="k">def</span> <span class="nf">object_to_items</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">skeleton</span><span class="p">:</span> <span class="n">Skeleton</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Converts given skeleton to list of nodes to show in table.&quot;&quot;&quot;</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="n">skeleton</span><span class="o">.</span><span class="n">nodes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span> <span class="o">=</span> <span class="n">skeleton</span>
+        <span class="k">return</span> <span class="n">items</span></div>
+
+    <span class="k">def</span> <span class="nf">item_to_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">symmetry</span><span class="o">=</span><span class="n">obj</span><span class="o">.</span><span class="n">get_symmetry_name</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+
+<div class="viewcode-block" id="SkeletonNodesTableModel.can_set"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.SkeletonNodesTableModel.can_set">[docs]</a>    <span class="k">def</span> <span class="nf">can_set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="SkeletonNodesTableModel.set_item"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.SkeletonNodesTableModel.set_item">[docs]</a>    <span class="k">def</span> <span class="nf">set_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;name&quot;</span> <span class="ow">and</span> <span class="n">value</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">setNodeName</span><span class="p">(</span><span class="n">skeleton</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">obj</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="n">item</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;symmetry&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">setNodeSymmetry</span><span class="p">(</span><span class="n">skeleton</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">obj</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="n">item</span><span class="p">,</span> <span class="n">symmetry</span><span class="o">=</span><span class="n">value</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SkeletonNodesTableModel.get_item_color"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.SkeletonNodesTableModel.get_item_color">[docs]</a>    <span class="k">def</span> <span class="nf">get_item_color</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="p">:</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">color_manager</span><span class="o">.</span><span class="n">get_item_color</span><span class="p">(</span>
+                <span class="n">item</span><span class="p">,</span> <span class="n">parent_skeleton</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QColor</span><span class="p">(</span><span class="o">*</span><span class="n">color</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="SkeletonEdgesTableModel"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.SkeletonEdgesTableModel">[docs]</a><span class="k">class</span> <span class="nc">SkeletonEdgesTableModel</span><span class="p">(</span><span class="n">GenericTableModel</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Table model for skeleton edges.</span>
+    <span class="sd">&quot;&quot;&quot;Table model for skeleton edges.&quot;&quot;&quot;</span>
 
-<span class="sd">    Args:</span>
-<span class="sd">        skeleton: The skeleton to show in table.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">properties</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;source&quot;</span><span class="p">,</span> <span class="s2">&quot;destination&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">skeleton</span><span class="p">:</span> <span class="n">Skeleton</span><span class="p">):</span>
-        <span class="n">props</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;source&quot;</span><span class="p">,</span> <span class="s2">&quot;destination&quot;</span><span class="p">)</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">SkeletonEdgesTableModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">props</span><span class="p">)</span>
+<div class="viewcode-block" id="SkeletonEdgesTableModel.object_to_items"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.SkeletonEdgesTableModel.object_to_items">[docs]</a>    <span class="k">def</span> <span class="nf">object_to_items</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">skeleton</span><span class="p">:</span> <span class="n">Skeleton</span><span class="p">):</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span> <span class="o">=</span> <span class="n">skeleton</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">skeleton</span><span class="p">,</span> <span class="s2">&quot;edges&quot;</span><span class="p">):</span>
+            <span class="n">items</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="nb">dict</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">destination</span><span class="o">=</span><span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">skeleton</span><span class="o">.</span><span class="n">edges</span>
+            <span class="p">]</span>
+        <span class="k">return</span> <span class="n">items</span></div>
 
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">skeleton</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Gets or sets current skeleton.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_skeleton</span>
-
-    <span class="nd">@skeleton</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">skeleton</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_skeleton</span> <span class="o">=</span> <span class="n">val</span>
-        <span class="n">items</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="nb">dict</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">destination</span><span class="o">=</span><span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_skeleton</span><span class="o">.</span><span class="n">edges</span>
-        <span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">items</span> <span class="o">=</span> <span class="n">items</span></div>
-
-
-<div class="viewcode-block" id="LabeledFrameTable"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.LabeledFrameTable">[docs]</a><span class="k">class</span> <span class="nc">LabeledFrameTable</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QTableView</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Table view widget for listing instances in labeled frame.&quot;&quot;&quot;</span>
-
-    <span class="n">selectionChangedSignal</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">(</span><span class="n">Instance</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labeled_frame</span><span class="p">:</span> <span class="n">LabeledFrame</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">LabeledFrameTable</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">setModel</span><span class="p">(</span><span class="n">LabeledFrameTableModel</span><span class="p">(</span><span class="n">labeled_frame</span><span class="p">,</span> <span class="n">labels</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">setSelectionBehavior</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QAbstractItemView</span><span class="o">.</span><span class="n">SelectRows</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">setSelectionMode</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QAbstractItemView</span><span class="o">.</span><span class="n">SingleSelection</span><span class="p">)</span>
-
-<div class="viewcode-block" id="LabeledFrameTable.selectionChanged"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.LabeledFrameTable.selectionChanged">[docs]</a>    <span class="k">def</span> <span class="nf">selectionChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new</span><span class="p">,</span> <span class="n">old</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Custom event handler, emits selectionChangedSignal signal.&quot;&quot;&quot;</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">LabeledFrameTable</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">selectionChanged</span><span class="p">(</span><span class="n">new</span><span class="p">,</span> <span class="n">old</span><span class="p">)</span>
-
-        <span class="n">instance</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">new</span><span class="o">.</span><span class="n">indexes</span><span class="p">()):</span>
-            <span class="n">row_idx</span> <span class="o">=</span> <span class="n">new</span><span class="o">.</span><span class="n">indexes</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">row</span><span class="p">()</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">instance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">()</span><span class="o">.</span><span class="n">labeled_frame</span><span class="o">.</span><span class="n">instances_to_show</span><span class="p">[</span><span class="n">row_idx</span><span class="p">]</span>
-            <span class="k">except</span><span class="p">:</span>
-                <span class="c1"># Usually means that there&#39;s no labeled_frame</span>
-                <span class="k">pass</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">selectionChangedSignal</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">instance</span><span class="p">)</span></div></div>
+<div class="viewcode-block" id="SkeletonEdgesTableModel.get_item_color"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.SkeletonEdgesTableModel.get_item_color">[docs]</a>    <span class="k">def</span> <span class="nf">get_item_color</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="p">:</span>
+            <span class="n">edge_pair</span> <span class="o">=</span> <span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;source&quot;</span><span class="p">],</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;destination&quot;</span><span class="p">])</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">color_manager</span><span class="o">.</span><span class="n">get_item_color</span><span class="p">(</span>
+                <span class="n">edge_pair</span><span class="p">,</span> <span class="n">parent_skeleton</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QColor</span><span class="p">(</span><span class="o">*</span><span class="n">color</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="LabeledFrameTableModel"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.LabeledFrameTableModel">[docs]</a><span class="k">class</span> <span class="nc">LabeledFrameTableModel</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">QAbstractTableModel</span><span class="p">):</span>
+<div class="viewcode-block" id="LabeledFrameTableModel"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.LabeledFrameTableModel">[docs]</a><span class="k">class</span> <span class="nc">LabeledFrameTableModel</span><span class="p">(</span><span class="n">GenericTableModel</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Table model for listing instances in labeled frame.</span>
 
 <span class="sd">    Allows editing track names.</span>
@@ -461,128 +468,123 @@
 <span class="sd">        labels: `Labels` datasource</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">_props</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;points&quot;</span><span class="p">,</span> <span class="s2">&quot;track&quot;</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">,</span> <span class="s2">&quot;skeleton&quot;</span><span class="p">)</span>
+    <span class="n">properties</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;points&quot;</span><span class="p">,</span> <span class="s2">&quot;track&quot;</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">,</span> <span class="s2">&quot;skeleton&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labeled_frame</span><span class="p">:</span> <span class="n">LabeledFrame</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">LabeledFrameTableModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_labeled_frame</span> <span class="o">=</span> <span class="n">labeled_frame</span>
+<div class="viewcode-block" id="LabeledFrameTableModel.object_to_items"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.LabeledFrameTableModel.object_to_items">[docs]</a>    <span class="k">def</span> <span class="nf">object_to_items</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labeled_frame</span><span class="p">:</span> <span class="n">LabeledFrame</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">labeled_frame</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="k">return</span> <span class="n">labeled_frame</span><span class="o">.</span><span class="n">instances_to_show</span></div>
 
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">labeled_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Gets or sets current labeled frame.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labeled_frame</span>
+    <span class="k">def</span> <span class="nf">item_to_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="n">instance</span> <span class="o">=</span> <span class="n">item</span>
 
-    <span class="nd">@labeled_frame</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">labeled_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">beginResetModel</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_labeled_frame</span> <span class="o">=</span> <span class="n">val</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">endResetModel</span><span class="p">()</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;{len(instance.nodes)}/{len(instance.skeleton.nodes)}&quot;</span>
+        <span class="n">track_name</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">track</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">instance</span><span class="o">.</span><span class="n">track</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">score</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">):</span>
+            <span class="n">score</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">score</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
 
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">labels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Gets or sets current labels dataset object.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">points</span><span class="o">=</span><span class="n">points</span><span class="p">,</span>
+            <span class="n">track</span><span class="o">=</span><span class="n">track_name</span><span class="p">,</span>
+            <span class="n">score</span><span class="o">=</span><span class="n">score</span><span class="p">,</span>
+            <span class="n">skeleton</span><span class="o">=</span><span class="n">instance</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="p">)</span>
 
-    <span class="nd">@labels</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span> <span class="o">=</span> <span class="n">val</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">color_manager</span> <span class="o">=</span> <span class="n">TrackColorManager</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">color_manager</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Gets or sets object for determining track colors.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_color_manager</span>
-
-    <span class="nd">@color_manager</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">color_manager</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_color_manager</span> <span class="o">=</span> <span class="n">val</span>
-
-<div class="viewcode-block" id="LabeledFrameTableModel.data"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.LabeledFrameTableModel.data">[docs]</a>    <span class="k">def</span> <span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QModelIndex</span><span class="p">,</span> <span class="n">role</span><span class="o">=</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">DisplayRole</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Overrides Qt method, returns data to show in table.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">index</span><span class="o">.</span><span class="n">isValid</span><span class="p">():</span>
-            <span class="n">idx</span> <span class="o">=</span> <span class="n">index</span><span class="o">.</span><span class="n">row</span><span class="p">()</span>
-            <span class="n">prop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_props</span><span class="p">[</span><span class="n">index</span><span class="o">.</span><span class="n">column</span><span class="p">()]</span>
-
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labeled_frame</span><span class="o">.</span><span class="n">instances_to_show</span><span class="p">)</span> <span class="o">&gt;</span> <span class="p">(</span><span class="n">idx</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
-                <span class="n">instance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labeled_frame</span><span class="o">.</span><span class="n">instances_to_show</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
-
-                <span class="c1"># Cell value</span>
-                <span class="k">if</span> <span class="n">role</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">DisplayRole</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">prop</span> <span class="o">==</span> <span class="s2">&quot;points&quot;</span><span class="p">:</span>
-                        <span class="k">return</span> <span class="n">f</span><span class="s2">&quot;{len(instance.nodes)}/{len(instance.skeleton.nodes)}&quot;</span>
-                    <span class="k">elif</span> <span class="n">prop</span> <span class="o">==</span> <span class="s2">&quot;track&quot;</span> <span class="ow">and</span> <span class="n">instance</span><span class="o">.</span><span class="n">track</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                        <span class="k">return</span> <span class="n">instance</span><span class="o">.</span><span class="n">track</span><span class="o">.</span><span class="n">name</span>
-                    <span class="k">elif</span> <span class="n">prop</span> <span class="o">==</span> <span class="s2">&quot;skeleton&quot;</span><span class="p">:</span>
-                        <span class="k">return</span> <span class="n">instance</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">name</span>
-                    <span class="k">elif</span> <span class="n">prop</span> <span class="o">==</span> <span class="s2">&quot;score&quot;</span><span class="p">:</span>
-                        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">):</span>
-                            <span class="k">return</span> <span class="n">f</span><span class="s2">&quot;{round(instance.score, 2)}&quot;</span>
-                        <span class="k">else</span><span class="p">:</span>
-                            <span class="k">return</span> <span class="s2">&quot;&quot;</span>
-
-                <span class="c1"># Cell color</span>
-                <span class="k">elif</span> <span class="n">role</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">ForegroundRole</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">prop</span> <span class="o">==</span> <span class="s2">&quot;track&quot;</span> <span class="ow">and</span> <span class="n">instance</span><span class="o">.</span><span class="n">track</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                        <span class="k">return</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QColor</span><span class="p">(</span>
-                            <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">color_manager</span><span class="o">.</span><span class="n">get_color</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">track</span><span class="p">)</span>
-                        <span class="p">)</span>
-
+<div class="viewcode-block" id="LabeledFrameTableModel.get_item_color"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.LabeledFrameTableModel.get_item_color">[docs]</a>    <span class="k">def</span> <span class="nf">get_item_color</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;track&quot;</span> <span class="ow">and</span> <span class="n">item</span><span class="o">.</span><span class="n">track</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">track</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">track</span>
+            <span class="k">return</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QColor</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">color_manager</span><span class="o">.</span><span class="n">get_track_color</span><span class="p">(</span><span class="n">track</span><span class="p">))</span>
         <span class="k">return</span> <span class="kc">None</span></div>
 
-<div class="viewcode-block" id="LabeledFrameTableModel.rowCount"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.LabeledFrameTableModel.rowCount">[docs]</a>    <span class="k">def</span> <span class="nf">rowCount</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Overrides Qt method, returns number of rows.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="p">(</span>
-            <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labeled_frame</span><span class="o">.</span><span class="n">instances_to_show</span><span class="p">)</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">labeled_frame</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-            <span class="k">else</span> <span class="mi">0</span>
-        <span class="p">)</span></div>
+<div class="viewcode-block" id="LabeledFrameTableModel.can_set"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.LabeledFrameTableModel.can_set">[docs]</a>    <span class="k">def</span> <span class="nf">can_set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;track&quot;</span> <span class="ow">and</span> <span class="n">item</span><span class="o">.</span><span class="n">track</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span></div>
 
-<div class="viewcode-block" id="LabeledFrameTableModel.columnCount"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.LabeledFrameTableModel.columnCount">[docs]</a>    <span class="k">def</span> <span class="nf">columnCount</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Overrides Qt method, returns number of columns.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">LabeledFrameTableModel</span><span class="o">.</span><span class="n">_props</span><span class="p">)</span></div>
+<div class="viewcode-block" id="LabeledFrameTableModel.set_item"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.LabeledFrameTableModel.set_item">[docs]</a>    <span class="k">def</span> <span class="nf">set_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;track&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">setTrackName</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">track</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div></div>
 
-<div class="viewcode-block" id="LabeledFrameTableModel.headerData"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.LabeledFrameTableModel.headerData">[docs]</a>    <span class="k">def</span> <span class="nf">headerData</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">section</span><span class="p">,</span> <span class="n">orientation</span><span class="p">:</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">Orientation</span><span class="p">,</span> <span class="n">role</span><span class="o">=</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">DisplayRole</span>
-    <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Overrides Qt method, returns column names.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">role</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">DisplayRole</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">orientation</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">Horizontal</span><span class="p">:</span>
-                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_props</span><span class="p">[</span><span class="n">section</span><span class="p">]</span>
-            <span class="k">elif</span> <span class="n">orientation</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">Vertical</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">section</span>
 
-        <span class="k">return</span> <span class="kc">None</span></div>
+<div class="viewcode-block" id="SuggestionsTableModel"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.SuggestionsTableModel">[docs]</a><span class="k">class</span> <span class="nc">SuggestionsTableModel</span><span class="p">(</span><span class="n">GenericTableModel</span><span class="p">):</span>
+    <span class="n">properties</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;video&quot;</span><span class="p">,</span> <span class="s2">&quot;frame&quot;</span><span class="p">,</span> <span class="s2">&quot;group&quot;</span><span class="p">,</span> <span class="s2">&quot;labeled&quot;</span><span class="p">,</span> <span class="s2">&quot;mean score&quot;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="LabeledFrameTableModel.setData"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.LabeledFrameTableModel.setData">[docs]</a>    <span class="k">def</span> <span class="nf">setData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QModelIndex</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">role</span><span class="o">=</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">EditRole</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Overrides Qt method, sets data in labeled frame from user changes.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">role</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">EditRole</span><span class="p">:</span>
-            <span class="n">idx</span> <span class="o">=</span> <span class="n">index</span><span class="o">.</span><span class="n">row</span><span class="p">()</span>
-            <span class="n">prop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_props</span><span class="p">[</span><span class="n">index</span><span class="o">.</span><span class="n">column</span><span class="p">()]</span>
-            <span class="n">instance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labeled_frame</span><span class="o">.</span><span class="n">instances_to_show</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">prop</span> <span class="o">==</span> <span class="s2">&quot;track&quot;</span><span class="p">:</span>
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="n">instance</span><span class="o">.</span><span class="n">track</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="k">def</span> <span class="nf">item_to_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">labels</span>
+        <span class="n">item_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
 
-            <span class="c1"># send signal that data has changed</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dataChanged</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+        <span class="n">item_dict</span><span class="p">[</span><span class="s2">&quot;SuggestionFrame&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span>
 
-            <span class="k">return</span> <span class="kc">True</span>
-        <span class="k">return</span> <span class="kc">False</span></div>
+        <span class="n">video_string</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;{labels.videos.index(item.video)}: {os.path.basename(item.video.filename)}&quot;</span>
 
-<div class="viewcode-block" id="LabeledFrameTableModel.flags"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.LabeledFrameTableModel.flags">[docs]</a>    <span class="k">def</span> <span class="nf">flags</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QModelIndex</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Overrides Qt method, returns flags (editable etc).&quot;&quot;&quot;</span>
-        <span class="n">f</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">ItemIsEnabled</span> <span class="o">|</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">ItemIsSelectable</span>
-        <span class="k">if</span> <span class="n">index</span><span class="o">.</span><span class="n">isValid</span><span class="p">():</span>
-            <span class="n">idx</span> <span class="o">=</span> <span class="n">index</span><span class="o">.</span><span class="n">row</span><span class="p">()</span>
-            <span class="k">if</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labeled_frame</span><span class="o">.</span><span class="n">instances_to_show</span><span class="p">):</span>
-                <span class="n">instance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labeled_frame</span><span class="o">.</span><span class="n">instances_to_show</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
-                <span class="n">prop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_props</span><span class="p">[</span><span class="n">index</span><span class="o">.</span><span class="n">column</span><span class="p">()]</span>
-                <span class="k">if</span> <span class="n">prop</span> <span class="o">==</span> <span class="s2">&quot;track&quot;</span> <span class="ow">and</span> <span class="n">instance</span><span class="o">.</span><span class="n">track</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">f</span> <span class="o">|=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">ItemIsEditable</span>
-        <span class="k">return</span> <span class="n">f</span></div></div>
+        <span class="n">item_dict</span><span class="p">[</span><span class="s2">&quot;group&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">group</span><span class="p">)</span> <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">group</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">item_dict</span><span class="p">[</span><span class="s2">&quot;group_int&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">group</span> <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">group</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">item_dict</span><span class="p">[</span><span class="s2">&quot;video&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">video_string</span>
+        <span class="n">item_dict</span><span class="p">[</span><span class="s2">&quot;frame&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">frame_idx</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>  <span class="c1"># start at frame 1 rather than 0</span>
+
+        <span class="c1"># show how many labeled instances are in this frame</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">instance_count</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">video</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">frame_idx</span><span class="p">)</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">if</span> <span class="n">val</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">item_dict</span><span class="p">[</span><span class="s2">&quot;labeled&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+
+        <span class="c1"># calculate score for frame</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">inst</span><span class="o">.</span><span class="n">score</span>
+            <span class="k">for</span> <span class="n">lf</span> <span class="ow">in</span> <span class="n">labels</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">video</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">frame_idx</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">lf</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">inst</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span> <span class="k">if</span> <span class="n">scores</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">item_dict</span><span class="p">[</span><span class="s2">&quot;mean score&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+
+        <span class="k">return</span> <span class="n">item_dict</span>
+
+<div class="viewcode-block" id="SuggestionsTableModel.sort"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.SuggestionsTableModel.sort">[docs]</a>    <span class="k">def</span> <span class="nf">sort</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">order</span><span class="p">:</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">SortOrder</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sorts table by given column and order.&quot;&quot;&quot;</span>
+        <span class="n">prop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="n">column_idx</span><span class="p">]</span>
+        <span class="n">reverse</span> <span class="o">=</span> <span class="n">order</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">SortOrder</span><span class="o">.</span><span class="n">DescendingOrder</span>
+
+        <span class="k">if</span> <span class="n">prop</span> <span class="o">!=</span> <span class="s2">&quot;group&quot;</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">SuggestionsTableModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">column_idx</span><span class="p">,</span> <span class="n">order</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">reverse</span><span class="p">:</span>
+                <span class="c1"># Use group_int (int) instead of group (str).</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">beginResetModel</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">itemgetter</span><span class="p">(</span><span class="s2">&quot;group_int&quot;</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">endResetModel</span><span class="p">()</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Instead of a reverse sort order on groups, we&#39;ll interleave the</span>
+                <span class="c1"># items so that we get the earliest item from each group, then the</span>
+                <span class="c1"># second item from each group, and so on.</span>
+
+                <span class="c1"># Make a decorated list of items with positions in group (plus the</span>
+                <span class="c1"># secondary sort keys: group, video, and frame)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">itemgetter</span><span class="p">(</span><span class="s2">&quot;group_int&quot;</span><span class="p">))</span>
+                <span class="n">decorated_data</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">last_group</span> <span class="o">=</span> <span class="nb">object</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">last_group</span> <span class="o">!=</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;group_int&quot;</span><span class="p">]:</span>
+                        <span class="n">group_i</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="n">decorated_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="p">(</span><span class="n">group_i</span><span class="p">,</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;group_int&quot;</span><span class="p">],</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;video&quot;</span><span class="p">],</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;frame&quot;</span><span class="p">],</span> <span class="n">item</span><span class="p">)</span>
+                    <span class="p">)</span>
+                    <span class="n">last_group</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;group_int&quot;</span><span class="p">]</span>
+                    <span class="n">group_i</span> <span class="o">+=</span> <span class="mi">1</span>
+
+                <span class="c1"># Sort decorated list</span>
+                <span class="n">decorated_data</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+
+                <span class="c1"># Undecorate the list and update table</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">beginResetModel</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="p">(</span><span class="o">*</span><span class="n">_</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span> <span class="ow">in</span> <span class="n">decorated_data</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">endResetModel</span><span class="p">()</span>
+
+        <span class="c1"># Update order in project (so order can be saved and affects what we</span>
+        <span class="c1"># consider previous/next suggestion for navigation).</span>
+        <span class="n">resorted_suggestions</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;SuggestionFrame&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">set_suggestions</span><span class="p">(</span><span class="n">resorted_suggestions</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="SkeletonNodeModel"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.SkeletonNodeModel">[docs]</a><span class="k">class</span> <span class="nc">SkeletonNodeModel</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">QStringListModel</span><span class="p">):</span>
@@ -598,7 +600,7 @@
 <span class="sd">            selected edge source node.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">skeleton</span><span class="p">:</span> <span class="n">Skeleton</span><span class="p">,</span> <span class="n">src_node</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">skeleton</span><span class="p">:</span> <span class="n">Skeleton</span><span class="p">,</span> <span class="n">src_node</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">SkeletonNodeModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_src_node</span> <span class="o">=</span> <span class="n">src_node</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span> <span class="o">=</span> <span class="n">skeleton</span>
@@ -659,87 +661,6 @@
 <div class="viewcode-block" id="SkeletonNodeModel.flags"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.SkeletonNodeModel.flags">[docs]</a>    <span class="k">def</span> <span class="nf">flags</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QModelIndex</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Overrides Qt method, returns flags (editable etc).&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">ItemIsEnabled</span> <span class="o">|</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">ItemIsSelectable</span></div></div>
-
-
-<div class="viewcode-block" id="SuggestionsTable"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.SuggestionsTable">[docs]</a><span class="k">class</span> <span class="nc">SuggestionsTable</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QTableView</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Table view widget for showing frame suggestions.&quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">SuggestionsTable</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">setModel</span><span class="p">(</span><span class="n">SuggestionsTableModel</span><span class="p">(</span><span class="n">labels</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">setSelectionBehavior</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QAbstractItemView</span><span class="o">.</span><span class="n">SelectRows</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">setSelectionMode</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QAbstractItemView</span><span class="o">.</span><span class="n">SingleSelection</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">setSortingEnabled</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="SuggestionsTableModel"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.SuggestionsTableModel">[docs]</a><span class="k">class</span> <span class="nc">SuggestionsTableModel</span><span class="p">(</span><span class="n">GenericTableModel</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Table model for showing frame suggestions.&quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
-        <span class="n">props</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;video&quot;</span><span class="p">,</span> <span class="s2">&quot;frame&quot;</span><span class="p">,</span> <span class="s2">&quot;labeled&quot;</span><span class="p">,</span> <span class="s2">&quot;mean score&quot;</span><span class="p">)</span>
-
-        <span class="nb">super</span><span class="p">(</span><span class="n">SuggestionsTableModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">propList</span><span class="o">=</span><span class="n">props</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">labels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Gets or sets current labels dataset.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span>
-
-    <span class="nd">@labels</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">beginResetModel</span><span class="p">()</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span> <span class="o">=</span> <span class="n">val</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">get_suggestions</span><span class="p">():</span>
-            <span class="n">item</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
-
-            <span class="n">item</span><span class="p">[</span>
-                <span class="s2">&quot;video&quot;</span>
-            <span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;{self.labels.videos.index(video)}: {os.path.basename(video.filename)}&quot;</span>
-            <span class="n">item</span><span class="p">[</span><span class="s2">&quot;frame&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">frame_idx</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>  <span class="c1"># start at frame 1 rather than 0</span>
-
-            <span class="c1"># show how many labeled instances are in this frame</span>
-            <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="o">.</span><span class="n">instance_count</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">)</span>
-            <span class="n">val</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">if</span> <span class="n">val</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
-            <span class="n">item</span><span class="p">[</span><span class="s2">&quot;labeled&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
-
-            <span class="c1"># calculate score for frame</span>
-            <span class="n">scores</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">inst</span><span class="o">.</span><span class="n">score</span>
-                <span class="k">for</span> <span class="n">lf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">lf</span>
-                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">inst</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">)</span>
-            <span class="p">]</span>
-            <span class="n">val</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span> <span class="k">if</span> <span class="n">scores</span> <span class="k">else</span> <span class="kc">None</span>
-            <span class="n">item</span><span class="p">[</span><span class="s2">&quot;mean score&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
-
-            <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">endResetModel</span><span class="p">()</span></div>
-
-
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">PySide2.QtWidgets</span> <span class="k">import</span> <span class="n">QApplication</span>
-
-    <span class="n">labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">load_json</span><span class="p">(</span>
-        <span class="s2">&quot;tests/data/json_format_v2/centered_pair_predictions.json&quot;</span>
-    <span class="p">)</span>
-    <span class="n">skeleton</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">instances</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">skeleton</span>
-
-    <span class="n">Labels</span><span class="o">.</span><span class="n">save_json</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="s2">&quot;test.json&quot;</span><span class="p">)</span>
-    <span class="k">del</span> <span class="n">labels</span>
-    <span class="n">labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">load_json</span><span class="p">(</span><span class="s2">&quot;test.json&quot;</span><span class="p">)</span>
-
-    <span class="n">app</span> <span class="o">=</span> <span class="n">QApplication</span><span class="p">([])</span>
-    <span class="c1"># table = SkeletonNodesTable(skeleton)</span>
-    <span class="c1"># table = SkeletonEdgesTable(skeleton)</span>
-    <span class="c1"># table = VideosTable(labels.videos)</span>
-    <span class="n">table</span> <span class="o">=</span> <span class="n">LabeledFrameTable</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">labels</span><span class="p">)</span>
-    <span class="n">table</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-
-    <span class="n">app</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
 </pre></div>
 
            </div>

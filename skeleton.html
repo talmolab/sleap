@@ -295,6 +295,12 @@ parts in a pair. For example, left and right hands of a person.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="sleap.skeleton.Skeleton.clear_edges">
+<code class="sig-name descname">clear_edges</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.clear_edges"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.clear_edges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deletes all edges in skeleton.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.skeleton.Skeleton.delete_edge">
 <code class="sig-name descname">delete_edge</code><span class="sig-paren">(</span><em class="sig-param">source: str</em>, <em class="sig-param">destination: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.delete_edge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.delete_edge" title="Permalink to this definition">¶</a></dt>
 <dd><p>Delete an edge between two nodes.</p>
@@ -355,6 +361,18 @@ connected to it.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="sleap.skeleton.Skeleton.edge_inds">
+<em class="property">property </em><code class="sig-name descname">edge_inds</code><a class="headerlink" href="#sleap.skeleton.Skeleton.edge_inds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list of edges as node indices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A list of (src_node_ind, dst_node_ind), where indices are subscripts into
+the Skeleton.nodes list.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.skeleton.Skeleton.edge_names">
 <em class="property">property </em><code class="sig-name descname">edge_names</code><a class="headerlink" href="#sleap.skeleton.Skeleton.edge_names" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a list of edge name tuples.</p>
@@ -363,6 +381,12 @@ connected to it.</p>
 <dd class="field-odd"><p>list of (src_node.name, dst_node.name)</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.skeleton.Skeleton.edge_to_index">
+<code class="sig-name descname">edge_to_index</code><span class="sig-paren">(</span><em class="sig-param">source: Union[str, Node], destination: Union[str, Node]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.edge_to_index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.edge_to_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the index of edge from source to destination.</p>
 </dd></dl>
 
 <dl class="method">
@@ -457,6 +481,24 @@ left in the <a class="reference internal" href="#sleap.skeleton.Skeleton" title=
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>An instance of the <cite>Skeleton</cite> object decoded from the JSON.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.skeleton.Skeleton.from_names_and_edge_inds">
+<em class="property">classmethod </em><code class="sig-name descname">from_names_and_edge_inds</code><span class="sig-paren">(</span><em class="sig-param">node_names: List[str], edge_inds: List[Tuple[int, int]] = None</em><span class="sig-paren">)</span> &#x2192; sleap.skeleton.Skeleton<a class="reference internal" href="_modules/sleap/skeleton.html#Skeleton.from_names_and_edge_inds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.from_names_and_edge_inds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create skeleton from a list of node names and edge indices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>node_names</strong> – List of strings defining the nodes.</p></li>
+<li><p><strong>edge_inds</strong> – List of tuples in the form (src_node_ind, dst_node_ind). If not
+specified, the resulting skeleton will have no edges.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The instantiated skeleton.</p>
 </dd>
 </dl>
 </dd></dl>

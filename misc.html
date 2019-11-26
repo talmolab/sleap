@@ -205,6 +205,24 @@ unless they really have no other place.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="sleap.util.find_files_by_suffix">
+<code class="sig-prename descclassname">sleap.util.</code><code class="sig-name descname">find_files_by_suffix</code><span class="sig-paren">(</span><em class="sig-param">root_dir: str</em>, <em class="sig-param">suffix: str</em>, <em class="sig-param">depth: int = 0</em><span class="sig-paren">)</span> &#x2192; List[nt.DirEntry]<a class="reference internal" href="_modules/sleap/util.html#find_files_by_suffix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.util.find_files_by_suffix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns list of files matching suffix, optionally searching in subdirs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>root_dir</strong> – Path to directory where we start searching</p></li>
+<li><p><strong>suffix</strong> – File suffix to match (e.g., ‘.json’)</p></li>
+<li><p><strong>depth</strong> – How many subdirectories deep to keep searching</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of os.DirEntry objects.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
 <dt id="sleap.util.frame_list">
 <code class="sig-prename descclassname">sleap.util.</code><code class="sig-name descname">frame_list</code><span class="sig-paren">(</span><em class="sig-param">frame_str: str</em><span class="sig-paren">)</span> &#x2192; Optional[List[int]]<a class="reference internal" href="_modules/sleap/util.html#frame_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.util.frame_list" title="Permalink to this definition">¶</a></dt>
 <dd><p>Converts ‘n-m’ string to list of ints.</p>
@@ -216,6 +234,33 @@ unless they really have no other place.</p>
 <dd class="field-even"><p>List of ints, or None if string does not represent valid range.</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.util.get_config_file">
+<code class="sig-prename descclassname">sleap.util.</code><code class="sig-name descname">get_config_file</code><span class="sig-paren">(</span><em class="sig-param">shortname: str</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/sleap/util.html#get_config_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.util.get_config_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the full path to the specified config file.</p>
+<p>The config file will be at ~/.sleap/&lt;shortname&gt;</p>
+<p>If that file doesn’t yet exist, we’ll look for a &lt;shortname&gt; file inside
+the package config directory (sleap/config) and copy the file into the
+user’s config directory (creating the directory if needed).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>shortname</strong> – The short filename, e.g., shortcuts.yaml</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>FileNotFoundError</strong> – If the specified config file cannot be found.</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The full path to the specified config file.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.util.get_package_file">
+<code class="sig-prename descclassname">sleap.util.</code><code class="sig-name descname">get_package_file</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/sleap/util.html#get_package_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.util.get_package_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns full path to specified file within sleap package.</p>
 </dd></dl>
 
 <dl class="function">
@@ -245,6 +290,28 @@ unless they really have no other place.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Result of decoding JSON string.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.util.make_scoped_dictionary">
+<code class="sig-prename descclassname">sleap.util.</code><code class="sig-name descname">make_scoped_dictionary</code><span class="sig-paren">(</span><em class="sig-param">flat_dict: Dict[str, Any], exclude_nones: bool = True</em><span class="sig-paren">)</span> &#x2192; Dict[str, Dict[str, Any]]<a class="reference internal" href="_modules/sleap/util.html#make_scoped_dictionary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.util.make_scoped_dictionary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts dictionary with scoped keys to dictionary of dictionaries.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>flat_dict</strong> – The dictionary to convert. Keys should be strings with
+<cite>scope.foo</cite> format.</p></li>
+<li><p><strong>exclude_nodes</strong> – Whether to exclude items where value is None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Dictionary in which keys are <cite>scope</cite> and values are dictionary with</dt><dd><p><cite>foo</cite> (etc) as keys and original value of <cite>scope.foo</cite> as value.</p>
+</dd>
+</dl>
+</p>
 </dd>
 </dl>
 </dd></dl>
@@ -643,6 +710,29 @@ same track) from the closest earlier labeled frame.</p>
 </dl>
 </dd></dl>
 
+<dl class="method">
+<dt id="sleap.info.summary.StatisticSeries.get_primary_point_displacement_series">
+<code class="sig-name descname">get_primary_point_displacement_series</code><span class="sig-paren">(</span><em class="sig-param">video</em>, <em class="sig-param">reduction='sum'</em>, <em class="sig-param">primary_node=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/info/summary.html#StatisticSeries.get_primary_point_displacement_series"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.info.summary.StatisticSeries.get_primary_point_displacement_series" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get sum of displacement for single node of each instance per frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>video</strong> – The <code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code> for which to calculate statistic.</p></li>
+<li><p><strong>reduction</strong> – name of function applied to point scores:
+* sum
+* mean
+* max</p></li>
+<li><p><strong>primary_node</strong> – The node for which we’ll calculate displacement.
+This can be name of node or <cite>Node</cite> object. If not specified,
+then defaults to first node.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The series dictionary (see class docs for details)</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -661,8 +751,15 @@ of video.</p>
 <p>The HDF5 file has these datasets:
 * “track_occupancy”     shape: tracks * frames
 * “tracks”              shape: frames * nodes * 2 * tracks
-* “track_names”         shape: tracks</p>
+* “track_names”         shape: tracks
+* “node_names”         shape: nodes</p>
 <p>Note: the datasets are stored column-major as expected by MATLAB.</p>
+<dl class="function">
+<dt id="sleap.info.write_tracking_h5.get_nodes_as_np_strings">
+<code class="sig-prename descclassname">sleap.info.write_tracking_h5.</code><code class="sig-name descname">get_nodes_as_np_strings</code><span class="sig-paren">(</span><em class="sig-param">labels: sleap.io.dataset.Labels</em><span class="sig-paren">)</span> &#x2192; List[numpy.bytes_]<a class="reference internal" href="_modules/sleap/info/write_tracking_h5.html#get_nodes_as_np_strings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.info.write_tracking_h5.get_nodes_as_np_strings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get list of node names as <cite>np.string_</cite>.</p>
+</dd></dl>
+
 <dl class="function">
 <dt id="sleap.info.write_tracking_h5.get_occupancy_and_points_matrices">
 <code class="sig-prename descclassname">sleap.info.write_tracking_h5.</code><code class="sig-name descname">get_occupancy_and_points_matrices</code><span class="sig-paren">(</span><em class="sig-param">labels: sleap.io.dataset.Labels</em>, <em class="sig-param">all_frames: bool</em><span class="sig-paren">)</span> &#x2192; Tuple[numpy.ndarray, numpy.ndarray]<a class="reference internal" href="_modules/sleap/info/write_tracking_h5.html#get_occupancy_and_points_matrices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.info.write_tracking_h5.get_occupancy_and_points_matrices" title="Permalink to this definition">¶</a></dt>

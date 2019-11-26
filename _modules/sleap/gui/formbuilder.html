@@ -167,11 +167,12 @@
 
 <span class="kn">import</span> <span class="nn">yaml</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
 
-<span class="kn">from</span> <span class="nn">PySide2</span> <span class="k">import</span> <span class="n">QtWidgets</span><span class="p">,</span> <span class="n">QtCore</span>
+<span class="kn">from</span> <span class="nn">PySide2</span> <span class="kn">import</span> <span class="n">QtWidgets</span><span class="p">,</span> <span class="n">QtCore</span>
 
-<span class="kn">from</span> <span class="nn">sleap.gui.filedialog</span> <span class="k">import</span> <span class="n">FileDialog</span>
+<span class="kn">from</span> <span class="nn">sleap.gui.filedialog</span> <span class="kn">import</span> <span class="n">FileDialog</span>
+<span class="kn">from</span> <span class="nn">sleap.util</span> <span class="kn">import</span> <span class="n">get_package_file</span>
 
 
 <div class="viewcode-block" id="YamlFormWidget"><a class="viewcode-back" href="../../../gui.html#sleap.gui.formbuilder.YamlFormWidget">[docs]</a><span class="k">class</span> <span class="nc">YamlFormWidget</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QGroupBox</span><span class="p">):</span>
@@ -186,7 +187,7 @@
     <span class="n">mainAction</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
     <span class="n">valueChanged</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">yaml_file</span><span class="p">,</span> <span class="n">which_form</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;main&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">yaml_file</span><span class="p">,</span> <span class="n">which_form</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;main&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">YamlFormWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">yaml_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">form_yaml</span><span class="p">:</span>
@@ -202,13 +203,32 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">form_layout</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">valueChanged</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return value for specified form field.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">FormBuilderLayout</span><span class="o">.</span><span class="n">get_widget_value</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
 
-    <span class="k">def</span> <span class="nf">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Set value for specified form field.&quot;&quot;&quot;</span>
         <span class="n">FormBuilderLayout</span><span class="o">.</span><span class="n">set_widget_value</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">val</span><span class="p">)</span>
+
+<div class="viewcode-block" id="YamlFormWidget.from_name"><a class="viewcode-back" href="../../../gui.html#sleap.gui.formbuilder.YamlFormWidget.from_name">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">form_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;YamlFormWidget&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Instantiate class from the short name of form (e.g., &quot;suggestions&quot;).</span>
+
+<span class="sd">        Short name is converted to path to yaml file, and then class is</span>
+<span class="sd">        instantiated using this path.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            form_name: Short name of form, corresponds to name of yaml file.</span>
+<span class="sd">            args: Positional args passed to class initializer.</span>
+<span class="sd">            kwargs: Named args passed to class initializer.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Instance of `YamlFormWidget` class.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">yaml_path</span> <span class="o">=</span> <span class="n">get_package_file</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;sleap/config/</span><span class="si">{form_name}</span><span class="s2">.yaml&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">yaml_path</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">buttons</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -244,7 +264,7 @@
 
     <span class="n">valueChanged</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">items_to_create</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">items_to_create</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">FormBuilderLayout</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">buttons</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
@@ -300,7 +320,7 @@
         <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">widget</span><span class="p">,</span> <span class="s2">&quot;text&quot;</span><span class="p">):</span>
             <span class="n">widget</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">val</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;don&#39;t know how to set value for </span><span class="si">{widget}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;don&#39;t know how to set value for </span><span class="si">{widget}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="c1"># for macOS we need to call repaint (bug in Qt?)</span>
         <span class="n">widget</span><span class="o">.</span><span class="n">repaint</span><span class="p">()</span></div>
 
@@ -355,6 +375,8 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            None.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">items_to_create</span><span class="p">:</span>
+            <span class="k">return</span>
         <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items_to_create</span><span class="p">:</span>
             <span class="c1"># double: show spinbox (number w/ up/down controls)</span>
             <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;double&quot;</span><span class="p">:</span>
@@ -452,7 +474,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span>
 
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">select_file</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;no action set for type </span><span class="si">{item[&#39;type&#39;]}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">select_file</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;no action set for type </span><span class="si">{item[&#39;type&#39;]}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="n">file_button</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">select_file</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">file_button</span></div>
@@ -470,20 +492,21 @@
 <span class="sd">            passed to :meth:`FormBuilderLayout.build_form()`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stack_data</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stack_data</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">StackBuilderWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">option_list</span> <span class="o">=</span> <span class="n">stack_data</span><span class="p">[</span><span class="s2">&quot;options&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+
         <span class="n">multi_layout</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QFormLayout</span><span class="p">()</span>
+        <span class="n">multi_layout</span><span class="o">.</span><span class="n">setFormAlignment</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">AlignLeft</span> <span class="o">|</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">AlignTop</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">combo_box</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QComboBox</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">stacked_widget</span> <span class="o">=</span> <span class="n">ResizingStackedWidget</span><span class="p">()</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">combo_box</span><span class="o">.</span><span class="n">activated</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
-            <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">stacked_widget</span><span class="o">.</span><span class="n">setCurrentIndex</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">combo_box</span><span class="o">.</span><span class="n">activated</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">switch_to_idx</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">page_layouts</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
 
-        <span class="k">for</span> <span class="n">page</span> <span class="ow">in</span> <span class="n">stack_data</span><span class="p">[</span><span class="s2">&quot;options&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">page</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">option_list</span><span class="p">:</span>
 
             <span class="c1"># add page</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">page_layouts</span><span class="p">[</span><span class="n">page</span><span class="p">]</span> <span class="o">=</span> <span class="n">FormBuilderLayout</span><span class="p">(</span><span class="n">stack_data</span><span class="p">[</span><span class="n">page</span><span class="p">])</span>
@@ -497,22 +520,37 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">combo_box</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">page</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">stack_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;label&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)):</span>
-            <span class="n">combo_label</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;</span><span class="si">{stack_data[&#39;label&#39;]}</span><span class="s2">:&quot;</span>
+            <span class="n">combo_label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{stack_data[&#39;label&#39;]}</span><span class="s2">:&quot;</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">combo_label</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
 
         <span class="n">multi_layout</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="n">combo_label</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">combo_box</span><span class="p">)</span>
         <span class="n">multi_layout</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stacked_widget</span><span class="p">)</span>
 
-        <span class="n">default_page</span> <span class="o">=</span> <span class="n">stack_data</span><span class="p">[</span><span class="s2">&quot;options&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">stack_data</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">])</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">combo_box</span><span class="o">.</span><span class="n">setCurrentIndex</span><span class="p">(</span><span class="n">default_page</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">stacked_widget</span><span class="o">.</span><span class="n">setCurrentIndex</span><span class="p">(</span><span class="n">default_page</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">stack_data</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">])</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">multi_layout</span><span class="p">)</span>
+
+<div class="viewcode-block" id="StackBuilderWidget.switch_to_idx"><a class="viewcode-back" href="../../../gui.html#sleap.gui.formbuilder.StackBuilderWidget.switch_to_idx">[docs]</a>    <span class="k">def</span> <span class="nf">switch_to_idx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Switch currently shown widget from stack.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stacked_widget</span><span class="o">.</span><span class="n">setCurrentIndex</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+        <span class="c1"># Only show if the widget contains more than an empty layout</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stacked_widget</span><span class="o">.</span><span class="n">currentWidget</span><span class="p">()</span><span class="o">.</span><span class="n">children</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stacked_widget</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stacked_widget</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="StackBuilderWidget.value"><a class="viewcode-back" href="../../../gui.html#sleap.gui.formbuilder.StackBuilderWidget.value">[docs]</a>    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns value of menu.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">combo_box</span><span class="o">.</span><span class="n">currentText</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="StackBuilderWidget.setValue"><a class="viewcode-back" href="../../../gui.html#sleap.gui.formbuilder.StackBuilderWidget.setValue">[docs]</a>    <span class="k">def</span> <span class="nf">setValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sets value of menu.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">option_list</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">option_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">combo_box</span><span class="o">.</span><span class="n">setCurrentIndex</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">switch_to_idx</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="StackBuilderWidget.get_data"><a class="viewcode-back" href="../../../gui.html#sleap.gui.formbuilder.StackBuilderWidget.get_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns value from currently shown subform.&quot;&quot;&quot;</span>
@@ -524,7 +562,7 @@
 <span class="sd">    A custom ComboBox widget with method to easily add set of options.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">FieldComboWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">setSizeAdjustPolicy</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QComboBox</span><span class="o">.</span><span class="n">AdjustToContents</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">setMinimumContentsLength</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
@@ -556,7 +594,7 @@
 <span class="sd">    QStackedWidget that updates its sizeHint and minimumSizeHint as needed.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">ResizingStackedWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ResizingStackedWidget.sizeHint"><a class="viewcode-back" href="../../../gui.html#sleap.gui.formbuilder.ResizingStackedWidget.sizeHint">[docs]</a>    <span class="k">def</span> <span class="nf">sizeHint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>

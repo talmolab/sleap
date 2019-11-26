@@ -160,23 +160,16 @@
 <span class="sd">    &gt;&gt;&gt; window.view.scene.addItem(cm)</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">PySide2</span> <span class="k">import</span> <span class="n">QtWidgets</span><span class="p">,</span> <span class="n">QtCore</span><span class="p">,</span> <span class="n">QtGui</span>
+<span class="kn">from</span> <span class="nn">PySide2</span> <span class="kn">import</span> <span class="n">QtWidgets</span><span class="p">,</span> <span class="n">QtCore</span><span class="p">,</span> <span class="n">QtGui</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">qimage2ndarray</span>
 
-<span class="kn">from</span> <span class="nn">sleap.gui.overlays.base</span> <span class="k">import</span> <span class="n">DataOverlay</span><span class="p">,</span> <span class="n">h5_colors</span>
+<span class="kn">from</span> <span class="nn">sleap.gui.overlays.base</span> <span class="kn">import</span> <span class="n">DataOverlay</span><span class="p">,</span> <span class="n">h5_colors</span>
 
 
 <div class="viewcode-block" id="ConfmapOverlay"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.confmaps.ConfmapOverlay">[docs]</a><span class="k">class</span> <span class="nc">ConfmapOverlay</span><span class="p">(</span><span class="n">DataOverlay</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Overlay to show confidence maps.&quot;&quot;&quot;</span>
-
-<div class="viewcode-block" id="ConfmapOverlay.from_h5"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.confmaps.ConfmapOverlay.from_h5">[docs]</a>    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_h5</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">input_format</span><span class="o">=</span><span class="s2">&quot;channels_last&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Create object with hdf5 as datasource.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">DataOverlay</span><span class="o">.</span><span class="n">from_h5</span><span class="p">(</span>
-            <span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;/confmaps&quot;</span><span class="p">,</span> <span class="n">input_format</span><span class="p">,</span> <span class="n">overlay_class</span><span class="o">=</span><span class="n">ConfMapsPlot</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
-        <span class="p">)</span></div>
 
 <div class="viewcode-block" id="ConfmapOverlay.from_model"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.confmaps.ConfmapOverlay.from_model">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_model</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -201,7 +194,7 @@
 <span class="sd">    When initialized, creates one child ConfMapPlot item for each channel.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">show_box</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">ConfMapsPlot</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -249,7 +242,7 @@
 <span class="sd">        In most cases this should only be called by ConfMapsPlot.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">confmap</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">ConfMapPlot</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -295,7 +288,7 @@
 
 <div class="viewcode-block" id="show_confmaps_from_h5"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.confmaps.show_confmaps_from_h5">[docs]</a><span class="k">def</span> <span class="nf">show_confmaps_from_h5</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">input_format</span><span class="o">=</span><span class="s2">&quot;channels_last&quot;</span><span class="p">,</span> <span class="n">standalone</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Demo function.&quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">sleap.io.video</span> <span class="k">import</span> <span class="n">HDF5Video</span>
+    <span class="kn">from</span> <span class="nn">sleap.io.video</span> <span class="kn">import</span> <span class="n">HDF5Video</span>
 
     <span class="n">video</span> <span class="o">=</span> <span class="n">HDF5Video</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;/box&quot;</span><span class="p">,</span> <span class="n">input_format</span><span class="o">=</span><span class="n">input_format</span><span class="p">)</span>
     <span class="n">conf_data</span> <span class="o">=</span> <span class="n">HDF5Video</span><span class="p">(</span>
@@ -310,8 +303,8 @@
 
 <div class="viewcode-block" id="demo_confmaps"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.confmaps.demo_confmaps">[docs]</a><span class="k">def</span> <span class="nf">demo_confmaps</span><span class="p">(</span><span class="n">confmaps</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">standalone</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Demo function.&quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">PySide2</span> <span class="k">import</span> <span class="n">QtWidgets</span>
-    <span class="kn">from</span> <span class="nn">sleap.gui.video</span> <span class="k">import</span> <span class="n">QtVideoPlayer</span>
+    <span class="kn">from</span> <span class="nn">PySide2</span> <span class="kn">import</span> <span class="n">QtWidgets</span>
+    <span class="kn">from</span> <span class="nn">sleap.gui.video</span> <span class="kn">import</span> <span class="n">QtVideoPlayer</span>
 
     <span class="k">if</span> <span class="n">standalone</span><span class="p">:</span>
         <span class="n">app</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QApplication</span><span class="p">([])</span>
@@ -320,9 +313,9 @@
     <span class="n">win</span><span class="o">.</span><span class="n">setWindowTitle</span><span class="p">(</span><span class="s2">&quot;confmaps&quot;</span><span class="p">)</span>
     <span class="n">win</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">plot_confmaps</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">item_idx</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">parent</span><span class="o">.</span><span class="n">frame_idx</span> <span class="o">&lt;</span> <span class="n">confmaps</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
-            <span class="n">frame_conf_map</span> <span class="o">=</span> <span class="n">ConfMapsPlot</span><span class="p">(</span><span class="n">confmaps</span><span class="p">[</span><span class="n">parent</span><span class="o">.</span><span class="n">frame_idx</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span>
+    <span class="k">def</span> <span class="nf">plot_confmaps</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">frame_idx</span> <span class="o">&lt;</span> <span class="n">confmaps</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">frame_conf_map</span> <span class="o">=</span> <span class="n">ConfMapsPlot</span><span class="p">(</span><span class="n">confmaps</span><span class="p">[</span><span class="n">frame_idx</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span>
             <span class="n">win</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">frame_conf_map</span><span class="p">)</span>
 
     <span class="n">win</span><span class="o">.</span><span class="n">changedPlot</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">plot_confmaps</span><span class="p">)</span>

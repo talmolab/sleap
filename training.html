@@ -160,277 +160,11 @@
             
   <div class="section" id="module-sleap.nn.training">
 <span id="training"></span><h1>Training<a class="headerlink" href="#module-sleap.nn.training" title="Permalink to this headline">¶</a></h1>
-<dl class="class">
-<dt id="sleap.nn.training.ProgressReporterZMQ">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.training.</code><code class="sig-name descname">ProgressReporterZMQ</code><span class="sig-paren">(</span><em class="sig-param">address='tcp://127.0.0.1'</em>, <em class="sig-param">port=9001</em>, <em class="sig-param">what='not_set'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/training.html#ProgressReporterZMQ"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.ProgressReporterZMQ" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
-<dt id="sleap.nn.training.ProgressReporterZMQ.on_batch_begin">
-<code class="sig-name descname">on_batch_begin</code><span class="sig-paren">(</span><em class="sig-param">batch</em>, <em class="sig-param">logs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/training.html#ProgressReporterZMQ.on_batch_begin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.ProgressReporterZMQ.on_batch_begin" title="Permalink to this definition">¶</a></dt>
-<dd><p>A backwards compatibility alias for <cite>on_train_batch_begin</cite>.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.nn.training.ProgressReporterZMQ.on_batch_end">
-<code class="sig-name descname">on_batch_end</code><span class="sig-paren">(</span><em class="sig-param">batch</em>, <em class="sig-param">logs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/training.html#ProgressReporterZMQ.on_batch_end"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.ProgressReporterZMQ.on_batch_end" title="Permalink to this definition">¶</a></dt>
-<dd><p>A backwards compatibility alias for <cite>on_train_batch_end</cite>.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.nn.training.ProgressReporterZMQ.on_epoch_begin">
-<code class="sig-name descname">on_epoch_begin</code><span class="sig-paren">(</span><em class="sig-param">epoch</em>, <em class="sig-param">logs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/training.html#ProgressReporterZMQ.on_epoch_begin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.ProgressReporterZMQ.on_epoch_begin" title="Permalink to this definition">¶</a></dt>
-<dd><p>Called at the start of an epoch.
-Subclasses should override for any actions to run. This function should only
-be called during train mode.
-# Arguments</p>
-<blockquote>
-<div><p>epoch: integer, index of epoch.
-logs: dict, currently no data is passed to this argument for this method</p>
-<blockquote>
-<div><p>but that may change in the future.</p>
-</div></blockquote>
-</div></blockquote>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.nn.training.ProgressReporterZMQ.on_epoch_end">
-<code class="sig-name descname">on_epoch_end</code><span class="sig-paren">(</span><em class="sig-param">epoch</em>, <em class="sig-param">logs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/training.html#ProgressReporterZMQ.on_epoch_end"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.ProgressReporterZMQ.on_epoch_end" title="Permalink to this definition">¶</a></dt>
-<dd><p>Called at the end of an epoch.
-Subclasses should override for any actions to run. This function should only
-be called during train mode.
-# Arguments</p>
-<blockquote>
-<div><p>epoch: integer, index of epoch.
-logs: dict, metric results for this training epoch, and for the</p>
-<blockquote>
-<div><p>validation epoch if validation is performed. Validation result keys
-are prefixed with <cite>val_</cite>.</p>
-</div></blockquote>
-</div></blockquote>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.nn.training.ProgressReporterZMQ.on_train_begin">
-<code class="sig-name descname">on_train_begin</code><span class="sig-paren">(</span><em class="sig-param">logs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/training.html#ProgressReporterZMQ.on_train_begin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.ProgressReporterZMQ.on_train_begin" title="Permalink to this definition">¶</a></dt>
-<dd><p>Called at the beginning of training.
-Subclasses should override for any actions to run.
-# Arguments</p>
-<blockquote>
-<div><dl class="simple">
-<dt>logs: dict, currently no data is passed to this argument for this method</dt><dd><p>but that may change in the future.</p>
-</dd>
-</dl>
-</div></blockquote>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.nn.training.ProgressReporterZMQ.on_train_end">
-<code class="sig-name descname">on_train_end</code><span class="sig-paren">(</span><em class="sig-param">logs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/training.html#ProgressReporterZMQ.on_train_end"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.ProgressReporterZMQ.on_train_end" title="Permalink to this definition">¶</a></dt>
-<dd><p>Called at the end of training.
-Subclasses should override for any actions to run.
-# Arguments</p>
-<blockquote>
-<div><dl class="simple">
-<dt>logs: dict, currently no data is passed to this argument for this method</dt><dd><p>but that may change in the future.</p>
-</dd>
-</dl>
-</div></blockquote>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="sleap.nn.training.Trainer">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.training.</code><code class="sig-name descname">Trainer</code><span class="sig-paren">(</span><em class="sig-param">val_size: float = 0.1</em>, <em class="sig-param">optimizer: str = 'adam'</em>, <em class="sig-param">learning_rate: float = 0.001</em>, <em class="sig-param">amsgrad: bool = True</em>, <em class="sig-param">batch_size: int = 4</em>, <em class="sig-param">num_epochs: int = 100</em>, <em class="sig-param">steps_per_epoch: int = 200</em>, <em class="sig-param">shuffle_initially: bool = True</em>, <em class="sig-param">shuffle_every_epoch: bool = True</em>, <em class="sig-param">augment_rotation: float = 180.0</em>, <em class="sig-param">augment_scale_min: float = 1.0</em>, <em class="sig-param">augment_scale_max: float = 1.0</em>, <em class="sig-param">save_every_epoch: bool = False</em>, <em class="sig-param">save_best_val: bool = True</em>, <em class="sig-param">reduce_lr_min_delta: float = 1e-06</em>, <em class="sig-param">reduce_lr_factor: float = 0.5</em>, <em class="sig-param">reduce_lr_patience: float = 5</em>, <em class="sig-param">reduce_lr_cooldown: float = 3</em>, <em class="sig-param">reduce_lr_min_lr: float = 1e-08</em>, <em class="sig-param">early_stopping_min_delta: float = 1e-08</em>, <em class="sig-param">early_stopping_patience: float = 3</em>, <em class="sig-param">scale: float = 1.0</em>, <em class="sig-param">sigma: float = 5.0</em>, <em class="sig-param">instance_crop: bool = False</em>, <em class="sig-param">bounding_box_size: int = 0</em>, <em class="sig-param">min_crop_size: int = 32</em>, <em class="sig-param">negative_samples: int = 10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/training.html#Trainer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.Trainer" title="Permalink to this definition">¶</a></dt>
-<dd><p>The Trainer class implements a training program on a SLEAP model.
-Its main purpose is to capture training program hyperparameters
-separate from model specific hyper parameters. The train function is
-used to invoke training on a specific model and dataset.</p>
-<p>Note: some of these values are passed directly to lower level Keras
-APIs and thus their documentation has been lifted from <a class="reference external" href="https://keras.io">https://keras.io</a>.
-This should be noted for these paramters, please consulte <a class="reference external" href="https://keras.io">https://keras.io</a>
-for the most up to date documentation for these parameters.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>val_size</strong> – If float, should be between 0.0 and 1.0 and represent</p></li>
-<li><p><strong>proportion of the dataset to include in the test split.</strong> (<em>the</em>) – </p></li>
-<li><p><strong>int</strong><strong>, </strong><strong>represents the absolute number of test samples. If None</strong><strong>,</strong> (<em>If</em>) – </p></li>
-<li><p><strong>value is set to it will be set to 0.25.</strong> (<em>the</em>) – </p></li>
-<li><p><strong>optimizer</strong> – Either “adam” or “rmsprop”. This selects whether to use</p></li>
-<li><p><strong>or keras.optimizers.RMSProp for the underlying</strong> (<em>keras.optimizers.Adam</em>) – </p></li>
-<li><p><strong>model optimizer.</strong> (<em>keras</em>) – </p></li>
-<li><p><strong>learning_rate</strong> – The learning rate to pass to Adam or RMSProp.</p></li>
-<li><p><strong>amsgrad</strong> – If optimizer is “adam”, whether to apply</p></li>
-<li><p><strong>AMSGrad variant of this algorithm from the paper</strong> (<em>the</em>) – </p></li>
-<li><p><strong>the Convergence of Adam and Beyond&quot;. If optimizer is &quot;RMSProp&quot;</strong><strong>,</strong> (<em>&quot;On</em>) – </p></li>
-<li><p><strong>unused.</strong> – </p></li>
-<li><p><strong>batch_size</strong> – The batch size to use for training.</p></li>
-<li><p><strong>num_epochs</strong> – Number of epochs to train the model. An epoch is an</p></li>
-<li><p><strong>over the entire data provided</strong><strong>, </strong><strong>as defined by steps_per_epoch.</strong> (<em>iteration</em>) – </p></li>
-<li><p><strong>steps_per_epoch</strong> – Total number of steps (batches of samples) to yield</p></li>
-<li><p><strong>generator before declaring one epoch finished and starting the</strong> (<em>from</em>) – </p></li>
-<li><p><strong>epoch. If set to None</strong><strong>, </strong><strong>do one loop through dataset per epoch.</strong> (<em>next</em>) – </p></li>
-<li><p><strong>shuffle_initially</strong> – Whether to shuffle training data before training begins.</p></li>
-<li><p><strong>shuffle_every_epoch</strong> – Whether to continually shuffle the data after each epoch.</p></li>
-<li><p><strong>augment_rotation</strong> – A float or two dimensional tuple expressing the range</p></li>
-<li><p><strong>rotataion</strong> (<em>of</em>) – </p></li>
-<li><p><strong>is transformed to</strong> (<em>it</em>) – </p></li>
-<li><p><strong>augment_scale_min</strong> – The lower bound of random scaling factors to apply to the</p></li>
-<li><p><strong>when augmenting. If augment_scale_min == augment_scale_max then scaling</strong> (<em>images</em>) – </p></li>
-<li><p><strong>will be skipped.</strong> (<em>augmentation</em>) – </p></li>
-<li><p><strong>augment_scale_max</strong> – The upper bound of random scaling factors to apply to the</p></li>
-<li><p><strong>when augmenting. If augment_scale_min == augment_scale_max then scaling</strong> – </p></li>
-<li><p><strong>will be skipped.</strong> – </p></li>
-<li><p><strong>save_dir</strong> – The directory to save trained Keras models.</p></li>
-<li><p><strong>save_every_epoch</strong> – Should a model be saved every epoch.</p></li>
-<li><p><strong>save_best_val</strong> – Should we save the model with the lowest validation loss.</p></li>
-<li><p><strong>reduce_lr_min_delta</strong> – Threshold for measuring the new optimum, to only focus on significant</p></li>
-<li><p><strong>Parameter passed to keras callback ReduceLROnPlateau</strong> (<em>patience</em><em>, </em><em>monitor='val_loss'</em>) – </p></li>
-<li><p><strong>reduce_lr_factor</strong> – Factor by which the learning rate will be reduced. new_lr = lr * factor.</p></li>
-<li><p><strong>passed to keras callback ReduceLROnPlateau</strong> (<em>Parameter</em>) – </p></li>
-<li><p><strong>reduce_lr_patience</strong> – Number of epochs with no improvement after which learning rate will be reduced.</p></li>
-<li><p><strong>passed to keras callback ReduceLROnPlateau</strong> – </p></li>
-<li><p><strong>reduce_lr_cooldown</strong> – Number of epochs to wait before resuming normal operation after lr has</p></li>
-<li><p><strong>reduced.Parameter passed to keras callback ReduceLROnPlateau</strong> (<em>been</em>) – </p></li>
-<li><p><strong>reduce_lr_min_lr</strong> – Lower bound on the learning rate. Parameter passed to keras callback</p></li>
-<li><p><strong>ReduceLROnPlateau</strong> (<em>min_lr</em><em>, </em><em>monitor='val_loss'</em>) – </p></li>
-<li><p><strong>early_stopping_min_delta</strong> – Minimum change in the monitored quantity to qualify as an improvement,</p></li>
-<li><p><strong>an absolute change of less than min_delta</strong><strong>, </strong><strong>will count as no improvement. Parameter passed to</strong> (<em>i.e.</em>) – </p></li>
-<li><p><strong>callback EarlyStopping</strong> (<em>keras</em>) – </p></li>
-<li><p><strong>early_stopping_patience</strong> – Number of epochs with no improvement after which training will be stopped.</p></li>
-<li><p><strong>passed to keras callback EarlyStopping</strong> (<em>Parameter</em>) – </p></li>
-<li><p><strong>scale</strong> – Scale factor for downsampling (2 means we downsample by factor of 2)</p></li>
-<li><p><strong>sigma</strong> – Size of confmaps/pafs generated by datagen functions</p></li>
-<li><p><strong>instance_crop</strong> – Whether to crop images around each instance (and adjust points)</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="method">
-<dt id="sleap.nn.training.Trainer.train">
-<code class="sig-name descname">train</code><span class="sig-paren">(</span><em class="sig-param">model: sleap.nn.model.Model, labels: Union[str, sleap.io.dataset.Labels, Dict], run_name: str = None, save_dir: Optional[str] = None, tensorboard_dir: Optional[str] = None, control_zmq_port: int = 9000, progress_report_zmq_port: int = 9001, multiprocessing_workers: int = 0</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/sleap/nn/training.html#Trainer.train"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.Trainer.train" title="Permalink to this definition">¶</a></dt>
-<dd><p>Train a given model using labels and the Trainer’s current hyper-parameter settings.
-This method executes synchronously, thus it blocks until training is finished.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> – The model to run training on.</p></li>
-<li><p><strong>labels</strong> – The SLEAP Labels dataset of labeled frames to run training on.</p></li>
-<li><p><strong>tensorboard_dir</strong> – An optional tensorboard directory.</p></li>
-<li><p><strong>run_name</strong> – A string name to use to prefix each model file name. If set to None,</p></li>
-<li><p><strong>default value is</strong> (<em>the</em>) – </p></li>
-<li><p><strong>f&quot;{timestamp}.{str</strong> (<em>model.output_type</em><em>)</em><em>lower</em><em>(</em>) – </p></li>
-<li><p><strong>num_total is the number of total training and validation images.</strong> (<em>Where</em>) – </p></li>
-<li><p><strong>control_zmq_port</strong> – This training process can be controlled by a control server.</p></li>
-<li><p><strong>is the port to connect to on the server at localhost. If None</strong><strong>, </strong><strong>no connection</strong> (<em>This</em>) – </p></li>
-<li><p><strong>made.</strong> (<em>is</em>) – </p></li>
-<li><p><strong>progress_report_zmq_port</strong> – Progress indications can be generated to a server</p></li>
-<li><p><strong>on localhost using this port. If None</strong><strong>, </strong><strong>no connection is made.</strong> (<em>listening</em>) – </p></li>
-<li><p><strong>multiprocessing_workers</strong> – Whether to user multiple worker processes to train the model.</p></li>
-<li><p><strong>set &lt; 1</strong><strong>, </strong><strong>use_multiprocessing will be set to false on call to</strong> (<em>If</em>) – </p></li>
-<li><p><strong>Otherwise</strong><strong>, </strong><strong>multiprocessing_workers will</strong> (<em>keras.Model.fit_generator</em><em>(</em><em>)</em><em></em>) – </p></li>
-<li><p><strong>passed to fit_generator</strong><strong>(</strong><strong>)</strong><strong></strong> (<em>be</em>) – </p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>If save_dir is not None, the file path of the JSON TrainingJob object. If save_dir
-is None, then the returns None.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.nn.training.Trainer.train_async">
-<code class="sig-name descname">train_async</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span> &#x2192; Tuple[multiprocessing.context.BaseContext.Pool, multiprocessing.pool.ApplyResult]<a class="reference internal" href="_modules/sleap/nn/training.html#Trainer.train_async"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.Trainer.train_async" title="Permalink to this definition">¶</a></dt>
-<dd><p>Train a given model using labels and the Trainer’s current hyper-parameter settings.
-This method executes asynchronously, that is, it launches training in a another
-process and returns immediately.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>Trainer.train</strong><strong>(</strong><strong>)</strong><strong></strong> (<em>See</em>) – </p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A tuple containing the multiprocessing.Process that is running training, start() has been called.
-And the AysncResult object that will contain the result when the job finishes.</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="sleap.nn.training.TrainingControllerZMQ">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.training.</code><code class="sig-name descname">TrainingControllerZMQ</code><span class="sig-paren">(</span><em class="sig-param">address='tcp://127.0.0.1'</em>, <em class="sig-param">port=9000</em>, <em class="sig-param">topic=''</em>, <em class="sig-param">poll_timeout=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/training.html#TrainingControllerZMQ"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.TrainingControllerZMQ" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
-<dt id="sleap.nn.training.TrainingControllerZMQ.on_batch_end">
-<code class="sig-name descname">on_batch_end</code><span class="sig-paren">(</span><em class="sig-param">batch</em>, <em class="sig-param">logs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/training.html#TrainingControllerZMQ.on_batch_end"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.TrainingControllerZMQ.on_batch_end" title="Permalink to this definition">¶</a></dt>
-<dd><p>Called at the end of a training batch.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.nn.training.TrainingControllerZMQ.set_lr">
-<code class="sig-name descname">set_lr</code><span class="sig-paren">(</span><em class="sig-param">lr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/training.html#TrainingControllerZMQ.set_lr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.TrainingControllerZMQ.set_lr" title="Permalink to this definition">¶</a></dt>
-<dd><p>Adjust the model learning rate.</p>
-<p>This is the based off of the implementation used in the native learning rate scheduling callbacks.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="sleap.nn.training.TrainingJob">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.training.</code><code class="sig-name descname">TrainingJob</code><span class="sig-paren">(</span><em class="sig-param">model: sleap.nn.model.Model</em>, <em class="sig-param">trainer: sleap.nn.training.Trainer</em>, <em class="sig-param">labels_filename: Optional[str] = None</em>, <em class="sig-param">run_name: Optional[str] = None</em>, <em class="sig-param">save_dir: Optional[str] = None</em>, <em class="sig-param">best_model_filename: Optional[str] = None</em>, <em class="sig-param">newest_model_filename: Optional[str] = None</em>, <em class="sig-param">final_model_filename: Optional[str] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/training.html#TrainingJob"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.TrainingJob" title="Permalink to this definition">¶</a></dt>
-<dd><p>A simple class that groups a model with a trainer to represent a record of a
-call to Trainer.train().</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> – The SLEAP Model that was trained.</p></li>
-<li><p><strong>trainer</strong> – The Trainer that was used to train the model.</p></li>
-<li><p><strong>labels_filename</strong> – The name of the labels file using to run this training job.</p></li>
-<li><p><strong>run_name</strong> – The run_name value passed to Trainer.train for this training run.</p></li>
-<li><p><strong>save_dir</strong> – The save_dir value passed to Trainer.train for this training run.</p></li>
-<li><p><strong>best_model_filename</strong> – The relative path (from save_dir) to the Keras model file</p></li>
-<li><p><strong>had best validation loss. Set to None when Trainer.save_best_val is False</strong> (<em>that</em>) – </p></li>
-<li><p><strong>if save_dir is None.</strong> (<em>or</em>) – </p></li>
-<li><p><strong>newest_model_filename</strong> – The relative path (from save_dir) to the Keras model file</p></li>
-<li><p><strong>the state of the model after the last epoch run. Set to None when</strong> (<em>from</em>) – </p></li>
-<li><p><strong>is False</strong><strong> or </strong><strong>save_dir is None.</strong> (<em>Trainer.save_every_epoch</em>) – </p></li>
-<li><p><strong>final_model_filename</strong> – The relative path (from save_dir) to the Keras model file</p></li>
-<li><p><strong>the final state of training. Set to None if save_dir is None. This model</strong> (<em>from</em>) – </p></li>
-<li><p><strong>is not created until training is finished.</strong> (<em>file</em>) – </p></li>
-</ul>
-</dd>
-</dl>
-<dl class="method">
-<dt id="sleap.nn.training.TrainingJob.load_json">
-<em class="property">classmethod </em><code class="sig-name descname">load_json</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/training.html#TrainingJob.load_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.TrainingJob.load_json" title="Permalink to this definition">¶</a></dt>
-<dd><p>Load a training run from a JSON file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>filename</strong> – The file to load the JSON from.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A TrainingJob instance constructed from JSON in filename.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.nn.training.TrainingJob.save_json">
-<em class="property">static </em><code class="sig-name descname">save_json</code><span class="sig-paren">(</span><em class="sig-param">training_job: sleap.nn.training.TrainingJob</em>, <em class="sig-param">filename: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/training.html#TrainingJob.save_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.TrainingJob.save_json" title="Permalink to this definition">¶</a></dt>
-<dd><p>Save a training run to a JSON file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>training_job</strong> – The TrainingJob instance to save.</p></li>
-<li><p><strong>filename</strong> – The filename to save the JSON to.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
+<p>SLEAP model training.</p>
+<dl class="function">
+<dt id="sleap.nn.training.main">
+<code class="sig-prename descclassname">sleap.nn.training.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/training.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>CLI for training.</p>
 </dd></dl>
 
 <div class="section" id="module-sleap.nn.architectures.hourglass">
@@ -582,133 +316,398 @@ by concatenating with intermediate outputs</p></li>
 </dl>
 </dd></dl>
 
-<span class="target" id="module-sleap.nn.architectures.densenet"></span><p>DenseNet models for Keras.
-# Reference paper
-- [Densely Connected Convolutional Networks]</p>
-<blockquote>
-<div><p>(<a class="reference external" href="https://arxiv.org/abs/1608.06993">https://arxiv.org/abs/1608.06993</a>) (CVPR 2017 Best Paper Award)</p>
-</div></blockquote>
-<p># Reference implementation
-- [Torch DenseNets]</p>
-<blockquote>
-<div><p>(<a class="reference external" href="https://github.com/liuzhuang13/DenseNet/blob/master/models/densenet.lua">https://github.com/liuzhuang13/DenseNet/blob/master/models/densenet.lua</a>)</p>
-</div></blockquote>
-<ul class="simple">
-<li><p>[TensorNets]
-(<a class="reference external" href="https://github.com/taehoonlee/tensornets/blob/master/tensornets/densenets.py">https://github.com/taehoonlee/tensornets/blob/master/tensornets/densenets.py</a>)</p></li>
-</ul>
-<p><a class="reference external" href="https://github.com/keras-team/keras-applications/blob/master/keras_applications/densenet.py">https://github.com/keras-team/keras-applications/blob/master/keras_applications/densenet.py</a></p>
-<dl class="function">
-<dt id="sleap.nn.architectures.densenet.DenseNet">
-<code class="sig-prename descclassname">sleap.nn.architectures.densenet.</code><code class="sig-name descname">DenseNet</code><span class="sig-paren">(</span><em class="sig-param">blocks</em>, <em class="sig-param">output_channels</em>, <em class="sig-param">input_tensor=None</em>, <em class="sig-param">input_shape=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/densenet.html#DenseNet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.densenet.DenseNet" title="Permalink to this definition">¶</a></dt>
-<dd><p>Instantiates the DenseNet architecture.
-Optionally loads weights pre-trained on ImageNet.
-Note that the data format convention used by the model is
-the one specified in your Keras config at <cite>~/.keras/keras.json</cite>.
-# Arguments</p>
-<blockquote>
-<div><p>blocks: numbers of building blocks for the four dense layers.
-include_top: whether to include the fully-connected</p>
-<blockquote>
-<div><p>layer at the top of the network.</p>
-</div></blockquote>
-<dl>
-<dt>weights: one of <cite>None</cite> (random initialization),</dt><dd><p>‘imagenet’ (pre-training on ImageNet),
-or the path to the weights file to be loaded.</p>
-</dd>
-<dt>input_tensor: optional Keras tensor</dt><dd><p>(i.e. output of <cite>layers.Input()</cite>)
-to use as image input for the model.</p>
-</dd>
-<dt>input_shape: optional shape tuple, only to be specified</dt><dd><p>if <cite>include_top</cite> is False (otherwise the input shape
-has to be <cite>(224, 224, 3)</cite> (with <cite>‘channels_last’</cite> data format)
-or <cite>(3, 224, 224)</cite> (with <cite>‘channels_first’</cite> data format).
-It should have exactly 3 inputs channels,
-and width and height should be no smaller than 32.
-E.g. <cite>(200, 200, 3)</cite> would be one valid value.</p>
-</dd>
-<dt>pooling: optional pooling mode for feature extraction</dt><dd><p>when <cite>include_top</cite> is <cite>False</cite>.
-- <cite>None</cite> means that the output of the model will be</p>
-<blockquote>
-<div><p>the 4D tensor output of the
-last convolutional block.</p>
-</div></blockquote>
-<ul class="simple">
-<li><dl class="simple">
-<dt><cite>avg</cite> means that global average pooling</dt><dd><p>will be applied to the output of the
-last convolutional block, and thus
-the output of the model will be a 2D tensor.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><cite>max</cite> means that global max pooling will</dt><dd><p>be applied.</p>
-</dd>
-</dl>
-</li>
+<span class="target" id="module-sleap.nn.architectures.densenet"></span><p>Implements wrappers for constructing (optionally pretrained) DenseNets.</p>
+<p>See original paper:
+<a class="reference external" href="https://arxiv.org/abs/1608.06993">https://arxiv.org/abs/1608.06993</a></p>
+<dl class="class">
+<dt id="sleap.nn.architectures.densenet.DenseNet121">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.architectures.densenet.</code><code class="sig-name descname">DenseNet121</code><span class="sig-paren">(</span><em class="sig-param">upsampling_layers: bool = True</em>, <em class="sig-param">interp: str = 'bilinear'</em>, <em class="sig-param">up_blocks: int = 5</em>, <em class="sig-param">refine_conv_up: bool = False</em>, <em class="sig-param">pretrained: bool = True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/densenet.html#DenseNet121"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.densenet.DenseNet121" title="Permalink to this definition">¶</a></dt>
+<dd><p>DenseNet121 backbone.</p>
+<p>This backbone has ~7M params.</p>
+<dl class="attribute">
+<dt id="sleap.nn.architectures.densenet.DenseNet121.upsampling_layers">
+<code class="sig-name descname">upsampling_layers</code><a class="headerlink" href="#sleap.nn.architectures.densenet.DenseNet121.upsampling_layers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use upsampling instead of transposed convolutions.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sleap.nn.architectures.densenet.DenseNet121.interp">
+<code class="sig-name descname">interp</code><a class="headerlink" href="#sleap.nn.architectures.densenet.DenseNet121.interp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to use for interpolation when upsampling smaller features.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sleap.nn.architectures.densenet.DenseNet121.up_blocks">
+<code class="sig-name descname">up_blocks</code><a class="headerlink" href="#sleap.nn.architectures.densenet.DenseNet121.up_blocks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of upsampling steps to perform. The backbone reduces
+the output scale by 1/32. If set to 5, outputs will be upsampled to the
+input resolution.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sleap.nn.architectures.densenet.DenseNet121.refine_conv_up">
+<code class="sig-name descname">refine_conv_up</code><a class="headerlink" href="#sleap.nn.architectures.densenet.DenseNet121.refine_conv_up" title="Permalink to this definition">¶</a></dt>
+<dd><p>If true, applies a 1x1 conv after each upsampling step.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sleap.nn.architectures.densenet.DenseNet121.pretrained">
+<code class="sig-name descname">pretrained</code><a class="headerlink" href="#sleap.nn.architectures.densenet.DenseNet121.pretrained" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load pretrained ImageNet weights for transfer learning. If
+False, random weights are used for initialization.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.architectures.densenet.DenseNet121.down_blocks">
+<em class="property">property </em><code class="sig-name descname">down_blocks</code><a class="headerlink" href="#sleap.nn.architectures.densenet.DenseNet121.down_blocks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of downsampling steps in the model.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.architectures.densenet.DenseNet121.output">
+<code class="sig-name descname">output</code><span class="sig-paren">(</span><em class="sig-param">x_in</em>, <em class="sig-param">num_output_channels</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/densenet.html#DenseNet121.output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.densenet.DenseNet121.output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds the layers for this backbone and return the output tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_in</strong> – Input 4-D tf.Tensor or instantiated layer. Must have height and width
+that are divisible by <a href="#id3"><span class="problematic" id="id4">`</span></a>2^down_blocks.</p></li>
+<li><p><strong>num_output_channels</strong> – The number of output channels of the block. These
+are the final output tensors on which intermediate supervision may be
+applied.</p></li>
 </ul>
 </dd>
-<dt>classes: optional number of classes to classify images</dt><dd><p>into, only to be specified if <cite>include_top</cite> is True, and
-if no <cite>weights</cite> argument is specified.</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>tf.Tensor of the output of the block of with <cite>num_output_channels</cite> channels.</p>
 </dd>
-</dl>
-</div></blockquote>
-<dl class="simple">
-<dt># Returns</dt><dd><p>A Keras model instance.</p>
-</dd>
-<dt># Raises</dt><dd><dl class="simple">
-<dt>ValueError: in case of invalid argument for <cite>weights</cite>,</dt><dd><p>or invalid input shape.</p>
-</dd>
-</dl>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>x_out</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="function">
-<dt id="sleap.nn.architectures.densenet.conv_block">
-<code class="sig-prename descclassname">sleap.nn.architectures.densenet.</code><code class="sig-name descname">conv_block</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">growth_rate</em>, <em class="sig-param">name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/densenet.html#conv_block"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.densenet.conv_block" title="Permalink to this definition">¶</a></dt>
-<dd><p>A building block for a dense block.
-# Arguments</p>
-<blockquote>
-<div><p>x: input tensor.
-growth_rate: float, growth rate at dense layers.
-name: string, block label.</p>
-</div></blockquote>
-<dl class="simple">
-<dt># Returns</dt><dd><p>Output tensor for the block.</p>
+<dl class="method">
+<dt id="sleap.nn.architectures.densenet.DenseNet121.output_scale">
+<em class="property">property </em><code class="sig-name descname">output_scale</code><a class="headerlink" href="#sleap.nn.architectures.densenet.DenseNet121.output_scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns relative scaling factor of this backbone.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sleap.nn.architectures.densenet.DenseNet169">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.architectures.densenet.</code><code class="sig-name descname">DenseNet169</code><span class="sig-paren">(</span><em class="sig-param">upsampling_layers: bool = True</em>, <em class="sig-param">interp: str = 'bilinear'</em>, <em class="sig-param">up_blocks: int = 5</em>, <em class="sig-param">refine_conv_up: bool = False</em>, <em class="sig-param">pretrained: bool = True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/densenet.html#DenseNet169"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.densenet.DenseNet169" title="Permalink to this definition">¶</a></dt>
+<dd><p>DenseNet169 backbone.</p>
+<p>This backbone has ~12.6M params.</p>
+<dl class="attribute">
+<dt id="sleap.nn.architectures.densenet.DenseNet169.upsampling_layers">
+<code class="sig-name descname">upsampling_layers</code><a class="headerlink" href="#sleap.nn.architectures.densenet.DenseNet169.upsampling_layers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use upsampling instead of transposed convolutions.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sleap.nn.architectures.densenet.DenseNet169.interp">
+<code class="sig-name descname">interp</code><a class="headerlink" href="#sleap.nn.architectures.densenet.DenseNet169.interp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to use for interpolation when upsampling smaller features.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sleap.nn.architectures.densenet.DenseNet169.up_blocks">
+<code class="sig-name descname">up_blocks</code><a class="headerlink" href="#sleap.nn.architectures.densenet.DenseNet169.up_blocks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of upsampling steps to perform. The backbone reduces
+the output scale by 1/32. If set to 5, outputs will be upsampled to the
+input resolution.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sleap.nn.architectures.densenet.DenseNet169.refine_conv_up">
+<code class="sig-name descname">refine_conv_up</code><a class="headerlink" href="#sleap.nn.architectures.densenet.DenseNet169.refine_conv_up" title="Permalink to this definition">¶</a></dt>
+<dd><p>If true, applies a 1x1 conv after each upsampling step.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sleap.nn.architectures.densenet.DenseNet169.pretrained">
+<code class="sig-name descname">pretrained</code><a class="headerlink" href="#sleap.nn.architectures.densenet.DenseNet169.pretrained" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load pretrained ImageNet weights for transfer learning. If
+False, random weights are used for initialization.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.architectures.densenet.DenseNet169.down_blocks">
+<em class="property">property </em><code class="sig-name descname">down_blocks</code><a class="headerlink" href="#sleap.nn.architectures.densenet.DenseNet169.down_blocks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of downsampling steps in the model.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.architectures.densenet.DenseNet169.output">
+<code class="sig-name descname">output</code><span class="sig-paren">(</span><em class="sig-param">x_in</em>, <em class="sig-param">num_output_channels</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/densenet.html#DenseNet169.output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.densenet.DenseNet169.output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds the layers for this backbone and return the output tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_in</strong> – Input 4-D tf.Tensor or instantiated layer. Must have height and width
+that are divisible by <a href="#id5"><span class="problematic" id="id6">`</span></a>2^down_blocks.</p></li>
+<li><p><strong>num_output_channels</strong> – The number of output channels of the block. These
+are the final output tensors on which intermediate supervision may be
+applied.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>tf.Tensor of the output of the block of with <cite>num_output_channels</cite> channels.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>x_out</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="function">
-<dt id="sleap.nn.architectures.densenet.dense_block">
-<code class="sig-prename descclassname">sleap.nn.architectures.densenet.</code><code class="sig-name descname">dense_block</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">blocks</em>, <em class="sig-param">name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/densenet.html#dense_block"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.densenet.dense_block" title="Permalink to this definition">¶</a></dt>
-<dd><p>A dense block.
-# Arguments</p>
-<blockquote>
-<div><p>x: input tensor.
-blocks: integer, the number of building blocks.
-name: string, block label.</p>
-</div></blockquote>
-<dl class="simple">
-<dt># Returns</dt><dd><p>output tensor for the block.</p>
+<dl class="method">
+<dt id="sleap.nn.architectures.densenet.DenseNet169.output_scale">
+<em class="property">property </em><code class="sig-name descname">output_scale</code><a class="headerlink" href="#sleap.nn.architectures.densenet.DenseNet169.output_scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns relative scaling factor of this backbone.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sleap.nn.architectures.densenet.DenseNet201">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.architectures.densenet.</code><code class="sig-name descname">DenseNet201</code><span class="sig-paren">(</span><em class="sig-param">upsampling_layers: bool = True</em>, <em class="sig-param">interp: str = 'bilinear'</em>, <em class="sig-param">up_blocks: int = 5</em>, <em class="sig-param">refine_conv_up: bool = False</em>, <em class="sig-param">pretrained: bool = True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/densenet.html#DenseNet201"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.densenet.DenseNet201" title="Permalink to this definition">¶</a></dt>
+<dd><p>DenseNet201 backbone.</p>
+<p>This backbone has ~18.3M params.</p>
+<dl class="attribute">
+<dt id="sleap.nn.architectures.densenet.DenseNet201.upsampling_layers">
+<code class="sig-name descname">upsampling_layers</code><a class="headerlink" href="#sleap.nn.architectures.densenet.DenseNet201.upsampling_layers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use upsampling instead of transposed convolutions.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sleap.nn.architectures.densenet.DenseNet201.interp">
+<code class="sig-name descname">interp</code><a class="headerlink" href="#sleap.nn.architectures.densenet.DenseNet201.interp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to use for interpolation when upsampling smaller features.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sleap.nn.architectures.densenet.DenseNet201.up_blocks">
+<code class="sig-name descname">up_blocks</code><a class="headerlink" href="#sleap.nn.architectures.densenet.DenseNet201.up_blocks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of upsampling steps to perform. The backbone reduces
+the output scale by 1/32. If set to 5, outputs will be upsampled to the
+input resolution.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sleap.nn.architectures.densenet.DenseNet201.refine_conv_up">
+<code class="sig-name descname">refine_conv_up</code><a class="headerlink" href="#sleap.nn.architectures.densenet.DenseNet201.refine_conv_up" title="Permalink to this definition">¶</a></dt>
+<dd><p>If true, applies a 1x1 conv after each upsampling step.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sleap.nn.architectures.densenet.DenseNet201.pretrained">
+<code class="sig-name descname">pretrained</code><a class="headerlink" href="#sleap.nn.architectures.densenet.DenseNet201.pretrained" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load pretrained ImageNet weights for transfer learning. If
+False, random weights are used for initialization.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.architectures.densenet.DenseNet201.down_blocks">
+<em class="property">property </em><code class="sig-name descname">down_blocks</code><a class="headerlink" href="#sleap.nn.architectures.densenet.DenseNet201.down_blocks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of downsampling steps in the model.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.architectures.densenet.DenseNet201.output">
+<code class="sig-name descname">output</code><span class="sig-paren">(</span><em class="sig-param">x_in</em>, <em class="sig-param">num_output_channels</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/densenet.html#DenseNet201.output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.densenet.DenseNet201.output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds the layers for this backbone and return the output tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_in</strong> – Input 4-D tf.Tensor or instantiated layer. Must have height and width
+that are divisible by <a href="#id7"><span class="problematic" id="id8">`</span></a>2^down_blocks.</p></li>
+<li><p><strong>num_output_channels</strong> – The number of output channels of the block. These
+are the final output tensors on which intermediate supervision may be
+applied.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>tf.Tensor of the output of the block of with <cite>num_output_channels</cite> channels.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>x_out</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="function">
-<dt id="sleap.nn.architectures.densenet.transition_block">
-<code class="sig-prename descclassname">sleap.nn.architectures.densenet.</code><code class="sig-name descname">transition_block</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">reduction</em>, <em class="sig-param">name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/densenet.html#transition_block"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.densenet.transition_block" title="Permalink to this definition">¶</a></dt>
-<dd><p>A transition block.
-# Arguments</p>
-<blockquote>
-<div><p>x: input tensor.
-reduction: float, compression rate at transition layers.
-name: string, block label.</p>
-</div></blockquote>
-<dl class="simple">
-<dt># Returns</dt><dd><p>output tensor for the block.</p>
+<dl class="method">
+<dt id="sleap.nn.architectures.densenet.DenseNet201.output_scale">
+<em class="property">property </em><code class="sig-name descname">output_scale</code><a class="headerlink" href="#sleap.nn.architectures.densenet.DenseNet201.output_scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns relative scaling factor of this backbone.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sleap.nn.architectures.densenet.GeneralizedDenseNet">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.architectures.densenet.</code><code class="sig-name descname">GeneralizedDenseNet</code><span class="sig-paren">(</span><em class="sig-param">n_dense_blocks_1: int = 3</em>, <em class="sig-param">n_dense_blocks_2: int = 6</em>, <em class="sig-param">n_dense_blocks_3: int = 12</em>, <em class="sig-param">n_dense_blocks_4: int = 8</em>, <em class="sig-param">upsampling_layers: bool = True</em>, <em class="sig-param">interp: str = 'bilinear'</em>, <em class="sig-param">up_blocks: int = 5</em>, <em class="sig-param">refine_conv_up: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/densenet.html#GeneralizedDenseNet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.densenet.GeneralizedDenseNet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generalized version of the 4-block DenseNet backbone.</p>
+<p>This allows for selecting the number of blocks in each dense layer, but cannot use
+pretrained weights since the configuration may not have been previously used.</p>
+<dl class="attribute">
+<dt id="sleap.nn.architectures.densenet.GeneralizedDenseNet.n_dense_blocks_1">
+<code class="sig-name descname">n_dense_blocks_1</code><a class="headerlink" href="#sleap.nn.architectures.densenet.GeneralizedDenseNet.n_dense_blocks_1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of blocks in dense layer 1.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sleap.nn.architectures.densenet.GeneralizedDenseNet.n_dense_blocks_2">
+<code class="sig-name descname">n_dense_blocks_2</code><a class="headerlink" href="#sleap.nn.architectures.densenet.GeneralizedDenseNet.n_dense_blocks_2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of blocks in dense layer 2.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sleap.nn.architectures.densenet.GeneralizedDenseNet.n_dense_blocks_3">
+<code class="sig-name descname">n_dense_blocks_3</code><a class="headerlink" href="#sleap.nn.architectures.densenet.GeneralizedDenseNet.n_dense_blocks_3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of blocks in dense layer 3.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sleap.nn.architectures.densenet.GeneralizedDenseNet.n_dense_blocks_4">
+<code class="sig-name descname">n_dense_blocks_4</code><a class="headerlink" href="#sleap.nn.architectures.densenet.GeneralizedDenseNet.n_dense_blocks_4" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of blocks in dense layer 4.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sleap.nn.architectures.densenet.GeneralizedDenseNet.upsampling_layers">
+<code class="sig-name descname">upsampling_layers</code><a class="headerlink" href="#sleap.nn.architectures.densenet.GeneralizedDenseNet.upsampling_layers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use upsampling instead of transposed convolutions.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sleap.nn.architectures.densenet.GeneralizedDenseNet.interp">
+<code class="sig-name descname">interp</code><a class="headerlink" href="#sleap.nn.architectures.densenet.GeneralizedDenseNet.interp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to use for interpolation when upsampling smaller features.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sleap.nn.architectures.densenet.GeneralizedDenseNet.up_blocks">
+<code class="sig-name descname">up_blocks</code><a class="headerlink" href="#sleap.nn.architectures.densenet.GeneralizedDenseNet.up_blocks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of upsampling steps to perform. The backbone reduces
+the output scale by 1/32. If set to 5, outputs will be upsampled to the
+input resolution.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sleap.nn.architectures.densenet.GeneralizedDenseNet.refine_conv_up">
+<code class="sig-name descname">refine_conv_up</code><a class="headerlink" href="#sleap.nn.architectures.densenet.GeneralizedDenseNet.refine_conv_up" title="Permalink to this definition">¶</a></dt>
+<dd><p>If true, applies a 1x1 conv after each upsampling step.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.architectures.densenet.GeneralizedDenseNet.down_blocks">
+<em class="property">property </em><code class="sig-name descname">down_blocks</code><a class="headerlink" href="#sleap.nn.architectures.densenet.GeneralizedDenseNet.down_blocks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of downsampling steps in the model.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.architectures.densenet.GeneralizedDenseNet.output">
+<code class="sig-name descname">output</code><span class="sig-paren">(</span><em class="sig-param">x_in</em>, <em class="sig-param">num_output_channels</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/densenet.html#GeneralizedDenseNet.output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.densenet.GeneralizedDenseNet.output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds the layers for this backbone and return the output tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_in</strong> – Input 4-D tf.Tensor or instantiated layer. Must have height and width
+that are divisible by <a href="#id9"><span class="problematic" id="id10">`</span></a>2^down_blocks.</p></li>
+<li><p><strong>num_output_channels</strong> – The number of output channels of the block. These
+are the final output tensors on which intermediate supervision may be
+applied.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>tf.Tensor of the output of the block of with <cite>num_output_channels</cite> channels.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>x_out</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.architectures.densenet.GeneralizedDenseNet.output_scale">
+<em class="property">property </em><code class="sig-name descname">output_scale</code><a class="headerlink" href="#sleap.nn.architectures.densenet.GeneralizedDenseNet.output_scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns relative scaling factor of this backbone.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sleap.nn.architectures.densenet.UDenseNet">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.architectures.densenet.</code><code class="sig-name descname">UDenseNet</code><span class="sig-paren">(</span><em class="sig-param">stem_stride: int = 1, stem_filters: int = 64, dense_blocks: List[int] = [2, 4, 6, 8], output_scale: Union[float, List[float]] = 1.0, n_heads: int = 1, head_filters: Union[int, List[int]] = 64</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/densenet.html#UDenseNet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.densenet.UDenseNet" title="Permalink to this definition">¶</a></dt>
+<dd><p>UDenseNet backbone, a UNet-like architecture with skip connections to heads.</p>
+<dl class="attribute">
+<dt id="sleap.nn.architectures.densenet.UDenseNet.stem_stride">
+<code class="sig-name descname">stem_stride</code><a class="headerlink" href="#sleap.nn.architectures.densenet.UDenseNet.stem_stride" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initial downsampling stride in the stem block.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sleap.nn.architectures.densenet.UDenseNet.stem_filters">
+<code class="sig-name descname">stem_filters</code><a class="headerlink" href="#sleap.nn.architectures.densenet.UDenseNet.stem_filters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initial number of conv filters in the stem block.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sleap.nn.architectures.densenet.UDenseNet.dense_blocks">
+<code class="sig-name descname">dense_blocks</code><a class="headerlink" href="#sleap.nn.architectures.densenet.UDenseNet.dense_blocks" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of integers defining the size of each dense block. Can be of
+any length &gt; 0.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sleap.nn.architectures.densenet.UDenseNet.output_scale">
+<code class="sig-name descname">output_scale</code><a class="headerlink" href="#sleap.nn.architectures.densenet.UDenseNet.output_scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scale of the output tensor relative to the input.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sleap.nn.architectures.densenet.UDenseNet.n_heads">
+<code class="sig-name descname">n_heads</code><a class="headerlink" href="#sleap.nn.architectures.densenet.UDenseNet.n_heads" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of heads to produce. Intermediate heads will pass features from
+every scale to the next head, starting from the first backbone with dense
+blocks and transitions.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sleap.nn.architectures.densenet.UDenseNet.head_filters">
+<code class="sig-name descname">head_filters</code><a class="headerlink" href="#sleap.nn.architectures.densenet.UDenseNet.head_filters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filters to use in each head block after concatenation with
+previous filters.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.architectures.densenet.UDenseNet.down_blocks">
+<em class="property">property </em><code class="sig-name descname">down_blocks</code><a class="headerlink" href="#sleap.nn.architectures.densenet.UDenseNet.down_blocks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of downsampling steps in the model.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.architectures.densenet.UDenseNet.output">
+<code class="sig-name descname">output</code><span class="sig-paren">(</span><em class="sig-param">x_in</em>, <em class="sig-param">n_output_channels</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/densenet.html#UDenseNet.output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.densenet.UDenseNet.output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds the layers for this backbone and return the output tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_in</strong> – Input 4-D tf.Tensor.</p></li>
+<li><p><strong>n_output_channels</strong> – Number of output channels.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A tf.keras.Model with as many outputs as the n_heads attribute for this</dt><dd><p>model.</p>
+</dd>
+</dl>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <span class="target" id="module-sleap.nn.architectures.leap"></span><dl class="class">
@@ -1081,6 +1080,39 @@ the intermediate convs.</p></li>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>x_out</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.nn.architectures.common.scale_input">
+<code class="sig-prename descclassname">sleap.nn.architectures.common.</code><code class="sig-name descname">scale_input</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/common.html#scale_input"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.common.scale_input" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rescale input to [-1, 1].</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.nn.architectures.common.tile_channels">
+<code class="sig-prename descclassname">sleap.nn.architectures.common.</code><code class="sig-name descname">tile_channels</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/architectures/common.html#tile_channels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.common.tile_channels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tiles single channel to 3 channel.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.nn.architectures.common.upsampled_average_block">
+<code class="sig-prename descclassname">sleap.nn.architectures.common.</code><code class="sig-name descname">upsampled_average_block</code><span class="sig-paren">(</span><em class="sig-param">tensors: List[tensorflow.python.framework.ops.Tensor], target_size: int = None, interp: str = 'bilinear'</em><span class="sig-paren">)</span> &#x2192; tensorflow.python.framework.ops.Tensor<a class="reference internal" href="_modules/sleap/nn/architectures/common.html#upsampled_average_block"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.common.upsampled_average_block" title="Permalink to this definition">¶</a></dt>
+<dd><p>Upsamples tensors to a common size and reduce by averaging.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tensors</strong> – A list of tensors of possibly different heights/widths, but the same
+number of channels.</p></li>
+<li><p><strong>target_size</strong> – Size that the tensors be upsampled to. If None, this is set to the
+size of the largest tensor in the list.</p></li>
+<li><p><strong>interp</strong> – Interpolation method (“nearest” or “bilinear”).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A single tensor with the target size that is the average of all of the input
+tensors.</p>
 </dd>
 </dl>
 </dd></dl>

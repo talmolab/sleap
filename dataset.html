@@ -163,7 +163,7 @@ together with all the other data that is saved for a SLEAP project
 (videos, skeletons, negative training sample anchors, etc.).</p>
 <dl class="class">
 <dt id="sleap.io.dataset.Labels">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.io.dataset.</code><code class="sig-name descname">Labels</code><span class="sig-paren">(</span><em class="sig-param">labeled_frames: List[sleap.instance.LabeledFrame] = NOTHING</em>, <em class="sig-param">videos: List[sleap.io.video.Video] = NOTHING</em>, <em class="sig-param">skeletons: List[sleap.skeleton.Skeleton] = NOTHING</em>, <em class="sig-param">nodes: List[sleap.skeleton.Node] = NOTHING</em>, <em class="sig-param">tracks: List[sleap.instance.Track] = NOTHING</em>, <em class="sig-param">suggestions: Dict[sleap.io.video.Video</em>, <em class="sig-param">list] = NOTHING</em>, <em class="sig-param">negative_anchors: Dict[sleap.io.video.Video</em>, <em class="sig-param">list] = NOTHING</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.io.dataset.</code><code class="sig-name descname">Labels</code><span class="sig-paren">(</span><em class="sig-param">labeled_frames: List[sleap.instance.LabeledFrame] = NOTHING</em>, <em class="sig-param">videos: List[sleap.io.video.Video] = NOTHING</em>, <em class="sig-param">skeletons: List[sleap.skeleton.Skeleton] = NOTHING</em>, <em class="sig-param">nodes: List[sleap.skeleton.Node] = NOTHING</em>, <em class="sig-param">tracks: List[sleap.instance.Track] = NOTHING</em>, <em class="sig-param">suggestions: List[SuggestionFrame] = NOTHING</em>, <em class="sig-param">negative_anchors: Dict[sleap.io.video.Video</em>, <em class="sig-param">list] = NOTHING</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels" title="Permalink to this definition">¶</a></dt>
 <dd><p>The <a class="reference internal" href="#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><code class="xref py py-class docutils literal notranslate"><span class="pre">Labels</span></code></a> class collects the data for a SLEAP project.</p>
 <p>This class is front-end for all interactions with loading, writing,
 and modifying these labels. The actual storage backend for the data
@@ -199,11 +199,9 @@ not be referenced by an <code class="xref py py-class docutils literal notransla
 <dl class="attribute">
 <dt id="sleap.io.dataset.Labels.suggestions">
 <code class="sig-name descname">suggestions</code><a class="headerlink" href="#sleap.io.dataset.Labels.suggestions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Dictionary that stores “suggested” frames for
+<dd><p>List that stores “suggested” frames for
 videos in project. These can be suggested frames for user
-to label or suggested frames for user to review.
-Dictionary key is <code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code>, value is list of frame
-indices.</p>
+to label or suggested frames for user to review.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -319,6 +317,22 @@ and value is list of <code class="xref py py-class docutils literal notranslate"
 </dd></dl>
 
 <dl class="method">
+<dt id="sleap.io.dataset.Labels.export_training_data">
+<code class="sig-name descname">export_training_data</code><span class="sig-paren">(</span><em class="sig-param">save_path: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.export_training_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.export_training_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exports a set of images and points for training with minimal metadata.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>save_path</strong> – Path to HDF5 that training data will be saved to.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The exported HDF5 file will contain no SLEAP-specific metadata or
+dependencies for serialization. These files cannot be read back in for
+labeling, but are useful when training on environments where it is hard to
+install complex dependencies.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.io.dataset.Labels.extend_from">
 <code class="sig-name descname">extend_from</code><span class="sig-paren">(</span><em class="sig-param">new_frames: Union[Labels, List[sleap.instance.LabeledFrame]], unify: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.extend_from"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.extend_from" title="Permalink to this definition">¶</a></dt>
 <dd><p>Merge data from another <cite>Labels</cite> object or <cite>LabeledFrame</cite> list.</p>
@@ -405,6 +419,12 @@ or None if none were found.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="sleap.io.dataset.Labels.find_suggestion">
+<code class="sig-name descname">find_suggestion</code><span class="sig-paren">(</span><em class="sig-param">video</em>, <em class="sig-param">frame_idx</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.find_suggestion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.find_suggestion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find SuggestionFrame by video and frame index.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.io.dataset.Labels.find_track_occupancy">
 <code class="sig-name descname">find_track_occupancy</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video, track: Union[sleap.instance.Track, int], frame_range=None</em><span class="sig-paren">)</span> &#x2192; List[sleap.instance.Instance]<a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.find_track_occupancy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.find_track_occupancy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get instances for a given video, track, and range of frames.</p>
@@ -482,6 +502,25 @@ duplicate matching objects (e.g., <code class="xref py py-class docutils literal
 </dd></dl>
 
 <dl class="method">
+<dt id="sleap.io.dataset.Labels.generate_training_data">
+<code class="sig-name descname">generate_training_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Tuple[Union[numpy.ndarray, List[numpy.ndarray]], List[numpy.ndarray]]<a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.generate_training_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.generate_training_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates images and points for training.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><p>A tuple of (imgs, points).</p>
+<p>imgs: Array of shape (n_samples, height, width, channels) containing the
+image data for all frames with user labels. If frames are of variable size,
+imgs is a list of length n_samples with elements of shape
+(height, width, channels).</p>
+<p>points: List of length n_samples with elements of shape
+(n_instances, n_nodes, 2), containing all user labeled instances in the
+frame, with NaN-padded xy coordinates for each visible body part.</p>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.io.dataset.Labels.get_next_suggestion">
 <code class="sig-name descname">get_next_suggestion</code><span class="sig-paren">(</span><em class="sig-param">video</em>, <em class="sig-param">frame_idx</em>, <em class="sig-param">seek_direction=1</em><span class="sig-paren">)</span> &#x2192; list<a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.get_next_suggestion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.get_next_suggestion" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a (video, frame_idx) tuple seeking from given frame.</p>
@@ -490,7 +529,7 @@ duplicate matching objects (e.g., <code class="xref py py-class docutils literal
 <dl class="method">
 <dt id="sleap.io.dataset.Labels.get_suggestions">
 <code class="sig-name descname">get_suggestions</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; list<a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.get_suggestions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.get_suggestions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return all suggestions as a list of (video, frame) tuples.</p>
+<dd><p>Return all suggestions as a list of SuggestionFrame items.</p>
 </dd></dl>
 
 <dl class="method">
@@ -888,7 +927,7 @@ because of their GPL license.</p>
 
 <dl class="method">
 <dt id="sleap.io.dataset.Labels.set_suggestions">
-<code class="sig-name descname">set_suggestions</code><span class="sig-paren">(</span><em class="sig-param">suggestions: Dict[sleap.io.video.Video, list]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.set_suggestions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.set_suggestions" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">set_suggestions</code><span class="sig-paren">(</span><em class="sig-param">suggestions: List[SuggestionFrame]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.set_suggestions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.set_suggestions" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets the suggested frames.</p>
 </dd></dl>
 

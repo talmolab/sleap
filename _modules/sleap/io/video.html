@@ -165,7 +165,7 @@
 <span class="kn">import</span> <span class="nn">cattr</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -198,6 +198,8 @@
     <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Called by attrs after __init__().&quot;&quot;&quot;</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">_test_frame_</span> <span class="o">=</span> <span class="kc">None</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">__original_to_current_frame_idx</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
 
         <span class="c1"># Handle cases where the user feeds in h5.File objects instead of filename</span>
@@ -209,7 +211,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">__file_h5</span> <span class="o">=</span> <span class="n">h5</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
-                    <span class="n">f</span><span class="s2">&quot;Could not find HDF5 file </span><span class="si">{self.filename}</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Could not find HDF5 file </span><span class="si">{self.filename}</span><span class="s2">&quot;</span>
                 <span class="p">)</span> <span class="kn">from</span> <span class="nn">ex</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__file_h5</span> <span class="o">=</span> <span class="kc">None</span>
@@ -226,7 +228,7 @@
 
             <span class="c1"># Check for frame_numbers dataset corresponding to video</span>
             <span class="n">base_dataset_path</span> <span class="o">=</span> <span class="s2">&quot;/&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-            <span class="n">framenum_dataset</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;</span><span class="si">{base_dataset_path}</span><span class="s2">/frame_numbers&quot;</span>
+            <span class="n">framenum_dataset</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{base_dataset_path}</span><span class="s2">/frame_numbers&quot;</span>
             <span class="k">if</span> <span class="n">framenum_dataset</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__file_h5</span><span class="p">:</span>
                 <span class="n">original_idx_lists</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__file_h5</span><span class="p">[</span><span class="n">framenum_dataset</span><span class="p">]</span>
                 <span class="c1"># Create map from idx in original video to idx in current</span>
@@ -241,7 +243,7 @@
     <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Called by attrs to validates input format.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;channels_first&quot;</span><span class="p">,</span> <span class="s2">&quot;channels_last&quot;</span><span class="p">]:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;HDF5Video input_format=</span><span class="si">{value}</span><span class="s2"> invalid.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;HDF5Video input_format=</span><span class="si">{value}</span><span class="s2"> invalid.&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;channels_first&quot;</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__channel_idx</span> <span class="o">=</span> <span class="mi">1</span>
@@ -251,6 +253,16 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">__channel_idx</span> <span class="o">=</span> <span class="mi">3</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__width_idx</span> <span class="o">=</span> <span class="mi">2</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__height_idx</span> <span class="o">=</span> <span class="mi">1</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">__test_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Load if not already loaded</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_test_frame_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Lets grab a test frame to help us figure things out about the video</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_test_frame_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_frame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">last_frame_idx</span><span class="p">)</span>
+
+        <span class="c1"># Return stored test frame</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_test_frame_</span>
 
 <div class="viewcode-block" id="HDF5Video.matches"><a class="viewcode-back" href="../../../video.html#sleap.io.video.HDF5Video.matches">[docs]</a>    <span class="k">def</span> <span class="nf">matches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;HDF5Video&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -278,7 +290,7 @@
                 <span class="k">pass</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__file_h5</span> <span class="o">=</span> <span class="kc">None</span></div>
 
-    <span class="k">def</span> <span class="nf">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Releases file object.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
@@ -314,7 +326,7 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;See :class:`Video`.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dataset_h5</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__test_frame</span><span class="o">.</span><span class="n">dtype</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">last_frame_idx</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
@@ -345,7 +357,8 @@
             <span class="k">if</span> <span class="n">idx</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__original_to_current_frame_idx</span><span class="p">:</span>
                 <span class="n">idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__original_to_current_frame_idx</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Frame index </span><span class="si">{idx}</span><span class="s2"> not in original index.&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__original_to_current_frame_idx</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Frame index </span><span class="si">{idx}</span><span class="s2"> not in original index.&quot;</span><span class="p">)</span>
 
         <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dataset_h5</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
 
@@ -383,6 +396,10 @@
     <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>
     <span class="n">grayscale</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>
     <span class="n">bgr</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">dataset</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>  <span class="c1"># unused, for compatibility with HDF5Video</span>
+    <span class="n">input_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>  <span class="c1"># unused, for compatibility with HDF5Video</span>
+
     <span class="n">_detect_grayscale</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">_reader_</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">_test_frame_</span> <span class="o">=</span> <span class="kc">None</span>
@@ -398,7 +415,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reader_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
-                    <span class="n">f</span><span class="s2">&quot;Could not find filename video filename named </span><span class="si">{self.filename}</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Could not find filename video filename named </span><span class="si">{self.filename}</span><span class="s2">&quot;</span>
                 <span class="p">)</span>
 
             <span class="c1"># Try and open the file either locally in current directory or with full path</span>
@@ -529,7 +546,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">__data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
-                    <span class="n">f</span><span class="s2">&quot;Could not find filename </span><span class="si">{self.filename}</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Could not find filename </span><span class="si">{self.filename}</span><span class="s2">&quot;</span>
                 <span class="p">)</span> <span class="kn">from</span> <span class="nn">ex</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__data</span> <span class="o">=</span> <span class="kc">None</span>
@@ -765,6 +782,120 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">__store</span> <span class="o">=</span> <span class="kc">None</span></div></div>
 
 
+<div class="viewcode-block" id="SingleImageVideo"><a class="viewcode-back" href="../../../video.html#sleap.io.video.SingleImageVideo">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="nb">cmp</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">SingleImageVideo</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Video wrapper for individual image files.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        filenames: Files to load as video.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">filename</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">filenames</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">height_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">width_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">channels_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">filenames</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filenames</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">filenames</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">filenames</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__test_frame</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">_load_idx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filenames</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="c1"># OpenCV channels are in BGR order, so we should convert to RGB</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">img</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">img</span>
+
+    <span class="k">def</span> <span class="nf">_load_test_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__test_frame</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__test_frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_idx</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">height_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">height_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__test_frame</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">width_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">width_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__test_frame</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">channels_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">channels_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__test_frame</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">get_idx_from_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">filenames</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">IndexError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="c1"># The properties and methods below complete our contract with the</span>
+    <span class="c1"># higher level Video interface.</span>
+
+<div class="viewcode-block" id="SingleImageVideo.matches"><a class="viewcode-back" href="../../../video.html#sleap.io.video.SingleImageVideo.matches">[docs]</a>    <span class="k">def</span> <span class="nf">matches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;SingleImageVideo&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if attributes match those of another video.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            other: The other video to compare with.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            True if attributes match, False otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">filenames</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">filenames</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">frames</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;See :class:`Video`.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filenames</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">channels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;See :class:`Video`.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">channels_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_load_test_frame</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">channels_</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">width</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;See :class:`Video`.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">width_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_load_test_frame</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">width_</span>
+
+    <span class="nd">@width</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">width</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">width_</span> <span class="o">=</span> <span class="n">val</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">height</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;See :class:`Video`.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">height_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_load_test_frame</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">height_</span>
+
+    <span class="nd">@height</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">height</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">height_</span> <span class="o">=</span> <span class="n">val</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;See :class:`Video`.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__data</span><span class="o">.</span><span class="n">dtype</span>
+
+<div class="viewcode-block" id="SingleImageVideo.get_frame"><a class="viewcode-back" href="../../../video.html#sleap.io.video.SingleImageVideo.get_frame">[docs]</a>    <span class="k">def</span> <span class="nf">get_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;See :class:`Video`.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">idx</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__data</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__data</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_idx</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__data</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span></div></div>
+
+
 <div class="viewcode-block" id="Video"><a class="viewcode-back" href="../../../video.html#sleap.io.video.Video">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="nb">cmp</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">Video</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -805,10 +936,12 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">backend</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">HDF5Video</span><span class="p">,</span> <span class="n">NumpyVideo</span><span class="p">,</span> <span class="n">MediaVideo</span><span class="p">,</span> <span class="n">ImgStoreVideo</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>
+    <span class="n">backend</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span>
+        <span class="n">HDF5Video</span><span class="p">,</span> <span class="n">NumpyVideo</span><span class="p">,</span> <span class="n">MediaVideo</span><span class="p">,</span> <span class="n">ImgStoreVideo</span><span class="p">,</span> <span class="n">SingleImageVideo</span>
+    <span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>
 
     <span class="c1"># Delegate to the backend</span>
-    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
 
     <span class="nd">@property</span>
@@ -832,11 +965,11 @@
         <span class="sd">&quot;&quot;&quot; Returns (frame count, height, width, channels).&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frames</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Informal string representation (for print or format) &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">+</span> <span class="s2">&quot; ([</span><span class="si">%d</span><span class="s2"> x </span><span class="si">%d</span><span class="s2"> x </span><span class="si">%d</span><span class="s2"> x </span><span class="si">%d</span><span class="s2">])&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span>
 
-    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The length of the video should be the number of frames.</span>
 
@@ -872,7 +1005,7 @@
             <span class="n">idxs</span> <span class="o">=</span> <span class="p">[</span><span class="n">idxs</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">get_frame</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">idxs</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idxs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idxs</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">idxs</span><span class="p">,</span> <span class="nb">slice</span><span class="p">):</span>
             <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">step</span> <span class="o">=</span> <span class="n">idxs</span><span class="o">.</span><span class="n">indices</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_frames</span><span class="p">)</span>
             <span class="n">idxs</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
@@ -945,6 +1078,23 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">filename</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">fixup_path</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
         <span class="n">backend</span> <span class="o">=</span> <span class="n">MediaVideo</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Video.from_image_filenames"><a class="viewcode-back" href="../../../video.html#sleap.io.video.Video.from_image_filenames">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_image_filenames</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">filenames</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">height</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">width</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Video&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create an instance of a SingleImageVideo from individual image file(s).&quot;&quot;&quot;</span>
+        <span class="n">backend</span> <span class="o">=</span> <span class="n">SingleImageVideo</span><span class="p">(</span><span class="n">filenames</span><span class="o">=</span><span class="n">filenames</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">height</span><span class="p">:</span>
+            <span class="n">backend</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="n">height</span>
+        <span class="k">if</span> <span class="n">width</span><span class="p">:</span>
+            <span class="n">backend</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="n">width</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Video.from_filename"><a class="viewcode-back" href="../../../video.html#sleap.io.video.Video.from_filename">[docs]</a>    <span class="nd">@classmethod</span>
@@ -1262,9 +1412,9 @@
                 <span class="k">return</span> <span class="n">img_store_dir</span>
 
         <span class="k">if</span> <span class="n">raise_error</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Cannot find a video file: </span><span class="si">{path}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot find a video file: </span><span class="si">{path}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Cannot find a video file: </span><span class="si">{path}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot find a video file: </span><span class="si">{path}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">path</span></div></div>
 </pre></div>
 

@@ -173,18 +173,18 @@
 <span class="kn">import</span> <span class="nn">scipy.io</span> <span class="k">as</span> <span class="nn">sio</span>
 <span class="kn">import</span> <span class="nn">h5py</span> <span class="k">as</span> <span class="nn">h5</span>
 
-<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">MutableSequence</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">MutableSequence</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Text</span>
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">ForwardRef</span>
+    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">ForwardRef</span>
 <span class="k">except</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">_ForwardRef</span> <span class="k">as</span> <span class="n">ForwardRef</span>
+    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">_ForwardRef</span> <span class="k">as</span> <span class="n">ForwardRef</span>
 
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 
-<span class="kn">from</span> <span class="nn">sleap.skeleton</span> <span class="k">import</span> <span class="n">Skeleton</span><span class="p">,</span> <span class="n">Node</span>
-<span class="kn">from</span> <span class="nn">sleap.instance</span> <span class="k">import</span> <span class="p">(</span>
+<span class="kn">from</span> <span class="nn">sleap.skeleton</span> <span class="kn">import</span> <span class="n">Skeleton</span><span class="p">,</span> <span class="n">Node</span>
+<span class="kn">from</span> <span class="nn">sleap.instance</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">Instance</span><span class="p">,</span>
     <span class="n">Point</span><span class="p">,</span>
     <span class="n">LabeledFrame</span><span class="p">,</span>
@@ -196,12 +196,13 @@
     <span class="n">PredictedPointArray</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="kn">from</span> <span class="nn">sleap.io</span> <span class="k">import</span> <span class="n">pathutils</span>
-<span class="kn">from</span> <span class="nn">sleap.io.legacy</span> <span class="k">import</span> <span class="n">load_labels_json_old</span>
-<span class="kn">from</span> <span class="nn">sleap.io.video</span> <span class="k">import</span> <span class="n">Video</span>
-<span class="kn">from</span> <span class="nn">sleap.gui.missingfiles</span> <span class="k">import</span> <span class="n">MissingFilesDialog</span>
-<span class="kn">from</span> <span class="nn">sleap.rangelist</span> <span class="k">import</span> <span class="n">RangeList</span>
-<span class="kn">from</span> <span class="nn">sleap.util</span> <span class="k">import</span> <span class="n">uniquify</span><span class="p">,</span> <span class="n">weak_filename_match</span><span class="p">,</span> <span class="n">json_dumps</span><span class="p">,</span> <span class="n">json_loads</span>
+<span class="kn">from</span> <span class="nn">sleap.io</span> <span class="kn">import</span> <span class="n">pathutils</span>
+<span class="kn">from</span> <span class="nn">sleap.io.legacy</span> <span class="kn">import</span> <span class="n">load_labels_json_old</span>
+<span class="kn">from</span> <span class="nn">sleap.io.video</span> <span class="kn">import</span> <span class="n">Video</span>
+<span class="kn">from</span> <span class="nn">sleap.gui.suggestions</span> <span class="kn">import</span> <span class="n">SuggestionFrame</span>
+<span class="kn">from</span> <span class="nn">sleap.gui.missingfiles</span> <span class="kn">import</span> <span class="n">MissingFilesDialog</span>
+<span class="kn">from</span> <span class="nn">sleap.rangelist</span> <span class="kn">import</span> <span class="n">RangeList</span>
+<span class="kn">from</span> <span class="nn">sleap.util</span> <span class="kn">import</span> <span class="n">uniquify</span><span class="p">,</span> <span class="n">weak_filename_match</span><span class="p">,</span> <span class="n">json_dumps</span><span class="p">,</span> <span class="n">json_loads</span>
 
 
 <span class="sd">&quot;&quot;&quot;</span>
@@ -228,11 +229,9 @@
 <span class="sd">        skeletons: A list of :class:`Skeleton` objects (again, that may or may</span>
 <span class="sd">            not be referenced by an :class:`Instance` in labeled frame).</span>
 <span class="sd">        tracks: A list of :class:`Track` that instances can belong to.</span>
-<span class="sd">        suggestions: Dictionary that stores &quot;suggested&quot; frames for</span>
+<span class="sd">        suggestions: List that stores &quot;suggested&quot; frames for</span>
 <span class="sd">            videos in project. These can be suggested frames for user</span>
 <span class="sd">            to label or suggested frames for user to review.</span>
-<span class="sd">            Dictionary key is :class:`Video`, value is list of frame</span>
-<span class="sd">            indices.</span>
 <span class="sd">        negative_anchors: Dictionary that stores center-points around</span>
 <span class="sd">            which to crop as negative samples when training.</span>
 <span class="sd">            Dictionary key is :class:`Video`, value is list of</span>
@@ -244,7 +243,7 @@
     <span class="n">skeletons</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Skeleton</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">Factory</span><span class="p">(</span><span class="nb">list</span><span class="p">))</span>
     <span class="n">nodes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Node</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">Factory</span><span class="p">(</span><span class="nb">list</span><span class="p">))</span>
     <span class="n">tracks</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Track</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">Factory</span><span class="p">(</span><span class="nb">list</span><span class="p">))</span>
-    <span class="n">suggestions</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Video</span><span class="p">,</span> <span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">Factory</span><span class="p">(</span><span class="nb">dict</span><span class="p">))</span>
+    <span class="n">suggestions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="s2">&quot;SuggestionFrame&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">Factory</span><span class="p">(</span><span class="nb">list</span><span class="p">))</span>
     <span class="n">negative_anchors</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Video</span><span class="p">,</span> <span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">Factory</span><span class="p">(</span><span class="nb">dict</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -389,7 +388,7 @@
         <span class="sd">&quot;&quot;&quot;Alias for labeled_frames.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">labeled_frames</span>
 
-    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Returns number of labeled frames.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labeled_frames</span><span class="p">)</span>
 
@@ -397,7 +396,7 @@
         <span class="sd">&quot;&quot;&quot;Returns index of labeled frame in list of labeled frames.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">labeled_frames</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Checks if object contains the given item.</span>
 
@@ -426,7 +425,7 @@
         <span class="p">):</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_first</span><span class="p">(</span><span class="o">*</span><span class="n">item</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 
-    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">LabeledFrame</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">LabeledFrame</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;Returns labeled frames matching key.</span>
 
 <span class="sd">        Args:</span>
@@ -458,14 +457,14 @@
             <span class="n">_hit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_first</span><span class="p">(</span><span class="n">video</span><span class="o">=</span><span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">frame_idx</span><span class="o">=</span><span class="n">key</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 
             <span class="k">if</span> <span class="n">_hit</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;No label found for specified video at frame </span><span class="si">{key[1]}</span><span class="s2">.&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No label found for specified video at frame </span><span class="si">{key[1]}</span><span class="s2">.&quot;</span><span class="p">)</span>
 
             <span class="k">return</span> <span class="n">_hit</span>
 
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Invalid label indexing arguments.&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">LabeledFrame</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">LabeledFrame</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Sets labeled frame at given index.&quot;&quot;&quot;</span>
         <span class="c1"># TODO: Maybe we should remove this method altogether?</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">labeled_frames</span><span class="o">.</span><span class="fm">__setitem__</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
@@ -483,7 +482,7 @@
         <span class="sd">&quot;&quot;&quot;Adds labeled frame to list of labeled frames.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Removes labeled frame with given index.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">labeled_frames</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labeled_frames</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
 
@@ -740,10 +739,10 @@
 <span class="sd">            None.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Get ranges in track occupancy cache</span>
-        <span class="n">_</span><span class="p">,</span> <span class="n">within_old</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_track_occupancy</span><span class="p">[</span><span class="n">video</span><span class="p">][</span><span class="n">old_track</span><span class="p">]</span><span class="o">.</span><span class="n">cut_range</span><span class="p">(</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">within_old</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_track_occupany</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">old_track</span><span class="p">)</span><span class="o">.</span><span class="n">cut_range</span><span class="p">(</span>
             <span class="n">frame_range</span>
         <span class="p">)</span>
-        <span class="n">_</span><span class="p">,</span> <span class="n">within_new</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_track_occupancy</span><span class="p">[</span><span class="n">video</span><span class="p">][</span><span class="n">new_track</span><span class="p">]</span><span class="o">.</span><span class="n">cut_range</span><span class="p">(</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">within_new</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_track_occupany</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">new_track</span><span class="p">)</span><span class="o">.</span><span class="n">cut_range</span><span class="p">(</span>
             <span class="n">frame_range</span>
         <span class="p">)</span>
 
@@ -825,6 +824,16 @@
                 <span class="n">tracks</span><span class="p">[</span><span class="n">instance</span><span class="o">.</span><span class="n">track</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">frame_idx</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">tracks</span>
 
+    <span class="k">def</span> <span class="nf">_get_track_occupany</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">,</span> <span class="n">track</span><span class="p">:</span> <span class="n">Track</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RangeList</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Accessor for track occupancy cache that adds video/track as needed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">video</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_track_occupancy</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_track_occupancy</span><span class="p">[</span><span class="n">video</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">track</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_track_occupancy</span><span class="p">[</span><span class="n">video</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_track_occupancy</span><span class="p">[</span><span class="n">video</span><span class="p">][</span><span class="n">track</span><span class="p">]</span> <span class="o">=</span> <span class="n">RangeList</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_track_occupancy</span><span class="p">[</span><span class="n">video</span><span class="p">][</span><span class="n">track</span><span class="p">]</span>
+
 <div class="viewcode-block" id="Labels.find_track_occupancy"><a class="viewcode-back" href="../../../dataset.html#sleap.io.dataset.Labels.find_track_occupancy">[docs]</a>    <span class="k">def</span> <span class="nf">find_track_occupancy</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">,</span> <span class="n">track</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Track</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">frame_range</span><span class="o">=</span><span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Instance</span><span class="p">]:</span>
@@ -870,73 +879,80 @@
 <span class="sd">        Returns the list of suggested frames for the specified video</span>
 <span class="sd">        or suggestions for all videos (if no video specified).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">suggestions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="nb">list</span><span class="p">())</span></div>
+        <span class="k">return</span> <span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">frame_idx</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">suggestions</span> <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">video</span> <span class="o">==</span> <span class="n">video</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="Labels.get_suggestions"><a class="viewcode-back" href="../../../dataset.html#sleap.io.dataset.Labels.get_suggestions">[docs]</a>    <span class="k">def</span> <span class="nf">get_suggestions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Return all suggestions as a list of (video, frame) tuples.&quot;&quot;&quot;</span>
-        <span class="n">suggestion_list</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">video</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">videos</span>
-            <span class="k">for</span> <span class="n">frame_idx</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_video_suggestions</span><span class="p">(</span><span class="n">video</span><span class="p">)</span>
+        <span class="sd">&quot;&quot;&quot;Return all suggestions as a list of SuggestionFrame items.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">suggestions</span></div>
+
+<div class="viewcode-block" id="Labels.find_suggestion"><a class="viewcode-back" href="../../../dataset.html#sleap.io.dataset.Labels.find_suggestion">[docs]</a>    <span class="k">def</span> <span class="nf">find_suggestion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Find SuggestionFrame by video and frame index.&quot;&quot;&quot;</span>
+        <span class="n">matches</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">item</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">suggestions</span>
+            <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">video</span> <span class="o">==</span> <span class="n">video</span> <span class="ow">and</span> <span class="n">item</span><span class="o">.</span><span class="n">frame_idx</span> <span class="o">==</span> <span class="n">frame_idx</span>
         <span class="p">]</span>
-        <span class="k">return</span> <span class="n">suggestion_list</span></div>
+
+        <span class="k">if</span> <span class="n">matches</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">matches</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="kc">None</span></div>
 
 <div class="viewcode-block" id="Labels.get_next_suggestion"><a class="viewcode-back" href="../../../dataset.html#sleap.io.dataset.Labels.get_next_suggestion">[docs]</a>    <span class="k">def</span> <span class="nf">get_next_suggestion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">,</span> <span class="n">seek_direction</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Returns a (video, frame_idx) tuple seeking from given frame.&quot;&quot;&quot;</span>
         <span class="c1"># make sure we have valid seek_direction</span>
         <span class="k">if</span> <span class="n">seek_direction</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
-            <span class="k">return</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;seek_direction should be -1 or 1.&quot;</span><span class="p">)</span>
         <span class="c1"># make sure the video belongs to this Labels object</span>
         <span class="k">if</span> <span class="n">video</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">videos</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
 
         <span class="n">all_suggestions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_suggestions</span><span class="p">()</span>
 
         <span class="c1"># If we&#39;re currently on a suggestion, then follow order of list</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">)</span> <span class="ow">in</span> <span class="n">all_suggestions</span><span class="p">:</span>
-            <span class="n">suggestion_idx</span> <span class="o">=</span> <span class="n">all_suggestions</span><span class="o">.</span><span class="n">index</span><span class="p">((</span><span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">))</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_suggestion</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">match</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">suggestion_idx</span> <span class="o">=</span> <span class="n">all_suggestions</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">match</span><span class="p">)</span>
             <span class="n">new_idx</span> <span class="o">=</span> <span class="p">(</span><span class="n">suggestion_idx</span> <span class="o">+</span> <span class="n">seek_direction</span><span class="p">)</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_suggestions</span><span class="p">)</span>
-            <span class="n">video</span><span class="p">,</span> <span class="n">frame_suggestion</span> <span class="o">=</span> <span class="n">all_suggestions</span><span class="p">[</span><span class="n">new_idx</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">all_suggestions</span><span class="p">[</span><span class="n">new_idx</span><span class="p">]</span>
 
-        <span class="c1"># Otherwise, find the prev/next suggestion sorted by frame order</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># look for next (or previous) suggestion in current video</span>
-            <span class="k">if</span> <span class="n">seek_direction</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="n">frame_suggestion</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
-                    <span class="p">(</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_video_suggestions</span><span class="p">(</span><span class="n">video</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="n">frame_idx</span><span class="p">),</span>
-                    <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                <span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">frame_suggestion</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
-                    <span class="p">(</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_video_suggestions</span><span class="p">(</span><span class="n">video</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">frame_idx</span><span class="p">),</span>
-                    <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                <span class="p">)</span>
-            <span class="k">if</span> <span class="n">frame_suggestion</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">return</span> <span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">frame_suggestion</span><span class="p">)</span>
-            <span class="c1"># if we didn&#39;t find suggestion in current video,</span>
-            <span class="c1"># then we want earliest frame in next video with suggestions</span>
-            <span class="n">next_video_idx</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">videos</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">video</span><span class="p">)</span> <span class="o">+</span> <span class="n">seek_direction</span><span class="p">)</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">videos</span>
+        <span class="c1"># Otherwise, find the prev/next suggestion sorted by frame order...</span>
+
+        <span class="c1"># Look for next (or previous) suggestion in current video.</span>
+        <span class="k">if</span> <span class="n">seek_direction</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">frame_suggestion</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_video_suggestions</span><span class="p">(</span><span class="n">video</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="n">frame_idx</span><span class="p">),</span>
+                <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="n">video</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">videos</span><span class="p">[</span><span class="n">next_video_idx</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">seek_direction</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="n">frame_suggestion</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
-                    <span class="p">(</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_video_suggestions</span><span class="p">(</span><span class="n">video</span><span class="p">)),</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span>
-                <span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">frame_suggestion</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
-                    <span class="p">(</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_video_suggestions</span><span class="p">(</span><span class="n">video</span><span class="p">)),</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span>
-                <span class="p">)</span>
-        <span class="k">return</span> <span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">frame_suggestion</span><span class="p">)</span></div>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">frame_suggestion</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_video_suggestions</span><span class="p">(</span><span class="n">video</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">frame_idx</span><span class="p">),</span>
+                <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">frame_suggestion</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_suggestion</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">frame_suggestion</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Labels.set_suggestions"><a class="viewcode-back" href="../../../dataset.html#sleap.io.dataset.Labels.set_suggestions">[docs]</a>    <span class="k">def</span> <span class="nf">set_suggestions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">suggestions</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Video</span><span class="p">,</span> <span class="nb">list</span><span class="p">]):</span>
+        <span class="c1"># If we didn&#39;t find suggestion in current video, then we want earliest</span>
+        <span class="c1"># frame in next video with suggestions.</span>
+        <span class="n">next_video_idx</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">videos</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">video</span><span class="p">)</span> <span class="o">+</span> <span class="n">seek_direction</span><span class="p">)</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">videos</span><span class="p">)</span>
+        <span class="n">video</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">videos</span><span class="p">[</span><span class="n">next_video_idx</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">seek_direction</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">frame_suggestion</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_video_suggestions</span><span class="p">(</span><span class="n">video</span><span class="p">)),</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">frame_suggestion</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_video_suggestions</span><span class="p">(</span><span class="n">video</span><span class="p">)),</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_suggestion</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">frame_suggestion</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Labels.set_suggestions"><a class="viewcode-back" href="../../../dataset.html#sleap.io.dataset.Labels.set_suggestions">[docs]</a>    <span class="k">def</span> <span class="nf">set_suggestions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">suggestions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="s2">&quot;SuggestionFrame&quot;</span><span class="p">]):</span>
         <span class="sd">&quot;&quot;&quot;Sets the suggested frames.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">suggestions</span> <span class="o">=</span> <span class="n">suggestions</span></div>
 
 <div class="viewcode-block" id="Labels.delete_suggestions"><a class="viewcode-back" href="../../../dataset.html#sleap.io.dataset.Labels.delete_suggestions">[docs]</a>    <span class="k">def</span> <span class="nf">delete_suggestions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Deletes suggestions for specified video.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">video</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">suggestions</span><span class="p">:</span>
-            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">suggestions</span><span class="p">[</span><span class="n">video</span><span class="p">]</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">suggestions</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">suggestions</span> <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">video</span> <span class="o">!=</span> <span class="n">video</span><span class="p">]</span></div>
 
     <span class="c1"># Methods for videos</span>
 
@@ -1118,7 +1134,7 @@
             <span class="n">base_labels</span><span class="o">.</span><span class="n">_build_lookup_caches</span><span class="p">()</span>
 
         <span class="c1"># Merge suggestions and negative anchors</span>
-        <span class="bp">cls</span><span class="o">.</span><span class="n">merge_container_dicts</span><span class="p">(</span><span class="n">base_labels</span><span class="o">.</span><span class="n">suggestions</span><span class="p">,</span> <span class="n">new_labels</span><span class="o">.</span><span class="n">suggestions</span><span class="p">)</span>
+        <span class="n">base_labels</span><span class="o">.</span><span class="n">suggestions</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">new_labels</span><span class="o">.</span><span class="n">suggestions</span><span class="p">)</span>
         <span class="bp">cls</span><span class="o">.</span><span class="n">merge_container_dicts</span><span class="p">(</span>
             <span class="n">base_labels</span><span class="o">.</span><span class="n">negative_anchors</span><span class="p">,</span> <span class="n">new_labels</span><span class="o">.</span><span class="n">negative_anchors</span>
         <span class="p">)</span>
@@ -1246,13 +1262,17 @@
 
         <span class="n">skeleton_cattr</span> <span class="o">=</span> <span class="n">Skeleton</span><span class="o">.</span><span class="n">make_cattr</span><span class="p">(</span><span class="n">idx_to_node</span><span class="p">)</span>
 
+        <span class="c1"># Make attr for tracks so that we save as tuples rather than dicts;</span>
+        <span class="c1"># this can save a lot of space when there are lots of tracks.</span>
+        <span class="n">track_cattr</span> <span class="o">=</span> <span class="n">cattr</span><span class="o">.</span><span class="n">Converter</span><span class="p">(</span><span class="n">unstruct_strat</span><span class="o">=</span><span class="n">cattr</span><span class="o">.</span><span class="n">UnstructureStrategy</span><span class="o">.</span><span class="n">AS_TUPLE</span><span class="p">)</span>
+
         <span class="c1"># Serialize the skeletons, videos, and labels</span>
         <span class="n">dicts</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="n">LABELS_JSON_FILE_VERSION</span><span class="p">,</span>
             <span class="s2">&quot;skeletons&quot;</span><span class="p">:</span> <span class="n">skeleton_cattr</span><span class="o">.</span><span class="n">unstructure</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">skeletons</span><span class="p">),</span>
             <span class="s2">&quot;nodes&quot;</span><span class="p">:</span> <span class="n">cattr</span><span class="o">.</span><span class="n">unstructure</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">),</span>
             <span class="s2">&quot;videos&quot;</span><span class="p">:</span> <span class="n">Video</span><span class="o">.</span><span class="n">cattr</span><span class="p">()</span><span class="o">.</span><span class="n">unstructure</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">videos</span><span class="p">),</span>
-            <span class="s2">&quot;tracks&quot;</span><span class="p">:</span> <span class="n">cattr</span><span class="o">.</span><span class="n">unstructure</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tracks</span><span class="p">),</span>
+            <span class="s2">&quot;tracks&quot;</span><span class="p">:</span> <span class="n">track_cattr</span><span class="o">.</span><span class="n">unstructure</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tracks</span><span class="p">),</span>
             <span class="s2">&quot;suggestions&quot;</span><span class="p">:</span> <span class="n">label_cattr</span><span class="o">.</span><span class="n">unstructure</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">suggestions</span><span class="p">),</span>
             <span class="s2">&quot;negative_anchors&quot;</span><span class="p">:</span> <span class="n">label_cattr</span><span class="o">.</span><span class="n">unstructure</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">negative_anchors</span><span class="p">),</span>
         <span class="p">}</span>
@@ -1412,7 +1432,19 @@
             <span class="n">dicts</span><span class="p">[</span><span class="s2">&quot;skeletons&quot;</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Skeleton</span><span class="p">]</span>
         <span class="p">)</span>
         <span class="n">videos</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">cattr</span><span class="p">()</span><span class="o">.</span><span class="n">structure</span><span class="p">(</span><span class="n">dicts</span><span class="p">[</span><span class="s2">&quot;videos&quot;</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Video</span><span class="p">])</span>
-        <span class="n">tracks</span> <span class="o">=</span> <span class="n">cattr</span><span class="o">.</span><span class="n">structure</span><span class="p">(</span><span class="n">dicts</span><span class="p">[</span><span class="s2">&quot;tracks&quot;</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Track</span><span class="p">])</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># First try unstructuring tuple (newer format)</span>
+            <span class="n">track_cattr</span> <span class="o">=</span> <span class="n">cattr</span><span class="o">.</span><span class="n">Converter</span><span class="p">(</span>
+                <span class="n">unstruct_strat</span><span class="o">=</span><span class="n">cattr</span><span class="o">.</span><span class="n">UnstructureStrategy</span><span class="o">.</span><span class="n">AS_TUPLE</span>
+            <span class="p">)</span>
+            <span class="n">tracks</span> <span class="o">=</span> <span class="n">track_cattr</span><span class="o">.</span><span class="n">structure</span><span class="p">(</span><span class="n">dicts</span><span class="p">[</span><span class="s2">&quot;tracks&quot;</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Track</span><span class="p">])</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="c1"># Then try unstructuring dict (older format)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">tracks</span> <span class="o">=</span> <span class="n">cattr</span><span class="o">.</span><span class="n">structure</span><span class="p">(</span><span class="n">dicts</span><span class="p">[</span><span class="s2">&quot;tracks&quot;</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Track</span><span class="p">])</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unable to load tracks as tuple or dict!&quot;</span><span class="p">)</span>
 
         <span class="c1"># if we&#39;re given a Labels object to match, use its objects when they match</span>
         <span class="k">if</span> <span class="n">match_to</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -1436,16 +1468,35 @@
                         <span class="n">videos</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">old_vid</span>
                         <span class="k">break</span>
 
+        <span class="n">suggestions</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">if</span> <span class="s2">&quot;suggestions&quot;</span> <span class="ow">in</span> <span class="n">dicts</span><span class="p">:</span>
             <span class="n">suggestions_cattr</span> <span class="o">=</span> <span class="n">cattr</span><span class="o">.</span><span class="n">Converter</span><span class="p">()</span>
             <span class="n">suggestions_cattr</span><span class="o">.</span><span class="n">register_structure_hook</span><span class="p">(</span>
                 <span class="n">Video</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="nb">type</span><span class="p">:</span> <span class="n">videos</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)]</span>
             <span class="p">)</span>
-            <span class="n">suggestions</span> <span class="o">=</span> <span class="n">suggestions_cattr</span><span class="o">.</span><span class="n">structure</span><span class="p">(</span>
-                <span class="n">dicts</span><span class="p">[</span><span class="s2">&quot;suggestions&quot;</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Video</span><span class="p">,</span> <span class="n">List</span><span class="p">]</span>
-            <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">suggestions</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">suggestions</span> <span class="o">=</span> <span class="n">suggestions_cattr</span><span class="o">.</span><span class="n">structure</span><span class="p">(</span>
+                    <span class="n">dicts</span><span class="p">[</span><span class="s2">&quot;suggestions&quot;</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">SuggestionFrame</span><span class="p">]</span>
+                <span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="c1"># Convert old suggestion format to new format.</span>
+                    <span class="c1"># Old format: {video: list of frame indices}</span>
+                    <span class="c1"># New format: [SuggestionFrames]</span>
+                    <span class="n">old_suggestions</span> <span class="o">=</span> <span class="n">suggestions_cattr</span><span class="o">.</span><span class="n">structure</span><span class="p">(</span>
+                        <span class="n">dicts</span><span class="p">[</span><span class="s2">&quot;suggestions&quot;</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Video</span><span class="p">,</span> <span class="n">List</span><span class="p">]</span>
+                    <span class="p">)</span>
+                    <span class="k">for</span> <span class="n">video</span> <span class="ow">in</span> <span class="n">old_suggestions</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                        <span class="n">suggestions</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                            <span class="p">[</span>
+                                <span class="n">SuggestionFrame</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>
+                                <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">old_suggestions</span><span class="p">[</span><span class="n">video</span><span class="p">]</span>
+                            <span class="p">]</span>
+                        <span class="p">)</span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error while loading suggestions&quot;</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                    <span class="k">pass</span>
 
         <span class="k">if</span> <span class="s2">&quot;negative_anchors&quot;</span> <span class="ow">in</span> <span class="n">dicts</span><span class="p">:</span>
             <span class="n">negative_anchors_cattr</span> <span class="o">=</span> <span class="n">cattr</span><span class="o">.</span><span class="n">Converter</span><span class="p">()</span>
@@ -1521,7 +1572,7 @@
             <span class="c1"># its contents.</span>
             <span class="n">tmp_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
                 <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">filename</span><span class="p">),</span>
-                <span class="n">f</span><span class="s2">&quot;tmp_{os.getpid()}_{os.path.basename(filename)}&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;tmp_{os.getpid()}_{os.path.basename(filename)}&quot;</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">):</span>
                 <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -1551,7 +1602,7 @@
 
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">json_files</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="n">f</span><span class="s2">&quot;No JSON file found inside </span><span class="si">{filename}</span><span class="s2">. Are you sure this is a valid sLEAP dataset.&quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;No JSON file found inside </span><span class="si">{filename}</span><span class="s2">. Are you sure this is a valid sLEAP dataset.&quot;</span>
                     <span class="p">)</span>
 
                 <span class="n">filename</span> <span class="o">=</span> <span class="n">json_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -2031,7 +2082,7 @@
             <span class="c1"># for now, the only csv we support is the DeepLabCut format</span>
             <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">load_deeplabcut_csv</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Cannot detect filetype for </span><span class="si">{filename}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot detect filetype for </span><span class="si">{filename}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Labels.save_file"><a class="viewcode-back" href="../../../dataset.html#sleap.io.dataset.Labels.save_file">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">save_file</span><span class="p">(</span>
@@ -2058,14 +2109,14 @@
 
         <span class="c1"># Detect filetype and use appropriate save method</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">&quot;.json&quot;</span><span class="p">,</span> <span class="s2">&quot;.zip&quot;</span><span class="p">,</span> <span class="s2">&quot;.h5&quot;</span><span class="p">))</span> <span class="ow">and</span> <span class="n">default_suffix</span><span class="p">:</span>
-            <span class="n">filename</span> <span class="o">+=</span> <span class="n">f</span><span class="s2">&quot;.</span><span class="si">{default_suffix}</span><span class="s2">&quot;</span>
+            <span class="n">filename</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;.</span><span class="si">{default_suffix}</span><span class="s2">&quot;</span>
         <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">&quot;.json&quot;</span><span class="p">,</span> <span class="s2">&quot;.zip&quot;</span><span class="p">)):</span>
             <span class="n">compress</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.zip&quot;</span><span class="p">)</span>
             <span class="bp">cls</span><span class="o">.</span><span class="n">save_json</span><span class="p">(</span><span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="n">compress</span><span class="o">=</span><span class="n">compress</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.h5&quot;</span><span class="p">):</span>
             <span class="bp">cls</span><span class="o">.</span><span class="n">save_hdf5</span><span class="p">(</span><span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Cannot detect filetype for </span><span class="si">{filename}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot detect filetype for </span><span class="si">{filename}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Labels.save_frame_data_imgstore"><a class="viewcode-back" href="../../../dataset.html#sleap.io.dataset.Labels.save_frame_data_imgstore">[docs]</a>    <span class="k">def</span> <span class="nf">save_frame_data_imgstore</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;./&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;png&quot;</span><span class="p">,</span> <span class="n">all_labels</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
@@ -2100,7 +2151,7 @@
 
             <span class="c1"># Join with &quot;/&quot; instead of os.path.join() since we want</span>
             <span class="c1"># path to work on Windows and Posix systems</span>
-            <span class="n">frames_filename</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">+</span> <span class="n">f</span><span class="s2">&quot;/frame_data_vid</span><span class="si">{v_idx}</span><span class="s2">&quot;</span>
+            <span class="n">frames_filename</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;/frame_data_vid</span><span class="si">{v_idx}</span><span class="s2">&quot;</span>
             <span class="n">vid</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">to_imgstore</span><span class="p">(</span>
                 <span class="n">path</span><span class="o">=</span><span class="n">frames_filename</span><span class="p">,</span> <span class="n">frame_numbers</span><span class="o">=</span><span class="n">frame_nums</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="nb">format</span>
             <span class="p">)</span>
@@ -2137,7 +2188,7 @@
 
             <span class="n">vid</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">to_hdf5</span><span class="p">(</span>
                 <span class="n">path</span><span class="o">=</span><span class="n">output_path</span><span class="p">,</span>
-                <span class="n">dataset</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;video</span><span class="si">{v_idx}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">dataset</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;video</span><span class="si">{v_idx}</span><span class="s2">&quot;</span><span class="p">,</span>
                 <span class="nb">format</span><span class="o">=</span><span class="nb">format</span><span class="p">,</span>
                 <span class="n">frame_numbers</span><span class="o">=</span><span class="n">frame_nums</span><span class="p">,</span>
             <span class="p">)</span>
@@ -2309,6 +2360,190 @@
 
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span></div>
 
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">load_coco</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">img_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">use_missing_gui</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Labels&quot;</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">json_str</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="n">dicts</span> <span class="o">=</span> <span class="n">json_loads</span><span class="p">(</span><span class="n">json_str</span><span class="p">)</span>
+
+        <span class="c1"># Make skeletons from &quot;categories&quot;</span>
+        <span class="n">skeleton_map</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">category</span> <span class="ow">in</span> <span class="n">dicts</span><span class="p">[</span><span class="s2">&quot;categories&quot;</span><span class="p">]:</span>
+            <span class="n">skeleton</span> <span class="o">=</span> <span class="n">Skeleton</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">category</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">])</span>
+            <span class="n">skeleton_id</span> <span class="o">=</span> <span class="n">category</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+            <span class="n">node_names</span> <span class="o">=</span> <span class="n">category</span><span class="p">[</span><span class="s2">&quot;keypoints&quot;</span><span class="p">]</span>
+            <span class="n">skeleton</span><span class="o">.</span><span class="n">add_nodes</span><span class="p">(</span><span class="n">node_names</span><span class="p">)</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">src_idx</span><span class="p">,</span> <span class="n">dst_idx</span> <span class="ow">in</span> <span class="n">category</span><span class="p">[</span><span class="s2">&quot;skeleton&quot;</span><span class="p">]:</span>
+                    <span class="n">skeleton</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">node_names</span><span class="p">[</span><span class="n">src_idx</span><span class="p">],</span> <span class="n">node_names</span><span class="p">[</span><span class="n">dst_idx</span><span class="p">])</span>
+            <span class="k">except</span> <span class="ne">IndexError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="c1"># According to the COCO data format specifications[^1], the edges</span>
+                <span class="c1"># are supposed to be 1-indexed. But in some of their own</span>
+                <span class="c1"># dataset the edges are 1-indexed! So we&#39;ll try.</span>
+                <span class="c1"># [1]: http://cocodataset.org/#format-data</span>
+
+                <span class="c1"># Clear any edges we already created using 0-indexing</span>
+                <span class="n">skeleton</span><span class="o">.</span><span class="n">clear_edges</span><span class="p">()</span>
+
+                <span class="c1"># Add edges</span>
+                <span class="k">for</span> <span class="n">src_idx</span><span class="p">,</span> <span class="n">dst_idx</span> <span class="ow">in</span> <span class="n">category</span><span class="p">[</span><span class="s2">&quot;skeleton&quot;</span><span class="p">]:</span>
+                    <span class="n">skeleton</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">node_names</span><span class="p">[</span><span class="n">src_idx</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span> <span class="n">node_names</span><span class="p">[</span><span class="n">dst_idx</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
+
+            <span class="n">skeleton_map</span><span class="p">[</span><span class="n">skeleton_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">skeleton</span>
+
+        <span class="c1"># Make videos from &quot;images&quot;</span>
+
+        <span class="c1"># Remove images that aren&#39;t referenced in the annotations</span>
+        <span class="n">img_refs</span> <span class="o">=</span> <span class="p">[</span><span class="n">annotation</span><span class="p">[</span><span class="s2">&quot;image_id&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">annotation</span> <span class="ow">in</span> <span class="n">dicts</span><span class="p">[</span><span class="s2">&quot;annotations&quot;</span><span class="p">]]</span>
+        <span class="n">dicts</span><span class="p">[</span><span class="s2">&quot;images&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">im</span><span class="p">:</span> <span class="n">im</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">img_refs</span><span class="p">,</span> <span class="n">dicts</span><span class="p">[</span><span class="s2">&quot;images&quot;</span><span class="p">]))</span>
+
+        <span class="c1"># Key in JSON file should be &quot;file_name&quot;, but sometimes it&#39;s &quot;filename&quot;,</span>
+        <span class="c1"># so we have to check both.</span>
+        <span class="n">img_filename_key</span> <span class="o">=</span> <span class="s2">&quot;file_name&quot;</span>
+        <span class="k">if</span> <span class="n">img_filename_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dicts</span><span class="p">[</span><span class="s2">&quot;images&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">img_filename_key</span> <span class="o">=</span> <span class="s2">&quot;filename&quot;</span>
+
+        <span class="c1"># First add the img_dir to each image filename</span>
+        <span class="n">img_paths</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">img_dir</span><span class="p">,</span> <span class="n">image</span><span class="p">[</span><span class="n">img_filename_key</span><span class="p">])</span> <span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="n">dicts</span><span class="p">[</span><span class="s2">&quot;images&quot;</span><span class="p">]</span>
+        <span class="p">]</span>
+
+        <span class="c1"># See if there are any missing files</span>
+        <span class="n">img_missing</span> <span class="o">=</span> <span class="p">[</span><span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">img_paths</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="n">img_missing</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">use_missing_gui</span><span class="p">:</span>
+                <span class="n">okay</span> <span class="o">=</span> <span class="n">MissingFilesDialog</span><span class="p">(</span><span class="n">img_paths</span><span class="p">,</span> <span class="n">img_missing</span><span class="p">)</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
+
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">okay</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">None</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Images for COCO dataset could not be found in </span><span class="si">{img_dir}</span><span class="s2">.&quot;</span>
+                <span class="p">)</span>
+
+        <span class="c1"># Update the image paths (with img_dir or user selected path)</span>
+        <span class="k">for</span> <span class="n">image</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">dicts</span><span class="p">[</span><span class="s2">&quot;images&quot;</span><span class="p">],</span> <span class="n">img_paths</span><span class="p">):</span>
+            <span class="n">image</span><span class="p">[</span><span class="n">img_filename_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">path</span>
+
+        <span class="c1"># Create the video objects for the image files</span>
+        <span class="n">image_video_map</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+        <span class="n">vid_id_video_map</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="n">dicts</span><span class="p">[</span><span class="s2">&quot;images&quot;</span><span class="p">]:</span>
+            <span class="n">image_id</span> <span class="o">=</span> <span class="n">image</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+            <span class="n">image_filename</span> <span class="o">=</span> <span class="n">image</span><span class="p">[</span><span class="n">img_filename_key</span><span class="p">]</span>
+
+            <span class="c1"># Sometimes images have a vid_id which links multiple images</span>
+            <span class="c1"># together as one video. If so, we&#39;ll use that as the video key.</span>
+            <span class="c1"># But if there isn&#39;t a vid_id, we&#39;ll treat each images as a</span>
+            <span class="c1"># distinct video and use the image id as the video id.</span>
+            <span class="n">vid_id</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;vid_id&quot;</span><span class="p">,</span> <span class="n">image_id</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">vid_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">vid_id_video_map</span><span class="p">:</span>
+                <span class="n">kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">filenames</span><span class="o">=</span><span class="p">[</span><span class="n">image_filename</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;width&quot;</span><span class="p">,</span> <span class="s2">&quot;height&quot;</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">image</span><span class="p">:</span>
+                        <span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">image</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+                <span class="n">video</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">from_image_filenames</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="n">vid_id_video_map</span><span class="p">[</span><span class="n">vid_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">video</span>
+                <span class="n">frame_idx</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">video</span> <span class="o">=</span> <span class="n">vid_id_video_map</span><span class="p">[</span><span class="n">vid_id</span><span class="p">]</span>
+                <span class="n">frame_idx</span> <span class="o">=</span> <span class="n">video</span><span class="o">.</span><span class="n">num_frames</span>
+                <span class="n">video</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">filenames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">image_filename</span><span class="p">)</span>
+
+            <span class="n">image_video_map</span><span class="p">[</span><span class="n">image_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">)</span>
+
+        <span class="c1"># Make instances from &quot;annotations&quot;</span>
+        <span class="n">lf_map</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">track_map</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">annotation</span> <span class="ow">in</span> <span class="n">dicts</span><span class="p">[</span><span class="s2">&quot;annotations&quot;</span><span class="p">]:</span>
+            <span class="n">skeleton</span> <span class="o">=</span> <span class="n">skeleton_map</span><span class="p">[</span><span class="n">annotation</span><span class="p">[</span><span class="s2">&quot;category_id&quot;</span><span class="p">]]</span>
+            <span class="n">image_id</span> <span class="o">=</span> <span class="n">annotation</span><span class="p">[</span><span class="s2">&quot;image_id&quot;</span><span class="p">]</span>
+            <span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span> <span class="o">=</span> <span class="n">image_video_map</span><span class="p">[</span><span class="n">image_id</span><span class="p">]</span>
+            <span class="n">keypoints</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">annotation</span><span class="p">[</span><span class="s2">&quot;keypoints&quot;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;int&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+            <span class="n">track</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="s2">&quot;track_id&quot;</span> <span class="ow">in</span> <span class="n">annotation</span><span class="p">:</span>
+                <span class="n">track_id</span> <span class="o">=</span> <span class="n">annotation</span><span class="p">[</span><span class="s2">&quot;track_id&quot;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">track_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">track_map</span><span class="p">:</span>
+                    <span class="n">track_map</span><span class="p">[</span><span class="n">track_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">Track</span><span class="p">(</span><span class="n">frame_idx</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">track_id</span><span class="p">))</span>
+                <span class="n">track</span> <span class="o">=</span> <span class="n">track_map</span><span class="p">[</span><span class="n">track_id</span><span class="p">]</span>
+
+            <span class="n">points</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+            <span class="n">any_visible</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">keypoints</span><span class="p">)):</span>
+                <span class="n">node</span> <span class="o">=</span> <span class="n">skeleton</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">flag</span> <span class="o">=</span> <span class="n">keypoints</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+                <span class="k">if</span> <span class="n">flag</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="c1"># node not labeled for this instance</span>
+                    <span class="k">continue</span>
+
+                <span class="n">is_visible</span> <span class="o">=</span> <span class="n">flag</span> <span class="o">==</span> <span class="mi">2</span>
+                <span class="n">any_visible</span> <span class="o">=</span> <span class="n">any_visible</span> <span class="ow">or</span> <span class="n">is_visible</span>
+                <span class="n">points</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">is_visible</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">points</span><span class="p">:</span>
+                <span class="c1"># If none of the points had 2 has the &quot;visible&quot; flag, we&#39;ll</span>
+                <span class="c1"># assume this incorrect and just mark all as visible.</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">any_visible</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">points</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                        <span class="n">point</span><span class="o">.</span><span class="n">visible</span> <span class="o">=</span> <span class="kc">True</span>
+
+                <span class="n">inst</span> <span class="o">=</span> <span class="n">Instance</span><span class="p">(</span><span class="n">skeleton</span><span class="o">=</span><span class="n">skeleton</span><span class="p">,</span> <span class="n">points</span><span class="o">=</span><span class="n">points</span><span class="p">,</span> <span class="n">track</span><span class="o">=</span><span class="n">track</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">image_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">lf_map</span><span class="p">:</span>
+                    <span class="n">lf_map</span><span class="p">[</span><span class="n">image_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">LabeledFrame</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">)</span>
+
+                <span class="n">lf_map</span><span class="p">[</span><span class="n">image_id</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">inst</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">labeled_frames</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">lf_map</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_deepposekit</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">video_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">skeleton_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">video</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">from_filename</span><span class="p">(</span><span class="n">video_path</span><span class="p">)</span>
+
+        <span class="n">skeleton_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">skeleton_path</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">skeleton</span> <span class="o">=</span> <span class="n">Skeleton</span><span class="p">()</span>
+        <span class="n">skeleton</span><span class="o">.</span><span class="n">add_nodes</span><span class="p">(</span><span class="n">skeleton_data</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">])</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="n">skeleton</span><span class="o">.</span><span class="n">nodes</span>
+
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">swap</span> <span class="ow">in</span> <span class="n">skeleton_data</span><span class="o">.</span><span class="n">itertuples</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">parent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">:</span>
+                <span class="n">skeleton</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+        <span class="n">lfs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">with</span> <span class="n">h5</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">pose_matrix</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;pose&quot;</span><span class="p">][:]</span>
+
+            <span class="n">track_count</span><span class="p">,</span> <span class="n">frame_count</span><span class="p">,</span> <span class="n">node_count</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">pose_matrix</span><span class="o">.</span><span class="n">shape</span>
+
+            <span class="n">tracks</span> <span class="o">=</span> <span class="p">[</span><span class="n">Track</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Track </span><span class="si">{i}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">track_count</span><span class="p">)]</span>
+            <span class="k">for</span> <span class="n">frame_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">frame_count</span><span class="p">):</span>
+                <span class="n">lf_instances</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">track_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">track_count</span><span class="p">):</span>
+                    <span class="n">points_array</span> <span class="o">=</span> <span class="n">pose_matrix</span><span class="p">[</span><span class="n">track_idx</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span>
+                    <span class="n">points</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+                    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">points_array</span><span class="p">)):</span>
+                        <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">score</span> <span class="o">=</span> <span class="n">points_array</span><span class="p">[</span><span class="n">p</span><span class="p">]</span>
+                        <span class="n">points</span><span class="p">[</span><span class="n">nodes</span><span class="p">[</span><span class="n">p</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>  <span class="c1"># TODO: score</span>
+
+                    <span class="n">inst</span> <span class="o">=</span> <span class="n">Instance</span><span class="p">(</span>
+                        <span class="n">skeleton</span><span class="o">=</span><span class="n">skeleton</span><span class="p">,</span> <span class="n">track</span><span class="o">=</span><span class="n">tracks</span><span class="p">[</span><span class="n">track_idx</span><span class="p">],</span> <span class="n">points</span><span class="o">=</span><span class="n">points</span>
+                    <span class="p">)</span>
+                    <span class="n">lf_instances</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">inst</span><span class="p">)</span>
+                <span class="n">lfs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">LabeledFrame</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="o">=</span><span class="n">frame_idx</span><span class="p">,</span> <span class="n">instances</span><span class="o">=</span><span class="n">lf_instances</span><span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">labeled_frames</span><span class="o">=</span><span class="n">lfs</span><span class="p">)</span>
+
 <div class="viewcode-block" id="Labels.make_video_callback"><a class="viewcode-back" href="../../../dataset.html#sleap.io.dataset.Labels.make_video_callback">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">make_video_callback</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">search_paths</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -2398,7 +2633,179 @@
             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">video_list</span><span class="p">):</span>
                 <span class="n">item</span><span class="p">[</span><span class="s2">&quot;backend&quot;</span><span class="p">][</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">filenames</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
 
-        <span class="k">return</span> <span class="n">gui_video_callback</span></div></div>
+        <span class="k">return</span> <span class="n">gui_video_callback</span></div>
+
+<div class="viewcode-block" id="Labels.export_training_data"><a class="viewcode-back" href="../../../dataset.html#sleap.io.dataset.Labels.export_training_data">[docs]</a>    <span class="k">def</span> <span class="nf">export_training_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_path</span><span class="p">:</span> <span class="n">Text</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Exports a set of images and points for training with minimal metadata.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            save_path: Path to HDF5 that training data will be saved to.</span>
+
+<span class="sd">        Notes:</span>
+<span class="sd">            The exported HDF5 file will contain no SLEAP-specific metadata or</span>
+<span class="sd">            dependencies for serialization. These files cannot be read back in for</span>
+<span class="sd">            labeling, but are useful when training on environments where it is hard to</span>
+<span class="sd">            install complex dependencies.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Skeleton</span>
+        <span class="n">node_names</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">string_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">skeletons</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">node_names</span><span class="p">)</span>
+        <span class="n">edge_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">skeletons</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">edge_inds</span><span class="p">)</span>
+
+        <span class="c1"># Videos metadata</span>
+        <span class="n">video_paths</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">video_datasets</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">video_shapes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">video_image_data_format</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">video</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">videos</span><span class="p">:</span>
+            <span class="n">video_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">backend</span><span class="p">,</span> <span class="s2">&quot;dataset&quot;</span><span class="p">):</span>
+                <span class="n">video_datasets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">video_datasets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="n">video_shapes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="n">video_image_data_format</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">input_format</span><span class="p">)</span>
+
+        <span class="n">video_paths</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">string_</span><span class="p">(</span><span class="n">video_paths</span><span class="p">)</span>
+        <span class="n">video_datasets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">string_</span><span class="p">(</span><span class="n">video_datasets</span><span class="p">)</span>
+        <span class="n">video_shapes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">video_shapes</span><span class="p">)</span>
+        <span class="n">video_image_data_format</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">string_</span><span class="p">(</span><span class="n">video_image_data_format</span><span class="p">)</span>
+
+        <span class="c1"># Main labeling data</span>
+        <span class="n">video_inds</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">frame_inds</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">imgs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">peaks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">peak_samples</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">peak_instances</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">peak_channels</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">peak_tracks</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Main labeling data.</span>
+        <span class="n">labeled_frames_with_instances</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">lf</span> <span class="k">for</span> <span class="n">lf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labeled_frames</span> <span class="k">if</span> <span class="n">lf</span><span class="o">.</span><span class="n">has_user_instances</span>
+        <span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">sample_ind</span><span class="p">,</span> <span class="n">lf</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">labeled_frames_with_instances</span><span class="p">):</span>
+
+            <span class="c1"># Video index into the videos metadata</span>
+            <span class="n">video_ind</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">videos</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">lf</span><span class="o">.</span><span class="n">video</span><span class="p">)</span>
+
+            <span class="c1"># Frame index into the original images array</span>
+            <span class="n">frame_ind</span> <span class="o">=</span> <span class="n">lf</span><span class="o">.</span><span class="n">frame_idx</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">lf</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">backend</span><span class="p">,</span> <span class="s2">&quot;_HDF5Video__original_to_current_frame_idx&quot;</span><span class="p">):</span>
+                <span class="n">frame_ind</span> <span class="o">=</span> <span class="n">lf</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">_HDF5Video__original_to_current_frame_idx</span><span class="p">[</span>
+                    <span class="n">lf</span><span class="o">.</span><span class="n">frame_idx</span>
+                <span class="p">]</span>
+
+            <span class="c1"># Actual image data</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">lf</span><span class="o">.</span><span class="n">image</span>
+
+            <span class="n">frame_peaks</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">frame_peak_samples</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">frame_peak_instances</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">frame_peak_channels</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">frame_peak_tracks</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">instance_ind</span><span class="p">,</span> <span class="n">instance</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lf</span><span class="o">.</span><span class="n">user_instances</span><span class="p">):</span>
+                <span class="n">instance_peaks</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">points_array</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;float32&quot;</span><span class="p">)</span>
+                <span class="n">frame_peaks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">instance_peaks</span><span class="p">)</span>
+                <span class="n">frame_peak_samples</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">instance_peaks</span><span class="p">),),</span> <span class="n">sample_ind</span><span class="p">))</span>
+                <span class="n">frame_peak_instances</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">instance_peaks</span><span class="p">),),</span> <span class="n">instance_ind</span><span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">frame_peak_channels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">instance_peaks</span><span class="p">)))</span>
+                <span class="n">track_ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+                <span class="k">if</span> <span class="n">instance</span><span class="o">.</span><span class="n">track</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">track_ind</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tracks</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">track</span><span class="p">)</span>
+                <span class="n">frame_peak_tracks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">instance_peaks</span><span class="p">),),</span> <span class="n">track_ind</span><span class="p">))</span>
+
+            <span class="c1"># Concatenate into (n_peaks, 2) -&gt; x, y = frame_peaks[i]</span>
+            <span class="n">frame_peaks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">frame_peaks</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+            <span class="c1"># Concatenate metadata</span>
+            <span class="n">frame_peak_samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">frame_peak_samples</span><span class="p">)</span>
+            <span class="n">frame_peak_instances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">frame_peak_instances</span><span class="p">)</span>
+            <span class="n">frame_peak_channels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">frame_peak_channels</span><span class="p">)</span>
+            <span class="n">frame_peak_tracks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">frame_peak_tracks</span><span class="p">)</span>
+
+            <span class="n">video_inds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">video_ind</span><span class="p">)</span>
+            <span class="n">frame_inds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">frame_ind</span><span class="p">)</span>
+            <span class="n">imgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+            <span class="n">peaks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">frame_peaks</span><span class="p">)</span>
+            <span class="n">peak_samples</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">frame_peak_samples</span><span class="p">)</span>
+            <span class="n">peak_instances</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">frame_peak_instances</span><span class="p">)</span>
+            <span class="n">peak_channels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">frame_peak_channels</span><span class="p">)</span>
+            <span class="n">peak_tracks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">peak_tracks</span><span class="p">)</span>
+
+        <span class="n">video_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">video_inds</span><span class="p">)</span>
+        <span class="n">frame_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">frame_inds</span><span class="p">)</span>
+        <span class="n">imgs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">imgs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">peaks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">peaks</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">peak_samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">peak_samples</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">)</span>
+        <span class="n">peak_instances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">peak_instances</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">)</span>
+        <span class="n">peak_channels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">peak_channels</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">)</span>
+        <span class="n">peak_tracks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">peak_channels</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">h5</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;skeleton/node_names&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">node_names</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;skeleton/n_nodes&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">node_names</span><span class="p">))</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;skeleton/edges&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">edge_inds</span><span class="p">)</span>
+
+            <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;videos/filepath&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">video_paths</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;videos/dataset&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">video_datasets</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;videos/shape&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">video_shapes</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;videos/image_data_format&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">video_image_data_format</span><span class="p">)</span>
+
+            <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span>
+                <span class="s2">&quot;imgs&quot;</span><span class="p">,</span>
+                <span class="n">data</span><span class="o">=</span><span class="n">imgs</span><span class="p">,</span>
+                <span class="n">chunks</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,)</span> <span class="o">+</span> <span class="n">imgs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
+                <span class="n">compression</span><span class="o">=</span><span class="s2">&quot;gzip&quot;</span><span class="p">,</span>
+                <span class="n">compression_opts</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;peaks/xy&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">peaks</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;peaks/sample&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">peak_samples</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;peaks/instance&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">peak_instances</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;peaks/channel&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">peak_channels</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;peaks/track&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">peak_tracks</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Labels.generate_training_data"><a class="viewcode-back" href="../../../dataset.html#sleap.io.dataset.Labels.generate_training_data">[docs]</a>    <span class="k">def</span> <span class="nf">generate_training_data</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]],</span> <span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Generates images and points for training.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A tuple of (imgs, points).</span>
+
+<span class="sd">            imgs: Array of shape (n_samples, height, width, channels) containing the</span>
+<span class="sd">            image data for all frames with user labels. If frames are of variable size,</span>
+<span class="sd">            imgs is a list of length n_samples with elements of shape</span>
+<span class="sd">            (height, width, channels).</span>
+
+<span class="sd">            points: List of length n_samples with elements of shape</span>
+<span class="sd">            (n_instances, n_nodes, 2), containing all user labeled instances in the</span>
+<span class="sd">            frame, with NaN-padded xy coordinates for each visible body part.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">imgs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">lf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labeled_frames</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">lf</span><span class="o">.</span><span class="n">has_user_instances</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">imgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lf</span><span class="o">.</span><span class="n">image</span><span class="p">)</span>
+            <span class="n">points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">inst</span><span class="o">.</span><span class="n">points_array</span> <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">lf</span><span class="o">.</span><span class="n">user_instances</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Try to stack all images into a single 4D array.</span>
+        <span class="n">first_shape</span> <span class="o">=</span> <span class="n">imgs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">can_stack</span> <span class="o">=</span> <span class="nb">all</span><span class="p">([</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">first_shape</span> <span class="k">for</span> <span class="n">img</span> <span class="ow">in</span> <span class="n">imgs</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">can_stack</span><span class="p">:</span>
+            <span class="n">imgs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">imgs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">imgs</span><span class="p">,</span> <span class="n">points</span></div></div>
 
 
 <span class="k">def</span> <span class="nf">find_path_using_paths</span><span class="p">(</span><span class="n">missing_path</span><span class="p">,</span> <span class="n">search_paths</span><span class="p">):</span>

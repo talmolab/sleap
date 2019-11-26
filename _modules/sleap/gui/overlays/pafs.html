@@ -152,16 +152,16 @@
            <div itemprop="articleBody">
             
   <h1>Source code for sleap.gui.overlays.pafs</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">PySide2</span> <span class="k">import</span> <span class="n">QtWidgets</span><span class="p">,</span> <span class="n">QtGui</span><span class="p">,</span> <span class="n">QtCore</span>
+<span></span><span class="kn">from</span> <span class="nn">PySide2</span> <span class="kn">import</span> <span class="n">QtWidgets</span><span class="p">,</span> <span class="n">QtGui</span><span class="p">,</span> <span class="n">QtCore</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">itertools</span>
 <span class="kn">import</span> <span class="nn">math</span>
 
-<span class="kn">from</span> <span class="nn">sleap.io.video</span> <span class="k">import</span> <span class="n">Video</span><span class="p">,</span> <span class="n">HDF5Video</span>
-<span class="kn">from</span> <span class="nn">sleap.gui.multicheck</span> <span class="k">import</span> <span class="n">MultiCheckWidget</span>
+<span class="kn">from</span> <span class="nn">sleap.io.video</span> <span class="kn">import</span> <span class="n">Video</span><span class="p">,</span> <span class="n">HDF5Video</span>
+<span class="kn">from</span> <span class="nn">sleap.gui.multicheck</span> <span class="kn">import</span> <span class="n">MultiCheckWidget</span>
 
-<span class="kn">from</span> <span class="nn">sleap.gui.overlays.base</span> <span class="k">import</span> <span class="n">DataOverlay</span><span class="p">,</span> <span class="n">h5_colors</span>
+<span class="kn">from</span> <span class="nn">sleap.gui.overlays.base</span> <span class="kn">import</span> <span class="n">DataOverlay</span><span class="p">,</span> <span class="n">h5_colors</span>
 
 
 <span class="k">class</span> <span class="nc">PafOverlay</span><span class="p">(</span><span class="n">DataOverlay</span><span class="p">):</span>
@@ -190,7 +190,7 @@
 <span class="sd">    When initialized, creates one child QuiverPlot item for each channel.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">frame</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">show</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -250,7 +250,7 @@
 <span class="sd">        None.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">field_x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">field_y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -396,7 +396,7 @@
 
 
 <span class="k">def</span> <span class="nf">demo_pafs</span><span class="p">(</span><span class="n">pafs</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">decimation</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">standalone</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="kn">from</span> <span class="nn">sleap.gui.video</span> <span class="k">import</span> <span class="n">QtVideoPlayer</span>
+    <span class="kn">from</span> <span class="nn">sleap.gui.video</span> <span class="kn">import</span> <span class="n">QtVideoPlayer</span>
 
     <span class="k">if</span> <span class="n">standalone</span><span class="p">:</span>
         <span class="n">app</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QApplication</span><span class="p">([])</span>
@@ -414,9 +414,9 @@
 
     <span class="n">win</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">plot_fields</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">parent</span><span class="o">.</span><span class="n">frame_idx</span> <span class="o">&lt;</span> <span class="n">pafs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
-            <span class="n">frame_pafs</span> <span class="o">=</span> <span class="n">pafs</span><span class="p">[</span><span class="n">parent</span><span class="o">.</span><span class="n">frame_idx</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="k">def</span> <span class="nf">plot_fields</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">frame_idx</span> <span class="o">&lt;</span> <span class="n">pafs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">frame_pafs</span> <span class="o">=</span> <span class="n">pafs</span><span class="p">[</span><span class="n">frame_idx</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
             <span class="n">decimation</span> <span class="o">=</span> <span class="n">decimation_size_bar</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
             <span class="n">aff_fields_item</span> <span class="o">=</span> <span class="n">MultiQuiverPlot</span><span class="p">(</span>
                 <span class="n">frame_pafs</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">decimation</span><span class="o">=</span><span class="n">decimation</span>
@@ -434,69 +434,10 @@
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
 
-    <span class="kn">from</span> <span class="nn">video</span> <span class="k">import</span> <span class="o">*</span>
-
-    <span class="c1"># data_path = &quot;training.scale=1.00,sigma=5.h5&quot;</span>
-
     <span class="n">data_path</span> <span class="o">=</span> <span class="s2">&quot;tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5&quot;</span>
     <span class="n">input_format</span> <span class="o">=</span> <span class="s2">&quot;channels_first&quot;</span>
 
-    <span class="n">data_path</span> <span class="o">=</span> <span class="s2">&quot;/Volumes/fileset-mmurthy/nat/nyu-mouse/predict.h5&quot;</span>
-    <span class="n">input_format</span> <span class="o">=</span> <span class="s2">&quot;channels_last&quot;</span>
-
     <span class="n">show_pafs_from_h5</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">input_format</span><span class="o">=</span><span class="n">input_format</span><span class="p">,</span> <span class="n">standalone</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">foo</span><span class="p">():</span>
-
-    <span class="n">vid</span> <span class="o">=</span> <span class="n">HDF5Video</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="s2">&quot;/box&quot;</span><span class="p">,</span> <span class="n">input_format</span><span class="o">=</span><span class="n">input_format</span><span class="p">)</span>
-    <span class="n">overlay_data</span> <span class="o">=</span> <span class="n">HDF5Video</span><span class="p">(</span>
-        <span class="n">data_path</span><span class="p">,</span> <span class="s2">&quot;/pafs&quot;</span><span class="p">,</span> <span class="n">input_format</span><span class="o">=</span><span class="n">input_format</span><span class="p">,</span> <span class="n">convert_range</span><span class="o">=</span><span class="kc">False</span>
-    <span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span>
-        <span class="n">f</span><span class="s2">&quot;</span><span class="si">{overlay_data.frames}</span><span class="s2">, </span><span class="si">{overlay_data.height}</span><span class="s2">, </span><span class="si">{overlay_data.width}</span><span class="s2">, </span><span class="si">{overlay_data.channels}</span><span class="s2">&quot;</span>
-    <span class="p">)</span>
-    <span class="n">app</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QApplication</span><span class="p">([])</span>
-    <span class="n">window</span> <span class="o">=</span> <span class="n">QtVideoPlayer</span><span class="p">(</span><span class="n">video</span><span class="o">=</span><span class="n">vid</span><span class="p">)</span>
-
-    <span class="n">field_count</span> <span class="o">=</span> <span class="n">overlay_data</span><span class="o">.</span><span class="n">get_frame</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span>
-    <span class="c1"># show the first, middle, and last fields</span>
-    <span class="n">show_fields</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">field_count</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">field_count</span><span class="p">]</span>
-
-    <span class="n">field_check_groupbox</span> <span class="o">=</span> <span class="n">MultiCheckWidget</span><span class="p">(</span>
-        <span class="n">count</span><span class="o">=</span><span class="n">field_count</span><span class="p">,</span> <span class="n">selected</span><span class="o">=</span><span class="n">show_fields</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Affinity Field Channel&quot;</span>
-    <span class="p">)</span>
-    <span class="n">field_check_groupbox</span><span class="o">.</span><span class="n">selectionChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">window</span><span class="o">.</span><span class="n">plot</span><span class="p">)</span>
-    <span class="n">window</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">field_check_groupbox</span><span class="p">)</span>
-
-    <span class="c1"># show one arrow for each decimation*decimation box</span>
-    <span class="n">default_decimation</span> <span class="o">=</span> <span class="mi">9</span>
-
-    <span class="n">decimation_size_bar</span> <span class="o">=</span> <span class="n">QSlider</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">Horizontal</span><span class="p">)</span>
-    <span class="n">decimation_size_bar</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="k">lambda</span> <span class="n">evt</span><span class="p">:</span> <span class="n">window</span><span class="o">.</span><span class="n">plot</span><span class="p">())</span>
-    <span class="n">decimation_size_bar</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">default_decimation</span><span class="p">)</span>
-    <span class="n">decimation_size_bar</span><span class="o">.</span><span class="n">setMinimum</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-    <span class="n">decimation_size_bar</span><span class="o">.</span><span class="n">setMaximum</span><span class="p">(</span><span class="mi">21</span><span class="p">)</span>
-    <span class="n">decimation_size_bar</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">window</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">decimation_size_bar</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">plot_fields</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
-        <span class="c1"># build list of checked boxes to determine which affinity fields to show</span>
-        <span class="n">selected</span> <span class="o">=</span> <span class="n">field_check_groupbox</span><span class="o">.</span><span class="n">getSelected</span><span class="p">()</span>
-        <span class="c1"># get decimation size from slider</span>
-        <span class="n">decimation</span> <span class="o">=</span> <span class="n">decimation_size_bar</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
-        <span class="c1"># show affinity fields</span>
-        <span class="n">frame_data</span> <span class="o">=</span> <span class="n">overlay_data</span><span class="o">.</span><span class="n">get_frame</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">frame_idx</span><span class="p">)</span>
-        <span class="n">aff_fields_item</span> <span class="o">=</span> <span class="n">MultiQuiverPlot</span><span class="p">(</span><span class="n">frame_data</span><span class="p">,</span> <span class="n">selected</span><span class="p">,</span> <span class="n">decimation</span><span class="p">)</span>
-
-        <span class="n">window</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">aff_fields_item</span><span class="p">)</span>
-
-    <span class="n">window</span><span class="o">.</span><span class="n">changedPlot</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">plot_fields</span><span class="p">)</span>
-
-    <span class="n">window</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-    <span class="n">window</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
-
-    <span class="n">app</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
 </pre></div>
 
            </div>
