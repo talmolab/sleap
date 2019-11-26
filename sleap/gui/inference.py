@@ -587,8 +587,8 @@ class JobMenuManager:
             models_dir = os.path.join(os.path.dirname(self.labels_filename), "models")
             if os.path.exists(models_dir):
                 self.find_saved_jobs(models_dir, self.job_options_by_menu)
-        # list default profiles
-        self.find_saved_jobs(profile_dir, self.job_options_by_menu)
+        # list default profiles (without searching subdirs)
+        self.find_saved_jobs(profile_dir, self.job_options_by_menu, depth=0)
 
         # Apply any filters
         if self.require_trained:
@@ -736,7 +736,7 @@ class JobMenuManager:
                     ).exec_()
 
     def find_saved_jobs(
-        self, job_dir: str, jobs=None,
+        self, job_dir: str, jobs=None, depth: int = 1
     ) -> Dict[ModelOutputType, List[Tuple[str, TrainingJob]]]:
         """Find all the TrainingJob json files in a given directory.
 
@@ -748,7 +748,7 @@ class JobMenuManager:
             dict of {ModelOutputType: list of (filename, TrainingJob) tuples}
         """
 
-        json_files = util.find_files_by_suffix(job_dir, ".json", depth=1)
+        json_files = util.find_files_by_suffix(job_dir, ".json", depth=depth)
 
         # Sort files, starting with most recently modified
         json_files.sort(key=lambda f: f.stat().st_mtime, reverse=True)
