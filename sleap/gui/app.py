@@ -1202,7 +1202,7 @@ class MainWindow(QMainWindow):
 
     def visualizeOutputs(self):
         """Gui for adding overlay with live visualization of predictions."""
-        filters = ["Model (*.json)", "HDF5 output (*.h5 *.hdf5)"]
+        filters = ["Model (*.json)"]
 
         # Default to opening from models directory from project
         models_dir = None
@@ -1222,40 +1222,16 @@ class MainWindow(QMainWindow):
         if len(filename) == 0:
             return
 
-        if selected_filter == filters[0]:
-            # Model as overlay datasource
-            # This will show live inference results
+        # Model as overlay datasource
+        # This will show live inference results
 
-            from sleap.gui.overlays.base import DataOverlay
+        from sleap.gui.overlays.base import DataOverlay
 
-            overlay = DataOverlay.from_model(
-                filename, self.state["video"], player=self.player
-            )
+        overlay = DataOverlay.from_model(
+            filename, self.state["video"], player=self.player
+        )
 
-            self.overlays["inference"] = overlay
-
-        else:
-            # HDF5 as overlay datasource
-            # This will show saved inference results from previous run
-
-            show_confmaps = True
-            show_pafs = False
-
-            if show_confmaps:
-                from sleap.gui.overlays.confmaps import ConfmapOverlay
-
-                confmap_overlay = ConfmapOverlay.from_h5(filename, player=self.player)
-                self.player.changedPlot.connect(
-                    lambda parent, idx: confmap_overlay.add_to_scene(None, idx)
-                )
-
-            if show_pafs:
-                from sleap.gui.overlays.pafs import PafOverlay
-
-                paf_overlay = PafOverlay.from_h5(filename, player=self.player)
-                self.player.changedPlot.connect(
-                    lambda parent, idx: paf_overlay.add_to_scene(None, idx)
-                )
+        self.overlays["inference"] = overlay
 
         self.plotFrame()
 
