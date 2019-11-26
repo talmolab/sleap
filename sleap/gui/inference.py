@@ -823,8 +823,6 @@ def run_learning_pipeline(
     # Set the parameters specific to this run
     for job in training_jobs.values():
         job.labels_filename = labels_filename
-        job.save_dir = None
-        job.run_name = None
 
     # TODO: only require labels_filename if we're training?
     # save_dir = os.path.join(os.path.dirname(labels_filename), "models")
@@ -892,6 +890,10 @@ def run_gui_training(
             print(f"Using already trained model: {trained_jobs[model_type]}")
 
         else:
+            # Clear save dir and run name for job we're about to train
+            job.save_dir = None
+            job.run_name = None
+
             if gui:
                 print("Resetting monitor window.")
                 win.reset(what=str(model_type))
