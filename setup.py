@@ -33,7 +33,7 @@ setup(
     url='https://github.com/murthylab/sleap',
     keywords='deep learning, pose estimation, tracking, neuroscience',
     license='BSD3',
-    packages=find_packages(exclude=['tensorflow']),
+    packages=find_packages(exclude=['tensorflow', 'tensorflow-gpu']),
     include_package_data=True,
     entry_points = {
         'console_scripts': [
