@@ -65,10 +65,14 @@ class Predictor:
                 imgs, chunk_ind, video_ds.chunk_size
             )
 
-            self.track_chunk(predicted_instances_chunk, frame_inds, imgs)
+            sample_inds = np.arange(
+                video_ds.chunk_size * chunk_ind, video_ds.chunk_size * (chunk_ind + 1)
+            )
+
+            self.track_chunk(predicted_instances_chunk, frame_inds, sample_inds, imgs)
 
             frames = self.make_labeled_frames(
-                predicted_instances_chunk, frame_inds, video_ds.video
+                predicted_instances_chunk, frame_inds, sample_inds, video_ds.video
             )
 
             predicted_frames.extend(frames)
@@ -126,11 +130,14 @@ class Predictor:
 
         return predicted_instances_chunk
 
-    def track_chunk(self, predicted_instances_chunk, frame_inds, img_chunk):
+    def track_chunk(
+        self, predicted_instances_chunk, frame_inds, sample_inds, img_chunk
+    ):
         """Runs tracker for each frame in chunk."""
-        for (sample_idx, instances), frame_idx, img in zip(
-            predicted_instances_chunk.items(), frame_inds, img_chunk
-        ):
+        for frame_idx, sample_idx, img in zip(frame_inds, sample_inds, img_chunk):
+            frame_idx = int(frame_idx)
+            instances = predicted_instances_chunk[sample_idx]
+
             predicted_instances_chunk[sample_idx] = self.track_next_sample(
                 untracked_instances=instances, t=frame_idx, img=img,
             )
@@ -153,18 +160,25 @@ class Predictor:
         return tracker.track(**track_args)
 
     def make_labeled_frames(
-        self, instances_chunk, frame_inds, video
+        self,
+        instances_chunk: Dict[int, List["PredictedInstance"]],
+        frame_inds,
+        sample_inds,
+        video: "Video",
     ) -> List[LabeledFrame]:
         """Makes LabeledFrame objects for all predictions in chunk."""
 
-        # Make a list of the instances from each frame, sorted by sample index
-        sorted_frame_instances = [val for (key, val) in sorted(instances_chunk.items())]
+        sorted_instances_chunk = sorted(instances_chunk.items())
 
-        frames = [
-            LabeledFrame(frame_idx=frame_idx, instances=instances, video=video)
-            for frame_idx, instances in zip(frame_inds, sorted_frame_instances)
-            if instances
-        ]
+        frames = []
+        for frame_idx, sample_idx in zip(frame_inds, sample_inds):
+            frame_idx = int(frame_idx)
+            instances = instances_chunk[sample_idx]
+            if instances:
+                frames.append(
+                    LabeledFrame(frame_idx=frame_idx, instances=instances, video=video)
+                )
+
         return frames
 
     @classmethod
