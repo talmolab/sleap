@@ -15,7 +15,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 def get_requirements(require_name=None):
     prefix = require_name + '_' if require_name is not None else ''
     with open(path.join(here, prefix + 'requirements.txt'), encoding='utf-8') as f:
-        return f.read().strip().split('\n')
+        return f.read().strip().replace('-gpu','').split('\n')
 
 
 setup(
@@ -33,7 +33,7 @@ setup(
     url='https://github.com/murthylab/sleap',
     keywords='deep learning, pose estimation, tracking, neuroscience',
     license='BSD3',
-    packages=find_packages(exclude=['tensorflow', 'tensorflow-gpu']),
+    packages=find_packages(exclude=['tensorflow']),
     include_package_data=True,
     entry_points = {
         'console_scripts': [
