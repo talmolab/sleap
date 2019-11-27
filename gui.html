@@ -92,7 +92,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">GUI</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#module-sleap.gui.video">Video Player</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#dialogs">Dialogs</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#active-learning">Active Learning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#training-inference">Training/Inference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-sleap.gui.importvideos">Video Importer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-sleap.gui.merge">Merging</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-sleap.gui.shortcuts">Shortcuts</a></li>
@@ -1121,8 +1121,131 @@ enough instances.</p></li>
 </div>
 <div class="section" id="dialogs">
 <h2>Dialogs<a class="headerlink" href="#dialogs" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="active-learning">
-<h3>Active Learning<a class="headerlink" href="#active-learning" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="training-inference">
+<h3>Training/Inference<a class="headerlink" href="#training-inference" title="Permalink to this headline">¶</a></h3>
+<span class="target" id="module-sleap.gui.inference"></span><p>Module for running training and inference from the main gui application.</p>
+<dl class="class">
+<dt id="sleap.gui.inference.InferenceDialog">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.inference.</code><code class="sig-name descname">InferenceDialog</code><span class="sig-paren">(</span><em class="sig-param">labels_filename: str</em>, <em class="sig-param">labels: sleap.io.dataset.Labels</em>, <em class="sig-param">mode: str = 'expert'</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/inference.html#InferenceDialog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.inference.InferenceDialog" title="Permalink to this definition">¶</a></dt>
+<dd><p>Training/inference dialog.</p>
+<p>The dialog can be used in different modes:
+* simplified training + inference (fewer controls)
+* expert training + inference (full controls)
+* inference only</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>labels_filename</strong> – Path to the dataset where we’ll get training data.</p></li>
+<li><p><strong>labels</strong> – The dataset where we’ll get training data and add predictions.</p></li>
+<li><p><strong>mode</strong> – String which specified mode (“learning”, “expert”, or “inference”).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="sleap.gui.inference.InferenceDialog.frame_selection">
+<em class="property">property </em><code class="sig-name descname">frame_selection</code><a class="headerlink" href="#sleap.gui.inference.InferenceDialog.frame_selection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns dictionary with frames that user has selected for inference.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.inference.InferenceDialog.on_job_menu_selection">
+<code class="sig-name descname">on_job_menu_selection</code><span class="sig-paren">(</span><em class="sig-param">menu_name: str</em>, <em class="sig-param">selected_idx: int</em>, <em class="sig-param">field</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/inference.html#InferenceDialog.on_job_menu_selection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.inference.InferenceDialog.on_job_menu_selection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles when user selects an item from model/job menu.</p>
+<p>If selection is a valid job, then update form fields from job.
+If selection is “add”, then show the appropriate gui for selecting job.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.inference.InferenceDialog.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/inference.html#InferenceDialog.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.inference.InferenceDialog.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run training (or inference) with current dialog settings.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.inference.InferenceDialog.show">
+<code class="sig-name descname">show</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/inference.html#InferenceDialog.show"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.inference.InferenceDialog.show" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shows dialog (we hide rather than close to maintain settings).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.inference.InferenceDialog.update_gui">
+<code class="sig-name descname">update_gui</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/inference.html#InferenceDialog.update_gui"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.inference.InferenceDialog.update_gui" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates gui state after user changes to options.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.inference.InferenceDialog.view_datagen">
+<code class="sig-name descname">view_datagen</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/inference.html#InferenceDialog.view_datagen"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.inference.InferenceDialog.view_datagen" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shows windows with sample visual data that will be used training.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.gui.inference.has_jobs_to_train">
+<code class="sig-prename descclassname">sleap.gui.inference.</code><code class="sig-name descname">has_jobs_to_train</code><span class="sig-paren">(</span><em class="sig-param">training_jobs: Dict[ModelOutputType, TrainingJob]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/inference.html#has_jobs_to_train"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.inference.has_jobs_to_train" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether any of the jobs need to be trained.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.gui.inference.run_gui_inference">
+<code class="sig-prename descclassname">sleap.gui.inference.</code><code class="sig-name descname">run_gui_inference</code><span class="sig-paren">(</span><em class="sig-param">labels: sleap.io.dataset.Labels, trained_job_paths: List[str], frames_to_predict: Dict[sleap.io.video.Video, List[int]], inference_params: Dict[str, str], gui: bool = True</em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="_modules/sleap/gui/inference.html#run_gui_inference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.inference.run_gui_inference" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run inference on specified frames using models from training_jobs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>labels</strong> – The current labels object; results will be added to this.</p></li>
+<li><p><strong>trained_job_paths</strong> – List of paths to TrainingJobs with trained models.</p></li>
+<li><p><strong>frames_to_predict</strong> – Dict that gives list of frame indices for each video.</p></li>
+<li><p><strong>inference_params</strong> – Parameters to pass to inference.</p></li>
+<li><p><strong>gui</strong> – Whether to show gui windows and process gui events.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Number of new frames added to labels.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.gui.inference.run_gui_training">
+<code class="sig-prename descclassname">sleap.gui.inference.</code><code class="sig-name descname">run_gui_training</code><span class="sig-paren">(</span><em class="sig-param">labels_filename: str, training_jobs: Dict[ModelOutputType, TrainingJob], gui: bool = True</em><span class="sig-paren">)</span> &#x2192; Dict[sleap.nn.model.ModelOutputType, str]<a class="reference internal" href="_modules/sleap/gui/inference.html#run_gui_training"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.inference.run_gui_training" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run training for each training job.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>labels</strong> – Labels object from which we’ll get training data.</p></li>
+<li><p><strong>training_jobs</strong> – Dict of the jobs to train.</p></li>
+<li><p><strong>save_dir</strong> – Path to the directory where we’ll save inference results.</p></li>
+<li><p><strong>gui</strong> – Whether to show gui windows and process gui events.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Dict of paths to trained jobs corresponding with input training jobs.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.gui.inference.run_learning_pipeline">
+<code class="sig-prename descclassname">sleap.gui.inference.</code><code class="sig-name descname">run_learning_pipeline</code><span class="sig-paren">(</span><em class="sig-param">labels_filename: str, labels: sleap.io.dataset.Labels, training_jobs: Dict[ModelOutputType, TrainingJob], inference_params: Dict[str, str], frames_to_predict: Dict[sleap.io.video.Video, List[int]] = None</em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="_modules/sleap/gui/inference.html#run_learning_pipeline"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.inference.run_learning_pipeline" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run training (as needed) and inference.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>labels_filename</strong> – Path to already saved current labels object.</p></li>
+<li><p><strong>labels</strong> – The current labels object; results will be added to this.</p></li>
+<li><p><strong>training_jobs</strong> – The TrainingJobs with params/hyperparams for training.</p></li>
+<li><p><strong>inference_params</strong> – Parameters to pass to inference.</p></li>
+<li><p><strong>frames_to_predict</strong> – Dict that gives list of frame indices for each video.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Number of new frames added to labels.</p>
+</dd>
+</dl>
+</dd></dl>
+
 </div>
 <div class="section" id="module-sleap.gui.importvideos">
 <span id="video-importer"></span><h3>Video Importer<a class="headerlink" href="#module-sleap.gui.importvideos" title="Permalink to this headline">¶</a></h3>

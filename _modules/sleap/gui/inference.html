@@ -1,0 +1,1228 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>sleap.gui.inference &mdash; SLEAP  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> SLEAP
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">SLEAP Package</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../skeleton.html">Skeleton</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../video.html">Video</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instance.html">Instance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dataset.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../training.html">Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../gui.html">GUI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc.html">Misc</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">SLEAP</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>sleap.gui.inference</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for sleap.gui.inference</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Module for running training and inference from the main gui application.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">attr</span>
+<span class="kn">import</span> <span class="nn">cattr</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">reduce</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">from</span> <span class="nn">sleap.io.dataset</span> <span class="kn">import</span> <span class="n">Labels</span>
+<span class="kn">from</span> <span class="nn">sleap.io.video</span> <span class="kn">import</span> <span class="n">Video</span>
+<span class="kn">from</span> <span class="nn">sleap.gui.filedialog</span> <span class="kn">import</span> <span class="n">FileDialog</span>
+<span class="kn">from</span> <span class="nn">sleap.gui.training_editor</span> <span class="kn">import</span> <span class="n">TrainingEditor</span>
+<span class="kn">from</span> <span class="nn">sleap.gui.formbuilder</span> <span class="kn">import</span> <span class="n">YamlFormWidget</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.model</span> <span class="kn">import</span> <span class="n">ModelOutputType</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.job</span> <span class="kn">import</span> <span class="n">TrainingJob</span>
+<span class="kn">from</span> <span class="nn">sleap</span> <span class="kn">import</span> <span class="n">util</span>
+
+<span class="kn">from</span> <span class="nn">PySide2</span> <span class="kn">import</span> <span class="n">QtWidgets</span><span class="p">,</span> <span class="n">QtCore</span>
+
+
+<span class="n">SELECT_FILE_OPTION</span> <span class="o">=</span> <span class="s2">&quot;Select training run/model file...&quot;</span>
+
+<span class="n">MENU_NAME_TYPE_MAP</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">confmap</span><span class="o">=</span><span class="p">(</span><span class="n">ModelOutputType</span><span class="o">.</span><span class="n">CONFIDENCE_MAP</span><span class="p">,</span> <span class="n">ModelOutputType</span><span class="o">.</span><span class="n">TOPDOWN_CONFIDENCE_MAP</span><span class="p">,),</span>
+    <span class="n">paf</span><span class="o">=</span><span class="p">(</span><span class="n">ModelOutputType</span><span class="o">.</span><span class="n">PART_AFFINITY_FIELD</span><span class="p">,),</span>
+    <span class="n">centroid</span><span class="o">=</span><span class="p">(</span><span class="n">ModelOutputType</span><span class="o">.</span><span class="n">CENTROIDS</span><span class="p">,),</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="InferenceDialog"><a class="viewcode-back" href="../../../gui.html#sleap.gui.inference.InferenceDialog">[docs]</a><span class="k">class</span> <span class="nc">InferenceDialog</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDialog</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Training/inference dialog.</span>
+
+<span class="sd">    The dialog can be used in different modes:</span>
+<span class="sd">    * simplified training + inference (fewer controls)</span>
+<span class="sd">    * expert training + inference (full controls)</span>
+<span class="sd">    * inference only</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        labels_filename: Path to the dataset where we&#39;ll get training data.</span>
+<span class="sd">        labels: The dataset where we&#39;ll get training data and add predictions.</span>
+<span class="sd">        mode: String which specified mode (&quot;learning&quot;, &quot;expert&quot;, or &quot;inference&quot;).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">learningFinished</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">labels_filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span><span class="p">,</span>
+        <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;expert&quot;</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">InferenceDialog</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">labels_filename</span> <span class="o">=</span> <span class="n">labels_filename</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_job_filter</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;inference&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_job_filter</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">job</span><span class="p">:</span> <span class="n">job</span><span class="o">.</span><span class="n">is_trained</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of frames to train on: {len(labels.user_labeled_frames)}&quot;</span><span class="p">)</span>
+
+        <span class="n">title</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">learning</span><span class="o">=</span><span class="s2">&quot;Training and Inference&quot;</span><span class="p">,</span>
+            <span class="n">inference</span><span class="o">=</span><span class="s2">&quot;Inference&quot;</span><span class="p">,</span>
+            <span class="n">expert</span><span class="o">=</span><span class="s2">&quot;Inference Pipeline&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span> <span class="o">=</span> <span class="n">YamlFormWidget</span><span class="o">.</span><span class="n">from_name</span><span class="p">(</span>
+            <span class="n">form_name</span><span class="o">=</span><span class="s2">&quot;inference_forms&quot;</span><span class="p">,</span>
+            <span class="n">which_form</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot; Settings&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setWindowTitle</span><span class="p">(</span><span class="n">title</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">])</span>
+
+        <span class="c1"># form ui</span>
+
+        <span class="n">is_confmap_strict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;learning&quot;</span>
+
+        <span class="n">job_option_widgets</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s2">&quot;_conf_job&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">fields</span><span class="p">:</span>
+            <span class="n">job_option_widgets</span><span class="p">[</span><span class="s2">&quot;confmap&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s2">&quot;_conf_job&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s2">&quot;_paf_job&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">fields</span><span class="p">:</span>
+            <span class="n">job_option_widgets</span><span class="p">[</span><span class="s2">&quot;paf&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s2">&quot;_paf_job&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s2">&quot;_centroid_job&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">fields</span><span class="p">:</span>
+            <span class="n">job_option_widgets</span><span class="p">[</span><span class="s2">&quot;centroid&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s2">&quot;_centroid_job&quot;</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">job_menu_manager</span> <span class="o">=</span> <span class="n">JobMenuManager</span><span class="p">(</span>
+            <span class="n">labels_filename</span><span class="p">,</span>
+            <span class="n">job_option_widgets</span><span class="p">,</span>
+            <span class="n">require_trained</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;inference&quot;</span><span class="p">),</span>
+            <span class="n">strict_confmap_type</span><span class="o">=</span><span class="n">is_confmap_strict</span><span class="p">,</span>
+            <span class="n">menu_selection_callback</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">on_job_menu_selection</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">job_menu_manager</span><span class="o">.</span><span class="n">rebuild</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">job_menu_manager</span><span class="o">.</span><span class="n">update_menus</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">buttons</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDialogButtonBox</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cancel_button</span> <span class="o">=</span> <span class="n">buttons</span><span class="o">.</span><span class="n">addButton</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDialogButtonBox</span><span class="o">.</span><span class="n">Cancel</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">run_button</span> <span class="o">=</span> <span class="n">buttons</span><span class="o">.</span><span class="n">addButton</span><span class="p">(</span>
+            <span class="s2">&quot;Run &quot;</span> <span class="o">+</span> <span class="n">title</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">],</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDialogButtonBox</span><span class="o">.</span><span class="n">AcceptRole</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">status_message</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QLabel</span><span class="p">(</span><span class="s2">&quot;hi!&quot;</span><span class="p">)</span>
+
+        <span class="n">buttons_layout</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QHBoxLayout</span><span class="p">()</span>
+        <span class="n">buttons_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">status_message</span><span class="p">)</span>
+        <span class="n">buttons_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">buttons</span><span class="p">,</span> <span class="n">alignment</span><span class="o">=</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">AlignTop</span><span class="p">)</span>
+
+        <span class="n">buttons_layout_widget</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QWidget</span><span class="p">()</span>
+        <span class="n">buttons_layout_widget</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">buttons_layout</span><span class="p">)</span>
+
+        <span class="n">layout</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QVBoxLayout</span><span class="p">()</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">buttons_layout_widget</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">layout</span><span class="p">)</span>
+
+        <span class="c1"># connect actions to buttons</span>
+
+        <span class="c1"># TODO: fix</span>
+
+        <span class="c1"># def edit_conf_profile():</span>
+        <span class="c1">#     self._view_profile(</span>
+        <span class="c1">#         self.form_widget[&quot;_conf_job&quot;], model_type=ModelOutputType.CONFIDENCE_MAP</span>
+        <span class="c1">#     )</span>
+        <span class="c1">#</span>
+        <span class="c1"># def edit_paf_profile():</span>
+        <span class="c1">#     self._view_profile(</span>
+        <span class="c1">#         self.form_widget[&quot;_paf_job&quot;],</span>
+        <span class="c1">#         model_type=ModelOutputType.PART_AFFINITY_FIELD,</span>
+        <span class="c1">#     )</span>
+        <span class="c1">#</span>
+        <span class="c1"># def edit_cent_profile():</span>
+        <span class="c1">#     self._view_profile(</span>
+        <span class="c1">#         self.form_widget[&quot;_centroid_job&quot;], model_type=ModelOutputType.CENTROIDS</span>
+        <span class="c1">#     )</span>
+
+        <span class="c1"># if &quot;_view_conf&quot; in self.form_widget.buttons:</span>
+        <span class="c1">#     self.form_widget.buttons[&quot;_view_conf&quot;].clicked.connect(edit_conf_profile)</span>
+        <span class="c1"># if &quot;_view_paf&quot; in self.form_widget.buttons:</span>
+        <span class="c1">#     self.form_widget.buttons[&quot;_view_paf&quot;].clicked.connect(edit_paf_profile)</span>
+        <span class="c1"># if &quot;_view_centoids&quot; in self.form_widget.buttons:</span>
+        <span class="c1">#     self.form_widget.buttons[&quot;_view_centoids&quot;].clicked.connect(</span>
+        <span class="c1">#         edit_cent_profile</span>
+        <span class="c1">#     )</span>
+        <span class="k">if</span> <span class="s2">&quot;_view_datagen&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">buttons</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">buttons</span><span class="p">[</span><span class="s2">&quot;_view_datagen&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">view_datagen</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_gui</span><span class="p">())</span>
+
+        <span class="n">buttons</span><span class="o">.</span><span class="n">accepted</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">)</span>
+        <span class="n">buttons</span><span class="o">.</span><span class="n">rejected</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reject</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_gui</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">frame_selection</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Video</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns dictionary with frames that user has selected for inference.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span>
+
+    <span class="nd">@frame_selection</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">frame_selection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame_selection</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Video</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]):</span>
+        <span class="sd">&quot;&quot;&quot;Sets options of frames on which to run inference.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span> <span class="o">=</span> <span class="n">frame_selection</span>
+
+        <span class="k">if</span> <span class="s2">&quot;_predict_frames&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">prediction_options</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">def</span> <span class="nf">count_total_frames</span><span class="p">(</span><span class="n">videos_frames</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">videos_frames</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="mi">0</span>
+                <span class="k">return</span> <span class="n">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">,</span> <span class="nb">map</span><span class="p">(</span><span class="nb">len</span><span class="p">,</span> <span class="n">videos_frames</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+
+            <span class="c1"># Determine which options are available given _frame_selection</span>
+
+            <span class="n">total_random</span> <span class="o">=</span> <span class="n">count_total_frames</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span><span class="p">[</span><span class="s2">&quot;random&quot;</span><span class="p">])</span>
+            <span class="n">total_suggestions</span> <span class="o">=</span> <span class="n">count_total_frames</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span><span class="p">[</span><span class="s2">&quot;suggestions&quot;</span><span class="p">])</span>
+            <span class="n">clip_length</span> <span class="o">=</span> <span class="n">count_total_frames</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span><span class="p">[</span><span class="s2">&quot;clip&quot;</span><span class="p">])</span>
+            <span class="n">video_length</span> <span class="o">=</span> <span class="n">count_total_frames</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span><span class="p">[</span><span class="s2">&quot;video&quot;</span><span class="p">])</span>
+
+            <span class="c1"># Build list of options</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">!=</span> <span class="s2">&quot;inference&quot;</span><span class="p">:</span>
+                <span class="n">prediction_options</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;nothing&quot;</span><span class="p">)</span>
+            <span class="n">prediction_options</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;current frame&quot;</span><span class="p">)</span>
+
+            <span class="n">option</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;random frames (</span><span class="si">{total_random}</span><span class="s2"> total frames)&quot;</span>
+            <span class="n">prediction_options</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">option</span><span class="p">)</span>
+            <span class="n">default_option</span> <span class="o">=</span> <span class="n">option</span>
+
+            <span class="k">if</span> <span class="n">total_suggestions</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">option</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;suggested frames (</span><span class="si">{total_suggestions}</span><span class="s2"> total frames)&quot;</span>
+                <span class="n">prediction_options</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">option</span><span class="p">)</span>
+                <span class="n">default_option</span> <span class="o">=</span> <span class="n">option</span>
+
+            <span class="k">if</span> <span class="n">clip_length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">option</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;selected clip (</span><span class="si">{clip_length}</span><span class="s2"> frames)&quot;</span>
+                <span class="n">prediction_options</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">option</span><span class="p">)</span>
+                <span class="n">default_option</span> <span class="o">=</span> <span class="n">option</span>
+
+            <span class="n">prediction_options</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;entire video (</span><span class="si">{video_length}</span><span class="s2"> frames)&quot;</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s2">&quot;_predict_frames&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span>
+                <span class="n">prediction_options</span><span class="p">,</span> <span class="n">default_option</span>
+            <span class="p">)</span>
+
+<div class="viewcode-block" id="InferenceDialog.show"><a class="viewcode-back" href="../../../gui.html#sleap.gui.inference.InferenceDialog.show">[docs]</a>    <span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Shows dialog (we hide rather than close to maintain settings).&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">InferenceDialog</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+        <span class="c1"># TODO: keep selection and any items added from training editor</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">job_menu_manager</span><span class="o">.</span><span class="n">rebuild</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">job_menu_manager</span><span class="o">.</span><span class="n">update_menus</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="InferenceDialog.update_gui"><a class="viewcode-back" href="../../../gui.html#sleap.gui.inference.InferenceDialog.update_gui">[docs]</a>    <span class="k">def</span> <span class="nf">update_gui</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Updates gui state after user changes to options.&quot;&quot;&quot;</span>
+        <span class="n">form_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">get_form_data</span><span class="p">()</span>
+
+        <span class="n">can_run</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">use_centroids</span> <span class="o">=</span> <span class="n">form_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_use_centroids&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;_use_centroids&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">fields</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">form_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_use_trained_centroids&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+                <span class="c1"># you must use centroids if you are using a centroid model</span>
+                <span class="n">use_centroids</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">set_form_data</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">_use_centroids</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s2">&quot;_use_centroids&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s2">&quot;_use_centroids&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">use_centroids</span><span class="p">:</span>
+                <span class="c1"># you must crop if you are using centroids</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">set_form_data</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">instance_crop</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s2">&quot;instance_crop&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s2">&quot;instance_crop&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">error_messages</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">form_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_use_trained_confmaps&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="ow">and</span> <span class="n">form_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">&quot;_use_trained_pafs&quot;</span><span class="p">,</span> <span class="kc">False</span>
+        <span class="p">):</span>
+            <span class="c1"># make sure trained models are compatible</span>
+            <span class="n">conf_job</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_menu_manager</span><span class="o">.</span><span class="n">get_current_job</span><span class="p">(</span><span class="s2">&quot;confmap&quot;</span><span class="p">)</span>
+            <span class="n">paf_job</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_menu_manager</span><span class="o">.</span><span class="n">get_current_job</span><span class="p">(</span><span class="s2">&quot;paf&quot;</span><span class="p">)</span>
+
+            <span class="c1"># only check compatible if we have both profiles</span>
+            <span class="k">if</span> <span class="n">conf_job</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">paf_job</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">conf_job</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">scale</span> <span class="o">!=</span> <span class="n">paf_job</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">scale</span><span class="p">:</span>
+                    <span class="n">can_run</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="n">error_messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;training image scale for confmaps (</span><span class="si">{conf_job.trainer.scale}</span><span class="s2">) does not match pafs (</span><span class="si">{paf_job.trainer.scale}</span><span class="s2">)&quot;</span>
+                    <span class="p">)</span>
+                <span class="k">if</span> <span class="n">conf_job</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">instance_crop</span> <span class="o">!=</span> <span class="n">paf_job</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">instance_crop</span><span class="p">:</span>
+                    <span class="n">can_run</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="n">crop_model_name</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="s2">&quot;confmaps&quot;</span> <span class="k">if</span> <span class="n">conf_job</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">instance_crop</span> <span class="k">else</span> <span class="s2">&quot;pafs&quot;</span>
+                    <span class="p">)</span>
+                    <span class="n">error_messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;exactly one model (</span><span class="si">{crop_model_name}</span><span class="s2">) was trained on crops&quot;</span>
+                    <span class="p">)</span>
+                <span class="k">if</span> <span class="n">use_centroids</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">conf_job</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">instance_crop</span><span class="p">:</span>
+                    <span class="n">can_run</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="n">error_messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;models used with centroids must be trained on cropped images&quot;</span>
+                    <span class="p">)</span>
+
+        <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">can_run</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;Unable to run with selected models:</span><span class="se">\n</span><span class="s2">- &quot;</span>
+                <span class="o">+</span> <span class="s2">&quot;;</span><span class="se">\n</span><span class="s2">- &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">error_messages</span><span class="p">)</span>
+                <span class="o">+</span> <span class="s2">&quot;.&quot;</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">status_message</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">run_button</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="n">can_run</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_model_types_to_use</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns lists of model types which user has enabled.&quot;&quot;&quot;</span>
+        <span class="n">form_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">get_form_data</span><span class="p">()</span>
+        <span class="n">types_to_use</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># TODO: check _grouping_method for confmaps vs topdown</span>
+
+        <span class="c1"># always include confidence maps</span>
+        <span class="k">if</span> <span class="s2">&quot;topdown&quot;</span> <span class="ow">in</span> <span class="n">form_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_grouping_method&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
+            <span class="n">types_to_use</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;topdown&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">types_to_use</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;confmap&quot;</span><span class="p">)</span>
+
+        <span class="c1"># by default we want to use part affinity fields</span>
+        <span class="n">do_use_pafs</span> <span class="o">=</span> <span class="n">form_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_use_pafs&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">form_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_dont_use_pafs&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="n">do_use_pafs</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">elif</span> <span class="n">form_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_multi_instance_mode&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;single&quot;</span><span class="p">:</span>
+            <span class="n">do_use_pafs</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">elif</span> <span class="s2">&quot;topdown&quot;</span> <span class="ow">in</span> <span class="n">form_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_grouping_method&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
+            <span class="n">do_use_pafs</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">do_use_pafs</span><span class="p">:</span>
+            <span class="n">types_to_use</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;paf&quot;</span><span class="p">)</span>
+
+        <span class="c1"># by default we want to use centroids</span>
+        <span class="n">do_use_centroids</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">form_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_use_centroids&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
+            <span class="n">do_use_centroids</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">elif</span> <span class="n">form_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_region_proposal_mode&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;full frame&quot;</span><span class="p">:</span>
+            <span class="n">do_use_centroids</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">do_use_centroids</span><span class="p">:</span>
+            <span class="n">types_to_use</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;centroid&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">types_to_use</span>
+
+    <span class="k">def</span> <span class="nf">_get_current_training_jobs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">ModelOutputType</span><span class="p">,</span> <span class="n">TrainingJob</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns all currently selected training jobs.</span>
+
+<span class="sd">        Form fields which match job parameters override values in saved jobs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">form_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">get_form_data</span><span class="p">()</span>
+        <span class="n">training_jobs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+        <span class="n">default_use_trained</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;inference&quot;</span>
+
+        <span class="k">for</span> <span class="n">menu_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_model_types_to_use</span><span class="p">():</span>
+            <span class="n">job</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_menu_manager</span><span class="o">.</span><span class="n">get_current_job</span><span class="p">(</span><span class="n">menu_name</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">job</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">model_type</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">output_type</span>
+
+            <span class="k">if</span> <span class="n">model_type</span> <span class="o">!=</span> <span class="n">ModelOutputType</span><span class="o">.</span><span class="n">CENTROIDS</span><span class="p">:</span>
+                <span class="c1"># update training job from params in form</span>
+                <span class="n">trainer</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">trainer</span>
+                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">form_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="c1"># check if field name is [var]_[model_type] (eg sigma_confmaps)</span>
+                    <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="nb">str</span><span class="p">(</span><span class="n">model_type</span><span class="p">):</span>
+                        <span class="n">key</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                    <span class="c1"># check if form field matches attribute of Trainer object</span>
+                    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">trainer</span><span class="p">):</span>
+                        <span class="nb">setattr</span><span class="p">(</span><span class="n">trainer</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+            <span class="c1"># Use already trained model if desired</span>
+            <span class="k">if</span> <span class="n">form_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;_use_trained_{str(model_type)}&quot;</span><span class="p">,</span> <span class="n">default_use_trained</span><span class="p">):</span>
+                <span class="n">job</span><span class="o">.</span><span class="n">use_trained_model</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="c1"># Clear parameters that shouldn&#39;t be copied</span>
+            <span class="n">job</span><span class="o">.</span><span class="n">val_set_filename</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">job</span><span class="o">.</span><span class="n">test_set_filename</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="n">training_jobs</span><span class="p">[</span><span class="n">model_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">job</span>
+
+        <span class="k">return</span> <span class="n">training_jobs</span>
+
+<div class="viewcode-block" id="InferenceDialog.run"><a class="viewcode-back" href="../../../gui.html#sleap.gui.inference.InferenceDialog.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run training (or inference) with current dialog settings.&quot;&quot;&quot;</span>
+        <span class="c1"># Collect TrainingJobs and params from form</span>
+        <span class="n">form_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">get_form_data</span><span class="p">()</span>
+        <span class="n">training_jobs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_current_training_jobs</span><span class="p">()</span>
+
+        <span class="c1"># Close the dialog now that we have the data from it</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span>
+
+        <span class="n">frames_to_predict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">predict_frames_choice</span> <span class="o">=</span> <span class="n">form_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_predict_frames&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">predict_frames_choice</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;current frame&quot;</span><span class="p">):</span>
+                <span class="n">frames_to_predict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span><span class="p">[</span><span class="s2">&quot;frame&quot;</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">predict_frames_choice</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">):</span>
+                <span class="n">frames_to_predict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span><span class="p">[</span><span class="s2">&quot;random&quot;</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">predict_frames_choice</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;selected clip&quot;</span><span class="p">):</span>
+                <span class="n">frames_to_predict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span><span class="p">[</span><span class="s2">&quot;clip&quot;</span><span class="p">]</span>
+                <span class="n">with_tracking</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">elif</span> <span class="n">predict_frames_choice</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;suggested&quot;</span><span class="p">):</span>
+                <span class="n">frames_to_predict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span><span class="p">[</span><span class="s2">&quot;suggestions&quot;</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">predict_frames_choice</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;entire video&quot;</span><span class="p">):</span>
+                <span class="n">frames_to_predict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span><span class="p">[</span><span class="s2">&quot;video&quot;</span><span class="p">]</span>
+
+        <span class="c1"># for key, val in training_jobs.items():</span>
+        <span class="c1">#     print(key)</span>
+        <span class="c1">#     print(val)</span>
+        <span class="c1">#     print()</span>
+        <span class="c1"># print(form_data)</span>
+
+        <span class="c1"># Run training/inference pipeline using the TrainingJobs</span>
+        <span class="n">new_counts</span> <span class="o">=</span> <span class="n">run_learning_pipeline</span><span class="p">(</span>
+            <span class="n">labels_filename</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">labels_filename</span><span class="p">,</span>
+            <span class="n">labels</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span>
+            <span class="n">training_jobs</span><span class="o">=</span><span class="n">training_jobs</span><span class="p">,</span>
+            <span class="n">inference_params</span><span class="o">=</span><span class="n">form_data</span><span class="p">,</span>
+            <span class="n">frames_to_predict</span><span class="o">=</span><span class="n">frames_to_predict</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">learningFinished</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">new_counts</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QMessageBox</span><span class="p">(</span>
+                <span class="n">text</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Inference has finished. Instances were predicted on </span><span class="si">{new_counts}</span><span class="s2"> frames.&quot;</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="InferenceDialog.view_datagen"><a class="viewcode-back" href="../../../gui.html#sleap.gui.inference.InferenceDialog.view_datagen">[docs]</a>    <span class="k">def</span> <span class="nf">view_datagen</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Shows windows with sample visual data that will be used training.&quot;&quot;&quot;</span>
+
+        <span class="kn">from</span> <span class="nn">sleap.nn</span> <span class="kn">import</span> <span class="n">data</span>
+        <span class="kn">from</span> <span class="nn">sleap.io.video</span> <span class="kn">import</span> <span class="n">Video</span>
+        <span class="kn">from</span> <span class="nn">sleap.gui.overlays.confmaps</span> <span class="kn">import</span> <span class="n">demo_confmaps</span>
+        <span class="kn">from</span> <span class="nn">sleap.gui.overlays.pafs</span> <span class="kn">import</span> <span class="n">demo_pafs</span>
+
+        <span class="n">training_data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">TrainingData</span><span class="o">.</span><span class="n">from_labels</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span>
+        <span class="n">ds</span> <span class="o">=</span> <span class="n">training_data</span><span class="o">.</span><span class="n">to_ds</span><span class="p">()</span>
+
+        <span class="n">conf_job</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_menu_manager</span><span class="o">.</span><span class="n">get_current_job</span><span class="p">(</span><span class="s2">&quot;confmap&quot;</span><span class="p">)</span>
+
+        <span class="c1"># settings for datagen</span>
+        <span class="n">form_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">get_form_data</span><span class="p">()</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="n">form_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;scale&quot;</span><span class="p">,</span> <span class="n">conf_job</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span>
+        <span class="n">sigma</span> <span class="o">=</span> <span class="n">form_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;sigma&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">sigma_confmaps</span> <span class="o">=</span> <span class="n">form_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;sigma_confmaps&quot;</span><span class="p">,</span> <span class="n">sigma</span><span class="p">)</span>
+        <span class="n">sigma_pafs</span> <span class="o">=</span> <span class="n">form_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;sigma_pafs&quot;</span><span class="p">,</span> <span class="n">sigma</span><span class="p">)</span>
+        <span class="n">instance_crop</span> <span class="o">=</span> <span class="n">form_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;instance_crop&quot;</span><span class="p">,</span> <span class="n">conf_job</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">instance_crop</span><span class="p">)</span>
+        <span class="n">bounding_box_size</span> <span class="o">=</span> <span class="n">form_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">&quot;bounding_box_size&quot;</span><span class="p">,</span> <span class="n">conf_job</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">bounding_box_size</span>
+        <span class="p">)</span>
+        <span class="c1"># negative_samples = form_data.get(&quot;negative_samples&quot;, 0)</span>
+
+        <span class="k">if</span> <span class="n">bounding_box_size</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">bounding_box_size</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">bounding_box_size</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">estimate_instance_crop_size</span><span class="p">(</span>
+                <span class="n">training_data</span><span class="o">.</span><span class="n">points</span><span class="p">,</span>
+                <span class="n">min_multiple</span><span class="o">=</span><span class="n">conf_job</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">input_min_multiple</span><span class="p">,</span>
+                <span class="n">padding</span><span class="o">=</span><span class="n">conf_job</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">instance_crop_padding</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">instance_crop</span><span class="p">:</span>
+            <span class="n">ds</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">instance_crop_dataset</span><span class="p">(</span>
+                <span class="n">ds</span><span class="p">,</span> <span class="n">box_height</span><span class="o">=</span><span class="n">bounding_box_size</span><span class="p">,</span> <span class="n">box_width</span><span class="o">=</span><span class="n">bounding_box_size</span>
+            <span class="p">)</span>
+
+        <span class="n">skeleton</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">conf_job</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">output_type</span> <span class="o">==</span> <span class="n">ModelOutputType</span><span class="o">.</span><span class="n">CONFIDENCE_MAP</span><span class="p">:</span>
+            <span class="n">conf_data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">make_confmap_dataset</span><span class="p">(</span>
+                <span class="n">ds</span><span class="p">,</span> <span class="n">output_scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sigma_confmaps</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">conf_job</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">output_type</span> <span class="o">==</span> <span class="n">ModelOutputType</span><span class="o">.</span><span class="n">TOPDOWN_CONFIDENCE_MAP</span><span class="p">:</span>
+            <span class="n">conf_data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">make_instance_confmap_dataset</span><span class="p">(</span>
+                <span class="n">ds</span><span class="p">,</span> <span class="n">with_ctr_peaks</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">output_scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sigma_confmaps</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="n">imgs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">confmaps</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">img</span><span class="p">,</span> <span class="n">confmap</span> <span class="ow">in</span> <span class="n">conf_data</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">confmap</span><span class="p">)</span> <span class="o">==</span> <span class="nb">tuple</span><span class="p">:</span>
+                <span class="n">confmap</span> <span class="o">=</span> <span class="n">confmap</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">imgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+            <span class="n">confmaps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">confmap</span><span class="p">)</span>
+
+        <span class="n">imgs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">imgs</span><span class="p">)</span>
+        <span class="n">confmaps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">confmaps</span><span class="p">)</span>
+        <span class="n">conf_vid</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">imgs</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span>
+
+        <span class="n">conf_win</span> <span class="o">=</span> <span class="n">demo_confmaps</span><span class="p">(</span><span class="n">confmaps</span><span class="p">,</span> <span class="n">conf_vid</span><span class="p">)</span>
+        <span class="n">conf_win</span><span class="o">.</span><span class="n">activateWindow</span><span class="p">()</span>
+        <span class="n">conf_win</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">bounding_box_size</span> <span class="o">+</span> <span class="mi">50</span><span class="p">,</span> <span class="n">bounding_box_size</span> <span class="o">+</span> <span class="mi">50</span><span class="p">)</span>
+        <span class="n">conf_win</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">200</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ModelOutputType</span><span class="o">.</span><span class="n">PART_AFFINITY_FIELD</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_current_training_jobs</span><span class="p">():</span>
+            <span class="n">paf_data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">make_paf_dataset</span><span class="p">(</span>
+                <span class="n">ds</span><span class="p">,</span>
+                <span class="n">data</span><span class="o">.</span><span class="n">SimpleSkeleton</span><span class="o">.</span><span class="n">from_skeleton</span><span class="p">(</span><span class="n">skeleton</span><span class="p">)</span><span class="o">.</span><span class="n">edges</span><span class="p">,</span>
+                <span class="n">output_scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span>
+                <span class="n">distance_threshold</span><span class="o">=</span><span class="n">sigma_pafs</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">imgs</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">pafs</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">img</span><span class="p">,</span> <span class="n">paf</span> <span class="ow">in</span> <span class="n">paf_data</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+                <span class="n">imgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+                <span class="n">pafs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">paf</span><span class="p">)</span>
+
+            <span class="n">imgs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">imgs</span><span class="p">)</span>
+            <span class="n">pafs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">pafs</span><span class="p">)</span>
+            <span class="n">paf_vid</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">imgs</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span>
+
+            <span class="n">paf_win</span> <span class="o">=</span> <span class="n">demo_pafs</span><span class="p">(</span><span class="n">pafs</span><span class="p">,</span> <span class="n">paf_vid</span><span class="p">)</span>
+            <span class="n">paf_win</span><span class="o">.</span><span class="n">activateWindow</span><span class="p">()</span>
+            <span class="n">paf_win</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">bounding_box_size</span> <span class="o">+</span> <span class="mi">50</span><span class="p">,</span> <span class="n">bounding_box_size</span> <span class="o">+</span> <span class="mi">50</span><span class="p">)</span>
+            <span class="n">paf_win</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="mi">220</span> <span class="o">+</span> <span class="n">conf_win</span><span class="o">.</span><span class="n">rect</span><span class="p">()</span><span class="o">.</span><span class="n">width</span><span class="p">(),</span> <span class="mi">200</span><span class="p">)</span>
+
+        <span class="c1"># FIXME: hide dialog so use can see other windows</span>
+        <span class="c1"># can we show these windows without closing dialog?</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">_view_profile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">menu_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">windows</span><span class="o">=</span><span class="p">[]):</span>
+        <span class="sd">&quot;&quot;&quot;Opens profile editor in new dialog window.&quot;&quot;&quot;</span>
+        <span class="n">saved_files</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">win</span> <span class="o">=</span> <span class="n">TrainingEditor</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">saved_files</span><span class="o">=</span><span class="n">saved_files</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">windows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">win</span><span class="p">)</span>
+        <span class="n">win</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">new_filename</span> <span class="ow">in</span> <span class="n">saved_files</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_job_file_to_list</span><span class="p">(</span><span class="n">new_filename</span><span class="p">,</span> <span class="n">menu_name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">update_fields_from_job</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job</span><span class="p">:</span> <span class="n">TrainingJob</span><span class="p">):</span>
+        <span class="n">model_type</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">output_type</span>
+
+        <span class="n">training_params</span> <span class="o">=</span> <span class="n">cattr</span><span class="o">.</span><span class="n">unstructure</span><span class="p">(</span><span class="n">job</span><span class="o">.</span><span class="n">trainer</span><span class="p">)</span>
+        <span class="n">training_params_specific</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{key}</span><span class="s2">_{str(model_type)}&quot;</span><span class="p">:</span> <span class="n">val</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">training_params</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+        <span class="c1"># confmap and paf models should share some params shown in dialog (e.g. scale)</span>
+        <span class="c1"># but centroids does not, so just set any centroid_foo fields from its profile</span>
+        <span class="k">if</span> <span class="n">model_type</span> <span class="ow">in</span> <span class="p">[</span><span class="n">ModelOutputType</span><span class="o">.</span><span class="n">CENTROIDS</span><span class="p">]:</span>
+            <span class="n">training_params</span> <span class="o">=</span> <span class="n">training_params_specific</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">training_params</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">training_params</span><span class="p">,</span> <span class="o">**</span><span class="n">training_params_specific</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">set_form_data</span><span class="p">(</span><span class="n">training_params</span><span class="p">)</span>
+
+        <span class="c1"># is the model already trained?</span>
+        <span class="n">is_trained</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">is_trained</span>
+        <span class="n">field_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;_use_trained_{str(model_type)}&quot;</span>
+        <span class="c1"># update &quot;use trained&quot; checkbox if present</span>
+        <span class="k">if</span> <span class="n">field_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">fields</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="n">is_trained</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">is_trained</span>
+
+<div class="viewcode-block" id="InferenceDialog.on_job_menu_selection"><a class="viewcode-back" href="../../../gui.html#sleap.gui.inference.InferenceDialog.on_job_menu_selection">[docs]</a>    <span class="k">def</span> <span class="nf">on_job_menu_selection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">menu_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">selected_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">field</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Handles when user selects an item from model/job menu.</span>
+
+<span class="sd">        If selection is a valid job, then update form fields from job.</span>
+<span class="sd">        If selection is &quot;add&quot;, then show the appropriate gui for selecting job.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">selected_idx</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">job</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">field_text</span> <span class="o">=</span> <span class="n">field</span><span class="o">.</span><span class="n">currentText</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">field_text</span> <span class="o">==</span> <span class="n">SELECT_FILE_OPTION</span><span class="p">:</span>
+            <span class="n">job</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_menu_manager</span><span class="o">.</span><span class="n">add_job_gui</span><span class="p">(</span><span class="n">menu_name</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">path</span><span class="p">,</span> <span class="n">job</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_menu_manager</span><span class="o">.</span><span class="n">get_menu_item</span><span class="p">(</span><span class="n">menu_name</span><span class="p">,</span> <span class="n">selected_idx</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">job</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_fields_from_job</span><span class="p">(</span><span class="n">job</span><span class="p">)</span></div></div>
+
+
+<span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">JobMenuManager</span><span class="p">:</span>
+
+    <span class="n">labels_filename</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">job_option_widgets</span><span class="p">:</span> <span class="nb">dict</span>  <span class="c1"># keyed by menu name</span>
+    <span class="n">job_options_by_menu</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>  <span class="c1"># keyed by model type</span>
+    <span class="n">strict_confmap_type</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">require_trained</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">menu_selection_callback</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">rebuild</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Rebuilds list of profile options (checking for new profile files).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># load list of job profiles from directory</span>
+        <span class="n">profile_dir</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">get_package_file</span><span class="p">(</span><span class="s2">&quot;sleap/training_profiles&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">job_options_by_menu</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+        <span class="c1"># list any profiles from previous runs</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels_filename</span><span class="p">:</span>
+            <span class="n">models_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels_filename</span><span class="p">),</span> <span class="s2">&quot;models&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">models_dir</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">find_saved_jobs</span><span class="p">(</span><span class="n">models_dir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_options_by_menu</span><span class="p">)</span>
+        <span class="c1"># list default profiles (without searching subdirs)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">find_saved_jobs</span><span class="p">(</span><span class="n">profile_dir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_options_by_menu</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># Apply any filters</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">require_trained</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">jobs_list</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_options_by_menu</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">job_options_by_menu</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">job</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">job</span><span class="p">)</span> <span class="ow">in</span> <span class="n">jobs_list</span> <span class="k">if</span> <span class="n">job</span><span class="o">.</span><span class="n">is_trained</span>
+                <span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">get_menu_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">menu_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the list of (path, TrainingJob) tuples for menu.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">menu_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_options_by_menu</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_options_by_menu</span><span class="p">[</span><span class="n">menu_name</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="c1"># menu_options = []</span>
+        <span class="c1"># for model_type in MENU_NAME_TYPE_MAP[menu_name]:</span>
+        <span class="c1">#     if model_type in self.job_options_by_model_type:</span>
+        <span class="c1">#         menu_options.extend(self.job_options_by_model_type[model_type])</span>
+        <span class="c1"># return menu_options</span>
+
+    <span class="k">def</span> <span class="nf">option_list_from_jobs_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jobs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns list of menu options for given model type.&quot;&quot;&quot;</span>
+        <span class="n">option_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">job</span><span class="p">)</span> <span class="ow">in</span> <span class="n">jobs</span><span class="p">]</span>
+        <span class="n">option_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">option_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;---&quot;</span><span class="p">)</span>
+        <span class="n">option_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">SELECT_FILE_OPTION</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">option_list</span>
+
+    <span class="k">def</span> <span class="nf">update_menus</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">init</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Updates the menus with training profile options.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            init: Whether this is first time calling (so we should connect</span>
+<span class="sd">                signals), or we&#39;re just updating menus.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">menu_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_option_widgets</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_menu</span><span class="p">(</span><span class="n">menu_name</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="n">init</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">update_menu</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">menu_name</span><span class="p">,</span>
+        <span class="n">select_item</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">init</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">signal</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="n">menu_options</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_menu_options</span><span class="p">(</span><span class="n">menu_name</span><span class="p">)</span>
+        <span class="n">field</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_option_widgets</span><span class="p">[</span><span class="n">menu_name</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">init</span><span class="p">:</span>
+
+            <span class="k">def</span> <span class="nf">menu_action</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">menu</span><span class="o">=</span><span class="n">menu_name</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="n">field</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">menu_selection_callback</span><span class="p">(</span><span class="n">menu</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">field</span><span class="p">)</span>
+
+            <span class="n">field</span><span class="o">.</span><span class="n">currentIndexChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">menu_action</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">signal</span><span class="p">:</span>
+            <span class="c1"># block signals so we can update combobox without overwriting</span>
+            <span class="c1"># any user data with the defaults from the profile</span>
+            <span class="n">field</span><span class="o">.</span><span class="n">blockSignals</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">field</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">option_list_from_jobs_list</span><span class="p">(</span><span class="n">menu_options</span><span class="p">),</span> <span class="n">select_item</span><span class="p">)</span>
+        <span class="c1"># enable signals again so that choice of profile will update params</span>
+        <span class="n">field</span><span class="o">.</span><span class="n">blockSignals</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_current_job</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">menu_name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">TrainingJob</span><span class="p">],</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Returns training job currently selected for given model type.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            model_type: The type of model for which we want data.</span>
+
+<span class="sd">        Returns: Tuple of (TrainingJob, path to job profile).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># by default use the first model for a given type</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># If there&#39;s a menu, then use the selected item</span>
+        <span class="k">if</span> <span class="n">menu_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_option_widgets</span><span class="p">:</span>
+            <span class="n">field</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_option_widgets</span><span class="p">[</span><span class="n">menu_name</span><span class="p">]</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">field</span><span class="o">.</span><span class="n">currentIndex</span><span class="p">()</span>
+
+        <span class="n">job_filename</span><span class="p">,</span> <span class="n">job</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_menu_item</span><span class="p">(</span><span class="n">menu_name</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">job</span><span class="p">,</span> <span class="n">job_filename</span>
+
+    <span class="k">def</span> <span class="nf">get_menu_item</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">menu_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">item_idx</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TrainingJob</span><span class="p">]]:</span>
+        <span class="n">menu_options</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_menu_options</span><span class="p">(</span><span class="n">menu_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">item_idx</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">menu_options</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="n">menu_options</span><span class="p">[</span><span class="n">item_idx</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">insert_menu_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">menu_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">job_path</span><span class="p">,</span> <span class="n">job</span><span class="p">):</span>
+        <span class="c1"># insert at beginning of list</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">job_options_by_menu</span><span class="p">[</span><span class="n">menu_name</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="n">job_path</span><span class="p">,</span> <span class="n">job</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_menu</span><span class="p">(</span><span class="n">menu_name</span><span class="p">,</span> <span class="n">select_item</span><span class="o">=</span><span class="n">job_path</span><span class="p">,</span> <span class="n">signal</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">add_job_gui</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">menu_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Allow user to add training profile for given model type.&quot;&quot;&quot;</span>
+        <span class="n">filename</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">FileDialog</span><span class="o">.</span><span class="n">open</span><span class="p">(</span>
+            <span class="kc">None</span><span class="p">,</span>
+            <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">caption</span><span class="o">=</span><span class="s2">&quot;Select training profile...&quot;</span><span class="p">,</span>
+            <span class="nb">filter</span><span class="o">=</span><span class="s2">&quot;TrainingJob JSON (*.json)&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_job_to_list</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">menu_name</span><span class="p">)</span>
+
+        <span class="c1"># If we didn&#39;t successfully select a new file, then reset menu selection</span>
+        <span class="n">field</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_option_widgets</span><span class="p">[</span><span class="n">menu_name</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">field</span><span class="o">.</span><span class="n">currentIndex</span><span class="p">()</span> <span class="o">==</span> <span class="n">field</span><span class="o">.</span><span class="n">count</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># subtract 1 for separator</span>
+            <span class="n">field</span><span class="o">.</span><span class="n">setCurrentIndex</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">add_job_to_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">menu_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Adds selected training profile for given model type.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># try to load json as TrainingJob</span>
+                <span class="n">job</span> <span class="o">=</span> <span class="n">TrainingJob</span><span class="o">.</span><span class="n">load_json</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="c1"># but do raise any other type of error</span>
+                <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QMessageBox</span><span class="p">(</span>
+                    <span class="n">text</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Unable to load a training profile from </span><span class="si">{filename}</span><span class="s2">.&quot;</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
+                <span class="k">raise</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Get the model type for the model/profile selected by user</span>
+                <span class="n">file_model_type</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">output_type</span>
+
+                <span class="c1"># Make sure this is the right type for this menu</span>
+                <span class="k">if</span> <span class="n">file_model_type</span> <span class="ow">in</span> <span class="n">MENU_NAME_TYPE_MAP</span><span class="p">[</span><span class="n">menu_name</span><span class="p">]:</span>
+
+                    <span class="bp">self</span><span class="o">.</span><span class="n">insert_menu_item</span><span class="p">(</span><span class="n">menu_name</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">job</span><span class="p">)</span>
+
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QMessageBox</span><span class="p">(</span>
+                        <span class="n">text</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Profile selected is for training {str(file_model_type)} instead of </span><span class="si">{menu_name}</span><span class="s2">.&quot;</span>
+                    <span class="p">)</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">find_saved_jobs</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">job_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">jobs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">ModelOutputType</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">TrainingJob</span><span class="p">]]]:</span>
+        <span class="sd">&quot;&quot;&quot;Find all the TrainingJob json files in a given directory.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            job_dir: the directory in which to look for json files</span>
+<span class="sd">            jobs: If given, then the found jobs will be added to this object,</span>
+<span class="sd">                rather than creating new dict.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            dict of {ModelOutputType: list of (filename, TrainingJob) tuples}</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">json_files</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">find_files_by_suffix</span><span class="p">(</span><span class="n">job_dir</span><span class="p">,</span> <span class="s2">&quot;.json&quot;</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="n">depth</span><span class="p">)</span>
+
+        <span class="c1"># Sort files, starting with most recently modified</span>
+        <span class="n">json_files</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="n">f</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">json_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">file</span><span class="o">.</span><span class="n">path</span> <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">json_files</span><span class="p">]</span>
+
+        <span class="n">jobs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span> <span class="k">if</span> <span class="n">jobs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">jobs</span>
+        <span class="k">for</span> <span class="n">full_filename</span> <span class="ow">in</span> <span class="n">json_paths</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># try to load json as TrainingJob</span>
+                <span class="n">job</span> <span class="o">=</span> <span class="n">TrainingJob</span><span class="o">.</span><span class="n">load_json</span><span class="p">(</span><span class="n">full_filename</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="c1"># Couldn&#39;t load as TrainingJob so just ignore this json file</span>
+                <span class="c1"># probably it&#39;s a json file for something else (or an json for a</span>
+                <span class="c1"># older version of the object with different class attributes).</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                <span class="k">pass</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># we loaded the json as a TrainingJob, so see what type of model it&#39;s for</span>
+                <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">menu_name_from_model_type</span><span class="p">(</span><span class="n">job</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">output_type</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">jobs</span><span class="p">:</span>
+                    <span class="n">jobs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">jobs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">full_filename</span><span class="p">,</span> <span class="n">job</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">jobs</span>
+
+    <span class="k">def</span> <span class="nf">menu_name_from_model_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_type</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">strict_confmap_type</span><span class="p">:</span>
+            <span class="n">conf_types</span> <span class="o">=</span> <span class="p">(</span><span class="n">ModelOutputType</span><span class="o">.</span><span class="n">CONFIDENCE_MAP</span><span class="p">,)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">conf_types</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">ModelOutputType</span><span class="o">.</span><span class="n">CONFIDENCE_MAP</span><span class="p">,</span>
+                <span class="n">ModelOutputType</span><span class="o">.</span><span class="n">TOPDOWN_CONFIDENCE_MAP</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">model_type</span> <span class="ow">in</span> <span class="n">conf_types</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;confmap&quot;</span>
+        <span class="k">elif</span> <span class="n">model_type</span> <span class="o">==</span> <span class="n">ModelOutputType</span><span class="o">.</span><span class="n">TOPDOWN_CONFIDENCE_MAP</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;topdown&quot;</span>
+
+        <span class="k">if</span> <span class="n">model_type</span> <span class="o">==</span> <span class="n">ModelOutputType</span><span class="o">.</span><span class="n">CENTROIDS</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;centroid&quot;</span>
+
+        <span class="k">if</span> <span class="n">model_type</span> <span class="o">==</span> <span class="n">ModelOutputType</span><span class="o">.</span><span class="n">PART_AFFINITY_FIELD</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;paf&quot;</span>
+
+        <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="run_learning_pipeline"><a class="viewcode-back" href="../../../gui.html#sleap.gui.inference.run_learning_pipeline">[docs]</a><span class="k">def</span> <span class="nf">run_learning_pipeline</span><span class="p">(</span>
+    <span class="n">labels_filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span><span class="p">,</span>
+    <span class="n">training_jobs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="s2">&quot;ModelOutputType&quot;</span><span class="p">,</span> <span class="s2">&quot;TrainingJob&quot;</span><span class="p">],</span>
+    <span class="n">inference_params</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+    <span class="n">frames_to_predict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Video</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Run training (as needed) and inference.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        labels_filename: Path to already saved current labels object.</span>
+<span class="sd">        labels: The current labels object; results will be added to this.</span>
+<span class="sd">        training_jobs: The TrainingJobs with params/hyperparams for training.</span>
+<span class="sd">        inference_params: Parameters to pass to inference.</span>
+<span class="sd">        frames_to_predict: Dict that gives list of frame indices for each video.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Number of new frames added to labels.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Set the parameters specific to this run</span>
+    <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">training_jobs</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="n">job</span><span class="o">.</span><span class="n">labels_filename</span> <span class="o">=</span> <span class="n">labels_filename</span>
+
+    <span class="c1"># TODO: only require labels_filename if we&#39;re training?</span>
+    <span class="c1"># save_dir = os.path.join(os.path.dirname(labels_filename), &quot;models&quot;)</span>
+
+    <span class="c1"># Train the TrainingJobs</span>
+    <span class="n">trained_jobs</span> <span class="o">=</span> <span class="n">run_gui_training</span><span class="p">(</span><span class="n">labels_filename</span><span class="p">,</span> <span class="n">training_jobs</span><span class="p">)</span>
+
+    <span class="c1"># Check that all the models were trained</span>
+    <span class="k">if</span> <span class="kc">None</span> <span class="ow">in</span> <span class="n">trained_jobs</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="n">trained_job_paths</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">trained_jobs</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+    <span class="c1"># Run the Predictor for suggested frames</span>
+    <span class="n">new_labeled_frame_count</span> <span class="o">=</span> <span class="n">run_gui_inference</span><span class="p">(</span>
+        <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+        <span class="n">trained_job_paths</span><span class="o">=</span><span class="n">trained_job_paths</span><span class="p">,</span>
+        <span class="n">inference_params</span><span class="o">=</span><span class="n">inference_params</span><span class="p">,</span>
+        <span class="n">frames_to_predict</span><span class="o">=</span><span class="n">frames_to_predict</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">new_labeled_frame_count</span></div>
+
+
+<div class="viewcode-block" id="has_jobs_to_train"><a class="viewcode-back" href="../../../gui.html#sleap.gui.inference.has_jobs_to_train">[docs]</a><span class="k">def</span> <span class="nf">has_jobs_to_train</span><span class="p">(</span><span class="n">training_jobs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="s2">&quot;ModelOutputType&quot;</span><span class="p">,</span> <span class="s2">&quot;TrainingJob&quot;</span><span class="p">]):</span>
+    <span class="sd">&quot;&quot;&quot;Returns whether any of the jobs need to be trained.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">job</span><span class="p">,</span> <span class="s2">&quot;use_trained_model&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">training_jobs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="run_gui_training"><a class="viewcode-back" href="../../../gui.html#sleap.gui.inference.run_gui_training">[docs]</a><span class="k">def</span> <span class="nf">run_gui_training</span><span class="p">(</span>
+    <span class="n">labels_filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">training_jobs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="s2">&quot;ModelOutputType&quot;</span><span class="p">,</span> <span class="s2">&quot;TrainingJob&quot;</span><span class="p">],</span>
+    <span class="n">gui</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="s2">&quot;ModelOutputType&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Run training for each training job.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        labels: Labels object from which we&#39;ll get training data.</span>
+<span class="sd">        training_jobs: Dict of the jobs to train.</span>
+<span class="sd">        save_dir: Path to the directory where we&#39;ll save inference results.</span>
+<span class="sd">        gui: Whether to show gui windows and process gui events.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Dict of paths to trained jobs corresponding with input training jobs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">from</span> <span class="nn">sleap.nn</span> <span class="kn">import</span> <span class="n">training</span>
+
+    <span class="n">trained_jobs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">gui</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">sleap.nn.monitor</span> <span class="kn">import</span> <span class="n">LossViewer</span>
+
+        <span class="c1"># open training monitor window</span>
+        <span class="n">win</span> <span class="o">=</span> <span class="n">LossViewer</span><span class="p">()</span>
+        <span class="n">win</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="mi">600</span><span class="p">,</span> <span class="mi">400</span><span class="p">)</span>
+        <span class="n">win</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">model_type</span><span class="p">,</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">training_jobs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">job</span><span class="p">,</span> <span class="s2">&quot;use_trained_model&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="c1"># set path to TrainingJob already trained from previous run</span>
+            <span class="c1"># json_name = f&quot;{job.run_name}.json&quot;</span>
+            <span class="n">trained_jobs</span><span class="p">[</span><span class="n">model_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">run_path</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Using already trained model: </span><span class="si">{trained_jobs[model_type]}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Clear save dir and run name for job we&#39;re about to train</span>
+            <span class="n">job</span><span class="o">.</span><span class="n">save_dir</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">job</span><span class="o">.</span><span class="n">run_name</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="k">if</span> <span class="n">gui</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Resetting monitor window.&quot;</span><span class="p">)</span>
+                <span class="n">win</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">what</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">model_type</span><span class="p">))</span>
+                <span class="n">win</span><span class="o">.</span><span class="n">setWindowTitle</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Training Model - {str(model_type)}&quot;</span><span class="p">)</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Start training {str(model_type)}...&quot;</span><span class="p">)</span>
+
+            <span class="k">def</span> <span class="nf">waiting</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">gui</span><span class="p">:</span>
+                    <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QApplication</span><span class="o">.</span><span class="n">instance</span><span class="p">()</span><span class="o">.</span><span class="n">processEvents</span><span class="p">()</span>
+
+            <span class="c1"># Run training</span>
+            <span class="n">trained_job_path</span><span class="p">,</span> <span class="n">success</span> <span class="o">=</span> <span class="n">training</span><span class="o">.</span><span class="n">Trainer</span><span class="o">.</span><span class="n">train_subprocess</span><span class="p">(</span>
+                <span class="n">job</span><span class="p">,</span> <span class="n">labels_filename</span><span class="p">,</span> <span class="n">waiting</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">success</span><span class="p">:</span>
+                <span class="c1"># get the path to the resulting TrainingJob file</span>
+                <span class="n">trained_jobs</span><span class="p">[</span><span class="n">model_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">trained_job_path</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Finished training {str(model_type)}.&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">gui</span><span class="p">:</span>
+                    <span class="n">win</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                    <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QMessageBox</span><span class="p">(</span>
+                        <span class="n">text</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;An error occurred while training {str(model_type)}. Your command line terminal may have more information about the error.&quot;</span>
+                    <span class="p">)</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
+                <span class="n">trained_jobs</span><span class="p">[</span><span class="n">model_type</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">gui</span><span class="p">:</span>
+        <span class="c1"># close training monitor window</span>
+        <span class="n">win</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">trained_jobs</span></div>
+
+
+<div class="viewcode-block" id="run_gui_inference"><a class="viewcode-back" href="../../../gui.html#sleap.gui.inference.run_gui_inference">[docs]</a><span class="k">def</span> <span class="nf">run_gui_inference</span><span class="p">(</span>
+    <span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span><span class="p">,</span>
+    <span class="n">trained_job_paths</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">frames_to_predict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Video</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
+    <span class="n">inference_params</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+    <span class="n">gui</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Run inference on specified frames using models from training_jobs.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        labels: The current labels object; results will be added to this.</span>
+<span class="sd">        trained_job_paths: List of paths to TrainingJobs with trained models.</span>
+<span class="sd">        frames_to_predict: Dict that gives list of frame indices for each video.</span>
+<span class="sd">        inference_params: Parameters to pass to inference.</span>
+<span class="sd">        gui: Whether to show gui windows and process gui events.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Number of new frames added to labels.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">sleap.nn</span> <span class="kn">import</span> <span class="n">inference</span>
+
+    <span class="k">if</span> <span class="n">gui</span><span class="p">:</span>
+        <span class="c1"># show message while running inference</span>
+        <span class="n">progress</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QProgressDialog</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Running inference on {len(frames_to_predict)} videos...&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Cancel&quot;</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">frames_to_predict</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">progress</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QApplication</span><span class="o">.</span><span class="n">instance</span><span class="p">()</span><span class="o">.</span><span class="n">processEvents</span><span class="p">()</span>
+
+    <span class="n">new_lfs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">frames</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">frames_to_predict</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">frames</span><span class="p">):</span>
+
+            <span class="k">def</span> <span class="nf">waiting</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">gui</span><span class="p">:</span>
+                    <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QApplication</span><span class="o">.</span><span class="n">instance</span><span class="p">()</span><span class="o">.</span><span class="n">processEvents</span><span class="p">()</span>
+                    <span class="n">progress</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">progress</span><span class="o">.</span><span class="n">wasCanceled</span><span class="p">():</span>
+                        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+
+            <span class="c1"># Run inference for desired frames in this video</span>
+            <span class="n">predictions_path</span><span class="p">,</span> <span class="n">success</span> <span class="o">=</span> <span class="n">inference</span><span class="o">.</span><span class="n">Predictor</span><span class="o">.</span><span class="n">predict_subprocess</span><span class="p">(</span>
+                <span class="n">video</span><span class="o">=</span><span class="n">video</span><span class="p">,</span>
+                <span class="n">frames</span><span class="o">=</span><span class="n">frames</span><span class="p">,</span>
+                <span class="n">trained_job_paths</span><span class="o">=</span><span class="n">trained_job_paths</span><span class="p">,</span>
+                <span class="n">kwargs</span><span class="o">=</span><span class="n">inference_params</span><span class="p">,</span>
+                <span class="n">waiting_callback</span><span class="o">=</span><span class="n">waiting</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">success</span><span class="p">:</span>
+                <span class="n">predictions_labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">predictions_path</span><span class="p">,</span> <span class="n">match_to</span><span class="o">=</span><span class="n">labels</span><span class="p">)</span>
+                <span class="n">new_lfs</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">predictions_labels</span><span class="o">.</span><span class="n">labeled_frames</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">gui</span><span class="p">:</span>
+                    <span class="n">progress</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                    <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QMessageBox</span><span class="p">(</span>
+                        <span class="n">text</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;An error occcured during inference. Your command line terminal may have more information about the error.&quot;</span>
+                    <span class="p">)</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
+                <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="c1"># Remove any frames without instances</span>
+    <span class="n">new_lfs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">lf</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">lf</span><span class="o">.</span><span class="n">instances</span><span class="p">),</span> <span class="n">new_lfs</span><span class="p">))</span>
+
+    <span class="c1"># Merge predictions into current labels dataset</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">new_conflicts</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">complex_merge_between</span><span class="p">(</span>
+        <span class="n">labels</span><span class="p">,</span>
+        <span class="n">new_labels</span><span class="o">=</span><span class="n">Labels</span><span class="p">(</span><span class="n">new_lfs</span><span class="p">),</span>
+        <span class="n">unify</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="c1"># since we used match_to when loading predictions file</span>
+    <span class="p">)</span>
+
+    <span class="c1"># new predictions should replace old ones</span>
+    <span class="n">Labels</span><span class="o">.</span><span class="n">finish_complex_merge</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">new_conflicts</span><span class="p">)</span>
+
+    <span class="c1"># close message window</span>
+    <span class="k">if</span> <span class="n">gui</span><span class="p">:</span>
+        <span class="n">progress</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="c1"># return total_new_lf_count</span>
+    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_lfs</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">sys</span>
+
+    <span class="c1">#     labels_filename = &quot;/Volumes/fileset-mmurthy/nat/shruthi/labels-mac.json&quot;</span>
+    <span class="n">labels_filename</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">labels_filename</span><span class="p">)</span>
+
+    <span class="n">app</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QApplication</span><span class="p">()</span>
+    <span class="n">win</span> <span class="o">=</span> <span class="n">InferenceDialog</span><span class="p">(</span>
+        <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">labels_filename</span><span class="o">=</span><span class="n">labels_filename</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;inference&quot;</span>
+    <span class="p">)</span>
+    <span class="n">win</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
+
+<span class="c1">#     labeled_frames = run_active_learning_pipeline(labels_filename)</span>
+<span class="c1">#     print(labeled_frames)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Murthy Lab @ Princeton
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

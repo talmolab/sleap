@@ -12,9 +12,9 @@ Video Player
 Dialogs
 -------------
 
-Active Learning
+Training/Inference
 ^^^^^^^^^^^^^^^
-.. automodule:: sleap.gui.active
+.. automodule:: sleap.gui.inference
    :members:
 
 Video Importer
