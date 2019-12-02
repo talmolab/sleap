@@ -7,7 +7,7 @@ from sleap.instance import Instance, Point, LabeledFrame, PredictedInstance, Tra
 from sleap.io.video import Video, MediaVideo
 from sleap.io.dataset import Labels
 from sleap.io.legacy import load_labels_json_old
-from sleap.gui.suggestions import VideoFrameSuggestions
+from sleap.gui.suggestions import VideoFrameSuggestions, SuggestionFrame
 
 TEST_H5_DATASET = "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"
 
@@ -580,15 +580,6 @@ def test_deserialize_suggestions(small_robot_mp4_vid, tmpdir):
         frame.frame_idx for frame in new_suggestion_labels.suggestions
     ]
 
-    old_suggestions = {dummy_video: [2, 5, 7]}
-    labels.set_suggestions(old_suggestions)
-
-    filename = os.path.join(tmpdir, "old_suggestions.h5")
-    Labels.save_file(filename=filename, labels=labels)
-    old_suggestion_labels = Labels.load_file(filename)
-    assert len(old_suggestion_labels.suggestions) == 3
-    assert [frame.frame_idx for frame in old_suggestion_labels.suggestions] == [2, 5, 7]
-
 
 def test_negative_anchors():
     video = Video.from_filename("foo.mp4")
@@ -784,3 +775,34 @@ def test_multivideo_tracks():
     labels.track_swap(vid_b, new_track=track_a, old_track=track_b, frame_range=(3, 4))
 
     assert inst_b.track == track_a
+
+
+def test_many_tracks_hdf5(tmpdir):
+    labels = Labels()
+    filename = os.path.join(tmpdir, "test.h5")
+
+    labels.tracks = [Track(spawned_on=i, name=f"track {i}")
+                     for i in range(4000)]
+
+    Labels.save_hdf5(filename=filename, labels=labels)
+
+
+def test_many_videos_hdf5(tmpdir):
+    labels = Labels()
+    filename = os.path.join(tmpdir, "test.h5")
+
+    labels.videos = [Video.from_filename(f"video {i}.mp4")
+                     for i in range(3000)]
+
+    Labels.save_hdf5(filename=filename, labels=labels)
+
+
+def test_many_suggestions_hdf5(tmpdir):
+    labels = Labels()
+    filename = os.path.join(tmpdir, "test.h5")
+    video = Video.from_filename("foo.mp4")
+    labels.videos = [video]
+
+    labels.suggestions = [SuggestionFrame(video, i) for i in range(3000)]
+
+    Labels.save_hdf5(filename=filename, labels=labels)

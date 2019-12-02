@@ -1324,7 +1324,10 @@ class Labels(MutableSequence):
                 suggestions = suggestions_cattr.structure(
                     dicts["suggestions"], List[SuggestionFrame]
                 )
-            except:
+            except Exception as e:
+                print("Error while loading suggestions (1)")
+                print(e)
+
                 try:
                     # Convert old suggestion format to new format.
                     # Old format: {video: list of frame indices}
@@ -1339,8 +1342,8 @@ class Labels(MutableSequence):
                                 for idx in old_suggestions[video]
                             ]
                         )
-                except:
-                    print("Error while loading suggestions")
+                except Exception as e:
+                    print("Error while loading suggestions (2)")
                     print(e)
                     pass
 
@@ -1617,6 +1620,20 @@ class Labels(MutableSequence):
                 # Get the dict for JSON and save it over the old data
                 d = labels.to_dict(skip_labels=True)
 
+            if not append:
+                for key in ("videos", "tracks", "suggestions"):
+
+                    # Convert for saving in hdf5 dataset
+                    data = [np.string_(json_dumps(item)) for item in d[key]]
+
+                    hdf5_key = f"{key}_json"
+
+                    # Save in its own dataset (e.g., videos_json)
+                    f.create_dataset(hdf5_key, data=data, maxshape=(None,))
+
+                    # Clear from dict since we don't want to save this in attribute
+                    d[key] = []
+
             # Output the dict to JSON
             meta_group.attrs["json"] = np.string_(json_dumps(d))
 
@@ -1833,6 +1850,12 @@ class Labels(MutableSequence):
             dicts = json_loads(
                 f.require_group("metadata").attrs["json"].tostring().decode()
             )
+
+            for key in ("videos", "tracks", "suggestions"):
+                hdf5_key = f"{key}_json"
+                if hdf5_key in f:
+                    items = [json_loads(item_json) for item_json in f[hdf5_key]]
+                    dicts[key] = items
 
             # Video path "." means the video is saved in same file as labels,
             # so replace these paths.
