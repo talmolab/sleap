@@ -3,15 +3,14 @@ model:
 - name: output_type
   label: Training For
   type: list
-  options: confmaps,pafs,centroids
+  options: confmaps,topdown,pafs,centroids
   default: confmaps
 
 - name: arch # backbone_name
   label: Architecture
   type: list
   default: 
-  options: LeapCNN,UNet,StackedHourglass
-  # options: LeapCNN,UNet,StackedHourglass,StackedUNet
+  options: LeapCNN,UNet,StackedUNet,StackedHourglass,ResNet50,DenseNet121,DenseNet169,DenseNet201,GeneralizedDenseNet,UDenseNet,MobileNetV1,MobileNetV2,NASNetMobile,NASNetLarge,GeneralizedNASNet,HigherHRNet
 
 - name: down_blocks
   label: Down Blocks
@@ -224,10 +223,10 @@ output:
   type: file_dir
   default: 
 
-#- name: tensorboard_dir
-#  label: Tensorboard Directory
-#  type: file_dir
-#  default: 
+- name: tensorboard_dir
+  label: Tensorboard Directory
+  type: file_dir
+  default:
 
 buttons:
 
