@@ -156,10 +156,9 @@ main:
     range: 1,10
 
   velocity:
-  - name: node_idx
-    label: Node Index
-    type: int
-    default: 0
+  - name: node
+    label: Node
+    type: list
   - name: threshold
     label: Velocity Threshold
     type: double

@@ -7,7 +7,7 @@ import itertools
 import numpy as np
 import random
 
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, Union
 
 from sleap.io.video import Video
 from sleap.info.feature_suggestions import (
@@ -185,15 +185,20 @@ class VideoFrameSuggestions(object):
         return cls.idx_list_to_frame_list(result, video)
 
     @classmethod
-    def velocity(cls, labels: "Labels", node_idx: int, threshold: float, **kwargs):
+    def velocity(
+        cls, labels: "Labels", node: Union[int, str], threshold: float, **kwargs
+    ):
         """
         Finds frames for proofreading with high node velocity.
         """
 
-        try:
-            node_name = labels.skeletons[0].nodes[node_idx]
-        except IndexError:
-            node_name = ""
+        if isinstance(node, str):
+            node_name = node
+        else:
+            try:
+                node_name = labels.skeletons[0].nodes[node]
+            except IndexError:
+                node_name = ""
 
         suggestions = []
         for video in labels.videos:
@@ -240,8 +245,12 @@ def demo_gui():
         "tests/data/json_format_v2/centered_pair_predictions.json"
     )
 
+    options_lists = dict(node=labels.skeletons[0].node_names)
+
     app = QApplication()
-    win = YamlFormWidget.from_name("suggestions", title="Generate Suggestions")
+    win = YamlFormWidget.from_name(
+        "suggestions", title="Generate Suggestions", field_options_lists=options_lists
+    )
 
     def demo_suggestions(params):
         print(params)
