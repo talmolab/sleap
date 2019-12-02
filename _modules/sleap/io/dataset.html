@@ -1478,7 +1478,10 @@
                 <span class="n">suggestions</span> <span class="o">=</span> <span class="n">suggestions_cattr</span><span class="o">.</span><span class="n">structure</span><span class="p">(</span>
                     <span class="n">dicts</span><span class="p">[</span><span class="s2">&quot;suggestions&quot;</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">SuggestionFrame</span><span class="p">]</span>
                 <span class="p">)</span>
-            <span class="k">except</span><span class="p">:</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error while loading suggestions (1)&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
                 <span class="k">try</span><span class="p">:</span>
                     <span class="c1"># Convert old suggestion format to new format.</span>
                     <span class="c1"># Old format: {video: list of frame indices}</span>
@@ -1493,8 +1496,8 @@
                                 <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">old_suggestions</span><span class="p">[</span><span class="n">video</span><span class="p">]</span>
                             <span class="p">]</span>
                         <span class="p">)</span>
-                <span class="k">except</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error while loading suggestions&quot;</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error while loading suggestions (2)&quot;</span><span class="p">)</span>
                     <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
                     <span class="k">pass</span>
 
@@ -1771,6 +1774,20 @@
                 <span class="c1"># Get the dict for JSON and save it over the old data</span>
                 <span class="n">d</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="n">skip_labels</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">append</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;videos&quot;</span><span class="p">,</span> <span class="s2">&quot;tracks&quot;</span><span class="p">,</span> <span class="s2">&quot;suggestions&quot;</span><span class="p">):</span>
+
+                    <span class="c1"># Convert for saving in hdf5 dataset</span>
+                    <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">string_</span><span class="p">(</span><span class="n">json_dumps</span><span class="p">(</span><span class="n">item</span><span class="p">))</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">d</span><span class="p">[</span><span class="n">key</span><span class="p">]]</span>
+
+                    <span class="n">hdf5_key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{key}</span><span class="s2">_json&quot;</span>
+
+                    <span class="c1"># Save in its own dataset (e.g., videos_json)</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="n">hdf5_key</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">maxshape</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span><span class="p">,))</span>
+
+                    <span class="c1"># Clear from dict since we don&#39;t want to save this in attribute</span>
+                    <span class="n">d</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
             <span class="c1"># Output the dict to JSON</span>
             <span class="n">meta_group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;json&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">string_</span><span class="p">(</span><span class="n">json_dumps</span><span class="p">(</span><span class="n">d</span><span class="p">))</span>
 
@@ -1987,6 +2004,12 @@
             <span class="n">dicts</span> <span class="o">=</span> <span class="n">json_loads</span><span class="p">(</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">require_group</span><span class="p">(</span><span class="s2">&quot;metadata&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;json&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">tostring</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
             <span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;videos&quot;</span><span class="p">,</span> <span class="s2">&quot;tracks&quot;</span><span class="p">,</span> <span class="s2">&quot;suggestions&quot;</span><span class="p">):</span>
+                <span class="n">hdf5_key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{key}</span><span class="s2">_json&quot;</span>
+                <span class="k">if</span> <span class="n">hdf5_key</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="n">json_loads</span><span class="p">(</span><span class="n">item_json</span><span class="p">)</span> <span class="k">for</span> <span class="n">item_json</span> <span class="ow">in</span> <span class="n">f</span><span class="p">[</span><span class="n">hdf5_key</span><span class="p">]]</span>
+                    <span class="n">dicts</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">items</span>
 
             <span class="c1"># Video path &quot;.&quot; means the video is saved in same file as labels,</span>
             <span class="c1"># so replace these paths.</span>

@@ -1772,7 +1772,7 @@ the name of one of the class methods.</p></li>
 
 <dl class="method">
 <dt id="sleap.gui.suggestions.VideoFrameSuggestions.velocity">
-<em class="property">classmethod </em><code class="sig-name descname">velocity</code><span class="sig-paren">(</span><em class="sig-param">labels: Labels</em>, <em class="sig-param">node_idx: int</em>, <em class="sig-param">threshold: float</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/suggestions.html#VideoFrameSuggestions.velocity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.suggestions.VideoFrameSuggestions.velocity" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">velocity</code><span class="sig-paren">(</span><em class="sig-param">labels: Labels, node: Union[int, str], threshold: float, **kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/suggestions.html#VideoFrameSuggestions.velocity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.suggestions.VideoFrameSuggestions.velocity" title="Permalink to this definition">¶</a></dt>
 <dd><p>Finds frames for proofreading with high node velocity.</p>
 </dd></dl>
 
@@ -1842,7 +1842,7 @@ list (which will be updated in code that created TrainingEditor).</p></li>
 
 <dl class="class">
 <dt id="sleap.gui.formbuilder.FormBuilderLayout">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.formbuilder.</code><code class="sig-name descname">FormBuilderLayout</code><span class="sig-paren">(</span><em class="sig-param">items_to_create</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/formbuilder.html#FormBuilderLayout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.formbuilder.FormBuilderLayout" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.formbuilder.</code><code class="sig-name descname">FormBuilderLayout</code><span class="sig-paren">(</span><em class="sig-param">items_to_create</em>, <em class="sig-param">field_options_lists=None</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/formbuilder.html#FormBuilderLayout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.formbuilder.FormBuilderLayout" title="Permalink to this definition">¶</a></dt>
 <dd><p>Custom QFormLayout which populates itself from list of form fields.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1945,7 +1945,7 @@ used for list or stack field-types</p></li>
 
 <dl class="class">
 <dt id="sleap.gui.formbuilder.StackBuilderWidget">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.formbuilder.</code><code class="sig-name descname">StackBuilderWidget</code><span class="sig-paren">(</span><em class="sig-param">stack_data</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/formbuilder.html#StackBuilderWidget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.formbuilder.StackBuilderWidget" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.formbuilder.</code><code class="sig-name descname">StackBuilderWidget</code><span class="sig-paren">(</span><em class="sig-param">stack_data</em>, <em class="sig-param">field_options_lists=None</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/formbuilder.html#StackBuilderWidget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.formbuilder.StackBuilderWidget" title="Permalink to this definition">¶</a></dt>
 <dd><p>A custom widget that shows different subforms depending on menu selection.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1984,7 +1984,7 @@ passed to <a class="reference internal" href="#sleap.gui.formbuilder.FormBuilder
 
 <dl class="class">
 <dt id="sleap.gui.formbuilder.YamlFormWidget">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.formbuilder.</code><code class="sig-name descname">YamlFormWidget</code><span class="sig-paren">(</span><em class="sig-param">yaml_file</em>, <em class="sig-param">which_form: str = 'main'</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/formbuilder.html#YamlFormWidget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.formbuilder.YamlFormWidget" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.formbuilder.</code><code class="sig-name descname">YamlFormWidget</code><span class="sig-paren">(</span><em class="sig-param">yaml_file</em>, <em class="sig-param">which_form: str = 'main'</em>, <em class="sig-param">field_options_lists: Optional[Dict[str</em>, <em class="sig-param">list]] = None</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/formbuilder.html#YamlFormWidget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.formbuilder.YamlFormWidget" title="Permalink to this definition">¶</a></dt>
 <dd><p>Custom QWidget which creates form based on yaml file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>

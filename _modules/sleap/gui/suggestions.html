@@ -161,7 +161,7 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">random</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">from</span> <span class="nn">sleap.io.video</span> <span class="kn">import</span> <span class="n">Video</span>
 <span class="kn">from</span> <span class="nn">sleap.info.feature_suggestions</span> <span class="kn">import</span> <span class="p">(</span>
@@ -339,15 +339,20 @@
         <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">idx_list_to_frame_list</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">video</span><span class="p">)</span>
 
 <div class="viewcode-block" id="VideoFrameSuggestions.velocity"><a class="viewcode-back" href="../../../gui.html#sleap.gui.suggestions.VideoFrameSuggestions.velocity">[docs]</a>    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">velocity</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="s2">&quot;Labels&quot;</span><span class="p">,</span> <span class="n">node_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">velocity</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="s2">&quot;Labels&quot;</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Finds frames for proofreading with high node velocity.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">node_name</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_idx</span><span class="p">]</span>
-        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
-            <span class="n">node_name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">node_name</span> <span class="o">=</span> <span class="n">node</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">node_name</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                <span class="n">node_name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
 
         <span class="n">suggestions</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">video</span> <span class="ow">in</span> <span class="n">labels</span><span class="o">.</span><span class="n">videos</span><span class="p">:</span>
@@ -394,8 +399,12 @@
         <span class="s2">&quot;tests/data/json_format_v2/centered_pair_predictions.json&quot;</span>
     <span class="p">)</span>
 
+    <span class="n">options_lists</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">node</span><span class="o">=</span><span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">node_names</span><span class="p">)</span>
+
     <span class="n">app</span> <span class="o">=</span> <span class="n">QApplication</span><span class="p">()</span>
-    <span class="n">win</span> <span class="o">=</span> <span class="n">YamlFormWidget</span><span class="o">.</span><span class="n">from_name</span><span class="p">(</span><span class="s2">&quot;suggestions&quot;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Generate Suggestions&quot;</span><span class="p">)</span>
+    <span class="n">win</span> <span class="o">=</span> <span class="n">YamlFormWidget</span><span class="o">.</span><span class="n">from_name</span><span class="p">(</span>
+        <span class="s2">&quot;suggestions&quot;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Generate Suggestions&quot;</span><span class="p">,</span> <span class="n">field_options_lists</span><span class="o">=</span><span class="n">options_lists</span>
+    <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">demo_suggestions</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>

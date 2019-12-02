@@ -187,19 +187,32 @@
     <span class="n">mainAction</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
     <span class="n">valueChanged</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">yaml_file</span><span class="p">,</span> <span class="n">which_form</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;main&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">yaml_file</span><span class="p">,</span>
+        <span class="n">which_form</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;main&quot;</span><span class="p">,</span>
+        <span class="n">field_options_lists</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">YamlFormWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">yaml_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">form_yaml</span><span class="p">:</span>
             <span class="n">items_to_create</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">form_yaml</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">SafeLoader</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">which_form</span> <span class="o">=</span> <span class="n">which_form</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">form_layout</span> <span class="o">=</span> <span class="n">FormBuilderLayout</span><span class="p">(</span><span class="n">items_to_create</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">which_form</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">form_layout</span> <span class="o">=</span> <span class="n">FormBuilderLayout</span><span class="p">(</span>
+            <span class="n">items_to_create</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">which_form</span><span class="p">],</span> <span class="n">field_options_lists</span><span class="o">=</span><span class="n">field_options_lists</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">form_layout</span><span class="p">)</span>
 
-        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items_to_create</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">which_form</span><span class="p">]:</span>
-            <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;button&quot;</span> <span class="ow">and</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;main action&quot;</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">buttons</span><span class="p">[</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trigger_main_action</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">items_to_create</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">which_form</span><span class="p">]:</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items_to_create</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">which_form</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="p">(</span>
+                    <span class="n">item</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;button&quot;</span>
+                    <span class="ow">and</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;main action&quot;</span>
+                <span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">buttons</span><span class="p">[</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trigger_main_action</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">form_layout</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">valueChanged</span><span class="p">)</span>
 
@@ -264,11 +277,12 @@
 
     <span class="n">valueChanged</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">items_to_create</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">items_to_create</span><span class="p">,</span> <span class="n">field_options_lists</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">FormBuilderLayout</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">buttons</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fields</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">field_options_lists</span> <span class="o">=</span> <span class="n">field_options_lists</span> <span class="ow">or</span> <span class="nb">dict</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">build_form</span><span class="p">(</span><span class="n">items_to_create</span><span class="p">)</span>
 
 <div class="viewcode-block" id="FormBuilderLayout.get_form_data"><a class="viewcode-back" href="../../../gui.html#sleap.gui.formbuilder.FormBuilderLayout.get_form_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_form_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
@@ -405,7 +419,14 @@
             <span class="c1"># list: show drop-down menu</span>
             <span class="k">elif</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;list&quot;</span><span class="p">:</span>
                 <span class="n">field</span> <span class="o">=</span> <span class="n">FieldComboWidget</span><span class="p">()</span>
-                <span class="n">field</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;options&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">),</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">])</span>
+
+                <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">field_options_lists</span><span class="p">:</span>
+                    <span class="n">field</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">field_options_lists</span><span class="p">[</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]])</span>
+                <span class="k">elif</span> <span class="s2">&quot;options&quot;</span> <span class="ow">in</span> <span class="n">item</span><span class="p">:</span>
+                    <span class="n">field</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span>
+                        <span class="n">item</span><span class="p">[</span><span class="s2">&quot;options&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">),</span> <span class="n">select_item</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                    <span class="p">)</span>
+
                 <span class="n">field</span><span class="o">.</span><span class="n">currentIndexChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">emit</span><span class="p">())</span>
 
             <span class="c1"># button</span>
@@ -422,7 +443,9 @@
 
             <span class="c1"># stacked: show menu and form panel corresponding to menu selection</span>
             <span class="k">elif</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;stacked&quot;</span><span class="p">:</span>
-                <span class="n">field</span> <span class="o">=</span> <span class="n">StackBuilderWidget</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+                <span class="n">field</span> <span class="o">=</span> <span class="n">StackBuilderWidget</span><span class="p">(</span>
+                    <span class="n">item</span><span class="p">,</span> <span class="n">field_options_lists</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">field_options_lists</span>
+                <span class="p">)</span>
 
             <span class="c1"># If we don&#39;t recognize the type, just show a text box</span>
             <span class="k">else</span><span class="p">:</span>
@@ -492,10 +515,12 @@
 <span class="sd">            passed to :meth:`FormBuilderLayout.build_form()`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stack_data</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stack_data</span><span class="p">,</span> <span class="n">field_options_lists</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">StackBuilderWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">option_list</span> <span class="o">=</span> <span class="n">stack_data</span><span class="p">[</span><span class="s2">&quot;options&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">field_options_lists</span> <span class="o">=</span> <span class="n">field_options_lists</span> <span class="ow">or</span> <span class="kc">None</span>
 
         <span class="n">multi_layout</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QFormLayout</span><span class="p">()</span>
         <span class="n">multi_layout</span><span class="o">.</span><span class="n">setFormAlignment</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">AlignLeft</span> <span class="o">|</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">AlignTop</span><span class="p">)</span>
@@ -509,7 +534,9 @@
         <span class="k">for</span> <span class="n">page</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">option_list</span><span class="p">:</span>
 
             <span class="c1"># add page</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">page_layouts</span><span class="p">[</span><span class="n">page</span><span class="p">]</span> <span class="o">=</span> <span class="n">FormBuilderLayout</span><span class="p">(</span><span class="n">stack_data</span><span class="p">[</span><span class="n">page</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">page_layouts</span><span class="p">[</span><span class="n">page</span><span class="p">]</span> <span class="o">=</span> <span class="n">FormBuilderLayout</span><span class="p">(</span>
+                <span class="n">stack_data</span><span class="p">[</span><span class="n">page</span><span class="p">],</span> <span class="n">field_options_lists</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">field_options_lists</span>
+            <span class="p">)</span>
 
             <span class="n">page_widget</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QGroupBox</span><span class="p">()</span>
             <span class="n">page_widget</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">page_layouts</span><span class="p">[</span><span class="n">page</span><span class="p">])</span>
