@@ -163,7 +163,8 @@
 <span class="kn">from</span> <span class="nn">PySide2</span> <span class="kn">import</span> <span class="n">QtWidgets</span>
 
 <span class="kn">from</span> <span class="nn">sleap.gui.formbuilder</span> <span class="kn">import</span> <span class="n">YamlFormWidget</span>
-<span class="kn">from</span> <span class="nn">sleap.util</span> <span class="kn">import</span> <span class="n">get_config_file</span>
+<span class="kn">from</span> <span class="nn">sleap.gui.filedialog</span> <span class="kn">import</span> <span class="n">FileDialog</span>
+<span class="kn">from</span> <span class="nn">sleap.util</span> <span class="kn">import</span> <span class="n">get_package_file</span>
 
 
 <div class="viewcode-block" id="TrainingEditor"><a class="viewcode-back" href="../../../gui.html#sleap.gui.training_editor.TrainingEditor">[docs]</a><span class="k">class</span> <span class="nc">TrainingEditor</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDialog</span><span class="p">):</span>
@@ -185,7 +186,7 @@
     <span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">TrainingEditor</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
-        <span class="n">form_yaml</span> <span class="o">=</span> <span class="n">get_config_file</span><span class="p">(</span><span class="s2">&quot;training_editor.yaml&quot;</span><span class="p">)</span>
+        <span class="n">form_yaml</span> <span class="o">=</span> <span class="n">get_package_file</span><span class="p">(</span><span class="s2">&quot;sleap/config/training_editor.yaml&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">YamlFormWidget</span><span class="p">(</span>
@@ -243,7 +244,7 @@
     <span class="k">def</span> <span class="nf">_load_profile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">profile_filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Loads training profile settings from file.&quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">sleap.nn.model</span> <span class="kn">import</span> <span class="n">ModelOutputType</span>
-        <span class="kn">from</span> <span class="nn">sleap.nn.training</span> <span class="kn">import</span> <span class="n">TrainingJob</span>
+        <span class="kn">from</span> <span class="nn">sleap.nn.job</span> <span class="kn">import</span> <span class="n">TrainingJob</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">training_job</span> <span class="o">=</span> <span class="n">TrainingJob</span><span class="o">.</span><span class="n">load_json</span><span class="p">(</span><span class="n">profile_filename</span><span class="p">)</span>
 
@@ -261,28 +262,27 @@
         <span class="sd">&quot;&quot;&quot;Shows dialog to save training profile.&quot;&quot;&quot;</span>
 
         <span class="c1"># Show &quot;Save&quot; dialog</span>
-        <span class="n">save_filename</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QFileDialog</span><span class="o">.</span><span class="n">getSaveFileName</span><span class="p">(</span>
+        <span class="n">save_filename</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">FileDialog</span><span class="o">.</span><span class="n">save</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span> <span class="n">caption</span><span class="o">=</span><span class="s2">&quot;Save As...&quot;</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="s2">&quot;Profile JSON (*.json)&quot;</span>
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">save_filename</span><span class="p">):</span>
             <span class="kn">from</span> <span class="nn">sleap.nn.model</span> <span class="kn">import</span> <span class="n">Model</span><span class="p">,</span> <span class="n">ModelOutputType</span>
-            <span class="kn">from</span> <span class="nn">sleap.nn.training</span> <span class="kn">import</span> <span class="n">Trainer</span><span class="p">,</span> <span class="n">TrainingJob</span>
-            <span class="kn">from</span> <span class="nn">sleap.nn.architectures</span> <span class="kn">import</span> <span class="n">unet</span><span class="p">,</span> <span class="n">leap</span><span class="p">,</span> <span class="n">hourglass</span>
+
+            <span class="c1"># from sleap.nn.training import TrainerConfig</span>
+            <span class="kn">from</span> <span class="nn">sleap.nn.job</span> <span class="kn">import</span> <span class="n">TrainingJob</span><span class="p">,</span> <span class="n">TrainerConfig</span>
+            <span class="kn">from</span> <span class="nn">sleap.nn</span> <span class="kn">import</span> <span class="n">architectures</span>
 
             <span class="c1"># Construct Model</span>
             <span class="n">model_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get_form_data</span><span class="p">()</span>
-            <span class="n">arch</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
-                <span class="n">LeapCNN</span><span class="o">=</span><span class="n">leap</span><span class="o">.</span><span class="n">LeapCNN</span><span class="p">,</span>
-                <span class="n">StackedHourglass</span><span class="o">=</span><span class="n">hourglass</span><span class="o">.</span><span class="n">StackedHourglass</span><span class="p">,</span>
-                <span class="n">UNet</span><span class="o">=</span><span class="n">unet</span><span class="o">.</span><span class="n">UNet</span><span class="p">,</span>
-                <span class="n">StackedUNet</span><span class="o">=</span><span class="n">unet</span><span class="o">.</span><span class="n">StackedUNet</span><span class="p">,</span>
-            <span class="p">)[</span><span class="n">model_data</span><span class="p">[</span><span class="s2">&quot;arch&quot;</span><span class="p">]]</span>
+            <span class="n">arches</span> <span class="o">=</span> <span class="p">{</span><span class="n">arch</span><span class="o">.</span><span class="vm">__name__</span><span class="p">:</span> <span class="n">arch</span> <span class="k">for</span> <span class="n">arch</span> <span class="ow">in</span> <span class="n">architectures</span><span class="o">.</span><span class="n">available_archs</span><span class="p">}</span>
+            <span class="n">arch</span> <span class="o">=</span> <span class="n">arches</span><span class="p">[</span><span class="n">model_data</span><span class="p">[</span><span class="s2">&quot;arch&quot;</span><span class="p">]]</span>
 
             <span class="n">output_type</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
                 <span class="n">confmaps</span><span class="o">=</span><span class="n">ModelOutputType</span><span class="o">.</span><span class="n">CONFIDENCE_MAP</span><span class="p">,</span>
                 <span class="n">pafs</span><span class="o">=</span><span class="n">ModelOutputType</span><span class="o">.</span><span class="n">PART_AFFINITY_FIELD</span><span class="p">,</span>
                 <span class="n">centroids</span><span class="o">=</span><span class="n">ModelOutputType</span><span class="o">.</span><span class="n">CENTROIDS</span><span class="p">,</span>
+                <span class="n">topdown</span><span class="o">=</span><span class="n">ModelOutputType</span><span class="o">.</span><span class="n">TOPDOWN_CONFIDENCE_MAP</span><span class="p">,</span>
             <span class="p">)[</span><span class="n">model_data</span><span class="p">[</span><span class="s2">&quot;output_type&quot;</span><span class="p">]]</span>
 
             <span class="n">backbone_kwargs</span> <span class="o">=</span> <span class="p">{</span>
@@ -303,9 +303,9 @@
             <span class="n">trainer_kwargs</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="n">key</span><span class="p">:</span> <span class="n">val</span>
                 <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">trainer_data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-                <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">attr</span><span class="o">.</span><span class="n">fields_dict</span><span class="p">(</span><span class="n">Trainer</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">attr</span><span class="o">.</span><span class="n">fields_dict</span><span class="p">(</span><span class="n">TrainerConfig</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
             <span class="p">}</span>
-            <span class="n">trainer</span> <span class="o">=</span> <span class="n">Trainer</span><span class="p">(</span><span class="o">**</span><span class="n">trainer_kwargs</span><span class="p">)</span>
+            <span class="n">trainer</span> <span class="o">=</span> <span class="n">TrainerConfig</span><span class="p">(</span><span class="o">**</span><span class="n">trainer_kwargs</span><span class="p">)</span>
 
             <span class="c1"># Construct TrainingJob</span>
             <span class="n">training_job_kwargs</span> <span class="o">=</span> <span class="p">{</span>
@@ -319,7 +319,7 @@
             <span class="n">TrainingJob</span><span class="o">.</span><span class="n">save_json</span><span class="p">(</span><span class="n">training_job</span><span class="p">,</span> <span class="n">save_filename</span><span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">saved_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">save_filename</span><span class="p">)</span>
-            <span class="c1"># print(cattr.unstructure(training_job))</span>
+
             <span class="bp">self</span><span class="o">.</span><span class="n">profile_filename</span> <span class="o">=</span> <span class="n">save_filename</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
