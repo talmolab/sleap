@@ -44,6 +44,7 @@ class TrainingEditor(QtWidgets.QDialog):
         self.form_widgets["trainer"] = YamlFormWidget(form_yaml, "trainer", "Trainer")
         self.form_widgets["output"] = YamlFormWidget(form_yaml, "output")
         self.form_widgets["buttons"] = YamlFormWidget(form_yaml, "buttons")
+        self.form_widgets["spacer"] = YamlFormWidget(form_yaml, "spacer")
 
         self.form_widgets["buttons"].mainAction.connect(self._save_as)
 
@@ -52,9 +53,10 @@ class TrainingEditor(QtWidgets.QDialog):
 
         col1_layout.addWidget(self.form_widgets["model"])
         col1_layout.addWidget(self.form_widgets["datagen"])
-        col1_layout.addWidget(self.form_widgets["output"])
+        col1_layout.addWidget(self.form_widgets["spacer"])
 
         col2_layout.addWidget(self.form_widgets["trainer"])
+        col2_layout.addWidget(self.form_widgets["output"])
         col2_layout.addWidget(self.form_widgets["buttons"])
 
         col_layout = QtWidgets.QHBoxLayout()

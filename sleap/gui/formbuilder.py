@@ -52,9 +52,13 @@ class YamlFormWidget(QtWidgets.QGroupBox):
         )
         self.setLayout(self.form_layout)
 
-        for item in items_to_create[self.which_form]:
-            if item["type"] == "button" and item.get("default", "") == "main action":
-                self.buttons[item["name"]].clicked.connect(self.trigger_main_action)
+        if items_to_create[self.which_form]:
+            for item in items_to_create[self.which_form]:
+                if (
+                    item["type"] == "button"
+                    and item.get("default", "") == "main action"
+                ):
+                    self.buttons[item["name"]].clicked.connect(self.trigger_main_action)
 
         self.form_layout.valueChanged.connect(self.valueChanged)
 

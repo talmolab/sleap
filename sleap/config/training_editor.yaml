@@ -12,6 +12,11 @@ model:
   default: 
   options: LeapCNN,UNet,StackedUNet,StackedHourglass,ResNet50,DenseNet121,DenseNet169,DenseNet201,GeneralizedDenseNet,UDenseNet,MobileNetV1,MobileNetV2,NASNetMobile,NASNetLarge,GeneralizedNASNet,HigherHRNet
 
+- name: pretrained
+  label: Pretrained
+  type: bool
+  default: False
+
 - name: down_blocks
   label: Down Blocks
   type: int
@@ -95,10 +100,10 @@ datagen:
   options: 0,64,128,256,512
   default: 0
 
-- name: negative_samples
-  label: Negative samples (if cropping)
-  type: int
-  default: 0
+#- name: negative_samples
+#  label: Negative samples (if cropping)
+#  type: int
+#  default: 0
 
 - name: augment_rotation
   label: Augmentation rotation
@@ -234,3 +239,5 @@ buttons:
   label: Save Profile As...
   type: button
   default: main action
+
+spacer:
