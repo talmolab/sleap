@@ -33,14 +33,23 @@ class YamlFormWidget(QtWidgets.QGroupBox):
     mainAction = QtCore.Signal(dict)
     valueChanged = QtCore.Signal()
 
-    def __init__(self, yaml_file, which_form: str = "main", *args, **kwargs):
+    def __init__(
+        self,
+        yaml_file,
+        which_form: str = "main",
+        field_options_lists: Optional[Dict[str, list]] = None,
+        *args,
+        **kwargs,
+    ):
         super(YamlFormWidget, self).__init__(*args, **kwargs)
 
         with open(yaml_file, "r") as form_yaml:
             items_to_create = yaml.load(form_yaml, Loader=yaml.SafeLoader)
 
         self.which_form = which_form
-        self.form_layout = FormBuilderLayout(items_to_create[self.which_form])
+        self.form_layout = FormBuilderLayout(
+            items_to_create[self.which_form], field_options_lists=field_options_lists
+        )
         self.setLayout(self.form_layout)
 
         for item in items_to_create[self.which_form]:
@@ -110,11 +119,12 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
 
     valueChanged = QtCore.Signal()
 
-    def __init__(self, items_to_create, *args, **kwargs):
+    def __init__(self, items_to_create, field_options_lists=None, *args, **kwargs):
         super(FormBuilderLayout, self).__init__(*args, **kwargs)
 
         self.buttons = dict()
         self.fields = dict()
+        self.field_options_lists = field_options_lists or dict()
         self.build_form(items_to_create)
 
     def get_form_data(self) -> dict:
@@ -251,7 +261,12 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
             # list: show drop-down menu
             elif item["type"] == "list":
                 field = FieldComboWidget()
-                field.set_options(item["options"].split(","), item["default"])
+
+                if item["name"] in self.field_options_lists:
+                    field.set_options(self.field_options_lists[item["name"]])
+                else:
+                    field.set_options(item["options"].split(","), item["default"])
+
                 field.currentIndexChanged.connect(lambda: self.valueChanged.emit())
 
             # button
@@ -268,7 +283,9 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
 
             # stacked: show menu and form panel corresponding to menu selection
             elif item["type"] == "stacked":
-                field = StackBuilderWidget(item)
+                field = StackBuilderWidget(
+                    item, field_options_lists=self.field_options_lists
+                )
 
             # If we don't recognize the type, just show a text box
             else:
@@ -338,10 +355,12 @@ class StackBuilderWidget(QtWidgets.QWidget):
             passed to :meth:`FormBuilderLayout.build_form()`.
     """
 
-    def __init__(self, stack_data, *args, **kwargs):
+    def __init__(self, stack_data, field_options_lists=None, *args, **kwargs):
         super(StackBuilderWidget, self).__init__(*args, **kwargs)
 
         self.option_list = stack_data["options"].split(",")
+
+        self.field_options_lists = field_options_lists or None
 
         multi_layout = QtWidgets.QFormLayout()
         multi_layout.setFormAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
@@ -355,7 +374,9 @@ class StackBuilderWidget(QtWidgets.QWidget):
         for page in self.option_list:
 
             # add page
-            self.page_layouts[page] = FormBuilderLayout(stack_data[page])
+            self.page_layouts[page] = FormBuilderLayout(
+                stack_data[page], field_options_lists=self.field_options_lists
+            )
 
             page_widget = QtWidgets.QGroupBox()
             page_widget.setLayout(self.page_layouts[page])
