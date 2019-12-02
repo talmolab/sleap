@@ -9,7 +9,8 @@ from typing import Optional
 from PySide2 import QtWidgets
 
 from sleap.gui.formbuilder import YamlFormWidget
-from sleap.util import get_config_file
+from sleap.gui.filedialog import FileDialog
+from sleap.util import get_package_file
 
 
 class TrainingEditor(QtWidgets.QDialog):
@@ -31,7 +32,7 @@ class TrainingEditor(QtWidgets.QDialog):
     ):
         super(TrainingEditor, self).__init__()
 
-        form_yaml = get_config_file("training_editor.yaml")
+        form_yaml = get_package_file("sleap/config/training_editor.yaml")
 
         self.form_widgets = dict()
         self.form_widgets["model"] = YamlFormWidget(
@@ -89,7 +90,7 @@ class TrainingEditor(QtWidgets.QDialog):
     def _load_profile(self, profile_filename: str):
         """Loads training profile settings from file."""
         from sleap.nn.model import ModelOutputType
-        from sleap.nn.training import TrainingJob
+        from sleap.nn.job import TrainingJob
 
         self.training_job = TrainingJob.load_json(profile_filename)
 
@@ -107,28 +108,27 @@ class TrainingEditor(QtWidgets.QDialog):
         """Shows dialog to save training profile."""
 
         # Show "Save" dialog
-        save_filename, _ = QtWidgets.QFileDialog.getSaveFileName(
+        save_filename, _ = FileDialog.save(
             self, caption="Save As...", dir=None, filter="Profile JSON (*.json)"
         )
 
         if len(save_filename):
             from sleap.nn.model import Model, ModelOutputType
-            from sleap.nn.training import Trainer, TrainingJob
-            from sleap.nn.architectures import unet, leap, hourglass
+
+            # from sleap.nn.training import TrainerConfig
+            from sleap.nn.job import TrainingJob, TrainerConfig
+            from sleap.nn import architectures
 
             # Construct Model
             model_data = self.form_widgets["model"].get_form_data()
-            arch = dict(
-                LeapCNN=leap.LeapCNN,
-                StackedHourglass=hourglass.StackedHourglass,
-                UNet=unet.UNet,
-                StackedUNet=unet.StackedUNet,
-            )[model_data["arch"]]
+            arches = {arch.__name__: arch for arch in architectures.available_archs}
+            arch = arches[model_data["arch"]]
 
             output_type = dict(
                 confmaps=ModelOutputType.CONFIDENCE_MAP,
                 pafs=ModelOutputType.PART_AFFINITY_FIELD,
                 centroids=ModelOutputType.CENTROIDS,
+                topdown=ModelOutputType.TOPDOWN_CONFIDENCE_MAP,
             )[model_data["output_type"]]
 
             backbone_kwargs = {
@@ -149,9 +149,9 @@ class TrainingEditor(QtWidgets.QDialog):
             trainer_kwargs = {
                 key: val
                 for key, val in trainer_data.items()
-                if key in attr.fields_dict(Trainer).keys()
+                if key in attr.fields_dict(TrainerConfig).keys()
             }
-            trainer = Trainer(**trainer_kwargs)
+            trainer = TrainerConfig(**trainer_kwargs)
 
             # Construct TrainingJob
             training_job_kwargs = {
@@ -165,7 +165,7 @@ class TrainingEditor(QtWidgets.QDialog):
             TrainingJob.save_json(training_job, save_filename)
 
             self.saved_files.append(save_filename)
-            # print(cattr.unstructure(training_job))
+
             self.profile_filename = save_filename
 
         self.close()

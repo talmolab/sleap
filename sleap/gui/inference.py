@@ -132,30 +132,25 @@ class InferenceDialog(QtWidgets.QDialog):
 
         # TODO: fix
 
-        # def edit_conf_profile():
-        #     self._view_profile(
-        #         self.form_widget["_conf_job"], model_type=ModelOutputType.CONFIDENCE_MAP
-        #     )
-        #
-        # def edit_paf_profile():
-        #     self._view_profile(
-        #         self.form_widget["_paf_job"],
-        #         model_type=ModelOutputType.PART_AFFINITY_FIELD,
-        #     )
-        #
-        # def edit_cent_profile():
-        #     self._view_profile(
-        #         self.form_widget["_centroid_job"], model_type=ModelOutputType.CENTROIDS
-        #     )
+        def edit_conf_profile():
+            self._view_profile(self.form_widget["_conf_job"], menu_name="confmap")
 
-        # if "_view_conf" in self.form_widget.buttons:
-        #     self.form_widget.buttons["_view_conf"].clicked.connect(edit_conf_profile)
-        # if "_view_paf" in self.form_widget.buttons:
-        #     self.form_widget.buttons["_view_paf"].clicked.connect(edit_paf_profile)
-        # if "_view_centoids" in self.form_widget.buttons:
-        #     self.form_widget.buttons["_view_centoids"].clicked.connect(
-        #         edit_cent_profile
-        #     )
+        def edit_paf_profile():
+            self._view_profile(
+                self.form_widget["_paf_job"], menu_name="paf",
+            )
+
+        def edit_cent_profile():
+            self._view_profile(self.form_widget["_centroid_job"], menu_name="centroid")
+
+        if "_view_conf" in self.form_widget.buttons:
+            self.form_widget.buttons["_view_conf"].clicked.connect(edit_conf_profile)
+        if "_view_paf" in self.form_widget.buttons:
+            self.form_widget.buttons["_view_paf"].clicked.connect(edit_paf_profile)
+        if "_view_centoids" in self.form_widget.buttons:
+            self.form_widget.buttons["_view_centoids"].clicked.connect(
+                edit_cent_profile
+            )
         if "_view_datagen" in self.form_widget.buttons:
             self.form_widget.buttons["_view_datagen"].clicked.connect(self.view_datagen)
 
@@ -517,7 +512,7 @@ class InferenceDialog(QtWidgets.QDialog):
         win.exec_()
 
         for new_filename in saved_files:
-            self._add_job_file_to_list(new_filename, menu_name)
+            self.job_menu_manager.add_job_to_list(new_filename, menu_name)
 
     def update_fields_from_job(self, job: TrainingJob):
         model_type = job.model.output_type
