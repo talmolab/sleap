@@ -264,8 +264,10 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
 
                 if item["name"] in self.field_options_lists:
                     field.set_options(self.field_options_lists[item["name"]])
-                else:
-                    field.set_options(item["options"].split(","), item["default"])
+                elif "options" in item:
+                    field.set_options(
+                        item["options"].split(","), select_item=item.get("default", "")
+                    )
 
                 field.currentIndexChanged.connect(lambda: self.valueChanged.emit())
 
