@@ -1548,7 +1548,9 @@ class AddInstance(EditCommand):
 
         # Now create the new instance
         new_instance = Instance(
-            skeleton=context.state["skeleton"], from_predicted=from_predicted
+            skeleton=context.state["skeleton"],
+            from_predicted=from_predicted,
+            frame=context.state["labeled_frame"],
         )
 
         has_missing_nodes = False
