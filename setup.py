@@ -32,7 +32,7 @@ setup(
     author_email='talmo@princeton.edu',
     url='https://github.com/murthylab/sleap',
     keywords='deep learning, pose estimation, tracking, neuroscience',
-    license='BSD3',
+    license='BSD 3-Clause License',
     packages=find_packages(exclude=['tensorflow']),
     include_package_data=True,
     entry_points = {
