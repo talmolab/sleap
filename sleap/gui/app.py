@@ -1259,21 +1259,9 @@ class MainWindow(QMainWindow):
         ShortcutDialog().exec_()
 
 
-def main(*args, **kwargs):
+def main():
     """Starts new instance of app."""
-    app = QApplication([])
-    app.setApplicationName("SLEAP Label")
 
-    window = MainWindow(*args, **kwargs)
-    window.showMaximized()
-
-    if not kwargs.get("labels_path", None):
-        window.commands.openProject(first_open=True)
-
-    app.exec_()
-
-
-if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
@@ -1293,4 +1281,17 @@ if __name__ == "__main__":
     if args.nonnative:
         os.environ["USE_NON_NATIVE_FILE"] = "1"
 
-    main(labels_path=args.labels_path)
+    app = QApplication([])
+    app.setApplicationName("SLEAP Label")
+
+    window = MainWindow(labels_path=args.labels_path)
+    window.showMaximized()
+
+    if not args.labels_path:
+        window.commands.openProject(first_open=True)
+
+    app.exec_()
+
+
+if __name__ == "__main__":
+    main()
