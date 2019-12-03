@@ -1,184 +1,41 @@
 
-
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
-<head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>Tutorial &mdash; SLEAP  documentation</title>
-  
 
-  
-  
-  
-  
-
-  
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Tutorial &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Skeleton" href="skeleton.html" />
-    <link rel="prev" title="Social LEAP Estimates Animal Pose (SLEAP)" href="index.html" /> 
-</head>
-
-<body class="wy-body-for-nav">
-
+    <link rel="next" title="Frequently Asked Questions" href="faq.html" />
+    <link rel="prev" title="Installation" href="installation.html" />
    
-  <div class="wy-grid-for-nav">
-    
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
-          
-
-          
-            <a href="index.html" class="icon icon-home"> SLEAP
-          
-
-          
-          </a>
-
-          
-            
-            
-          
-
-          
-<div role="search">
-  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
-    <input type="hidden" name="check_keywords" value="yes" />
-    <input type="hidden" name="area" value="default" />
-  </form>
-</div>
-
-          
-        </div>
-
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">SLEAP Package</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorial</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#stage-1-creating-a-project">Stage 1: Creating a project</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#opening-a-video">Opening a video</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#creating-the-skeleton">Creating the Skeleton</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#stage-2-labeling-and-learning">Stage 2: Labeling and learning</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#labeling-the-first-frame">Labeling the first frame</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#saving">Saving</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#labeling-more-frames">Labeling more frames</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#active-learning">Active learning</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#reviewing-and-fixing-predictions">Reviewing and fixing predictions</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#stage-3-tracking-instances-across-frames">Stage 3: Tracking instances across frames</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#running-inference-remotely-optional">Running inference remotely (optional)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#track-proofreading">Track proofreading</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="skeleton.html">Skeleton</a></li>
-<li class="toctree-l1"><a class="reference internal" href="video.html">Video</a></li>
-<li class="toctree-l1"><a class="reference internal" href="instance.html">Instance</a></li>
-<li class="toctree-l1"><a class="reference internal" href="dataset.html">Datasets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="training.html">Training</a></li>
-<li class="toctree-l1"><a class="reference internal" href="inference.html">Inference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="gui.html">GUI</a></li>
-<li class="toctree-l1"><a class="reference internal" href="misc.html">Misc</a></li>
-</ul>
-
-            
-          
-        </div>
-      </div>
-    </nav>
-
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">SLEAP</a>
-        
-      </nav>
-
-
-      <div class="wy-nav-content">
-        
-        <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
-  <ul class="wy-breadcrumbs">
-    
-      <li><a href="index.html">Docs</a> &raquo;</li>
-        
-      <li>Tutorial</li>
-    
-    
-      <li class="wy-breadcrumbs-aside">
-        
-            
-            <a href="_sources/tutorial.rst.txt" rel="nofollow"> View page source</a>
-          
-        
-      </li>
-    
-  </ul>
-
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
-  <hr/>
-</div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
             
   <div class="section" id="tutorial">
 <h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h1>
 <p>Before you can use SLEAP, you’ll need to install it. Follow the
-instructions at <a class="reference internal" href="index.html#installation"><span class="std std-ref">Installation</span></a> to install SLEAP and
+instructions at <a class="reference internal" href="installation.html#installation"><span class="std std-ref">Installation</span></a> to install SLEAP and
 start the GUI app.</p>
 <p>There are three main stages of using SLEAP:</p>
 <ol class="arabic simple">
@@ -191,15 +48,14 @@ positions and proofreading of track identities in full videos.</p></li>
 <div class="section" id="stage-1-creating-a-project">
 <h2>Stage 1: Creating a project<a class="headerlink" href="#stage-1-creating-a-project" title="Permalink to this headline">¶</a></h2>
 <p>When you first start SLEAP you’ll see an open dialog. Since you don’t
-yet have a project to open, click “Cancel” and you’ll be left with a
+yet have a project to open, click “<strong>Cancel</strong>” and you’ll be left with a
 new, empty project.</p>
 <div class="section" id="opening-a-video">
 <h3>Opening a video<a class="headerlink" href="#opening-a-video" title="Permalink to this headline">¶</a></h3>
-<p>Add a <strong>video</strong> by clicking the “Add Video” button in the “Videos” panel
-on the right side of the main window, the “Add Video” command in the
-“Videos” menu, or the keyboard shortcut.</p>
+<p>Add a <strong>video</strong> by clicking the “<strong>Add Video</strong>” button in the “Videos” panel
+on the right side of the main window.</p>
 <p><img alt="image0" src="docs/_static/add-video.gif" /></p>
-<p>You’ll then be able to select one or more video files and click “Open”.
+<p>You’ll then be able to select one or more video files and click “<strong>Open</strong>”.
 SLEAP currently supports mp4, avi, and h5 files. For mp4 and avi files,
 you’ll be asked whether to import the video as grayscale. For h5 files,
 you’ll be asked the dataset and whether the video is stored with
@@ -210,43 +66,36 @@ channels first or last.</p>
 <h3>Creating the Skeleton<a class="headerlink" href="#creating-the-skeleton" title="Permalink to this headline">¶</a></h3>
 <p>Create a new <strong>skeleton</strong> using the “Skeleton” panel on the right side
 of the main window.</p>
-<p>Use the “New node” button to add a node (i.e., joint or body part).
-Double click the node name to rename it (hit enter after you type the
+<p>Use the “<strong>New Node</strong>” button to add a node (i.e., joint or body part).
+Double-click the node name to rename it (hit enter after you type the
 new name). Repeat until you have created all your nodes. You then need
 to connect the nodes with edges. Directly to the left of the “Add edge”
 button you’ll see two drop-down menus. Use these to select a pair of
-nodes, and then click “Add edge”. Repeat until you’ve entered all the
+nodes, and then click “<strong>Add Edge</strong>”. Repeat until you’ve entered all the
 edges.</p>
 <p><img alt="image2" src="docs/_static/add-skeleton.gif" /></p>
-<p>Note: it’s okay to add edges after you’ve already labeled some
-instances. Any labeled instances will be updated with the new edge. But
-if you add a new node after labeling instances, there’s currently no way
-to update your already labeled instances with this node.</p>
 </div>
 </div>
 <div class="section" id="stage-2-labeling-and-learning">
 <h2>Stage 2: Labeling and learning<a class="headerlink" href="#stage-2-labeling-and-learning" title="Permalink to this headline">¶</a></h2>
 <p>We start by assembling a candidate group of images to label. You can
 either pick your own frames or let the system suggest a set of frames
-using the “Generate Suggestions” panel. SLEAP can choose these frames
-(i) randomly, or using (ii) Strides (evenly spaced samples), (iii) PCA
-(runs Principle Component Analysis on the images, clusters the images
-into groups, and uses sample frames from each cluster), or (iv) BRISK
-(extracts features from each image using key-point detection then runs
-PCA and clustering).</p>
+using the “Labeling Suggestions” panel. SLEAP can give you random or
+evenly-spaced samples, or it can try to give you distinctive groups of
+frames by taking the image features into account.</p>
+<p>For now, let’s just get 20 random frames. Choose “sample” as the method and “random” as the sampling method, then click “<strong>Generate Suggestions</strong>”.</p>
 <p><img alt="image3" src="docs/_static/suggestions.jpg" /></p>
 <div class="section" id="labeling-the-first-frame">
 <h3>Labeling the first frame<a class="headerlink" href="#labeling-the-first-frame" title="Permalink to this headline">¶</a></h3>
 <p>Start by adding an <strong>instance</strong> of the skeleton to the current image by
-clicking the “Add Instance” button in the Instances panel, selecting
-“Add Instance” from the “Labels” menu, or the keyboard shortcut. This
+clicking the “<strong>Add Instance</strong>” button in the Instances panel. The
 first instance will have its points located at random. Move the points
 to their appropriate positions by dragging with the mouse. Use the mouse
 scroll-wheel to <strong>zoom</strong>.</p>
 <p><img alt="image4" src="docs/_static/labeling.gif" /></p>
-<p>You can <strong>move the entire instance</strong> by holding down the “Alt” key while
+<p>You can <strong>move the entire instance</strong> by holding down the <strong>Alt</strong> key while
 you click and drag the instance. You can <strong>rotate the instance</strong> by
-using the scroll-wheel while holding down the “Alt” key.</p>
+using the scroll-wheel while holding down the <strong>Alt</strong> key.</p>
 <p>For body parts that are not visible in the frame, right-click the node
 (or its name) to toggle visibility. The node will appear smaller to show
 that it’s marked as “not visible”. If you can determine where an
@@ -260,24 +109,18 @@ order to train the model to predict the node even when it’s occluded.</p>
 the first time you save. SLEAP will ask you to save before closing any
 project that has been changed to avoid losing any work. Note: There is
 not yet an “undo” feature built into SLEAP. If you want to make
-temporary changes to a project, use the “Save As…” command first to save
+temporary changes to a project, use the “<strong>Save As…</strong>” command first to save
 a copy of your project.</p>
 </div>
 <div class="section" id="labeling-more-frames">
 <h3>Labeling more frames<a class="headerlink" href="#labeling-more-frames" title="Permalink to this headline">¶</a></h3>
 <p>After labeling the first frame saving the project, it’s time to label
 more frames. Nodes positions will be copied from the instances in the
-prior labeled frame to increase labeling speed. If you generated a list
-of suggested frames, you can go to the next frame in the labeling set by
-either:</p>
-<ul class="simple">
-<li><p>clicking “Next” under the list of suggested frames</p></li>
-<li><p>double-clicking one of the suggested frames on the list</p></li>
-<li><p>selecting “Next Suggestion” from the “Labels” menu</p></li>
-<li><p>using the keyboard shortcut listed in the “Labels” menu</p></li>
-</ul>
-<p>You can also always pick a frame to label by using the slider bar under
+prior labeled frame to increase labeling speed. Since you generated a list
+of suggested frames, you can go to the next frame in the labeling set by clicking “<strong>Next</strong>” under the list of suggested frames.</p>
+<p>You can also always pick a frame to label by using the seekbar under
 the video.</p>
+<p>Try adding an instance by <strong>right-clicking</strong> on the location of the animal in the video. You’ll see a pop-up menu with options for how we determine the initial node placement. Feel free to try the different options.</p>
 <p>There’s no need to be consistent about which animal you label with which
 instance for the case of multiple animals. For instance, suppose you
 have a male and a female. It’s fine to label the male with the blue
@@ -288,22 +131,22 @@ predicting body part locations.</p>
 your animal in the frame. Otherwise, the models may learn to not
 identify things that look like the instances you didn’t label.</p>
 </div>
-<div class="section" id="active-learning">
-<h3>Active learning<a class="headerlink" href="#active-learning" title="Permalink to this headline">¶</a></h3>
-<p>Active learning has two main goals. First, it speeds up the labeling
+<div class="section" id="prediction-assisted-labeling">
+<h3>Prediction-assisted labeling<a class="headerlink" href="#prediction-assisted-labeling" title="Permalink to this headline">¶</a></h3>
+<p><em>Prediction-assisted labeling</em> has two main goals. First, it speeds up the labeling
 process as it is faster to correct a predicted instance which is mostly
 correct than it is to add a new instance from scratch. Second, it
 provides feedback about where your model does well and where it does
 poorly, and this should give you a better idea of which frames will be
 most useful to label.</p>
-<p>To run active learning, select “Run Active Learning…” from the “Predict”
+<p>To run active learning, select “<strong>Run Training…</strong>” from the “Predict”
 menu. This trains new models using the frames that you’ve already
 labeled in your project, and then uses these models to predict instances
 in the suggested frames that you haven’t yet labeled (or on other random
 frames). This process can take a while, and since it runs on your
 machine, you should only try it if you have a GPU installed.</p>
-<p><img alt="image6" src="docs/_static/learning-dialog.jpg" /></p>
-<p>Active learning uses the training settings which we’ve found to work
+<p><img alt="image6" src="docs/_static/training-dialog.jpg" /></p>
+<p>By default, training uses the training settings which we’ve found to work
 well on a wide range of videos. We train a “centroid” model on 1/4 scale
 images and then use this to crop where we think there are instances
 during inference. Another pair of models are trained on unscaled,
@@ -313,12 +156,9 @@ edges that connect nodes.</p>
 <p>There are a few hyperparameters that you can control for active
 learning:</p>
 <ul class="simple">
-<li><p><strong>Minimum crop size</strong> ensures that the box for our crop is at least a
+<li><p><strong>Crop size</strong> ensures that the box for our crop is at least a
 given size instead of using the tightest crop that will bound any
 labeled instance.</p></li>
-<li><p><strong>Negative samples</strong> help the model learn to distinguish instances
-from the background by including randomly selected crops where there
-are no labeled instances.</p></li>
 <li><p><strong>Sigma</strong> controls the size of the confidence map gaussians and part
 affinity fields used for training.</p></li>
 <li><p><strong>Batch Size</strong> determines how many samples are used to train the
@@ -326,10 +166,10 @@ neural network at one time. If you get an error that your GPU ran out
 of memory while training, you should try a smaller batch size.</p></li>
 </ul>
 <p>You can visually preview the effects of these settings on the training
-data by clicking the “View Training Image Inputs…” button. You’ll then
+data by clicking the “<strong>View Training Image Inputs…</strong>” button. You’ll then
 see windows with the confidence maps and part affinity fields that will
 be used to train the models.</p>
-<p>After setting the parameters click “Run Active Learning”. During the
+<p>After setting the parameters click “<strong>Run Training and Inference</strong>”. During the
 training process, you’ll see a window where you can monitor the loss.
 Blue points are training loss for each batch, lines are training and
 validation loss for the epochs (these won’t appear until the second
@@ -338,43 +178,26 @@ you think is appropriate, or the training will automatically stop if the
 model doesn’t improve for a certain number of epochs (15 by default)</p>
 <p>First we train a model for confidence maps, part affinity fields, and
 centroids, and then we run inference. The GUI doesn’t yet give you a way
-to monitor the progress during inference, although you can get more
-information in the console window from which you started SLEAP.</p>
-<p>When active learning finishes, you’ll be told how many instances were
+to monitor the progress during inference, although it will alert you if an error occurs during inference.</p>
+<p>When inference finishes, you’ll be told how many instances were
 predicted. Suggested frames with predicted instances will be marked in
-red on the seek-bar.</p>
-<p><strong>For experts in training neural networks:</strong> The “Expert Controls…”
-command in the “Predict” lets you control many more hyperparameters, as
-well as defining “training profiles”. You can turn off cropping for
-training or for inference, and you can adjust image scaling. You can
-also mix and match models trained at different times. Use at your own
-risk.</p>
-<p><img alt="image7" src="docs/_static/expert-dialog.jpg" /></p>
+red on the seekbar.</p>
 </div>
 <div class="section" id="reviewing-and-fixing-predictions">
 <h3>Reviewing and fixing predictions<a class="headerlink" href="#reviewing-and-fixing-predictions" title="Permalink to this headline">¶</a></h3>
 <p>After you’ve successfully trained models and predicted some instances,
-you’ll get a message that active learning has finished. Every suggested
+you’ll get a message that inference has finished. Every suggested
 frame with predicted instances will have a distinctive mark in the
-seek-bar. Suggested frames which you labeled are marked in blue while
+seekbar. Suggested frames which you labeled are marked in blue while
 those with predicted instances are marked in red. Predicted instances
 will <em>not</em> be used for future model training unless you correct the
 predictions in the GUI.</p>
 <p><img alt="imagefix" src="docs/_static/fixing-predictions.gif" /></p>
 <p>Predicted instances in the frame are displayed in grey with yellow
 nodes. To edit a prediction, you’ll need to replace it with an editable
-instance. There are a few ways to do this:</p>
-<ul class="simple">
-<li><p>double-click the predicted instance and it will be converted into a
-regular instance</p></li>
-<li><p>add an instance (by clicking the “Add Instance” button, using the
-menu command or keyboard shortcut) and it will replace one of the
-predicted instances with your new instance (it does this in sequence,
-so the next instance you add will replace a different predicted
-instance in the frame)</p></li>
-</ul>
+instance. <strong>Double-click</strong> the predicted instance and it will be converted into a regular instance.</p>
 <p>You can now edit the instance as before. Once you’ve added and/or
-corrected more instances, you can repeat the active learning process:
+corrected more instances, you can repeat the process:
 train a new model, predict on more frames, correct those predictions,
 and so on. You’ll want to regularly generate new frame suggestions,
 since active learning will return predictions for just these frames.</p>
@@ -382,47 +205,10 @@ since active learning will return predictions for just these frames.</p>
 </div>
 <div class="section" id="stage-3-tracking-instances-across-frames">
 <h2>Stage 3: Tracking instances across frames<a class="headerlink" href="#stage-3-tracking-instances-across-frames" title="Permalink to this headline">¶</a></h2>
-<p>When you’re satisfied with the predictions you’re getting during active
-learning, you can use your models to predict on more frames by selecting
-“Run Inference…” from the “Predict” menu. This will use the most
+<p>When you’re satisfied with the predictions you’re getting, you can use your models to predict on more frames by selecting
+“<strong>Run Inference…</strong>” from the “Predict” menu. This will use the most
 recently trained set of models.</p>
 <p><img alt="image8" src="docs/_static/inference-dialog.jpg" /></p>
-<p>Inference only returns track data if you run it on a continuous range of
-frames. To do this, select a range of frames in the seek-bar by
-shift-clicking in the seek-bar and dragging over the desired range (this
-could be the entire video). The selected frames will be highlighted in
-light blue in the seek-bar. If a range of frames is selected in the
-seek-bar, inference will return predictions (with tracks) for that
-range, rather than returning predictions on the suggested frames.</p>
-<div class="section" id="running-inference-remotely-optional">
-<h3>Running inference remotely (optional)<a class="headerlink" href="#running-inference-remotely-optional" title="Permalink to this headline">¶</a></h3>
-<p>It’s also possible to run inference using the command line interface, which is
-useful if you’re going to run on a cluster. The command to run inference on
-an entire video is:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">sleap</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">inference</span> \
-   <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">video</span><span class="o">.</span><span class="n">mp4</span> <span class="o">--</span><span class="k">with</span><span class="o">-</span><span class="n">tracking</span> \
-   <span class="o">-</span><span class="n">m</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">models</span><span class="o">/</span><span class="n">your_confmap_model</span><span class="o">.</span><span class="n">json</span> \
-   <span class="o">-</span><span class="n">m</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">models</span><span class="o">/</span><span class="n">your_paf_model</span><span class="o">.</span><span class="n">json</span> \
-   <span class="o">-</span><span class="n">m</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">models</span><span class="o">/</span><span class="n">your_centroid_model</span><span class="o">.</span><span class="n">json</span>
-</pre></div>
-</div>
-<p>The predictions will be saved in path/to/video.mp4.predictions.h5,
-which you can open from the GUI app. You can also import these predictions into
-your project by opening your project and then using the “Import Predictions…”
-command in the “Predict” menu.</p>
-<p>Note that if you want to copy your trained models so that they can be used on
-another machine (e.g., from a cluster), you’ll need to copy both the json files
-and the corresponding directories within your models directory.
-For example, you might copy:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mf">190711_185300.</span><span class="n">centroids</span><span class="o">.</span><span class="n">UNet</span><span class="o">.</span><span class="n">n</span><span class="o">=</span><span class="mf">113.</span><span class="n">json</span>
-<span class="mf">190711_183049.</span><span class="n">pafs</span><span class="o">.</span><span class="n">LeapCNN</span><span class="o">.</span><span class="n">n</span><span class="o">=</span><span class="mf">226.</span><span class="n">json</span>
-<span class="mf">190711_181028.</span><span class="n">confmaps</span><span class="o">.</span><span class="n">UNet</span><span class="o">.</span><span class="n">n</span><span class="o">=</span><span class="mf">226.</span><span class="n">json</span>
-<span class="mf">190711_181028.</span><span class="n">confmaps</span><span class="o">.</span><span class="n">UNet</span><span class="o">.</span><span class="n">n</span><span class="o">=</span><span class="mi">226</span><span class="o">/</span>
-<span class="mf">190711_183049.</span><span class="n">pafs</span><span class="o">.</span><span class="n">LeapCNN</span><span class="o">.</span><span class="n">n</span><span class="o">=</span><span class="mi">226</span><span class="o">/</span>
-<span class="mf">190711_185300.</span><span class="n">centroids</span><span class="o">.</span><span class="n">UNet</span><span class="o">.</span><span class="n">n</span><span class="o">=</span><span class="mi">113</span><span class="o">/</span>
-</pre></div>
-</div>
-</div>
 <div class="section" id="track-proofreading">
 <h3>Track proofreading<a class="headerlink" href="#track-proofreading" title="Permalink to this headline">¶</a></h3>
 <p>Once you have predicted tracks, you’ll need to proofread these to ensure
@@ -463,52 +249,81 @@ which a new track is spawned.</p>
 </div>
 
 
-           </div>
-           
           </div>
-          <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="skeleton.html" class="btn btn-neutral float-right" title="Skeleton" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="index.html" class="btn btn-neutral float-left" title="Social LEAP Estimates Animal Pose (SLEAP)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">SLEAP Package</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#stage-1-creating-a-project">Stage 1: Creating a project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#stage-2-labeling-and-learning">Stage 2: Labeling and learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#stage-3-tracking-instances-across-frames">Stage 3: Tracking instances across frames</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Developer API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="installation.html" title="previous chapter">Installation</a></li>
+      <li>Next: <a href="faq.html" title="next chapter">Frequently Asked Questions</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
     </div>
-  
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
 
-  <hr/>
 
-  <div role="contentinfo">
-    <p>
-        &copy; Copyright 2019, Murthy Lab @ Princeton
 
-    </p>
-  </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
-</footer>
+
+
+
 
         </div>
       </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/tutorial.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
 
-    </section>
-
-  </div>
-  
-
-
-  <script type="text/javascript">
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script>
-
-  
-  
     
-   
 
-</body>
+    
+  </body>
 </html>

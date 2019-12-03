@@ -4,17 +4,13 @@
 .. _sleap:
 .. toctree::
     :caption: SLEAP Package
-    :maxdepth: 3
+    :maxdepth: 2
 
+    installation
     tutorial
-    skeleton
-    video
-    instance
-    dataset
-    training
-    inference
-    gui
-    misc
+    faq
+    reference
+    api
 
 .. _Indices_and_Tables:
 

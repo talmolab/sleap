@@ -1,0 +1,138 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Remote Machines &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="remote-machines">
+<span id="remote"></span><h1>Remote Machines<a class="headerlink" href="#remote-machines" title="Permalink to this headline">¶</a></h1>
+<p>It’s easy to install <strong>SLEAP</strong> on a remote machine for running training or inference without the GUI. This could be on a cluster or in a colab notebook.</p>
+<div class="section" id="old">
+<h2>old<a class="headerlink" href="#old" title="Permalink to this headline">¶</a></h2>
+<p>It’s also possible to run inference using the command line interface, which is
+useful if you’re going to run on a cluster. The command to run inference on
+an entire video is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">sleap</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">inference</span> \
+   <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">video</span><span class="o">.</span><span class="n">mp4</span> <span class="o">--</span><span class="k">with</span><span class="o">-</span><span class="n">tracking</span> \
+   <span class="o">-</span><span class="n">m</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">models</span><span class="o">/</span><span class="n">your_confmap_model</span><span class="o">.</span><span class="n">json</span> \
+   <span class="o">-</span><span class="n">m</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">models</span><span class="o">/</span><span class="n">your_paf_model</span><span class="o">.</span><span class="n">json</span> \
+   <span class="o">-</span><span class="n">m</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">models</span><span class="o">/</span><span class="n">your_centroid_model</span><span class="o">.</span><span class="n">json</span>
+</pre></div>
+</div>
+<p>The predictions will be saved in path/to/video.mp4.predictions.h5,
+which you can open from the GUI app. You can also import these predictions into
+your project by opening your project and then using the “Import Predictions…”
+command in the “Predict” menu.</p>
+<p>Note that if you want to copy your trained models so that they can be used on
+another machine (e.g., from a cluster), you’ll need to copy both the json files
+and the corresponding directories within your models directory.
+For example, you might copy:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mf">190711_185300.</span><span class="n">centroids</span><span class="o">.</span><span class="n">UNet</span><span class="o">.</span><span class="n">n</span><span class="o">=</span><span class="mf">113.</span><span class="n">json</span>
+<span class="mf">190711_183049.</span><span class="n">pafs</span><span class="o">.</span><span class="n">LeapCNN</span><span class="o">.</span><span class="n">n</span><span class="o">=</span><span class="mf">226.</span><span class="n">json</span>
+<span class="mf">190711_181028.</span><span class="n">confmaps</span><span class="o">.</span><span class="n">UNet</span><span class="o">.</span><span class="n">n</span><span class="o">=</span><span class="mf">226.</span><span class="n">json</span>
+<span class="mf">190711_181028.</span><span class="n">confmaps</span><span class="o">.</span><span class="n">UNet</span><span class="o">.</span><span class="n">n</span><span class="o">=</span><span class="mi">226</span><span class="o">/</span>
+<span class="mf">190711_183049.</span><span class="n">pafs</span><span class="o">.</span><span class="n">LeapCNN</span><span class="o">.</span><span class="n">n</span><span class="o">=</span><span class="mi">226</span><span class="o">/</span>
+<span class="mf">190711_185300.</span><span class="n">centroids</span><span class="o">.</span><span class="n">UNet</span><span class="o">.</span><span class="n">n</span><span class="o">=</span><span class="mi">113</span><span class="o">/</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">SLEAP Package</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Developer API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/remote.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
