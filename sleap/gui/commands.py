@@ -1278,7 +1278,7 @@ class TransposeInstances(EditCommand):
 
 
 class DeleteSelectedInstance(EditCommand):
-    topics = [UpdateTopic.frame]
+    topics = [UpdateTopic.frame, UpdateTopic.project_instances]
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
@@ -1467,7 +1467,7 @@ class MergeProject(EditCommand):
 
 
 class AddInstance(EditCommand):
-    topics = [UpdateTopic.frame]
+    topics = [UpdateTopic.frame, UpdateTopic.project_instances]
 
     @staticmethod
     def get_previous_frame_index(context: CommandContext) -> Optional[int]:

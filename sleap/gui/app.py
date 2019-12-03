@@ -933,6 +933,7 @@ class MainWindow(QMainWindow):
         if _has_topic([UpdateTopic.suggestions]):
             self.suggestionsTable.model().items = self.labels.suggestions
 
+        if _has_topic([UpdateTopic.project_instances, UpdateTopic.suggestions]):
             # update count of suggested frames w/ labeled instances
             suggestion_status_text = ""
             suggestion_list = self.labels.get_suggestions()
