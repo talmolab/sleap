@@ -1186,6 +1186,12 @@ class MainWindow(QMainWindow):
             ).exec_()
             return
 
+        if not self.state["filename"] or self.state["has_changes"]:
+            QMessageBox(
+                text="You have unsaved changes. Please save before running training or inference."
+            ).exec_()
+            return
+
         if self._child_windows.get(mode, None) is None:
             self._child_windows[mode] = InferenceDialog(
                 self.state["filename"], self.labels, mode
