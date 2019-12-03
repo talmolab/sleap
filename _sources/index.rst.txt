@@ -8,6 +8,7 @@
 
     installation
     tutorial
+    tutorial-part2
     faq
     reference
     api
