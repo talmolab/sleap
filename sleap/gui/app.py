@@ -933,6 +933,7 @@ class MainWindow(QMainWindow):
         if _has_topic([UpdateTopic.suggestions]):
             self.suggestionsTable.model().items = self.labels.suggestions
 
+        if _has_topic([UpdateTopic.project_instances, UpdateTopic.suggestions]):
             # update count of suggested frames w/ labeled instances
             suggestion_status_text = ""
             suggestion_list = self.labels.get_suggestions()
@@ -1185,6 +1186,12 @@ class MainWindow(QMainWindow):
             ).exec_()
             return
 
+        if not self.state["filename"] or self.state["has_changes"]:
+            QMessageBox(
+                text="You have unsaved changes. Please save before running training or inference."
+            ).exec_()
+            return
+
         if self._child_windows.get(mode, None) is None:
             self._child_windows[mode] = InferenceDialog(
                 self.state["filename"], self.labels, mode
@@ -1259,21 +1266,9 @@ class MainWindow(QMainWindow):
         ShortcutDialog().exec_()
 
 
-def main(*args, **kwargs):
+def main():
     """Starts new instance of app."""
-    app = QApplication([])
-    app.setApplicationName("SLEAP Label")
 
-    window = MainWindow(*args, **kwargs)
-    window.showMaximized()
-
-    if not kwargs.get("labels_path", None):
-        window.commands.openProject(first_open=True)
-
-    app.exec_()
-
-
-if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
@@ -1293,4 +1288,17 @@ if __name__ == "__main__":
     if args.nonnative:
         os.environ["USE_NON_NATIVE_FILE"] = "1"
 
-    main(labels_path=args.labels_path)
+    app = QApplication([])
+    app.setApplicationName("SLEAP Label")
+
+    window = MainWindow(labels_path=args.labels_path)
+    window.showMaximized()
+
+    if not args.labels_path:
+        window.commands.openProject(first_open=True)
+
+    app.exec_()
+
+
+if __name__ == "__main__":
+    main()

@@ -1278,7 +1278,7 @@ class TransposeInstances(EditCommand):
 
 
 class DeleteSelectedInstance(EditCommand):
-    topics = [UpdateTopic.frame]
+    topics = [UpdateTopic.frame, UpdateTopic.project_instances]
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
@@ -1467,7 +1467,7 @@ class MergeProject(EditCommand):
 
 
 class AddInstance(EditCommand):
-    topics = [UpdateTopic.frame]
+    topics = [UpdateTopic.frame, UpdateTopic.project_instances]
 
     @staticmethod
     def get_previous_frame_index(context: CommandContext) -> Optional[int]:
@@ -1548,7 +1548,9 @@ class AddInstance(EditCommand):
 
         # Now create the new instance
         new_instance = Instance(
-            skeleton=context.state["skeleton"], from_predicted=from_predicted
+            skeleton=context.state["skeleton"],
+            from_predicted=from_predicted,
+            frame=context.state["labeled_frame"],
         )
 
         has_missing_nodes = False

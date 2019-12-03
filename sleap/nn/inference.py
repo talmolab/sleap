@@ -440,9 +440,7 @@ class Predictor:
         return True
 
 
-if __name__ == "__main__":
-    import attr
-
+def main():
     predictor, args = Predictor.from_cli_args()
 
     # TODO: better support for video params
@@ -465,3 +463,7 @@ if __name__ == "__main__":
     labels = Labels(labeled_frames=lfs)
     print(f"Saving: {output_path}")
     Labels.save_file(labels, output_path)
+
+
+if __name__ == "__main__":
+    main()
