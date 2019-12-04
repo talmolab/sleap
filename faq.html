@@ -34,12 +34,43 @@
             
   <div class="section" id="frequently-asked-questions">
 <span id="faq"></span><h1>Frequently Asked Questions<a class="headerlink" href="#frequently-asked-questions" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="skeleton">
+<h2>Skeleton<a class="headerlink" href="#skeleton" title="Permalink to this headline">¶</a></h2>
 <p><strong>Can I add or remove nodes in the skeleton after I’ve already created instances?</strong></p>
 <p>Yes.</p>
 <p>Removing nodes is straightforward: just remove them. If you’re using part affinity fields for inference, you should make sure that the skeleton graph is still connected.</p>
 <p>Adding nodes is a little more complicated. First add the nodes to your skeleton. Then, to add these nodes to any instance which already exists, you’ll need to <strong>double-click</strong> on the instance (on the video frame image). The new nodes will be added and marked as “non-visible”; you’ll need to <strong>right-click</strong> on each node you want to make visible, and move it to the correct location.</p>
 <p><strong>Can I add or remove edges in the skeleton after I’ve already created instances?</strong></p>
 <p>Yes, adding or removed edges is straightforward and the change will be applied to all instances.</p>
+</div>
+<div class="section" id="pretraining">
+<h2>Pretraining<a class="headerlink" href="#pretraining" title="Permalink to this headline">¶</a></h2>
+<p><strong>How can I download pretrained weights to use for my backbones?</strong>
+Normally, pretrained weights will be automatically downloaded when the network is trained. This can be an issue when training in an environment that does not have internet access (e.g., HPC clusters). A simple solution is to manually trigger downloading of the pretrained weights in the same environment (e.g., the head node of a cluster). These one-liners will trigger weight downloading for the appropriate backbones:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python -c <span class="s2">&quot;from tensorflow.keras import applications; applications.ResNet50(weights=&#39;imagenet&#39;, include_top=False, input_shape=(256, 256, 3))&quot;</span>
+
+python -c <span class="s2">&quot;from tensorflow.keras import applications; applications.DenseNet121(weights=&#39;imagenet&#39;, include_top=False, input_shape=(256, 256, 3))&quot;</span>
+python -c <span class="s2">&quot;from tensorflow.keras import applications; applications.DenseNet169(weights=&#39;imagenet&#39;, include_top=False, input_shape=(256, 256, 3))&quot;</span>
+python -c <span class="s2">&quot;from tensorflow.keras import applications; applications.DenseNet201(weights=&#39;imagenet&#39;, include_top=False, input_shape=(256, 256, 3))&quot;</span>
+
+python -c <span class="s2">&quot;from tensorflow.keras import applications; applications.MobileNet(weights=&#39;imagenet&#39;, include_top=False, input_shape=(256, 256, 3), alpha=0.25)&quot;</span>
+python -c <span class="s2">&quot;from tensorflow.keras import applications; applications.MobileNet(weights=&#39;imagenet&#39;, include_top=False, input_shape=(256, 256, 3), alpha=0.5)&quot;</span>
+python -c <span class="s2">&quot;from tensorflow.keras import applications; applications.MobileNet(weights=&#39;imagenet&#39;, include_top=False, input_shape=(256, 256, 3), alpha=0.75)&quot;</span>
+python -c <span class="s2">&quot;from tensorflow.keras import applications; applications.MobileNet(weights=&#39;imagenet&#39;, include_top=False, input_shape=(256, 256, 3), alpha=1.0)&quot;</span>
+
+python -c <span class="s2">&quot;from tensorflow.keras import applications; applications.MobileNetV2(weights=&#39;imagenet&#39;, include_top=False, input_shape=(256, 256, 3), alpha=0.35)&quot;</span>
+python -c <span class="s2">&quot;from tensorflow.keras import applications; applications.MobileNetV2(weights=&#39;imagenet&#39;, include_top=False, input_shape=(256, 256, 3), alpha=0.5)&quot;</span>
+python -c <span class="s2">&quot;from tensorflow.keras import applications; applications.MobileNetV2(weights=&#39;imagenet&#39;, include_top=False, input_shape=(256, 256, 3), alpha=0.75)&quot;</span>
+python -c <span class="s2">&quot;from tensorflow.keras import applications; applications.MobileNetV2(weights=&#39;imagenet&#39;, include_top=False, input_shape=(256, 256, 3), alpha=1.0)&quot;</span>
+python -c <span class="s2">&quot;from tensorflow.keras import applications; applications.MobileNetV2(weights=&#39;imagenet&#39;, include_top=False, input_shape=(256, 256, 3), alpha=1.3)&quot;</span>
+python -c <span class="s2">&quot;from tensorflow.keras import applications; applications.MobileNetV2(weights=&#39;imagenet&#39;, include_top=False, input_shape=(256, 256, 3), alpha=1.4)&quot;</span>
+
+python -c <span class="s2">&quot;from tensorflow.keras import applications; applications.NASNetMobile(weights=&#39;imagenet&#39;, include_top=False, input_shape=(224, 224, 3))&quot;</span>
+python -c <span class="s2">&quot;from tensorflow.keras import applications; applications.NASNetLarge(weights=&#39;imagenet&#39;, include_top=False, input_shape=(331, 331, 3))&quot;</span>
+</pre></div>
+</div>
+<p>Be sure to run these with the same <code class="docutils literal notranslate"><span class="pre">python</span></code> binary as will be used for training so the weights can be loaded from the disk appropriately.</p>
+</div>
 </div>
 
 
@@ -64,7 +95,11 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial-part2.html">Tutorial, Part 2</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Frequently Asked Questions</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Frequently Asked Questions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#skeleton">Skeleton</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pretraining">Pretraining</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Feature Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">Developer API</a></li>
 </ul>
