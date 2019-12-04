@@ -1,0 +1,33 @@
+diff --git a/environment.yml b/environment.yml
+index a86365a..dd518cd 100644
+--- a/environment.yml
++++ b/environment.yml
+@@ -1,13 +1,11 @@
+-name: sleap
++name: sleap-cpu
+ 
+ dependencies:
+ - python=3.6
+ - attrs
+ - jsonpickle=1.2
+ - networkx
+-- cudatoolkit=10.0.*
+-- cudnn
+-- tensorflow-gpu=2.0
++- tensorflow=2.0
+ - scikit-learn
+ - h5py
+ - pandas
+diff --git a/requirements.txt b/requirements.txt
+index 0270f7e..a6eff9a 100644
+--- a/requirements.txt
++++ b/requirements.txt
+@@ -2,7 +2,7 @@ attrs
+ cattrs==1.0.0rc
+ jsonpickle==1.2
+ networkx
+-tensorflow-gpu==2.0
++tensorflow==2.0
+ h5py
+ python-rapidjson
+ opencv-python-headless==3.4.1.15
