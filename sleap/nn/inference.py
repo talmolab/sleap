@@ -153,7 +153,7 @@ class Predictor:
 
         track_args = dict(untracked_instances=untracked_instances, t=t)
         if self._tracker_takes_img:
-            track_args["img"] = img
+            track_args["img"] = img.numpy()
         else:
             track_args["img"] = None
 
