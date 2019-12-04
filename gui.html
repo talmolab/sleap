@@ -1727,6 +1727,20 @@ used for list or stack field-types</p></li>
 </dd></dl>
 
 <dl class="method">
+<dt id="sleap.gui.formbuilder.FormBuilderLayout.find_field">
+<code class="sig-name descname">find_field</code><span class="sig-paren">(</span><em class="sig-param">field_name: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/formbuilder.html#FormBuilderLayout.find_field"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.formbuilder.FormBuilderLayout.find_field" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds form fields by name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>field_name</strong> – Name of field to find.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of field widgets, including any in active stacked widget.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.gui.formbuilder.FormBuilderLayout.get_form_data">
 <code class="sig-name descname">get_form_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; dict<a class="reference internal" href="_modules/sleap/gui/formbuilder.html#FormBuilderLayout.get_form_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.formbuilder.FormBuilderLayout.get_form_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Gets all user-editable data from the widgets in the form layout.</p>
@@ -1756,6 +1770,12 @@ used for list or stack field-types</p></li>
 </dd></dl>
 
 <dl class="method">
+<dt id="sleap.gui.formbuilder.FormBuilderLayout.set_field_options">
+<code class="sig-name descname">set_field_options</code><span class="sig-paren">(</span><em class="sig-param">field_name: str, options_list: List[str]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/formbuilder.html#FormBuilderLayout.set_field_options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.formbuilder.FormBuilderLayout.set_field_options" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets custom list of options for specified field.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.gui.formbuilder.FormBuilderLayout.set_form_data">
 <code class="sig-name descname">set_form_data</code><span class="sig-paren">(</span><em class="sig-param">data: dict</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/formbuilder.html#FormBuilderLayout.set_form_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.formbuilder.FormBuilderLayout.set_form_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set specified user-editable data.</p>
@@ -1770,6 +1790,12 @@ used for list or stack field-types</p></li>
 <dt id="sleap.gui.formbuilder.FormBuilderLayout.set_widget_value">
 <em class="property">static </em><code class="sig-name descname">set_widget_value</code><span class="sig-paren">(</span><em class="sig-param">widget: PySide2.QtWidgets.QWidget</em>, <em class="sig-param">val</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/formbuilder.html#FormBuilderLayout.set_widget_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.formbuilder.FormBuilderLayout.set_widget_value" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set value for specific widget.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.formbuilder.FormBuilderLayout.update_field_options">
+<code class="sig-name descname">update_field_options</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/formbuilder.html#FormBuilderLayout.update_field_options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.formbuilder.FormBuilderLayout.update_field_options" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates options list for every field with custom list.</p>
 </dd></dl>
 
 </dd></dl>
@@ -1806,6 +1832,12 @@ passed to <a class="reference internal" href="#sleap.gui.formbuilder.FormBuilder
 </dd>
 </dl>
 <dl class="method">
+<dt id="sleap.gui.formbuilder.StackBuilderWidget.find_field">
+<code class="sig-name descname">find_field</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/formbuilder.html#StackBuilderWidget.find_field"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.formbuilder.StackBuilderWidget.find_field" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns result of find_field method on currently shown subform.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.gui.formbuilder.StackBuilderWidget.get_data">
 <code class="sig-name descname">get_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/formbuilder.html#StackBuilderWidget.get_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.formbuilder.StackBuilderWidget.get_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns value from currently shown subform.</p>
@@ -1815,6 +1847,12 @@ passed to <a class="reference internal" href="#sleap.gui.formbuilder.FormBuilder
 <dt id="sleap.gui.formbuilder.StackBuilderWidget.setValue">
 <code class="sig-name descname">setValue</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/formbuilder.html#StackBuilderWidget.setValue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.formbuilder.StackBuilderWidget.setValue" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets value of menu.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.formbuilder.StackBuilderWidget.set_field_options">
+<code class="sig-name descname">set_field_options</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/formbuilder.html#StackBuilderWidget.set_field_options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.formbuilder.StackBuilderWidget.set_field_options" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calls set_field_options for every subform.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1884,6 +1922,12 @@ instantiated using this path.</p>
 <dt id="sleap.gui.formbuilder.YamlFormWidget.get_form_data">
 <code class="sig-name descname">get_form_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/formbuilder.html#YamlFormWidget.get_form_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.formbuilder.YamlFormWidget.get_form_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns dict of form data.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.formbuilder.YamlFormWidget.set_field_options">
+<code class="sig-name descname">set_field_options</code><span class="sig-paren">(</span><em class="sig-param">field_name: str, options_list: List[str]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/formbuilder.html#YamlFormWidget.set_field_options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.formbuilder.YamlFormWidget.set_field_options" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets option list for specified field.</p>
 </dd></dl>
 
 <dl class="method">

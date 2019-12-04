@@ -795,11 +795,13 @@
         <span class="n">hbw</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">hb</span><span class="p">)</span>
         <span class="n">suggestions_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">hbw</span><span class="p">)</span>
 
-        <span class="n">form_wid</span> <span class="o">=</span> <span class="n">YamlFormWidget</span><span class="o">.</span><span class="n">from_name</span><span class="p">(</span><span class="s2">&quot;suggestions&quot;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Generate Suggestions&quot;</span><span class="p">)</span>
-        <span class="n">form_wid</span><span class="o">.</span><span class="n">mainAction</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">suggestions_form_widget</span> <span class="o">=</span> <span class="n">YamlFormWidget</span><span class="o">.</span><span class="n">from_name</span><span class="p">(</span>
+            <span class="s2">&quot;suggestions&quot;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Generate Suggestions&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">suggestions_form_widget</span><span class="o">.</span><span class="n">mainAction</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">process_events_then</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">generateSuggestions</span><span class="p">)</span>
         <span class="p">)</span>
-        <span class="n">suggestions_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">form_wid</span><span class="p">)</span>
+        <span class="n">suggestions_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">suggestions_form_widget</span><span class="p">)</span>
 
         <span class="k">def</span> <span class="nf">goto_suggestion</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
             <span class="n">selected_frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">suggestionsTable</span><span class="o">.</span><span class="n">getSelectedRowItem</span><span class="p">()</span>
@@ -959,6 +961,11 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">skeletonEdgesTable</span><span class="o">.</span><span class="n">model</span><span class="p">()</span><span class="o">.</span><span class="n">items</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;skeleton&quot;</span><span class="p">]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">skeletonEdgesSrc</span><span class="o">.</span><span class="n">model</span><span class="p">()</span><span class="o">.</span><span class="n">skeleton</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;skeleton&quot;</span><span class="p">]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">skeletonEdgesDst</span><span class="o">.</span><span class="n">model</span><span class="p">()</span><span class="o">.</span><span class="n">skeleton</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;skeleton&quot;</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">suggestions_form_widget</span><span class="o">.</span><span class="n">set_field_options</span><span class="p">(</span>
+                    <span class="s2">&quot;node&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">node_names</span>
+                <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">_has_topic</span><span class="p">([</span><span class="n">UpdateTopic</span><span class="o">.</span><span class="n">project</span><span class="p">,</span> <span class="n">UpdateTopic</span><span class="o">.</span><span class="n">on_frame</span><span class="p">]):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">instancesTable</span><span class="o">.</span><span class="n">model</span><span class="p">()</span><span class="o">.</span><span class="n">items</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;labeled_frame&quot;</span><span class="p">]</span>
