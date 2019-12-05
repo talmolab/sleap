@@ -2099,19 +2099,25 @@ class Labels(MutableSequence):
             box_path = os.path.join(file_dir, box_path_name)
 
         if not os.path.exists(box_path):
-            video_paths = [box_path]
-            missing = [True]
-            okay = MissingFilesDialog(video_paths, missing).exec_()
+            if gui:
+                video_paths = [box_path]
+                missing = [True]
+                okay = MissingFilesDialog(video_paths, missing).exec_()
 
-            if not okay or missing[0]:
-                return
+                if not okay or missing[0]:
+                    return
 
-            box_path = video_paths[0]
+                box_path = video_paths[0]
+            else:
+                # Ignore missing videos if not loading from gui
+                box_path = ""
 
-        # If we get here, then the video path should be good.
-        vid = Video.from_hdf5(
-            dataset="box", filename=box_path, input_format="channels_first"
-        )
+        if os.path.exists(box_path):
+            vid = Video.from_hdf5(
+                dataset="box", filename=box_path, input_format="channels_first"
+            )
+        else:
+            vid = None
 
         nodes_ = mat_contents["skeleton"]["nodes"]
         edges_ = mat_contents["skeleton"]["edges"]
