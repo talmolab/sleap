@@ -199,6 +199,10 @@ class CommandContext(object):
         """Imports COCO datasets."""
         self.execute(ImportCoco)
 
+    def importLEAP(self):
+        """Imports LEAP matlab datasets."""
+        self.execute(ImportLEAP)
+
     def saveProject(self):
         """Show gui to save project (or save as if not yet saved)."""
         self.execute(SaveProject)
@@ -432,7 +436,6 @@ class OpenProject(AppCommand):
         filters = [
             "HDF5 dataset (*.h5 *.hdf5)",
             "JSON labels (*.json *.json.zip)",
-            "Matlab dataset (*.mat)",
             "DeepLabCut csv (*.csv)",
         ]
 
@@ -495,6 +498,35 @@ class ImportDeepPoseKit(AppCommand):
         params["filename"] = filename
         params["video_path"] = paths[0]
         params["skeleton_path"] = paths[1]
+
+        return True
+
+
+class ImportLEAP(AppCommand):
+    @staticmethod
+    def do_action(context: "CommandContext", params: dict):
+
+        labels = Labels.load_leap_matlab(filename=params["filename"],)
+
+        new_window = context.app.__class__()
+        new_window.showMaximized()
+        new_window.loadLabelsObject(labels=labels)
+
+    @staticmethod
+    def ask(context: "CommandContext", params: dict) -> bool:
+        filters = ["Matlab (*.mat)"]
+
+        filename, selected_filter = FileDialog.open(
+            context.app,
+            dir=None,
+            caption="Import LEAP Matlab dataset...",
+            filter=";;".join(filters),
+        )
+
+        if len(filename) == 0:
+            return False
+
+        params["filename"] = filename
 
         return True
 
