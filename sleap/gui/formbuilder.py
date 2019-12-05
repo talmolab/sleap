@@ -107,6 +107,10 @@ class YamlFormWidget(QtWidgets.QGroupBox):
         """Returns dict of form data."""
         return self.form_layout.get_form_data()
 
+    def set_field_options(self, field_name: str, options_list: List[str]):
+        """Sets option list for specified field."""
+        self.form_layout.set_field_options(field_name, options_list)
+
     def trigger_main_action(self):
         """Emit mainAction signal with form data."""
         self.mainAction.emit(self.get_form_data())
@@ -130,6 +134,10 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
         self.fields = dict()
         self.field_options_lists = field_options_lists or dict()
         self.build_form(items_to_create)
+
+    @property
+    def stacked(self) -> list:
+        return [w for w in self.fields.values() if type(w) == StackBuilderWidget]
 
     def get_form_data(self) -> dict:
         """Gets all user-editable data from the widgets in the form layout.
@@ -163,7 +171,42 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
             else:
                 pass
 
-    #                 print(f"no {name} widget found")
+    def set_field_options(self, field_name: str, options_list: List[str]):
+        """Sets custom list of options for specified field."""
+        self.field_options_lists[field_name] = options_list
+
+        for subform in self.stacked:
+            subform.set_field_options(field_name, options_list)
+
+        self.update_field_options()
+
+    def update_field_options(self):
+        """Updates options list for every field with custom list."""
+        for field_name, field in self.fields.items():
+            if field_name in self.field_options_lists:
+                field.set_options(self.field_options_lists[field_name])
+
+    def find_field(self, field_name: str):
+        """
+        Finds form fields by name.
+
+        Args:
+            field_name: Name of field to find.
+
+        Returns:
+            List of field widgets, including any in active stacked widget.
+        """
+        widgets = self.fields.values()
+        found = [
+            w
+            for w in widgets
+            if w.objectName() == field_name
+            and type(w) not in (QtWidgets.QLabel, QtWidgets.QPushButton)
+        ]
+        stacks = [w for w in widgets if type(w) == StackBuilderWidget]
+        for stack in stacks:
+            found.extend(stack.find_field(field_name))
+        return found
 
     @staticmethod
     def set_widget_value(widget: QtWidgets.QWidget, val):
@@ -428,6 +471,15 @@ class StackBuilderWidget(QtWidgets.QWidget):
     def get_data(self):
         """Returns value from currently shown subform."""
         return self.page_layouts[self.value()].get_form_data()
+
+    def find_field(self, *args, **kwargs):
+        """Returns result of find_field method on currently shown subform."""
+        return self.page_layouts[self.value()].find_field(*args, **kwargs)
+
+    def set_field_options(self, *args, **kwargs):
+        """Calls set_field_options for every subform."""
+        for subform in self.page_layouts.values():
+            subform.set_field_options(*args, **kwargs)
 
 
 class FieldComboWidget(QtWidgets.QComboBox):

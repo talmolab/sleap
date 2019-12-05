@@ -768,11 +768,13 @@ class MainWindow(QMainWindow):
         hbw.setLayout(hb)
         suggestions_layout.addWidget(hbw)
 
-        form_wid = YamlFormWidget.from_name("suggestions", title="Generate Suggestions")
-        form_wid.mainAction.connect(
+        self.suggestions_form_widget = YamlFormWidget.from_name(
+            "suggestions", title="Generate Suggestions",
+        )
+        self.suggestions_form_widget.mainAction.connect(
             self.process_events_then(self.commands.generateSuggestions)
         )
-        suggestions_layout.addWidget(form_wid)
+        suggestions_layout.addWidget(self.suggestions_form_widget)
 
         def goto_suggestion(*args):
             selected_frame = self.suggestionsTable.getSelectedRowItem()
@@ -932,6 +934,11 @@ class MainWindow(QMainWindow):
             self.skeletonEdgesTable.model().items = self.state["skeleton"]
             self.skeletonEdgesSrc.model().skeleton = self.state["skeleton"]
             self.skeletonEdgesDst.model().skeleton = self.state["skeleton"]
+
+            if self.labels.skeletons:
+                self.suggestions_form_widget.set_field_options(
+                    "node", self.labels.skeletons[0].node_names
+                )
 
         if _has_topic([UpdateTopic.project, UpdateTopic.on_frame]):
             self.instancesTable.model().items = self.state["labeled_frame"]
