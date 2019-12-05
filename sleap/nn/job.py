@@ -269,6 +269,10 @@ class TrainingJob:
 
         if filename is not None:
 
+            # Check for old directory structure ({run_name}.json)
+            if os.path.exists(f"{filename}.json"):
+                filename = f"{filename}.json"
+
             # Check for training job file if save directory specified.
             if os.path.isdir(filename):
                 filename = os.path.join(filename, "training_job.json")
@@ -309,10 +313,21 @@ class TrainingJob:
         if run.run_path is not None and filename is not None:
             if not os.path.exists(run.run_path):
 
-                # First try the standard pattern:
+                # Check for old pattern where {run_name}.json is not inside
+                # the {run_name} directory but next to it. We have to check
+                # because the code for the standard (new) pattern doesn't
+                # work in this case (it uses the parent directory of the json
+                # as the run_name and the resulting path exists but is wrong).
+                skip_new_pattern = False
+                if filename.endswith(".json"):
+                    if not filename.endswith("training_job.json"):
+                        skip_new_pattern = True
+
+                # Try the standard pattern:
                 # {save_dir}/{run_name}/{job_json} -> run_path = {save_dir}/{run_name}/
                 save_dir, run_name = os.path.split(os.path.dirname(filename))
-                if os.path.exists(os.path.join(save_dir, run_name)):
+                new_run_path = os.path.join(save_dir, run_name)
+                if not skip_new_pattern and os.path.exists(new_run_path):
                     run.save_dir = save_dir
                     run.run_name = run_name
 
@@ -320,7 +335,8 @@ class TrainingJob:
                     # Next, try the old pattern:
                     # {save_dir}/{run_name}.json -> run_path = {save_dir}/{run_name}/
                     save_dir, run_name = os.path.split(os.path.splitext(filename)[0])
-                    if os.path.exists(os.path.join(save_dir, run_name)):
+                    new_run_path = os.path.join(save_dir, run_name)
+                    if os.path.exists(new_run_path):
                         run.save_dir = save_dir
                         run.run_name = run_name
 
