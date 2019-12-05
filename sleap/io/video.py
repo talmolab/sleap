@@ -203,7 +203,6 @@ class HDF5Video:
             if idx in self.__original_to_current_frame_idx:
                 idx = self.__original_to_current_frame_idx[idx]
             else:
-                print(self.__original_to_current_frame_idx)
                 raise ValueError(f"Frame index {idx} not in original index.")
 
         frame = self.__dataset_h5[idx]

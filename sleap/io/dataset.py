@@ -1945,8 +1945,6 @@ class Labels(MutableSequence):
             return cls.load_hdf5(filename, *args, **kwargs)
         elif filename.endswith((".json", ".json.zip")):
             return cls.load_json(filename, *args, **kwargs)
-        elif filename.endswith(".mat"):
-            return cls.load_mat(filename)
         elif filename.endswith(".csv"):
             # for now, the only csv we support is the DeepLabCut format
             return cls.load_deeplabcut_csv(filename)
@@ -2082,11 +2080,11 @@ class Labels(MutableSequence):
         return c
 
     @classmethod
-    def load_mat(cls, filename: str) -> "Labels":
+    def load_leap_matlab(cls, filename: str, gui: bool = True) -> "Labels":
         """Load LEAP MATLAB file as dataset.
 
         Args:
-            filename: Path to csv file.
+            filename: Path to matlab file.
         Returns:
             The :class:`Labels` dataset.
         """
@@ -2100,14 +2098,26 @@ class Labels(MutableSequence):
             box_path_name = box_path.split("\\")[-1]  # assume windows path
             box_path = os.path.join(file_dir, box_path_name)
 
+        if not os.path.exists(box_path):
+            if gui:
+                video_paths = [box_path]
+                missing = [True]
+                okay = MissingFilesDialog(video_paths, missing).exec_()
+
+                if not okay or missing[0]:
+                    return
+
+                box_path = video_paths[0]
+            else:
+                # Ignore missing videos if not loading from gui
+                box_path = ""
+
         if os.path.exists(box_path):
             vid = Video.from_hdf5(
                 dataset="box", filename=box_path, input_format="channels_first"
             )
         else:
             vid = None
-
-        # TODO: prompt user to locate video
 
         nodes_ = mat_contents["skeleton"]["nodes"]
         edges_ = mat_contents["skeleton"]["edges"]
