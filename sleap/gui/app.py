@@ -263,6 +263,12 @@ class MainWindow(QMainWindow):
             "DeepPoseKit dataset...",
             self.commands.importDPK,
         )
+        add_menu_item(
+            import_types_menu,
+            "import_leap",
+            "LEAP Matlab dataset...",
+            self.commands.importLEAP,
+        )
 
         add_menu_item(
             fileMenu,

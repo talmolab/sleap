@@ -36,7 +36,7 @@ def min_labels():
 
 @pytest.fixture
 def mat_labels():
-    return Labels.load_mat(TEST_MAT_LABELS)
+    return Labels.load_leap_matlab(TEST_MAT_LABELS, gui=False)
 
 
 @pytest.fixture
