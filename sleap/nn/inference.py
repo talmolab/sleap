@@ -65,9 +65,7 @@ class Predictor:
                 imgs, chunk_ind, video_ds.chunk_size
             )
 
-            sample_inds = np.arange(
-                video_ds.chunk_size * chunk_ind, video_ds.chunk_size * (chunk_ind + 1)
-            )
+            sample_inds = np.arange(len(imgs))
 
             self.track_chunk(predicted_instances_chunk, frame_inds, sample_inds, imgs)
 
@@ -82,19 +80,29 @@ class Predictor:
     def predict_chunk(self, img_chunk, chunk_ind, chunk_size):
         """Runs the inference components of pipeline for a chunk."""
 
-        centroid_predictor = self.policies["centroid"]
-        region_proposal_extractor = self.policies["region"]
+        if "centroid" in self.policies:
+            centroid_predictor = self.policies["centroid"]
+            region_proposal_extractor = self.policies["region"]
 
-        centroids, centroid_vals = centroid_predictor.predict(img_chunk)
+            centroids, centroid_vals = centroid_predictor.predict(img_chunk)
 
-        region_proposal_sets = region_proposal_extractor.extract(
-            img_chunk, centroids, centroid_vals
-        )
-        for region_ind in range(len(region_proposal_sets)):
-            region_proposal_sets[region_ind].sample_inds += chunk_ind * chunk_size
+            region_proposal_sets = region_proposal_extractor.extract(
+                img_chunk, centroids, centroid_vals
+            )
+        else:
+            # We aren't using centroids, so use whole frame as region of interest.
+            region_proposal_sets = [
+                region_proposal.RegionProposalSet.from_uncropped(images=img_chunk)
+            ]
 
-        if "topdown" in self.policies:
-            topdown_peak_finder = self.policies["topdown"]
+        # for region_ind in range(len(region_proposal_sets)):
+        #     region_proposal_sets[region_ind].sample_inds += chunk_ind * chunk_size
+
+        if "paf" not in self.policies:
+            if "topdown" in self.policies:
+                topdown_peak_finder = self.policies["topdown"]
+            else:
+                topdown_peak_finder = self.policies["confmap"]
 
             rps = region_proposal_sets[0]
 
@@ -127,6 +135,11 @@ class Predictor:
             for region_instance_set in region_instance_sets:
                 for sample, region_instances in region_instance_set.items():
                     predicted_instances_chunk[sample].extend(region_instances)
+
+        else:
+            raise ValueError(
+                f"Unable to run inference with {list(self.policies.keys())}"
+            )
 
         return predicted_instances_chunk
 
@@ -308,14 +321,29 @@ class Predictor:
             model.ModelOutputType.TOPDOWN_CONFIDENCE_MAP: "topdown",
         }
 
-        # Add policy classes which depend on models
+        # Load the information for these models
+        loaded_models = dict()
         for model_path in model_paths:
             training_job = job.TrainingJob.load_json(model_path)
             inference_model = model.InferenceModel.from_training_job(training_job)
-
             policy_key = model_type_policy_key_map[training_job.model.output_type]
 
-            policy_object = POLICY_CLASSES[policy_key](
+            loaded_models[policy_key] = dict(
+                job=training_job, inference_model=inference_model
+            )
+
+        # Add policy classes which depend on models
+        for policy_key, policy_model in loaded_models.items():
+            training_job = policy_model["job"]
+            inference_model = policy_model["inference_model"]
+
+            if policy_key == "confmap" and "paf" not in loaded_models.keys():
+                # Use topdown class when we have confmaps and not pafs
+                policy_class = POLICY_CLASSES["topdown"]
+            else:
+                policy_class = POLICY_CLASSES[policy_key]
+
+            policy_object = policy_class(
                 inference_model=inference_model, **policy_args[policy_key]
             )
 
@@ -427,14 +455,12 @@ class Predictor:
                 f" {non_topdowns}."
             )
 
-        if len(non_topdowns) == 1:
-            raise ValueError(
-                "Must have both CONFIDENCE_MAP and PART_AFFINITY_FIELD models."
-            )
+        if non_topdowns and "confmap" not in non_topdowns:
+            raise ValueError("Must have CONFIDENCE_MAP model.")
 
         if not has_topdown and not non_topdowns:
             raise ValueError(
-                f"Must have either TOPDOWN or CONFIDENCE_MAP and PART_AFFINITY_FIELD models."
+                f"Must have either TOPDOWN or CONFIDENCE_MAP/PART_AFFINITY_FIELD models."
             )
 
         return True
