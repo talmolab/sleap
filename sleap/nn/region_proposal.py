@@ -471,7 +471,12 @@ class RegionProposalExtractor:
 
             # Save proposal set.
             region_proposal_sets.append(
-                RegionProposalSet(box_size, sample_inds, bboxes, patches)
+                RegionProposalSet(
+                    patches=patches,
+                    sample_inds=sample_inds,
+                    box_size=box_size,
+                    bboxes=bboxes,
+                )
             )
 
         return region_proposal_sets
