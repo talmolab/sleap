@@ -32,7 +32,7 @@ class TrackTrailOverlay:
 
     labels: Labels = None
     player: "QtVideoPlayer" = None
-    trail_length: int = 4
+    trail_length: int = 10
     show: bool = False
 
     def get_track_trails(self, frame_selection, track: Track):
@@ -86,8 +86,11 @@ class TrackTrailOverlay:
         """Return list of tracks that have instance in specified frame."""
 
         tracks_in_frame = [
-            inst.track for lf in self.labels.find(video, frame_idx) for inst in lf
+            inst.track
+            for lf in self.get_frame_selection(video, frame_idx)
+            for inst in lf
         ]
+
         return tracks_in_frame
 
     def add_to_scene(self, video: Video, frame_idx: int):
