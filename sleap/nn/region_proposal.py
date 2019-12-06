@@ -503,3 +503,9 @@ class RegionProposalExtractor:
         )
 
         return region_proposal_sets
+
+
+@attr.s(auto_attribs=True, eq=False)
+class PassthroughRegionProposalExtractor:
+    def extract(self, imgs):
+        return [RegionProposalSet.from_uncropped(images=imgs)]
