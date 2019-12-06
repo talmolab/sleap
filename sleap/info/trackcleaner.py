@@ -80,6 +80,8 @@ def fit_tracks(filename, instance_count: int):
         }
     )
 
+    labels.tracks.sort(key=operator.attrgetter("spawned_on", "name"))
+
     # Save new file
     save_filename = filename
     save_filename = save_filename.replace(".h5", ".cleaned.h5")
