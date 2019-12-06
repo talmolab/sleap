@@ -532,6 +532,10 @@ class Labels(MutableSequence):
 
     # Methods for tracks
 
+    def get_track_count(self, video: Video) -> int:
+        """Returns the number of occupied tracks for a given video."""
+        return len(self.get_track_occupany(video))
+
     def get_track_occupany(self, video: Video) -> List:
         """Returns track occupancy list for given video"""
         try:
