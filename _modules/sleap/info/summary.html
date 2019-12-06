@@ -168,33 +168,63 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">reduce_funct</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">sum</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">)[</span><span class="n">reduction</span><span class="p">]</span>
 
-        <span class="n">track_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">find_first</span><span class="p">(</span><span class="n">video</span><span class="p">)</span><span class="o">.</span><span class="n">instances</span><span class="p">)</span>
+        <span class="n">track_count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">get_track_count</span><span class="p">(</span><span class="n">video</span><span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="n">primary_node_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">node_to_index</span><span class="p">(</span><span class="n">primary_node</span><span class="p">)</span>
-        <span class="k">except</span><span class="p">:</span>
+        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unable to locate node </span><span class="si">{primary_node}</span><span class="s2"> so using node 0&quot;</span><span class="p">)</span>
             <span class="n">primary_node_idx</span> <span class="o">=</span> <span class="mi">0</span>
 
-        <span class="n">last_frame_idx</span> <span class="o">=</span> <span class="n">video</span><span class="o">.</span><span class="n">num_frames</span><span class="o">-</span><span class="mi">1</span>
+        <span class="n">last_frame_idx</span> <span class="o">=</span> <span class="n">video</span><span class="o">.</span><span class="n">num_frames</span> <span class="o">-</span> <span class="mi">1</span>
         <span class="n">location_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span>
             <span class="p">(</span><span class="n">last_frame_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">track_count</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span>
         <span class="p">)</span>
-        <span class="k">for</span> <span class="n">lf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">video</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">lf</span><span class="o">.</span><span class="n">instances</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">inst</span><span class="o">.</span><span class="n">track</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">track_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">tracks</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">inst</span><span class="o">.</span><span class="n">track</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="n">track_idx</span> <span class="o">&lt;</span> <span class="n">track_count</span><span class="p">:</span>
-                        <span class="n">frame_idx</span> <span class="o">=</span> <span class="n">lf</span><span class="o">.</span><span class="n">frame_idx</span>
-                        <span class="n">point</span> <span class="o">=</span> <span class="n">inst</span><span class="o">.</span><span class="n">points_array</span><span class="p">[</span><span class="n">primary_node_idx</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">]</span>
-                        <span class="n">location_matrix</span><span class="p">[</span><span class="n">frame_idx</span><span class="p">,</span> <span class="n">track_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">point</span>
+        <span class="n">last_track_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="n">track_count</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
 
+        <span class="n">has_seen_track_idx</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">frame_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">last_frame_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">lfs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">)</span>
+
+            <span class="c1"># Start by setting all track positions to where they were last,</span>
+            <span class="c1"># so that we won&#39;t get &quot;jumps&quot; when an instance is missing for</span>
+            <span class="c1"># some frames.</span>
+            <span class="n">location_matrix</span><span class="p">[</span><span class="n">frame_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">last_track_pos</span>
+
+            <span class="c1"># Now update any positions we do have for the frame</span>
+            <span class="k">if</span> <span class="n">lfs</span><span class="p">:</span>
+                <span class="n">lf</span> <span class="o">=</span> <span class="n">lfs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">lf</span><span class="o">.</span><span class="n">instances</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">inst</span><span class="o">.</span><span class="n">track</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">track_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">tracks</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">inst</span><span class="o">.</span><span class="n">track</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">track_idx</span> <span class="o">&lt;</span> <span class="n">track_count</span><span class="p">:</span>
+                            <span class="n">point</span> <span class="o">=</span> <span class="n">inst</span><span class="o">.</span><span class="n">points_array</span><span class="p">[</span><span class="n">primary_node_idx</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+                            <span class="n">location_matrix</span><span class="p">[</span><span class="n">frame_idx</span><span class="p">,</span> <span class="n">track_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">point</span>
+
+                            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">point</span><span class="p">)):</span>
+                                <span class="c1"># Keep track of where this track was last.</span>
+                                <span class="n">last_track_pos</span><span class="p">[</span><span class="n">track_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">point</span>
+
+                                <span class="c1"># If this is the first time we&#39;ve seen this</span>
+                                <span class="c1"># track, then use initial location for all</span>
+                                <span class="c1"># previous frames so first occurrence doesn&#39;t</span>
+                                <span class="c1"># have high displacement.</span>
+                                <span class="k">if</span> <span class="n">track_idx</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">has_seen_track_idx</span><span class="p">:</span>
+                                    <span class="n">location_matrix</span><span class="p">[:</span><span class="n">frame_idx</span><span class="p">,</span> <span class="n">track_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">point</span>
+                                    <span class="n">has_seen_track_idx</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">track_idx</span><span class="p">)</span>
+
+        <span class="c1"># Calculate the displacements. Note these will be offset by 1 frame</span>
+        <span class="c1"># since we&#39;re starting from frame 1 rather than 0.</span>
         <span class="n">displacement</span> <span class="o">=</span> <span class="n">location_matrix</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="o">...</span><span class="p">]</span> <span class="o">-</span> <span class="n">location_matrix</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
 
         <span class="n">displacement_distances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">displacement</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 
         <span class="n">result</span> <span class="o">=</span> <span class="n">reduce_funct</span><span class="p">(</span><span class="n">displacement_distances</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">result</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">result</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># Shift back by 1 frame so offsets line up with frame index.</span>
+        <span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="n">result</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
         <span class="k">return</span> <span class="n">result</span></div>
 

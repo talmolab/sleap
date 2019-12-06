@@ -2485,7 +2485,7 @@ heightUpdated: triggered when the height of slider changes</p>
 
 <dl class="class">
 <dt id="sleap.gui.overlays.tracks.TrackTrailOverlay">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.overlays.tracks.</code><code class="sig-name descname">TrackTrailOverlay</code><span class="sig-paren">(</span><em class="sig-param">labels: sleap.io.dataset.Labels = None</em>, <em class="sig-param">player: QtVideoPlayer = None</em>, <em class="sig-param">trail_length: int = 4</em>, <em class="sig-param">show: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/overlays/tracks.html#TrackTrailOverlay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.overlays.tracks.TrackTrailOverlay" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.overlays.tracks.</code><code class="sig-name descname">TrackTrailOverlay</code><span class="sig-paren">(</span><em class="sig-param">labels: sleap.io.dataset.Labels = None</em>, <em class="sig-param">player: QtVideoPlayer = None</em>, <em class="sig-param">trail_length: int = 10</em>, <em class="sig-param">show: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/overlays/tracks.html#TrackTrailOverlay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.overlays.tracks.TrackTrailOverlay" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class to show track trails as overlay on video frame.</p>
 <p>Initialize this object with both its data source and its visual output
 scene, and it handles both extracting the relevant data for a given
@@ -2557,8 +2557,22 @@ objects to include in trail.</p></li>
 
 <dl class="method">
 <dt id="sleap.gui.overlays.tracks.TrackTrailOverlay.get_tracks_in_frame">
-<code class="sig-name descname">get_tracks_in_frame</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em>, <em class="sig-param">frame_idx: int</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/overlays/tracks.html#TrackTrailOverlay.get_tracks_in_frame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.overlays.tracks.TrackTrailOverlay.get_tracks_in_frame" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return list of tracks that have instance in specified frame.</p>
+<code class="sig-name descname">get_tracks_in_frame</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em>, <em class="sig-param">frame_idx: int</em>, <em class="sig-param">include_trails: bool = False</em><span class="sig-paren">)</span> &#x2192; List[sleap.instance.Track]<a class="reference internal" href="_modules/sleap/gui/overlays/tracks.html#TrackTrailOverlay.get_tracks_in_frame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.overlays.tracks.TrackTrailOverlay.get_tracks_in_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns list of tracks that have instance in specified frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>video</strong> – Video for which we want tracks.</p></li>
+<li><p><strong>frame_idx</strong> – Frame index for which we want tracks.</p></li>
+<li><p><strong>include_trails</strong> – Whether to include tracks which aren’t in current
+frame but would be included in trail (i.e., previous frames
+within trail_length).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of tracks.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">

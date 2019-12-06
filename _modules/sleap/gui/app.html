@@ -410,7 +410,10 @@
         <span class="n">add_menu_check_item</span><span class="p">(</span><span class="n">viewMenu</span><span class="p">,</span> <span class="s2">&quot;show trails&quot;</span><span class="p">,</span> <span class="s2">&quot;Show Trails&quot;</span><span class="p">)</span>
 
         <span class="n">add_submenu_choices</span><span class="p">(</span>
-            <span class="n">menu</span><span class="o">=</span><span class="n">viewMenu</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Trail Length&quot;</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;trail_length&quot;</span>
+            <span class="n">menu</span><span class="o">=</span><span class="n">viewMenu</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Trail Length&quot;</span><span class="p">,</span>
+            <span class="n">options</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span>
+            <span class="n">key</span><span class="o">=</span><span class="s2">&quot;trail_length&quot;</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">viewMenu</span><span class="o">.</span><span class="n">addSeparator</span><span class="p">()</span>
@@ -855,7 +858,7 @@
         <span class="p">)</span>
 
         <span class="c1"># Set defaults</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;trail_length&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;trail_length&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span>
 
         <span class="c1"># Emit signals for default that may have been set earlier</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="s2">&quot;palette&quot;</span><span class="p">)</span>
