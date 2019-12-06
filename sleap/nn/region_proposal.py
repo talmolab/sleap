@@ -6,7 +6,7 @@ usage when the foreground region occupies a small fraction of the image.
 """
 
 import attr
-from typing import Tuple, List
+from typing import Tuple, List, Union
 import itertools
 from collections import defaultdict
 import numpy as np
@@ -19,10 +19,77 @@ from sleap.nn import model
 
 @attr.s(auto_attribs=True, slots=True)
 class RegionProposalSet:
-    box_size: Tuple[int, int]
-    sample_inds: np.ndarray
-    bboxes: np.ndarray
+    """Data structure to hold a set of possibly cropped or resized image regions.
+
+    Attributes:
+        patches: 4-D stack of tf.Tensors of shape (num_samples, height, width, channels)
+            containing a set of images for processing.
+        sample_inds: Numpy array vector of length (num_samples), where each element
+            indicates the sample index of the patch. This is useful when multiple crops
+            exist in the patches that belong to the same frame.
+        box_size: Tuple of (height, width) specifying the shape of the region proposal
+            patches. If any cropping or resizing occurred, box_size will be in pixels
+            after applying all transformations.
+        bboxes: Bounding boxes describing the position of the images relative to the
+            full frame, specified as a numpy array of shape (num_samples, 4), where each
+            row contains the (y1, x1, y2, x2) coordinates defining the top-left and
+            bottom-right of the bounding box. These are specified in units of pixels
+            before any cropping or resizing is done. Note that a center offset is
+            expected, e.g., the left-most x-coordinate is at 0.5 and the right-most is
+            at image_width + 0.5.
+    """
+
     patches: tf.Tensor
+    sample_inds: np.ndarray
+    box_size: Tuple[int, int]
+    bboxes: np.ndarray
+
+    @classmethod
+    def from_uncropped(
+        cls,
+        images: Union[np.ndarray, tf.Tensor],
+        image_scale: Union[float, Tuple[float, float]] = 1.0,
+    ) -> "RegionProposalSet":
+        """Creates a region proposal set from an uncropped stack of images.
+
+        Args:
+            images: 4-D stack of numpy arrays or tf.Tensors of shape
+                (num_samples, height, width, channels). These do not need to be
+                normalized or converted to a particular dtype.
+            image_scale: A float or tuple of (height_scale, width_scale) specifying the
+                relative scale of the images if they are already resized.
+
+        Returns:
+            A RegionProposalSet instance with the uncropped images.
+        """
+
+        # Convert numpy arrays to tensors.
+        if not tf.is_tensor(images):
+            images = tf.convert_to_tensor(images)
+
+        if isinstance(image_scale, float):
+            image_scale = (image_scale, image_scale)
+
+        # Get image dimensions.
+        num_samples, image_height, image_width, _ = images.shape
+        image_height = int(image_height / image_scale[0])
+        image_width = int(image_width / image_scale[1])
+
+        # Indices for each sample (one per image).
+        sample_inds = np.arange(num_samples, dtype="int32")
+
+        # Make bounding boxes in absolute units (pixels) with center offset.
+        bboxes = np.zeros((num_samples, 4), dtype="float32")
+        bboxes[:, 2] = image_height
+        bboxes[:, 3] = image_width
+        bboxes += 0.5
+
+        return cls(
+            box_size=(images.shape[1], images.shape[2]),
+            sample_inds=sample_inds,
+            bboxes=bboxes,
+            patches=images,
+        )
 
 
 def make_centered_bboxes(
@@ -200,9 +267,6 @@ def normalize_bboxes(bboxes: np.ndarray, img_height: int, img_width: int) -> np.
     h = img_height - 1.0
     w = img_width - 1.0
     return bboxes / np.array([[h, w, h, w]])
-
-
-###########################################################################
 
 
 @attr.s(auto_attribs=True, eq=False)
