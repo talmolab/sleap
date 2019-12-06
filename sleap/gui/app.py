@@ -825,7 +825,7 @@ class MainWindow(QMainWindow):
         )
 
         # Set defaults
-        self.state["trail_length"] = 50
+        self.state["trail_length"] = 10
 
         # Emit signals for default that may have been set earlier
         self.state.emit("palette")
