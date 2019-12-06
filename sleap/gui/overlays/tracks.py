@@ -9,6 +9,8 @@ from sleap.io.video import Video
 import attr
 import itertools
 
+from typing import List
+
 from PySide2 import QtCore, QtGui
 
 
@@ -32,7 +34,7 @@ class TrackTrailOverlay:
 
     labels: Labels = None
     player: "QtVideoPlayer" = None
-    trail_length: int = 4
+    trail_length: int = 10
     show: bool = False
 
     def get_track_trails(self, frame_selection, track: Track):
@@ -82,12 +84,31 @@ class TrackTrailOverlay:
 
         return frame_selection[-self.trail_length :]
 
-    def get_tracks_in_frame(self, video: Video, frame_idx: int):
-        """Return list of tracks that have instance in specified frame."""
+    def get_tracks_in_frame(self, video: Video, frame_idx: int, include_trails: bool = False) -> List[Track]:
+        """
+        Returns list of tracks that have instance in specified frame.
+
+        Args:
+            video: Video for which we want tracks.
+            frame_idx: Frame index for which we want tracks.
+            include_trails: Whether to include tracks which aren't in current
+                frame but would be included in trail (i.e., previous frames
+                within trail_length).
+        Returns:
+            List of tracks.
+        """
+
+        if include_trails:
+            lfs = self.get_frame_selection(video, frame_idx)
+        else:
+            lfs = self.labels.find(video, frame_idx)
 
         tracks_in_frame = [
-            inst.track for lf in self.labels.find(video, frame_idx) for inst in lf
+            inst.track
+            for lf in lfs
+            for inst in lf
         ]
+
         return tracks_in_frame
 
     def add_to_scene(self, video: Video, frame_idx: int):
@@ -101,7 +122,7 @@ class TrackTrailOverlay:
             return
 
         frame_selection = self.get_frame_selection(video, frame_idx)
-        tracks_in_frame = self.get_tracks_in_frame(video, frame_idx)
+        tracks_in_frame = self.get_tracks_in_frame(video, frame_idx, include_trails=True)
 
         for track in tracks_in_frame:
 

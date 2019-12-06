@@ -15,6 +15,9 @@ def test_track_trails(centered_pair_predictions):
     assert tracks[0].name == "1"
     assert tracks[1].name == "2"
 
+    tracks_with_trails = trail_manager.get_tracks_in_frame(labels.videos[0], 27, include_trails=True)
+    assert len(tracks_with_trails) == 13
+
     trails = trail_manager.get_track_trails(frames, tracks[0])
 
     assert len(trails) == 24

@@ -377,7 +377,10 @@ class MainWindow(QMainWindow):
         add_menu_check_item(viewMenu, "show trails", "Show Trails")
 
         add_submenu_choices(
-            menu=viewMenu, title="Trail Length", options=(4, 10, 20), key="trail_length"
+            menu=viewMenu,
+            title="Trail Length",
+            options=(10, 20, 50),
+            key="trail_length",
         )
 
         viewMenu.addSeparator()
@@ -822,7 +825,7 @@ class MainWindow(QMainWindow):
         )
 
         # Set defaults
-        self.state["trail_length"] = 4
+        self.state["trail_length"] = 10
 
         # Emit signals for default that may have been set earlier
         self.state.emit("palette")
