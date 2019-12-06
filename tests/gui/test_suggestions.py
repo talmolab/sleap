@@ -6,6 +6,6 @@ def test_velocity_suggestions(centered_pair_predictions):
         labels=centered_pair_predictions,
         params=dict(method="velocity", node="", threshold=0.5),
     )
-    assert len(suggestions) == 12
-    assert suggestions[0].frame_idx == 80
-    assert suggestions[1].frame_idx == 145
+    assert len(suggestions) == 45
+    assert suggestions[0].frame_idx == 21
+    assert suggestions[1].frame_idx == 45

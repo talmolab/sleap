@@ -135,33 +135,63 @@ class StatisticSeries:
         """
         reduce_funct = dict(sum=np.sum, mean=np.nanmean, max=np.max)[reduction]
 
-        track_count = len(self.labels.find_first(video).instances)
+        track_count = self.labels.get_track_count(video)
 
         try:
             primary_node_idx = self.labels.skeletons[0].node_to_index(primary_node)
-        except:
+        except ValueError as e:
             print(f"Unable to locate node {primary_node} so using node 0")
             primary_node_idx = 0
 
-        last_frame_idx = video.num_frames-1
+        last_frame_idx = video.num_frames - 1
         location_matrix = np.full(
             (last_frame_idx + 1, track_count, 2), np.nan, dtype=np.float
         )
-        for lf in self.labels.find(video):
-            for inst in lf.instances:
-                if inst.track is not None:
-                    track_idx = self.labels.tracks.index(inst.track)
-                    if track_idx < track_count:
-                        frame_idx = lf.frame_idx
-                        point = inst.points_array[primary_node_idx, :2]
-                        location_matrix[frame_idx, track_idx] = point
+        last_track_pos = np.full((track_count, 2), 0, dtype=np.float)
 
+        has_seen_track_idx = set()
+
+        for frame_idx in range(last_frame_idx + 1):
+            lfs = self.labels.find(video, frame_idx)
+
+            # Start by setting all track positions to where they were last,
+            # so that we won't get "jumps" when an instance is missing for
+            # some frames.
+            location_matrix[frame_idx] = last_track_pos
+
+            # Now update any positions we do have for the frame
+            if lfs:
+                lf = lfs[0]
+                for inst in lf.instances:
+                    if inst.track is not None:
+                        track_idx = self.labels.tracks.index(inst.track)
+                        if track_idx < track_count:
+                            point = inst.points_array[primary_node_idx, :2]
+                            location_matrix[frame_idx, track_idx] = point
+
+                            if not np.all(np.isnan(point)):
+                                # Keep track of where this track was last.
+                                last_track_pos[track_idx] = point
+
+                                # If this is the first time we've seen this
+                                # track, then use initial location for all
+                                # previous frames so first occurrence doesn't
+                                # have high displacement.
+                                if track_idx not in has_seen_track_idx:
+                                    location_matrix[:frame_idx, track_idx] = point
+                                    has_seen_track_idx.add(track_idx)
+
+        # Calculate the displacements. Note these will be offset by 1 frame
+        # since we're starting from frame 1 rather than 0.
         displacement = location_matrix[1:, ...] - location_matrix[:-1, ...]
 
         displacement_distances = np.linalg.norm(displacement, axis=2)
 
         result = reduce_funct(displacement_distances, axis=1)
         result[np.isnan(result)] = 0
+
+        # Shift back by 1 frame so offsets line up with frame index.
+        result[1:] = result[:-1]
 
         return result
 
