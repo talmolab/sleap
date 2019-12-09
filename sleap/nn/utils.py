@@ -210,7 +210,7 @@ def group_array(
 def normalize_imgs(imgs: tf.Tensor) -> tf.Tensor:
     """Normalize images to unit range and dtype float32."""
 
-    if imgs.dtype == tf.uint8:
+    if imgs.dtype.is_integer:
         imgs = tf.cast(imgs, tf.float32) / 255.0
     return imgs
 
