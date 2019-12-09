@@ -44,6 +44,11 @@ class TrainerConfig:
     augment_gaussian_noise: bool = False
     augment_gaussian_noise_mean: float = 0.05
     augment_gaussian_noise_stddev: float = 0.1
+    augment_contrast: bool = False
+    augment_contrast_min_gamma: float = 0.5
+    augment_contrast_max_gamma: float = 2.0
+    augment_brightness: bool = False
+    augment_brightness_val: float = 0.0
 
     # Optimization:
     optimizer: str = "adam"

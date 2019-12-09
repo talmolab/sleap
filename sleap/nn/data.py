@@ -325,6 +325,11 @@ def augment_dataset(
     gaussian_noise: bool = False,
     gaussian_noise_mean: float = 0.05,
     gaussian_noise_stddev: float = 0.02,
+    contrast: bool = False,
+    contrast_min_gamma: float = 0.5,
+    contrast_max_gamma: float = 2.0,
+    brightness: bool = False,
+    brightness_val: float = 0.0,
 ) -> tf.data.Dataset:
     """Augments a pair of image and points dataset.
 
@@ -354,6 +359,14 @@ def augment_dataset(
 
     if scale:
         aug_stack.append(iaa.Affine(scale=(scale_min, scale_max)))
+
+    if contrast:
+        aug_stack.append(
+            iaa.GammaContrast(gamma=(contrast_min_gamma, contrast_max_gamma))
+        )
+
+    if brightness:
+        aug_stack.append(iaa.Add(value=(-brightness_val, brightness_val)))
 
     if uniform_noise:
         aug_stack.append(
