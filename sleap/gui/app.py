@@ -1164,7 +1164,8 @@ class MainWindow(QMainWindow):
         selection["clip"] = {
             current_video: list(range(*self.state.get("frame_range", default=(0, 0))))
         }
-        selection["video"] = {current_video: list(range(current_video.num_frames))}
+        # Use negative number in list for range (i.e., "0,-123" means "0-123")
+        selection["video"] = {current_video: (0, -current_video.num_frames + 1)}
 
         selection["suggestions"] = {
             video: remove_user_labeled(video, self.labels.get_video_suggestions(video))

@@ -236,10 +236,13 @@ class Predictor:
 
         def frame_list(frame_str: str):
 
-            # Handle ranges of frames. Must be of the form "1-200"
+            # Handle ranges of frames.
+            # NOTE: Ranges are *inclusive* at both ends.
+            # Must be in format "123-456" or "5,-10" (i.e., 5-10),
+            # and doesn't support list of ranges.
             if "-" in frame_str:
                 min_max = frame_str.split("-")
-                min_frame = int(min_max[0])
+                min_frame = int(min_max[0].rstrip(","))
                 max_frame = int(min_max[1])
                 return list(range(min_frame, max_frame + 1))
 
@@ -265,7 +268,7 @@ class Predictor:
             type=frame_list,
             default="",
             help="List of frames to predict. Either comma separated list (e.g. 1,2,3) or "
-            "a range separated by hyphen (e.g. 1-3). (default is entire video)",
+            "a range separated by hyphen (e.g. 1-3, for 1,2,3). (default is entire video)",
         )
         parser.add_argument(
             "-o",
@@ -419,7 +422,7 @@ class Predictor:
             if not key.startswith("_"):
                 cli_args.extend((f"--{key}", str(val)))
 
-        cli_args.extend(("--frames", ",".join(map(str, sorted(frames)))))
+        cli_args.extend(("--frames", ",".join(map(str, frames))))
 
         cli_args.extend(("-o", output_path))
 

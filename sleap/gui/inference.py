@@ -179,7 +179,14 @@ class InferenceDialog(QtWidgets.QDialog):
             def count_total_frames(videos_frames):
                 if not videos_frames:
                     return 0
-                return reduce(lambda x, y: x + y, map(len, videos_frames.values()))
+                count = 0
+                for frame_list in videos_frames.values():
+                    # Check for range, given as X, -Y
+                    if len(frame_list) == 2 and frame_list[1] < 0:
+                        count += -frame_list[1] - frame_list[0] + 1
+                    else:
+                        count += len(frame_list)
+                return count
 
             # Determine which options are available given _frame_selection
 
