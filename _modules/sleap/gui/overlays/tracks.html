@@ -117,7 +117,9 @@
 
         <span class="k">return</span> <span class="n">frame_selection</span><span class="p">[</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">trail_length</span> <span class="p">:]</span></div>
 
-<div class="viewcode-block" id="TrackTrailOverlay.get_tracks_in_frame"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.tracks.TrackTrailOverlay.get_tracks_in_frame">[docs]</a>    <span class="k">def</span> <span class="nf">get_tracks_in_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">include_trails</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Track</span><span class="p">]:</span>
+<div class="viewcode-block" id="TrackTrailOverlay.get_tracks_in_frame"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.tracks.TrackTrailOverlay.get_tracks_in_frame">[docs]</a>    <span class="k">def</span> <span class="nf">get_tracks_in_frame</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">include_trails</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Track</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns list of tracks that have instance in specified frame.</span>
 
@@ -136,11 +138,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">lfs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">)</span>
 
-        <span class="n">tracks_in_frame</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">inst</span><span class="o">.</span><span class="n">track</span>
-            <span class="k">for</span> <span class="n">lf</span> <span class="ow">in</span> <span class="n">lfs</span>
-            <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">lf</span>
-        <span class="p">]</span>
+        <span class="n">tracks_in_frame</span> <span class="o">=</span> <span class="p">[</span><span class="n">inst</span><span class="o">.</span><span class="n">track</span> <span class="k">for</span> <span class="n">lf</span> <span class="ow">in</span> <span class="n">lfs</span> <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">lf</span><span class="p">]</span>
 
         <span class="k">return</span> <span class="n">tracks_in_frame</span></div>
 
@@ -155,7 +153,9 @@
             <span class="k">return</span>
 
         <span class="n">frame_selection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_frame_selection</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">)</span>
-        <span class="n">tracks_in_frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_tracks_in_frame</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">,</span> <span class="n">include_trails</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">tracks_in_frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_tracks_in_frame</span><span class="p">(</span>
+            <span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">,</span> <span class="n">include_trails</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
 
         <span class="k">for</span> <span class="n">track</span> <span class="ow">in</span> <span class="n">tracks_in_frame</span><span class="p">:</span>
 

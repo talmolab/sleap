@@ -212,7 +212,14 @@
             <span class="k">def</span> <span class="nf">count_total_frames</span><span class="p">(</span><span class="n">videos_frames</span><span class="p">):</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">videos_frames</span><span class="p">:</span>
                     <span class="k">return</span> <span class="mi">0</span>
-                <span class="k">return</span> <span class="n">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">,</span> <span class="nb">map</span><span class="p">(</span><span class="nb">len</span><span class="p">,</span> <span class="n">videos_frames</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+                <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">for</span> <span class="n">frame_list</span> <span class="ow">in</span> <span class="n">videos_frames</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                    <span class="c1"># Check for range, given as X, -Y</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">frame_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">frame_list</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">count</span> <span class="o">+=</span> <span class="o">-</span><span class="n">frame_list</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">frame_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">count</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">frame_list</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">count</span>
 
             <span class="c1"># Determine which options are available given _frame_selection</span>
 
