@@ -171,6 +171,10 @@ class FlowCandidateMaker:
         Tuple[int, int], List[ShiftedInstance]  # keyed by (src_t, dst_t)
     ] = attr.ib(factory=dict)
 
+    @property
+    def uses_image(self):
+        return True
+
     def get_candidates(
         self, track_matching_queue: Deque[MatchedInstance], t: int, img: np.ndarray
     ) -> List[ShiftedInstance]:
@@ -297,6 +301,10 @@ class SimpleCandidateMaker:
 
     min_points: int = 0
 
+    @property
+    def uses_image(self):
+        return False
+
     def get_candidates(
         self, track_matching_queue: Deque[MatchedInstance], *args, **kwargs
     ) -> List[InstanceType]:
@@ -371,6 +379,10 @@ class Tracker:
                 unique_tracks.add(instance.track)
 
         return list(unique_tracks)
+
+    @property
+    def uses_image(self):
+        return getattr(self.candidate_maker, "uses_image", False)
 
     def track(
         self,
@@ -653,9 +665,6 @@ def run_tracker(frames, tracker):
     import time
     from sleap import Labels
 
-    sig = inspect.signature(tracker.track)
-    takes_img = "img" in sig.parameters
-
     t0 = time.time()
 
     new_lfs = []
@@ -668,7 +677,7 @@ def run_tracker(frames, tracker):
             inst.track = None
 
         track_args = dict(untracked_instances=lf.instances)
-        if takes_img:
+        if tracker.uses_image:
             track_args["img"] = lf.video[lf.frame_idx]
         else:
             track_args["img"] = None
