@@ -84,7 +84,9 @@ class TrackTrailOverlay:
 
         return frame_selection[-self.trail_length :]
 
-    def get_tracks_in_frame(self, video: Video, frame_idx: int, include_trails: bool = False) -> List[Track]:
+    def get_tracks_in_frame(
+        self, video: Video, frame_idx: int, include_trails: bool = False
+    ) -> List[Track]:
         """
         Returns list of tracks that have instance in specified frame.
 
@@ -103,11 +105,7 @@ class TrackTrailOverlay:
         else:
             lfs = self.labels.find(video, frame_idx)
 
-        tracks_in_frame = [
-            inst.track
-            for lf in lfs
-            for inst in lf
-        ]
+        tracks_in_frame = [inst.track for lf in lfs for inst in lf]
 
         return tracks_in_frame
 
@@ -122,7 +120,9 @@ class TrackTrailOverlay:
             return
 
         frame_selection = self.get_frame_selection(video, frame_idx)
-        tracks_in_frame = self.get_tracks_in_frame(video, frame_idx, include_trails=True)
+        tracks_in_frame = self.get_tracks_in_frame(
+            video, frame_idx, include_trails=True
+        )
 
         for track in tracks_in_frame:
 
