@@ -1,0 +1,261 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>How-Tos &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Frequently Asked Questions" href="faq.html" />
+    <link rel="prev" title="Tutorial, Part 2" href="tutorial-part2.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="how-tos">
+<span id="howtos"></span><h1>How-Tos<a class="headerlink" href="#how-tos" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="training-and-inference">
+<h2>Training and Inference<a class="headerlink" href="#training-and-inference" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="export-a-training-package">
+<span id="training-package"></span><h3>Export a training package<a class="headerlink" href="#export-a-training-package" title="Permalink to this headline">¶</a></h3>
+<p><em>Case: You’ve created a project with training data on one computer, and you want to use a different computer for training models. This could be another desktop with a GPU, an HPC cluster, or a Colab notebook.</em></p>
+<p>The easiest way to move your training data to another machine is to export a <strong>training package</strong>. This is a single HDF5 file which contains both labeled data as well as the images which will be used for training. This makes it easy to transport your training data since you won’t have to worry about paths to your video files.</p>
+<p>To export a training package, use the “<strong>Export Training Package…</strong>” command in the “Predict” menu of the GUI app.</p>
+<p>Pretty much anything you can do with a regular SLEAP file (i.e., a labels file or a predictions file), you can do with a training package file. In particular, you can:</p>
+<ul class="simple">
+<li><p>open a training package in the GUI (you can only see frames with labeled data, since only these are included in the training package)</p></li>
+<li><p>use a training package as the <cite>labels_path</cite> parameter to the <cite>sleap-track</cite> command-line interface</p></li>
+</ul>
+</div>
+<div class="section" id="run-training-and-or-inference-on-colab">
+<h3>Run training and/or inference on Colab<a class="headerlink" href="#run-training-and-or-inference-on-colab" title="Permalink to this headline">¶</a></h3>
+<p><em>Case: You already have a project with labeled training data and you’d like to run training or inference in a Colab notebook.</em></p>
+<p><a class="reference external" href="https://colab.research.google.com/drive/1jLS4UQ8p-DCQE8WET8w8i8Jf2Apxsq47">This notebook</a> will walk you through the process.</p>
+<p>You’ll need a <a class="reference external" href="https://www.google.com/drive/">Google Drive</a> where you can upload your training data (as a tracking package file), store models and predictions.</p>
+</div>
+<div class="section" id="remote-training">
+<h3>Remote training<a class="headerlink" href="#remote-training" title="Permalink to this headline">¶</a></h3>
+<p><em>Case: You already have a project with training data and you want to train on a different machine using a command-line interface.</em></p>
+<p>You need three things to run training:</p>
+<ol class="arabic simple">
+<li><p>You need to install SLEAP on the remote machine where you’ll run training.</p></li>
+<li><p>Labels and images to use for training.</p></li>
+<li><p>A training profile which defines the training parameters (e.g., learning rate, image augmentation methods).</p></li>
+</ol>
+<p><strong>Installing SLEAP</strong>:</p>
+<p>See the <a class="reference internal" href="installation.html#installation"><span class="std std-ref">Installation</span></a> instructions.</p>
+<p><strong>Training labels and images</strong>:</p>
+<p>Usually the easiest and best way to make the training labels and images available is to export a training package and copy that to the remote machine. See the instructions above to <a class="reference internal" href="#training-package"><span class="std std-ref">Export a training package</span></a>.</p>
+<p>Although it’s easiest if you bundle the labels and images into training package, there are alternatives. If the files are already on a shared network drive, it may be possible to use the original labels project and videos for training. But this can be tricky, because often the full paths to the files will be different when accessed from different machines (i.e., different paths on Windows and Linux machines or different paths from how the network drive is mounted). To use the original labels and video files, you’ll either need to ensure that the file paths to videos used in the project are the same on the remote machine as on the local machine where you last saved the project, <strong>or</strong> if all the video files have distinct filenames, you can place the videos inside the same directory which contains the labels project file.</p>
+<p>But in most cases it’s best to create a training package and just use that for remote training.</p>
+<p><strong>Training profile</strong>:</p>
+<p>SLEAP comes with “default” training profiles for training confidence maps, part affinity fields, centroids, or top-down confidence maps (which allow multi-instance inference without using part affinity fields). Any file in the <a class="reference external" href="https://github.com/murthylab/sleap/tree/master/sleap/training_profiles">training_profiles</a> directory of the SLEAP package can be used by specifying it’s filename (e.g., <code class="code docutils literal notranslate"><span class="pre">default_confmaps.json</span></code>) as the training profile—the full path isn’t required.</p>
+<p>You can also use a custom training profile. There’s a GUI <strong>training editor</strong> which gives you access to many of the profile parameters (<code class="code docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">sleap.gui.training_editor</span></code>, as described in the <a class="reference internal" href="reference.html#reference"><span class="std std-ref">Feature Reference</span></a>), or you can directly edit a profile <code class="code docutils literal notranslate"><span class="pre">.json</span></code> file in a text editor. To use a custom training profile, you’ll need to specify the full path to the file when you run training.</p>
+<p><strong>Command-line training</strong>:</p>
+<p>Once you have your training package (or labels project file) and training profile, you can run training like so:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sleap</span><span class="o">-</span><span class="n">train</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">your</span><span class="o">/</span><span class="n">training_profile</span><span class="o">.</span><span class="n">json</span> <span class="n">another</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">training_package</span><span class="o">.</span><span class="n">h5</span>
+</pre></div>
+</div>
+<p>The model will be saved in the <code class="code docutils literal notranslate"><span class="pre">models/</span></code> directory within the same directory as the <strong>training package</strong> (in this case, <code class="code docutils literal notranslate"><span class="pre">another/path/to/models/run_name/</span></code>). You can specify the <code class="code docutils literal notranslate"><span class="pre">run_name</span></code> to use when saving the model with the <code class="code docutils literal notranslate"><span class="pre">-o</span></code> argument, otherwise the run name will include a timestamp, the output type and model architecture.</p>
+</div>
+<div class="section" id="remote-inference">
+<h3>Remote inference<a class="headerlink" href="#remote-inference" title="Permalink to this headline">¶</a></h3>
+<p><em>Case: You already have models and you want to run inference on a different machine using a command-line interface.</em></p>
+<p>Here’s what you need to run inference:</p>
+<ol class="arabic simple">
+<li><p>You need to install SLEAP on the remote machine where you’ll run training.</p></li>
+<li><p>You need a compatible set of trained model files.</p></li>
+<li><p>You need a video for which you want predictions.</p></li>
+</ol>
+<p><strong>Installing SLEAP</strong>:</p>
+<p>See the <a class="reference internal" href="installation.html#installation"><span class="std std-ref">Installation</span></a> instructions.</p>
+<p><strong>Trained models</strong></p>
+<p>When you train a model, you’ll get a directory with the <cite>run_name</cite> of the model. This will typically be something like <code class="code docutils literal notranslate"><span class="pre">191205_162402.UNet.confmaps</span></code> (i.e., <code class="code docutils literal notranslate"><span class="pre">&lt;timestamp&gt;.&lt;architecture&gt;.&lt;output</span> <span class="pre">type&gt;</span></code>), although you can also specify the run name in the training command-line interface.</p>
+<p>The model directory will contain two or three files:</p>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">training_job.json</span></code> is the training profile used to train the model, together with some additional information about the trained model. Amongst other things, this specifies the network architecture of the model.</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">best_model.h5</span></code> and/or <code class="code docutils literal notranslate"><span class="pre">final_model.h5</span></code> are the weights for the trained model.</p></li>
+</ul>
+<p>You’ll need this entire directory for each model you’re going to use for inference.</p>
+<p>Inference will run in different modes depending on the output types of the models you supply. See the instructions for <a class="reference internal" href="#choosing-models"><span class="std std-ref">Choosing a set of models</span></a>.</p>
+<p>For this example, let’s suppose you have three models: confidence maps (confmaps), part affinity fields (pafs), and centroids. This is the typical case for multi-instance predictions.</p>
+<p><strong>Video</strong></p>
+<p>SLEAP uses OpenCV to read a variety of video formats including <cite>mp3</cite> and <cite>avi</cite> files. You’ll just need the file path to run inference on such a video file.</p>
+<p>SLEAP can also read videos stored as a datasets inside an HDF5 file. To run inference on an HDF5 video, you’ll need the file path, the dataset path, and whether the video data is formatted is formatted as <cite>(channels, images, height, width)</cite> or <cite>(images, height, width, channels)</cite>.</p>
+<p>For this example, let’s suppose you’re working with an HDF5 video at <code class="code docutils literal notranslate"><span class="pre">path/to/video.h5</span></code>, and the video data is stored in the <code class="code docutils literal notranslate"><span class="pre">video/</span></code> dataset with channels as the index.</p>
+<p><strong>Command-line inference</strong>:</p>
+<p>To run inference, you’ll call <code class="code docutils literal notranslate"><span class="pre">sleap-track</span></code> with the paths to each trained model and your video file, like so:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sleap</span><span class="o">-</span><span class="n">track</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">video</span><span class="o">.</span><span class="n">h5</span> \
+<span class="o">--</span><span class="n">video</span><span class="o">.</span><span class="n">dataset</span> <span class="n">video</span> <span class="o">--</span><span class="n">video</span><span class="o">.</span><span class="n">input_format</span> <span class="n">channels_last</span> \
+<span class="o">-</span><span class="n">m</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">models</span><span class="o">/</span><span class="mf">191205_162402.</span><span class="n">UNet</span><span class="o">.</span><span class="n">confmaps</span> \
+<span class="o">-</span><span class="n">m</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">models</span><span class="o">/</span><span class="mf">191205_163413.</span><span class="n">LeapCNN</span><span class="o">.</span><span class="n">pafs</span> \
+<span class="o">-</span><span class="n">m</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">models</span><span class="o">/</span><span class="mf">191205_170118.</span><span class="n">UNet</span><span class="o">.</span><span class="n">centroids</span> \
+</pre></div>
+</div>
+<p>(The order of the models doesn’t matter.)</p>
+<p>This will run inference on the entire video. If you only want to run inference on some range of frames, you can specify this with the <code class="code docutils literal notranslate"><span class="pre">--frames</span> <span class="pre">123-456</span></code> command-line argument.</p>
+<p>This will give you predictions frame-by-frame, but will not connect those predictions across frames into <cite>tracks</cite>. If you want cross-frame identity tracking, you’ll need to choose a tracker and specify this from the command-line with the <code class="code docutils literal notranslate"><span class="pre">--tracking.tracker</span></code> argument. For optical flow, use <code class="code docutils literal notranslate"><span class="pre">--tracking.tracker</span> <span class="pre">flow</span></code>. For matching identities without optical flow and using each instance centroid (rather than all the predicted nodes), use <code class="code docutils literal notranslate"><span class="pre">--tracking.tracker</span> <span class="pre">simple</span> <span class="pre">--tracking.similarity</span> <span class="pre">centroid</span></code>.</p>
+<p>It’s also possible to run tracking separately after you’ve generated a predictions file (see <a class="reference internal" href="reference.html#reference"><span class="std std-ref">Feature Reference</span></a>). This makes it easy to try different tracking methods and parameters without needing to re-run the full inference process.</p>
+<p>When inference is finished, it will save the predictions in a new HDF5 file. This file has the same format as a standard SLEAP project file, and you can use the GUI to proofread this file or merge the predictions into an existing SLEAP project. The file will be in the same directory as the video and the filename will be <code class="code docutils literal notranslate"><span class="pre">{video</span> <span class="pre">filename}.predictions.h5</span></code>.</p>
+</div>
+<div class="section" id="choosing-a-set-of-models">
+<span id="choosing-models"></span><h3>Choosing a set of models<a class="headerlink" href="#choosing-a-set-of-models" title="Permalink to this headline">¶</a></h3>
+<p>Inference will run in different modes depending on the output types of the models you supply. SLEAP currently support four different output types:</p>
+<ol class="arabic simple">
+<li><p><strong>Confidence maps</strong> (confmaps) are used to predict point locations.</p></li>
+<li><p><strong>Part affinity fields</strong> (pafs) are used to connect points which belong to the same animal instance.</p></li>
+<li><p><strong>Centroids</strong> are used to crop the video frame around each animal instance.</p></li>
+<li><p><strong>Top-down confidence maps</strong> (topdown) are used to predict point locations for a <em>single</em> instance at the center of a cropped image.</p></li>
+</ol>
+<p>When there’s only a <strong>single</strong> instance in the video, run with confidence maps. Centroids are optional.</p>
+<p>When there are <strong>multiple</strong> instances in the video, you have two options:</p>
+<ol class="arabic simple">
+<li><p>Confidence maps (<em>required</em>) and part affinity fields (<em>required</em>), with centroids <em>optional</em>.</p></li>
+<li><p>Top-down confidence maps and centroids (<em>required</em>).</p></li>
+</ol>
+<p>Note that top-down confidence maps rely on centroid cropping, since they’re trained to give predictions for the single instance centered in the (cropped) image.</p>
+</div>
+</div>
+<div class="section" id="improving-predictions">
+<h2>Improving predictions<a class="headerlink" href="#improving-predictions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="add-more-training-data-to-a-project">
+<h3>Add more training data to a project<a class="headerlink" href="#add-more-training-data-to-a-project" title="Permalink to this headline">¶</a></h3>
+<p><em>Case: You have predictions that aren’t in the same project as your original training data and you want to correct some of the predictions and use these corrections to train a better model.</em></p>
+<p><strong>TODO</strong></p>
+<ul class="simple">
+<li><p>correct predictions</p></li>
+<li><p>make copy</p></li>
+<li><p>delete predictions</p></li>
+<li><p>import into project with original training data</p></li>
+<li><p>train new models</p></li>
+</ul>
+</div>
+<div class="section" id="experimenting-with-training-parameters">
+<h3>Experimenting with training parameters<a class="headerlink" href="#experimenting-with-training-parameters" title="Permalink to this headline">¶</a></h3>
+<p><strong>TODO</strong></p>
+</div>
+</div>
+<div class="section" id="proofreading">
+<h2>Proofreading<a class="headerlink" href="#proofreading" title="Permalink to this headline">¶</a></h2>
+<p><em>Case: You’re happy enough with the frame-by-frame predictions but you need to correct the identities tracked across frames.</em></p>
+<p><strong>TODO</strong></p>
+<p>General:</p>
+<ul class="simple">
+<li><p>use colors, pick palette with enough distinct colors, modify palette if background makes some colors hard to see</p></li>
+<li><p>try alternate tracking methods</p></li>
+<li><p>add more training data (tracking could be poor because there are too many frames with one or more instances without predictions)</p></li>
+</ul>
+<p>For breaks:</p>
+<ul class="simple">
+<li><p>step between spawn frames</p></li>
+<li><p>try track cleaner</p></li>
+</ul>
+<p>For swaps:</p>
+<ul class="simple">
+<li><p>longer trails and step 50 frames at a time (to find swaps)</p></li>
+<li><p>short trails and velocity-based suggestions (to find swaps)</p></li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial-part2.html">Tutorial, Part 2</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">How-Tos</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#training-and-inference">Training and Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#improving-predictions">Improving predictions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#proofreading">Proofreading</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="tutorial-part2.html" title="previous chapter">Tutorial, Part 2</a></li>
+      <li>Next: <a href="faq.html" title="next chapter">Frequently Asked Questions</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/howtos.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

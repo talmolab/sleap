@@ -1,3 +1,5 @@
+.. _reference:
+
 Feature Reference
 =================
 
@@ -6,11 +8,19 @@ Command Line Interfaces
 
 :code:`sleap-label` (or :code:`python -m sleap.gui.app`) runs the GUI application.
 
-:code:`sleap-train` (or :code:`python -m sleap.nn.train`) is the command-line interface for *training*. Use this for training on a remote machine/cluster/colab notebook. Run with :code:`--help` for details.
+:code:`sleap-train` (or :code:`python -m sleap.nn.train`) is the command-line interface for *training*. Use this for training on a remote machine/cluster/colab notebook.
 
-:code:`sleap-track` (or :code:`python -m sleap.nn.inference`) is the command-line interface for running *inference* using models which have already been trained. Use this for running inference on a remote machine/cluster/colab notebook. All training parameters are exposed; run with :code:`--help` for details.
+:code:`sleap-track` (or :code:`python -m sleap.nn.inference`) is the command-line interface for running *inference* using models which have already been trained. Use this for running inference on a remote machine such as an HPC cluster or Colab notebook. All training parameters are exposed.
+
+:code:`python -m sleap.nn.tracking` allows you to run the cross-frame identity tracker (or re-run with different parameters) without needed to re-run inference. You give it a prediction file.
+
+:code:`python -m sleap.info.trackcleaner` is an experimental script which tries to clean the resuls of cross-frame identity tracking by connecting "breaks" where we lose one identity and spawn another. You specify how many identities there should be in a frame (i.e., the number of animals).
+
+:code:`python -m sleap.gui.training_editor` allows you to view and create new training profiles. These are the files which specify what the model will be used for (confidence maps, part affinity fields, centroids, or top-down confidence maps), the network architecture (e.g., UNet), and the other training parameters (e.g., learning rate, image rescaling, image augmentation methods). If you want to view an existing profile—including a `training_job.json` file associated with a trained model—you can specify it's path as the first command-line parameter. You can also do this if you want to use an exiting profile as a template for creating a new training profile.
 
 :code:`python -m sleap.info.write_tracking_h5` allows you to export the tracking data from a SLEAP dataset into an HDF5 file that can be easily used for analysis (e.g., read from MATLAB).
+
+**Note**: For more details about any command, run with the :code:`--help` argument (e.g., :code:`sleap-track --help`).
 
 Menus
 -----
@@ -113,6 +123,10 @@ Predict
 "**Delete All Predictions with Low Score...**" deletes all instances with a prediction score below the specified value. You'll be asked for the value, and then asked to confirm before instances are deleted. Instance scores are shown in the "Instances" table and below the selected instance in the current frame.
 
 "**Delete All Predictions beyond Frame Limit...**" deletes the lowest scoring instances beyond some set number of instances in each frame. For example, if you know that there are only two animals in the video, this would let you keep just the two best predicted instances. You'll be asked for the number of instances to keep, and then asked to confirm before instances are deleted.
+
+"**Export Training Package...**" allows you to export a training package. This is a single HDF5 file which contains both labeled data as well as the images which will be used for training. This makes it easy to transport your training data, especially if you need to run training on another machine (e.g., an HPC cluster). Training packages can be opened just like regular SLEAP dataset files, although you'll only be able to view the frames which have labeled data (since only these are included in the file).
+
+"**Export Labeled Clip...**" allows you to export a video clip with any instances drawn on the frame (much as you can see in the GUI). To use this command, first select a clip in the seekbar.
 
 Help
 ~~~~

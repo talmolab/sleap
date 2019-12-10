@@ -9,6 +9,7 @@
     installation
     tutorial
     tutorial-part2
+    howtos
     FAQ <faq>
     reference
     API <api>
