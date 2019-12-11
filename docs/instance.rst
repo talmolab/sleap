@@ -1,4 +1,4 @@
-Instance
+sleap.instance
 ========
 
 .. automodule:: sleap.instance

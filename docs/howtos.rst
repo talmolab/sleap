@@ -3,7 +3,7 @@
 How-Tos
 =======
 
-:ref:`training_package` when you've created a project with training data on one computer and you want to move your training data for training models on a different computer.
+:ref:`training_package` when you've created a project with training data on one computer and you want to **move your training data** for training models on a different computer.
 
 :ref:`colab` when you have a project with labeled training data and you'd like to run training or inference in a **Colab** notebook.
 
@@ -35,7 +35,7 @@ To export a training package, use the "**Export Training Package...**" command i
 Pretty much anything you can do with a regular SLEAP file (i.e., a labels file or a predictions file), you can do with a training package file. In particular, you can:
 
 - open a training package in the GUI (you can only see frames with labeled data, since only these are included in the training package)
-- use a training package as the `labels_path` parameter to the `sleap-track` command-line interface
+- use a training package as the :code:`labels_path` parameter to the :code:`sleap-track` command-line interface
 
 .. _colab:
 
@@ -123,7 +123,7 @@ For this example, let's suppose you have three models: confidence maps (confmaps
 
 **Video**
 
-SLEAP uses OpenCV to read a variety of video formats including `mp3` and `avi` files. You'll just need the file path to run inference on such a video file.
+SLEAP uses OpenCV to read a variety of video formats including `mp4` and `avi` files. You'll just need the file path to run inference on such a video file.
 
 SLEAP can also read videos stored as a datasets inside an HDF5 file. To run inference on an HDF5 video, you'll need the file path, the dataset path, and whether the video data is formatted is formatted as `(channels, images, height, width)` or `(images, height, width, channels)`.
 
