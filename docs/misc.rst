@@ -1,35 +1,32 @@
 Misc
 ========
 
-Utils
+sleap.util
 -------------
 .. automodule:: sleap.util
    :members:
 
-Range list
+sleap.rangelist
 -------------
 .. automodule:: sleap.rangelist
    :members:
 
-Legacy formats
+sleap.io.legacy
 --------------
 .. automodule:: sleap.io.legacy
    :members:
 
-Info tools
-----------
-
-Metrics
-^^^^^^^^^^^^^^
+sleap.info.metrics
+-------------------
 .. automodule:: sleap.info.metrics
    :members:
 
-Summary
-^^^^^^^^^^^^^^
+sleap.info.summary
+------------------------
 .. automodule:: sleap.info.summary
    :members:
 
-Track Analysis
-^^^^^^^^^^^^^^
+sleap.info.write_tracking_h5
+------------------------------
 .. automodule:: sleap.info.write_tracking_h5
    :members:

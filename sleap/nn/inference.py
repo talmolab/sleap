@@ -1,3 +1,7 @@
+"""
+Class and command-line interface for running inference with trained models.
+"""
+
 import argparse
 import attr
 import datetime
@@ -32,6 +36,21 @@ POLICY_CLASSES = dict(
 
 @attr.s(auto_attribs=True)
 class Predictor:
+    """
+    Encapsulates the inference pipeline.
+
+    Attributes:
+        policies: A dictionary with objects for different parts of the pipeline:
+
+          * "centroid": Instance of `region_proposal.CentroidPredictor`
+          * "region": Instance of `region_proposal.RegionProposalExtractor`
+          * "confmap": Instance of `peak_finding.ConfmapPeakFinder`
+          * "paf": Instance of `paf_grouping.PAFGrouper`
+          * "tracking": Instance of `tracking.Tracker`
+
+    Note: the pipeline will be determined by which policies are given.
+    """
+
     policies: Dict[str, object]
 
     _tracker_takes_img: bool = False
@@ -55,7 +74,7 @@ class Predictor:
             video_kwargs = dict()
 
         video_ds = utils.VideoLoader(
-            filename=video_filename, frame_inds=frames, **video_kwargs,
+            filename=video_filename, frame_inds=frames, **video_kwargs
         )
 
         predicted_frames = []
@@ -152,7 +171,7 @@ class Predictor:
             instances = predicted_instances_chunk[sample_idx]
 
             predicted_instances_chunk[sample_idx] = self.track_next_sample(
-                untracked_instances=instances, t=frame_idx, img=img,
+                untracked_instances=instances, t=frame_idx, img=img
             )
 
     def track_next_sample(
@@ -281,10 +300,7 @@ class Predictor:
         # TODO: better video parameters
 
         parser.add_argument(
-            "--video.dataset",
-            type=str,
-            default="",
-            help="The dataset for HDF5 videos.",
+            "--video.dataset", type=str, default="", help="The dataset for HDF5 videos."
         )
 
         parser.add_argument(
@@ -295,7 +311,7 @@ class Predictor:
         )
 
         # Class attributes to exclude from cli
-        exclude_args = dict(region=("merge_overlapping",),)
+        exclude_args = dict(region=("merge_overlapping",))
 
         for name, attrs_class in POLICY_CLASSES.items():
             add_class_args(parser, attrs_class, name, exclude_args)
@@ -470,6 +486,7 @@ class Predictor:
 
 
 def main():
+    """CLI for running inference."""
     predictor, args = Predictor.from_cli_args()
 
     # TODO: better support for video params
@@ -479,7 +496,7 @@ def main():
     )
 
     lfs = predictor.predict(
-        video_filename=args.data_path, frames=args.frames, video_kwargs=video_kwargs,
+        video_filename=args.data_path, frames=args.frames, video_kwargs=video_kwargs
     )
 
     if args.output:

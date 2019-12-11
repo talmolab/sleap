@@ -1,11 +1,15 @@
 Training
-========
+==================
+
+sleap.nn.training
+------------------------
+
 
 .. automodule:: sleap.nn.training
    :members:
 
-Architectures
--------------
+sleap.nn.architectures
+------------------------
 
 .. automodule:: sleap.nn.architectures.hourglass
     :members:
