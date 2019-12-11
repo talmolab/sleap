@@ -101,6 +101,8 @@ recently trained set of models.
 
 |image8|
 
+.. _track_proofreading:
+
 Track proofreading
 ~~~~~~~~~~~~~~~~~~
 
@@ -108,7 +110,7 @@ Once you have predicted tracks, you’ll need to proofread these to ensure
 that the identities of instances across frames are correct. By default,
 predicted instances all appear in grey and yellow. Select “Color
 Predicted Instances” to show the tracks in color. (Note that colors in
-the frame match colors in the seek-bar and colors in the “Instances”
+the frame match colors in the seekbar and colors in the “Instances”
 panel.) Click an instance to see it’s track name. Double-click the track
 name in the “Instances” panel to change the name.
 
