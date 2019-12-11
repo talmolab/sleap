@@ -5,12 +5,12 @@ Developer API
 
 .. toctree::
     :caption: API
-    :maxdepth: 2
+    :maxdepth: 3
 
     skeleton
-    video
     instance
     dataset
+    video
     training
     inference
     gui

@@ -1,10 +1,12 @@
 GUI
 ========
 
+sleap.gui.app
+-------------
 .. automodule:: sleap.gui.app
    :members:
 
-Video Player
+sleap.gui.video
 -------------
 .. automodule:: sleap.gui.video
    :members:
@@ -12,32 +14,32 @@ Video Player
 Dialogs
 -------------
 
-Training/Inference
+sleap.gui.inference
 ^^^^^^^^^^^^^^^
 .. automodule:: sleap.gui.inference
    :members:
 
-Video Importer
+sleap.gui.importvideos
 ^^^^^^^^^^^^^^
 .. automodule:: sleap.gui.importvideos
    :members:
 
-Merging
+sleap.gui.merge
 ^^^^^^^^^^^^^^
 .. automodule:: sleap.gui.merge
    :members:
 
-Shortcuts
+sleap.gui.shortcuts
 ^^^^^^^^^^^^^^
 .. automodule:: sleap.gui.shortcuts
    :members:
 
-Suggestions
+sleap.gui.suggestions
 ^^^^^^^^^^^^^^
 .. automodule:: sleap.gui.suggestions
    :members:
 
-Training Profiles
+sleap.gui.training_editor
 ^^^^^^^^^^^^^^^^^
 .. automodule:: sleap.gui.training_editor
    :members:
@@ -45,58 +47,58 @@ Training Profiles
 Other Widgets
 -------------
 
-Form builder
+sleap.gui.formbuilder
 ^^^^^^^^^^^^^^
 .. automodule:: sleap.gui.formbuilder
    :members:
 
-Slider
+sleap.gui.slider
 ^^^^^^^^^^^^^^
 .. automodule:: sleap.gui.slider
    :members:
 
-Multicheck
+sleap.gui.multicheck
 ^^^^^^^^^^^^^^
 .. automodule:: sleap.gui.multicheck
    :members:
 
-Overlays
+sleap.gui.overlays
 -------------
 
-Instances
+sleap.gui.overlays.instance
 ^^^^^^^^^^^^^^
 .. automodule:: sleap.gui.overlays.instance
    :members:
 
-Tracks
+sleap.gui.overlays.tracks
 ^^^^^^^^^^^^^^
 .. automodule:: sleap.gui.overlays.tracks
    :members:
 
-Anchors
+sleap.gui.overlays.anchors
 ^^^^^^^^^^^^^^
 .. automodule:: sleap.gui.overlays.anchors
    :members:
 
-Datasource classes
+sleap.gui.overlays.base
 ^^^^^^^^^^^^^^^^^^
 .. automodule:: sleap.gui.overlays.base
    :members:
 
-Confidence maps
+sleap.gui.overlays.confmaps
 ^^^^^^^^^^^^^^^
 .. automodule:: sleap.gui.overlays.confmaps
    :members:
 
 
-Part affinity fields
+sleap.gui.overlays.pafs
 ^^^^^^^^^^^^^^^^^^^^
 .. automodule:: sleap.gui.overlays.pafs
    :members:
 
 
 
-Dataviews
+sleap.gui.dataviews
 -------------
 .. automodule:: sleap.gui.dataviews
    :members:

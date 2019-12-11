@@ -34,7 +34,7 @@
             
   <div class="section" id="how-tos">
 <span id="howtos"></span><h1>How-Tos<a class="headerlink" href="#how-tos" title="Permalink to this headline">¶</a></h1>
-<p><a class="reference internal" href="#training-package"><span class="std std-ref">Export a training package</span></a> when you’ve created a project with training data on one computer and you want to move your training data for training models on a different computer.</p>
+<p><a class="reference internal" href="#training-package"><span class="std std-ref">Export a training package</span></a> when you’ve created a project with training data on one computer and you want to <strong>move your training data</strong> for training models on a different computer.</p>
 <p><a class="reference internal" href="#colab"><span class="std std-ref">Run training and/or inference on Colab</span></a> when you have a project with labeled training data and you’d like to run training or inference in a <strong>Colab</strong> notebook.</p>
 <p><a class="reference internal" href="#remote-train"><span class="std std-ref">Remote training</span></a> when you have a project with training data and you want to train on a different machine using a <strong>command-line interface</strong>.</p>
 <p><a class="reference internal" href="#remote-inference"><span class="std std-ref">Remote inference</span></a> when you trained models and you want to run inference on a different machine using a <strong>command-line interface</strong>.</p>
@@ -51,7 +51,7 @@
 <p>Pretty much anything you can do with a regular SLEAP file (i.e., a labels file or a predictions file), you can do with a training package file. In particular, you can:</p>
 <ul class="simple">
 <li><p>open a training package in the GUI (you can only see frames with labeled data, since only these are included in the training package)</p></li>
-<li><p>use a training package as the <cite>labels_path</cite> parameter to the <cite>sleap-track</cite> command-line interface</p></li>
+<li><p>use a training package as the <code class="code docutils literal notranslate"><span class="pre">labels_path</span></code> parameter to the <code class="code docutils literal notranslate"><span class="pre">sleap-track</span></code> command-line interface</p></li>
 </ul>
 </div>
 <div class="section" id="run-training-and-or-inference-on-colab">
@@ -107,7 +107,7 @@
 <p>Inference will run in different modes depending on the output types of the models you supply. See the instructions for <a class="reference internal" href="#choosing-models"><span class="std std-ref">Choosing a set of models</span></a>.</p>
 <p>For this example, let’s suppose you have three models: confidence maps (confmaps), part affinity fields (pafs), and centroids. This is the typical case for multi-instance predictions.</p>
 <p><strong>Video</strong></p>
-<p>SLEAP uses OpenCV to read a variety of video formats including <cite>mp3</cite> and <cite>avi</cite> files. You’ll just need the file path to run inference on such a video file.</p>
+<p>SLEAP uses OpenCV to read a variety of video formats including <cite>mp4</cite> and <cite>avi</cite> files. You’ll just need the file path to run inference on such a video file.</p>
 <p>SLEAP can also read videos stored as a datasets inside an HDF5 file. To run inference on an HDF5 video, you’ll need the file path, the dataset path, and whether the video data is formatted is formatted as <cite>(channels, images, height, width)</cite> or <cite>(images, height, width, channels)</cite>.</p>
 <p>For this example, let’s suppose you’re working with an HDF5 video at <code class="code docutils literal notranslate"><span class="pre">path/to/video.h5</span></code>, and the video data is stored in the <code class="code docutils literal notranslate"><span class="pre">video/</span></code> dataset with channels as the index.</p>
 <p><strong>Command-line inference</strong>:</p>

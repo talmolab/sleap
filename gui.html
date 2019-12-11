@@ -32,8 +32,10 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="module-sleap.gui.app">
-<span id="gui"></span><h1>GUI<a class="headerlink" href="#module-sleap.gui.app" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="gui">
+<h1>GUI<a class="headerlink" href="#gui" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-sleap.gui.app">
+<span id="sleap-gui-app"></span><h2>sleap.gui.app<a class="headerlink" href="#module-sleap.gui.app" title="Permalink to this headline">¶</a></h2>
 <p>Main GUI application for labeling, training/inference, and proofreading.</p>
 <dl class="class">
 <dt id="sleap.gui.app.MainWindow">
@@ -219,9 +221,10 @@ then don’t do anything.</p>
 <dd><p>Starts new instance of app.</p>
 </dd></dl>
 
-<div class="section" id="module-sleap.gui.video">
-<span id="video-player"></span><h2>Video Player<a class="headerlink" href="#module-sleap.gui.video" title="Permalink to this headline">¶</a></h2>
-<p>Module for showing and manipulating skeleton instances within a video.</p>
+</div>
+<div class="section" id="sleap-gui-video">
+<h2>sleap.gui.video<a class="headerlink" href="#sleap-gui-video" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-sleap.gui.video"></span><p>Module for showing and manipulating skeleton instances within a video.</p>
 <p>All interactions should go through <cite>QtVideoPlayer</cite>.</p>
 <dl>
 <dt>Example usage:</dt><dd><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_video</span> <span class="o">=</span> <span class="n">Video</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
@@ -970,8 +973,8 @@ enough instances.</p></li>
 </div>
 <div class="section" id="dialogs">
 <h2>Dialogs<a class="headerlink" href="#dialogs" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="training-inference">
-<h3>Training/Inference<a class="headerlink" href="#training-inference" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="sleap-gui-inference">
+<h3>sleap.gui.inference<a class="headerlink" href="#sleap-gui-inference" title="Permalink to this headline">¶</a></h3>
 <span class="target" id="module-sleap.gui.inference"></span><p>Module for running training and inference from the main gui application.</p>
 <dl class="class">
 <dt id="sleap.gui.inference.InferenceDialog">
@@ -1096,9 +1099,9 @@ If selection is “add”, then show the appropriate gui for selecting job.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="module-sleap.gui.importvideos">
-<span id="video-importer"></span><h3>Video Importer<a class="headerlink" href="#module-sleap.gui.importvideos" title="Permalink to this headline">¶</a></h3>
-<p>Interface to handle the UI for importing videos.</p>
+<div class="section" id="sleap-gui-importvideos">
+<h3>sleap.gui.importvideos<a class="headerlink" href="#sleap-gui-importvideos" title="Permalink to this headline">¶</a></h3>
+<span class="target" id="module-sleap.gui.importvideos"></span><p>Interface to handle the UI for importing videos.</p>
 <p>Usage:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">import_list</span> <span class="o">=</span> <span class="n">ImportVideos</span><span class="p">()</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
 </pre></div>
@@ -1355,9 +1358,9 @@ even though it’s not a user-selectable param.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="module-sleap.gui.merge">
-<span id="merging"></span><h3>Merging<a class="headerlink" href="#module-sleap.gui.merge" title="Permalink to this headline">¶</a></h3>
-<p>Gui for merging two labels files with options to resolve conflicts.</p>
+<div class="section" id="sleap-gui-merge">
+<h3>sleap.gui.merge<a class="headerlink" href="#sleap-gui-merge" title="Permalink to this headline">¶</a></h3>
+<span class="target" id="module-sleap.gui.merge"></span><p>Gui for merging two labels files with options to resolve conflicts.</p>
 <dl class="class">
 <dt id="sleap.gui.merge.ConflictTable">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.gui.merge.</code><code class="sig-name descname">ConflictTable</code><span class="sig-paren">(</span><em class="sig-param">base_labels: sleap.io.dataset.Labels, extra_base: List[sleap.instance.LabeledFrame], extra_new: List[sleap.instance.LabeledFrame]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/merge.html#ConflictTable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.merge.ConflictTable" title="Permalink to this definition">¶</a></dt>
@@ -1493,9 +1496,9 @@ See <code class="xref py py-meth docutils literal notranslate"><span class="pre"
 </dd></dl>
 
 </div>
-<div class="section" id="module-sleap.gui.shortcuts">
-<span id="shortcuts"></span><h3>Shortcuts<a class="headerlink" href="#module-sleap.gui.shortcuts" title="Permalink to this headline">¶</a></h3>
-<p>Gui for keyboard shortcuts.</p>
+<div class="section" id="sleap-gui-shortcuts">
+<h3>sleap.gui.shortcuts<a class="headerlink" href="#sleap-gui-shortcuts" title="Permalink to this headline">¶</a></h3>
+<span class="target" id="module-sleap.gui.shortcuts"></span><p>Gui for keyboard shortcuts.</p>
 <dl class="class">
 <dt id="sleap.gui.shortcuts.ShortcutDialog">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.gui.shortcuts.</code><code class="sig-name descname">ShortcutDialog</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/shortcuts.html#ShortcutDialog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.shortcuts.ShortcutDialog" title="Permalink to this definition">¶</a></dt>
@@ -1561,9 +1564,9 @@ See <code class="xref py py-meth docutils literal notranslate"><span class="pre"
 </dd></dl>
 
 </div>
-<div class="section" id="module-sleap.gui.suggestions">
-<span id="suggestions"></span><h3>Suggestions<a class="headerlink" href="#module-sleap.gui.suggestions" title="Permalink to this headline">¶</a></h3>
-<p>Module for generating lists of suggested frames (for labeling or reviewing).</p>
+<div class="section" id="sleap-gui-suggestions">
+<h3>sleap.gui.suggestions<a class="headerlink" href="#sleap-gui-suggestions" title="Permalink to this headline">¶</a></h3>
+<span class="target" id="module-sleap.gui.suggestions"></span><p>Module for generating lists of suggested frames (for labeling or reviewing).</p>
 <dl class="class">
 <dt id="sleap.gui.suggestions.SuggestionFrame">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.gui.suggestions.</code><code class="sig-name descname">SuggestionFrame</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em>, <em class="sig-param">frame_idx: int</em>, <em class="sig-param">group: Optional[int] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/suggestions.html#SuggestionFrame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.suggestions.SuggestionFrame" title="Permalink to this definition">¶</a></dt>
@@ -1628,9 +1631,9 @@ the name of one of the class methods.</p></li>
 </dd></dl>
 
 </div>
-<div class="section" id="module-sleap.gui.training_editor">
-<span id="training-profiles"></span><h3>Training Profiles<a class="headerlink" href="#module-sleap.gui.training_editor" title="Permalink to this headline">¶</a></h3>
-<p>Module for viewing and modifying training profiles.</p>
+<div class="section" id="sleap-gui-training-editor">
+<h3>sleap.gui.training_editor<a class="headerlink" href="#sleap-gui-training-editor" title="Permalink to this headline">¶</a></h3>
+<span class="target" id="module-sleap.gui.training_editor"></span><p>Module for viewing and modifying training profiles.</p>
 <dl class="class">
 <dt id="sleap.gui.training_editor.TrainingEditor">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.gui.training_editor.</code><code class="sig-name descname">TrainingEditor</code><span class="sig-paren">(</span><em class="sig-param">profile_filename: Optional[str] = None</em>, <em class="sig-param">saved_files: list = []</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/training_editor.html#TrainingEditor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.training_editor.TrainingEditor" title="Permalink to this definition">¶</a></dt>
@@ -1656,9 +1659,9 @@ list (which will be updated in code that created TrainingEditor).</p></li>
 </div>
 <div class="section" id="other-widgets">
 <h2>Other Widgets<a class="headerlink" href="#other-widgets" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="module-sleap.gui.formbuilder">
-<span id="form-builder"></span><h3>Form builder<a class="headerlink" href="#module-sleap.gui.formbuilder" title="Permalink to this headline">¶</a></h3>
-<p>Module for creating a form from a yaml file.</p>
+<div class="section" id="sleap-gui-formbuilder">
+<h3>sleap.gui.formbuilder<a class="headerlink" href="#sleap-gui-formbuilder" title="Permalink to this headline">¶</a></h3>
+<span class="target" id="module-sleap.gui.formbuilder"></span><p>Module for creating a form from a yaml file.</p>
 <p>Example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">widget</span> <span class="o">=</span> <span class="n">YamlFormWidget</span><span class="p">(</span><span class="n">yaml_file</span><span class="o">=</span><span class="s2">&quot;example.yaml&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">widget</span><span class="o">.</span><span class="n">mainAction</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">my_function</span><span class="p">)</span>
@@ -1945,9 +1948,9 @@ instantiated using this path.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="module-sleap.gui.slider">
-<span id="slider"></span><h3>Slider<a class="headerlink" href="#module-sleap.gui.slider" title="Permalink to this headline">¶</a></h3>
-<p>Drop-in replacement for QSlider with additional features.</p>
+<div class="section" id="sleap-gui-slider">
+<h3>sleap.gui.slider<a class="headerlink" href="#sleap-gui-slider" title="Permalink to this headline">¶</a></h3>
+<span class="target" id="module-sleap.gui.slider"></span><p>Drop-in replacement for QSlider with additional features.</p>
 <dl class="class">
 <dt id="sleap.gui.slider.SliderMark">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.gui.slider.</code><code class="sig-name descname">SliderMark</code><span class="sig-paren">(</span><em class="sig-param">type: str</em>, <em class="sig-param">val: float</em>, <em class="sig-param">end_val: float = None</em>, <em class="sig-param">row: int = None</em>, <em class="sig-param">track: Track = None</em>, <em class="sig-param">color: Union[tuple</em>, <em class="sig-param">str] = 'black'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#SliderMark"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.SliderMark" title="Permalink to this definition">¶</a></dt>
@@ -2362,9 +2365,9 @@ heightUpdated: triggered when the height of slider changes</p>
 </dd></dl>
 
 </div>
-<div class="section" id="module-sleap.gui.multicheck">
-<span id="multicheck"></span><h3>Multicheck<a class="headerlink" href="#module-sleap.gui.multicheck" title="Permalink to this headline">¶</a></h3>
-<p>Module for Qt Widget to show multiple checkboxes for selecting.</p>
+<div class="section" id="sleap-gui-multicheck">
+<h3>sleap.gui.multicheck<a class="headerlink" href="#sleap-gui-multicheck" title="Permalink to this headline">¶</a></h3>
+<span class="target" id="module-sleap.gui.multicheck"></span><p>Module for Qt Widget to show multiple checkboxes for selecting.</p>
 <p class="rubric">Example</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span> <span class="o">=</span> <span class="n">MultiCheckWidget</span><span class="p">(</span><span class="n">count</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">selected</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;My Items&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">selectionChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">window</span><span class="o">.</span><span class="n">plot</span><span class="p">)</span>
@@ -2426,11 +2429,11 @@ heightUpdated: triggered when the height of slider changes</p>
 
 </div>
 </div>
-<div class="section" id="overlays">
-<h2>Overlays<a class="headerlink" href="#overlays" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="module-sleap.gui.overlays.instance">
-<span id="instances"></span><h3>Instances<a class="headerlink" href="#module-sleap.gui.overlays.instance" title="Permalink to this headline">¶</a></h3>
-<p>Module with overlay for showing instances.</p>
+<div class="section" id="sleap-gui-overlays">
+<h2>sleap.gui.overlays<a class="headerlink" href="#sleap-gui-overlays" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="sleap-gui-overlays-instance">
+<h3>sleap.gui.overlays.instance<a class="headerlink" href="#sleap-gui-overlays-instance" title="Permalink to this headline">¶</a></h3>
+<span class="target" id="module-sleap.gui.overlays.instance"></span><p>Module with overlay for showing instances.</p>
 <dl class="class">
 <dt id="sleap.gui.overlays.instance.InstanceOverlay">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.gui.overlays.instance.</code><code class="sig-name descname">InstanceOverlay</code><span class="sig-paren">(</span><em class="sig-param">labels: sleap.io.dataset.Labels = None</em>, <em class="sig-param">player: sleap.gui.video.QtVideoPlayer = None</em>, <em class="sig-param">state: sleap.gui.state.GuiState = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/overlays/instance.html#InstanceOverlay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.overlays.instance.InstanceOverlay" title="Permalink to this definition">¶</a></dt>
@@ -2462,9 +2465,9 @@ heightUpdated: triggered when the height of slider changes</p>
 </dd></dl>
 
 </div>
-<div class="section" id="module-sleap.gui.overlays.tracks">
-<span id="tracks"></span><h3>Tracks<a class="headerlink" href="#module-sleap.gui.overlays.tracks" title="Permalink to this headline">¶</a></h3>
-<p>Module that handles track-related overlays (including track color).</p>
+<div class="section" id="sleap-gui-overlays-tracks">
+<h3>sleap.gui.overlays.tracks<a class="headerlink" href="#sleap-gui-overlays-tracks" title="Permalink to this headline">¶</a></h3>
+<span class="target" id="module-sleap.gui.overlays.tracks"></span><p>Module that handles track-related overlays (including track color).</p>
 <dl class="class">
 <dt id="sleap.gui.overlays.tracks.TrackListOverlay">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.gui.overlays.tracks.</code><code class="sig-name descname">TrackListOverlay</code><span class="sig-paren">(</span><em class="sig-param">labels: sleap.io.dataset.Labels = None</em>, <em class="sig-param">player: QtVideoPlayer = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/overlays/tracks.html#TrackListOverlay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.overlays.tracks.TrackListOverlay" title="Permalink to this definition">¶</a></dt>
@@ -2584,9 +2587,9 @@ within trail_length).</p></li>
 </dd></dl>
 
 </div>
-<div class="section" id="module-sleap.gui.overlays.anchors">
-<span id="anchors"></span><h3>Anchors<a class="headerlink" href="#module-sleap.gui.overlays.anchors" title="Permalink to this headline">¶</a></h3>
-<p>Module with overlay for showing negative training sample anchors.</p>
+<div class="section" id="sleap-gui-overlays-anchors">
+<h3>sleap.gui.overlays.anchors<a class="headerlink" href="#sleap-gui-overlays-anchors" title="Permalink to this headline">¶</a></h3>
+<span class="target" id="module-sleap.gui.overlays.anchors"></span><p>Module with overlay for showing negative training sample anchors.</p>
 <dl class="class">
 <dt id="sleap.gui.overlays.anchors.NegativeAnchorOverlay">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.gui.overlays.anchors.</code><code class="sig-name descname">NegativeAnchorOverlay</code><span class="sig-paren">(</span><em class="sig-param">labels: sleap.io.dataset.Labels = None</em>, <em class="sig-param">player: sleap.gui.video.QtVideoPlayer = None</em>, <em class="sig-param">line_len: int = 3</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/overlays/anchors.html#NegativeAnchorOverlay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.overlays.anchors.NegativeAnchorOverlay" title="Permalink to this definition">¶</a></dt>
@@ -2612,13 +2615,13 @@ within trail_length).</p></li>
 </dd></dl>
 
 </div>
-<div class="section" id="module-sleap.gui.overlays.base">
-<span id="datasource-classes"></span><h3>Datasource classes<a class="headerlink" href="#module-sleap.gui.overlays.base" title="Permalink to this headline">¶</a></h3>
-<p>Base class for overlays.</p>
+<div class="section" id="sleap-gui-overlays-base">
+<h3>sleap.gui.overlays.base<a class="headerlink" href="#sleap-gui-overlays-base" title="Permalink to this headline">¶</a></h3>
+<span class="target" id="module-sleap.gui.overlays.base"></span><p>Base class for overlays.</p>
 </div>
-<div class="section" id="module-sleap.gui.overlays.confmaps">
-<span id="confidence-maps"></span><h3>Confidence maps<a class="headerlink" href="#module-sleap.gui.overlays.confmaps" title="Permalink to this headline">¶</a></h3>
-<p>Module for showing confidence maps as an overlay within a QtVideoPlayer.</p>
+<div class="section" id="sleap-gui-overlays-confmaps">
+<h3>sleap.gui.overlays.confmaps<a class="headerlink" href="#sleap-gui-overlays-confmaps" title="Permalink to this headline">¶</a></h3>
+<span class="target" id="module-sleap.gui.overlays.confmaps"></span><p>Module for showing confidence maps as an overlay within a QtVideoPlayer.</p>
 <p class="rubric">Example</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cm</span> <span class="o">=</span> <span class="n">ConfMapsPlot</span><span class="p">(</span><span class="n">conf_data</span><span class="o">.</span><span class="n">get_frame</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">window</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">cm</span><span class="p">)</span>
@@ -2713,9 +2716,9 @@ Shape of array should be (channels, height, width).</p></li>
 </dd></dl>
 
 </div>
-<div class="section" id="module-sleap.gui.overlays.pafs">
-<span id="part-affinity-fields"></span><h3>Part affinity fields<a class="headerlink" href="#module-sleap.gui.overlays.pafs" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
+<div class="section" id="sleap-gui-overlays-pafs">
+<h3>sleap.gui.overlays.pafs<a class="headerlink" href="#sleap-gui-overlays-pafs" title="Permalink to this headline">¶</a></h3>
+<span class="target" id="module-sleap.gui.overlays.pafs"></span><dl class="class">
 <dt id="sleap.gui.overlays.pafs.MultiQuiverPlot">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.gui.overlays.pafs.</code><code class="sig-name descname">MultiQuiverPlot</code><span class="sig-paren">(</span><em class="sig-param">frame: numpy.array = None</em>, <em class="sig-param">show: list = None</em>, <em class="sig-param">decimation: int = 2</em>, <em class="sig-param">scale: float = 1.0</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/overlays/pafs.html#MultiQuiverPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.overlays.pafs.MultiQuiverPlot" title="Permalink to this definition">¶</a></dt>
 <dd><p>QtWidgets.QGraphicsObject to display multiple quiver plots in a QtWidgets.QGraphicsView.</p>
@@ -2784,9 +2787,9 @@ Shape of array should be (channels, height, width).</p></li>
 
 </div>
 </div>
-<div class="section" id="module-sleap.gui.dataviews">
-<span id="dataviews"></span><h2>Dataviews<a class="headerlink" href="#module-sleap.gui.dataviews" title="Permalink to this headline">¶</a></h2>
-<p>Data table widgets and view models used in GUI app.</p>
+<div class="section" id="sleap-gui-dataviews">
+<h2>sleap.gui.dataviews<a class="headerlink" href="#sleap-gui-dataviews" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-sleap.gui.dataviews"></span><p>Data table widgets and view models used in GUI app.</p>
 <dl class="class">
 <dt id="sleap.gui.dataviews.GenericTableModel">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.gui.dataviews.</code><code class="sig-name descname">GenericTableModel</code><span class="sig-paren">(</span><em class="sig-param">items: Optional[list] = None</em>, <em class="sig-param">properties: Optional[List[str]] = None</em>, <em class="sig-param">context: Optional[sleap.gui.commands.CommandContext] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#GenericTableModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.GenericTableModel" title="Permalink to this definition">¶</a></dt>
@@ -3065,10 +3068,10 @@ selected edge source node.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Feature Reference</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">API</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="skeleton.html">Skeleton</a></li>
-<li class="toctree-l2"><a class="reference internal" href="video.html">Video</a></li>
-<li class="toctree-l2"><a class="reference internal" href="instance.html">Instance</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dataset.html">Datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="skeleton.html">sleap.skeleton</a></li>
+<li class="toctree-l2"><a class="reference internal" href="instance.html">sleap.instance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dataset.html">sleap.io.dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="video.html">sleap.io.video</a></li>
 <li class="toctree-l2"><a class="reference internal" href="training.html">Training</a></li>
 <li class="toctree-l2"><a class="reference internal" href="inference.html">Inference</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">GUI</a></li>

@@ -34,7 +34,7 @@
   <div class="section" id="misc">
 <h1>Misc<a class="headerlink" href="#misc" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="module-sleap.util">
-<span id="utils"></span><h2>Utils<a class="headerlink" href="#module-sleap.util" title="Permalink to this headline">¶</a></h2>
+<span id="sleap-util"></span><h2>sleap.util<a class="headerlink" href="#module-sleap.util" title="Permalink to this headline">¶</a></h2>
 <p>A miscellaneous set of utility functions. Try not to put things in here
 unless they really have no other place.</p>
 <dl class="function">
@@ -255,9 +255,9 @@ order.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="module-sleap.rangelist">
-<span id="range-list"></span><h2>Range list<a class="headerlink" href="#module-sleap.rangelist" title="Permalink to this headline">¶</a></h2>
-<p>Module with RangeList class for manipulating a list of range intervals.</p>
+<div class="section" id="sleap-rangelist">
+<h2>sleap.rangelist<a class="headerlink" href="#sleap-rangelist" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-sleap.rangelist"></span><p>Module with RangeList class for manipulating a list of range intervals.</p>
 <p>This is used to cache the track occupancy so we can keep cache updating
 when user manipulates tracks for a range of instances.</p>
 <dl class="class">
@@ -355,9 +355,9 @@ Each range interval in the list is a [start, end)-tuple.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="module-sleap.io.legacy">
-<span id="legacy-formats"></span><h2>Legacy formats<a class="headerlink" href="#module-sleap.io.legacy" title="Permalink to this headline">¶</a></h2>
-<p>Module for legacy LEAP dataset.</p>
+<div class="section" id="sleap-io-legacy">
+<h2>sleap.io.legacy<a class="headerlink" href="#sleap-io-legacy" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-sleap.io.legacy"></span><p>Module for legacy LEAP dataset.</p>
 <dl class="function">
 <dt id="sleap.io.legacy.load_labels_json_old">
 <code class="sig-prename descclassname">sleap.io.legacy.</code><code class="sig-name descname">load_labels_json_old</code><span class="sig-paren">(</span><em class="sig-param">data_path: str</em>, <em class="sig-param">parsed_json: dict = None</em>, <em class="sig-param">adjust_matlab_indexing: bool = True</em>, <em class="sig-param">fix_rel_paths: bool = True</em><span class="sig-paren">)</span> &#x2192; List[sleap.instance.LabeledFrame]<a class="reference internal" href="_modules/sleap/io/legacy.html#load_labels_json_old"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.legacy.load_labels_json_old" title="Permalink to this definition">¶</a></dt>
@@ -399,10 +399,8 @@ some time if already parsed.</p></li>
 </dd></dl>
 
 </div>
-<div class="section" id="info-tools">
-<h2>Info tools<a class="headerlink" href="#info-tools" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="module-sleap.info.metrics">
-<span id="metrics"></span><h3>Metrics<a class="headerlink" href="#module-sleap.info.metrics" title="Permalink to this headline">¶</a></h3>
+<span id="sleap-info-metrics"></span><h2>sleap.info.metrics<a class="headerlink" href="#module-sleap.info.metrics" title="Permalink to this headline">¶</a></h2>
 <p>Module for producing prediction metrics for SLEAP datasets.</p>
 <dl class="function">
 <dt id="sleap.info.metrics.calculate_pairwise_cost">
@@ -495,7 +493,7 @@ ignoring node identities.</p>
 
 </div>
 <div class="section" id="module-sleap.info.summary">
-<span id="summary"></span><h3>Summary<a class="headerlink" href="#module-sleap.info.summary" title="Permalink to this headline">¶</a></h3>
+<span id="sleap-info-summary"></span><h2>sleap.info.summary<a class="headerlink" href="#module-sleap.info.summary" title="Permalink to this headline">¶</a></h2>
 <p>Module for getting a series which gives some statistic based on labeling
 data for each frame of some labeled video.</p>
 <dl class="class">
@@ -603,7 +601,7 @@ then defaults to first node.</p></li>
 
 </div>
 <div class="section" id="module-sleap.info.write_tracking_h5">
-<span id="track-analysis"></span><h3>Track Analysis<a class="headerlink" href="#module-sleap.info.write_tracking_h5" title="Permalink to this headline">¶</a></h3>
+<span id="sleap-info-write-tracking-h5"></span><h2>sleap.info.write_tracking_h5<a class="headerlink" href="#module-sleap.info.write_tracking_h5" title="Permalink to this headline">¶</a></h2>
 <p>Generate an HDF5 file with track occupancy and point location data.</p>
 <p>Ignores tracks that are entirely empty. By default will also ignore
 empty frames from the beginning and end of video, although
@@ -723,7 +721,6 @@ column-major format.</p></li>
 
 </div>
 </div>
-</div>
 
 
           </div>
@@ -751,10 +748,10 @@ column-major format.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Feature Reference</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">API</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="skeleton.html">Skeleton</a></li>
-<li class="toctree-l2"><a class="reference internal" href="video.html">Video</a></li>
-<li class="toctree-l2"><a class="reference internal" href="instance.html">Instance</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dataset.html">Datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="skeleton.html">sleap.skeleton</a></li>
+<li class="toctree-l2"><a class="reference internal" href="instance.html">sleap.instance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dataset.html">sleap.io.dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="video.html">sleap.io.video</a></li>
 <li class="toctree-l2"><a class="reference internal" href="training.html">Training</a></li>
 <li class="toctree-l2"><a class="reference internal" href="inference.html">Inference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gui.html">GUI</a></li>
