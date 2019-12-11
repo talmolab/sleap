@@ -56,6 +56,8 @@ Go
 
 "**Go to Frame...**" allows you to go to a specific frame (in the current video) by frame number. It's also handy if you want to copy the current frame number to the clipboard.
 
+.. _view:
+
 View
 ~~~~
 
