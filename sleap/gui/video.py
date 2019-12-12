@@ -1298,7 +1298,7 @@ class QtEdge(QGraphicsPolygonItem):
 
         if self.player.state.get("edge style", default="").lower() == "wedge":
 
-            r = self.src.visible_radius / 4
+            r = self.src.visible_radius / 2.0
 
             norm_a = line.normalVector()
             norm_a.setLength(r)
