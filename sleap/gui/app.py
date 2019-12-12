@@ -91,7 +91,7 @@ class MainWindow(QMainWindow):
         self.state["filename"] = None
         self.state["show labels"] = True
         self.state["show edges"] = True
-        self.state["edge style"] = "Wedge"
+        self.state["edge style"] = "Line"
         self.state["fit"] = False
         self.state["show trails"] = False
         self.state["color predicted"] = False
