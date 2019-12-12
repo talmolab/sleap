@@ -91,6 +91,7 @@ class MainWindow(QMainWindow):
         self.state["filename"] = None
         self.state["show labels"] = True
         self.state["show edges"] = True
+        self.state["edge style"] = "Wedge"
         self.state["fit"] = False
         self.state["show trails"] = False
         self.state["color predicted"] = False
@@ -374,6 +375,14 @@ class MainWindow(QMainWindow):
 
         add_menu_check_item(viewMenu, "show labels", "Show Node Names")
         add_menu_check_item(viewMenu, "show edges", "Show Edges")
+
+        add_submenu_choices(
+            menu=viewMenu,
+            title="Edge Style",
+            options=("Line", "Wedge"),
+            key="edge style",
+        )
+
         add_menu_check_item(viewMenu, "show trails", "Show Trails")
 
         add_submenu_choices(
@@ -817,12 +826,10 @@ class MainWindow(QMainWindow):
         self.state.connect("palette", lambda x: self.updateSeekbarMarks())
 
         # update the skeleton tables since we may want to redraw colors
-        self.state.connect(
-            "palette", lambda x: self.on_data_update([UpdateTopic.skeleton])
-        )
-        self.state.connect(
-            "distinctly_color", lambda x: self.on_data_update([UpdateTopic.skeleton])
-        )
+        for state_var in ("palette", "distinctly_color", "edge style"):
+            self.state.connect(
+                state_var, lambda x: self.on_data_update([UpdateTopic.skeleton])
+            )
 
         # Set defaults
         self.state["trail_length"] = 10
