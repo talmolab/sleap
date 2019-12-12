@@ -77,6 +77,8 @@ View
 
 "**Show Edges**" allows you to toggle the visibility of the edges which connect the nodes. This can be useful when you have lots of edges which make it hard to see the features of animals in your video.
 
+"**Edge Style**" controls whether edges are drawn as thin lines or as wedges which indicate the :ref:`orientation` of the instance (as well as the direction of the part affinity field which would be used to predict the connection between nodes).
+
 "**Show Trails**" allows you to toggle the visibility of trail lines, which show where each node was located in recent prior frames. This can be useful when proofreading predictions since it can help you detect swaps in the identities of animals across frames.
 
 "**Trail Length**" allows you to control how many prior frames to include in the trails.

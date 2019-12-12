@@ -335,6 +335,18 @@ If there are far too many frame suggestions, then make the threshold higher. If 
 
 Once you're happy with the number of suggested frames, you can step between these (use the keyboard shortcut for the "**Next Suggestion**" command in the "Go" menu) and quickly review whether this is in fact a swap by looking at the track trails or reviewing adjacent frames. If you've found a swap, either use the keyboard shortcut for the "**Transpose Instance Tracks**" command in the "Labels" menu, or select one of the swapped instances and use **Control** (or command) plus a number key, just like you do for fixing lost identities (as explained above).
 
+.. _orientation:
+
+Orientation
+~~~~~~~~~~~
+
+In some cases it may be difficult to see the orientation of the predicted instances. You can make it easier to see the orientation by changing the style of the edges drawn between nodes from thin lines (as shown above) to **wedges**, as shown here:
+
+|wedges|
+
+The wedges point from each **source** node to its **destination** node(s) in your skeleton. You can set the edge style using the "**Edge Style**" submenu in the "View" menu.
+
 .. |track-fixing-list| image:: docs/_static/track-fixing-list.jpg
 .. |swap-trails| image:: docs/_static/swap-trails.jpg
 .. |velocity-suggestions| image:: docs/_static/velocity-suggestions.jpg
+.. |wedges| image:: docs/_static/wedges.jpg
