@@ -124,6 +124,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;show labels&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;show edges&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;edge style&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Line&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;fit&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;show trails&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;color predicted&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
@@ -407,6 +408,14 @@
 
         <span class="n">add_menu_check_item</span><span class="p">(</span><span class="n">viewMenu</span><span class="p">,</span> <span class="s2">&quot;show labels&quot;</span><span class="p">,</span> <span class="s2">&quot;Show Node Names&quot;</span><span class="p">)</span>
         <span class="n">add_menu_check_item</span><span class="p">(</span><span class="n">viewMenu</span><span class="p">,</span> <span class="s2">&quot;show edges&quot;</span><span class="p">,</span> <span class="s2">&quot;Show Edges&quot;</span><span class="p">)</span>
+
+        <span class="n">add_submenu_choices</span><span class="p">(</span>
+            <span class="n">menu</span><span class="o">=</span><span class="n">viewMenu</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Edge Style&quot;</span><span class="p">,</span>
+            <span class="n">options</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;Line&quot;</span><span class="p">,</span> <span class="s2">&quot;Wedge&quot;</span><span class="p">),</span>
+            <span class="n">key</span><span class="o">=</span><span class="s2">&quot;edge style&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
         <span class="n">add_menu_check_item</span><span class="p">(</span><span class="n">viewMenu</span><span class="p">,</span> <span class="s2">&quot;show trails&quot;</span><span class="p">,</span> <span class="s2">&quot;Show Trails&quot;</span><span class="p">)</span>
 
         <span class="n">add_submenu_choices</span><span class="p">(</span>
@@ -850,12 +859,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s2">&quot;palette&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">updateSeekbarMarks</span><span class="p">())</span>
 
         <span class="c1"># update the skeleton tables since we may want to redraw colors</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
-            <span class="s2">&quot;palette&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_data_update</span><span class="p">([</span><span class="n">UpdateTopic</span><span class="o">.</span><span class="n">skeleton</span><span class="p">])</span>
-        <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
-            <span class="s2">&quot;distinctly_color&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_data_update</span><span class="p">([</span><span class="n">UpdateTopic</span><span class="o">.</span><span class="n">skeleton</span><span class="p">])</span>
-        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">state_var</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;palette&quot;</span><span class="p">,</span> <span class="s2">&quot;distinctly_color&quot;</span><span class="p">,</span> <span class="s2">&quot;edge style&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+                <span class="n">state_var</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_data_update</span><span class="p">([</span><span class="n">UpdateTopic</span><span class="o">.</span><span class="n">skeleton</span><span class="p">])</span>
+            <span class="p">)</span>
 
         <span class="c1"># Set defaults</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;trail_length&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span>

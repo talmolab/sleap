@@ -55,9 +55,9 @@
     <span class="n">QGraphicsScene</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">PySide2.QtGui</span> <span class="kn">import</span> <span class="n">QImage</span><span class="p">,</span> <span class="n">QPixmap</span><span class="p">,</span> <span class="n">QPainter</span><span class="p">,</span> <span class="n">QPainterPath</span><span class="p">,</span> <span class="n">QTransform</span>
-<span class="kn">from</span> <span class="nn">PySide2.QtGui</span> <span class="kn">import</span> <span class="n">QPen</span><span class="p">,</span> <span class="n">QBrush</span><span class="p">,</span> <span class="n">QColor</span><span class="p">,</span> <span class="n">QFont</span>
+<span class="kn">from</span> <span class="nn">PySide2.QtGui</span> <span class="kn">import</span> <span class="n">QPen</span><span class="p">,</span> <span class="n">QBrush</span><span class="p">,</span> <span class="n">QColor</span><span class="p">,</span> <span class="n">QFont</span><span class="p">,</span> <span class="n">QPolygonF</span>
 <span class="kn">from</span> <span class="nn">PySide2.QtGui</span> <span class="kn">import</span> <span class="n">QKeyEvent</span>
-<span class="kn">from</span> <span class="nn">PySide2.QtCore</span> <span class="kn">import</span> <span class="n">Qt</span><span class="p">,</span> <span class="n">QRectF</span><span class="p">,</span> <span class="n">QPointF</span><span class="p">,</span> <span class="n">QMarginsF</span>
+<span class="kn">from</span> <span class="nn">PySide2.QtCore</span> <span class="kn">import</span> <span class="n">Qt</span><span class="p">,</span> <span class="n">QRectF</span><span class="p">,</span> <span class="n">QPointF</span><span class="p">,</span> <span class="n">QMarginsF</span><span class="p">,</span> <span class="n">QLineF</span>
 
 <span class="kn">import</span> <span class="nn">math</span>
 
@@ -70,6 +70,7 @@
     <span class="n">QGraphicsLineItem</span><span class="p">,</span>
     <span class="n">QGraphicsTextItem</span><span class="p">,</span>
     <span class="n">QGraphicsRectItem</span><span class="p">,</span>
+    <span class="n">QGraphicsPolygonItem</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="kn">from</span> <span class="nn">sleap.skeleton</span> <span class="kn">import</span> <span class="n">Node</span>
@@ -1138,6 +1139,13 @@
             <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">callback</span><span class="p">):</span>
                 <span class="n">callback</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">visible_radius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">visible</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">zoomFactor</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius</span> <span class="o">/</span> <span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">zoomFactor</span><span class="p">)</span>
+
 <div class="viewcode-block" id="QtNode.updatePoint"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.QtNode.updatePoint">[docs]</a>    <span class="k">def</span> <span class="nf">updatePoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_change</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Method to update data for node/edge when node position is manipulated.</span>
@@ -1165,6 +1173,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">setBrush</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">brush_missing</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">show_non_visible</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">setRect</span><span class="p">(</span><span class="o">-</span><span class="n">radius</span><span class="p">,</span> <span class="o">-</span><span class="n">radius</span><span class="p">,</span> <span class="n">radius</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">radius</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="p">:</span>
@@ -1264,7 +1273,7 @@
             <span class="n">view</span><span class="o">.</span><span class="n">instanceDoubleClicked</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parentObject</span><span class="p">()</span><span class="o">.</span><span class="n">instance</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="QtEdge"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.QtEdge">[docs]</a><span class="k">class</span> <span class="nc">QtEdge</span><span class="p">(</span><span class="n">QGraphicsLineItem</span><span class="p">):</span>
+<div class="viewcode-block" id="QtEdge"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.QtEdge">[docs]</a><span class="k">class</span> <span class="nc">QtEdge</span><span class="p">(</span><span class="n">QGraphicsPolygonItem</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    QGraphicsLineItem to handle display of edge between skeleton instance nodes.</span>
 
@@ -1286,18 +1295,19 @@
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="n">parent</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">player</span> <span class="o">=</span> <span class="n">player</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">src</span> <span class="o">=</span> <span class="n">src</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dst</span> <span class="o">=</span> <span class="n">dst</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">show_non_visible</span> <span class="o">=</span> <span class="n">show_non_visible</span>
 
         <span class="nb">super</span><span class="p">(</span><span class="n">QtEdge</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">src</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">src</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">y</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dst</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dst</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">y</span><span class="p">,</span>
-            <span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">,</span>
-            <span class="o">*</span><span class="n">args</span><span class="p">,</span>
-            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+            <span class="n">polygon</span><span class="o">=</span><span class="n">QPolygonF</span><span class="p">(),</span> <span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setLine</span><span class="p">(</span>
+            <span class="n">QLineF</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">src</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">src</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dst</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dst</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">y</span><span class="p">,</span>
+            <span class="p">)</span>
         <span class="p">)</span>
 
         <span class="n">edge_pair</span> <span class="o">=</span> <span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">node</span><span class="p">,</span> <span class="n">dst</span><span class="o">.</span><span class="n">node</span><span class="p">)</span>
@@ -1305,8 +1315,40 @@
         <span class="n">pen_width</span> <span class="o">=</span> <span class="n">player</span><span class="o">.</span><span class="n">color_manager</span><span class="o">.</span><span class="n">get_item_pen_width</span><span class="p">(</span><span class="n">edge_pair</span><span class="p">,</span> <span class="n">parent</span><span class="o">.</span><span class="n">instance</span><span class="p">)</span>
         <span class="n">pen</span> <span class="o">=</span> <span class="n">QPen</span><span class="p">(</span><span class="n">QColor</span><span class="p">(</span><span class="o">*</span><span class="n">color</span><span class="p">),</span> <span class="n">pen_width</span><span class="p">)</span>
         <span class="n">pen</span><span class="o">.</span><span class="n">setCosmetic</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">brush</span> <span class="o">=</span> <span class="n">QBrush</span><span class="p">(</span><span class="n">QColor</span><span class="p">(</span><span class="o">*</span><span class="n">color</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">128</span><span class="p">))</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">setPen</span><span class="p">(</span><span class="n">pen</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setBrush</span><span class="p">(</span><span class="n">brush</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">full_opacity</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">line</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_line</span>
+
+    <span class="k">def</span> <span class="nf">setLine</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_line</span> <span class="o">=</span> <span class="n">line</span>
+        <span class="n">polygon</span> <span class="o">=</span> <span class="n">QPolygonF</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;edge style&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;wedge&quot;</span><span class="p">:</span>
+
+            <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">src</span><span class="o">.</span><span class="n">visible_radius</span> <span class="o">/</span> <span class="mf">2.0</span>
+
+            <span class="n">norm_a</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">normalVector</span><span class="p">()</span>
+            <span class="n">norm_a</span><span class="o">.</span><span class="n">setLength</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+
+            <span class="n">norm_b</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">normalVector</span><span class="p">()</span>
+            <span class="n">norm_b</span><span class="o">.</span><span class="n">setLength</span><span class="p">(</span><span class="o">-</span><span class="n">r</span><span class="p">)</span>
+
+            <span class="n">polygon</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">norm_a</span><span class="o">.</span><span class="n">p2</span><span class="p">())</span>
+            <span class="n">polygon</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">p2</span><span class="p">())</span>
+            <span class="n">polygon</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">norm_b</span><span class="o">.</span><span class="n">p2</span><span class="p">())</span>
+            <span class="n">polygon</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">norm_a</span><span class="o">.</span><span class="n">p2</span><span class="p">())</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">polygon</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">p1</span><span class="p">())</span>
+            <span class="n">polygon</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">p2</span><span class="p">())</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setPolygon</span><span class="p">(</span><span class="n">polygon</span><span class="p">)</span>
 
 <div class="viewcode-block" id="QtEdge.connected_to"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.QtEdge.connected_to">[docs]</a>    <span class="k">def</span> <span class="nf">connected_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">QtNode</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>

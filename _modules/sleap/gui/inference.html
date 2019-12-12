@@ -477,6 +477,28 @@
         <span class="p">)</span>
         <span class="c1"># negative_samples = form_data.get(&quot;negative_samples&quot;, 0)</span>
 
+        <span class="c1"># Augment dataset</span>
+        <span class="n">aug_params</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="c1"># rotate=conf_job.trainer.augment_rotate,</span>
+            <span class="c1"># rotation_min_angle=-conf_job.trainer.augment_rotation,</span>
+            <span class="c1"># rotation_max_angle=conf_job.trainer.augment_rotation,</span>
+            <span class="n">scale</span><span class="o">=</span><span class="n">form_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;scale&quot;</span><span class="p">,</span> <span class="n">conf_job</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">scale</span><span class="p">),</span>
+            <span class="c1"># scale_min=conf_job.trainer.augment_scale_min,</span>
+            <span class="c1"># scale_max=conf_job.trainer.augment_scale_max,</span>
+            <span class="c1"># uniform_noise=conf_job.trainer.augment_uniform_noise,</span>
+            <span class="c1"># min_noise_val=conf_job.trainer.augment_uniform_noise_min_val,</span>
+            <span class="c1"># max_noise_val=conf_job.trainer.augment_uniform_noise_max_val,</span>
+            <span class="c1"># gaussian_noise=conf_job.trainer.augment_gaussian_noise,</span>
+            <span class="c1"># gaussian_noise_mean=conf_job.trainer.augment_gaussian_noise_mean,</span>
+            <span class="c1"># gaussian_noise_stddev=conf_job.trainer.augment_gaussian_noise_stddev,</span>
+            <span class="n">contrast</span><span class="o">=</span><span class="n">conf_job</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">augment_contrast</span><span class="p">,</span>
+            <span class="n">contrast_min_gamma</span><span class="o">=</span><span class="n">conf_job</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">augment_contrast_min_gamma</span><span class="p">,</span>
+            <span class="n">contrast_max_gamma</span><span class="o">=</span><span class="n">conf_job</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">augment_contrast_max_gamma</span><span class="p">,</span>
+            <span class="n">brightness</span><span class="o">=</span><span class="n">conf_job</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">augment_brightness</span><span class="p">,</span>
+            <span class="n">brightness_val</span><span class="o">=</span><span class="n">conf_job</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">augment_brightness_val</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">ds</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">augment_dataset</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="o">**</span><span class="n">aug_params</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="n">bounding_box_size</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">bounding_box_size</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">bounding_box_size</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">estimate_instance_crop_size</span><span class="p">(</span>
                 <span class="n">training_data</span><span class="o">.</span><span class="n">points</span><span class="p">,</span>
