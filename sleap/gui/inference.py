@@ -444,6 +444,28 @@ class InferenceDialog(QtWidgets.QDialog):
         )
         # negative_samples = form_data.get("negative_samples", 0)
 
+        # Augment dataset
+        aug_params = dict(
+            # rotate=conf_job.trainer.augment_rotate,
+            # rotation_min_angle=-conf_job.trainer.augment_rotation,
+            # rotation_max_angle=conf_job.trainer.augment_rotation,
+            scale=form_data.get("scale", conf_job.trainer.scale),
+            # scale_min=conf_job.trainer.augment_scale_min,
+            # scale_max=conf_job.trainer.augment_scale_max,
+            # uniform_noise=conf_job.trainer.augment_uniform_noise,
+            # min_noise_val=conf_job.trainer.augment_uniform_noise_min_val,
+            # max_noise_val=conf_job.trainer.augment_uniform_noise_max_val,
+            # gaussian_noise=conf_job.trainer.augment_gaussian_noise,
+            # gaussian_noise_mean=conf_job.trainer.augment_gaussian_noise_mean,
+            # gaussian_noise_stddev=conf_job.trainer.augment_gaussian_noise_stddev,
+            contrast=conf_job.trainer.augment_contrast,
+            contrast_min_gamma=conf_job.trainer.augment_contrast_min_gamma,
+            contrast_max_gamma=conf_job.trainer.augment_contrast_max_gamma,
+            brightness=conf_job.trainer.augment_brightness,
+            brightness_val=conf_job.trainer.augment_brightness_val,
+        )
+        ds = data.augment_dataset(ds, **aug_params)
+
         if bounding_box_size is None or bounding_box_size <= 0:
             bounding_box_size = data.estimate_instance_crop_size(
                 training_data.points,
