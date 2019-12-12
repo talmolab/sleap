@@ -22,9 +22,9 @@ from PySide2.QtWidgets import (
     QGraphicsScene,
 )
 from PySide2.QtGui import QImage, QPixmap, QPainter, QPainterPath, QTransform
-from PySide2.QtGui import QPen, QBrush, QColor, QFont
+from PySide2.QtGui import QPen, QBrush, QColor, QFont, QPolygonF
 from PySide2.QtGui import QKeyEvent
-from PySide2.QtCore import Qt, QRectF, QPointF, QMarginsF
+from PySide2.QtCore import Qt, QRectF, QPointF, QMarginsF, QLineF
 
 import math
 
@@ -37,6 +37,7 @@ from PySide2.QtWidgets import (
     QGraphicsLineItem,
     QGraphicsTextItem,
     QGraphicsRectItem,
+    QGraphicsPolygonItem,
 )
 
 from sleap.skeleton import Node
@@ -1105,6 +1106,13 @@ class QtNode(QGraphicsEllipseItem):
             if callable(callback):
                 callback(self)
 
+    @property
+    def visible_radius(self):
+        if self.point.visible:
+            return self.radius / self.player.view.zoomFactor
+        else:
+            return self.radius / (2.0 * self.player.view.zoomFactor)
+
     def updatePoint(self, user_change: bool = False):
         """
         Method to update data for node/edge when node position is manipulated.
@@ -1132,6 +1140,7 @@ class QtNode(QGraphicsEllipseItem):
             self.setBrush(self.brush_missing)
             if not self.show_non_visible:
                 self.hide()
+
         self.setRect(-radius, -radius, radius * 2, radius * 2)
 
         for edge in self.edges:
@@ -1231,7 +1240,7 @@ class QtNode(QGraphicsEllipseItem):
             view.instanceDoubleClicked.emit(self.parentObject().instance)
 
 
-class QtEdge(QGraphicsLineItem):
+class QtEdge(QGraphicsPolygonItem):
     """
     QGraphicsLineItem to handle display of edge between skeleton instance nodes.
 
@@ -1253,18 +1262,19 @@ class QtEdge(QGraphicsLineItem):
         **kwargs,
     ):
         self.parent = parent
+        self.player = player
         self.src = src
         self.dst = dst
         self.show_non_visible = show_non_visible
 
         super(QtEdge, self).__init__(
-            self.src.point.x,
-            self.src.point.y,
-            self.dst.point.x,
-            self.dst.point.y,
-            parent=parent,
-            *args,
-            **kwargs,
+            polygon=QPolygonF(), parent=parent, *args, **kwargs,
+        )
+
+        self.setLine(
+            QLineF(
+                self.src.point.x, self.src.point.y, self.dst.point.x, self.dst.point.y,
+            )
         )
 
         edge_pair = (src.node, dst.node)
@@ -1272,8 +1282,40 @@ class QtEdge(QGraphicsLineItem):
         pen_width = player.color_manager.get_item_pen_width(edge_pair, parent.instance)
         pen = QPen(QColor(*color), pen_width)
         pen.setCosmetic(True)
+
+        brush = QBrush(QColor(*color, a=128))
+
         self.setPen(pen)
+        self.setBrush(brush)
         self.full_opacity = 1
+
+    def line(self):
+        return self._line
+
+    def setLine(self, line):
+        self._line = line
+        polygon = QPolygonF()
+
+        if self.player.state.get("edge style", default="").lower() == "wedge":
+
+            r = self.src.visible_radius / 2.0
+
+            norm_a = line.normalVector()
+            norm_a.setLength(r)
+
+            norm_b = line.normalVector()
+            norm_b.setLength(-r)
+
+            polygon.append(norm_a.p2())
+            polygon.append(line.p2())
+            polygon.append(norm_b.p2())
+            polygon.append(norm_a.p2())
+
+        else:
+            polygon.append(line.p1())
+            polygon.append(line.p2())
+
+        self.setPolygon(polygon)
 
     def connected_to(self, node: QtNode):
         """

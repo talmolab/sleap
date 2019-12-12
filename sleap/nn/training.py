@@ -218,6 +218,11 @@ class Trainer:
             gaussian_noise=self.training_job.trainer.augment_gaussian_noise,
             gaussian_noise_mean=self.training_job.trainer.augment_gaussian_noise_mean,
             gaussian_noise_stddev=self.training_job.trainer.augment_gaussian_noise_stddev,
+            contrast=self.training_job.trainer.augment_contrast,
+            contrast_min_gamma=self.training_job.trainer.augment_contrast_min_gamma,
+            contrast_max_gamma=self.training_job.trainer.augment_contrast_max_gamma,
+            brightness=self.training_job.trainer.augment_brightness,
+            brightness_val=self.training_job.trainer.augment_brightness_val,
         )
         ds_train = data.augment_dataset(ds_train, **aug_params)
         ds_val = data.augment_dataset(ds_val, **aug_params)
