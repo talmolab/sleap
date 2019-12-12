@@ -1296,7 +1296,7 @@ class QtEdge(QGraphicsPolygonItem):
         self._line = line
         polygon = QPolygonF()
 
-        if self.player.state.get("edge style").lower() == "wedge":
+        if self.player.state.get("edge style", default="").lower() == "wedge":
 
             r = self.src.visible_radius / 4
 
