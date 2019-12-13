@@ -330,8 +330,11 @@ class CentroidPredictor:
         return centroids, centroid_vals
 
     def predict(self, imgs):
-        imgs = self.preproc(imgs)
-        confmaps = utils.batched_call(self.inference, imgs, batch_size=self.batch_size)
+        confmaps = utils.batched_call(
+            lambda imgs: self.inference(self.preproc(imgs)),
+            imgs,
+            batch_size=self.batch_size,
+        )
         return self.postproc(confmaps)
 
 
