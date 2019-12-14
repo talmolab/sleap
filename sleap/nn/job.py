@@ -222,15 +222,17 @@ class TrainingJob:
                 return model_path
 
         # Raise error if all fail.
-        raise ValueError(f"Could not find a saved model in run path: {self.run_path}")
+        raise FileNotFoundError(f"Could not find a saved model in run path: {self.run_path}")
 
     @property
     def is_trained(self):
         if self.run_path is None:
             return False
-        if os.path.exists(self.model_path):
-            return True
-        return False
+
+        try:
+            return os.path.exists(self.model_path)
+        except FileNotFoundError:
+            return False
 
     @staticmethod
     def _to_dicts(training_job: "TrainingJob"):
