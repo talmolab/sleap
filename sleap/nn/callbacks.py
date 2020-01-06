@@ -1,10 +1,13 @@
-"""Training-related tf.Keras callbacks."""
+"""Training-related tf.keras callbacks."""
 
 import jsonpickle
 import logging
 import numpy as np
 import tensorflow as tf
 import zmq
+import io
+import matplotlib.pyplot as plt
+from typing import Text, Callable
 
 from tensorflow.keras.callbacks import (
     ReduceLROnPlateau,
@@ -12,7 +15,7 @@ from tensorflow.keras.callbacks import (
     TensorBoard,
     LambdaCallback,
     ModelCheckpoint,
-    CSVLogger
+    CSVLogger,
 )
 
 logger = logging.getLogger(__name__)
@@ -187,3 +190,44 @@ class ModelCheckpointOnEvent(tf.keras.callbacks.Callback):
         """Called at the end of training."""
         if self.event == "train_end":
             self.model.save(self.filepath)
+
+
+class TensorBoardMatplotlibWriter(tf.keras.callbacks.Callback):
+    """Callback for writing image summaries with visualizations during training.
+
+    Attributes:
+        logdir: Path to log directory.
+        plot_fn: Function with no arguments that returns a matplotlib figure handle.
+        tag: Text to append to the summary label in TensorBoard.
+    """
+
+    def __init__(self, log_dir: Text, plot_fn: Callable, tag: Text = "viz"):
+        self.log_dir = log_dir
+        self.plot_fn = plot_fn
+        self.tag = tag
+
+        self.file_writer = tf.summary.create_file_writer(self.log_dir)
+
+        # Callback initialization
+        super().__init__()
+
+    def on_epoch_end(self, epoch, logs=None):
+        """Called at the end of each epoch."""
+
+        # Call plotting function.
+        figure = self.plot_fn()
+
+        # Render to in-memory PNG.
+        image_buffer = io.BytesIO()
+        figure.savefig(image_buffer, format="png", pad_inches=0)
+        plt.close(figure)
+
+        # Convert PNG to tensor.
+        image_buffer.seek(0)
+        image_tensor = tf.expand_dims(
+            tf.image.decode_png(image_buffer.getvalue(), channels=4), axis=0
+        )
+
+        # Log to TensorBoard.
+        with self.file_writer.as_default():
+            tf.summary.image(name=self.tag, data=image_tensor, step=epoch)
