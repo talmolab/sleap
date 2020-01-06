@@ -1061,6 +1061,8 @@ def make_instance_confmap_dataset(
     with_instance_cms: bool = False,
     with_all_peaks: bool = False,
     with_ctr_peaks: bool = True,
+    with_pts: bool = False,
+    with_ctr_pts: bool = False
 ) -> tf.data.Dataset:
     """Creates a confmaps dataset with optionally instance-wise confmaps.
 
@@ -1080,11 +1082,13 @@ def make_instance_confmap_dataset(
         with_ctr_peaks: If True, confmaps will be generated from the ctr_points to
             produce confmaps of shape (height, width, n_nodes) with peaks from just the
             centered instances.
+        with_pts: If True, will return the input points for all instances.
+        with_ctr_pts: If True, will return the input points for the center instance.
 
     Returns:
         ds_cms: A tf.data.Dataset that returns elements that are tuples of
-        (image, (instance_cms, cms_all, cms_ctr)) or some subset of the specified
-        confmaps depending on the outputs requested.
+        (image, (instance_cms, cms_all, cms_ctr, pts, ctr_pts)) or some subset of the
+        specified images/confmaps/points depending on the outputs requested.
     """
 
     def gen_cm_fn(img, pts, ctr_pts):
@@ -1126,6 +1130,12 @@ def make_instance_confmap_dataset(
                     axis=0,
                 )
             )
+
+        if with_pts:
+            outputs.append(pts)
+
+        if with_ctr_pts:
+            outputs.append(ctr_pts)
 
         return img, tuple(outputs)
 
