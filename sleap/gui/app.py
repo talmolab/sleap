@@ -1011,10 +1011,10 @@ class MainWindow(QMainWindow):
         frame_idx = self.state["frame_idx"] or 0
 
         if message is None:
-            message = f"Frame: {frame_idx+1}/{len(current_video)}"
+            message = f"Frame: {frame_idx+1:,}/{len(current_video):,}"
             if self.player.seekbar.hasSelection():
                 start, end = self.state["frame_range"]
-                message += f" (selection: {start}-{end})"
+                message += f" (selection: {start:,}-{end:,})"
 
             if len(self.labels.videos) > 1:
                 message += f" of video {self.labels.videos.index(current_video)}"
