@@ -84,7 +84,7 @@ class UpsamplingStack:
     upsampling_stride: int = 2
 
     transposed_conv: bool = True
-    transposed_conv_filters: Union[int, Sequence[int]] = 128
+    transposed_conv_filters: Union[int, Sequence[int]] = 64
     transposed_conv_kernel_size: int = 4
     transposed_conv_batchnorm: bool = True
 
@@ -141,9 +141,9 @@ class UpsamplingStack:
         """
 
         # Calculate the number of upsampling steps.
-        num_blocks = (np.log(current_stride) - np.log(self.output_stride)) / np.log(
+        num_blocks = int((np.log(current_stride) - np.log(self.output_stride)) / np.log(
             self.upsampling_stride
-        )
+        ))
 
         # Replicate filter counts if scalar was provided.
         if isinstance(self.transposed_conv_filters, int):
@@ -171,7 +171,7 @@ class UpsamplingStack:
         for block in range(num_blocks):
 
             # Update stride level.
-            new_stride = current_stride * self.upsampling_stride
+            new_stride = current_stride // self.upsampling_stride
             block_prefix = f"upsample_s{current_stride}_to_s{new_stride}"
 
             if self.transposed_conv:
@@ -207,7 +207,8 @@ class UpsamplingStack:
                         if self.skip_add:
                             source_x = skip_source.tensor
                             if source_x.shape[-1] != x.shape[-1]:
-                                # Adjust channel count via 1x1 linear conv if not matching.
+                                # Adjust channel count via 1x1 linear conv if not
+                                # matching.
                                 source_x = tf.keras.layers.Conv2D(
                                     filters=x.shape[-1],
                                     kernel_size=1,
