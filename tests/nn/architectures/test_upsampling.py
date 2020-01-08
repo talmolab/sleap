@@ -7,12 +7,6 @@ from sleap.nn.architectures import upsampling
 
 
 class UpsamplingTests(tf.test.TestCase):
-    def test_intermediate_feature(self):
-        intermediate_feature = upsampling.IntermediateFeature(
-            tensor=tf.zeros((1, 1, 1, 1)), stride=4
-        )
-        self.assertEqual(intermediate_feature.scale, 0.25)
-
     def test_upsampling_stack(self):
         upsampling_stack = upsampling.UpsamplingStack(
             output_stride=4,

@@ -15,28 +15,7 @@ import tensorflow as tf
 import attr
 from typing import Union, Sequence, List, Tuple, Optional
 
-
-@attr.s(auto_attribs=True)
-class IntermediateFeature:
-    """Intermediate feature tensor for use in skip connections.
-
-    This class is effectively a named tuple to store the stride (resolution) metadata
-
-    Attributes:
-        tensor: The tensor output from an intermediate layer.
-        stride: Stride of the tensor relative to the input.
-    """
-
-    tensor: tf.Tensor
-    stride: int
-
-    @property
-    def scale(self):
-        """The absolute scale of the tensor relative to the input.
-
-        This is equivalent to the reciprocal of the stride, e.g., stride 2 => scale 0.5.
-        """
-        return 1.0 / float(self.stride)
+from sleap.nn.architectures.common import IntermediateFeature
 
 
 @attr.s(auto_attribs=True)
