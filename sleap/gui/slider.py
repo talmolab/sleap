@@ -2,7 +2,7 @@
 Drop-in replacement for QSlider with additional features.
 """
 
-from PySide2 import QtCore, QtWidgets
+from PySide2 import QtCore, QtWidgets, QtGui
 from PySide2.QtGui import QPen, QBrush, QColor, QKeyEvent, QPolygonF, QPainterPath
 
 from sleap.gui.color import ColorManager
@@ -25,6 +25,7 @@ class SliderMark:
             * "open" (single value)
             * "predicted" (single value)
             * "track" (range of values)
+            * "tick" (single value)
         val: Beginning of mark range
         end_val: End of mark range (for "track" marks)
         row: The row that the mark goes in; used for tracks.
@@ -42,7 +43,13 @@ class SliderMark:
     @property
     def color(self):
         """Returns color of mark."""
-        colors = dict(simple="black", filled="blue", open="blue", predicted="yellow")
+        colors = dict(
+            simple="black",
+            filled="blue",
+            open="blue",
+            predicted="yellow",
+            tick="lightGray",
+        )
 
         if self.type in colors:
             return colors[self.type]
@@ -70,6 +77,27 @@ class SliderMark:
             return False
         else:
             return True
+
+    @property
+    def padded(self):
+        """Returns whether mark has top and bottom padding."""
+        if self.type == "tick":
+            return False
+        else:
+            return True
+
+    @property
+    def visual_width(self):
+        return 2 if self.type in ("open", "filled", "tick") else 0
+
+    def get_height(self, box_height):
+        if self.type == "track":
+            return 1.5
+        height = box_height
+        if self.padded:
+            height -= 4  # 2 (top) + 2 (bottom)
+
+        return height
 
 
 class VideoSlider(QtWidgets.QGraphicsView):
@@ -116,7 +144,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
         marks=None,
         color_manager: Optional[ColorManager] = None,
         *args,
-        **kwargs
+        **kwargs,
     ):
         super(VideoSlider, self).__init__(*args, **kwargs)
 
@@ -125,7 +153,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
         self.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
 
         self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.setVerticalScrollBarPolicy(
             QtCore.Qt.ScrollBarAlwaysOff
         )  # ScrollBarAsNeeded
@@ -135,14 +163,24 @@ class VideoSlider(QtWidgets.QGraphicsView):
         self.zoom_factor = 1
 
         self._track_rows = 0
-        self._track_height = 3
-        self._header_height = 0
+        self._track_height = 5
+        self._max_tracks_stacked = 120
+        self._track_stack_skip_count = 10
+        self._header_label_height = 20
+        self._header_graph_height = 30
+        self._header_height = self._header_label_height  # room for frame labels
         self._min_height = 19 + self._header_height
 
+        self._base_font = QtGui.QFont()
+        self._base_font.setPixelSize(10)
+
+        self._tick_marks = []
+
         # Add border rect
-        outline_rect = QtCore.QRect(0, 0, 200, self._min_height - 3)
-        self.outlineBox = self.scene.addRect(outline_rect)
-        self.outlineBox.setPen(QPen(QColor("black")))
+        outline_rect = QtCore.QRectF(0, 0, 200, self._min_height - 3)
+        self.setBoxRect(outline_rect)
+        # self.outlineBox = self.scene.addRect(outline_rect)
+        # self.outlineBox.setPen(QPen(QColor("black", alpha=0)))
 
         # Add drag handle rect
         handle_width = 6
@@ -162,6 +200,13 @@ class VideoSlider(QtWidgets.QGraphicsView):
         self.select_box.setPen(QPen(QColor(80, 80, 255)))
         self.select_box.setBrush(QColor(80, 80, 255, 128))
         self.select_box.hide()
+
+        self.zoom_box = self.scene.addRect(
+            QtCore.QRect(0, 1, 0, outline_rect.height() - 2)
+        )
+        self.zoom_box.setPen(QPen(QColor(80, 80, 80, 64)))
+        self.zoom_box.setBrush(QColor(80, 80, 80, 64))
+        self.zoom_box.hide()
 
         self.scene.setBackgroundBrush(QBrush(QColor(200, 200, 200)))
 
@@ -252,14 +297,14 @@ class VideoSlider(QtWidgets.QGraphicsView):
             None.
         """
         self.headerSeries = [] if series is None else series
-        self._header_height = 30
+        self._header_height = self._header_label_height + self._header_graph_height
         self.drawHeader()
         self.updateHeight()
 
     def clearHeader(self):
         """Remove header graph from slider."""
         self.headerSeries = []
-        self._header_height = 0
+        self._header_height = self._header_label_height
         self.updateHeight()
 
     def setTracks(self, track_rows):
@@ -271,9 +316,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
         self._track_rows = track_rows
         self.updateHeight()
 
-    def updateHeight(self):
-        """Update the height of the slider."""
-
+    def getMinMaxHeights(self):
         tracks = self._track_rows
         if tracks == 0:
             min_height = self._min_height
@@ -286,11 +329,18 @@ class VideoSlider(QtWidgets.QGraphicsView):
 
             # Add height for tracks
             min_height += self._track_height * min(tracks, 20)
-            max_height += self._track_height * tracks
+            max_height += self._track_height * min(tracks, self._max_tracks_stacked)
 
             # Make sure min/max height is at least 19, even if few tracks
             min_height = max(self._min_height, min_height)
             max_height = max(self._min_height, max_height)
+
+        return min_height, max_height
+
+    def updateHeight(self):
+        """Update the height of the slider."""
+
+        min_height, max_height = self.getMinMaxHeights()
 
         self.setMaximumHeight(max_height)
         self.setMinimumHeight(min_height)
@@ -333,7 +383,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
 
     def _sliderWidth(self) -> float:
         """Returns visual width of slider."""
-        return self.outlineBox.rect().width() - self.handle.rect().width()
+        return self.getBoxRect().width() - self.handle.rect().width()
 
     def value(self) -> float:
         """Returns value of slider."""
@@ -352,6 +402,10 @@ class VideoSlider(QtWidgets.QGraphicsView):
     def setMaximum(self, max: float) -> float:
         """Sets maximum value for slider."""
         self._val_max = max
+
+    @property
+    def value_range(self) -> float:
+        return self._val_max - self._val_min
 
     def setEnabled(self, val: float) -> float:
         """Set whether the slider is enabled."""
@@ -413,9 +467,16 @@ class VideoSlider(QtWidgets.QGraphicsView):
         return start, end
 
     def drawSelection(self, a: float, b: float):
-        """Draws selection box on slider.
+        self.updateSelectionBoxPositions(self.select_box, a, b)
+
+    def drawZoomBox(self, a: float, b: float):
+        self.updateSelectionBoxPositions(self.zoom_box, a, b)
+
+    def updateSelectionBoxPositions(self, box_object, a: float, b: float):
+        """Update box item on slider.
 
         Args:
+            box_object: The box to update
             a: one endpoint value
             b: other endpoint value
 
@@ -426,12 +487,24 @@ class VideoSlider(QtWidgets.QGraphicsView):
         end = max(a, b)
         start_pos = self._toPos(start, center=True)
         end_pos = self._toPos(end, center=True)
-        selection_rect = QtCore.QRect(
-            start_pos, 1, end_pos - start_pos, self.outlineBox.rect().height() - 2
+        box_rect = QtCore.QRect(
+            start_pos,
+            self._header_height,
+            end_pos - start_pos,
+            self.getBoxRect().height(),
         )
 
-        self.select_box.setRect(selection_rect)
-        self.select_box.show()
+        box_object.setRect(box_rect)
+        box_object.show()
+
+    def updateSelectionBoxesOnResize(self):
+        for box_object in (self.select_box, self.zoom_box):
+            rect = box_object.rect()
+            rect.setHeight(self._handleHeight())
+            box_object.setRect(rect)
+
+        if self.select_box.isVisible():
+            self.drawSelection(*self.getSelection())
 
     def moveSelectionAnchor(self, x: float, y: float):
         """
@@ -445,7 +518,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
             None.
         """
         x = max(x, 0)
-        x = min(x, self.outlineBox.rect().width())
+        x = min(x, self.getBoxRect().width())
         anchor_val = self._toVal(x, center=True)
 
         if len(self._selection) % 2 == 0:
@@ -465,17 +538,65 @@ class VideoSlider(QtWidgets.QGraphicsView):
             None.
         """
         x = max(x, 0)
-        x = min(x, self.outlineBox.rect().width())
+        x = min(x, self.getBoxRect().width())
         anchor_val = self._toVal(x)
         self.endSelection(anchor_val)
+
+    def moveZoomDrag(self, x: float, y: float):
+        if getattr(self, "_zoom_start_val", None) is None:
+            self._zoom_start_val = self._toVal(x, center=True)
+
+        current_val = self._toVal(x, center=True)
+
+        self.drawZoomBox(current_val, self._zoom_start_val)
+
+    def releaseZoomDrag(self, x, y):
+
+        self.zoom_box.hide()
+
+        val_a = self._zoom_start_val
+        val_b = self._toVal(x, center=True)
+
+        val_start = min(val_a, val_b)
+        val_end = max(val_a, val_b)
+
+        # pad the zoom
+        val_range = val_end - val_start
+        val_start -= val_range * 0.05
+        val_end += val_range * 0.05
+
+        self.setZoomRange(val_start, val_end)
+
+        self._zoom_start_val = None
+
+    def setZoomRange(self, start_val: float, end_val: float):
+
+        zoom_val_range = end_val - start_val
+        if zoom_val_range > 0:
+            self.zoom_factor = self.value_range / zoom_val_range
+        else:
+            self.zoom_factor = 1
+
+        self.resizeEvent()
+
+        center_val = start_val + zoom_val_range / 2
+        center_pos = self._toPos(center_val)
+
+        self.centerOn(center_pos, 0)
 
     def clearMarks(self):
         """Clears all marked values for slider."""
         if hasattr(self, "_mark_items"):
             for item in self._mark_items.values():
                 self.scene.removeItem(item)
+
+        if hasattr(self, "_mark_labels"):
+            for item in self._mark_labels.values():
+                self.scene.removeItem(item)
+
         self._marks = set()  # holds mark position
         self._mark_items = dict()  # holds visual Qt object for plotting mark
+        self._mark_labels = dict()
 
     def setMarks(self, marks: Iterable[Union[SliderMark, int]]):
         """Sets all marked values for the slider.
@@ -487,15 +608,37 @@ class VideoSlider(QtWidgets.QGraphicsView):
             None.
         """
         self.clearMarks()
+
+        # Add tick marks first so they're behind other marks
+        self._add_tick_marks()
+
         if marks is not None:
             for mark in marks:
                 if not isinstance(mark, SliderMark):
                     mark = SliderMark("simple", mark)
                 self.addMark(mark, update=False)
+
         self.updatePos()
 
-    def getMarks(self):
+    def _add_tick_marks(self):
+        val_range = self._val_max - self._val_min
+        val_order = 10
+        while val_range // val_order > 10:
+            val_order *= 10
+
+        self._tick_marks = []
+
+        for tick_pos in range(self._val_min + val_order - 1, self._val_max, val_order):
+            self._tick_marks.append(SliderMark("tick", tick_pos))
+
+        for tick_mark in self._tick_marks:
+            self.addMark(tick_mark, update=False)
+
+    def getMarks(self, type: str = ""):
         """Returns list of marks."""
+        if type:
+            return [mark for mark in self._marks if mark.type == type]
+
         return self._marks
 
     def addMark(self, new_mark: SliderMark, update: bool = True):
@@ -516,19 +659,25 @@ class VideoSlider(QtWidgets.QGraphicsView):
 
         self._marks.add(new_mark)
 
-        v_top_pad = 3 + self._header_height
-        v_bottom_pad = 3
+        v_top_pad = self._header_height + 1
+        v_bottom_pad = 1
+        if new_mark.padded:
+            v_top_pad += 2
+            v_bottom_pad += 2
 
-        width = 0
+        width = new_mark.visual_width
 
+        v_offset = v_top_pad
         if new_mark.type == "track":
-            v_offset = v_top_pad + (self._track_height * new_mark.row)
-            height = 1
-        else:
-            v_offset = v_top_pad
-            height = self.outlineBox.rect().height() - (v_offset + v_bottom_pad)
+            if new_mark.row < self._max_tracks_stacked:
+                v_offset += self._track_height * new_mark.row
+            else:
+                rows_down = new_mark.row - self._max_tracks_stacked
+                rows_down %= self._max_tracks_stacked - self._track_stack_skip_count
+                v_offset += self._track_height * self._track_stack_skip_count
+                v_offset += self._track_height * rows_down
 
-            width = 2 if new_mark.type in ("open", "filled") else 0
+        height = new_mark.get_height(box_height=self.getBoxRect().height())
 
         color = new_mark.QColor
         pen = QPen(color, 0.5)
@@ -537,6 +686,13 @@ class VideoSlider(QtWidgets.QGraphicsView):
 
         line = self.scene.addRect(-width // 2, v_offset, width, height, pen, brush)
         self._mark_items[new_mark] = line
+
+        if new_mark.type == "tick":
+            mark_label_text = f"{new_mark.val + 1:g}"  # sci notation if large
+            self._mark_labels[new_mark] = self.scene.addSimpleText(
+                mark_label_text, self._base_font
+            )
+
         if update:
             self.updatePos()
 
@@ -547,19 +703,25 @@ class VideoSlider(QtWidgets.QGraphicsView):
 
         for mark in self._mark_items.keys():
 
-            width = 0
             if mark.type == "track":
                 width_in_frames = mark.end_val - mark.val
                 width = max(2, self._toPos(width_in_frames))
 
-            elif mark.type in ("open", "filled"):
-                width = 2
+            else:
+                width = mark.visual_width
 
             x = self._toPos(mark.val, center=True)
             self._mark_items[mark].setPos(x, 0)
 
+            if mark in self._mark_labels:
+                label_x = max(
+                    0, x - self._mark_labels[mark].boundingRect().width() // 2
+                )
+                self._mark_labels[mark].setPos(label_x, 4)
+
             rect = self._mark_items[mark].rect()
             rect.setWidth(width)
+            rect.setHeight(mark.get_height(box_height=self.getBoxRect().height()))
 
             self._mark_items[mark].setRect(rect)
 
@@ -604,7 +766,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
 
         series_min = np.min(sampled) - 1
         series_max = np.max(sampled)
-        series_scale = (self._header_height - 5) / (series_max - series_min)
+        series_scale = (self._header_graph_height) / (series_max - series_min)
 
         def toYPos(val):
             return self._header_height - ((val - series_min) * series_scale)
@@ -636,7 +798,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
         """
         x -= self.handle.rect().width() / 2.0
         x = max(x, 0)
-        x = min(x, self.outlineBox.rect().width() - self.handle.rect().width())
+        x = min(x, self.getBoxRect().width() - self.handle.rect().width())
 
         val = self._toVal(x)
 
@@ -657,33 +819,53 @@ class VideoSlider(QtWidgets.QGraphicsView):
         if old != val:
             self.valueChanged.emit(self._val_main)
 
+    def getBoxRect(self):
+        # return self.outlineBox.rect()
+        return self._box_rect
+
+    def setBoxRect(self, rect):
+        # self.outlineBox.setRect(rect)
+        self._box_rect = rect
+
+        # Update the scene rect so that it matches how much space we
+        # currently want for drawing everything.
+        rect.setWidth(rect.width() - 1)
+        self.setSceneRect(rect)
+
+    def getMarkAreaHeight(self):
+        _, max_height = self.getMinMaxHeights()
+        return max_height - 3 - self._header_height
+
     def resizeEvent(self, event=None):
         """Override method to update visual size when necessary.
 
         Args:
             event
         """
-        height = self.size().height()
 
-        outline_rect = self.outlineBox.rect()
+        outline_rect = self.getBoxRect()
         handle_rect = self.handle.rect()
-        select_box_rect = self.select_box.rect()
 
-        outline_rect.setHeight(height - 3)
+        outline_rect.setHeight(self.getMarkAreaHeight())
         if event is not None:
             visual_width = event.size().width() - 1
-            outline_rect.setWidth(visual_width * self.zoom_factor)
-        self.outlineBox.setRect(outline_rect)
+        else:
+            visual_width = self.width() - 1
+
+        drawn_width = visual_width * self.zoom_factor
+
+        outline_rect.setWidth(drawn_width)
+        self.setBoxRect(outline_rect)
 
         handle_rect.setTop(self._handleTop())
         handle_rect.setHeight(self._handleHeight())
         self.handle.setRect(handle_rect)
 
-        select_box_rect.setHeight(self._handleHeight())
-        self.select_box.setRect(select_box_rect)
+        self.updateSelectionBoxesOnResize()
 
         self.updatePos()
         self.drawHeader()
+
         super(VideoSlider, self).resizeEvent(event)
 
     def _handleTop(self) -> float:
@@ -702,14 +884,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
         Returns:
             Height of handle in pixels.
         """
-        if outline_rect is None:
-            outline_rect = self.outlineBox.rect()
-
-        handle_bottom_offset = 1
-        handle_height = outline_rect.height() - (
-            self._handleTop() + handle_bottom_offset
-        )
-        return handle_height
+        return self.getMarkAreaHeight()
 
     def mousePressEvent(self, event):
         """Override method to move handle for mouse press/drag.
@@ -723,7 +898,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
         if not self.enabled():
             return
         # Do nothing if click outside slider area
-        if not self.outlineBox.rect().contains(scenePos):
+        if not self.getBoxRect().contains(scenePos):
             return
 
         move_function = None
@@ -739,6 +914,13 @@ class VideoSlider(QtWidgets.QGraphicsView):
             move_function = self.moveHandle
             release_function = None
 
+        elif event.modifiers() == QtCore.Qt.AltModifier:
+            move_function = self.moveZoomDrag
+            release_function = self.releaseZoomDrag
+
+        else:
+            event.accept()  # mouse events shouldn't be passed to video widgets
+
         # Connect to signals
         if move_function is not None:
             self.mouseMoved.connect(move_function)
@@ -746,7 +928,8 @@ class VideoSlider(QtWidgets.QGraphicsView):
         def done(x, y):
             if release_function is not None:
                 release_function(x, y)
-            self.mouseMoved.disconnect(move_function)
+            if move_function is not None:
+                self.mouseMoved.disconnect(move_function)
             self.mouseReleased.disconnect(done)
 
         self.mouseReleased.connect(done)
@@ -777,7 +960,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
 
     def boundingRect(self) -> QtCore.QRectF:
         """Method required by Qt."""
-        return self.outlineBox.rect()
+        return self.getBoxRect()
 
     def paint(self, *args, **kwargs):
         """Method required by Qt."""
