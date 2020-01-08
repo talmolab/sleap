@@ -1,5 +1,8 @@
 import numpy as np
 import tensorflow as tf
+
+tf.config.experimental.set_visible_devices([], device_type="GPU")  # hide GPUs for test
+
 from sleap.nn.architectures import upsampling
 
 
@@ -30,6 +33,66 @@ class UpsamplingTests(tf.test.TestCase):
         self.assertEqual(intermediate_feats[1].stride, 4)
         self.assertEqual(len(model.layers), 13)
         self.assertIsInstance(model.layers[1], tf.keras.layers.Conv2DTranspose)
+
+    def test_upsampling_stack_transposed_filter_rate(self):
+        upsampling_stack = upsampling.UpsamplingStack(
+            output_stride=2,
+            upsampling_stride=2,
+            transposed_conv=True,
+            transposed_conv_filters=16,
+            transposed_conv_filters_rate=2,
+            refine_convs=0,
+        )
+        x, intermediate_feats = upsampling_stack.make_stack(
+            tf.keras.Input((4, 4, 2)), current_stride=16
+        )
+        model = tf.keras.Model(tf.keras.utils.get_source_inputs(x), x)
+
+        self.assertEqual(model.get_layer("upsample_s16_to_s8_trans_conv").filters, 16)
+        self.assertEqual(model.get_layer("upsample_s8_to_s4_trans_conv").filters, 32)
+        self.assertEqual(model.get_layer("upsample_s4_to_s2_trans_conv").filters, 64)
+        self.assertAllEqual(x.shape, (None, 32, 32, 64))
+
+    def test_upsampling_stack_transposed_filter_rate_shrink(self):
+        upsampling_stack = upsampling.UpsamplingStack(
+            output_stride=2,
+            upsampling_stride=2,
+            transposed_conv=True,
+            transposed_conv_filters=128,
+            transposed_conv_filters_rate=0.5,
+            refine_convs=0,
+        )
+        x, intermediate_feats = upsampling_stack.make_stack(
+            tf.keras.Input((4, 4, 2)), current_stride=16
+        )
+        model = tf.keras.Model(tf.keras.utils.get_source_inputs(x), x)
+
+        self.assertEqual(model.get_layer("upsample_s16_to_s8_trans_conv").filters, 128)
+        self.assertEqual(model.get_layer("upsample_s8_to_s4_trans_conv").filters, 64)
+        self.assertEqual(model.get_layer("upsample_s4_to_s2_trans_conv").filters, 32)
+        self.assertAllEqual(x.shape, (None, 32, 32, 32))
+
+    def test_upsampling_stack_refine_convs_filter_rate(self):
+        upsampling_stack = upsampling.UpsamplingStack(
+            output_stride=2,
+            upsampling_stride=2,
+            transposed_conv=False,
+            refine_convs=2,
+            refine_convs_filters=16,
+            refine_convs_filters_rate=2,
+        )
+        x, intermediate_feats = upsampling_stack.make_stack(
+            tf.keras.Input((4, 4, 2)), current_stride=16
+        )
+        model = tf.keras.Model(tf.keras.utils.get_source_inputs(x), x)
+
+        self.assertEqual(model.get_layer("upsample_s16_to_s8_refine0_conv").filters, 16)
+        self.assertEqual(model.get_layer("upsample_s16_to_s8_refine1_conv").filters, 16)
+        self.assertEqual(model.get_layer("upsample_s8_to_s4_refine0_conv").filters, 32)
+        self.assertEqual(model.get_layer("upsample_s8_to_s4_refine1_conv").filters, 32)
+        self.assertEqual(model.get_layer("upsample_s4_to_s2_refine0_conv").filters, 64)
+        self.assertEqual(model.get_layer("upsample_s4_to_s2_refine1_conv").filters, 64)
+        self.assertAllEqual(x.shape, (None, 32, 32, 64))
 
     def test_upsampling_stack_upsampling_stride4(self):
         upsampling_stack = upsampling.UpsamplingStack(

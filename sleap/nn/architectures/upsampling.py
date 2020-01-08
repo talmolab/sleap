@@ -1,9 +1,9 @@
 """This module defines common upsampling layer stack configurations.
 
 The generic upsampling stack consists of:
-	- transposed convolution or bilinear upsampling with stride > 1
-	- skip connections
-	- 0 or more 3x3 convolutions for refinement
+    - transposed convolution or bilinear upsampling with stride > 1
+    - skip connections
+    - 0 or more 3x3 convolutions for refinement
 
 Configuring these components suffices to define the "decoder" portion of most canonical
 "encoder-decoder"-like architectures (e.g., LEAP CNN, UNet, Hourglass, etc.), as well as
@@ -52,11 +52,13 @@ class UpsamplingStack:
             method for examples.
         transposed_conv: If True, use a strided transposed convolution to perform
             learnable upsampling. If False, bilinear upsampling will be used instead.
-        transposed_conv_filters: Integer or sequence of integers that specify the number
-            of filters in each transposed convolution layer. If a scalar integer is
-            specified, the same number of filters will be used in each step. If a
-            sequence is provided, this must match the calculated number of upsampling
-            steps. No effect if bilinear upsampling is used.
+        transposed_conv_filters: Integer that specifies the base number of filters in
+            each transposed convolution layer. This will be scaled by the
+            `transposed_conv_filters_rate` at every upsampling step. No effect if
+            bilinear upsampling is used.
+        transposed_conv_filters_rate: Factor to scale the number of filters in the
+            transposed convolution layer after each upsampling step. If set to 1, the
+            number of filters won't change. No effect if bilinear upsampling is used.
         transposed_conv_kernel_size: Size of the kernel for the transposed convolution.
             No effect if bilinear upsampling is used.
         transposed_conv_batchnorm: Specifies whether batch norm should be applied after
@@ -75,6 +77,10 @@ class UpsamplingStack:
         refine_convs_filters: Similar to `transposed_conv_filters`, specifies the number
             of filters to use for the refinement convolutions in each upsampling step.
             No effect if `refine_convs` is 0.
+        refine_convs_filters_rate: Factor to scale the number of filters in the refine
+            conv layers after each upsampling step. The same number of filters are used
+            for all convs within the same upsampling step. If set to 1, the number of
+            filters won't change. No effect if `refine_convs` is 0.
         refine_convs_batchnorm: Specifies whether batch norm should be applied after
             each 3x3 convolution and before the ReLU activation. No effect if
             `refine_convs` is 0.
@@ -84,14 +90,16 @@ class UpsamplingStack:
     upsampling_stride: int = 2
 
     transposed_conv: bool = True
-    transposed_conv_filters: Union[int, Sequence[int]] = 64
+    transposed_conv_filters: int = 64
+    transposed_conv_filters_rate: float = 1
     transposed_conv_kernel_size: int = 4
     transposed_conv_batchnorm: bool = True
 
     skip_add: bool = False
 
     refine_convs: int = 2
-    refine_convs_filters: Union[int, Sequence[int]] = 64
+    refine_convs_filters: int = 64
+    refine_convs_filters_rate: float = 1
     refine_convs_batchnorm: bool = True
 
     def make_stack(
@@ -119,11 +127,6 @@ class UpsamplingStack:
             The intermediate features are useful when creating multi-head architectures
             with different output strides for the heads.
 
-        Raises:
-            AttributeError: If a sequence of `transposed_conv_filters` or
-                `refine_convs_filters` are specified in the class attributes that do not
-                match the number of upsampling steps calculated.
-
         Note:
             The computed number of upsampling steps will be determined by the
             `current_stride` argument, and `output_stride` and `upsampling_stride` class
@@ -141,30 +144,10 @@ class UpsamplingStack:
         """
 
         # Calculate the number of upsampling steps.
-        num_blocks = int((np.log(current_stride) - np.log(self.output_stride)) / np.log(
-            self.upsampling_stride
-        ))
-
-        # Replicate filter counts if scalar was provided.
-        if isinstance(self.transposed_conv_filters, int):
-            self.transposed_conv_filters = [self.transposed_conv_filters] * num_blocks
-
-        if len(self.transposed_conv_filters) != num_blocks:
-            raise AttributeError(
-                f"The number of transposed conv filter sizes "
-                f"({len(self.transposed_conv_filters)}) must be equal to the number of "
-                f"upsampling steps ({num_blocks})."
-            )
-
-        if isinstance(self.refine_convs_filters, int):
-            self.refine_convs_filters = [self.refine_convs_filters] * num_blocks
-
-        if len(self.refine_convs_filters) != num_blocks:
-            raise AttributeError(
-                f"The number of refine conv filter sizes "
-                f"({len(self.refine_convs_filters)}) must be equal to the number of "
-                f"upsampling steps ({num_blocks})."
-            )
+        num_blocks = int(
+            (np.log(current_stride) - np.log(self.output_stride))
+            / np.log(self.upsampling_stride)
+        )
 
         # Create each upsampling block.
         intermediate_feats = []
@@ -175,9 +158,14 @@ class UpsamplingStack:
             block_prefix = f"upsample_s{current_stride}_to_s{new_stride}"
 
             if self.transposed_conv:
+
                 # Upsample via strided transposed convolution.
+                block_trans_conv_filters = int(
+                    self.transposed_conv_filters
+                    * self.transposed_conv_filters_rate ** block
+                )
                 x = tf.keras.layers.Conv2DTranspose(
-                    filters=self.transposed_conv_filters[block],
+                    filters=block_trans_conv_filters,
                     kernel_size=self.transposed_conv_kernel_size,
                     strides=self.upsampling_stride,
                     padding="same",
@@ -231,9 +219,12 @@ class UpsamplingStack:
                         added_skip = True
 
             # Add further convolutions to refine after upsampling and/or skip.
+            block_refine_filters = int(
+                self.refine_convs_filters * self.refine_convs_filters_rate ** block
+            )
             for i in range(self.refine_convs):
                 x = tf.keras.layers.Conv2D(
-                    filters=self.refine_convs_filters[block],
+                    filters=block_refine_filters,
                     kernel_size=3,
                     strides=1,
                     padding="same",
