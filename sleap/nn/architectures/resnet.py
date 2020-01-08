@@ -14,7 +14,7 @@ import tensorflow as tf
 import numpy as np
 import attr
 
-from typing import Tuple, Union, Optional, Text, Callable, Mapping, Sequence, Any
+from typing import Tuple, Optional, Text, Callable, Mapping, Sequence, Any, List
 from sleap.nn.architectures.upsampling import IntermediateFeature, UpsamplingStack
 
 
@@ -253,7 +253,7 @@ def stack_v1(
 
 
 def make_backbone_fn(
-    stack_fn: Callable[[tf.Tensor, ...], Tuple[tf.Tensor, List[IntermediateFeature]]],
+    stack_fn: Callable[[tf.Tensor, Any], Tuple[tf.Tensor, List[IntermediateFeature]]],
     stack_configs: Sequence[Mapping[Text, Any]],
     output_stride: int,
 ) -> Callable[[tf.Tensor, int], tf.Tensor]:
@@ -373,8 +373,8 @@ class ResNetv1:
             strided convs into dilated convs.
         upsampling_stack: Definition of the upsampling layers that convert the ResNet
             backbone features into the output features with the desired stride. See
-            the `UpsamplingStack` documentation for more. By default, a configuration
-            is used with an output stride of 4.
+            the `UpsamplingStack` documentation for more.  If not provided, the
+            activations from the last backbone block will be the output.
         features_output_stride: Output stride of the standard ResNet backbone.
             Canonically, ResNets have 5 layers with 2-stride, resulting in a final
             feature output layer with stride of 32. If a lower value is specified, the
@@ -396,43 +396,29 @@ class ResNetv1:
 
     model_name: Text
     stack_configs: Sequence[Mapping[Text, Any]]
-    upsampling_stack: UpsamplingStack = attr.ib()
+    upsampling_stack: Optional[UpsamplingStack] = None
     features_output_stride: int = 16
     pretrained: bool = True
     frozen: bool = False
     skip_connections: bool = False
 
-    @upsampling_stack.default
-    def _default_upsampling_stack(self):
-        """Return default upsampling stack configuration.
-
-        This is a smaller version of the network used in Simple Baselines
-        (https://arxiv.org/abs/1804.06208).
-        """
-        return UpsamplingStack(
-            output_stride=4,
-            upsampling_stride=2,
-            transposed_conv=True,
-            transposed_conv_filters=128,
-            transposed_conv_kernel_size=4,
-            transposed_conv_batchnorm=True,
-            refine_convs=0,
-        )
-
     @property
-    def down_blocks(self) -> float:
+    def down_blocks(self) -> int:
         """Return the number of downsampling steps in the model."""
-        return np.log2(self.features_output_stride)
-
-    @property
-    def output_scale(self) -> float:
-        """Return relative scaling factor of this backbone."""
-        return 1 / float(self.upsampling_stack.output_stride)
+        return int(np.log2(self.features_output_stride))
 
     @property
     def output_stride(self) -> int:
         """Return output stride of this backbone."""
-        return self.upsampling_stack.output_stride
+        if self.upsampling_stack is not None:
+            return self.upsampling_stack.output_stride
+        else:
+            return self.features_output_stride
+
+    @property
+    def output_scale(self) -> float:
+        """Return relative scaling factor of this backbone."""
+        return 1 / float(self.output_stride)
 
     def make_backbone(
         self, x_in: tf.Tensor
@@ -444,8 +430,8 @@ class ResNetv1:
 
         Returns:
             A tuple of the final output tensor at the stride specified by the
-            `upsampling_stack.output_stride` class attribute, and a list of intermediate
-            tensors after each upsampling step.
+            `upsampling_stack.features_output_stride` class attribute, and a list of
+            intermediate tensors after each upsampling step.
 
             The intermediate features are useful when creating multi-head architectures
             with different output strides for the heads.
@@ -462,9 +448,9 @@ class ResNetv1:
         # Adjust stem strides if necessary.
         stem_stride1 = 2
         stem_stride2 = 2
-        if self.output_stride <= 2:
+        if self.features_output_stride <= 2:
             stem_stride2 = 1
-        if self.output_stride == 1:
+        if self.features_output_stride == 1:
             stem_stride1 = 1
 
         # Configure the backbone instantiation function.
@@ -491,63 +477,182 @@ class ResNetv1:
             for layer in backbone.layers:
                 layer.trainable = False
 
-        # Use post-stem intermediate activations for skip connections if specified.
-        skip_sources = None
-        if self.skip_connections:
-            skip_sources = intermediate_feats[2:]
+        if self.upsampling_stack is not None:
+            # Use post-stem intermediate activations for skip connections if specified.
+            skip_sources = None
+            if self.skip_connections:
+                skip_sources = intermediate_feats[2:]
 
-        # Return the result of the upsampling stack, starting with the ResNet features
-        # as input.
-        return self.upsampling_stack.make_stack(
-            backbone.output,
-            current_stride=self.features_output_stride,
-            skip_sources=skip_sources,
-        )
+            # Return the result of the upsampling stack, starting with the ResNet
+            # features as input.
+            return self.upsampling_stack.make_stack(
+                backbone.output,
+                current_stride=self.features_output_stride,
+                skip_sources=skip_sources,
+            )
+
+        else:
+            # Just return the final activation layer and backbone intermediate features.
+            return backbone.output, intermediate_feats
 
 
-@attr.s(auto_attribs=True)
+@attr.s
 class ResNet50(ResNetv1):
     """ResNet50 backbone.
 
     This model has a stack of 3, 4, 6 and 3 residual blocks.
+
+    Attributes:
+        upsampling_stack: Definition of the upsampling layers that convert the ResNet
+            backbone features into the output features with the desired stride. See
+            the `UpsamplingStack` documentation for more.  If not provided, the
+            activations from the last backbone block will be the output.
+        features_output_stride: Output stride of the standard ResNet backbone.
+            Canonically, ResNets have 5 layers with 2-stride, resulting in a final
+            feature output layer with stride of 32. If a lower value is specified, the
+            strided convolution layers will be adjusted to have a stride of 1, but the
+            receptive field is maintained by compensating with dilated (atrous)
+            convolution kernel expansion, in the same style as DeepLabv2. Valid values
+            are 1, 2, 4, 8, 16 or 32.
+        pretrained: If True, initialize with weights pretrained on ImageNet. If False,
+            random weights will be used.
+        frozen: If True, the backbone weights will be not be trainable. This is useful
+            for fast fine-tuning of ResNet features, but relies on having an upsampling
+            stack with sufficient representational capacity to adapt the fixed features.
+        skip_connections: If True, form skip connections between outputs of each block
+            in the ResNet backbone and the upsampling stack.
+
+    Note:
+        This defines the ResNetv1 architecture, not v2.
     """
 
-    model_name = "resnet50"
-    stack_configs = [
+    model_name = attr.ib()
+    stack_configs = attr.ib()
+
+    @model_name.default
+    def _fixed_model_name(self) -> Text:
+        """ResNet50 model name."""
+        return "resnet50"
+
+    @stack_configs.default
+    def _fixed_stack_configs(self) -> Sequence[Mapping[Text, Any]]:
+        """ResNet50 layer stack configuration."""
+        return [
         dict(filters=64, blocks=3, stride1=1, name="conv2"),
         dict(filters=128, blocks=4, stride1=2, name="conv3"),
         dict(filters=256, blocks=6, stride1=2, name="conv4"),
         dict(filters=512, blocks=3, stride1=2, name="conv5"),
     ]
 
+    def __attrs_post_init__(self):
+        """Enforce fixed attributes."""
+        self.model_name = self._fixed_model_name()
+        self.stack_configs = self._fixed_stack_configs()
 
-@attr.s(auto_attribs=True)
+
+@attr.s
 class ResNet101(ResNetv1):
     """ResNet101 backbone.
 
     This model has a stack of 3, 4, 23 and 3 residual blocks.
+
+    Attributes:
+        upsampling_stack: Definition of the upsampling layers that convert the ResNet
+            backbone features into the output features with the desired stride. See
+            the `UpsamplingStack` documentation for more.  If not provided, the
+            activations from the last backbone block will be the output.
+        features_output_stride: Output stride of the standard ResNet backbone.
+            Canonically, ResNets have 5 layers with 2-stride, resulting in a final
+            feature output layer with stride of 32. If a lower value is specified, the
+            strided convolution layers will be adjusted to have a stride of 1, but the
+            receptive field is maintained by compensating with dilated (atrous)
+            convolution kernel expansion, in the same style as DeepLabv2. Valid values
+            are 1, 2, 4, 8, 16 or 32.
+        pretrained: If True, initialize with weights pretrained on ImageNet. If False,
+            random weights will be used.
+        frozen: If True, the backbone weights will be not be trainable. This is useful
+            for fast fine-tuning of ResNet features, but relies on having an upsampling
+            stack with sufficient representational capacity to adapt the fixed features.
+        skip_connections: If True, form skip connections between outputs of each block
+            in the ResNet backbone and the upsampling stack.
+
+    Note:
+        This defines the ResNetv1 architecture, not v2.
     """
 
-    model_name = "resnet101"
-    stack_configs = [
+    model_name = attr.ib()
+    stack_configs = attr.ib()
+
+    @model_name.default
+    def _fixed_model_name(self) -> Text:
+        """ResNet101 model name."""
+        return "resnet101"
+
+    @stack_configs.default
+    def _fixed_stack_configs(self) -> Sequence[Mapping[Text, Any]]:
+        """ResNet101 layer stack configuration."""
+        return [
         dict(filters=64, blocks=3, stride1=1, name="conv2"),
         dict(filters=128, blocks=4, stride1=2, name="conv3"),
         dict(filters=256, blocks=23, stride1=2, name="conv4"),
         dict(filters=512, blocks=3, stride1=2, name="conv5"),
     ]
 
+    def __attrs_post_init__(self):
+        """Enforce fixed attributes."""
+        self.model_name = self._fixed_model_name()
+        self.stack_configs = self._fixed_stack_configs()
 
-@attr.s(auto_attribs=True)
+
+@attr.s
 class ResNet152(ResNetv1):
     """ResNet152 backbone.
 
     This model has a stack of 3, 4, 23 and 3 residual blocks.
+
+    Attributes:
+        upsampling_stack: Definition of the upsampling layers that convert the ResNet
+            backbone features into the output features with the desired stride. See
+            the `UpsamplingStack` documentation for more. If not provided, the
+            activations from the last backbone block will be the output.
+        features_output_stride: Output stride of the standard ResNet backbone.
+            Canonically, ResNets have 5 layers with 2-stride, resulting in a final
+            feature output layer with stride of 32. If a lower value is specified, the
+            strided convolution layers will be adjusted to have a stride of 1, but the
+            receptive field is maintained by compensating with dilated (atrous)
+            convolution kernel expansion, in the same style as DeepLabv2. Valid values
+            are 1, 2, 4, 8, 16 or 32.
+        pretrained: If True, initialize with weights pretrained on ImageNet. If False,
+            random weights will be used.
+        frozen: If True, the backbone weights will be not be trainable. This is useful
+            for fast fine-tuning of ResNet features, but relies on having an upsampling
+            stack with sufficient representational capacity to adapt the fixed features.
+        skip_connections: If True, form skip connections between outputs of each block
+            in the ResNet backbone and the upsampling stack.
+
+    Note:
+        This defines the ResNetv1 architecture, not v2.
     """
 
-    model_name = "resnet152"
-    stack_configs = [
+    model_name = attr.ib()
+    stack_configs = attr.ib()
+
+    @model_name.default
+    def _fixed_model_name(self) -> Text:
+        """ResNet152 model name."""
+        return "resnet152"
+
+    @stack_configs.default
+    def _fixed_stack_configs(self) -> Sequence[Mapping[Text, Any]]:
+        """ResNet152 layer stack configuration."""
+        return [
         dict(filters=64, blocks=3, stride1=1, name="conv2"),
         dict(filters=128, blocks=8, stride1=2, name="conv3"),
         dict(filters=256, blocks=36, stride1=2, name="conv4"),
         dict(filters=512, blocks=3, stride1=2, name="conv5"),
     ]
+
+    def __attrs_post_init__(self):
+        """Enforce fixed attributes."""
+        self.model_name = self._fixed_model_name()
+        self.stack_configs = self._fixed_stack_configs()
