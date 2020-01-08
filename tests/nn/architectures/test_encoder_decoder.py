@@ -73,6 +73,53 @@ class EncoderDecoderTests(tf.test.TestCase):
         self.assertIsInstance(model.layers[2], tf.keras.layers.Activation)
         self.assertIsInstance(model.layers[3], tf.keras.layers.BatchNormalization)
 
+    def test_simple_conv_block_no_pool(self):
+        block = encoder_decoder.SimpleConvBlock(
+            pool=False,
+            pooling_stride=2,
+            num_convs=3,
+            filters=16,
+            kernel_size=3,
+            use_bias=True,
+            batch_norm=True,
+            batch_norm_before_activation=True,
+            activation="relu",
+        )
+        x_in = tf.keras.Input((8, 8, 1))
+        x = block.make_block(x_in)
+        model = tf.keras.Model(x_in, x)
+
+        self.assertEqual(len(model.layers), 1 + 3 * 3)
+        self.assertEqual(len(model.trainable_weights), 12)
+        self.assertEqual(model.count_params(), 4992)
+        self.assertAllEqual(model.output.shape, (None, 8, 8, 16))
+
+    def test_simple_conv_block_pool_before_convs(self):
+        block = encoder_decoder.SimpleConvBlock(
+            pool=True,
+            pool_before_convs=True,
+            pooling_stride=2,
+            num_convs=3,
+            filters=16,
+            kernel_size=3,
+            use_bias=True,
+            batch_norm=True,
+            batch_norm_before_activation=True,
+            activation="relu",
+        )
+        x_in = tf.keras.Input((8, 8, 1))
+        x = block.make_block(x_in)
+        model = tf.keras.Model(x_in, x)
+
+        self.assertEqual(len(model.layers), 1 + 3 * 3 + 1)
+        self.assertEqual(len(model.trainable_weights), 12)
+        self.assertEqual(model.count_params(), 4992)
+        self.assertAllEqual(model.output.shape, (None, 4, 4, 16))
+        self.assertIsInstance(model.layers[1], tf.keras.layers.MaxPooling2D)
+        self.assertIsInstance(model.layers[2], tf.keras.layers.Conv2D)
+        self.assertIsInstance(model.layers[3], tf.keras.layers.BatchNormalization)
+        self.assertIsInstance(model.layers[4], tf.keras.layers.Activation)
+
     def test_simple_upsampling_block(self):
         block = encoder_decoder.SimpleUpsamplingBlock(
             upsampling_stride=2,

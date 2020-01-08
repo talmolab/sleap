@@ -38,10 +38,12 @@ class EncoderBlock:
     """Base class for encoder blocks.
 
     Attributes:
-        pooling_stride: Stride of the pooling operation. If 1, the output of this block
-            will be at the same stride (== 1/scale) as the input.
+        pool: If True, applies max pooling at the end of the block.
+        pooling_stride: Stride of the max pooling operation. If 1, the output of this
+            block will be at the same stride (== 1/scale) as the input.
     """
 
+    pool: bool = True
     pooling_stride: int = 2
 
     def make_block(x_in: tf.Tensor) -> tf.Tensor:
@@ -54,8 +56,10 @@ class SimpleConvBlock(EncoderBlock):
     """Flexible block of convolutions and max pooling.
     
     Attributes:
+        pool: If True, applies max pooling at the end of the block.
         pooling_stride: Stride of the max pooling operation. If 1, the output of this
             block will be at the same stride (== 1/scale) as the input.
+        pool_before_convs: If True, max pooling is performed before convolutions.
         num_convs: Number of convolution layers with activation. All attributes below
             are the same for all convolution layers within the block.
         filters: Number of convolutional kernel filters.
@@ -74,6 +78,7 @@ class SimpleConvBlock(EncoderBlock):
         This block is used in LeapCNN and UNet.
     """
 
+    pool_before_convs: bool = False
     num_convs: int = 2
     filters: int = 32
     kernel_size: int = 3
@@ -95,6 +100,14 @@ class SimpleConvBlock(EncoderBlock):
             The output tensor after applying all operations in the block.
         """
         x = x_in
+        if self.pool and self.pool_before_convs:
+            x = tf.keras.layers.MaxPool2D(
+                pool_size=2,
+                strides=self.pooling_stride,
+                padding="same",
+                name=f"{prefix}_pool",
+            )(x)
+
         for i in range(self.num_convs):
             x = tf.keras.layers.Conv2D(
                 filters=self.filters,
@@ -115,12 +128,13 @@ class SimpleConvBlock(EncoderBlock):
             if self.batch_norm and not self.batch_norm_before_activation:
                 x = tf.keras.layers.BatchNormalization(name=f"{prefix}_bn{i}")(x)
 
-        x = tf.keras.layers.MaxPool2D(
-            pool_size=2,
-            strides=self.pooling_stride,
-            padding="same",
-            name=f"{prefix}_pool",
-        )(x)
+        if self.pool and not self.pool_before_convs:
+            x = tf.keras.layers.MaxPool2D(
+                pool_size=2,
+                strides=self.pooling_stride,
+                padding="same",
+                name=f"{prefix}_pool",
+            )(x)
 
         return x
 
@@ -318,9 +332,6 @@ class SimpleUpsamplingBlock(DecoderBlock):
         if self.skip_connection and skip_source is not None:
             if self.skip_add:
                 source_x = skip_source
-                print("x.shape =", x.shape)
-                print("source_x.shape =", source_x.shape)
-                print("eq =", source_x.shape[-1] == x.shape[-1])
                 if source_x.shape[-1] != x.shape[-1]:
                     # Adjust channel count via 1x1 linear conv if not matching.
                     source_x = tf.keras.layers.Conv2D(
@@ -401,7 +412,11 @@ class EncoderDecoder:
         This is equivalent to the stride of the encoder assuming that it is constructed
         from an input with stride 1.
         """
-        return int(np.prod([block.pooling_stride for block in self.encoder_stack]))
+        return int(
+            np.prod(
+                [block.pooling_stride for block in self.encoder_stack if block.pool]
+            )
+        )
 
     @property
     def decoder_features_stride(self) -> int:
@@ -441,10 +456,13 @@ class EncoderDecoder:
             x = block.make_block(x, prefix=f"enc{i}")
 
             # Update the current stride and store the output of the current block.
-            current_stride *= block.pooling_stride
-            intermediate_features.append(
-                IntermediateFeature(tensor=x, stride=current_stride)
-            )
+            if block.pool:
+                current_stride *= block.pooling_stride
+
+            if current_stride not in [feat.stride for feat in intermediate_features]:
+                intermediate_features.append(
+                    IntermediateFeature(tensor=x, stride=current_stride)
+                )
 
         return x, intermediate_features[:-1]
 
@@ -484,11 +502,15 @@ class EncoderDecoder:
                 IntermediateFeature(tensor=x, stride=current_stride)
             )
 
-            # Look for a source tensor at the current stride to form a skip connection.
+            next_stride = current_stride // block.upsampling_stride
+
+            # Look for a source tensor at the next stride (after upsampling) to form a
+            # skip connection.
             skip_source = None
             for source_feat in skip_source_features:
-                if source_feat.stride == current_stride:
+                if source_feat.stride == next_stride:
                     skip_source = source_feat.tensor
+                    break
 
             # Create the block.
             x = block.make_block(
@@ -499,7 +521,7 @@ class EncoderDecoder:
             )
 
             # Update current stride.
-            current_stride /= block.upsampling_stride
+            current_stride = next_stride
 
         return x, intermediate_features
 
