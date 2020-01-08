@@ -130,6 +130,10 @@ class QtVideoPlayer(QWidget):
         if video is not None:
             self.load_video(video)
 
+    def setSeekbarSelection(self, a: int, b: int):
+        self.seekbar.startSelection(a)
+        self.seekbar.endSelection(b, update=True)
+
     def show_contextual_menu(self, where: QtCore.QPoint):
         if not self.is_menu_enabled:
             return

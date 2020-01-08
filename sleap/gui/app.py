@@ -343,6 +343,9 @@ class MainWindow(QMainWindow):
         goMenu.addSeparator()
 
         add_menu_item(goMenu, "goto frame", "Go to Frame...", self.commands.gotoFrame)
+        add_menu_item(
+            goMenu, "select to frame", "Select to Frame...", self.commands.selectToFrame
+        )
 
         ### View Menu ###
 
@@ -1014,7 +1017,7 @@ class MainWindow(QMainWindow):
             message = f"Frame: {frame_idx+1:,}/{len(current_video):,}"
             if self.player.seekbar.hasSelection():
                 start, end = self.state["frame_range"]
-                message += f" (selection: {start:,}-{end:,})"
+                message += f" (selection: {start+1:,}-{end+1:,})"
 
             if len(self.labels.videos) > 1:
                 message += f" of video {self.labels.videos.index(current_video)}"

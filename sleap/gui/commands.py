@@ -249,6 +249,10 @@ class CommandContext(object):
         """Shows gui to go to frame by number."""
         self.execute(GoFrameGui)
 
+    def selectToFrame(self):
+        """Shows gui to go to frame by number."""
+        self.execute(SelectToFrameGui)
+
     def gotoVideoAndFrame(self, video: Video, frame_idx: int):
         """Activates video and goes to frame."""
         NavCommand.go_to(self, frame_idx, video)
@@ -842,6 +846,29 @@ class GoFrameGui(NavCommand):
             context.state["video"].frames,
         )
         params["frame_idx"] = frame_number - 1
+
+        return okay
+
+
+class SelectToFrameGui(NavCommand):
+    @classmethod
+    def do_action(cls, context: "CommandContext", params: dict):
+        context.app.player.setSeekbarSelection(
+            params["from_frame_idx"], params["to_frame_idx"]
+        )
+
+    @classmethod
+    def ask(cls, context: "CommandContext", params: dict) -> bool:
+        frame_number, okay = QtWidgets.QInputDialog.getInt(
+            context.app,
+            "Select To Frame...",
+            "Frame Number:",
+            context.state["frame_idx"] + 1,
+            1,
+            context.state["video"].frames,
+        )
+        params["from_frame_idx"] = context.state["frame_idx"]
+        params["to_frame_idx"] = frame_number - 1
 
         return okay
 
