@@ -1013,6 +1013,8 @@ class MainWindow(QMainWindow):
         current_video = self.state["video"]
         frame_idx = self.state["frame_idx"] or 0
 
+        spacer = "        "
+
         if message is None:
             message = f"Frame: {frame_idx+1:,}/{len(current_video):,}"
             if self.player.seekbar.hasSelection():
@@ -1022,15 +1024,26 @@ class MainWindow(QMainWindow):
             if len(self.labels.videos) > 1:
                 message += f" of video {self.labels.videos.index(current_video)}"
 
-            message += f"    Labeled Frames: "
+            message += f"{spacer}Labeled Frames: "
             if current_video is not None:
                 message += (
                     f"{len(self.labels.get_video_user_labeled_frames(current_video))}"
                 )
+
                 if len(self.labels.videos) > 1:
                     message += " in video, "
             if len(self.labels.videos) > 1:
                 message += f"{len(self.labels.user_labeled_frames)} in project"
+
+            if current_video is not None:
+                pred_frame_count = len(
+                    self.labels.get_video_predicted_frames(current_video)
+                )
+                if pred_frame_count:
+                    message += f"{spacer}Predicted Frames: {pred_frame_count:,}"
+                    message += (
+                        f" ({pred_frame_count/current_video.num_frames*100:.2f}%)"
+                    )
 
         self.statusBar().showMessage(message)
 

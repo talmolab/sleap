@@ -1124,6 +1124,11 @@ class LabeledFrame:
         return len(self.user_instances) > 0
 
     @property
+    def has_predicted_instances(self) -> bool:
+        """Whether the frame contains any predicted instances."""
+        return len(self.predicted_instances) > 0
+
+    @property
     def unused_predictions(self) -> List[Instance]:
         """
         Returns list of "unused" :class:`PredictedInstance` objects in frame.
