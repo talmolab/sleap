@@ -81,14 +81,6 @@ class SliderMark:
             return True
 
     @property
-    def padded(self):
-        """Returns whether mark has top and bottom padding."""
-        if self.type in ("tick", "tick_column"):
-            return False
-        else:
-            return True
-
-    @property
     def top_pad(self):
         if self.type == "tick_column":
             return 40
@@ -176,9 +168,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
 
         self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-        self.setVerticalScrollBarPolicy(
-            QtCore.Qt.ScrollBarAlwaysOff
-        )  # ScrollBarAsNeeded
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
 
         self._color_manager = color_manager
 
@@ -410,6 +400,11 @@ class VideoSlider(QtWidgets.QGraphicsView):
     def _sliderWidth(self) -> float:
         """Returns visual width of slider."""
         return self.getBoxRect().width() - self.handle.rect().width()
+
+    @property
+    def slider_visible_value_range(self) -> float:
+        """Value range that's visible given current size and zoom."""
+        return self._toVal(self.width() - 1)
 
     def value(self) -> float:
         """Returns value of slider."""
@@ -646,10 +641,23 @@ class VideoSlider(QtWidgets.QGraphicsView):
 
         self.updatePos()
 
+    def setTickMarks(self):
+        """Resets which tick marks to show."""
+        self._clear_tick_marks()
+        self._add_tick_marks()
+
+    def _clear_tick_marks(self):
+        if not hasattr(self, "_tick_marks"):
+            return
+
+        for mark in self._tick_marks:
+            self.removeMark(mark)
+
     def _add_tick_marks(self):
-        val_range = self._val_max - self._val_min
+        val_range = self.slider_visible_value_range
+
         val_order = 10
-        while val_range // val_order > 10:
+        while val_range // val_order > 24:
             val_order *= 10
 
         self._tick_marks = []
@@ -659,6 +667,17 @@ class VideoSlider(QtWidgets.QGraphicsView):
 
         for tick_mark in self._tick_marks:
             self.addMark(tick_mark, update=False)
+
+    def removeMark(self, mark: SliderMark):
+        """Removes an individual mark."""
+        if mark in self._mark_labels:
+            self.scene.removeItem(self._mark_labels[mark])
+            del self._mark_labels[mark]
+        if mark in self._mark_items:
+            self.scene.removeItem(self._mark_items[mark])
+            del self._mark_items[mark]
+        if mark in self._marks:
+            self._marks.remove(mark)
 
     def getMarks(self, type: str = ""):
         """Returns list of marks."""
@@ -707,10 +726,17 @@ class VideoSlider(QtWidgets.QGraphicsView):
         self._mark_items[new_mark] = line
 
         if new_mark.type == "tick":
+            # Show tick mark behind other slider marks
+            self._mark_items[new_mark].setZValue(0)
+
+            # Add a text label to show in header area
             mark_label_text = f"{new_mark.val + 1:g}"  # sci notation if large
             self._mark_labels[new_mark] = self.scene.addSimpleText(
                 mark_label_text, self._base_font
             )
+        else:
+            # Show in front of tick marks
+            self._mark_items[new_mark].setZValue(1)
 
         if update:
             self.updatePos()
@@ -909,6 +935,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
 
         self.updateSelectionBoxesOnResize()
 
+        self.setTickMarks()
         self.updatePos()
         self.drawHeader()
 
