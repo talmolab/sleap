@@ -10,7 +10,7 @@ from sleap.gui.color import ColorManager
 import attr
 import itertools
 import numpy as np
-from typing import Dict, Iterable, List, Optional, Union
+from typing import Dict, Iterable, List, Optional, Tuple, Union
 
 
 @attr.s(auto_attribs=True, cmp=False)
@@ -26,6 +26,7 @@ class SliderMark:
             * "predicted" (single value)
             * "track" (range of values)
             * "tick" (single value)
+            * "tick_column" (single value)
         val: Beginning of mark range
         end_val: End of mark range (for "track" marks)
         row: The row that the mark goes in; used for tracks.
@@ -49,6 +50,7 @@ class SliderMark:
             open="blue",
             predicted="yellow",
             tick="lightGray",
+            tick_column="gray",
         )
 
         if self.type in colors:
@@ -81,21 +83,41 @@ class SliderMark:
     @property
     def padded(self):
         """Returns whether mark has top and bottom padding."""
-        if self.type == "tick":
+        if self.type in ("tick", "tick_column"):
             return False
         else:
             return True
 
     @property
+    def top_pad(self):
+        if self.type == "tick_column":
+            return 40
+        if self.type == "tick":
+            return 0
+        return 2
+
+    @property
+    def bottom_pad(self):
+        if self.type == "tick_column":
+            return 200
+        if self.type == "tick":
+            return 0
+        return 2
+
+    @property
     def visual_width(self):
-        return 2 if self.type in ("open", "filled", "tick") else 0
+        if self.type in ("open", "filled", "tick"):
+            return 2
+        if self.type in ("tick_column"):
+            return 1
+        return 0
 
     def get_height(self, box_height):
         if self.type == "track":
             return 1.5
         height = box_height
-        if self.padded:
-            height -= 4  # 2 (top) + 2 (bottom)
+        # if self.padded:
+        height -= self.top_pad + self.bottom_pad
 
         return height
 
@@ -254,6 +276,10 @@ class VideoSlider(QtWidgets.QGraphicsView):
         track_occupancy = labels.get_track_occupany(video)
         for track in labels.tracks:
             if track in track_occupancy and not track_occupancy[track].is_empty:
+                if track_row > 0 and self.isNewColTrack(track_row):
+                    slider_marks.append(
+                        SliderMark("tick_column", val=track_occupancy[track].start)
+                    )
                 for occupancy_range in track_occupancy[track].list:
                     slider_marks.append(
                         SliderMark(
@@ -661,21 +687,14 @@ class VideoSlider(QtWidgets.QGraphicsView):
 
         v_top_pad = self._header_height + 1
         v_bottom_pad = 1
-        if new_mark.padded:
-            v_top_pad += 2
-            v_bottom_pad += 2
+        v_top_pad += new_mark.top_pad
+        v_bottom_pad += new_mark.bottom_pad
 
         width = new_mark.visual_width
 
         v_offset = v_top_pad
         if new_mark.type == "track":
-            if new_mark.row < self._max_tracks_stacked:
-                v_offset += self._track_height * new_mark.row
-            else:
-                rows_down = new_mark.row - self._max_tracks_stacked
-                rows_down %= self._max_tracks_stacked - self._track_stack_skip_count
-                v_offset += self._track_height * self._track_stack_skip_count
-                v_offset += self._track_height * rows_down
+            v_offset += self.getTrackVerticalPos(*self.getTrackColRow(new_mark.row))
 
         height = new_mark.get_height(box_height=self.getBoxRect().height())
 
@@ -695,6 +714,33 @@ class VideoSlider(QtWidgets.QGraphicsView):
 
         if update:
             self.updatePos()
+
+    def getTrackColRow(self, raw_row: int) -> Tuple[int, int]:
+        if raw_row < self._max_tracks_stacked:
+            return 0, raw_row
+
+        else:
+            rows_after_first_col = raw_row - self._max_tracks_stacked
+            rows_per_later_cols = (
+                self._max_tracks_stacked - self._track_stack_skip_count
+            )
+
+            rows_down = rows_after_first_col % rows_per_later_cols
+            col = (rows_after_first_col // rows_per_later_cols) + 1
+
+            return col, rows_down
+
+    def getTrackVerticalPos(self, col: int, row: int) -> int:
+        if col == 0:
+            return row * self._track_height
+        else:
+            return (self._track_height * self._track_stack_skip_count) + (
+                self._track_height * row
+            )
+
+    def isNewColTrack(self, row: int) -> bool:
+        _, row_down = self.getTrackColRow(row)
+        return row_down == 0
 
     def updatePos(self):
         """Update the visual x position of handle and slider annotations."""
