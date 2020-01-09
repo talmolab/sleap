@@ -473,6 +473,11 @@ class VideoSlider(QtWidgets.QGraphicsView):
         # Emit signal (even if user selected same region as before)
         self.selectionChanged.emit(*self.getSelection())
 
+    def setSelection(self, start_val, end_val):
+        """Selects clip from start_val to end_val."""
+        self.startSelection(start_val)
+        self.endSelection(end_val, update=True)
+
     def hasSelection(self) -> bool:
         """Returns True if a clip is selected, False otherwise."""
         a, b = self.getSelection()
@@ -891,6 +896,75 @@ class VideoSlider(QtWidgets.QGraphicsView):
         if old != val:
             self.valueChanged.emit(self._val_main)
 
+    def contiguousSelectionMarksAroundVal(self, val):
+        """Selects contiguously marked frames around value."""
+        if not self.isMarkedVal(val):
+            return
+
+        last_val = val
+        dec_val = self.decrementContiguousMarkedVal(last_val)
+        while dec_val < last_val and dec_val > self._val_min:
+            last_val = dec_val
+            dec_val = self.decrementContiguousMarkedVal(last_val)
+
+        last_val = val
+        inc_val = self.incrementContiguousMarkedVal(last_val)
+        while inc_val > last_val and inc_val < self._val_max:
+            last_val = inc_val
+            inc_val = self.incrementContiguousMarkedVal(last_val)
+
+        self.setSelection(dec_val, inc_val)
+
+    def isMarkedVal(self, val):
+        """Returns whether value has mark."""
+        if val in [mark.val for mark in self._marks]:
+            return True
+        if any(
+            mark.val <= val < mark.end_val
+            for mark in self._marks
+            if mark.type == "track"
+        ):
+            return True
+        return False
+
+    def decrementContiguousMarkedVal(self, val):
+        """Decrements value within contiguously marked range if possible."""
+        dec_val = min(
+            (
+                mark.val
+                for mark in self._marks
+                if mark.type == "track" and mark.val < val <= mark.end_val
+            ),
+            default=val,
+        )
+        if dec_val < val:
+            return dec_val
+
+        if val - 1 in [mark.val for mark in self._marks]:
+            return val - 1
+
+        # Return original value if we can't decrement it w/in contiguous range
+        return val
+
+    def incrementContiguousMarkedVal(self, val):
+        """Increments value within contiguously marked range if possible."""
+        inc_val = max(
+            (
+                mark.end_val - 1
+                for mark in self._marks
+                if mark.type == "track" and mark.val <= val < mark.end_val
+            ),
+            default=val,
+        )
+        if inc_val > val:
+            return inc_val
+
+        if val + 1 in [mark.val for mark in self._marks]:
+            return val + 1
+
+        # Return original value if we can't decrement it w/in contiguous range
+        return val
+
     def getBoxRect(self):
         # return self.outlineBox.rect()
         return self._box_rect
@@ -1020,6 +1094,24 @@ class VideoSlider(QtWidgets.QGraphicsView):
         """Override method to emit mouseReleased signal on release."""
         scenePos = self.mapToScene(event.pos())
         self.mouseReleased.emit(scenePos.x(), scenePos.y())
+
+    def mouseDoubleClickEvent(self, event):
+        """Override method to move handle for mouse double-click.
+
+        Args:
+            event
+        """
+        scenePos = self.mapToScene(event.pos())
+
+        # Do nothing if not enabled
+        if not self.enabled():
+            return
+        # Do nothing if click outside slider area
+        if not self.getBoxRect().contains(scenePos):
+            return
+
+        if event.modifiers() == QtCore.Qt.ShiftModifier:
+            self.contiguousSelectionMarksAroundVal(self._toVal(scenePos.x()))
 
     def keyPressEvent(self, event):
         """Catch event and emit signal so something else can handle event."""
