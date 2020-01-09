@@ -901,19 +901,28 @@ class VideoSlider(QtWidgets.QGraphicsView):
         if not self.isMarkedVal(val):
             return
 
+        dec_val = self.getStartContiguousMark(val)
+        inc_val = self.getEndContiguousMark(val)
+
+        self.setSelection(dec_val, inc_val)
+
+    def getStartContiguousMark(self, val):
         last_val = val
         dec_val = self.decrementContiguousMarkedVal(last_val)
         while dec_val < last_val and dec_val > self._val_min:
             last_val = dec_val
             dec_val = self.decrementContiguousMarkedVal(last_val)
 
+        return dec_val
+
+    def getEndContiguousMark(self, val):
         last_val = val
         inc_val = self.incrementContiguousMarkedVal(last_val)
         while inc_val > last_val and inc_val < self._val_max:
             last_val = inc_val
             inc_val = self.incrementContiguousMarkedVal(last_val)
 
-        self.setSelection(dec_val, inc_val)
+        return inc_val
 
     def isMarkedVal(self, val):
         """Returns whether value has mark."""

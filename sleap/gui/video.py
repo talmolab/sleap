@@ -450,6 +450,14 @@ class QtVideoPlayer(QWidget):
         elif event.key() == Qt.Key.Key_Escape:
             self.view.click_mode = ""
             self.state["instance"] = None
+        elif event.key() == Qt.Key.Key_K:
+            self.state["frame_idx"] = self.seekbar.getEndContiguousMark(
+                self.state["frame_idx"]
+            )
+        elif event.key() == Qt.Key.Key_J:
+            self.state["frame_idx"] = self.seekbar.getStartContiguousMark(
+                self.state["frame_idx"]
+            )
         elif event.key() == Qt.Key.Key_QuoteLeft:
             self.state.increment_in_list("instance", self.selectable_instances)
         elif event.key() < 128 and chr(event.key()).isnumeric():
