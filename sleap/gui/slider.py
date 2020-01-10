@@ -104,10 +104,10 @@ class SliderMark:
             return 1
         return 0
 
-    def get_height(self, box_height):
+    def get_height(self, container_height):
         if self.type == "track":
             return 1.5
-        height = box_height
+        height = container_height
         # if self.padded:
         height -= self.top_pad + self.bottom_pad
 
@@ -720,7 +720,9 @@ class VideoSlider(QtWidgets.QGraphicsView):
         if new_mark.type == "track":
             v_offset += self.getTrackVerticalPos(*self.getTrackColRow(new_mark.row))
 
-        height = new_mark.get_height(box_height=self.getBoxRect().height())
+        height = new_mark.get_height(
+            container_height=self.getBoxRect().height() - self._header_height
+        )
 
         color = new_mark.QColor
         pen = QPen(color, 0.5)
@@ -798,7 +800,11 @@ class VideoSlider(QtWidgets.QGraphicsView):
 
             rect = self._mark_items[mark].rect()
             rect.setWidth(width)
-            rect.setHeight(mark.get_height(box_height=self.getBoxRect().height()))
+            rect.setHeight(
+                mark.get_height(
+                    container_height=self.getBoxRect().height() - self._header_height
+                )
+            )
 
             self._mark_items[mark].setRect(rect)
 
@@ -1001,7 +1007,8 @@ class VideoSlider(QtWidgets.QGraphicsView):
         outline_rect = self.getBoxRect()
         handle_rect = self.handle.rect()
 
-        outline_rect.setHeight(self.getMarkAreaHeight())
+        outline_rect.setHeight(self.getMarkAreaHeight() + self._header_height)
+
         if event is not None:
             visual_width = event.size().width() - 1
         else:
