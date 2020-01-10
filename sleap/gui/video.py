@@ -12,6 +12,9 @@ Example usage:
 
 """
 
+FORCE_REQUEST_AFTER_TIME_IN_SECONDS = 1
+
+
 from PySide2 import QtWidgets, QtCore
 
 from PySide2.QtWidgets import (
@@ -26,7 +29,9 @@ from PySide2.QtGui import QPen, QBrush, QColor, QFont, QPolygonF
 from PySide2.QtGui import QKeyEvent
 from PySide2.QtCore import Qt, QRectF, QPointF, QMarginsF, QLineF
 
+import atexit
 import math
+import time
 
 from typing import Callable, Dict, List, Optional, Tuple, Union
 
@@ -34,7 +39,6 @@ from PySide2.QtWidgets import QGraphicsItem, QGraphicsObject
 
 from PySide2.QtWidgets import (
     QGraphicsEllipseItem,
-    QGraphicsLineItem,
     QGraphicsTextItem,
     QGraphicsRectItem,
     QGraphicsPolygonItem,
@@ -48,6 +52,72 @@ from sleap.gui.state import GuiState
 from sleap.gui.color import ColorManager
 
 import qimage2ndarray
+
+
+class LoadImageWorker(QtCore.QObject):
+    """
+    Object to load video frames in background thread.
+    """
+
+    result = QtCore.Signal(QImage)
+    process = QtCore.Signal()
+
+    load_queue = []
+    video = None
+    _last_process_time = 0
+
+    def __init__(self, *args, **kwargs):
+        super(LoadImageWorker, self).__init__(*args, **kwargs)
+
+        # Connect signal to processing function so that we can add processing
+        # event to event queue from the request handler.
+        self.process.connect(self.doProcessing)
+
+        # Start timer which will trigger processing events when we're free
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.doProcessing)
+        self.timer.start(0)
+
+    def doProcessing(self):
+        self._last_process_time = time.time()
+
+        if not self.load_queue:
+            return
+
+        frame_idx = self.load_queue[-1]
+        self.load_queue = []
+
+        # print(f"\t{frame_idx} starting to load") # DEBUG
+
+        try:
+            # Get image data
+            frame = self.video.get_frame(frame_idx)
+        except:
+            frame = None
+
+        if frame is not None:
+            # Convert ndarray to QImage
+            qimage = qimage2ndarray.array2qimage(frame)
+
+            # print(f"\t{frame_idx} result") # DEBUG
+
+            # Emit result
+            self.result.emit(qimage)
+
+    def request(self, frame_idx):
+        # Add request to the queue so that we can just process the most recent.
+        self.load_queue.append(frame_idx)
+
+        # If we haven't processed a request for a certain amount of time,
+        # then trigger a processing event now. This helps when the user has been
+        # continuously changing frames for a while (i.e., dragging on seekbar
+        # or holding down arrow key).
+
+        since_last = time.time() - self._last_process_time
+
+        if since_last > FORCE_REQUEST_AFTER_TIME_IN_SECONDS:
+            self._last_process_time = time.time()
+            self.process.emit()
 
 
 class QtVideoPlayer(QWidget):
@@ -65,6 +135,7 @@ class QtVideoPlayer(QWidget):
     """
 
     changedPlot = QtCore.Signal(QWidget, int, Instance)
+    requestImage = QtCore.Signal(int)
 
     def __init__(
         self,
@@ -110,6 +181,20 @@ class QtVideoPlayer(QWidget):
             lambda e: self.state.set("frame_idx", self.seekbar.value())
         )
 
+        # Make worker thread to load images in the background
+        self._loader_thread = QtCore.QThread()
+        self._video_image_loader = LoadImageWorker()
+        self._video_image_loader.moveToThread(self._loader_thread)
+        self._loader_thread.start()
+
+        # Connect signal so that image will be shown after it's loaded
+        self._video_image_loader.result.connect(
+            lambda qimage: self.view.setImage(qimage)
+        )
+
+        # Connect request signals from self to worker
+        self.requestImage.connect(self._video_image_loader.request)
+
         def update_selection_state(a, b):
             self.state.set("frame_range", (a, b))
             self.state.set("has_frame_range", (a < b))
@@ -127,8 +212,30 @@ class QtVideoPlayer(QWidget):
 
         self.view.show()
 
+        # Call cleanup method when application exits to end worker thread
+        self.destroyed.connect(self.cleanup)
+        atexit.register(self.cleanup)
+
         if video is not None:
             self.load_video(video)
+
+    def cleanup(self):
+        self._loader_thread.quit()
+        self._loader_thread.wait()
+
+    def _load_and_show_requested_image(self, frame_idx):
+        # Get image data
+        try:
+            frame = self.video.get_frame(frame_idx)
+        except:
+            frame = None
+
+        if frame is not None:
+            # Convert ndarray to QImage
+            qimage = qimage2ndarray.array2qimage(frame)
+
+            # Display image
+            self.view.setImage(qimage)
 
     def setSeekbarSelection(self, a: int, b: int):
         self.seekbar.setSelection(a, b)
@@ -241,24 +348,15 @@ class QtVideoPlayer(QWidget):
 
         idx = self.state["frame_idx"] or 0
 
-        # Get image data
-        try:
-            frame = self.video.get_frame(idx)
-        except:
-            frame = None
+        # Clear exiting objects before drawing instances
+        self.view.clear()
 
-        if frame is not None:
-            # Clear existing objects
-            self.view.clear()
+        # Emit signal for the instances to be drawn for this frame
+        self.changedPlot.emit(self, idx, self.state["instance"])
 
-            # Convert ndarray to QImage
-            image = qimage2ndarray.array2qimage(frame)
-
-            # Display image
-            self.view.setImage(image)
-
-            # Emit signal
-            self.changedPlot.emit(self, idx, self.state["instance"])
+        # Emit signal for the image to loaded and shown for this frame
+        self._video_image_loader.video = self.video
+        self.requestImage.emit(idx)
 
     def showLabels(self, show):
         """ Show/hide node labels for all instances in viewer.
@@ -554,8 +652,16 @@ class GraphicsView(QGraphicsView):
     def clear(self):
         """ Clears the displayed frame from the scene.
         """
-        self._pixmapHandle = None
+
+        if self._pixmapHandle:
+            # get the pixmap currently shown
+            pixmap = self._pixmapHandle.pixmap()
+
         self.scene.clear()
+
+        if self._pixmapHandle:
+            # add the pixmap back
+            self._pixmapHandle = self.scene.addPixmap(pixmap)
 
     def setImage(self, image: Union[QImage, QPixmap]):
         """
@@ -582,7 +688,12 @@ class GraphicsView(QGraphicsView):
             self._pixmapHandle.setPixmap(pixmap)
         else:
             self._pixmapHandle = self.scene.addPixmap(pixmap)
-        self.setSceneRect(QRectF(pixmap.rect()))  # Set scene size to image size.
+
+            # Ensure that image is behind everything else
+            self._pixmapHandle.setZValue(-1)
+
+        # Set scene size to image size.
+        self.setSceneRect(QRectF(pixmap.rect()))
         self.updateViewer()
 
     def updateViewer(self):
