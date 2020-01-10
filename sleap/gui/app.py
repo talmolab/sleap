@@ -280,6 +280,9 @@ class MainWindow(QMainWindow):
 
         fileMenu.addSeparator()
         add_menu_item(fileMenu, "add videos", "Add Videos...", self.commands.addVideo)
+        add_menu_item(
+            fileMenu, "replace videos", "Replace Videos...", self.commands.replaceVideo
+        )
 
         fileMenu.addSeparator()
         add_menu_item(fileMenu, "save", "Save", self.commands.saveProject)
