@@ -781,8 +781,7 @@ def test_many_tracks_hdf5(tmpdir):
     labels = Labels()
     filename = os.path.join(tmpdir, "test.h5")
 
-    labels.tracks = [Track(spawned_on=i, name=f"track {i}")
-                     for i in range(4000)]
+    labels.tracks = [Track(spawned_on=i, name=f"track {i}") for i in range(4000)]
 
     Labels.save_hdf5(filename=filename, labels=labels)
 
@@ -791,8 +790,7 @@ def test_many_videos_hdf5(tmpdir):
     labels = Labels()
     filename = os.path.join(tmpdir, "test.h5")
 
-    labels.videos = [Video.from_filename(f"video {i}.mp4")
-                     for i in range(3000)]
+    labels.videos = [Video.from_filename(f"video {i}.mp4") for i in range(3000)]
 
     Labels.save_hdf5(filename=filename, labels=labels)
 
@@ -806,3 +804,20 @@ def test_many_suggestions_hdf5(tmpdir):
     labels.suggestions = [SuggestionFrame(video, i) for i in range(3000)]
 
     Labels.save_hdf5(filename=filename, labels=labels)
+
+
+def test_path_fix(tmpdir):
+    labels = Labels()
+    filename = os.path.join(tmpdir, "test.h5")
+
+    # Add a video without a full path
+    labels.add_video(Video.from_filename("small_robot.mp4"))
+
+    Labels.save_hdf5(filename=filename, labels=labels)
+
+    # Pass the path to the directory with the video
+    labels = Labels.load_file(filename, video_callback=["tests/data/videos/"])
+
+    # Make sure we got the actual video path by searching that directory
+    assert len(labels.videos) == 1
+    assert labels.videos[0].filename == "tests/data/videos/small_robot.mp4"
