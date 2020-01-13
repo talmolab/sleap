@@ -93,7 +93,6 @@ class MainWindow(QMainWindow):
         self.state["show edges"] = True
         self.state["edge style"] = "Line"
         self.state["fit"] = False
-        self.state["show trails"] = False
         self.state["color predicted"] = False
 
         self._initialize_gui()
@@ -389,12 +388,10 @@ class MainWindow(QMainWindow):
             key="edge style",
         )
 
-        add_menu_check_item(viewMenu, "show trails", "Show Trails")
-
         add_submenu_choices(
             menu=viewMenu,
             title="Trail Length",
-            options=(10, 20, 50),
+            options=(0, 10, 20, 50),
             key="trail_length",
         )
 
@@ -823,7 +820,6 @@ class MainWindow(QMainWindow):
                 ],
             )
 
-        overlay_state_connect(self.overlays["trails"], "show trails", "show")
         overlay_state_connect(self.overlays["trails"], "trail_length")
 
         overlay_state_connect(self.color_manager, "palette")
@@ -838,7 +834,7 @@ class MainWindow(QMainWindow):
             )
 
         # Set defaults
-        self.state["trail_length"] = 10
+        self.state["trail_length"] = 0
 
         # Emit signals for default that may have been set earlier
         self.state.emit("palette")
