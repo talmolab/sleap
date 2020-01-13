@@ -14,7 +14,12 @@ from sleap.gui.filedialog import FileDialog
 
 class MissingFilesDialog(QtWidgets.QDialog):
     def __init__(
-        self, filenames: List[str], missing: List[bool] = None, *args, **kwargs
+        self,
+        filenames: List[str],
+        missing: List[bool] = None,
+        replace: bool = False,
+        *args,
+        **kwargs,
     ):
         """
         Creates dialog window for finding missing files.
@@ -42,10 +47,13 @@ class MissingFilesDialog(QtWidgets.QDialog):
 
         layout = QtWidgets.QVBoxLayout()
 
-        info_text = (
-            f"{missing_count} file(s) which could not be found. "
-            "Please double-click on a file to locate it..."
-        )
+        if replace:
+            info_text = "Double-click on a file to replace it..."
+        else:
+            info_text = (
+                f"{missing_count} file(s) which could not be found. "
+                "Please double-click on a file to locate it..."
+            )
         info_label = QtWidgets.QLabel(info_text)
         layout.addWidget(info_label)
 
