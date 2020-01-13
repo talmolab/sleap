@@ -5,8 +5,6 @@ dependencies:
 - attrs
 - jsonpickle=1.2
 - networkx
-- cudatoolkit=10.0.*
-- cudnn
 - tensorflow-gpu=2.0
 - scikit-learn
 - h5py
