@@ -8,7 +8,12 @@ from typing import List
 from sleap.nn.architectures import encoder_decoder
 
 from sleap.nn.architectures.common import conv, expand_to_n
-from tensorflow.keras.layers import Conv2DTranspose, Concatenate, MaxPool2D, UpSampling2D
+from tensorflow.keras.layers import (
+    Conv2DTranspose,
+    Concatenate,
+    MaxPool2D,
+    UpSampling2D,
+)
 
 
 @attr.s(auto_attribs=True)
@@ -35,8 +40,7 @@ class Unet(encoder_decoder.EncoderDecoder):
         up_blocks: Number of blocks with upsampling in the decoder. If this is equal to
             `down_blocks`, the output of this network will be at the same stride (scale)
             as the input.
-        middle_block: If True, add an additional block at the end of the encoder to
-            maintain symmetry since the first block does not have pooling.
+        middle_block: If True, add an additional block at the end of the encoder.
         up_interpolate: If True, use bilinear interpolation instead of transposed
             convolutions for upsampling. Interpolation is faster but transposed
             convolutions may be able to learn richer or more complex upsampling to
@@ -60,42 +64,50 @@ class Unet(encoder_decoder.EncoderDecoder):
     middle_block: bool = True
     up_blocks: int = 4
     up_interpolate: bool = False
-    
+
     @property
     def encoder_stack(self) -> List[encoder_decoder.SimpleConvBlock]:
         """Define the encoder stack."""
         blocks = []
-        for block in range(self.down_blocks + int(self.middle_block)):
-            blocks.append(encoder_decoder.SimpleConvBlock(
-                pool=(block > 0),
-                pool_before_convs=True,
-                pooling_stride=2,
-                num_convs=self.convs_per_block,
-                filters=self.filters * (self.filters_rate ** block),
-                kernel_size=self.kernel_size,
-                use_bias=True,
-                batch_norm=False,
-                activation="relu"
-            ))
+        for block in range(self.down_blocks + 1):
+            block_filters = int(self.filters * (self.filters_rate ** block))
+            blocks.append(
+                encoder_decoder.SimpleConvBlock(
+                    pool=(block > 0),
+                    pool_before_convs=True,
+                    pooling_stride=2,
+                    num_convs=self.convs_per_block,
+                    filters=block_filters,
+                    kernel_size=self.kernel_size,
+                    use_bias=True,
+                    batch_norm=False,
+                    activation="relu",
+                )
+            )
         return blocks
-    
+
     @property
     def decoder_stack(self) -> List[encoder_decoder.SimpleUpsamplingBlock]:
         """Define the decoder stack."""
         blocks = []
         for block in range(self.up_blocks):
-            block_filters = self.filters * (self.filters_rate ** (self.down_blocks - int(not self.middle_block) - block - 1))
-            blocks.append(encoder_decoder.SimpleUpsamplingBlock(
-                upsampling_stride=2,
-                transposed_conv=(not self.up_interpolate),
-                transposed_conv_filters=block_filters,
-                transposed_conv_kernel_size=self.kernel_size,
-                transposed_conv_batch_norm=False,
-                interp_method="bilinear",
-                skip_connection=True,
-                skip_add=False,
-                refine_convs=self.convs_per_block,
-                refine_convs_filters=block_filters,
-                refine_convs_kernel_size=self.kernel_size,
+            block_filters = int(self.filters * (
+                self.filters_rate **
+                (self.down_blocks - block - 1)
             ))
+            blocks.append(
+                encoder_decoder.SimpleUpsamplingBlock(
+                    upsampling_stride=2,
+                    transposed_conv=(not self.up_interpolate),
+                    transposed_conv_filters=block_filters,
+                    transposed_conv_kernel_size=self.kernel_size,
+                    transposed_conv_batch_norm=False,
+                    interp_method="bilinear",
+                    skip_connection=True,
+                    skip_add=False,
+                    refine_convs=self.convs_per_block,
+                    refine_convs_filters=block_filters,
+                    refine_convs_kernel_size=self.kernel_size,
+                )
+            )
         return blocks

@@ -54,7 +54,7 @@ class EncoderBlock:
 @attr.s(auto_attribs=True)
 class SimpleConvBlock(EncoderBlock):
     """Flexible block of convolutions and max pooling.
-    
+
     Attributes:
         pool: If True, applies max pooling at the end of the block.
         pooling_stride: Stride of the max pooling operation. If 1, the output of this
@@ -95,7 +95,7 @@ class SimpleConvBlock(EncoderBlock):
             prefix: String that will be added to the name of every layer in the block.
                 If not specified, instantiating this block multiple times may result in
                 name conflicts if existing layers have the same name.
-        
+
         Returns:
             The output tensor after applying all operations in the block.
         """

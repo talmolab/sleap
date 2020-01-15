@@ -34,3 +34,30 @@ class UnetTests(tf.test.TestCase):
         self.assertEqual(len(x_mid), 4)
         self.assertEqual(arch.encoder_features_stride, 16)
         self.assertEqual(arch.decoder_features_stride, 1)
+
+    def test_unet_no_middle_block(self):
+        arch = unet.Unet(
+            filters=8,
+            filters_rate=2,
+            kernel_size=3,
+            convs_per_block=2,
+            down_blocks=2,
+            middle_block=False,
+            up_blocks=2,
+            up_interpolate=False,
+        )
+        x_in = tf.keras.layers.Input((192, 192, 1))
+        x, x_mid = arch.make_backbone(x_in)
+        model = tf.keras.Model(x_in, x)
+        param_counts = [
+            np.prod(train_var.shape) for train_var in model.trainable_weights
+        ]
+
+        self.assertEqual(len(model.layers), 33)
+        self.assertEqual(len(model.trainable_weights), 32)
+        self.assertEqual(np.sum(param_counts), 32608)
+        self.assertEqual(model.count_params(), 32704)
+        self.assertAllEqual(model.output.shape, (None, 192, 192, 8))
+        self.assertEqual(len(x_mid), 2)
+        self.assertEqual(arch.encoder_features_stride, 4)
+        self.assertEqual(arch.decoder_features_stride, 1)
