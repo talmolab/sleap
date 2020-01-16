@@ -7,49 +7,33 @@ together with all the other data that is saved for a SLEAP project
 """
 
 import os
-import re
-import zipfile
-import atexit
+from collections import MutableSequence
+from typing import Callable, List, Union, Dict, Optional, Tuple, Text
 
 import attr
 import cattr
-import shutil
-import tempfile
-import numpy as np
-import scipy.io as sio
 import h5py as h5
-
-from collections import MutableSequence
-from typing import Callable, List, Union, Dict, Optional, Tuple, Text
+import numpy as np
 
 try:
     from typing import ForwardRef
 except:
     from typing import _ForwardRef as ForwardRef
 
-import pandas as pd
-
 from sleap.skeleton import Skeleton, Node
 from sleap.instance import (
     Instance,
-    Point,
     LabeledFrame,
     Track,
-    PredictedPoint,
-    PredictedInstance,
     make_instance_cattr,
-    PointArray,
-    PredictedPointArray,
 )
 
 from sleap.io import pathutils
-from sleap.io.legacy import load_labels_json_old
 from sleap.io.video import Video
 from sleap.gui.suggestions import SuggestionFrame
 from sleap.gui.missingfiles import MissingFilesDialog
 from sleap.rangelist import RangeList
-from sleap.util import uniquify, weak_filename_match, json_dumps, json_loads
-
+from sleap.util import uniquify, json_dumps
 
 """
 The version number to put in the Labels JSON format.
@@ -893,6 +877,12 @@ class Labels(MutableSequence):
 
     # Methods for saving/loading
 
+    @classmethod
+    def from_json(cls, *args, **kwargs):
+        from sleap.io.format.labels_json import LabelsJsonAdaptor
+
+        return LabelsJsonAdaptor.from_json_data(*args, **kwargs)
+
     def extend_from(
         self, new_frames: Union["Labels", List[LabeledFrame]], unify: bool = False
     ):
@@ -1000,21 +990,6 @@ class Labels(MutableSequence):
         )
 
         return merged, extra_base, extra_new
-
-    #     @classmethod
-    #     def merge_predictions_by_score(cls, extra_base: List[LabeledFrame], extra_new: List[LabeledFrame]):
-    #         """
-    #         Remove all predictions from input lists, return list with only
-    #         the merged predictions.
-    #
-    #         Args:
-    #             extra_base: list of `LabeledFrame` objects
-    #             extra_new: list of `LabeledFrame` objects
-    #                 Conflicting frames should have same index in both lists.
-    #         Returns:
-    #             list of `LabeledFrame` objects with merged predictions
-    #         """
-    #         pass
 
     @staticmethod
     def finish_complex_merge(
@@ -1154,834 +1129,12 @@ class Labels(MutableSequence):
         # Unstructure the data into dicts and dump to JSON.
         return json_dumps(self.to_dict())
 
-    @staticmethod
-    def save_json(
-        labels: "Labels",
-        filename: str,
-        compress: bool = False,
-        save_frame_data: bool = False,
-        frame_data_format: str = "png",
-    ):
-        """
-        Save a Labels instance to a JSON format.
-
-        Args:
-            labels: The labels dataset to save.
-            filename: The filename to save the data to.
-            compress: Whether the data be zip compressed or not? If True,
-                the JSON will be compressed using Python's shutil.make_archive
-                command into a PKZIP zip file. If compress is True then
-                filename will have a .zip appended to it.
-            save_frame_data: Whether to save the image data for each frame.
-                For each video in the dataset, all frames that have labels
-                will be stored as an imgstore dataset.
-                If save_frame_data is True then compress will be forced to True
-                since the archive must contain both the JSON data and image
-                data stored in ImgStores.
-            frame_data_format: If save_frame_data is True, then this argument
-                is used to set the data format to use when writing frame
-                data to ImgStore objects. Supported formats should be:
-
-                 * 'pgm',
-                 * 'bmp',
-                 * 'ppm',
-                 * 'tif',
-                 * 'png',
-                 * 'jpg',
-                 * 'npy',
-                 * 'mjpeg/avi',
-                 * 'h264/mkv',
-                 * 'avc1/mp4'
-
-                 Note: 'h264/mkv' and 'avc1/mp4' require separate installation
-                 of these codecs on your system. They are excluded from SLEAP
-                 because of their GPL license.
-
-        Returns:
-            None
-        """
-
-        # Lets make a temporary directory to store the image frame data or pre-compressed json
-        # in case we need it.
-        with tempfile.TemporaryDirectory() as tmp_dir:
-
-            # If we are saving frame data along with the datasets. We will replace videos with
-            # new video object that represent video data from just the labeled frames.
-            if save_frame_data:
-
-                # Create a set of new Video objects with imgstore backends. One for each
-                # of the videos. We will only include the labeled frames though. We will
-                # then replace each video with this new video
-                new_videos = labels.save_frame_data_imgstore(
-                    output_dir=tmp_dir, format=frame_data_format
-                )
-
-                # Make video paths relative
-                for vid in new_videos:
-                    tmp_path = vid.filename
-                    # Get the parent dir of the YAML file.
-                    # Use "/" since this works on Windows and posix
-                    img_store_dir = (
-                        os.path.basename(os.path.split(tmp_path)[0])
-                        + "/"
-                        + os.path.basename(tmp_path)
-                    )
-                    # Change to relative path
-                    vid.backend.filename = img_store_dir
-
-                # Convert to a dict, not JSON yet, because we need to patch up the videos
-                d = labels.to_dict()
-                d["videos"] = Video.cattr().unstructure(new_videos)
-
-            else:
-                d = labels.to_dict()
-
-            if compress or save_frame_data:
-
-                # Ensure that filename ends with .json
-                # shutil will append .zip
-                filename = re.sub("(\.json)?(\.zip)?$", ".json", filename)
-
-                # Write the json to the tmp directory, we will zip it up with the frame data.
-                full_out_filename = os.path.join(tmp_dir, os.path.basename(filename))
-                json_dumps(d, full_out_filename)
-
-                # Create the archive
-                shutil.make_archive(base_name=filename, root_dir=tmp_dir, format="zip")
-
-            # If the user doesn't want to compress, then just write the json to the filename
-            else:
-                json_dumps(d, filename)
-
-    @classmethod
-    def from_json(
-        cls, data: Union[str, dict], match_to: Optional["Labels"] = None
-    ) -> "Labels":
-        """
-        Create instance of class from data in dictionary.
-
-        Method is used by other methods that load from JSON.
-
-        Args:
-            data: Dictionary, deserialized from JSON.
-            match_to: If given, we'll replace particular objects in the
-                data dictionary with *matching* objects in the match_to
-                :class:`Labels` object. This ensures that the newly
-                instantiated :class:`Labels` can be merged without
-                duplicate matching objects (e.g., :class:`Video` objects ).
-        Returns:
-            A new :class:`Labels` object.
-        """
-
-        # Parse the json string if needed.
-        if type(data) is str:
-            dicts = json_loads(data)
-        else:
-            dicts = data
-
-        dicts["tracks"] = dicts.get(
-            "tracks", []
-        )  # don't break if json doesn't include tracks
-
-        # First, deserialize the skeletons, videos, and nodes lists.
-        # The labels reference these so we will need them while deserializing.
-        nodes = cattr.structure(dicts["nodes"], List[Node])
-
-        idx_to_node = {i: nodes[i] for i in range(len(nodes))}
-        skeletons = Skeleton.make_cattr(idx_to_node).structure(
-            dicts["skeletons"], List[Skeleton]
-        )
-        videos = Video.cattr().structure(dicts["videos"], List[Video])
-
-        try:
-            # First try unstructuring tuple (newer format)
-            track_cattr = cattr.Converter(
-                unstruct_strat=cattr.UnstructureStrategy.AS_TUPLE
-            )
-            tracks = track_cattr.structure(dicts["tracks"], List[Track])
-        except:
-            # Then try unstructuring dict (older format)
-            try:
-                tracks = cattr.structure(dicts["tracks"], List[Track])
-            except:
-                raise ValueError("Unable to load tracks as tuple or dict!")
-
-        # if we're given a Labels object to match, use its objects when they match
-        if match_to is not None:
-            for idx, sk in enumerate(skeletons):
-                for old_sk in match_to.skeletons:
-                    if sk.matches(old_sk):
-                        # use nodes from matched skeleton
-                        for (node, match_node) in zip(sk.nodes, old_sk.nodes):
-                            node_idx = nodes.index(node)
-                            nodes[node_idx] = match_node
-                        # use skeleton from match
-                        skeletons[idx] = old_sk
-                        break
-            for idx, vid in enumerate(videos):
-                for old_vid in match_to.videos:
-                    # compare last three parts of path
-                    if vid.filename == old_vid.filename or weak_filename_match(
-                        vid.filename, old_vid.filename
-                    ):
-                        # use video from match
-                        videos[idx] = old_vid
-                        break
-
-        suggestions = []
-        if "suggestions" in dicts:
-            suggestions_cattr = cattr.Converter()
-            suggestions_cattr.register_structure_hook(
-                Video, lambda x, type: videos[int(x)]
-            )
-            try:
-                suggestions = suggestions_cattr.structure(
-                    dicts["suggestions"], List[SuggestionFrame]
-                )
-            except Exception as e:
-                print("Error while loading suggestions (1)")
-                print(e)
-
-                try:
-                    # Convert old suggestion format to new format.
-                    # Old format: {video: list of frame indices}
-                    # New format: [SuggestionFrames]
-                    old_suggestions = suggestions_cattr.structure(
-                        dicts["suggestions"], Dict[Video, List]
-                    )
-                    for video in old_suggestions.keys():
-                        suggestions.extend(
-                            [
-                                SuggestionFrame(video, idx)
-                                for idx in old_suggestions[video]
-                            ]
-                        )
-                except Exception as e:
-                    print("Error while loading suggestions (2)")
-                    print(e)
-                    pass
-
-        if "negative_anchors" in dicts:
-            negative_anchors_cattr = cattr.Converter()
-            negative_anchors_cattr.register_structure_hook(
-                Video, lambda x, type: videos[int(x)]
-            )
-            negative_anchors = negative_anchors_cattr.structure(
-                dicts["negative_anchors"], Dict[Video, List]
-            )
-        else:
-            negative_anchors = dict()
-
-        # If there is actual labels data, get it.
-        if "labels" in dicts:
-            label_cattr = make_instance_cattr()
-            label_cattr.register_structure_hook(
-                Skeleton, lambda x, type: skeletons[int(x)]
-            )
-            label_cattr.register_structure_hook(Video, lambda x, type: videos[int(x)])
-            label_cattr.register_structure_hook(
-                Node, lambda x, type: x if isinstance(x, Node) else nodes[int(x)]
-            )
-            label_cattr.register_structure_hook(
-                Track, lambda x, type: None if x is None else tracks[int(x)]
-            )
-
-            labels = label_cattr.structure(dicts["labels"], List[LabeledFrame])
-        else:
-            labels = []
-
-        return cls(
-            labeled_frames=labels,
-            videos=videos,
-            skeletons=skeletons,
-            nodes=nodes,
-            suggestions=suggestions,
-            negative_anchors=negative_anchors,
-            tracks=tracks,
-        )
-
-    @classmethod
-    def load_json(
-        cls,
-        filename: str,
-        video_callback: Optional[Callable] = None,
-        match_to: Optional["Labels"] = None,
-    ) -> "Labels":
-        """
-        Deserialize JSON file as new :class:`Labels` instance.
-
-        Args:
-            filename: Path to JSON file.
-            video_callback: A callback function that which can modify
-                video paths before we try to create the corresponding
-                :class:`Video` objects. Usually you'll want to pass
-                a callback created by :meth:`make_video_callback`
-                or :meth:`make_gui_video_callback`.
-                Alternately, if you pass a list of strings we'll construct a
-                non-gui callback with those strings as the search paths.
-            match_to: If given, we'll replace particular objects in the
-                data dictionary with *matching* objects in the match_to
-                :class:`Labels` object. This ensures that the newly
-                instantiated :class:`Labels` can be merged without
-                duplicate matching objects (e.g., :class:`Video` objects ).
-        Returns:
-            A new :class:`Labels` object.
-        """
-
-        tmp_dir = None
-
-        # Check if the file is a zipfile for not.
-        if zipfile.is_zipfile(filename):
-
-            # Make a tmpdir, located in the directory that the file exists, to unzip
-            # its contents.
-            tmp_dir = os.path.join(
-                os.path.dirname(filename),
-                f"tmp_{os.getpid()}_{os.path.basename(filename)}",
-            )
-            if os.path.exists(tmp_dir):
-                shutil.rmtree(tmp_dir, ignore_errors=True)
-            try:
-                os.mkdir(tmp_dir)
-            except FileExistsError:
-                pass
-
-            # tmp_dir = tempfile.mkdtemp(dir=os.path.dirname(filename))
-
-            try:
-
-                # Register a cleanup routine that deletes the tmpdir on program exit
-                # if something goes wrong. The True is for ignore_errors
-                atexit.register(shutil.rmtree, tmp_dir, True)
-
-                # Uncompress the data into the directory
-                shutil.unpack_archive(filename, extract_dir=tmp_dir)
-
-                # We can now open the JSON file, save the zip file and
-                # replace file with the first JSON file we find in the archive.
-                json_files = [
-                    os.path.join(tmp_dir, file)
-                    for file in os.listdir(tmp_dir)
-                    if file.endswith(".json")
-                ]
-
-                if len(json_files) == 0:
-                    raise ValueError(
-                        f"No JSON file found inside {filename}. Are you sure this is a valid sLEAP dataset."
-                    )
-
-                filename = json_files[0]
-
-            except Exception as ex:
-                # If we had problems, delete the temp directory and reraise the exception.
-                shutil.rmtree(tmp_dir, ignore_errors=True)
-                raise
-
-        # Open and parse the JSON in filename
-        with open(filename, "r") as file:
-
-            # FIXME: Peek into the json to see if there is version string.
-            # We do this to tell apart old JSON data from leap_dev vs the
-            # newer format for sLEAP.
-            json_str = file.read()
-            dicts = json_loads(json_str)
-
-            # If we have a version number, then it is new sLEAP format
-            if "version" in dicts:
-
-                # Cache the working directory.
-                cwd = os.getcwd()
-                # Replace local video paths (for imagestore)
-                if tmp_dir:
-                    for vid in dicts["videos"]:
-                        vid["backend"]["filename"] = os.path.join(
-                            tmp_dir, vid["backend"]["filename"]
-                        )
-
-                if hasattr(video_callback, "__iter__"):
-                    # If the callback is an iterable, then we'll expect it to be a
-                    # list of strings and build a non-gui callback with those as
-                    # the search paths.
-                    search_paths = [path for path in video_callback]
-                    video_callback = cls.make_video_callback(search_paths)
-
-                # Use the callback if given to handle missing videos
-                if callable(video_callback):
-                    abort = video_callback(dicts["videos"])
-                    if abort:
-                        raise FileNotFoundError
-
-                # Try to load the labels filename.
-                try:
-                    labels = Labels.from_json(dicts, match_to=match_to)
-
-                except FileNotFoundError:
-
-                    # FIXME: We are going to the labels JSON that has references to
-                    # video files. Lets change directory to the dirname of the json file
-                    # so that relative paths will be from this directory. Maybe
-                    # it is better to feed the dataset dirname all the way down to
-                    # the Video object. This seems like less coupling between classes
-                    # though.
-                    if os.path.dirname(filename) != "":
-                        os.chdir(os.path.dirname(filename))
-
-                    # Try again
-                    labels = Labels.from_json(dicts, match_to=match_to)
-
-                except Exception as ex:
-                    # Ok, we give up, where the hell are these videos!
-                    raise  # Re-raise.
-                finally:
-                    os.chdir(cwd)  # Make sure to change back if we have problems.
-
-                return labels
-
-            else:
-                frames = load_labels_json_old(data_path=filename, parsed_json=dicts)
-                return Labels(frames)
-
-    @staticmethod
-    def save_hdf5(
-        labels: "Labels",
-        filename: str,
-        append: bool = False,
-        save_frame_data: bool = False,
-        frame_data_format: str = "png",
-    ):
-        """
-        Serialize the labels dataset to an HDF5 file.
-
-        Args:
-            labels: The :class:`Labels` dataset to save
-            filename: The file to serialize the dataset to.
-            append: Whether to append these labeled frames to the file
-                or not.
-            save_frame_data: Whether to save the image frame data for
-                any labeled frame as well. This is useful for uploading
-                the HDF5 for model training when video files are to
-                large to move. This will only save video frames that
-                have some labeled instances.
-            frame_data_format: If save_frame_data is True, then this argument
-                is used to set the data format to use when encoding images
-                saved in HDF5. Supported formats include:
-
-                * "" for no encoding (ndarray)
-                * "png"
-                * "jpg"
-                * anything else supported by `cv2.imencode`
-
-        Returns:
-            None
-        """
-
-        # Delete the file if it exists, we want to start from scratch since
-        # h5py truncates the file which seems to not actually delete data
-        # from the file. Don't if we are appending of course.
-        if os.path.exists(filename) and not append:
-            os.unlink(filename)
-
-        # Serialize all the meta-data to JSON.
-        d = labels.to_dict(skip_labels=True)
-
-        if save_frame_data:
-            new_videos = labels.save_frame_data_hdf5(filename, frame_data_format)
-
-            # Replace path to video file with "." (which indicates that the
-            # video is in the same file as the HDF5 labels dataset).
-            # Otherwise, the video paths will break if the HDF5 labels
-            # dataset file is moved.
-            for vid in new_videos:
-                vid.backend.filename = "."
-
-            d["videos"] = Video.cattr().unstructure(new_videos)
-
-        with h5.File(filename, "a") as f:
-
-            # Add all the JSON metadata
-            meta_group = f.require_group("metadata")
-
-            # If we are appending and there already exists JSON metadata
-            if append and "json" in meta_group.attrs:
-
-                # Otherwise, we need to read the JSON and append to the lists
-                old_labels = Labels.from_json(
-                    meta_group.attrs["json"].tostring().decode()
-                )
-
-                # A function to join to list but only include new non-dupe entries
-                # from the right hand list.
-                def append_unique(old, new):
-                    unique = []
-                    for x in new:
-                        try:
-                            matches = [y.matches(x) for y in old]
-                        except AttributeError:
-                            matches = [x == y for y in old]
-
-                        # If there were no matches, this is a unique object.
-                        if sum(matches) == 0:
-                            unique.append(x)
-                        else:
-                            # If we have an object that matches, replace the instance with
-                            # the one from the new list. This will will make sure objects
-                            # on the Instances are the same as those in the Labels lists.
-                            for i, match in enumerate(matches):
-                                if match:
-                                    old[i] = x
-
-                    return old + unique
-
-                # Append the lists
-                labels.tracks = append_unique(old_labels.tracks, labels.tracks)
-                labels.skeletons = append_unique(old_labels.skeletons, labels.skeletons)
-                labels.videos = append_unique(old_labels.videos, labels.videos)
-                labels.nodes = append_unique(old_labels.nodes, labels.nodes)
-
-                # FIXME: Do something for suggestions and negative_anchors
-
-                # Get the dict for JSON and save it over the old data
-                d = labels.to_dict(skip_labels=True)
-
-            if not append:
-                for key in ("videos", "tracks", "suggestions"):
-
-                    # Convert for saving in hdf5 dataset
-                    data = [np.string_(json_dumps(item)) for item in d[key]]
-
-                    hdf5_key = f"{key}_json"
-
-                    # Save in its own dataset (e.g., videos_json)
-                    f.create_dataset(hdf5_key, data=data, maxshape=(None,))
-
-                    # Clear from dict since we don't want to save this in attribute
-                    d[key] = []
-
-            # Output the dict to JSON
-            meta_group.attrs["json"] = np.string_(json_dumps(d))
-
-            # FIXME: We can probably construct these from attrs fields
-            # We will store Instances and PredcitedInstances in the same
-            # table. instance_type=0 or Instance and instance_type=1 for
-            # PredictedInstance, score will be ignored for Instances.
-            instance_dtype = np.dtype(
-                [
-                    ("instance_id", "i8"),
-                    ("instance_type", "u1"),
-                    ("frame_id", "u8"),
-                    ("skeleton", "u4"),
-                    ("track", "i4"),
-                    ("from_predicted", "i8"),
-                    ("score", "f4"),
-                    ("point_id_start", "u8"),
-                    ("point_id_end", "u8"),
-                ]
-            )
-            frame_dtype = np.dtype(
-                [
-                    ("frame_id", "u8"),
-                    ("video", "u4"),
-                    ("frame_idx", "u8"),
-                    ("instance_id_start", "u8"),
-                    ("instance_id_end", "u8"),
-                ]
-            )
-
-            num_instances = len(labels.all_instances)
-            max_skeleton_size = max([len(s.nodes) for s in labels.skeletons], default=0)
-
-            # Initialize data arrays for serialization
-            points = np.zeros(num_instances * max_skeleton_size, dtype=Point.dtype)
-            pred_points = np.zeros(
-                num_instances * max_skeleton_size, dtype=PredictedPoint.dtype
-            )
-            instances = np.zeros(num_instances, dtype=instance_dtype)
-            frames = np.zeros(len(labels), dtype=frame_dtype)
-
-            # Pre compute some structures to make serialization faster
-            skeleton_to_idx = {
-                skeleton: labels.skeletons.index(skeleton)
-                for skeleton in labels.skeletons
-            }
-            track_to_idx = {
-                track: labels.tracks.index(track) for track in labels.tracks
-            }
-            track_to_idx[None] = -1
-            video_to_idx = {
-                video: labels.videos.index(video) for video in labels.videos
-            }
-            instance_type_to_idx = {Instance: 0, PredictedInstance: 1}
-
-            # Each instance we create will have and index in the dataset, keep track of
-            # these so we can quickly add from_predicted links on a second pass.
-            instance_to_idx = {}
-            instances_with_from_predicted = []
-            instances_from_predicted = []
-
-            # If we are appending, we need look inside to see what frame, instance, and point
-            # ids we need to start from. This gives us offsets to use.
-            if append and "points" in f:
-                point_id_offset = f["points"].shape[0]
-                pred_point_id_offset = f["pred_points"].shape[0]
-                instance_id_offset = f["instances"][-1]["instance_id"] + 1
-                frame_id_offset = int(f["frames"][-1]["frame_id"]) + 1
-            else:
-                point_id_offset = 0
-                pred_point_id_offset = 0
-                instance_id_offset = 0
-                frame_id_offset = 0
-
-            point_id = 0
-            pred_point_id = 0
-            instance_id = 0
-
-            for frame_id, label in enumerate(labels):
-                frames[frame_id] = (
-                    frame_id + frame_id_offset,
-                    video_to_idx[label.video],
-                    label.frame_idx,
-                    instance_id + instance_id_offset,
-                    instance_id + instance_id_offset + len(label.instances),
-                )
-                for instance in label.instances:
-
-                    # Add this instance to our lookup structure we will need for from_predicted
-                    # links
-                    instance_to_idx[instance] = instance_id
-
-                    parray = instance.get_points_array(copy=False, full=True)
-                    instance_type = type(instance)
-
-                    # Check whether we are working with a PredictedInstance or an Instance.
-                    if instance_type is PredictedInstance:
-                        score = instance.score
-                        pid = pred_point_id + pred_point_id_offset
-                    else:
-                        score = np.nan
-                        pid = point_id + point_id_offset
-
-                        # Keep track of any from_predicted instance links, we will insert the
-                        # correct instance_id in the dataset after we are done.
-                        if instance.from_predicted:
-                            instances_with_from_predicted.append(instance_id)
-                            instances_from_predicted.append(instance.from_predicted)
-
-                    # Copy all the data
-                    instances[instance_id] = (
-                        instance_id + instance_id_offset,
-                        instance_type_to_idx[instance_type],
-                        frame_id,
-                        skeleton_to_idx[instance.skeleton],
-                        track_to_idx[instance.track],
-                        -1,
-                        score,
-                        pid,
-                        pid + len(parray),
-                    )
-
-                    # If these are predicted points, copy them to the predicted point array
-                    # otherwise, use the normal point array
-                    if type(parray) is PredictedPointArray:
-                        pred_points[
-                            pred_point_id : pred_point_id + len(parray)
-                        ] = parray
-                        pred_point_id = pred_point_id + len(parray)
-                    else:
-                        points[point_id : point_id + len(parray)] = parray
-                        point_id = point_id + len(parray)
-
-                    instance_id = instance_id + 1
-
-            # Add from_predicted links
-            for instance_id, from_predicted in zip(
-                instances_with_from_predicted, instances_from_predicted
-            ):
-                try:
-                    instances[instance_id]["from_predicted"] = instance_to_idx[
-                        from_predicted
-                    ]
-                except KeyError:
-                    # If we haven't encountered the from_predicted instance yet then don't save the link.
-                    # It’s possible for a user to create a regular instance from a predicted instance and then
-                    # delete all predicted instances from the file, but in this case I don’t think there’s any reason
-                    # to remember which predicted instance the regular instance came from.
-                    pass
-
-            # We pre-allocated our points array with max possible size considering the max
-            # skeleton size, drop any unused points.
-            points = points[0:point_id]
-            pred_points = pred_points[0:pred_point_id]
-
-            # Create datasets if we need to
-            if append and "points" in f:
-                f["points"].resize((f["points"].shape[0] + points.shape[0]), axis=0)
-                f["points"][-points.shape[0] :] = points
-                f["pred_points"].resize(
-                    (f["pred_points"].shape[0] + pred_points.shape[0]), axis=0
-                )
-                f["pred_points"][-pred_points.shape[0] :] = pred_points
-                f["instances"].resize(
-                    (f["instances"].shape[0] + instances.shape[0]), axis=0
-                )
-                f["instances"][-instances.shape[0] :] = instances
-                f["frames"].resize((f["frames"].shape[0] + frames.shape[0]), axis=0)
-                f["frames"][-frames.shape[0] :] = frames
-            else:
-                f.create_dataset(
-                    "points", data=points, maxshape=(None,), dtype=Point.dtype
-                )
-                f.create_dataset(
-                    "pred_points",
-                    data=pred_points,
-                    maxshape=(None,),
-                    dtype=PredictedPoint.dtype,
-                )
-                f.create_dataset(
-                    "instances", data=instances, maxshape=(None,), dtype=instance_dtype
-                )
-                f.create_dataset(
-                    "frames", data=frames, maxshape=(None,), dtype=frame_dtype
-                )
-
-    @classmethod
-    def load_hdf5(
-        cls, filename: str, video_callback=None, match_to: Optional["Labels"] = None
-    ):
-        """
-        Deserialize HDF5 file as new :class:`Labels` instance.
-
-        Args:
-            filename: Path to HDF5 file.
-            video_callback: A callback function that which can modify
-                video paths before we try to create the corresponding
-                :class:`Video` objects. Usually you'll want to pass
-                a callback created by :meth:`make_video_callback`
-                or :meth:`make_gui_video_callback`.
-                Alternately, if you pass a list of strings we'll construct a
-                non-gui callback with those strings as the search paths.
-            match_to: If given, we'll replace particular objects in the
-                data dictionary with *matching* objects in the match_to
-                :class:`Labels` object. This ensures that the newly
-                instantiated :class:`Labels` can be merged without
-                duplicate matching objects (e.g., :class:`Video` objects ).
-
-        Returns:
-            A new :class:`Labels` object.
-        """
-        with h5.File(filename, "r") as f:
-
-            # Extract the Labels JSON metadata and create Labels object with just
-            # this metadata.
-            dicts = json_loads(
-                f.require_group("metadata").attrs["json"].tostring().decode()
-            )
-
-            for key in ("videos", "tracks", "suggestions"):
-                hdf5_key = f"{key}_json"
-                if hdf5_key in f:
-                    items = [json_loads(item_json) for item_json in f[hdf5_key]]
-                    dicts[key] = items
-
-            # Video path "." means the video is saved in same file as labels,
-            # so replace these paths.
-            for video_item in dicts["videos"]:
-                if video_item["backend"]["filename"] == ".":
-                    video_item["backend"]["filename"] = filename
-
-            if hasattr(video_callback, "__iter__"):
-                # If the callback is an iterable, then we'll expect it to be a
-                # list of strings and build a non-gui callback with those as
-                # the search paths.
-                search_paths = [path for path in video_callback]
-                video_callback = cls.make_video_callback(search_paths)
-
-            # Use the callback if given to handle missing videos
-            if callable(video_callback):
-                video_callback(dicts["videos"])
-
-            labels = cls.from_json(dicts, match_to=match_to)
-
-            frames_dset = f["frames"][:]
-            instances_dset = f["instances"][:]
-            points_dset = f["points"][:]
-            pred_points_dset = f["pred_points"][:]
-
-            # Rather than instantiate a bunch of Point\PredictedPoint objects, we will
-            # use inplace numpy recarrays. This will save a lot of time and memory
-            # when reading things in.
-            points = PointArray(buf=points_dset, shape=len(points_dset))
-            pred_points = PredictedPointArray(
-                buf=pred_points_dset, shape=len(pred_points_dset)
-            )
-
-            # Extend the tracks list with a None track. We will signify this with a -1 in the
-            # data which will map to last element of tracks
-            tracks = labels.tracks.copy()
-            tracks.extend([None])
-
-            # A dict to keep track of instances that have a from_predicted link. The key is the
-            # instance and the value is the index of the instance.
-            from_predicted_lookup = {}
-
-            # Create the instances
-            instances = []
-            for i in instances_dset:
-                track = tracks[i["track"]]
-                skeleton = labels.skeletons[i["skeleton"]]
-
-                if i["instance_type"] == 0:  # Instance
-                    instance = Instance(
-                        skeleton=skeleton,
-                        track=track,
-                        points=points[i["point_id_start"] : i["point_id_end"]],
-                    )
-                else:  # PredictedInstance
-                    instance = PredictedInstance(
-                        skeleton=skeleton,
-                        track=track,
-                        points=pred_points[i["point_id_start"] : i["point_id_end"]],
-                        score=i["score"],
-                    )
-                instances.append(instance)
-
-                if i["from_predicted"] != -1:
-                    from_predicted_lookup[instance] = i["from_predicted"]
-
-            # Make a second pass to add any from_predicted links
-            for instance, from_predicted_idx in from_predicted_lookup.items():
-                instance.from_predicted = instances[from_predicted_idx]
-
-            # Create the labeled frames
-            frames = [
-                LabeledFrame(
-                    video=labels.videos[frame["video"]],
-                    frame_idx=frame["frame_idx"],
-                    instances=instances[
-                        frame["instance_id_start"] : frame["instance_id_end"]
-                    ],
-                )
-                for i, frame in enumerate(frames_dset)
-            ]
-
-            labels.labeled_frames = frames
-
-            # Do the stuff that should happen after we have labeled frames
-            labels._build_lookup_caches()
-
-        return labels
-
     @classmethod
     def load_file(cls, filename: str, *args, **kwargs):
         """Load file, detecting format from filename."""
-        if filename.endswith((".h5", ".hdf5")):
-            return cls.load_hdf5(filename, *args, **kwargs)
-        elif filename.endswith((".json", ".json.zip")):
-            return cls.load_json(filename, *args, **kwargs)
-        elif filename.endswith(".csv"):
-            # for now, the only csv we support is the DeepLabCut format
-            return cls.load_deeplabcut_csv(filename)
-        else:
-            raise ValueError(f"Cannot detect filetype for {filename}")
+        from .format import read
+
+        return read(filename, for_object="labels", *args, **kwargs)
 
     @classmethod
     def save_file(
@@ -2007,15 +1160,69 @@ class Labels(MutableSequence):
         os.makedirs(os.path.dirname(filename), exist_ok=True)
 
         # Detect filetype and use appropriate save method
-        if not filename.endswith((".json", ".zip", ".h5")) and default_suffix:
-            filename += f".{default_suffix}"
-        if filename.endswith((".json", ".zip")):
-            compress = filename.endswith(".zip")
-            cls.save_json(labels=labels, filename=filename, compress=compress, **kwargs)
-        elif filename.endswith(".h5"):
-            cls.save_hdf5(labels=labels, filename=filename, **kwargs)
-        else:
-            raise ValueError(f"Cannot detect filetype for {filename}")
+        # if not filename.endswith((".json", ".zip", ".h5")) and default_suffix:
+        #     filename += f".{default_suffix}"
+
+        from .format import write
+
+        write(filename, labels, *args, **kwargs)
+
+    @classmethod
+    def load_json(cls, filename: str, *args, **kwargs) -> "Labels":
+        from .format import read
+
+        return read(filename, for_object="labels", as_format="json", *args, **kwargs)
+
+    @classmethod
+    def save_json(cls, labels: "Labels", filename: str, *args, **kwargs):
+        from .format import write
+
+        write(filename, labels, as_format="json", *args, **kwargs)
+
+    @classmethod
+    def load_hdf5(cls, filename, *args, **kwargs):
+        from .format import read
+
+        return read(filename, for_object="labels", as_format="hdf5_v1", *args, **kwargs)
+
+    @classmethod
+    def save_hdf5(cls, labels, filename, *args, **kwargs):
+        from .format import write
+
+        write(filename, labels, as_format="hdf5_v1", *args, **kwargs)
+
+    @classmethod
+    def load_leap_matlab(cls, filename, *args, **kwargs):
+        from .format import read
+
+        return read(filename, for_object="labels", as_format="leap", *args, **kwargs)
+
+    @classmethod
+    def load_deeplabcut_csv(cls, filename: str) -> "Labels":
+        from sleap.io.format.deeplabcut import LabelsDeepLabCutAdaptor
+        from sleap.io.format.filehandle import FileHandle
+
+        return LabelsDeepLabCutAdaptor.read(FileHandle(filename))
+
+    @classmethod
+    def load_coco(
+        cls, filename: str, img_dir: str, use_missing_gui: bool = False,
+    ) -> "Labels":
+        from sleap.io.format.coco import LabelsCocoAdaptor
+        from sleap.io.format.filehandle import FileHandle
+
+        return LabelsCocoAdaptor.read(FileHandle(filename), img_dir, use_missing_gui)
+
+    @classmethod
+    def from_deepposekit(
+        cls, filename: str, video_path: str, skeleton_path: str
+    ) -> "Labels":
+        from sleap.io.format.deepposekit import LabelsDeepPoseKitAdaptor
+        from sleap.io.format.filehandle import FileHandle
+
+        return LabelsDeepPoseKitAdaptor.read(
+            FileHandle(filename), video_path, skeleton_path
+        )
 
     def save_frame_data_imgstore(
         self, output_dir: str = "./", format: str = "png", all_labels: bool = False
@@ -2095,365 +1302,6 @@ class Labels(MutableSequence):
             new_vids.append(vid)
 
         return new_vids
-
-    @staticmethod
-    def _unwrap_mat_scalar(a):
-        """Extract single value from nested MATLAB file data."""
-        if a.shape == (1,):
-            return Labels._unwrap_mat_scalar(a[0])
-        else:
-            return a
-
-    @staticmethod
-    def _unwrap_mat_array(a):
-        """Extract list of values from nested MATLAB file data."""
-        b = a[0][0]
-        c = [Labels._unwrap_mat_scalar(x) for x in b]
-        return c
-
-    @classmethod
-    def load_leap_matlab(cls, filename: str, gui: bool = True) -> "Labels":
-        """Load LEAP MATLAB file as dataset.
-
-        Args:
-            filename: Path to matlab file.
-        Returns:
-            The :class:`Labels` dataset.
-        """
-        mat_contents = sio.loadmat(filename)
-
-        box_path = Labels._unwrap_mat_scalar(mat_contents["boxPath"])
-
-        # If the video file isn't found, try in the same dir as the mat file
-        if not os.path.exists(box_path):
-            file_dir = os.path.dirname(filename)
-            box_path_name = box_path.split("\\")[-1]  # assume windows path
-            box_path = os.path.join(file_dir, box_path_name)
-
-        if not os.path.exists(box_path):
-            if gui:
-                video_paths = [box_path]
-                missing = [True]
-                okay = MissingFilesDialog(video_paths, missing).exec_()
-
-                if not okay or missing[0]:
-                    return
-
-                box_path = video_paths[0]
-            else:
-                # Ignore missing videos if not loading from gui
-                box_path = ""
-
-        if os.path.exists(box_path):
-            vid = Video.from_hdf5(
-                dataset="box", filename=box_path, input_format="channels_first"
-            )
-        else:
-            vid = None
-
-        nodes_ = mat_contents["skeleton"]["nodes"]
-        edges_ = mat_contents["skeleton"]["edges"]
-        points_ = mat_contents["positions"]
-
-        edges_ = edges_ - 1  # convert matlab 1-indexing to python 0-indexing
-
-        nodes = Labels._unwrap_mat_array(nodes_)
-        edges = Labels._unwrap_mat_array(edges_)
-
-        nodes = list(map(str, nodes))  # convert np._str to str
-
-        sk = Skeleton(name=filename)
-        sk.add_nodes(nodes)
-        for edge in edges:
-            sk.add_edge(source=nodes[edge[0]], destination=nodes[edge[1]])
-
-        labeled_frames = []
-        node_count, _, frame_count = points_.shape
-
-        for i in range(frame_count):
-            new_inst = Instance(skeleton=sk)
-            for node_idx, node in enumerate(nodes):
-                x = points_[node_idx][0][i]
-                y = points_[node_idx][1][i]
-                new_inst[node] = Point(x, y)
-            if len(new_inst.points):
-                new_frame = LabeledFrame(video=vid, frame_idx=i)
-                new_frame.instances = (new_inst,)
-                labeled_frames.append(new_frame)
-
-        labels = cls(labeled_frames=labeled_frames, videos=[vid], skeletons=[sk])
-
-        return labels
-
-    @classmethod
-    def load_deeplabcut_csv(cls, filename: str) -> "Labels":
-        """Load DeepLabCut csv file as dataset.
-
-        Args:
-            filename: Path to csv file.
-        Returns:
-            The :class:`Labels` dataset.
-        """
-
-        # At the moment we don't need anything from the config file,
-        # but the code to read it is here in case we do in the future.
-
-        # # Try to find the config file by walking up file path starting at csv file looking for config.csv
-        # last_dir = None
-        # file_dir = os.path.dirname(filename)
-        # config_filename = ""
-
-        # while file_dir != last_dir:
-        #     last_dir = file_dir
-        #     file_dir = os.path.dirname(file_dir)
-        #     config_filename = os.path.join(file_dir, 'config.yaml')
-        #     if os.path.exists(config_filename):
-        #         break
-
-        # # If we couldn't find a config file, give up
-        # if not os.path.exists(config_filename): return
-
-        # with open(config_filename, 'r') as f:
-        #     config = yaml.load(f, Loader=yaml.SafeLoader)
-
-        # x1 = config['x1']
-        # y1 = config['y1']
-        # x2 = config['x2']
-        # y2 = config['y2']
-
-        data = pd.read_csv(filename, header=[1, 2])
-
-        # Create the skeleton from the list of nodes in the csv file
-        # Note that DeepLabCut doesn't have edges, so these will have to be added by user later
-        node_names = [n[0] for n in list(data)[1::2]]
-
-        skeleton = Skeleton()
-        skeleton.add_nodes(node_names)
-
-        # Create an imagestore `Video` object from frame images.
-        # This may not be ideal for large projects, since we're reading in
-        # each image and then writing it out in a new directory.
-
-        img_files = data.ix[:, 0]  # get list of all images
-
-        # the image filenames in the csv may not match where the user has them
-        # so we'll change the directory to match where the user has the csv
-        def fix_img_path(img_dir, img_filename):
-            img_filename = os.path.basename(img_filename)
-            img_filename = os.path.join(img_dir, img_filename)
-            return img_filename
-
-        img_dir = os.path.dirname(filename)
-        img_files = list(map(lambda f: fix_img_path(img_dir, f), img_files))
-
-        # we'll put the new imgstore in the same directory as the current csv
-        imgstore_name = os.path.join(os.path.dirname(filename), "sleap_video")
-
-        # create the imgstore (or open if it already exists)
-        if os.path.exists(imgstore_name):
-            video = Video.from_filename(imgstore_name)
-        else:
-            video = Video.imgstore_from_filenames(img_files, imgstore_name)
-
-        labels = []
-
-        for i in range(len(data)):
-            # get points for each node
-            instance_points = dict()
-            for node in node_names:
-                x, y = data[(node, "x")][i], data[(node, "y")][i]
-                instance_points[node] = Point(x, y)
-            # create instance with points (we can assume there's only one instance per frame)
-            instance = Instance(skeleton=skeleton, points=instance_points)
-            # create labeledframe and add it to list
-            label = LabeledFrame(video=video, frame_idx=i, instances=[instance])
-            labels.append(label)
-
-        return cls(labels)
-
-    @classmethod
-    def load_coco(
-        cls, filename: str, img_dir: str, use_missing_gui: bool = False
-    ) -> "Labels":
-        with open(filename, "r") as file:
-            json_str = file.read()
-            dicts = json_loads(json_str)
-
-        # Make skeletons from "categories"
-        skeleton_map = dict()
-        for category in dicts["categories"]:
-            skeleton = Skeleton(name=category["name"])
-            skeleton_id = category["id"]
-            node_names = category["keypoints"]
-            skeleton.add_nodes(node_names)
-
-            try:
-                for src_idx, dst_idx in category["skeleton"]:
-                    skeleton.add_edge(node_names[src_idx], node_names[dst_idx])
-            except IndexError as e:
-                # According to the COCO data format specifications[^1], the edges
-                # are supposed to be 1-indexed. But in some of their own
-                # dataset the edges are 1-indexed! So we'll try.
-                # [1]: http://cocodataset.org/#format-data
-
-                # Clear any edges we already created using 0-indexing
-                skeleton.clear_edges()
-
-                # Add edges
-                for src_idx, dst_idx in category["skeleton"]:
-                    skeleton.add_edge(node_names[src_idx - 1], node_names[dst_idx - 1])
-
-            skeleton_map[skeleton_id] = skeleton
-
-        # Make videos from "images"
-
-        # Remove images that aren't referenced in the annotations
-        img_refs = [annotation["image_id"] for annotation in dicts["annotations"]]
-        dicts["images"] = list(filter(lambda im: im["id"] in img_refs, dicts["images"]))
-
-        # Key in JSON file should be "file_name", but sometimes it's "filename",
-        # so we have to check both.
-        img_filename_key = "file_name"
-        if img_filename_key not in dicts["images"][0].keys():
-            img_filename_key = "filename"
-
-        # First add the img_dir to each image filename
-        img_paths = [
-            os.path.join(img_dir, image[img_filename_key]) for image in dicts["images"]
-        ]
-
-        # See if there are any missing files
-        img_missing = [not os.path.exists(path) for path in img_paths]
-
-        if sum(img_missing):
-            if use_missing_gui:
-                okay = MissingFilesDialog(img_paths, img_missing).exec_()
-
-                if not okay:
-                    return None
-            else:
-                raise FileNotFoundError(
-                    f"Images for COCO dataset could not be found in {img_dir}."
-                )
-
-        # Update the image paths (with img_dir or user selected path)
-        for image, path in zip(dicts["images"], img_paths):
-            image[img_filename_key] = path
-
-        # Create the video objects for the image files
-        image_video_map = dict()
-
-        vid_id_video_map = dict()
-        for image in dicts["images"]:
-            image_id = image["id"]
-            image_filename = image[img_filename_key]
-
-            # Sometimes images have a vid_id which links multiple images
-            # together as one video. If so, we'll use that as the video key.
-            # But if there isn't a vid_id, we'll treat each images as a
-            # distinct video and use the image id as the video id.
-            vid_id = image.get("vid_id", image_id)
-
-            if vid_id not in vid_id_video_map:
-                kwargs = dict(filenames=[image_filename])
-                for key in ("width", "height"):
-                    if key in image:
-                        kwargs[key] = image[key]
-
-                video = Video.from_image_filenames(**kwargs)
-                vid_id_video_map[vid_id] = video
-                frame_idx = 0
-            else:
-                video = vid_id_video_map[vid_id]
-                frame_idx = video.num_frames
-                video.backend.filenames.append(image_filename)
-
-            image_video_map[image_id] = (video, frame_idx)
-
-        # Make instances from "annotations"
-        lf_map = dict()
-        track_map = dict()
-        for annotation in dicts["annotations"]:
-            skeleton = skeleton_map[annotation["category_id"]]
-            image_id = annotation["image_id"]
-            video, frame_idx = image_video_map[image_id]
-            keypoints = np.array(annotation["keypoints"], dtype="int").reshape(-1, 3)
-
-            track = None
-            if "track_id" in annotation:
-                track_id = annotation["track_id"]
-                if track_id not in track_map:
-                    track_map[track_id] = Track(frame_idx, str(track_id))
-                track = track_map[track_id]
-
-            points = dict()
-            any_visible = False
-            for i in range(len(keypoints)):
-                node = skeleton.nodes[i]
-                x, y, flag = keypoints[i]
-
-                if flag == 0:
-                    # node not labeled for this instance
-                    continue
-
-                is_visible = flag == 2
-                any_visible = any_visible or is_visible
-                points[node] = Point(x, y, is_visible)
-
-            if points:
-                # If none of the points had 2 has the "visible" flag, we'll
-                # assume this incorrect and just mark all as visible.
-                if not any_visible:
-                    for point in points.values():
-                        point.visible = True
-
-                inst = Instance(skeleton=skeleton, points=points, track=track)
-
-                if image_id not in lf_map:
-                    lf_map[image_id] = LabeledFrame(video, frame_idx)
-
-                lf_map[image_id].insert(0, inst)
-
-        return cls(labeled_frames=list(lf_map.values()))
-
-    @classmethod
-    def from_deepposekit(cls, filename: str, video_path: str, skeleton_path: str):
-        video = Video.from_filename(video_path)
-
-        skeleton_data = pd.read_csv(skeleton_path, header=0)
-        skeleton = Skeleton()
-        skeleton.add_nodes(skeleton_data["name"])
-        nodes = skeleton.nodes
-
-        for name, parent, swap in skeleton_data.itertuples(index=False, name=None):
-            if parent is not np.nan:
-                skeleton.add_edge(parent, name)
-
-        lfs = []
-        with h5.File(filename, "r") as f:
-            pose_matrix = f["pose"][:]
-
-            track_count, frame_count, node_count, _ = pose_matrix.shape
-
-            tracks = [Track(0, f"Track {i}") for i in range(track_count)]
-            for frame_idx in range(frame_count):
-                lf_instances = []
-                for track_idx in range(track_count):
-                    points_array = pose_matrix[track_idx, frame_idx, :, :]
-                    points = dict()
-                    for p in range(len(points_array)):
-                        x, y, score = points_array[p]
-                        points[nodes[p]] = Point(x, y)  # TODO: score
-
-                    inst = Instance(
-                        skeleton=skeleton, track=tracks[track_idx], points=points
-                    )
-                    lf_instances.append(inst)
-                lfs.append(
-                    LabeledFrame(video, frame_idx=frame_idx, instances=lf_instances)
-                )
-
-        return cls(labeled_frames=lfs)
 
     @classmethod
     def make_video_callback(cls, search_paths: Optional[List] = None) -> Callable:
