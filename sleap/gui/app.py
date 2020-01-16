@@ -980,9 +980,6 @@ class MainWindow(QMainWindow):
 
         self.player.plot()
 
-        if self.state["fit"]:
-            self.player.zoomToFit()
-
     def _after_plot_update(self, player, frame_idx, selected_inst):
         """Called each time a new frame is drawn."""
 
@@ -998,6 +995,9 @@ class MainWindow(QMainWindow):
         # Select instance if there was already selection
         if selected_inst is not None:
             player.view.selectInstance(selected_inst)
+
+        if self.state["fit"]:
+            player.zoomToFit()
 
         # Update related displays
         self.updateStatusMessage()
