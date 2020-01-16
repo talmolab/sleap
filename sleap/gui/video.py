@@ -11,8 +11,17 @@ Example usage:
     >>> vp.addInstance(instance=my_instance, color=(r, g, b))
 
 """
+from collections import deque
 
-FORCE_REQUEST_AFTER_TIME_IN_SECONDS = 1
+
+# FORCE_REQUESTS controls whether we emit a signal to process frame requests
+# if we haven't processed any for a certain amount of time.
+# Usually the processing gets triggered by a timer but if the user is (e.g.)
+# dragging the mouse, the timer doesn't trigger.
+# FORCE_REQUESTS lets us update the frames in real time, assuming the load time
+# is short enough to do that.
+
+FORCE_REQUESTS = True
 
 
 from PySide2 import QtWidgets, QtCore
@@ -65,9 +74,13 @@ class LoadImageWorker(QtCore.QObject):
     load_queue = []
     video = None
     _last_process_time = 0
+    _force_request_wait_time = 1
+    _recent_load_times = None
 
     def __init__(self, *args, **kwargs):
         super(LoadImageWorker, self).__init__(*args, **kwargs)
+
+        self._recent_load_times = deque(maxlen=5)
 
         # Connect signal to processing function so that we can add processing
         # event to event queue from the request handler.
@@ -87,12 +100,21 @@ class LoadImageWorker(QtCore.QObject):
         frame_idx = self.load_queue[-1]
         self.load_queue = []
 
-        # print(f"\t{frame_idx} starting to load") # DEBUG
-
         try:
+
+            t0 = time.time()
+
             # Get image data
             frame = self.video.get_frame(frame_idx)
-        except:
+
+            self._recent_load_times.append(time.time() - t0)
+
+            # Set the time to wait before forcing a load request to a little
+            # longer than the average time it recently took to load a frame
+            avg_load_time = sum(self._recent_load_times) / len(self._recent_load_times)
+            self._force_request_wait_time = avg_load_time * 1.2
+
+        except Exception as e:
             frame = None
 
         if frame is not None:
@@ -115,9 +137,10 @@ class LoadImageWorker(QtCore.QObject):
 
         since_last = time.time() - self._last_process_time
 
-        if since_last > FORCE_REQUEST_AFTER_TIME_IN_SECONDS:
-            self._last_process_time = time.time()
-            self.process.emit()
+        if FORCE_REQUESTS:
+            if since_last > self._force_request_wait_time:
+                self._last_process_time = time.time()
+                self.process.emit()
 
 
 class QtVideoPlayer(QWidget):
