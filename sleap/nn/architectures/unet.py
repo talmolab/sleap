@@ -4,7 +4,7 @@ See the `Unet` class docstring for more information.
 """
 
 import attr
-from typing import List
+from typing import List, Optional
 from sleap.nn.architectures import encoder_decoder
 
 from sleap.nn.architectures.common import conv, expand_to_n
@@ -32,6 +32,8 @@ class Unet(encoder_decoder.EncoderDecoder):
             and runtime.
         filters_rate: Factor to increase the number of filters by in each block.
         kernel_size: Size of convolutional kernels (== height == width).
+        stem_blocks: If >0, will create additional "down" blocks for initial
+            downsampling. These will be configured identically to the down blocks below.
         down_blocks: Number of blocks with pooling in the encoder. More down blocks will
         convs_per_block: Number of convolutions in each block. More convolutions per
             block will increase the representational capacity of the network at the cost
@@ -60,17 +62,43 @@ class Unet(encoder_decoder.EncoderDecoder):
     filters_rate: float = 2
     kernel_size: int = 3
     convs_per_block: int = 2
+    stem_blocks: int = 0
     down_blocks: int = 4
     middle_block: bool = True
     up_blocks: int = 4
     up_interpolate: bool = False
 
     @property
+    def stem_stack(self) -> Optional[List[encoder_decoder.SimpleConvBlock]]:
+        """Define the downsampling stem."""
+        if self.stem_blocks == 0:
+            return None
+
+        blocks = []
+        for block in range(self.stem_blocks):
+            block_filters = int(self.filters * (self.filters_rate ** block))
+            blocks.append(
+                encoder_decoder.SimpleConvBlock(
+                    pool=True,
+                    pool_before_convs=True,
+                    pooling_stride=2,
+                    num_convs=self.convs_per_block,
+                    filters=block_filters,
+                    kernel_size=self.kernel_size,
+                    use_bias=True,
+                    batch_norm=False,
+                    activation="relu",
+                )
+            )
+
+        return blocks
+
+    @property
     def encoder_stack(self) -> List[encoder_decoder.SimpleConvBlock]:
         """Define the encoder stack."""
         blocks = []
         for block in range(self.down_blocks + 1):
-            block_filters = int(self.filters * (self.filters_rate ** block))
+            block_filters = int(self.filters * (self.filters_rate ** (block + self.stem_blocks)))
             blocks.append(
                 encoder_decoder.SimpleConvBlock(
                     pool=(block > 0),
@@ -93,7 +121,7 @@ class Unet(encoder_decoder.EncoderDecoder):
         for block in range(self.up_blocks):
             block_filters = int(self.filters * (
                 self.filters_rate **
-                (self.down_blocks - block - 1)
+                (self.stem_blocks + self.down_blocks - block - 1)
             ))
             blocks.append(
                 encoder_decoder.SimpleUpsamplingBlock(

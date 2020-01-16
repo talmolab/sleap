@@ -34,7 +34,7 @@ class LeapTests(tf.test.TestCase):
         self.assertEqual(arch.encoder_features_stride, 8)
         self.assertEqual(arch.decoder_features_stride, 1)
         self.assertIsInstance(
-            model.get_layer("dec0_s8_to_s4_trans_conv"),
+            model.get_layer("stack0_dec0_s8_to_s4_trans_conv"),
             tf.keras.layers.Conv2DTranspose,
         )
 
@@ -61,6 +61,6 @@ class LeapTests(tf.test.TestCase):
         self.assertEqual(model.count_params(), 120272)
         self.assertAllEqual(model.output.shape, (None, 64, 64, 16))
         self.assertIsInstance(
-            model.get_layer("dec0_s8_to_s4_interp_bilinear"),
+            model.get_layer("stack0_dec0_s8_to_s4_interp_bilinear"),
             tf.keras.layers.UpSampling2D,
         )

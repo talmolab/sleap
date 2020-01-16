@@ -28,7 +28,7 @@ See the `EncoderDecoder` base class for requirements for creating new architectu
 import numpy as np
 import tensorflow as tf
 import attr
-from typing import Text, TypeVar, Sequence, Optional, Tuple, List
+from typing import Text, TypeVar, Sequence, Optional, Tuple, List, Union
 
 from sleap.nn.architectures.common import IntermediateFeature
 
@@ -48,7 +48,9 @@ class EncoderBlock:
 
     def make_block(x_in: tf.Tensor) -> tf.Tensor:
         """Instantiate the encoder block from an input tensor."""
-        raise NotImplemented("Subclasses of EncoderBlock must implement make_block.")
+        raise NotImplementedError(
+            "Subclasses of EncoderBlock must implement make_block."
+        )
 
 
 @attr.s(auto_attribs=True)
@@ -168,11 +170,13 @@ class DecoderBlock:
             prefix: String that will be added to the name of every layer in the block.
                 If not specified, instantiating this block multiple times may result in
                 name conflicts if existing layers have the same name.
-        
+
         Returns:
             The output tensor after applying all operations in the block.
         """
-        raise NotImplemented("Subclasses of DecoderBlock must implement make_block.")
+        raise NotImplementedError(
+            "Subclasses of DecoderBlock must implement make_block."
+        )
 
 
 @attr.s(auto_attribs=True)
@@ -386,24 +390,54 @@ class SimpleUpsamplingBlock(DecoderBlock):
         return x
 
 
-@attr.s
+@attr.s(auto_attribs=True)
 class EncoderDecoder:
     """General encoder-decoder base class.
 
     New architectures that follow the encoder-decoder pattern can be defined by
     inheriting from this class and implementing the `encoder_stack` and `decoder_stack`
     methods.
+
+    Attributes:
+        stacks: If greater than 1, the encoder-decoder architecture will be repeated.
     """
+
+    stacks: int = 1
+
+    @property
+    def stem_stack(self) -> Optional[Sequence[EncoderBlock]]:
+        """Return a list of encoder blocks that define the stem."""
+        return None
 
     @property
     def encoder_stack(self) -> Sequence[EncoderBlock]:
         """Return a list of encoder blocks that define the encoder."""
-        raise NotImplemented("Encoder-decoder subclasses must define encoder stack.")
+        raise NotImplementedError(
+            "Encoder-decoder subclasses must define encoder stack."
+        )
 
     @property
     def decoder_stack(self) -> Sequence[DecoderBlock]:
         """Return a list of decoder blocks that define the decoder."""
-        raise NotImplemented("Encoder-decoder subclasses must define decoder stack.")
+        raise NotImplementedError(
+            "Encoder-decoder subclasses must define decoder stack."
+        )
+
+    @property
+    def stem_features_stride(self) -> int:
+        """Return the relative stride of the final output of the stem block.
+
+        This is equivalent to the stride of the stem assuming that it is constructed
+        from an input with stride 1.
+        """
+        if self.stem_stack is None:
+            return 1
+
+        return int(
+            np.prod(
+                [block.pooling_stride for block in self.stem_stack if block.pool]
+            )
+        )
 
     @property
     def encoder_features_stride(self) -> int:
@@ -415,6 +449,7 @@ class EncoderDecoder:
         return int(
             np.prod(
                 [block.pooling_stride for block in self.encoder_stack if block.pool]
+                + [self.stem_features_stride]
             )
         )
 
@@ -429,10 +464,35 @@ class EncoderDecoder:
             np.prod([block.upsampling_stride for block in self.decoder_stack])
         )
 
+    def make_stem(self, x_in: tf.Tensor, prefix: Text = "stem") -> tf.Tensor:
+        """Instantiate the stem layers defined by the stem block configuration.
+
+        Unlike in the encoder, the stem layers do not get repeated in stacked models.
+
+        Args:
+            x_in: The input tensor.
+            current_stride: The stride of `x_in` relative to the original input. If any
+                pooling was performed before the stem, this must be specified in
+                order to appropriately set the stride in the rest of the model.
+            prefix: String prefix for naming stem layers.
+
+        Returns:
+            The final output tensor of the stem.
+        """
+
+        if self.stem_stack is None:
+            return x_in
+
+        x = x_in
+        for i, block in enumerate(self.stem_stack):
+            # Instantiate block.
+            x = block.make_block(x, prefix=f"{prefix}{i}")
+        return x
+
     def make_encoder(
-        self, x_in: tf.Tensor, current_stride: int
+        self, x_in: tf.Tensor, current_stride: int, prefix: Text = "enc"
     ) -> Tuple[tf.Tensor, List[IntermediateFeature]]:
-        """Instantiate the encoder layers define by the encoder stack configuration.
+        """Instantiate the encoder layers defined by the encoder stack configuration.
 
         Args:
             x_in: The input tensor.
@@ -440,6 +500,7 @@ class EncoderDecoder:
                 pooling was performed before the encoder, this must be specified in
                 order to appropriately set the stride in the returned intermediate
                 features.
+            prefix: String prefix for naming encoder layers.
 
         Returns:
             A tuple of the final output tensor of the encoder and a list of
@@ -453,7 +514,7 @@ class EncoderDecoder:
         for i, block in enumerate(self.encoder_stack):
 
             # Instantiate block.
-            x = block.make_block(x, prefix=f"enc{i}")
+            x = block.make_block(x, prefix=f"{prefix}{i}")
 
             # Update the current stride and store the output of the current block.
             if block.pool:
@@ -471,6 +532,7 @@ class EncoderDecoder:
         x_in: tf.Tensor,
         current_stride: int,
         skip_source_features: Optional[Sequence[IntermediateFeature]] = None,
+        prefix: Text = "dec",
     ) -> Tuple[tf.Tensor, List[IntermediateFeature]]:
         """Instantiate the encoder layers defined by the decoder stack configuration.
 
@@ -484,6 +546,7 @@ class EncoderDecoder:
                 stride of the block will be passed to the block instantiation method. If
                 the decoder block is not configured to form skip connections, these will
                 be ignored even if found.
+            prefix: String prefix for naming decoder layers.
 
         Returns:
             A tuple of the final output tensor of the decoder and a list of
@@ -517,7 +580,7 @@ class EncoderDecoder:
                 x,
                 current_stride=current_stride,
                 skip_source=skip_source,
-                prefix=f"dec{i}",
+                prefix=f"{prefix}{i}",
             )
 
             # Update current stride.
@@ -527,7 +590,10 @@ class EncoderDecoder:
 
     def make_backbone(
         self, x_in: tf.Tensor, current_stride: int = 1
-    ) -> Tuple[tf.Tensor, List[IntermediateFeature]]:
+    ) -> Union[
+        Tuple[tf.Tensor, List[IntermediateFeature]],
+        Tuple[List[tf.Tensor], List[List[IntermediateFeature]]],
+    ]:
         """Instantiate the entire encoder-decoder backbone.
 
         Args:
@@ -544,17 +610,45 @@ class EncoderDecoder:
             The intermediate features contain the output tensors from every block except
             the last. This includes the input to this function (`x_in`). These are
             useful when defining heads that take inputs at multiple scales.
+
+            If the architecture has more than 1 stack, the outputs are each lists of
+            output tensors and intermediate features corresponding to each stack.
         """
-        # Build encoder.
-        x, intermediate_encoder_features = self.make_encoder(
-            x_in, current_stride=current_stride
-        )
 
-        # Build decoder.
-        x, intermediate_decoder_features = self.make_decoder(
-            x,
-            skip_source_features=intermediate_encoder_features,
-            current_stride=current_stride * self.encoder_features_stride,
-        )
+        if self.stacks > 1:
+            if self.stem_features_stride != self.decoder_features_stride:
+                raise ValueError(
+                    "If using a stacked configuration, the backbone must define "
+                    "symmetric encoder and decoder. Create a stem for initial "
+                    "downsampling if an output stride > 1 is desired."
+                )
 
-        return x, intermediate_decoder_features
+        # Build stem for the first stack if defined.
+        x = self.make_stem(x_in, prefix="stem")
+
+        stack_outputs = []
+        intermediate_outputs = []
+        for i in range(self.stacks):
+
+            # Build encoder.
+            x, intermediate_encoder_features = self.make_encoder(
+                x,
+                current_stride=current_stride * self.stem_features_stride,
+                prefix=f"stack{i}_enc",
+            )
+
+            # Build decoder.
+            x, intermediate_decoder_features = self.make_decoder(
+                x,
+                skip_source_features=intermediate_encoder_features,
+                current_stride=current_stride * self.encoder_features_stride,
+                prefix=f"stack{i}_dec",
+            )
+
+            stack_outputs.append(x)
+            intermediate_outputs.append(intermediate_decoder_features)
+
+        if self.stacks == 1:
+            return stack_outputs[0], intermediate_outputs[0]
+        else:
+            return stack_outputs, intermediate_outputs
