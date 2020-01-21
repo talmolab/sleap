@@ -11,6 +11,12 @@ from datetime import datetime
 import numpy as np
 import tensorflow as tf
 
+import matplotlib
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+from sleap.nn import peak_finding
+
 from sleap import Labels, Skeleton
 from sleap.util import get_package_file
 from sleap.nn import callbacks
@@ -480,6 +486,104 @@ class Trainer:
                     )
                 )
 
+                def viz_fn(training_set=False):
+
+                    topdown = (
+                        self.training_job.model.output_type
+                        == model.ModelOutputType.TOPDOWN_CONFIDENCE_MAP
+                    )
+
+                    if training_set:
+                        X, Y_gt = list(self.ds_train.take(1))[0]
+                    else:
+                        X, Y_gt = list(self.ds_val.take(1))[0]
+
+                    ind = np.random.randint(0, len(X))
+                    X = X[ind : (ind + 1)]
+
+                    if isinstance(Y_gt, (list, tuple)):
+                        Y_gt = Y_gt[0]
+                    Y_gt = Y_gt[ind : (ind + 1)]
+
+                    Y_pr = self.model.predict(X)
+                    cm_scale = Y_pr.shape[1] / X.shape[1]
+
+                    if topdown:
+                        peaks_gt, peak_vals_gt = peak_finding.find_global_peaks(Y_gt)
+                        peaks_pr, peak_vals_pr = peak_finding.find_global_peaks(Y_pr)
+                        peaks_gt = peaks_gt.numpy() / cm_scale
+                        peaks_pr = peaks_pr.numpy() / cm_scale
+                        peaks_gt[peak_vals_gt < 0.3, :] = np.nan
+                        peaks_pr[peak_vals_pr < 0.3, :] = np.nan
+
+                    else:
+                        peaks_gt = (
+                            peak_finding.find_local_peaks(Y_gt)[0].numpy() / cm_scale
+                        )
+                        peaks_pr = (
+                            peak_finding.find_local_peaks(Y_pr)[0].numpy() / cm_scale
+                        )
+
+                    img = X[0]
+                    cm = Y_pr[0]
+
+                    fig = plt.figure(figsize=(6, 6))
+                    ax = fig.add_axes([0, 0, 1, 1], frameon=False)
+                    ax.get_xaxis().set_visible(False)
+                    ax.get_yaxis().set_visible(False)
+                    plt.autoscale(tight=True)
+                    ax.imshow(
+                        np.squeeze(img),
+                        cmap="gray",
+                        origin="lower",
+                        extent=[-0.5, img.shape[1] - 0.5, -0.5, img.shape[0] - 0.5],
+                    )
+                    ax.imshow(
+                        # np.squeeze(Y_gt.numpy().max(axis=-1)),
+                        np.squeeze(Y_pr.max(axis=-1)),
+                        alpha=0.5,
+                        origin="lower",
+                        extent=[-0.5, img.shape[1] - 0.5, -0.5, img.shape[0] - 0.5],
+                    )
+
+                    if topdown:
+                        for p_gt, p_pr in zip(peaks_gt, peaks_pr):
+                            ax.plot(
+                                [p_gt[2], p_pr[2]],
+                                [p_gt[1], p_pr[1]],
+                                "r-",
+                                alpha=0.5,
+                                lw=2,
+                            )
+
+                    ax.plot(peaks_gt[:, 2], peaks_gt[:, 1], ".", alpha=0.6, ms=10)
+                    ax.plot(peaks_pr[:, 2], peaks_pr[:, 1], ".", alpha=0.6, ms=10)
+                    ax.set_xticks([])
+                    ax.set_yticks([])
+                    ax.grid(False)
+
+                    return fig
+
+                if self.training_job.model.output_type in [
+                    model.ModelOutputType.CONFIDENCE_MAP,
+                    model.ModelOutputType.TOPDOWN_CONFIDENCE_MAP,
+                    model.ModelOutputType.CENTROIDS,
+                ]:
+                    callback_list.append(
+                        callbacks.TensorBoardMatplotlibWriter(
+                            log_dir=self.tensorboard_dir,
+                            plot_fn=lambda: viz_fn(training_set=True),
+                            tag="viz_train",
+                        )
+                    )
+                    callback_list.append(
+                        callbacks.TensorBoardMatplotlibWriter(
+                            log_dir=self.tensorboard_dir,
+                            plot_fn=lambda: viz_fn(training_set=False),
+                            tag="viz_val",
+                        )
+                    )
+
             if self.training_job.trainer.save_every_epoch:
                 if self.training_job.newest_model_filename is None:
                     self.training_job.newest_model_filename = "newest_model.h5"
@@ -767,7 +871,7 @@ def main():
         help="Enables TensorBoard logging to the run path.",
     )
     parser.add_argument(
-        "--zmq", action="store_true", help="Enables ZMQ logging (for GUI).",
+        "--zmq", action="store_true", help="Enables ZMQ logging (for GUI)."
     )
     parser.add_argument(
         "--run_name",
