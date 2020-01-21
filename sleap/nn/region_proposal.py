@@ -467,6 +467,10 @@ class RegionProposalExtractor:
             sample_inds = size_grouped_sample_inds[box_size]
             bboxes = size_grouped_bboxes[box_size]
 
+            if len(bboxes) == 0:
+                # Skip region proposal set if we found no bboxes.
+                continue
+
             # Extract image patches for all regions in the set.
             patches = extract_patches(
                 imgs, tf.cast(bboxes, tf.float32), tf.cast(sample_inds, tf.int32)
