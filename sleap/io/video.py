@@ -188,6 +188,11 @@ class HDF5Video:
             return last_key
         return self.frames - 1
 
+    def reset(self):
+        """Reloads the video."""
+        # TODO
+        pass
+
     def get_frame(self, idx) -> np.ndarray:
         """
         Get a frame from the underlying HDF5 video data.
@@ -343,6 +348,10 @@ class MediaVideo:
         """See :class:`Video`."""
         return self.__test_frame.dtype
 
+    def reset(self):
+        """Reloads the video."""
+        self._reader_ = None
+
     def get_frame(self, idx: int, grayscale: bool = None) -> np.ndarray:
         """See :class:`Video`."""
         if self.__reader.get(cv2.CAP_PROP_POS_FRAMES) != idx:
@@ -435,6 +444,11 @@ class NumpyVideo:
     def dtype(self):
         """See :class:`Video`."""
         return self.__data.dtype
+
+    def reset(self):
+        """Reloads the video."""
+        # TODO
+        pass
 
     def get_frame(self, idx):
         """See :class:`Video`."""
@@ -556,6 +570,11 @@ class ImgStoreVideo:
         if self.index_by_original:
             return self.__store.frame_max
         return self.frames - 1
+
+    def reset(self):
+        """Reloads the video."""
+        # TODO
+        pass
 
     def get_frame(self, frame_number: int) -> np.ndarray:
         """
@@ -732,6 +751,11 @@ class SingleImageVideo:
     def dtype(self):
         """See :class:`Video`."""
         return self.__data.dtype
+
+    def reset(self):
+        """Reloads the video."""
+        # TODO
+        pass
 
     def get_frame(self, idx):
         """See :class:`Video`."""

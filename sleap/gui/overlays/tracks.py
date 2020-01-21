@@ -9,9 +9,11 @@ from sleap.io.video import Video
 import attr
 import itertools
 
-from typing import List
+from typing import Iterable, List
 
 from PySide2 import QtCore, QtGui
+
+MAX_NODES_IN_TRAIL = 30
 
 
 @attr.s(auto_attribs=True)
@@ -37,42 +39,48 @@ class TrackTrailOverlay:
     trail_length: int = 10
     show: bool = False
 
-    def get_track_trails(self, frame_selection, track: Track):
+    def get_track_trails(self, frame_selection: Iterable["LabeledFrame"]):
         """Get data needed to draw track trail.
 
         Args:
-            frame_selection: an interable with the :class:`LabeledFrame`
+            frame_selection: an iterable with the :class:`LabeledFrame`
                 objects to include in trail.
-            track: the :class:`Track` for which to get trail
 
         Returns:
-            list of lists of (x, y) tuples
+            Dictionary keyed by track, value is list of lists of (x, y) tuples
                 i.e., for every node in instance, we get a list of positions
         """
 
-        all_trails = [[] for _ in range(len(self.labels.nodes))]
+        all_track_trails = dict()
+
+        nodes = self.labels.nodes
+        if len(nodes) > MAX_NODES_IN_TRAIL:
+            nodes = nodes[:MAX_NODES_IN_TRAIL]
 
         for frame in frame_selection:
-            frame_idx = frame.frame_idx
 
-            inst_on_track = [instance for instance in frame if instance.track == track]
-            if inst_on_track:
-                # just use the first instance from this track in this frame
-                inst = inst_on_track[0]
-                # loop through all nodes
-                for node_i, node in enumerate(self.labels.nodes):
+            for inst in frame:
+                if inst.track is not None:
+                    if inst.track not in all_track_trails:
+                        all_track_trails[inst.track] = [[] for _ in range(len(nodes))]
 
-                    if node in inst.nodes and inst[node].visible:
-                        point = (inst[node].x, inst[node].y)
-                    elif len(all_trails[node_i]):
-                        point = all_trails[node_i][-1]
-                    else:
-                        point = None
+                    # loop through all nodes
+                    for node_i, node in enumerate(nodes):
 
-                    if point is not None:
-                        all_trails[node_i].append(point)
+                        if node in inst.nodes and inst[node].visible:
+                            point = (inst[node].x, inst[node].y)
 
-        return all_trails
+                        # Add last location of node so that we can easily
+                        # calculate trail length (since we adjust opacity).
+                        elif len(all_track_trails[inst.track][node_i]):
+                            point = all_track_trails[inst.track][node_i][-1]
+                        else:
+                            point = None
+
+                        if point is not None:
+                            all_track_trails[inst.track][node_i].append(point)
+
+        return all_track_trails
 
     def get_frame_selection(self, video: Video, frame_idx: int):
         """
@@ -116,17 +124,14 @@ class TrackTrailOverlay:
             video: current video
             frame_idx: index of the frame to which the trail is attached
         """
-        if not self.show:
+        if not self.show or self.trail_length == 0:
             return
 
         frame_selection = self.get_frame_selection(video, frame_idx)
-        tracks_in_frame = self.get_tracks_in_frame(
-            video, frame_idx, include_trails=True
-        )
 
-        for track in tracks_in_frame:
+        all_track_trails = self.get_track_trails(frame_selection)
 
-            trails = self.get_track_trails(frame_selection, track)
+        for track, trails in all_track_trails.items():
 
             color = QtGui.QColor(*self.player.color_manager.get_track_color(track))
             pen = QtGui.QPen()

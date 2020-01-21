@@ -308,6 +308,7 @@ class VideoLoader:
     filename: str
     dataset: str = None
     input_format: str = None
+    grayscale: bool = False
     chunk_size: int = 32
     prefetch_chunks: int = 1
     frame_inds: Optional[List[int]] = None
@@ -351,18 +352,22 @@ class VideoLoader:
 
     def __attrs_post_init__(self):
 
-        self._video = Video.from_filename(
-            self.filename, dataset=self.dataset, input_format=self.input_format
-        )
+        self._video = self._load_video(self.filename)
         self._shape = self.video.shape
         self._np_dtype = self.video.dtype
         self._tf_dtype = tf.dtypes.as_dtype(self.np_dtype)
         self._ds = self.make_ds()
 
-    def load_frames(self, frame_inds):
-        local_vid = Video.from_filename(
-            self.video.filename, dataset=self.dataset, input_format=self.input_format
+    def _load_video(self, filename) -> "Video":
+        return Video.from_filename(
+            filename,
+            dataset=self.dataset,
+            input_format=self.input_format,
+            grayscale=self.grayscale,
         )
+
+    def load_frames(self, frame_inds):
+        local_vid = self._load_video(self.video.filename)
         imgs = local_vid[np.array(frame_inds).astype("int64")]
         return imgs
 

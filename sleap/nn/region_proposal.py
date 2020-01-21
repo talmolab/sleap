@@ -330,8 +330,11 @@ class CentroidPredictor:
         return centroids, centroid_vals
 
     def predict(self, imgs):
-        imgs = self.preproc(imgs)
-        confmaps = utils.batched_call(self.inference, imgs, batch_size=self.batch_size)
+        confmaps = utils.batched_call(
+            lambda imgs: self.inference(self.preproc(imgs)),
+            imgs,
+            batch_size=self.batch_size,
+        )
         return self.postproc(confmaps)
 
 
@@ -463,6 +466,10 @@ class RegionProposalExtractor:
             # Gather size grouped data.
             sample_inds = size_grouped_sample_inds[box_size]
             bboxes = size_grouped_bboxes[box_size]
+
+            if len(bboxes) == 0:
+                # Skip region proposal set if we found no bboxes.
+                continue
 
             # Extract image patches for all regions in the set.
             patches = extract_patches(

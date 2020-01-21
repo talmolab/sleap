@@ -404,12 +404,11 @@ class ConfmapPeakFinder:
 
     def predict_rps(self, rps: "RegionProposalSet") -> RegionPeakSet:
 
-        imgs = self.preproc(rps.patches)
-
-        confmaps = utils.batched_call(self.inference, imgs, batch_size=self.batch_size)
-
         peak_subs_and_vals, batch_inds = utils.batched_call(
-            self.postproc, confmaps, batch_size=self.batch_size, return_batch_inds=True
+            lambda imgs: self.postproc(self.inference(self.preproc(imgs))),
+            rps.patches,
+            batch_size=self.batch_size,
+            return_batch_inds=True,
         )
 
         # Split.
