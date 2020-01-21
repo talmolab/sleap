@@ -363,6 +363,9 @@ class InferenceDialog(QtWidgets.QDialog):
             # Use already trained model if desired
             if form_data.get(f"_use_trained_{str(model_type)}", default_use_trained):
                 job.use_trained_model = True
+            elif model_type == ModelOutputType.TOPDOWN_CONFIDENCE_MAP:
+                if form_data.get(f"_use_trained_confmaps", default_use_trained):
+                    job.use_trained_model = True
 
             # Clear parameters that shouldn't be copied
             job.val_set_filename = None
