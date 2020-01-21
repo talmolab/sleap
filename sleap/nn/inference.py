@@ -73,6 +73,10 @@ class Predictor:
         if video_kwargs is None:
             video_kwargs = dict()
 
+        # Detect whether to use grayscale video by looking at trained models.
+        if self.has_grayscale_models:
+            video_kwargs["grayscale"] = True
+
         video_ds = utils.VideoLoader(
             filename=video_filename, frame_inds=frames, **video_kwargs
         )
@@ -222,6 +226,19 @@ class Predictor:
                 )
 
         return frames
+
+    @property
+    def has_grayscale_models(self):
+        for policy_name in ("centroid", "topdown", "confmap"):
+            if policy_name in self.policies:
+                if (
+                    self.policies[policy_name].inference_model.input_tensor.shape[-1]
+                    == 1
+                ):
+                    return True
+                else:
+                    return False
+        return False
 
     @classmethod
     def from_cli_args(cls):
