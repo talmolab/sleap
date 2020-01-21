@@ -131,8 +131,9 @@ class Predictor:
 
             # Find peaks in each sample of the region proposal set.
             sample_peak_pts, sample_peak_vals = topdown_peak_finder.predict_rps(rps)
-            sample_peak_pts = sample_peak_pts.to_tensor().numpy()
-            sample_peak_vals = sample_peak_vals.to_tensor().numpy()
+
+            sample_peak_pts = sample_peak_pts.to_tensor(default_value=np.nan).numpy()
+            sample_peak_vals = sample_peak_vals.to_tensor(default_value=np.nan).numpy()
 
             # Gather instances across all region proposals for this chunk.
             predicted_instances_chunk = topdown.make_sample_grouped_predicted_instances(
