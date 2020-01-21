@@ -571,14 +571,14 @@ class Trainer:
                 ]:
                     callback_list.append(
                         callbacks.TensorBoardMatplotlibWriter(
-                            log_dir=self.tensorboard_dir,
+                            log_dir=os.path.join(self.tensorboard_dir, "train"),
                             plot_fn=lambda: viz_fn(training_set=True),
                             tag="viz_train",
                         )
                     )
                     callback_list.append(
                         callbacks.TensorBoardMatplotlibWriter(
-                            log_dir=self.tensorboard_dir,
+                            log_dir=os.path.join(self.tensorboard_dir, "validation"),
                             plot_fn=lambda: viz_fn(training_set=False),
                             tag="viz_val",
                         )
