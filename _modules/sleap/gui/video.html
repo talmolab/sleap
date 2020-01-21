@@ -45,6 +45,9 @@
 
 <span class="sd">&quot;&quot;&quot;</span>
 
+<span class="n">FORCE_REQUEST_AFTER_TIME_IN_SECONDS</span> <span class="o">=</span> <span class="mi">1</span>
+
+
 <span class="kn">from</span> <span class="nn">PySide2</span> <span class="kn">import</span> <span class="n">QtWidgets</span><span class="p">,</span> <span class="n">QtCore</span>
 
 <span class="kn">from</span> <span class="nn">PySide2.QtWidgets</span> <span class="kn">import</span> <span class="p">(</span>
@@ -59,7 +62,9 @@
 <span class="kn">from</span> <span class="nn">PySide2.QtGui</span> <span class="kn">import</span> <span class="n">QKeyEvent</span>
 <span class="kn">from</span> <span class="nn">PySide2.QtCore</span> <span class="kn">import</span> <span class="n">Qt</span><span class="p">,</span> <span class="n">QRectF</span><span class="p">,</span> <span class="n">QPointF</span><span class="p">,</span> <span class="n">QMarginsF</span><span class="p">,</span> <span class="n">QLineF</span>
 
+<span class="kn">import</span> <span class="nn">atexit</span>
 <span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">time</span>
 
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
@@ -67,7 +72,6 @@
 
 <span class="kn">from</span> <span class="nn">PySide2.QtWidgets</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">QGraphicsEllipseItem</span><span class="p">,</span>
-    <span class="n">QGraphicsLineItem</span><span class="p">,</span>
     <span class="n">QGraphicsTextItem</span><span class="p">,</span>
     <span class="n">QGraphicsRectItem</span><span class="p">,</span>
     <span class="n">QGraphicsPolygonItem</span><span class="p">,</span>
@@ -81,6 +85,72 @@
 <span class="kn">from</span> <span class="nn">sleap.gui.color</span> <span class="kn">import</span> <span class="n">ColorManager</span>
 
 <span class="kn">import</span> <span class="nn">qimage2ndarray</span>
+
+
+<div class="viewcode-block" id="LoadImageWorker"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.LoadImageWorker">[docs]</a><span class="k">class</span> <span class="nc">LoadImageWorker</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">QObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Object to load video frames in background thread.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">(</span><span class="n">QImage</span><span class="p">)</span>
+    <span class="n">process</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">()</span>
+
+    <span class="n">load_queue</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">video</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">_last_process_time</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">LoadImageWorker</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Connect signal to processing function so that we can add processing</span>
+        <span class="c1"># event to event queue from the request handler.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">doProcessing</span><span class="p">)</span>
+
+        <span class="c1"># Start timer which will trigger processing events when we&#39;re free</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timer</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QTimer</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="o">.</span><span class="n">timeout</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">doProcessing</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">doProcessing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_last_process_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_queue</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">frame_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_queue</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_queue</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># print(f&quot;\t{frame_idx} starting to load&quot;) # DEBUG</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Get image data</span>
+            <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">get_frame</span><span class="p">(</span><span class="n">frame_idx</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">frame</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">frame</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Convert ndarray to QImage</span>
+            <span class="n">qimage</span> <span class="o">=</span> <span class="n">qimage2ndarray</span><span class="o">.</span><span class="n">array2qimage</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+
+            <span class="c1"># print(f&quot;\t{frame_idx} result&quot;) # DEBUG</span>
+
+            <span class="c1"># Emit result</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">qimage</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">):</span>
+        <span class="c1"># Add request to the queue so that we can just process the most recent.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_queue</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">frame_idx</span><span class="p">)</span>
+
+        <span class="c1"># If we haven&#39;t processed a request for a certain amount of time,</span>
+        <span class="c1"># then trigger a processing event now. This helps when the user has been</span>
+        <span class="c1"># continuously changing frames for a while (i.e., dragging on seekbar</span>
+        <span class="c1"># or holding down arrow key).</span>
+
+        <span class="n">since_last</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_last_process_time</span>
+
+        <span class="k">if</span> <span class="n">since_last</span> <span class="o">&gt;</span> <span class="n">FORCE_REQUEST_AFTER_TIME_IN_SECONDS</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_last_process_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="QtVideoPlayer"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.QtVideoPlayer">[docs]</a><span class="k">class</span> <span class="nc">QtVideoPlayer</span><span class="p">(</span><span class="n">QWidget</span><span class="p">):</span>
@@ -98,6 +168,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">changedPlot</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">(</span><span class="n">QWidget</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">Instance</span><span class="p">)</span>
+    <span class="n">requestImage</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -143,6 +214,20 @@
             <span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;frame_idx&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">seekbar</span><span class="o">.</span><span class="n">value</span><span class="p">())</span>
         <span class="p">)</span>
 
+        <span class="c1"># Make worker thread to load images in the background</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_loader_thread</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QThread</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_video_image_loader</span> <span class="o">=</span> <span class="n">LoadImageWorker</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_video_image_loader</span><span class="o">.</span><span class="n">moveToThread</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_loader_thread</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_loader_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+        <span class="c1"># Connect signal so that image will be shown after it&#39;s loaded</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_video_image_loader</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">qimage</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">setImage</span><span class="p">(</span><span class="n">qimage</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Connect request signals from self to worker</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">requestImage</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_video_image_loader</span><span class="o">.</span><span class="n">request</span><span class="p">)</span>
+
         <span class="k">def</span> <span class="nf">update_selection_state</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;frame_range&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;has_frame_range&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span> <span class="o">&lt;</span> <span class="n">b</span><span class="p">))</span>
@@ -160,8 +245,33 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
+        <span class="c1"># Call cleanup method when application exits to end worker thread</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">destroyed</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cleanup</span><span class="p">)</span>
+        <span class="n">atexit</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cleanup</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="n">video</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">load_video</span><span class="p">(</span><span class="n">video</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">cleanup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_loader_thread</span><span class="o">.</span><span class="n">quit</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_loader_thread</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_load_and_show_requested_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">):</span>
+        <span class="c1"># Get image data</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">get_frame</span><span class="p">(</span><span class="n">frame_idx</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">frame</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">frame</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Convert ndarray to QImage</span>
+            <span class="n">qimage</span> <span class="o">=</span> <span class="n">qimage2ndarray</span><span class="o">.</span><span class="n">array2qimage</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+
+            <span class="c1"># Display image</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">setImage</span><span class="p">(</span><span class="n">qimage</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">setSeekbarSelection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seekbar</span><span class="o">.</span><span class="n">setSelection</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">show_contextual_menu</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">where</span><span class="p">:</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QPoint</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_menu_enabled</span><span class="p">:</span>
@@ -271,24 +381,15 @@
 
         <span class="n">idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;frame_idx&quot;</span><span class="p">]</span> <span class="ow">or</span> <span class="mi">0</span>
 
-        <span class="c1"># Get image data</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">get_frame</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
-        <span class="k">except</span><span class="p">:</span>
-            <span class="n">frame</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># Clear exiting objects before drawing instances</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
 
-        <span class="k">if</span> <span class="n">frame</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># Clear existing objects</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="c1"># Emit signal for the instances to be drawn for this frame</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">changedPlot</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;instance&quot;</span><span class="p">])</span>
 
-            <span class="c1"># Convert ndarray to QImage</span>
-            <span class="n">image</span> <span class="o">=</span> <span class="n">qimage2ndarray</span><span class="o">.</span><span class="n">array2qimage</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
-
-            <span class="c1"># Display image</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">setImage</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
-
-            <span class="c1"># Emit signal</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">changedPlot</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;instance&quot;</span><span class="p">])</span></div>
+        <span class="c1"># Emit signal for the image to loaded and shown for this frame</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_video_image_loader</span><span class="o">.</span><span class="n">video</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">requestImage</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="QtVideoPlayer.showLabels"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.QtVideoPlayer.showLabels">[docs]</a>    <span class="k">def</span> <span class="nf">showLabels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">show</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Show/hide node labels for all instances in viewer.</span>
@@ -480,6 +581,14 @@
         <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key</span><span class="o">.</span><span class="n">Key_Escape</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">click_mode</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;instance&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key</span><span class="o">.</span><span class="n">Key_K</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;frame_idx&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">seekbar</span><span class="o">.</span><span class="n">getEndContiguousMark</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;frame_idx&quot;</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key</span><span class="o">.</span><span class="n">Key_J</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;frame_idx&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">seekbar</span><span class="o">.</span><span class="n">getStartContiguousMark</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;frame_idx&quot;</span><span class="p">]</span>
+            <span class="p">)</span>
         <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key</span><span class="o">.</span><span class="n">Key_QuoteLeft</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">increment_in_list</span><span class="p">(</span><span class="s2">&quot;instance&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">selectable_instances</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mi">128</span> <span class="ow">and</span> <span class="nb">chr</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">())</span><span class="o">.</span><span class="n">isnumeric</span><span class="p">():</span>
@@ -576,8 +685,16 @@
 <div class="viewcode-block" id="GraphicsView.clear"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.GraphicsView.clear">[docs]</a>    <span class="k">def</span> <span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Clears the displayed frame from the scene.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_pixmapHandle</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span></div>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixmapHandle</span><span class="p">:</span>
+            <span class="c1"># get the pixmap currently shown</span>
+            <span class="n">pixmap</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixmapHandle</span><span class="o">.</span><span class="n">pixmap</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixmapHandle</span><span class="p">:</span>
+            <span class="c1"># add the pixmap back</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_pixmapHandle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">addPixmap</span><span class="p">(</span><span class="n">pixmap</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="GraphicsView.setImage"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.GraphicsView.setImage">[docs]</a>    <span class="k">def</span> <span class="nf">setImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">QImage</span><span class="p">,</span> <span class="n">QPixmap</span><span class="p">]):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -604,7 +721,12 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_pixmapHandle</span><span class="o">.</span><span class="n">setPixmap</span><span class="p">(</span><span class="n">pixmap</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_pixmapHandle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">addPixmap</span><span class="p">(</span><span class="n">pixmap</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">setSceneRect</span><span class="p">(</span><span class="n">QRectF</span><span class="p">(</span><span class="n">pixmap</span><span class="o">.</span><span class="n">rect</span><span class="p">()))</span>  <span class="c1"># Set scene size to image size.</span>
+
+            <span class="c1"># Ensure that image is behind everything else</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_pixmapHandle</span><span class="o">.</span><span class="n">setZValue</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># Set scene size to image size.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setSceneRect</span><span class="p">(</span><span class="n">QRectF</span><span class="p">(</span><span class="n">pixmap</span><span class="o">.</span><span class="n">rect</span><span class="p">()))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">updateViewer</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="GraphicsView.updateViewer"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.GraphicsView.updateViewer">[docs]</a>    <span class="k">def</span> <span class="nf">updateViewer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1814,7 +1936,7 @@
       &copy;2019, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.2</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.3.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

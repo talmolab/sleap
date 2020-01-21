@@ -221,6 +221,11 @@
             <span class="k">return</span> <span class="n">last_key</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">frames</span> <span class="o">-</span> <span class="mi">1</span>
 
+<div class="viewcode-block" id="HDF5Video.reset"><a class="viewcode-back" href="../../../video.html#sleap.io.video.HDF5Video.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reloads the video.&quot;&quot;&quot;</span>
+        <span class="c1"># TODO</span>
+        <span class="k">pass</span></div>
+
 <div class="viewcode-block" id="HDF5Video.get_frame"><a class="viewcode-back" href="../../../video.html#sleap.io.video.HDF5Video.get_frame">[docs]</a>    <span class="k">def</span> <span class="nf">get_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a frame from the underlying HDF5 video data.</span>
@@ -376,6 +381,10 @@
         <span class="sd">&quot;&quot;&quot;See :class:`Video`.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__test_frame</span><span class="o">.</span><span class="n">dtype</span>
 
+<div class="viewcode-block" id="MediaVideo.reset"><a class="viewcode-back" href="../../../video.html#sleap.io.video.MediaVideo.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reloads the video.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reader_</span> <span class="o">=</span> <span class="kc">None</span></div>
+
 <div class="viewcode-block" id="MediaVideo.get_frame"><a class="viewcode-back" href="../../../video.html#sleap.io.video.MediaVideo.get_frame">[docs]</a>    <span class="k">def</span> <span class="nf">get_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">grayscale</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;See :class:`Video`.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__reader</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">CAP_PROP_POS_FRAMES</span><span class="p">)</span> <span class="o">!=</span> <span class="n">idx</span><span class="p">:</span>
@@ -468,6 +477,11 @@
     <span class="k">def</span> <span class="nf">dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;See :class:`Video`.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__data</span><span class="o">.</span><span class="n">dtype</span>
+
+<div class="viewcode-block" id="NumpyVideo.reset"><a class="viewcode-back" href="../../../video.html#sleap.io.video.NumpyVideo.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reloads the video.&quot;&quot;&quot;</span>
+        <span class="c1"># TODO</span>
+        <span class="k">pass</span></div>
 
 <div class="viewcode-block" id="NumpyVideo.get_frame"><a class="viewcode-back" href="../../../video.html#sleap.io.video.NumpyVideo.get_frame">[docs]</a>    <span class="k">def</span> <span class="nf">get_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;See :class:`Video`.&quot;&quot;&quot;</span>
@@ -589,6 +603,11 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_by_original</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__store</span><span class="o">.</span><span class="n">frame_max</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">frames</span> <span class="o">-</span> <span class="mi">1</span>
+
+<div class="viewcode-block" id="ImgStoreVideo.reset"><a class="viewcode-back" href="../../../video.html#sleap.io.video.ImgStoreVideo.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reloads the video.&quot;&quot;&quot;</span>
+        <span class="c1"># TODO</span>
+        <span class="k">pass</span></div>
 
 <div class="viewcode-block" id="ImgStoreVideo.get_frame"><a class="viewcode-back" href="../../../video.html#sleap.io.video.ImgStoreVideo.get_frame">[docs]</a>    <span class="k">def</span> <span class="nf">get_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame_number</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -765,6 +784,11 @@
     <span class="k">def</span> <span class="nf">dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;See :class:`Video`.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__data</span><span class="o">.</span><span class="n">dtype</span>
+
+<div class="viewcode-block" id="SingleImageVideo.reset"><a class="viewcode-back" href="../../../video.html#sleap.io.video.SingleImageVideo.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reloads the video.&quot;&quot;&quot;</span>
+        <span class="c1"># TODO</span>
+        <span class="k">pass</span></div>
 
 <div class="viewcode-block" id="SingleImageVideo.get_frame"><a class="viewcode-back" href="../../../video.html#sleap.io.video.SingleImageVideo.get_frame">[docs]</a>    <span class="k">def</span> <span class="nf">get_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;See :class:`Video`.&quot;&quot;&quot;</span>
@@ -1358,7 +1382,7 @@
       &copy;2019, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.2</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.3.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

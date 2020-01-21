@@ -524,6 +524,16 @@
             <span class="k">if</span> <span class="n">lf</span><span class="o">.</span><span class="n">has_user_instances</span> <span class="ow">and</span> <span class="n">lf</span><span class="o">.</span><span class="n">video</span> <span class="o">==</span> <span class="n">video</span>
         <span class="p">]</span></div>
 
+<div class="viewcode-block" id="Labels.get_video_predicted_frames"><a class="viewcode-back" href="../../../dataset.html#sleap.io.dataset.Labels.get_video_predicted_frames">[docs]</a>    <span class="k">def</span> <span class="nf">get_video_predicted_frames</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">LabeledFrame</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns labeled frames for given video with user instances.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">lf</span>
+            <span class="k">for</span> <span class="n">lf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labeled_frames</span>
+            <span class="k">if</span> <span class="n">lf</span><span class="o">.</span><span class="n">has_predicted_instances</span> <span class="ow">and</span> <span class="n">lf</span><span class="o">.</span><span class="n">video</span> <span class="o">==</span> <span class="n">video</span>
+        <span class="p">]</span></div>
+
     <span class="c1"># Methods for instances</span>
 
 <div class="viewcode-block" id="Labels.instance_count"><a class="viewcode-back" href="../../../dataset.html#sleap.io.dataset.Labels.instance_count">[docs]</a>    <span class="k">def</span> <span class="nf">instance_count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
@@ -1440,6 +1450,8 @@
 <span class="sd">                :class:`Video` objects. Usually you&#39;ll want to pass</span>
 <span class="sd">                a callback created by :meth:`make_video_callback`</span>
 <span class="sd">                or :meth:`make_gui_video_callback`.</span>
+<span class="sd">                Alternately, if you pass a list of strings we&#39;ll construct a</span>
+<span class="sd">                non-gui callback with those strings as the search paths.</span>
 <span class="sd">            match_to: If given, we&#39;ll replace particular objects in the</span>
 <span class="sd">                data dictionary with *matching* objects in the match_to</span>
 <span class="sd">                :class:`Labels` object. This ensures that the newly</span>
@@ -1518,6 +1530,13 @@
                         <span class="n">vid</span><span class="p">[</span><span class="s2">&quot;backend&quot;</span><span class="p">][</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
                             <span class="n">tmp_dir</span><span class="p">,</span> <span class="n">vid</span><span class="p">[</span><span class="s2">&quot;backend&quot;</span><span class="p">][</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span>
                         <span class="p">)</span>
+
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">video_callback</span><span class="p">,</span> <span class="s2">&quot;__iter__&quot;</span><span class="p">):</span>
+                    <span class="c1"># If the callback is an iterable, then we&#39;ll expect it to be a</span>
+                    <span class="c1"># list of strings and build a non-gui callback with those as</span>
+                    <span class="c1"># the search paths.</span>
+                    <span class="n">search_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">path</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">video_callback</span><span class="p">]</span>
+                    <span class="n">video_callback</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">make_video_callback</span><span class="p">(</span><span class="n">search_paths</span><span class="p">)</span>
 
                 <span class="c1"># Use the callback if given to handle missing videos</span>
                 <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">video_callback</span><span class="p">):</span>
@@ -1871,6 +1890,8 @@
 <span class="sd">                :class:`Video` objects. Usually you&#39;ll want to pass</span>
 <span class="sd">                a callback created by :meth:`make_video_callback`</span>
 <span class="sd">                or :meth:`make_gui_video_callback`.</span>
+<span class="sd">                Alternately, if you pass a list of strings we&#39;ll construct a</span>
+<span class="sd">                non-gui callback with those strings as the search paths.</span>
 <span class="sd">            match_to: If given, we&#39;ll replace particular objects in the</span>
 <span class="sd">                data dictionary with *matching* objects in the match_to</span>
 <span class="sd">                :class:`Labels` object. This ensures that the newly</span>
@@ -1899,6 +1920,13 @@
             <span class="k">for</span> <span class="n">video_item</span> <span class="ow">in</span> <span class="n">dicts</span><span class="p">[</span><span class="s2">&quot;videos&quot;</span><span class="p">]:</span>
                 <span class="k">if</span> <span class="n">video_item</span><span class="p">[</span><span class="s2">&quot;backend&quot;</span><span class="p">][</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;.&quot;</span><span class="p">:</span>
                     <span class="n">video_item</span><span class="p">[</span><span class="s2">&quot;backend&quot;</span><span class="p">][</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">filename</span>
+
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">video_callback</span><span class="p">,</span> <span class="s2">&quot;__iter__&quot;</span><span class="p">):</span>
+                <span class="c1"># If the callback is an iterable, then we&#39;ll expect it to be a</span>
+                <span class="c1"># list of strings and build a non-gui callback with those as</span>
+                <span class="c1"># the search paths.</span>
+                <span class="n">search_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">path</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">video_callback</span><span class="p">]</span>
+                <span class="n">video_callback</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">make_video_callback</span><span class="p">(</span><span class="n">search_paths</span><span class="p">)</span>
 
             <span class="c1"># Use the callback if given to handle missing videos</span>
             <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">video_callback</span><span class="p">):</span>
@@ -2806,7 +2834,7 @@
       &copy;2019, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.2</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.3.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

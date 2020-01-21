@@ -227,11 +227,11 @@ then don’t do anything.</p>
 <span class="target" id="module-sleap.gui.video"></span><p>Module for showing and manipulating skeleton instances within a video.</p>
 <p>All interactions should go through <cite>QtVideoPlayer</cite>.</p>
 <dl>
-<dt>Example usage:</dt><dd><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_video</span> <span class="o">=</span> <span class="n">Video</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<dt>Example usage:</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_video</span> <span class="o">=</span> <span class="n">Video</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_instance</span> <span class="o">=</span> <span class="n">Instance</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">vp</span> <span class="o">=</span> <span class="n">QtVideoPlayer</span><span class="p">(</span><span class="n">video</span><span class="o">=</span><span class="n">my_video</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">vp</span> <span class="o">=</span> <span class="n">QtVideoPlayer</span><span class="p">(</span><span class="n">video</span><span class="o">=</span><span class="n">my_video</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">vp</span><span class="o">.</span><span class="n">addInstance</span><span class="p">(</span><span class="n">instance</span><span class="o">=</span><span class="n">my_instance</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
 </pre></div>
 </div>
@@ -448,6 +448,12 @@ given in absolute coordinates for displayed frame.</p>
 </dl>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="class">
+<dt id="sleap.gui.video.LoadImageWorker">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.video.</code><code class="sig-name descname">LoadImageWorker</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#LoadImageWorker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.LoadImageWorker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Object to load video frames in background thread.</p>
 </dd></dl>
 
 <dl class="class">
@@ -1103,7 +1109,7 @@ If selection is “add”, then show the appropriate gui for selecting job.</p>
 <h3>sleap.gui.importvideos<a class="headerlink" href="#sleap-gui-importvideos" title="Permalink to this headline">¶</a></h3>
 <span class="target" id="module-sleap.gui.importvideos"></span><p>Interface to handle the UI for importing videos.</p>
 <p>Usage:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">import_list</span> <span class="o">=</span> <span class="n">ImportVideos</span><span class="p">()</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">import_list</span> <span class="o">=</span> <span class="n">ImportVideos</span><span class="p">()</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>This will show the user a file-selection dialog, and then a second dialog
@@ -1114,7 +1120,7 @@ relevant for that specific type of file. It also includes a reference
 to the relevant method of <code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code>.</p>
 <p>For each <cite>item</cite> in <cite>import_list</cite>, we can load the video by calling this
 method while passing the user-selected params as the named parameters:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">vid</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;video_class&quot;</span><span class="p">](</span><span class="o">**</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;params&quot;</span><span class="p">])</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">vid</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;video_class&quot;</span><span class="p">](</span><span class="o">**</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;params&quot;</span><span class="p">])</span>
 </pre></div>
 </div>
 <dl class="class">
@@ -1663,7 +1669,7 @@ list (which will be updated in code that created TrainingEditor).</p></li>
 <h3>sleap.gui.formbuilder<a class="headerlink" href="#sleap-gui-formbuilder" title="Permalink to this headline">¶</a></h3>
 <span class="target" id="module-sleap.gui.formbuilder"></span><p>Module for creating a form from a yaml file.</p>
 <p>Example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">widget</span> <span class="o">=</span> <span class="n">YamlFormWidget</span><span class="p">(</span><span class="n">yaml_file</span><span class="o">=</span><span class="s2">&quot;example.yaml&quot;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">widget</span> <span class="o">=</span> <span class="n">YamlFormWidget</span><span class="p">(</span><span class="n">yaml_file</span><span class="o">=</span><span class="s2">&quot;example.yaml&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">widget</span><span class="o">.</span><span class="n">mainAction</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">my_function</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -1963,7 +1969,9 @@ instantiated using this path.</p>
 * “filled” (single value)
 * “open” (single value)
 * “predicted” (single value)
-* “track” (range of values)</p>
+* “track” (range of values)
+* “tick” (single value)
+* “tick_column” (single value)</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -2089,26 +2097,21 @@ heightUpdated: triggered when the height of slider changes</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="sleap.gui.slider.VideoSlider.drawHeader">
-<code class="sig-name descname">drawHeader</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.drawHeader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.drawHeader" title="Permalink to this definition">¶</a></dt>
-<dd><p>Draw the header graph.</p>
+<dt id="sleap.gui.slider.VideoSlider.contiguousSelectionMarksAroundVal">
+<code class="sig-name descname">contiguousSelectionMarksAroundVal</code><span class="sig-paren">(</span><em class="sig-param">val</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.contiguousSelectionMarksAroundVal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.contiguousSelectionMarksAroundVal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Selects contiguously marked frames around value.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="sleap.gui.slider.VideoSlider.drawSelection">
-<code class="sig-name descname">drawSelection</code><span class="sig-paren">(</span><em class="sig-param">a: float</em>, <em class="sig-param">b: float</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.drawSelection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.drawSelection" title="Permalink to this definition">¶</a></dt>
-<dd><p>Draws selection box on slider.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>a</strong> – one endpoint value</p></li>
-<li><p><strong>b</strong> – other endpoint value</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>None.</p>
-</dd>
-</dl>
+<dt id="sleap.gui.slider.VideoSlider.decrementContiguousMarkedVal">
+<code class="sig-name descname">decrementContiguousMarkedVal</code><span class="sig-paren">(</span><em class="sig-param">val</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.decrementContiguousMarkedVal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.decrementContiguousMarkedVal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decrements value within contiguously marked range if possible.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.drawHeader">
+<code class="sig-name descname">drawHeader</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.drawHeader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.drawHeader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw the header graph.</p>
 </dd></dl>
 
 <dl class="method">
@@ -2134,7 +2137,7 @@ heightUpdated: triggered when the height of slider changes</p>
 
 <dl class="method">
 <dt id="sleap.gui.slider.VideoSlider.getMarks">
-<code class="sig-name descname">getMarks</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.getMarks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.getMarks" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getMarks</code><span class="sig-paren">(</span><em class="sig-param">type: str = ''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.getMarks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.getMarks" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns list of marks.</p>
 </dd></dl>
 
@@ -2151,6 +2154,18 @@ heightUpdated: triggered when the height of slider changes</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.incrementContiguousMarkedVal">
+<code class="sig-name descname">incrementContiguousMarkedVal</code><span class="sig-paren">(</span><em class="sig-param">val</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.incrementContiguousMarkedVal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.incrementContiguousMarkedVal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Increments value within contiguously marked range if possible.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.isMarkedVal">
+<code class="sig-name descname">isMarkedVal</code><span class="sig-paren">(</span><em class="sig-param">val</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.isMarkedVal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.isMarkedVal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether value has mark.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.gui.slider.VideoSlider.keyPressEvent">
 <code class="sig-name descname">keyPressEvent</code><span class="sig-paren">(</span><em class="sig-param">event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.keyPressEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.keyPressEvent" title="Permalink to this definition">¶</a></dt>
 <dd><p>Catch event and emit signal so something else can handle event.</p>
@@ -2160,6 +2175,17 @@ heightUpdated: triggered when the height of slider changes</p>
 <dt id="sleap.gui.slider.VideoSlider.keyReleaseEvent">
 <code class="sig-name descname">keyReleaseEvent</code><span class="sig-paren">(</span><em class="sig-param">event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.keyReleaseEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.keyReleaseEvent" title="Permalink to this definition">¶</a></dt>
 <dd><p>Catch event and emit signal so something else can handle event.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.mouseDoubleClickEvent">
+<code class="sig-name descname">mouseDoubleClickEvent</code><span class="sig-paren">(</span><em class="sig-param">event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.mouseDoubleClickEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.mouseDoubleClickEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override method to move handle for mouse double-click.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>event</strong> – </p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -2241,6 +2267,12 @@ heightUpdated: triggered when the height of slider changes</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.removeMark">
+<code class="sig-name descname">removeMark</code><span class="sig-paren">(</span><em class="sig-param">mark: sleap.gui.slider.SliderMark</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.removeMark"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.removeMark" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes an individual mark.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.gui.slider.VideoSlider.resizeEvent">
 <code class="sig-name descname">resizeEvent</code><span class="sig-paren">(</span><em class="sig-param">event=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.resizeEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.resizeEvent" title="Permalink to this definition">¶</a></dt>
 <dd><p>Override method to update visual size when necessary.</p>
@@ -2298,6 +2330,18 @@ heightUpdated: triggered when the height of slider changes</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.setSelection">
+<code class="sig-name descname">setSelection</code><span class="sig-paren">(</span><em class="sig-param">start_val</em>, <em class="sig-param">end_val</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.setSelection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.setSelection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Selects clip from start_val to end_val.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.setTickMarks">
+<code class="sig-name descname">setTickMarks</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.setTickMarks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.setTickMarks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resets which tick marks to show.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.gui.slider.VideoSlider.setTracks">
 <code class="sig-name descname">setTracks</code><span class="sig-paren">(</span><em class="sig-param">track_rows</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.setTracks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.setTracks" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the number of tracks to show in slider.</p>
@@ -2333,6 +2377,12 @@ heightUpdated: triggered when the height of slider changes</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.slider_visible_value_range">
+<em class="property">property </em><code class="sig-name descname">slider_visible_value_range</code><a class="headerlink" href="#sleap.gui.slider.VideoSlider.slider_visible_value_range" title="Permalink to this definition">¶</a></dt>
+<dd><p>Value range that’s visible given current size and zoom.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.gui.slider.VideoSlider.startSelection">
 <code class="sig-name descname">startSelection</code><span class="sig-paren">(</span><em class="sig-param">val</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.startSelection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.startSelection" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds initial selection endpoint.</p>
@@ -2357,6 +2407,24 @@ heightUpdated: triggered when the height of slider changes</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="sleap.gui.slider.VideoSlider.updateSelectionBoxPositions">
+<code class="sig-name descname">updateSelectionBoxPositions</code><span class="sig-paren">(</span><em class="sig-param">box_object</em>, <em class="sig-param">a: float</em>, <em class="sig-param">b: float</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.updateSelectionBoxPositions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.updateSelectionBoxPositions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update box item on slider.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>box_object</strong> – The box to update</p></li>
+<li><p><strong>a</strong> – one endpoint value</p></li>
+<li><p><strong>b</strong> – other endpoint value</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.gui.slider.VideoSlider.value">
 <code class="sig-name descname">value</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; float<a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider.value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider.value" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns value of slider.</p>
@@ -2369,7 +2437,7 @@ heightUpdated: triggered when the height of slider changes</p>
 <h3>sleap.gui.multicheck<a class="headerlink" href="#sleap-gui-multicheck" title="Permalink to this headline">¶</a></h3>
 <span class="target" id="module-sleap.gui.multicheck"></span><p>Module for Qt Widget to show multiple checkboxes for selecting.</p>
 <p class="rubric">Example</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span> <span class="o">=</span> <span class="n">MultiCheckWidget</span><span class="p">(</span><span class="n">count</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">selected</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;My Items&quot;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span> <span class="o">=</span> <span class="n">MultiCheckWidget</span><span class="p">(</span><span class="n">count</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">selected</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;My Items&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">selectionChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">window</span><span class="o">.</span><span class="n">plot</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">window</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span>
 </pre></div>
@@ -2538,19 +2606,16 @@ to plot the trails in scene.</p>
 
 <dl class="method">
 <dt id="sleap.gui.overlays.tracks.TrackTrailOverlay.get_track_trails">
-<code class="sig-name descname">get_track_trails</code><span class="sig-paren">(</span><em class="sig-param">frame_selection</em>, <em class="sig-param">track: sleap.instance.Track</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/overlays/tracks.html#TrackTrailOverlay.get_track_trails"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.overlays.tracks.TrackTrailOverlay.get_track_trails" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_track_trails</code><span class="sig-paren">(</span><em class="sig-param">frame_selection: Iterable[LabeledFrame]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/overlays/tracks.html#TrackTrailOverlay.get_track_trails"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.overlays.tracks.TrackTrailOverlay.get_track_trails" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get data needed to draw track trail.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>frame_selection</strong> – an interable with the <code class="xref py py-class docutils literal notranslate"><span class="pre">LabeledFrame</span></code>
-objects to include in trail.</p></li>
-<li><p><strong>track</strong> – the <code class="xref py py-class docutils literal notranslate"><span class="pre">Track</span></code> for which to get trail</p></li>
-</ul>
+<dd class="field-odd"><p><strong>frame_selection</strong> – an iterable with the <code class="xref py py-class docutils literal notranslate"><span class="pre">LabeledFrame</span></code>
+objects to include in trail.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><dl class="simple">
-<dt>list of lists of (x, y) tuples</dt><dd><p>i.e., for every node in instance, we get a list of positions</p>
+<dt>Dictionary keyed by track, value is list of lists of (x, y) tuples</dt><dd><p>i.e., for every node in instance, we get a list of positions</p>
 </dd>
 </dl>
 </p>
@@ -2623,7 +2688,7 @@ within trail_length).</p></li>
 <h3>sleap.gui.overlays.confmaps<a class="headerlink" href="#sleap-gui-overlays-confmaps" title="Permalink to this headline">¶</a></h3>
 <span class="target" id="module-sleap.gui.overlays.confmaps"></span><p>Module for showing confidence maps as an overlay within a QtVideoPlayer.</p>
 <p class="rubric">Example</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cm</span> <span class="o">=</span> <span class="n">ConfMapsPlot</span><span class="p">(</span><span class="n">conf_data</span><span class="o">.</span><span class="n">get_frame</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cm</span> <span class="o">=</span> <span class="n">ConfMapsPlot</span><span class="p">(</span><span class="n">conf_data</span><span class="o">.</span><span class="n">get_frame</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">window</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">cm</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -3117,7 +3182,7 @@ selected edge source node.</p></li>
       &copy;2019, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.2</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.3.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

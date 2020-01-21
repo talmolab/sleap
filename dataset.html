@@ -422,6 +422,12 @@ frame, with NaN-padded xy coordinates for each visible body part.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="sleap.io.dataset.Labels.get_video_predicted_frames">
+<code class="sig-name descname">get_video_predicted_frames</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em><span class="sig-paren">)</span> &#x2192; List[sleap.instance.LabeledFrame]<a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.get_video_predicted_frames"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.get_video_predicted_frames" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns labeled frames for given video with user instances.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.io.dataset.Labels.get_video_suggestions">
 <code class="sig-name descname">get_video_suggestions</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em><span class="sig-paren">)</span> &#x2192; list<a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.get_video_suggestions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.get_video_suggestions" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the list of suggested frames for the specified video
@@ -507,7 +513,9 @@ or suggestions for all videos (if no video specified).</p>
 video paths before we try to create the corresponding
 <code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code> objects. Usually you’ll want to pass
 a callback created by <a class="reference internal" href="#sleap.io.dataset.Labels.make_video_callback" title="sleap.io.dataset.Labels.make_video_callback"><code class="xref py py-meth docutils literal notranslate"><span class="pre">make_video_callback()</span></code></a>
-or <a class="reference internal" href="#sleap.io.dataset.Labels.make_gui_video_callback" title="sleap.io.dataset.Labels.make_gui_video_callback"><code class="xref py py-meth docutils literal notranslate"><span class="pre">make_gui_video_callback()</span></code></a>.</p></li>
+or <a class="reference internal" href="#sleap.io.dataset.Labels.make_gui_video_callback" title="sleap.io.dataset.Labels.make_gui_video_callback"><code class="xref py py-meth docutils literal notranslate"><span class="pre">make_gui_video_callback()</span></code></a>.
+Alternately, if you pass a list of strings we’ll construct a
+non-gui callback with those strings as the search paths.</p></li>
 <li><p><strong>match_to</strong> – If given, we’ll replace particular objects in the
 data dictionary with <em>matching</em> objects in the match_to
 <a class="reference internal" href="#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><code class="xref py py-class docutils literal notranslate"><span class="pre">Labels</span></code></a> object. This ensures that the newly
@@ -533,7 +541,9 @@ duplicate matching objects (e.g., <code class="xref py py-class docutils literal
 video paths before we try to create the corresponding
 <code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code> objects. Usually you’ll want to pass
 a callback created by <a class="reference internal" href="#sleap.io.dataset.Labels.make_video_callback" title="sleap.io.dataset.Labels.make_video_callback"><code class="xref py py-meth docutils literal notranslate"><span class="pre">make_video_callback()</span></code></a>
-or <a class="reference internal" href="#sleap.io.dataset.Labels.make_gui_video_callback" title="sleap.io.dataset.Labels.make_gui_video_callback"><code class="xref py py-meth docutils literal notranslate"><span class="pre">make_gui_video_callback()</span></code></a>.</p></li>
+or <a class="reference internal" href="#sleap.io.dataset.Labels.make_gui_video_callback" title="sleap.io.dataset.Labels.make_gui_video_callback"><code class="xref py py-meth docutils literal notranslate"><span class="pre">make_gui_video_callback()</span></code></a>.
+Alternately, if you pass a list of strings we’ll construct a
+non-gui callback with those strings as the search paths.</p></li>
 <li><p><strong>match_to</strong> – If given, we’ll replace particular objects in the
 data dictionary with <em>matching</em> objects in the match_to
 <a class="reference internal" href="#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><code class="xref py py-class docutils literal notranslate"><span class="pre">Labels</span></code></a> object. This ensures that the newly
@@ -982,7 +992,7 @@ If you want to swap tracks on a single frame, use
       &copy;2019, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.2</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.3.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

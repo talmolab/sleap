@@ -135,6 +135,12 @@ frame index here will not match the number of frames in video.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="sleap.io.video.HDF5Video.reset">
+<code class="sig-name descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/video.html#HDF5Video.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.HDF5Video.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reloads the video.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.io.video.HDF5Video.width">
 <em class="property">property </em><code class="sig-name descname">width</code><a class="headerlink" href="#sleap.io.video.HDF5Video.width" title="Permalink to this definition">¶</a></dt>
 <dd><p>See <a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a>.</p>
@@ -263,6 +269,12 @@ frame index here will not match the number of frames in video.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="sleap.io.video.ImgStoreVideo.reset">
+<code class="sig-name descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/video.html#ImgStoreVideo.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.ImgStoreVideo.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reloads the video.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.io.video.ImgStoreVideo.width">
 <em class="property">property </em><code class="sig-name descname">width</code><a class="headerlink" href="#sleap.io.video.ImgStoreVideo.width" title="Permalink to this definition">¶</a></dt>
 <dd><p>See <a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a>.</p>
@@ -343,6 +355,12 @@ based on first frame.</p></li>
 </dd></dl>
 
 <dl class="method">
+<dt id="sleap.io.video.MediaVideo.reset">
+<code class="sig-name descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/video.html#MediaVideo.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.MediaVideo.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reloads the video.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.io.video.MediaVideo.width">
 <em class="property">property </em><code class="sig-name descname">width</code><a class="headerlink" href="#sleap.io.video.MediaVideo.width" title="Permalink to this definition">¶</a></dt>
 <dd><p>See <a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a>.</p>
@@ -407,6 +425,12 @@ based on first frame.</p></li>
 </dd></dl>
 
 <dl class="method">
+<dt id="sleap.io.video.NumpyVideo.reset">
+<code class="sig-name descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/video.html#NumpyVideo.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.NumpyVideo.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reloads the video.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.io.video.NumpyVideo.width">
 <em class="property">property </em><code class="sig-name descname">width</code><a class="headerlink" href="#sleap.io.video.NumpyVideo.width" title="Permalink to this definition">¶</a></dt>
 <dd><p>See <a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a>.</p>
@@ -468,6 +492,12 @@ based on first frame.</p></li>
 </dd></dl>
 
 <dl class="method">
+<dt id="sleap.io.video.SingleImageVideo.reset">
+<code class="sig-name descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/video.html#SingleImageVideo.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.SingleImageVideo.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reloads the video.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="sleap.io.video.SingleImageVideo.width">
 <em class="property">property </em><code class="sig-name descname">width</code><a class="headerlink" href="#sleap.io.video.SingleImageVideo.width" title="Permalink to this definition">¶</a></dt>
 <dd><p>See <a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a>.</p>
@@ -486,12 +516,12 @@ components. This interface currently only supports reading of video
 data, there is no write support. Unless one is creating a new video
 backend, this class should be instantiated from its various class methods
 for different formats. For example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">video</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">from_hdf5</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s2">&quot;test.h5&quot;</span><span class="p">,</span> <span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;box&quot;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">video</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">from_hdf5</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s2">&quot;test.h5&quot;</span><span class="p">,</span> <span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;box&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">video</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">from_media</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s2">&quot;test.mp4&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Or we can use auto-detection based on filename:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">video</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">from_filename</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s2">&quot;test.mp4&quot;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">video</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">from_filename</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s2">&quot;test.mp4&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <dl class="field-list simple">
@@ -855,7 +885,7 @@ all the frame indices on <code class="xref py py-class docutils literal notransl
       &copy;2019, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.2</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.3.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

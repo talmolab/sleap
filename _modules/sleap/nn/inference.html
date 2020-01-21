@@ -106,6 +106,10 @@
         <span class="k">if</span> <span class="n">video_kwargs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">video_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
 
+        <span class="c1"># Detect whether to use grayscale video by looking at trained models.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_grayscale_models</span><span class="p">:</span>
+            <span class="n">video_kwargs</span><span class="p">[</span><span class="s2">&quot;grayscale&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
         <span class="n">video_ds</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">VideoLoader</span><span class="p">(</span>
             <span class="n">filename</span><span class="o">=</span><span class="n">video_filename</span><span class="p">,</span> <span class="n">frame_inds</span><span class="o">=</span><span class="n">frames</span><span class="p">,</span> <span class="o">**</span><span class="n">video_kwargs</span>
         <span class="p">)</span>
@@ -133,6 +137,7 @@
         <span class="sd">&quot;&quot;&quot;Runs the inference components of pipeline for a chunk.&quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="s2">&quot;centroid&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">policies</span><span class="p">:</span>
+            <span class="c1"># Detect centroids and pull out region proposals.</span>
             <span class="n">centroid_predictor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">policies</span><span class="p">[</span><span class="s2">&quot;centroid&quot;</span><span class="p">]</span>
             <span class="n">region_proposal_extractor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">policies</span><span class="p">[</span><span class="s2">&quot;region&quot;</span><span class="p">]</span>
 
@@ -147,21 +152,27 @@
                 <span class="n">region_proposal</span><span class="o">.</span><span class="n">RegionProposalSet</span><span class="o">.</span><span class="n">from_uncropped</span><span class="p">(</span><span class="n">images</span><span class="o">=</span><span class="n">img_chunk</span><span class="p">)</span>
             <span class="p">]</span>
 
-        <span class="c1"># for region_ind in range(len(region_proposal_sets)):</span>
-        <span class="c1">#     region_proposal_sets[region_ind].sample_inds += chunk_ind * chunk_size</span>
-
         <span class="k">if</span> <span class="s2">&quot;paf&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">policies</span><span class="p">:</span>
+            <span class="c1"># If we don&#39;t have PAFs, we must be doing topdown or single-instance.</span>
             <span class="k">if</span> <span class="s2">&quot;topdown&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">policies</span><span class="p">:</span>
                 <span class="n">topdown_peak_finder</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">policies</span><span class="p">[</span><span class="s2">&quot;topdown&quot;</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">topdown_peak_finder</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">policies</span><span class="p">[</span><span class="s2">&quot;confmap&quot;</span><span class="p">]</span>
 
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">region_proposal_sets</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># No region proposals were found, so just return empty result.</span>
+                <span class="k">return</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+
+            <span class="c1"># Only one scale region proposals in topdown inference.</span>
             <span class="n">rps</span> <span class="o">=</span> <span class="n">region_proposal_sets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
+            <span class="c1"># Find peaks in each sample of the region proposal set.</span>
             <span class="n">sample_peak_pts</span><span class="p">,</span> <span class="n">sample_peak_vals</span> <span class="o">=</span> <span class="n">topdown_peak_finder</span><span class="o">.</span><span class="n">predict_rps</span><span class="p">(</span><span class="n">rps</span><span class="p">)</span>
-            <span class="n">sample_peak_pts</span> <span class="o">=</span> <span class="n">sample_peak_pts</span><span class="o">.</span><span class="n">to_tensor</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
-            <span class="n">sample_peak_vals</span> <span class="o">=</span> <span class="n">sample_peak_vals</span><span class="o">.</span><span class="n">to_tensor</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
 
+            <span class="n">sample_peak_pts</span> <span class="o">=</span> <span class="n">sample_peak_pts</span><span class="o">.</span><span class="n">to_tensor</span><span class="p">(</span><span class="n">default_value</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+            <span class="n">sample_peak_vals</span> <span class="o">=</span> <span class="n">sample_peak_vals</span><span class="o">.</span><span class="n">to_tensor</span><span class="p">(</span><span class="n">default_value</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+
+            <span class="c1"># Gather instances across all region proposals for this chunk.</span>
             <span class="n">predicted_instances_chunk</span> <span class="o">=</span> <span class="n">topdown</span><span class="o">.</span><span class="n">make_sample_grouped_predicted_instances</span><span class="p">(</span>
                 <span class="n">sample_peak_pts</span><span class="p">,</span>
                 <span class="n">sample_peak_vals</span><span class="p">,</span>
@@ -173,16 +184,19 @@
             <span class="n">confmap_peak_finder</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">policies</span><span class="p">[</span><span class="s2">&quot;confmap&quot;</span><span class="p">]</span>
             <span class="n">paf_grouper</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">policies</span><span class="p">[</span><span class="s2">&quot;paf&quot;</span><span class="p">]</span>
 
+            <span class="c1"># Find multi-instance peaks in each region proposal set.</span>
             <span class="n">region_peak_sets</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">for</span> <span class="n">rps</span> <span class="ow">in</span> <span class="n">region_proposal_sets</span><span class="p">:</span>
                 <span class="n">region_peaks</span> <span class="o">=</span> <span class="n">confmap_peak_finder</span><span class="o">.</span><span class="n">predict_rps</span><span class="p">(</span><span class="n">rps</span><span class="p">)</span>
                 <span class="n">region_peak_sets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">region_peaks</span><span class="p">)</span>
 
+            <span class="c1"># Group peaks into instances using PAFs.</span>
             <span class="n">region_instance_sets</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">for</span> <span class="n">rps</span><span class="p">,</span> <span class="n">region_peaks</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">region_proposal_sets</span><span class="p">,</span> <span class="n">region_peak_sets</span><span class="p">):</span>
                 <span class="n">region_instances</span> <span class="o">=</span> <span class="n">paf_grouper</span><span class="o">.</span><span class="n">predict_rps</span><span class="p">(</span><span class="n">rps</span><span class="p">,</span> <span class="n">region_peaks</span><span class="p">)</span>
                 <span class="n">region_instance_sets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">region_instances</span><span class="p">)</span>
 
+            <span class="c1"># Gather instances across all region proposals for this chunk.</span>
             <span class="n">predicted_instances_chunk</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">region_instance_set</span> <span class="ow">in</span> <span class="n">region_instance_sets</span><span class="p">:</span>
                 <span class="k">for</span> <span class="n">sample</span><span class="p">,</span> <span class="n">region_instances</span> <span class="ow">in</span> <span class="n">region_instance_set</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -245,6 +259,19 @@
                 <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">frames</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">has_grayscale_models</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">policy_name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;centroid&quot;</span><span class="p">,</span> <span class="s2">&quot;topdown&quot;</span><span class="p">,</span> <span class="s2">&quot;confmap&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">policy_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">policies</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">policies</span><span class="p">[</span><span class="n">policy_name</span><span class="p">]</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">input_tensor</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="o">==</span> <span class="mi">1</span>
+                <span class="p">):</span>
+                    <span class="k">return</span> <span class="kc">True</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">False</span>
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_cli_args</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
@@ -610,7 +637,7 @@
       &copy;2019, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.2</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.3.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>
