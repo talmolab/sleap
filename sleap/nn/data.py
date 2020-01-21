@@ -355,7 +355,7 @@ def augment_dataset(
     # Setup augmenter.
     aug_stack = []
     if rotate:
-        aug_stack.append(iaa.Affine(rotate=(-rotation_min_angle, rotation_max_angle)))
+        aug_stack.append(iaa.Affine(rotate=(rotation_min_angle, rotation_max_angle)))
 
     if scale:
         aug_stack.append(iaa.Affine(scale=(scale_min, scale_max)))
