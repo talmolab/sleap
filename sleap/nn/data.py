@@ -5,7 +5,8 @@ import numpy as np
 # Monkey patch for: https://github.com/aleju/imgaug/issues/537
 # TODO: Fix when new version of imgaug is available on PyPI.
 import numpy
-numpy.random.bit_generator = numpy.random._bit_generator
+if hasattr(numpy.random, "_bit_generator"):
+    numpy.random.bit_generator = numpy.random._bit_generator
 
 import h5py
 import tensorflow as tf
