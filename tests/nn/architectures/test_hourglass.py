@@ -26,13 +26,21 @@ class UnetTests(tf.test.TestCase):
             np.prod(train_var.shape) for train_var in model.trainable_weights
         ]
 
-        self.assertAllEqual(
-            [out.shape for out in model.output],
-            [(None, 64, 64, 256)] * 3)
-        self.assertEqual(arch.encoder_features_stride, 64)
-        self.assertEqual(arch.decoder_features_stride, 4)
-        self.assertEqual(len(model.layers), 116)
-        self.assertEqual(len(model.trainable_weights), 156)
-        self.assertEqual(np.sum(param_counts), 65969408)
-        self.assertEqual(model.count_params(), 66002944)
-        self.assertEqual(len(x_mid), 3)
+        with self.subTest("output shape"):
+            self.assertAllEqual(
+                [out.shape for out in model.output],
+                [(None, 64, 64, 256)] * 3)
+        with self.subTest("encoder stride"):
+            self.assertEqual(arch.encoder_features_stride, 64)
+        with self.subTest("decoder stride"):
+            self.assertEqual(arch.decoder_features_stride, 4)
+        with self.subTest("number of layers"):
+            self.assertEqual(len(model.layers), 116)
+        with self.subTest("number of trainable weights"):
+            self.assertEqual(len(model.trainable_weights), 156)
+        with self.subTest("trainable parameter count"):
+            self.assertEqual(np.sum(param_counts), 65969408)
+        with self.subTest("total parameter count"):
+            self.assertEqual(model.count_params(), 66002944)
+        with self.subTest("number of intermediate features"):
+            self.assertEqual(len(x_mid), 3)

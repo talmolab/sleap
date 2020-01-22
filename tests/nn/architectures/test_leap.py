@@ -25,18 +25,27 @@ class LeapTests(tf.test.TestCase):
             np.prod(train_var.shape) for train_var in model.trainable_weights
         ]
 
-        self.assertEqual(len(model.layers), 40)
-        self.assertEqual(len(model.trainable_weights), 36)
-        self.assertEqual(np.sum(param_counts), 10768896)
-        self.assertEqual(model.count_params(), 10768896)
-        self.assertAllEqual(model.output.shape, (None, 192, 192, 128))
-        self.assertEqual(len(x_mid), 3)
-        self.assertEqual(arch.encoder_features_stride, 8)
-        self.assertEqual(arch.decoder_features_stride, 1)
-        self.assertIsInstance(
-            model.get_layer("stack0_dec0_s8_to_s4_trans_conv"),
-            tf.keras.layers.Conv2DTranspose,
-        )
+        with self.subTest("number of layers"):
+            self.assertEqual(len(model.layers), 40)
+        with self.subTest("number of trainable weights"):
+            self.assertEqual(len(model.trainable_weights), 36)
+        with self.subTest("trainable parameter count"):
+            self.assertEqual(np.sum(param_counts), 10768896)
+        with self.subTest("total parameter count"):
+            self.assertEqual(model.count_params(), 10768896)
+        with self.subTest("output shape"):
+            self.assertAllEqual(model.output.shape, (None, 192, 192, 128))
+        with self.subTest("number of intermediate features"):
+            self.assertEqual(len(x_mid), 3)
+        with self.subTest("encoder stride"):
+            self.assertEqual(arch.encoder_features_stride, 8)
+        with self.subTest("decoder stride"):
+            self.assertEqual(arch.decoder_features_stride, 1)
+        with self.subTest("layer instance type by name"):
+            self.assertIsInstance(
+                model.get_layer("stack0_dec0_s8_to_s4_trans_conv"),
+                tf.keras.layers.Conv2DTranspose,
+            )
 
     def test_leap_cnn_interp(self):
         arch = leap.LeapCNN(
@@ -55,12 +64,18 @@ class LeapTests(tf.test.TestCase):
             np.prod(train_var.shape) for train_var in model.trainable_weights
         ]
 
-        self.assertEqual(len(model.layers), 37)
-        self.assertEqual(len(model.trainable_weights), 30)
-        self.assertEqual(np.sum(param_counts), 120272)
-        self.assertEqual(model.count_params(), 120272)
-        self.assertAllEqual(model.output.shape, (None, 64, 64, 16))
-        self.assertIsInstance(
-            model.get_layer("stack0_dec0_s8_to_s4_interp_bilinear"),
-            tf.keras.layers.UpSampling2D,
-        )
+        with self.subTest("number of layers"):
+            self.assertEqual(len(model.layers), 37)
+        with self.subTest("number of trainable weights"):
+            self.assertEqual(len(model.trainable_weights), 30)
+        with self.subTest("trainable parameter count"):
+            self.assertEqual(np.sum(param_counts), 120272)
+        with self.subTest("total parameter count"):
+            self.assertEqual(model.count_params(), 120272)
+        with self.subTest("output shape"):
+            self.assertAllEqual(model.output.shape, (None, 64, 64, 16))
+        with self.subTest("layer instance type by name"):
+            self.assertIsInstance(
+                model.get_layer("stack0_dec0_s8_to_s4_interp_bilinear"),
+                tf.keras.layers.UpSampling2D,
+            )

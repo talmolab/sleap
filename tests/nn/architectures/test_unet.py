@@ -26,14 +26,22 @@ class UnetTests(tf.test.TestCase):
             np.prod(train_var.shape) for train_var in model.trainable_weights
         ]
 
-        self.assertEqual(len(model.layers), 61)
-        self.assertEqual(len(model.trainable_weights), 60)
-        self.assertEqual(np.sum(param_counts), 34515968)
-        self.assertEqual(model.count_params(), 34519808)
-        self.assertAllEqual(model.output.shape, (None, 192, 192, 64))
-        self.assertEqual(len(x_mid), 4)
-        self.assertEqual(arch.encoder_features_stride, 16)
-        self.assertEqual(arch.decoder_features_stride, 1)
+        with self.subTest("number of layers"):
+            self.assertEqual(len(model.layers), 61)
+        with self.subTest("number of trainable weights"):
+            self.assertEqual(len(model.trainable_weights), 60)
+        with self.subTest("trainable parameter count"):
+            self.assertEqual(np.sum(param_counts), 34515968)
+        with self.subTest("total parameter count"):
+            self.assertEqual(model.count_params(), 34519808)
+        with self.subTest("output shape"):
+            self.assertAllEqual(model.output.shape, (None, 192, 192, 64))
+        with self.subTest("number of intermediate features"):
+            self.assertEqual(len(x_mid), 4)
+        with self.subTest("encoder stride"):
+            self.assertEqual(arch.encoder_features_stride, 16)
+        with self.subTest("decoder stride"):
+            self.assertEqual(arch.decoder_features_stride, 1)
 
     def test_unet_no_middle_block(self):
         arch = unet.Unet(
@@ -53,14 +61,22 @@ class UnetTests(tf.test.TestCase):
             np.prod(train_var.shape) for train_var in model.trainable_weights
         ]
 
-        self.assertEqual(len(model.layers), 33)
-        self.assertEqual(len(model.trainable_weights), 32)
-        self.assertEqual(np.sum(param_counts), 32608)
-        self.assertEqual(model.count_params(), 32704)
-        self.assertAllEqual(model.output.shape, (None, 192, 192, 8))
-        self.assertEqual(len(x_mid), 2)
-        self.assertEqual(arch.encoder_features_stride, 4)
-        self.assertEqual(arch.decoder_features_stride, 1)
+        with self.subTest("number of layers"):
+            self.assertEqual(len(model.layers), 33)
+        with self.subTest("number of trainable weights"):
+            self.assertEqual(len(model.trainable_weights), 32)
+        with self.subTest("trainable parameter count"):
+            self.assertEqual(np.sum(param_counts), 32608)
+        with self.subTest("total parameter count"):
+            self.assertEqual(model.count_params(), 32704)
+        with self.subTest("output shape"):
+            self.assertAllEqual(model.output.shape, (None, 192, 192, 8))
+        with self.subTest("number of intermediate features"):
+            self.assertEqual(len(x_mid), 2)
+        with self.subTest("encoder stride"):
+            self.assertEqual(arch.encoder_features_stride, 4)
+        with self.subTest("decoder stride"):
+            self.assertEqual(arch.decoder_features_stride, 1)
 
     def test_stacked_unet(self):
         arch = unet.Unet(
@@ -81,16 +97,24 @@ class UnetTests(tf.test.TestCase):
             np.prod(train_var.shape) for train_var in model.trainable_weights
         ]
 
-        self.assertEqual(len(model.layers), 208)
-        self.assertEqual(len(model.trainable_weights), 192)
-        self.assertEqual(np.sum(param_counts), 23596560)
-        self.assertEqual(model.count_params(), 23602512)
-        self.assertAllEqual(
-            [out.shape for out in model.output],
-            [(None, 160, 160, 16)] * 3)
-        self.assertEqual([len(mid) for mid in x_mid], [5, 5, 5])
-        self.assertEqual(arch.encoder_features_stride, 32)
-        self.assertEqual(arch.decoder_features_stride, 1)
+        with self.subTest("number of layers"):
+            self.assertEqual(len(model.layers), 208)
+        with self.subTest("number of trainable weights"):
+            self.assertEqual(len(model.trainable_weights), 192)
+        with self.subTest("trainable parameter count"):
+            self.assertEqual(np.sum(param_counts), 23596560)
+        with self.subTest("total parameter count"):
+            self.assertEqual(model.count_params(), 23602512)
+        with self.subTest("output shape"):
+            self.assertAllEqual(
+                [out.shape for out in model.output],
+                [(None, 160, 160, 16)] * 3)
+        with self.subTest("number of intermediate features"):
+            self.assertEqual([len(mid) for mid in x_mid], [5, 5, 5])
+        with self.subTest("encoder stride"):
+            self.assertEqual(arch.encoder_features_stride, 32)
+        with self.subTest("decoder stride"):
+            self.assertEqual(arch.decoder_features_stride, 1)
 
     def test_stacked_unet_with_stem(self):
         arch = unet.Unet(
@@ -112,13 +136,21 @@ class UnetTests(tf.test.TestCase):
             np.prod(train_var.shape) for train_var in model.trainable_weights
         ]
 
-        self.assertEqual(len(model.layers), 140)
-        self.assertEqual(len(model.trainable_weights), 128)
-        self.assertEqual(np.sum(param_counts), 23401968)
-        self.assertEqual(model.count_params(), 23407344)
-        self.assertAllEqual(
-            [out.shape for out in model.output],
-            [(None, 40, 40, 64)] * 3)
-        self.assertEqual([len(mid) for mid in x_mid], [3, 3, 3])
-        self.assertEqual(arch.encoder_features_stride, 32)
-        self.assertEqual(arch.decoder_features_stride, 4)
+        with self.subTest("number of layers"):
+            self.assertEqual(len(model.layers), 140)
+        with self.subTest("number of trainable weights"):
+            self.assertEqual(len(model.trainable_weights), 128)
+        with self.subTest("trainable parameter count"):
+            self.assertEqual(np.sum(param_counts), 23401968)
+        with self.subTest("total parameter count"):
+            self.assertEqual(model.count_params(), 23407344)
+        with self.subTest("output shape"):
+            self.assertAllEqual(
+                [out.shape for out in model.output],
+                [(None, 40, 40, 64)] * 3)
+        with self.subTest("number of intermediate features"):
+            self.assertEqual([len(mid) for mid in x_mid], [3, 3, 3])
+        with self.subTest("encoder stride"):
+            self.assertEqual(arch.encoder_features_stride, 32)
+        with self.subTest("decoder stride"):
+            self.assertEqual(arch.decoder_features_stride, 4)
