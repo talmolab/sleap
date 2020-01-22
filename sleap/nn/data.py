@@ -1,6 +1,13 @@
 """This module contains utilities for data I/O and generating training data."""
 
 import numpy as np
+
+# Monkey patch for: https://github.com/aleju/imgaug/issues/537
+# TODO: Fix when new version of imgaug is available on PyPI.
+import numpy
+if hasattr(numpy.random, "_bit_generator"):
+    numpy.random.bit_generator = numpy.random._bit_generator
+
 import h5py
 import tensorflow as tf
 import imgaug as ia
@@ -355,7 +362,7 @@ def augment_dataset(
     # Setup augmenter.
     aug_stack = []
     if rotate:
-        aug_stack.append(iaa.Affine(rotate=(-rotation_min_angle, rotation_max_angle)))
+        aug_stack.append(iaa.Affine(rotate=(rotation_min_angle, rotation_max_angle)))
 
     if scale:
         aug_stack.append(iaa.Affine(scale=(scale_min, scale_max)))

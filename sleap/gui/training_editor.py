@@ -130,7 +130,7 @@ class TrainingEditor(QtWidgets.QDialog):
                 confmaps=ModelOutputType.CONFIDENCE_MAP,
                 pafs=ModelOutputType.PART_AFFINITY_FIELD,
                 centroids=ModelOutputType.CENTROIDS,
-                topdown=ModelOutputType.TOPDOWN_CONFIDENCE_MAP,
+                topdown_confidence_maps=ModelOutputType.TOPDOWN_CONFIDENCE_MAP,
             )[model_data["output_type"]]
 
             backbone_kwargs = {

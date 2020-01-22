@@ -3,7 +3,7 @@ model:
 - name: output_type
   label: Training For
   type: list
-  options: confmaps,topdown,pafs,centroids
+  options: confmaps,topdown_confidence_maps,pafs,centroids
   default: confmaps
 
 - name: arch # backbone_name
