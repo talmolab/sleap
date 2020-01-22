@@ -309,6 +309,7 @@ class VideoLoader:
     dataset: str = None
     input_format: str = None
     grayscale: bool = False
+    dummy: bool = False
     chunk_size: int = 32
     prefetch_chunks: int = 1
     frame_inds: Optional[List[int]] = None
@@ -367,8 +368,12 @@ class VideoLoader:
         )
 
     def load_frames(self, frame_inds):
-        local_vid = self._load_video(self.video.filename)
-        imgs = local_vid[np.array(frame_inds).astype("int64")]
+        if self.dummy:
+            dummy_shape = (len(frame_inds), *self._shape[1:])
+            imgs = np.zeros(dummy_shape, dtype="int8")
+        else:
+            local_vid = self._load_video(self.video.filename)
+            imgs = local_vid[np.array(frame_inds).astype("int64")]
         return imgs
 
     def tf_load_frames(self, frame_inds):
