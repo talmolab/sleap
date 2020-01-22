@@ -1,268 +1,280 @@
-import attr
+"""This module provides a generalized implementation of Unet.
 
-from sleap.nn.architectures.common import (
-    residual_block,
-    expand_to_n,
-    conv,
-    conv1,
-    conv3,
-)
-from tensorflow.keras.layers import (
-    Conv2D,
-    BatchNormalization,
-    Add,
-    MaxPool2D,
-    UpSampling2D,
-    Concatenate,
-    Conv2DTranspose,
-)
+See the `Unet` class docstring for more information.
+"""
+
+import tensorflow as tf
+
+import attr
+from typing import Text, Optional, List
+
+from sleap.nn.architectures import encoder_decoder
+from sleap.nn.architectures import common
+
+
+def conv(
+    x: tf.Tensor,
+    filters: int,
+    kernel_size: int = 3,
+    stride: int = 1,
+    prefix: Text = "conv",
+) -> tf.Tensor:
+    """Apply basic convolution with ReLU and batch normalization.
+
+    Args:
+        x: Input tensor.
+        filters: Number of convolutional filters (output channels).
+        kernel_size: Size (height == width) of convolutional kernel.
+        stride: Striding of convolution. If >1, the output is smaller than the input.
+        prefix: String to prepend to the sublayers of this convolution.
+
+    Returns:
+        The output tensor after applying convolution and batch normalization.
+    """
+    x = tf.keras.layers.Conv2D(
+        filters=filters,
+        kernel_size=kernel_size,
+        padding="same",
+        strides=stride,
+        activation="relu",
+        name=prefix + "_conv",
+    )(x)
+    x = tf.keras.layers.BatchNormalization(name=prefix + "_bn")(x)
+    return x
 
 
 @attr.s(auto_attribs=True)
-class StackedHourglass:
-    """Stacked hourglass block.
+class StemBlock(encoder_decoder.EncoderBlock):
+    """Stem layers of the hourglass. These are not repeated with multiple stacks.
 
-   This function builds and connects multiple hourglass blocks. See `hourglass` for
-   more specifics on the implementation.
+    The default structure of this block is:
+        Conv(7 x 7 x filters, stride 2) -> Conv(3 x 3 x 2*filters) -> MaxPool(stride 2)
+        -> Conv(3 x 3 x output_filters)
 
-   Individual hourglasses can be customized by providing an iterable of hyperparameters
-   for each of the arguments of the function (except `num_output_channels`). If scalars
-   are provided, all hourglasses will share the same hyperparameters.
-
-   Args:
-       x_in: Input 4-D tf.Tensor or instantiated layer. If the number of channels
-           are not the same as `num_filters`, an additional residual block is
-           applied to this input.
-       num_output_channels: The number of output channels of the block. These
-           are the final output tensors on which intermediate supervision may be
-           applied.
-       num_filters: The number feature channels of the block. These features are
-           used throughout the hourglass and will be passed on to the next block
-           and need not match the `num_output_channels`. Must be divisible by 2.
-       depth: The number of pooling steps applied to the input. The input must
-           be a tensor with `2^depth` height and width to allow for symmetric
-           pooling and upsampling with skip connections.
-       batch_norm: Apply batch normalization after each convolution
-       intermediate_inputs: Re-introduce the input tensor `x_in` after each hourglass
-           by concatenating with intermediate outputs
-       upsampling_layers: Use upsampling instead of transposed convolutions.
-       interp: Method to use for interpolation when upsampling smaller features.
-       initial_stride: Stride of first convolution to use for reducing input resolution.
-
+    Attributes:
+        pool: If True, pooling is applied. See `pooling_stride`.
+        pooling_stride: Determines how much pooling is applied within the stem block. If
+            set to 1, no pooling is applied. If set to 2, the max pooling layer will
+            have a stride of 2. If set to 4, the first convolution and the max pooling
+            layer will both have a stride of 2.
+        filters: Base number of convolutional filters.
+        output_filters: Number of filters to output at the end of this block.
+        first_conv_stride: Stride of the first convolutional layer. Set to 1 to increase
+            the effective spatial resolution of the initial activations.
     """
 
-    num_stacks: int = 3
-    num_filters: int = 32
-    depth: int = 3
-    batch_norm: bool = True
-    intermediate_inputs: bool = True
-    upsampling_layers: bool = True
-    interp: str = "bilinear"
-    initial_stride: int = 1
+    pool: bool = True
+    pooling_stride: int = 4
+    filters: int = 128
+    output_filters: int = 256
 
-    def output(self, x_in, num_output_channels):
-        """
-        Generate a tensorflow graph for the backbone and return the output tensor.
+    def make_block(self, x_in: tf.Tensor, prefix: Text = "stem") -> tf.Tensor:
+        """Create the block from an input tensor.
 
         Args:
-            x_in: Input 4-D tf.Tensor or instantiated layer. Must have height and width
-            that are divisible by `2^down_blocks.
-            num_output_channels: The number of output channels of the block. These
-            are the final output tensors on which intermediate supervision may be
-            applied.
+            x_in: Input tensor to the block.
+            prefix: String that will be added to the name of every layer in the block.
+                If not specified, instantiating this block multiple times may result in
+                name conflicts if existing layers have the same name.
+
         Returns:
-            x_out: tf.Tensor of the output of the block of with `num_output_channels` channels.
+            The output tensor after applying all operations in the block.
         """
-        return stacked_hourglass(x_in, num_output_channels, **attr.asdict(self))
+        x = conv(
+            x_in,
+            filters=self.filters,
+            kernel_size=7,
+            stride=2 if (self.pool and self.pooling_stride == 4) else 1,
+            prefix=prefix + "_conv7x7",
+        )
+        x = conv(x, filters=2 * self.filters, prefix=prefix + "_conv3x3")
+            
+        x = tf.keras.layers.MaxPool2D(
+            strides=2 if (self.pool and self.pooling_stride > 1) else 1,
+            padding="same",
+            name=prefix + "_pool")(
+            x
+        )
+        x = conv(x, filters=self.output_filters, prefix=prefix + "_conv3x3_out")
+        return x
 
 
-def hourglass_block(
-    x_in,
-    num_output_channels,
-    num_filters,
-    depth=3,
-    batch_norm=True,
-    upsampling_layers=True,
-    interp="bilinear",
-):
-    """Creates a single hourglass block.
+@attr.s(auto_attribs=True)
+class DownsamplingBlock(encoder_decoder.EncoderBlock):
+    """Convolutional downsampling block of the hourglass.
 
-    This function builds an hourglass block from residual blocks and max pooling.
+    This block is the simplified convolution-only block described in the `Associative
+    Embedding paper <https://arxiv.org/abs/1611.05424>`_, not the original residual
+    blocks used in the `original hourglass paper <https://arxiv.org/abs/1603.06937>`_.
+    This block is simpler and demonstrated similar performance to the residual block.
 
-    The hourglass is defined as a set of `depth` residual blocks followed by 2-strided
-    max pooling for downsampling, then an intermediate residual block, followed by
-    `depth` blocks of upsampling -> skip Add -> residual blocks.
+    The structure of this block is simply:
+        MaxPool(stride 2) -> Conv(3 x 3 x filters)
 
-    The output tensors are then produced by linear activation with 1x1 convs.
-
-    Args:
-        x_in: Input 4-D tf.Tensor or instantiated layer. Must have `num_filters` 
-            channels since the hourglass adds a residual to this input.
-        num_output_channels: The number of output channels of the block. These
-            are the final output tensors on which intermediate supervision may be
-            applied.
-        num_filters: The number feature channels of the block. These features are
-            used throughout the hourglass and will be passed on to the next block
-            and need not match the `num_output_channels`. Must be divisible by 2.
-        depth: The number of pooling steps applied to the input. The input must
-            be a tensor with `2^depth` height and width to allow for symmetric
-            pooling and upsampling with skip connections.
-        batch_norm: Apply batch normalization after each convolution
-        upsampling_layers: Use upsampling instead of transposed convolutions.
-        interp: Method to use for interpolation when upsampling smaller features.
-
-    Returns:
-        x: tf.Tensor of the features output by the block with `num_filters`
-            channels. This tensor can be passed on to the next hourglass or
-            ignored if this is the last hourglass.
-        x_out: tf.Tensor of the output of the block of the same width and height
-            as the input with `num_output_channels` channels.
+    Attributes:
+        filters: Number of filters in the convolutional layer of the block.
     """
 
-    # Check if input tensor has the right number of channels
-    if x_in.shape[-1] != num_filters:
-        raise ValueError(
-            "Input tensor must have the same number of channels as the intermediate output of the hourglass (%d)."
-            % num_filters
+    filters: int = 256
+
+    def make_block(self, x_in: tf.Tensor, prefix: Text = "downsample") -> tf.Tensor:
+        """Create the block from an input tensor.
+
+        Args:
+            x_in: Input tensor to the block.
+            prefix: String that will be added to the name of every layer in the block.
+                If not specified, instantiating this block multiple times may result in
+                name conflicts if existing layers have the same name.
+
+        Returns:
+            The output tensor after applying all operations in the block.
+        """
+        x = tf.keras.layers.MaxPool2D(strides=2, padding="same", name=prefix + "_pool")(
+            x_in
         )
-
-    # Check if input tensor has the right height/width for pooling given depth
-    if x_in.shape[-2] % (2 ** depth) != 0 or x_in.shape[-2] % (2 ** depth) != 0:
-        raise ValueError(
-            "Input tensor must have width and height dimensions divisible by %d."
-            % (2 ** depth)
-        )
-
-    # Down
-    x = x_in
-    blocks_down = []
-    for i in range(depth):
-        x = residual_block(x, num_filters, batch_norm)
-        blocks_down.append(x)
-        x = MaxPool2D(pool_size=(2, 2), strides=(2, 2))(x)
-
-    x = residual_block(x, num_filters, batch_norm)
-
-    # Middle
-    x_identity = residual_block(x, num_filters, batch_norm)
-    x = residual_block(x, num_filters, batch_norm)
-    x = residual_block(x, num_filters, batch_norm)
-    x = residual_block(x, num_filters, batch_norm)
-    x = Add()([x_identity, x])
-
-    # Up
-    for x_down in blocks_down[::-1]:
-        x_down = residual_block(x_down, num_filters, batch_norm)
-        if upsampling_layers:
-            x = UpSampling2D(size=(2, 2), interpolation=interp)(x)
-        else:
-            x = Conv2DTranspose(
-                num_filters,
-                kernel_size=3,
-                strides=2,
-                padding="same",
-                activation="relu",
-                kernel_initializer="glorot_normal",
-            )(x)
-        x = Add()([x_down, x])
-        x = residual_block(x, num_filters, batch_norm)
-
-    # Head
-    x = conv1(num_filters)(x)
-    if batch_norm:
-        x = BatchNormalization()(x)
-
-    x_out = conv1(num_output_channels, activation="linear")(x)
-
-    x = conv1(num_filters, activation="linear")(x)
-    x_ = conv1(num_filters, activation="linear")(x_out)
-    x = Add()([x_in, x, x_])
-
-    return x, x_out
+        x = conv(x, filters=self.filters, prefix=prefix + "_conv")
+        return x
 
 
-def stacked_hourglass(
-    x_in,
-    num_output_channels,
-    num_stacks=3,
-    num_filters=32,
-    depth=3,
-    batch_norm=True,
-    intermediate_inputs=True,
-    upsampling_layers=True,
-    interp="bilinear",
-    initial_stride=1,
-):
-    """Stacked hourglass block.
+@attr.s(auto_attribs=True)
+class UpsamplingBlock(encoder_decoder.DecoderBlock):
+    """Upsampling block that integrates skip connections with refinement.
 
-    This function builds and connects multiple hourglass blocks. See `hourglass` for
-    more specifics on the implementation.
+    This block implements both the intermediate block after the skip connection from the
+    downsampling path, as well as the upsampling block from the main network backbone
+    path.
 
-    Individual hourglasses can be customized by providing an iterable of hyperparameters
-    for each of the arguments of the function (except `num_output_channels`). If scalars
-    are provided, all hourglasses will share the same hyperparameters.
+    The structure of this block is:
+        x_in -> Conv(3 x 3 x filters) -> Upsample -> x_up
+        skip_in -> Conv(3 x 3 x filters) -> x_middle
+        x_up + x_middle -> x_out
 
-    Args:
-        x_in: Input 4-D tf.Tensor or instantiated layer. If the number of channels
-            are not the same as `num_filters`, an additional residual block is
-            applied to this input.
-        num_output_channels: The number of output channels of the block. These
-            are the final output tensors on which intermediate supervision may be
-            applied.
-        num_filters: The number feature channels of the block. These features are
-            used throughout the hourglass and will be passed on to the next block
-            and need not match the `num_output_channels`. Must be divisible by 2.
-        depth: The number of pooling steps applied to the input. The input must
-            be a tensor with `2^depth` height and width to allow for symmetric
-            pooling and upsampling with skip connections.
-        batch_norm: Apply batch normalization after each convolution
-        intermediate_inputs: Re-introduce the input tensor `x_in` after each hourglass
-            by concatenating with intermediate outputs
-        upsampling_layers: Use upsampling instead of transposed convolutions.
-        interp: Method to use for interpolation when upsampling smaller features.
-        initial_stride: Stride of first convolution to use for reducing input resolution.
-
-    Returns:
-        x_outs: List of tf.Tensors of the output of the block of the same width and height
-            as the input with `num_output_channels` channels.
+    Attributes:
+        filters: Number of filters in the output tensor.
+        interp_method: Interpolation method for the upsampling step. In the original
+            implementation, nearest neighbor interpolation was used. Valid values are
+            "nearest" or "bilinear".
     """
 
-    # Expand block-specific parameters if scalars provided
-    num_filters = expand_to_n(num_filters, num_stacks)
-    depth = expand_to_n(depth, num_stacks)
-    batch_norm = expand_to_n(batch_norm, num_stacks)
-    upsampling_layers = expand_to_n(upsampling_layers, num_stacks)
-    interp = expand_to_n(interp, num_stacks)
+    filters: int = 256
+    interp_method: Text = "bilinear"
 
-    # Initial downsampling
-    x = conv(num_filters[0], kernel_size=(7, 7), strides=initial_stride)(x_in)
+    def make_block(
+        self,
+        x: tf.Tensor,
+        current_stride: Optional[int] = None,
+        skip_source: Optional[common.IntermediateFeature] = None,
+        prefix: Text = "upsample",
+    ) -> tf.Tensor:
+        """Instantiate the upsampling block from an input tensor.
 
-    # Batchnorm after the intial down sampling
-    if batch_norm[0]:
-        x = BatchNormalization()(x)
+        Args:
+            x_in: Input tensor to the block.
+            current_stride: The stride of input tensor.
+            skip_source: A tensor that will be used to form a skip connection if
+                the block is configured to use it.
+            prefix: String that will be added to the name of every layer in the block.
+                If not specified, instantiating this block multiple times may result in
+                name conflicts if existing layers have the same name.
 
-    # Make sure first block gets the right number of channels
-    # x = x_in
-    if x.shape[-1] != num_filters[0]:
-        x = residual_block(x, num_filters[0], batch_norm[0])
+        Returns:
+            The output tensor after applying all operations in the block.
+        """
+        x = conv(x, filters=self.filters, prefix=prefix + "_conv")
+        x = tf.keras.layers.UpSampling2D(
+            interpolation=self.interp_method, name=prefix + "_" + self.interp_method
+        )(x)
 
-    # Create individual hourglasses and collect intermediate outputs
-    x_in = x
-    x_outs = []
-    for i in range(num_stacks):
-        if i > 0 and intermediate_inputs:
-            x = Concatenate()([x, x_in])
-            x = residual_block(x, num_filters[i], batch_norm[i])
+        x_skip = conv(skip_source, filters=self.filters, prefix=prefix + "_skip")
+        x = tf.keras.layers.Add(name=prefix + "_skip_add")([x, x_skip])
+        return x
 
-        x, x_out = hourglass_block(
-            x,
-            num_output_channels,
-            num_filters[i],
-            depth=depth[i],
-            batch_norm=batch_norm[i],
-            upsampling_layers=upsampling_layers[i],
-            interp=interp[i],
-        )
-        x_outs.append(x_out)
 
-    return x_outs
+@attr.s(auto_attribs=True)
+class Hourglass(encoder_decoder.EncoderDecoder):
+    """Encoder-decoder definition of the (stacked) hourglass network backbone.
+
+    This implements the architecture of the `Associative Embedding paper
+    <https://arxiv.org/abs/1611.05424>`_, which improves upon the architecture in the 
+    `original hourglass paper <https://arxiv.org/abs/1603.06937>`_. The primary changes
+    are to replace the residual block with simple convolutions and modify the filter
+    sizes.
+
+    The basic structure of this backbone is:
+        x_in -> stem -> {encoder_stack -> decoder_stack} * stacks -> x_out
+
+    Attributes:
+        down_blocks: Number of downsampling blocks. The original implementation has 4
+            downsampling blocks.
+        up_blocks: Number of upsampling blocks. The original implementation is symmetric
+            and has 4 upsampling blocks. If specifying more than 1 stack, this should be
+            equal to down_blocks.
+        stem_filters: Number of filters to output from the stem block. This block of
+            convolutions will not be repeated across stacks, so it serves as a
+            convenient way to reduce the input image size while extracting fine-scale
+            image features. In the original implementation this is 128.
+        stem_stride: Stride of the stem block. This can be set to 1, 2 or 4. If >1, this
+            increases the spatial receptive field at the cost of losing fine details at
+            higher resolution. In the original implementation this is 4.
+        filters: Base number of filters. This will be the number of filters in the first
+            block, where subsequent blocks will have an linearly increasing number of
+            filters (see `filter_increase`). In the original implementation this is 256.
+        filter_increase: Number to increment the number of filters in each subsequent
+            block by. This number is added, not multiplied, at each block. In the
+            original implementation this is 128.
+        interp_method: Method for interpolation in the upsampling blocks. In the
+            original implementation this is nearest neighbor interpolation. Valid values
+            are "nearest" or "bilinear".
+        stacks: Number of repeated stacks of symmetric downsampling -> upsampling
+            stacks. Intermediate outputs are returned which can be used to apply
+            intermediate supervision.
+    """
+
+    down_blocks: int = 4
+    up_blocks: int = 4
+    stem_filters: int = 128
+    stem_stride: int = 4
+    filters: int = 256
+    filter_increase: int = 128
+    interp_method: Text = "nearest"
+    stacks: int = 3
+
+    @property
+    def stem_stack(self) -> List[encoder_decoder.EncoderBlock]:
+        """Define stem stack configuration."""
+        return [
+            StemBlock(
+                filters=self.stem_filters,
+                output_filters=self.filters,
+                pool=True,
+                pooling_stride=self.stem_stride,
+            )
+        ]
+
+    @property
+    def encoder_stack(self) -> List[encoder_decoder.EncoderBlock]:
+        """Define encoder stack configuration."""
+        encoder_blocks = []
+
+        # Downsampling path
+        for i in range(self.down_blocks):
+            encoder_blocks.append(
+                DownsamplingBlock(filters=self.filters + (i * self.filter_increase))
+            )
+
+        return encoder_blocks
+
+    @property
+    def decoder_stack(self) -> List[encoder_decoder.DecoderBlock]:
+        """Define decoder stack configuration."""
+        # Upsampling path
+        decoder_blocks = []
+        for i in range(self.up_blocks):
+            decoder_blocks.append(
+                UpsamplingBlock(
+                    filters=self.filters
+                    + ((self.down_blocks - i - 1) * self.filter_increase),
+                    interp_method=self.interp_method,
+                )
+            )
+        return decoder_blocks

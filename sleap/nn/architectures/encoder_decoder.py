@@ -434,9 +434,7 @@ class EncoderDecoder:
             return 1
 
         return int(
-            np.prod(
-                [block.pooling_stride for block in self.stem_stack if block.pool]
-            )
+            np.prod([block.pooling_stride for block in self.stem_stack if block.pool])
         )
 
     @property
@@ -479,7 +477,6 @@ class EncoderDecoder:
         Returns:
             The final output tensor of the stem.
         """
-
         if self.stem_stack is None:
             return x_in
 
@@ -614,7 +611,6 @@ class EncoderDecoder:
             If the architecture has more than 1 stack, the outputs are each lists of
             output tensors and intermediate features corresponding to each stack.
         """
-
         if self.stacks > 1:
             if self.stem_features_stride != self.decoder_features_stride:
                 raise ValueError(
@@ -625,6 +621,13 @@ class EncoderDecoder:
 
         # Build stem for the first stack if defined.
         x = self.make_stem(x_in, prefix="stem")
+        stem_output = []
+        if self.stem_stack is not None:
+            stem_output = [
+                IntermediateFeature(
+                    tensor=x, stride=current_stride * self.stem_features_stride
+                )
+            ]
 
         stack_outputs = []
         intermediate_outputs = []
@@ -640,7 +643,7 @@ class EncoderDecoder:
             # Build decoder.
             x, intermediate_decoder_features = self.make_decoder(
                 x,
-                skip_source_features=intermediate_encoder_features,
+                skip_source_features=stem_output + intermediate_encoder_features,
                 current_stride=current_stride * self.encoder_features_stride,
                 prefix=f"stack{i}_dec",
             )

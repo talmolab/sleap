@@ -114,8 +114,8 @@ class UnetTests(tf.test.TestCase):
 
         self.assertEqual(len(model.layers), 140)
         self.assertEqual(len(model.trainable_weights), 128)
-        self.assertEqual(np.sum(param_counts), 23457264)
-        self.assertEqual(model.count_params(), 23462640)
+        self.assertEqual(np.sum(param_counts), 23401968)
+        self.assertEqual(model.count_params(), 23407344)
         self.assertAllEqual(
             [out.shape for out in model.output],
             [(None, 40, 40, 64)] * 3)
