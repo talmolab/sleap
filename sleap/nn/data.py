@@ -250,7 +250,7 @@ def make_points_dataset(points: Union[ArrayLike, List[ArrayLike]]) -> tf.data.Da
             )
 
     elif isinstance(points, (np.ndarray, tf.Tensor)):
-        return tf.tensor_slices(points)
+        return tf.data.Dataset.from_tensor_slices(points)
 
     else:
         raise ValueError("Invalid points type provided.")
