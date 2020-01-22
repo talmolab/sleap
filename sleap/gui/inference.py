@@ -798,7 +798,15 @@ class JobMenuManager:
                 key = self.menu_name_from_model_type(job.model.output_type)
                 if key not in jobs:
                     jobs[key] = []
-                jobs[key].append((full_filename, job))
+
+                # See if this job file is already in list, and if so, update job
+                existing_job_filenames = [filename for filename, job in jobs[key]]
+                if full_filename in existing_job_filenames:
+                    existing_idx = existing_job_filenames.index(full_filename)
+                    jobs[key][existing_idx] = (full_filename, job)
+                else:
+                    # It's not already in list, so add it
+                    jobs[key].append((full_filename, job))
 
         return jobs
 

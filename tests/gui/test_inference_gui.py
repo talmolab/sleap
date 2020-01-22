@@ -96,77 +96,19 @@ def test_find_saved_jobs():
     assert os.path.basename(paths[1]) == "default_confmaps.json"
 
 
-@pytest.mark.skip(reason="for old merging method")
-def test_add_frames_from_json():
-    vid_a = Video.from_filename("foo.mp4")
-    vid_b = Video.from_filename("bar.mp4")
+def test_skip_duplicate_job_paths():
+    job_manager = JobMenuManager(None, dict())
 
-    skeleton_a = Skeleton.load_json("tests/data/skeleton/fly_skeleton_legs.json")
-    skeleton_b = Skeleton.load_json("tests/data/skeleton/fly_skeleton_legs.json")
+    job_list = dict()
 
-    lf_a = LabeledFrame(vid_a, frame_idx=2, instances=[Instance(skeleton_a)])
-    lf_b = LabeledFrame(vid_b, frame_idx=3, instances=[Instance(skeleton_b)])
+    # Add some jobs to the list
+    job_manager.find_saved_jobs("tests/data/training_profiles/set_a", jobs=job_list)
+    assert len(job_list["confmap"]) == 1
 
-    empty_labels = Labels()
-    labels_with_video = Labels(videos=[vid_a])
-    labels_with_skeleton = Labels(skeletons=[skeleton_a])
+    # Add some more
+    job_manager.find_saved_jobs("tests/data/training_profiles/set_b", jobs=job_list)
+    assert len(job_list["confmap"]) == 2
 
-    new_labels_a = Labels(labeled_frames=[lf_a])
-    new_labels_b = Labels(labeled_frames=[lf_b])
-
-    json_a = new_labels_a.to_dict()
-    json_b = new_labels_b.to_dict()
-
-    # Test with empty labels
-
-    assert len(empty_labels.labeled_frames) == 0
-    assert len(empty_labels.skeletons) == 0
-    assert len(empty_labels.skeletons) == 0
-
-    add_frames_from_json(empty_labels, json_a)
-    assert len(empty_labels.labeled_frames) == 1
-    assert len(empty_labels.videos) == 1
-    assert len(empty_labels.skeletons) == 1
-
-    add_frames_from_json(empty_labels, json_b)
-    assert len(empty_labels.labeled_frames) == 2
-    assert len(empty_labels.videos) == 2
-    assert len(empty_labels.skeletons) == 1
-
-    empty_labels.to_dict()
-
-    # Test with labels that have video
-
-    assert len(labels_with_video.labeled_frames) == 0
-    assert len(labels_with_video.skeletons) == 0
-    assert len(labels_with_video.videos) == 1
-
-    add_frames_from_json(labels_with_video, json_a)
-    assert len(labels_with_video.labeled_frames) == 1
-    assert len(labels_with_video.videos) == 1
-    assert len(labels_with_video.skeletons) == 1
-
-    add_frames_from_json(labels_with_video, json_b)
-    assert len(labels_with_video.labeled_frames) == 2
-    assert len(labels_with_video.videos) == 2
-    assert len(labels_with_video.skeletons) == 1
-
-    labels_with_video.to_dict()
-
-    # Test with labels that have skeleton
-
-    assert len(labels_with_skeleton.labeled_frames) == 0
-    assert len(labels_with_skeleton.skeletons) == 1
-    assert len(labels_with_skeleton.videos) == 0
-
-    add_frames_from_json(labels_with_skeleton, json_a)
-    assert len(labels_with_skeleton.labeled_frames) == 1
-    assert len(labels_with_skeleton.videos) == 1
-    assert len(labels_with_skeleton.skeletons) == 1
-
-    add_frames_from_json(labels_with_skeleton, json_b)
-    assert len(labels_with_skeleton.labeled_frames) == 2
-    assert len(labels_with_skeleton.videos) == 2
-    assert len(labels_with_skeleton.skeletons) == 1
-
-    labels_with_skeleton.to_dict()
+    # Make sure we don't add duplicates
+    job_manager.find_saved_jobs("tests/data/training_profiles/set_b", jobs=job_list)
+    assert len(job_list["confmap"]) == 2
