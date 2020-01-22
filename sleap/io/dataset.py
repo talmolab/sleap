@@ -491,6 +491,16 @@ class Labels(MutableSequence):
             if lf.has_user_instances and lf.video == video
         ]
 
+    def get_video_predicted_frames(self, video: Video) -> List[LabeledFrame]:
+        """
+        Returns labeled frames for given video with user instances.
+        """
+        return [
+            lf
+            for lf in self.labeled_frames
+            if lf.has_predicted_instances and lf.video == video
+        ]
+
     # Methods for instances
 
     def instance_count(self, video: Video, frame_idx: int) -> int:
@@ -1407,6 +1417,8 @@ class Labels(MutableSequence):
                 :class:`Video` objects. Usually you'll want to pass
                 a callback created by :meth:`make_video_callback`
                 or :meth:`make_gui_video_callback`.
+                Alternately, if you pass a list of strings we'll construct a
+                non-gui callback with those strings as the search paths.
             match_to: If given, we'll replace particular objects in the
                 data dictionary with *matching* objects in the match_to
                 :class:`Labels` object. This ensures that the newly
@@ -1485,6 +1497,13 @@ class Labels(MutableSequence):
                         vid["backend"]["filename"] = os.path.join(
                             tmp_dir, vid["backend"]["filename"]
                         )
+
+                if hasattr(video_callback, "__iter__"):
+                    # If the callback is an iterable, then we'll expect it to be a
+                    # list of strings and build a non-gui callback with those as
+                    # the search paths.
+                    search_paths = [path for path in video_callback]
+                    video_callback = cls.make_video_callback(search_paths)
 
                 # Use the callback if given to handle missing videos
                 if callable(video_callback):
@@ -1838,6 +1857,8 @@ class Labels(MutableSequence):
                 :class:`Video` objects. Usually you'll want to pass
                 a callback created by :meth:`make_video_callback`
                 or :meth:`make_gui_video_callback`.
+                Alternately, if you pass a list of strings we'll construct a
+                non-gui callback with those strings as the search paths.
             match_to: If given, we'll replace particular objects in the
                 data dictionary with *matching* objects in the match_to
                 :class:`Labels` object. This ensures that the newly
@@ -1866,6 +1887,13 @@ class Labels(MutableSequence):
             for video_item in dicts["videos"]:
                 if video_item["backend"]["filename"] == ".":
                     video_item["backend"]["filename"] = filename
+
+            if hasattr(video_callback, "__iter__"):
+                # If the callback is an iterable, then we'll expect it to be a
+                # list of strings and build a non-gui callback with those as
+                # the search paths.
+                search_paths = [path for path in video_callback]
+                video_callback = cls.make_video_callback(search_paths)
 
             # Use the callback if given to handle missing videos
             if callable(video_callback):

@@ -26,6 +26,7 @@ prev video: QKeySequence.Back
 save as: QKeySequence.SaveAs
 save: Ctrl+S
 select next: '`'
+select to frame: Ctrl+Shift+J
 show edges: Ctrl+Shift+Tab
 show labels: Ctrl+Tab
 show trails: 

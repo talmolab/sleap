@@ -249,6 +249,10 @@ class CommandContext(object):
         """Shows gui to go to frame by number."""
         self.execute(GoFrameGui)
 
+    def selectToFrame(self):
+        """Shows gui to go to frame by number."""
+        self.execute(SelectToFrameGui)
+
     def gotoVideoAndFrame(self, video: Video, frame_idx: int):
         """Activates video and goes to frame."""
         NavCommand.go_to(self, frame_idx, video)
@@ -258,6 +262,10 @@ class CommandContext(object):
     def addVideo(self):
         """Shows gui for adding videos to project."""
         self.execute(AddVideo)
+
+    def replaceVideo(self):
+        """Shows gui for replacing videos to project."""
+        self.execute(ReplaceVideo)
 
     def removeVideo(self):
         """Removes selected video from project."""
@@ -846,6 +854,29 @@ class GoFrameGui(NavCommand):
         return okay
 
 
+class SelectToFrameGui(NavCommand):
+    @classmethod
+    def do_action(cls, context: "CommandContext", params: dict):
+        context.app.player.setSeekbarSelection(
+            params["from_frame_idx"], params["to_frame_idx"]
+        )
+
+    @classmethod
+    def ask(cls, context: "CommandContext", params: dict) -> bool:
+        frame_number, okay = QtWidgets.QInputDialog.getInt(
+            context.app,
+            "Select To Frame...",
+            "Frame Number:",
+            context.state["frame_idx"] + 1,
+            1,
+            context.state["video"].frames,
+        )
+        params["from_frame_idx"] = context.state["frame_idx"]
+        params["to_frame_idx"] = frame_number - 1
+
+        return okay
+
+
 # Editing Commands
 
 
@@ -880,6 +911,33 @@ class AddVideo(EditCommand):
         params["import_list"] = ImportVideos().go()
 
         return len(params["import_list"]) > 0
+
+
+class ReplaceVideo(EditCommand):
+    topics = [UpdateTopic.video]
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        new_paths = params["new_video_paths"]
+
+        for video, new_path in zip(context.labels.videos, new_paths):
+            if new_path != video.backend.filename:
+                video.backend.filename = new_path
+                video.backend.reset()
+
+    @staticmethod
+    def ask(context: CommandContext, params: dict) -> bool:
+        """Shows gui for replacing videos in project."""
+        paths = [video.backend.filename for video in context.labels.videos]
+
+        okay = MissingFilesDialog(filenames=paths, replace=True).exec_()
+
+        if not okay:
+            return False
+
+        params["new_video_paths"] = paths
+
+        return True
 
 
 class RemoveVideo(EditCommand):

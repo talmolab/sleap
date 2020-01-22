@@ -280,6 +280,9 @@ class MainWindow(QMainWindow):
 
         fileMenu.addSeparator()
         add_menu_item(fileMenu, "add videos", "Add Videos...", self.commands.addVideo)
+        add_menu_item(
+            fileMenu, "replace videos", "Replace Videos...", self.commands.replaceVideo
+        )
 
         fileMenu.addSeparator()
         add_menu_item(fileMenu, "save", "Save", self.commands.saveProject)
@@ -343,6 +346,9 @@ class MainWindow(QMainWindow):
         goMenu.addSeparator()
 
         add_menu_item(goMenu, "goto frame", "Go to Frame...", self.commands.gotoFrame)
+        add_menu_item(
+            goMenu, "select to frame", "Select to Frame...", self.commands.selectToFrame
+        )
 
         ### View Menu ###
 
@@ -1010,24 +1016,37 @@ class MainWindow(QMainWindow):
         current_video = self.state["video"]
         frame_idx = self.state["frame_idx"] or 0
 
+        spacer = "        "
+
         if message is None:
-            message = f"Frame: {frame_idx+1}/{len(current_video)}"
+            message = f"Frame: {frame_idx+1:,}/{len(current_video):,}"
             if self.player.seekbar.hasSelection():
                 start, end = self.state["frame_range"]
-                message += f" (selection: {start}-{end})"
+                message += f" (selection: {start+1:,}-{end+1:,})"
 
             if len(self.labels.videos) > 1:
                 message += f" of video {self.labels.videos.index(current_video)}"
 
-            message += f"    Labeled Frames: "
+            message += f"{spacer}Labeled Frames: "
             if current_video is not None:
                 message += (
                     f"{len(self.labels.get_video_user_labeled_frames(current_video))}"
                 )
+
                 if len(self.labels.videos) > 1:
                     message += " in video, "
             if len(self.labels.videos) > 1:
                 message += f"{len(self.labels.user_labeled_frames)} in project"
+
+            if current_video is not None:
+                pred_frame_count = len(
+                    self.labels.get_video_predicted_frames(current_video)
+                )
+                if pred_frame_count:
+                    message += f"{spacer}Predicted Frames: {pred_frame_count:,}"
+                    message += (
+                        f" ({pred_frame_count/current_video.num_frames*100:.2f}%)"
+                    )
 
         self.statusBar().showMessage(message)
 
