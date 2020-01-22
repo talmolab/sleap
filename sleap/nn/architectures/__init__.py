@@ -1,7 +1,8 @@
 from sleap.nn.architectures.leap import LeapCNN
-from sleap.nn.architectures.unet import UNet, StackedUNet
-from sleap.nn.architectures.hourglass import StackedHourglass
-from sleap.nn.architectures.resnet import ResNet50
+from sleap.nn.architectures.unet import Unet
+from sleap.nn.architectures.hourglass import Hourglass
+from sleap.nn.architectures.resnet import ResNet50, ResNet101, ResNet152
+
 from sleap.nn.architectures.densenet import (
     DenseNet121,
     DenseNet169,
@@ -18,10 +19,11 @@ from typing import TypeVar
 # TODO: We can set this up to find all classes under sleap.nn.architectures
 available_archs = [
     LeapCNN,
-    UNet,
-    StackedUNet,
-    StackedHourglass,
+    Unet,
+    Hourglass,
     ResNet50,
+    ResNet101,
+    ResNet152,
     DenseNet121,
     DenseNet169,
     DenseNet201,
