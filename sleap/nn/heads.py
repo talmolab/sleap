@@ -29,9 +29,27 @@ class CentroidConfmap:
     """
 
     use_part_anchor: bool = False
-    anchor_part_name: Optional[Text] = None
-    anchor_part_ind: Optional[int] = None
+    anchor_part_name: Optional[Text] = attr.ib(default=None)
+    anchor_part_ind: Optional[int] = attr.ib(default=None)
     sigma: float = 5.0
+
+    @anchor_part_name.validator
+    def _check_anchor_part_name(self, attribute, value):
+        if self.use_part_anchor:
+            if value is None and self.anchor_part_ind is None:
+                raise ValueError(
+                    "If using a part anchor, either the anchor_part_name or "
+                    "anchor_part_ind must be set."
+                )
+
+    @anchor_part_ind.validator
+    def _check_anchor_part_ind(self, attribute, value):
+        if self.use_part_anchor:
+            if value is None and self.anchor_part_name is None:
+                raise ValueError(
+                    "If using a part anchor, either the anchor_part_name or "
+                    "anchor_part_ind must be set."
+                )
 
     @property
     def num_channels(self) -> int:
@@ -54,7 +72,7 @@ class SinglePartConfmaps:
         sigma: Spread of the confidence map around each part location.
     """
 
-    part_names: Optional[Sequence[Text]] = None
+    part_names: Sequence[Text]
     sigma: float = 5.0
 
     @property
@@ -79,7 +97,7 @@ class MultiPartConfmaps:
         sigma: Spread of the confidence map around each part location.
     """
 
-    part_names: Optional[Sequence[Text]] = None
+    part_names: Sequence[Text]
     sigma: float = 5.0
 
     @property
@@ -113,9 +131,19 @@ class PartAffinityFields:
             `edge_inds`.
     """
 
-    width: float = 5.0
-    edge_inds: Optional[Sequence[Tuple[int, int]]] = None
-    part_names: Optional[Text] = None
+    edge_inds: Sequence[Tuple[int, int]] = attr.ib()
+    part_names: Sequence[Text]
+    max_distance: float = 5.0
+
+    @edge_inds.validator
+    def _check_edge_inds(self, attribute, value):
+        min_parts = max([max(src, dst) for (src, dst) in value]) + 1
+        if len(self.part_names) < min_parts:
+            raise ValueError(
+                f"Fewer part names specified ({len(self.part_names)}) than expected "
+                f"from edge indices ({min_parts}). Check the edge indices for the "
+                "part affinity field output head."
+            )
 
     @property
     def num_channels(self) -> int:
@@ -149,22 +177,27 @@ class OutputHead:
             will be smaller than the input.
     """
 
-    type: str
+    type: Text = attr.ib(
+        validator=attr.validators.in_([cls.__name__ for cls in OUTPUT_TYPES])
+    )
     config: OutputConfig
     stride: int
 
     @classmethod
     def from_cattr(cls, data_dicts: Dict[Text, Any]) -> "OutputHead":
-        """Structure a list of output heads."""
+        """Structure an output head from decoded JSON dictionaries."""
         for output_type_cls in OUTPUT_TYPES:
             if output_type_cls.__name__ == data_dicts["type"]:
+                config_dict = data_dicts.get("config", {})
                 return cls(
                     type=data_dicts["type"],
-                    config=output_type_cls(**data_dicts["config"]),
+                    config=output_type_cls(**config_dict),
                     stride=data_dicts["stride"],
                 )
 
-        return ValueError("Could not find output type with name:", data_dicts["type"])
+        raise ValueError(
+            "Could not find output type with name: '%s'" % data_dicts["type"]
+        )
 
     @property
     def num_channels(self) -> int:
@@ -192,6 +225,7 @@ class OutputHead:
             padding="same",
             name=name,
         )(x)
+
 
 # Register global cattr structuring hook.
 cattr.register_structure_hook(OutputHead, lambda d, t: OutputHead.from_cattr(d))
