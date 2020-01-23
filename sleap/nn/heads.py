@@ -157,6 +157,7 @@ OUTPUT_TYPES = [
     MultiPartConfmaps,
     PartAffinityFields,
 ]
+OUTPUT_TYPE_NAMES = [cls.__name__ for cls in OUTPUT_TYPES]
 OutputConfig = TypeVar("OutputConfig", *OUTPUT_TYPES)
 
 
@@ -178,7 +179,7 @@ class OutputHead:
     """
 
     type: Text = attr.ib(
-        validator=attr.validators.in_([cls.__name__ for cls in OUTPUT_TYPES])
+        validator=attr.validators.in_(OUTPUT_TYPE_NAMES)
     )
     config: OutputConfig
     stride: int

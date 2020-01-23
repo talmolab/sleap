@@ -79,7 +79,20 @@ class HeadsTests(tf.test.TestCase):
         with self.subTest("num_chanels"):
             self.assertEqual(output_head.num_channels, 3)
 
-    def test_output_head_from_cattr_no_config(self):
+    def test_output_head_from_cattr_no_config_allowed(self):
+        json_dicts = json.loads(jsmin(
+            """
+            {
+                "type": "CentroidConfmap",
+                "stride": 4
+            }
+            """
+            ))
+
+        output_head = cattr.structure(json_dicts, heads.OutputHead)
+        self.assertIsInstance(output_head.config, heads.CentroidConfmap)
+
+    def test_output_head_from_cattr_no_config_invalid(self):
         json_dicts = json.loads(jsmin(
             """
             {
