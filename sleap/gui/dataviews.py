@@ -4,6 +4,7 @@ Data table widgets and view models used in GUI app.
 
 from PySide2 import QtCore, QtWidgets, QtGui
 
+import numpy as np
 import os
 
 from operator import itemgetter
@@ -140,7 +141,11 @@ class GenericTableModel(QtCore.QAbstractTableModel):
 
         return None
 
-    def sort(self, column_idx: int, order: QtCore.Qt.SortOrder):
+    def sort(
+        self,
+        column_idx: int,
+        order: QtCore.Qt.SortOrder = QtCore.Qt.SortOrder.AscendingOrder,
+    ):
         """Sorts table by given column and order."""
         prop = self.properties[column_idx]
         reverse = order == QtCore.Qt.SortOrder.DescendingOrder
@@ -150,8 +155,14 @@ class GenericTableModel(QtCore.QAbstractTableModel):
             if "video" in self.properties and "frame" in self.properties:
                 sort_function = itemgetter("video", "frame")
 
+        def string_safe_sort(x):
+            try:
+                return float(sort_function(x))
+            except ValueError:
+                return -np.inf
+
         self.beginResetModel()
-        self._data.sort(key=sort_function, reverse=reverse)
+        self._data.sort(key=string_safe_sort, reverse=reverse)
         self.endResetModel()
 
     def get_from_idx(self, index: QtCore.QModelIndex):
