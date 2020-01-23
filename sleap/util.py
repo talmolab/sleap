@@ -292,6 +292,12 @@ def get_config_yaml(shortname: str) -> dict:
         return yaml.load(f, Loader=yaml.SafeLoader)
 
 
+def save_config_yaml(shortname: str, data: Any) -> dict:
+    yaml_path = get_config_file(shortname)
+    with open(yaml_path, "w") as f:
+        yaml.dump(data, f)
+
+
 def make_scoped_dictionary(
     flat_dict: Dict[str, Any], exclude_nones: bool = True
 ) -> Dict[str, Dict[str, Any]]:
