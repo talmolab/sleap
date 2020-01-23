@@ -51,7 +51,7 @@ class ModelConfigTests(tf.test.TestCase):
             self.assertAllEqual([x.shape for x in keras_model.outputs],
                 [(None, 40, 40, 3), (None, 20, 20, 6)])
 
-    def test_model_config_from_legacy_cattr(self):
+    def test_model_config_from_legacy_model_cattr(self):
         json_dicts = json.loads(jsmin(
             """
             {
@@ -81,14 +81,7 @@ class ModelConfigTests(tf.test.TestCase):
 
         skeletons = [sleap.Skeleton.from_names_and_edge_inds(
             node_names=["a", "b", "c"], edge_inds=[[0, 1], [1, 2], [0, 2]])]
-        config = model_config.ModelConfig.from_legacy_cattr(
-            data_dicts=json_dicts["model"],
-            scale=json_dicts["trainer"]["scale"],
-            sigma=json_dicts["trainer"]["sigma"],
-            skeletons=skeletons,
-            instance_crop_use_ctr_node=json_dicts["trainer"]["instance_crop_use_ctr_node"],
-            instance_crop_ctr_node_ind=json_dicts["trainer"]["instance_crop_ctr_node_ind"]
-        )
+        config = model_config.ModelConfig.from_legacy_job_cattr(json_dicts, skeletons=skeletons)
         keras_model = config.make_model((160, 160, 1))
 
         with self.subTest("keras model output shapes"):
