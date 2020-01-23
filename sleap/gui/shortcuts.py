@@ -8,7 +8,7 @@ import yaml
 
 from typing import Dict, List, Union
 
-from sleap.util import get_config_file
+from sleap import util
 
 
 class ShortcutDialog(QtWidgets.QDialog):
@@ -141,9 +141,7 @@ class Shortcuts(object):
     )
 
     def __init__(self):
-        shortcut_yaml = get_config_file("shortcuts.yaml")
-        with open(shortcut_yaml, "r") as f:
-            shortcuts = yaml.load(f, Loader=yaml.SafeLoader)
+        shortcuts = util.get_config_yaml("shortcuts.yaml")
 
         for action in shortcuts:
             key_string = shortcuts.get(action, None)
@@ -158,9 +156,7 @@ class Shortcuts(object):
 
     def save(self):
         """Saves all shortcuts to shortcut file."""
-        shortcut_yaml = get_config_file("shortcuts.yaml")
-        with open(shortcut_yaml, "w") as f:
-            yaml.dump(self._shortcuts, f)
+        util.save_config_yaml("shortcuts.yaml", self._shortcuts)
 
     def __getitem__(self, idx: Union[slice, int, str]) -> Union[str, Dict[str, str]]:
         """

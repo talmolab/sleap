@@ -36,3 +36,15 @@ def test_skeleton_nodes(qtbot, centered_pair_predictions):
     )
     table.selectRow(1)
     assert table.model().data(table.currentIndex()) == "21/24"
+
+
+def test_table_sort_string(qtbot):
+    table_model = GenericTableModel(
+        items=[dict(a=1, b=2), dict(a=2, b="")], properties=["a", "b"]
+    )
+
+    table = GenericTableView(is_sortable=True, model=table_model)
+
+    # Make sure we can sort with both numbers and strings (i.e., "")
+    table.model().sort(0)
+    table.model().sort(1)

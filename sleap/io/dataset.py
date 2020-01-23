@@ -111,8 +111,11 @@ class Labels(MutableSequence):
         # Add any videos that are present in the labels but
         # missing from the video list
         if merge or len(self.videos) == 0:
-            # find videos in labeled frames that aren't yet in top level videos
-            new_videos = {label.video for label in self.labels} - set(self.videos)
+            # find videos in labeled frames or suggestions
+            # that aren't yet in top level videos
+            lf_videos = {label.video for label in self.labels}
+            suggestion_videos = {sug.video for sug in self.suggestions}
+            new_videos = lf_videos.union(suggestion_videos) - set(self.videos)
             # just add the new videos so we don't re-order current list
             if len(new_videos):
                 self.videos.extend(list(new_videos))
@@ -1331,31 +1334,24 @@ class Labels(MutableSequence):
         search_paths = search_paths or []
 
         def video_callback(video_list, new_paths=search_paths):
-            # Check each video
-            for video_item in video_list:
-                if "backend" in video_item and "filename" in video_item["backend"]:
-                    current_filename = video_item["backend"]["filename"]
-                    # check if we can find video
-                    if not os.path.exists(current_filename):
+            filenames = [item["backend"]["filename"] for item in video_list]
+            missing = pathutils.list_file_missing(filenames)
 
-                        current_basename = os.path.basename(current_filename)
-                        # handle unix, windows, or mixed paths
-                        if current_basename.find("/") > -1:
-                            current_basename = current_basename.split("/")[-1]
-                        if current_basename.find("\\") > -1:
-                            current_basename = current_basename.split("\\")[-1]
+            # Try changing the prefix using saved patterns
+            if sum(missing):
+                pathutils.fix_paths_with_saved_prefix(filenames, missing)
 
-                        # First see if we can find the file in another directory,
-                        # and if not, prompt the user to find the file.
+            # Check for file in search_path directories
+            if sum(missing) and new_paths:
+                for i, filename in enumerate(filenames):
+                    fixed_path = find_path_using_paths(filename, new_paths)
+                    if fixed_path != filename:
+                        filenames[i] = fixed_path
+                        missing[i] = False
 
-                        # We'll check in the current working directory, and if the user has
-                        # already found any missing videos, check in the directory of those.
-                        for path_dir in new_paths:
-                            check_path = os.path.join(path_dir, current_basename)
-                            if os.path.exists(check_path):
-                                # we found the file in a different directory
-                                video_item["backend"]["filename"] = check_path
-                                break
+            # Replace the video filenames with changes by user
+            for i, item in enumerate(video_list):
+                item["backend"]["filename"] = filenames[i]
 
         return video_callback
 
@@ -1383,7 +1379,11 @@ class Labels(MutableSequence):
             filenames = [item["backend"]["filename"] for item in video_list]
             missing = pathutils.list_file_missing(filenames)
 
-            # First check for file in search_path directories
+            # Try changing the prefix using saved patterns
+            if sum(missing):
+                pathutils.fix_paths_with_saved_prefix(filenames, missing)
+
+            # Check for file in search_path directories
             if sum(missing) and new_paths:
                 for i, filename in enumerate(filenames):
                     fixed_path = find_path_using_paths(filename, new_paths)
