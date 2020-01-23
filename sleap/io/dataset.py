@@ -26,6 +26,9 @@ from sleap.instance import (
     LabeledFrame,
     Track,
     make_instance_cattr,
+    PointArray,
+    PredictedPointArray,
+    PredictedInstance,
 )
 
 from sleap.io import pathutils
@@ -506,6 +509,11 @@ class Labels(MutableSequence):
     def user_instances(self):
         """Returns list of all user (non-predicted) instances."""
         return [inst for inst in self.all_instances if type(inst) == Instance]
+
+    @property
+    def predicted_instances(self):
+        """Returns list of all user (non-predicted) instances."""
+        return [inst for inst in self.all_instances if type(inst) == PredictedInstance]
 
     def instances(self, video: Video = None, skeleton: Skeleton = None):
         """
@@ -1156,6 +1164,7 @@ class Labels(MutableSequence):
         Returns:
             None.
         """
+
         # Make sure that all directories for path exist
         os.makedirs(os.path.dirname(filename), exist_ok=True)
 
