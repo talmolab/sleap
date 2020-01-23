@@ -3,7 +3,9 @@ Utilities for working with file paths.
 """
 
 import os
-from typing import Callable, Optional, Tuple
+from typing import Callable, List, Optional, Tuple
+
+from sleap import util
 
 
 def list_file_missing(filenames):
@@ -99,3 +101,25 @@ def find_changed_subpath(old_path: str, new_path: str) -> Tuple[str, str]:
     new_inital = new_path[: new_char_idx + 1] if new_char_idx < -1 else new_path
 
     return (old_initial, new_inital)
+
+
+def fix_paths_with_saved_prefix(filenames, missing: Optional[List[bool]] = None):
+    path_prefix_conversions = util.get_config_yaml("path_prefixes.yaml")
+
+    for i, filename in enumerate(filenames):
+        if missing is not None:
+            if not missing[i]:
+                continue
+        elif os.path.exists(filename):
+            continue
+
+        for old_prefix, new_prefix in path_prefix_conversions.items():
+            if filename.startswith(old_prefix):
+                try_filename = filename.replace(old_prefix, new_prefix)
+                try_filename = fix_path_separator(try_filename)
+
+                if os.path.exists(try_filename):
+                    filenames[i] = try_filename
+                    if missing is not None:
+                        missing[i] = False
+                    continue

@@ -16,8 +16,11 @@ import attr
 import psutil
 import json
 import rapidjson
+import yaml
 
 from typing import Any, Dict, Hashable, Iterable, List, Optional
+
+from sleap.io import pathutils
 
 
 def json_loads(json_str: str) -> Dict:
@@ -267,7 +270,7 @@ def get_config_file(shortname: str) -> str:
     if not os.path.exists(desired_path):
         package_path = get_package_file(f"sleap/config/{shortname}")
         if not os.path.exists(package_path):
-            return FileNotFoundError(
+            raise FileNotFoundError(
                 f"Cannot locate {shortname} config file at {desired_path} or {package_path}."
             )
         # Make sure there's a ~/.sleap/ directory to store user version of the
@@ -281,6 +284,12 @@ def get_config_file(shortname: str) -> str:
         shutil.copy(package_path, desired_path)
 
     return desired_path
+
+
+def get_config_yaml(shortname: str) -> dict:
+    config_path = get_config_file(shortname)
+    with open(config_path, "r") as f:
+        return yaml.load(f, Loader=yaml.SafeLoader)
 
 
 def make_scoped_dictionary(
