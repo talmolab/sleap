@@ -66,6 +66,10 @@ def filenames_prefix_change(
                     filenames[i] = try_filename
                     check[i] = False
 
+                    # Save prefix change in config file so that it can be used
+                    # automatically in the future
+                    save_path_prefix_replacement(old_prefix, new_prefix)
+
 
 def fix_path_separator(path: str):
     return path.replace("\\", "/")
@@ -106,6 +110,9 @@ def find_changed_subpath(old_path: str, new_path: str) -> Tuple[str, str]:
 def fix_paths_with_saved_prefix(filenames, missing: Optional[List[bool]] = None):
     path_prefix_conversions = util.get_config_yaml("path_prefixes.yaml")
 
+    if path_prefix_conversions is None:
+        return
+
     for i, filename in enumerate(filenames):
         if missing is not None:
             if not missing[i]:
@@ -123,3 +130,9 @@ def fix_paths_with_saved_prefix(filenames, missing: Optional[List[bool]] = None)
                     if missing is not None:
                         missing[i] = False
                     continue
+
+
+def save_path_prefix_replacement(old_prefix: str, new_prefix: str):
+    data = util.get_config_yaml("path_prefixes.yaml") or dict()
+    data[old_prefix] = new_prefix
+    util.save_config_yaml("path_prefixes.yaml", data)
