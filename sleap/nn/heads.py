@@ -173,8 +173,16 @@ class OutputHead:
     type: Text = attr.ib(
         validator=attr.validators.in_(OUTPUT_TYPE_NAMES)
     )
-    config: OutputConfig
+    config: OutputConfig = attr.ib()
     stride: int
+
+    @config.validator
+    def _check_config(self, attribute, value):
+        config_class_name = type(value).__name__
+        if config_class_name != self.type:
+            raise ValueError(
+                f"Output head config ({config_class_name}) and type ({self.type}) "
+                "must be the same.")
 
     @classmethod
     def from_cattr(cls, data_dicts: Dict[Text, Any]) -> "OutputHead":
