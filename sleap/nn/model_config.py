@@ -6,6 +6,8 @@ import tensorflow as tf
 
 import attr
 import cattr
+import json
+from jsmin import jsmin
 from typing import TypeVar, Text, Any, Dict, Sequence, List, Optional, Tuple, Union
 
 import sleap
