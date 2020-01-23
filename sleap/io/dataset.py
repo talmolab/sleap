@@ -2003,6 +2003,9 @@ class Labels(MutableSequence):
         Returns:
             None.
         """
+        # Convert to full (absolute) path
+        filename = os.path.abspath(filename)
+
         # Make sure that all directories for path exist
         os.makedirs(os.path.dirname(filename), exist_ok=True)
 
