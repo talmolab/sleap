@@ -1246,11 +1246,12 @@ class MainWindow(QMainWindow):
         self._child_windows[mode].frame_selection = self._frames_for_prediction()
         self._child_windows[mode].open()
 
-    def learningFinished(self):
+    def learningFinished(self, new_count: int):
         """Called when inference finishes."""
         # we ran inference so update display/ui
         self.on_data_update([UpdateTopic.all])
-        self.commands.changestack_push("new predictions")
+        if new_count:
+            self.commands.changestack_push("new predictions")
 
     def visualizeOutputs(self):
         """Gui for adding overlay with live visualization of predictions."""

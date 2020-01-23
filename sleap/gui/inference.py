@@ -45,7 +45,7 @@ class InferenceDialog(QtWidgets.QDialog):
         mode: String which specified mode ("learning", "expert", or "inference").
     """
 
-    learningFinished = QtCore.Signal()
+    learningFinished = QtCore.Signal(int)
 
     def __init__(
         self,
@@ -415,7 +415,7 @@ class InferenceDialog(QtWidgets.QDialog):
             frames_to_predict=frames_to_predict,
         )
 
-        self.learningFinished.emit()
+        self.learningFinished.emit(new_counts)
 
         if new_counts >= 0:
             QtWidgets.QMessageBox(
