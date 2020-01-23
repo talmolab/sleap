@@ -376,6 +376,11 @@ class QtVideoPlayer(QWidget):
         for inst in self.selectable_instances:
             inst.showEdges(show)
 
+    def highlightPredictions(self, highlight_text: str = ""):
+        for inst in self.predicted_instances:
+            inst.highlight = True
+            inst.highlight_text = highlight_text
+
     def zoomToFit(self):
         """ Zoom view to fit all instances.
         """
@@ -726,7 +731,7 @@ class GraphicsView(QGraphicsView):
 
         Order should match the order in which instances were added to scene.
         """
-        return list(filter(lambda x: not x.predicted, self.all_instances))
+        return list(filter(lambda x: x.predicted, self.all_instances))
 
     @property
     def selectable_instances(self) -> List["QtInstance"]:
@@ -1551,15 +1556,30 @@ class QtInstance(QGraphicsObject):
         self._bounding_rect = QRectF()
 
         # Show predicted instances behind non-predicted ones
-        self.setZValue(0 if self.predicted else 1)
+        self.setZValue(1 if self.predicted else 2)
 
-        # Add box to go around instance
+        # Add box to go around instance for selection
         self.box = QGraphicsRectItem(parent=self)
-        box_pen_widget = color_manager.get_item_pen_width(self.instance)
-        box_pen = QPen(QColor(*color), box_pen_widget)
+        box_pen_width = color_manager.get_item_pen_width(self.instance)
+        box_pen = QPen(QColor(*color), box_pen_width)
         box_pen.setStyle(Qt.DashLine)
         box_pen.setCosmetic(True)
         self.box.setPen(box_pen)
+
+        # Add label for highlighted instance
+        self.highlight_label = QtTextWithBackground(parent=self)
+        self.highlight_label.setDefaultTextColor(QColor("yellow"))
+        font = self.highlight_label.font()
+        font.setPointSize(10)
+        self.highlight_label.setFont(font)
+        self.highlight_label.setOpacity(0.5)
+        self.highlight_label.hide()
+
+        # Add box to go around instance for highlight
+        self.highlight_box = QGraphicsRectItem(parent=self)
+        highlight_pen = QPen(QColor("yellow"), 8)
+        highlight_pen.setCosmetic(True)
+        self.highlight_box.setPen(highlight_pen)
 
         self.track_label = QtTextWithBackground(parent=self)
         self.track_label.setDefaultTextColor(QColor(*color))
@@ -1698,6 +1718,36 @@ class QtInstance(QGraphicsObject):
             self.box.setRect(rect)
             self.track_label.setOpacity(op)
             self.track_label.setPos(rect.bottomLeft() + QPointF(0, 5))
+
+    @property
+    def highlight(self):
+        return self.highlight_box.opacity() > 0
+
+    @highlight.setter
+    def highlight(self, val):
+        op = 0.2 if val else 0
+        self.highlight_box.setOpacity(op)
+        # Update the position for the box
+        rect = self.getPointsBoundingRect()
+        if rect is not None:
+            self._bounding_rect = rect
+            rect = rect.marginsAdded(QMarginsF(10, 10, 10, 10))
+            self.highlight_box.setRect(rect)
+
+            if rect.width() > 30:
+                # Show label if highlight box isn't too small
+                self.highlight_label.setVisible(op > 0)
+                self.highlight_label.setPos(rect.topLeft() - QPointF(0, 10))
+            else:
+                self.highlight_label.hide()
+
+    @property
+    def highlight_text(self):
+        return ""
+
+    @highlight_text.setter
+    def highlight_text(self, val):
+        self.highlight_label.setPlainText(val)
 
     @property
     def selected(self):
