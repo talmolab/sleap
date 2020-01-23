@@ -488,6 +488,28 @@ class ModelConfig:
         data_dicts = json.loads(jsmin(read(open(filepath, "r"))))
         return cls.from_legacy_job_cattr(data_dicts, skeletons=skeletons)
 
+    @property
+    def is_complete_for_training(self) -> bool:
+        """Return True if the configuration is fully specified for training.
+
+        This requires that the `PreprocessingConfig` is complete for training and that
+        all output heads are complete.
+        """
+        return self.preprocessing.is_complete_for_training and all(
+            [head.is_complete for head in self.outputs]
+        )
+
+    @property
+    def is_complete_for_inference(self) -> bool:
+        """Return True if the configuration is fully specified for inference.
+
+        This requires that the `PreprocessingConfig` is complete for inference and that
+        all output heads are complete.
+        """
+        return self.preprocessing.is_complete_for_inference and all(
+            [head.is_complete for head in self.outputs]
+        )
+
     def make_model(self, input_shape: Tuple[int, int, int]) -> tf.keras.Model:
         """Create a trainable model from the configuration.
 
