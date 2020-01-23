@@ -16,44 +16,29 @@ class CentroidConfmap:
     """Single-landmark confidence map for locating the instance centroid.
 
     Attributes:
-        use_part_anchor: If True, attempt to compute centroid from the specified part.
+        use_anchor_part: If True, attempt to compute centroid from the specified part.
             This is useful when the body morphology is such that the bounding box
             centroid often falls on very different parts of the body or the background.
             When the body part is not visible, the bounding box centroid is used
             instead. If False, the bounding box centroid is always used.
-        anchor_part_name: String specifying the body part name within the skeleton. This
-            takes precedence over `anchor_part_ind` if both are specified.
-        anchor_part_ind: Index of the body part within the skeleton. If both this and
-            `anchor_part_name` are specified, the latter will take precedence.
+        anchor_part_name: String specifying the body part name within the skeleton.
         sigma: Spread of the confidence map around the centroid location.
     """
 
-    use_part_anchor: bool = False
-    anchor_part_name: Optional[Text] = attr.ib(default=None)
-    anchor_part_ind: Optional[int] = attr.ib(default=None)
+    use_anchor_part: bool = False
+    anchor_part_name: Optional[Text] = None
     sigma: float = 5.0
 
-    @anchor_part_name.validator
-    def _check_anchor_part_name(self, attribute, value):
-        if self.use_part_anchor:
-            if value is None and self.anchor_part_ind is None:
-                raise ValueError(
-                    "If using a part anchor, either the anchor_part_name or "
-                    "anchor_part_ind must be set."
-                )
-
-    @anchor_part_ind.validator
-    def _check_anchor_part_ind(self, attribute, value):
-        if self.use_part_anchor:
-            if value is None and self.anchor_part_name is None:
-                raise ValueError(
-                    "If using a part anchor, either the anchor_part_name or "
-                    "anchor_part_ind must be set."
-                )
+    @property
+    def is_complete(self):
+        """Return True if the configuration is fully specified."""
+        return not self.use_anchor_part or self.anchor_part_name is not None
 
     @property
     def num_channels(self) -> int:
         """Return number of channels in the output tensor."""
+        if not self.is_complete:
+            raise ValueError("Output head configuration is not complete.")
         return 1
 
 
@@ -74,15 +59,34 @@ class SinglePartConfmaps:
             will produce confidence maps corresponding to the centered instance. This
             implies that region proposals must first be generated to do the alignment
             (e.g., from `CentroidConfmap` peaks).
+        center_on_anchor_part: If True, specifies that centering should be done relative
+            to a body part rather than the center of the instance bounding box.
+        anchor_part_name: String specifying the body part name to use as an anchor for
+            centering. If `center_on_anchor_part` is False, this has no effect and does
+            not need to be specified.
     """
 
-    part_names: Sequence[Text]
+    part_names: Optional[Sequence[Text]] = None
     sigma: float = 5.0
-    centered: bool = True
+    centered: bool = False
+    center_on_anchor_part: bool = False
+    anchor_part_name: Optional[Text] = None
+
+    @property
+    def is_complete(self):
+        """Return True if the configuration is fully specified."""
+        part_names_specified = self.part_names is not None and len(self.part_names) > 0
+        anchor_specified = (
+            not self.center_on_anchor_part or self.anchor_part_name is not None
+        )
+        centering_specified = not self.centered or anchor_specified
+        return part_names_specified and centering_specified
 
     @property
     def num_channels(self) -> int:
         """Return number of channels in the output tensor."""
+        if not self.is_complete:
+            raise ValueError("Output head configuration is not complete.")
         return len(self.part_names)
 
 
@@ -102,12 +106,19 @@ class MultiPartConfmaps:
         sigma: Spread of the confidence map around each part location.
     """
 
-    part_names: Sequence[Text]
+    part_names: Optional[Sequence[Text]] = None
     sigma: float = 5.0
+
+    @property
+    def is_complete(self):
+        """Return True if the configuration is fully specified."""
+        return self.part_names is not None and len(self.part_names) > 0
 
     @property
     def num_channels(self) -> int:
         """Return number of channels in the output tensor."""
+        if not self.is_complete:
+            raise ValueError("Output head configuration is not complete.")
         return len(self.part_names)
 
 
@@ -134,12 +145,19 @@ class PartAffinityFields:
             and destination parts.
     """
 
-    edges: Sequence[Tuple[Text, Text]] = attr.ib()
+    edges: Optional[Sequence[Tuple[Text, Text]]] = None
     max_distance: float = 5.0
+
+    @property
+    def is_complete(self):
+        """Return True if the configuration is fully specified."""
+        return self.edges is not None
 
     @property
     def num_channels(self) -> int:
         """Return number of channels in the output tensor."""
+        if not self.is_complete:
+            raise ValueError("Output head configuration is not complete.")
         return len(self.edges) * 2
 
 
@@ -162,7 +180,9 @@ class OutputHead:
             type ("CentroidConfmap", "SinglePartConfmaps", "MultiPartConfmaps",
             "PartAffinityFields").
         config: Head type-specific configuration. This is an instance of one of the
-            valid head types with the attributes specific to that type.
+            valid head types with the attributes specific to that type. Valid types
+            include `CentroidConfmap`, `SinglePartConfmaps`, `MultiPartConfmaps`, and
+            `PartAffinityFields`.
         stride: The expected output stride of the tensor resulting from this head. This
             is effectively (1 / scale) of the output relative to the input and used to
             appropriately connect the backbone to this head. Set to 1 to specify that a
@@ -170,9 +190,7 @@ class OutputHead:
             will be smaller than the input.
     """
 
-    type: Text = attr.ib(
-        validator=attr.validators.in_(OUTPUT_TYPE_NAMES)
-    )
+    type: Text = attr.ib(validator=attr.validators.in_(OUTPUT_TYPE_NAMES))
     config: OutputConfig = attr.ib()
     stride: int
 
@@ -182,7 +200,35 @@ class OutputHead:
         if config_class_name != self.type:
             raise ValueError(
                 f"Output head config ({config_class_name}) and type ({self.type}) "
-                "must be the same.")
+                "must be the same."
+            )
+
+    @classmethod
+    def from_config(cls, config: OutputConfig, stride: int) -> "OutputHead":
+        """Create an output head from an output head configuration.
+
+        This method is a convenient way to initialize this class without having to
+        specify the `OutputConfig` class name as a string as well.
+
+        Args:
+            config: Head type-specific configuration. This is an instance of one of the
+                valid head types with the attributes specific to that type. Valid types
+                include `CentroidConfmap`, `SinglePartConfmaps`, `MultiPartConfmaps`,
+                and `PartAffinityFields`.
+            stride: The expected output stride of the tensor resulting from this head.
+                This is effectively (1 / scale) of the output relative to the input and
+                used to appropriately connect the backbone to this head. Set to 1 to
+                specify that a tensor of the same size as the input should be output. If
+                >1, the output will be smaller than the input.
+
+        Returns:
+            The initialized `OutputHead` instance.
+        """
+        return cls(
+            type=type(config).__name__,
+            config=config,
+            stride=stride
+            )
 
     @classmethod
     def from_cattr(cls, data_dicts: Dict[Text, Any]) -> "OutputHead":
@@ -201,6 +247,11 @@ class OutputHead:
         )
 
     @property
+    def is_complete(self):
+        """Return True if the configuration is fully specified."""
+        return self.config.is_complete
+
+    @property
     def num_channels(self) -> int:
         """Return the number of channels in the output tensor for this head."""
         return self.config.num_channels
@@ -217,6 +268,8 @@ class OutputHead:
             The output tensor mapped to the configured number of channels for this
             output type through a 1x1 linear convolution.
         """
+        if not self.is_complete:
+            raise ValueError("Output head configuration is not complete.")
         if name is None:
             name = self.type
         return tf.keras.layers.Conv2D(
