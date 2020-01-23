@@ -477,9 +477,16 @@ class Predictor:
         kwargs: Dict[str, str],
         frames: Optional[List[int]] = None,
         waiting_callback: Optional[Callable] = None,
+        labels_filename: Optional[str] = None,
     ):
 
-        cli_args = ["python", "-m", "sleap.nn.inference", video.filename]
+        cli_args = ["python", "-m", "sleap.nn.inference"]
+
+        if not trained_job_paths and "tracking.tracker" in kwargs and labels_filename:
+            # No models so we must want to re-track previous predictions
+            cli_args.append(labels_filename)
+        else:
+            cli_args.append(video.filename)
 
         # TODO: better support for video params
         if hasattr(video.backend, "dataset"):
