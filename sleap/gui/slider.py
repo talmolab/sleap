@@ -106,7 +106,7 @@ class SliderMark:
 
     def get_height(self, container_height):
         if self.type == "track":
-            return 1.5
+            return 2
         height = container_height
         # if self.padded:
         height -= self.top_pad + self.bottom_pad

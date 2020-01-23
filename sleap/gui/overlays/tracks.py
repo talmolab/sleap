@@ -36,8 +36,8 @@ class TrackTrailOverlay:
 
     labels: Labels = None
     player: "QtVideoPlayer" = None
-    trail_length: int = 10
-    show: bool = False
+    trail_length: int = 0
+    show: bool = True
 
     def get_track_trails(self, frame_selection: Iterable["LabeledFrame"]):
         """Get data needed to draw track trail.
