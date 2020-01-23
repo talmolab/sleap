@@ -73,7 +73,7 @@ class SinglePartConfmaps:
     anchor_part_name: Optional[Text] = None
 
     @property
-    def is_complete(self):
+    def is_complete(self) -> bool:
         """Return True if the configuration is fully specified."""
         part_names_specified = self.part_names is not None and len(self.part_names) > 0
         anchor_specified = (
@@ -110,7 +110,7 @@ class MultiPartConfmaps:
     sigma: float = 5.0
 
     @property
-    def is_complete(self):
+    def is_complete(self) -> bool:
         """Return True if the configuration is fully specified."""
         return self.part_names is not None and len(self.part_names) > 0
 
@@ -149,7 +149,7 @@ class PartAffinityFields:
     max_distance: float = 5.0
 
     @property
-    def is_complete(self):
+    def is_complete(self) -> bool:
         """Return True if the configuration is fully specified."""
         return self.edges is not None
 
@@ -247,7 +247,7 @@ class OutputHead:
         )
 
     @property
-    def is_complete(self):
+    def is_complete(self) -> bool:
         """Return True if the configuration is fully specified."""
         return self.config.is_complete
 
