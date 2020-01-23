@@ -9,7 +9,7 @@ import random
 
 from typing import Callable, Dict, Iterator, List, Optional
 
-from PySide2 import QtCore, QtWidgets
+from PySide2 import QtCore, QtGui
 from PySide2.QtCore import Qt, QEvent
 
 from PySide2.QtWidgets import QApplication, QMainWindow, QWidget, QDockWidget
@@ -1284,7 +1284,7 @@ class MainWindow(QMainWindow):
 
         self.plotFrame()
 
-    def doubleClickInstance(self, instance: Instance):
+    def doubleClickInstance(self, instance: Instance, event: QtGui.QMouseEvent = None):
         """
         Handles when the user has double-clicked an instance.
 
@@ -1297,7 +1297,14 @@ class MainWindow(QMainWindow):
         """
         # When a predicted instance is double-clicked, add a new instance
         if hasattr(instance, "score"):
-            self.commands.newInstance(copy_instance=instance)
+            mark_complete = False
+            # Mark the nodes as "complete" if shift-key is down
+            if event is not None and event.modifiers() & Qt.ShiftModifier:
+                mark_complete = True
+
+            self.commands.newInstance(
+                copy_instance=instance, mark_complete=mark_complete
+            )
 
         # When a regular instance is double-clicked, add any missing points
         else:

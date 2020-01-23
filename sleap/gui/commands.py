@@ -336,6 +336,7 @@ class CommandContext(object):
         copy_instance: Optional[Instance] = None,
         init_method: str = "best",
         location: Optional[QtCore.QPoint] = None,
+        mark_complete: bool = False,
     ):
         """
         Creates a new instance, copying node coordinates as appropriate.
@@ -352,6 +353,7 @@ class CommandContext(object):
             copy_instance=copy_instance,
             init_method=init_method,
             location=location,
+            mark_complete=mark_complete,
         )
 
     def setPointLocations(
@@ -1579,6 +1581,7 @@ class AddInstance(EditCommand):
         copy_instance = params.get("copy_instance", None)
         init_method = params.get("init_method", "best")
         location = params.get("location", None)
+        mark_complete = params.get("mark_complete", False)
 
         if context.state["labeled_frame"] is None:
             return
@@ -1659,6 +1662,7 @@ class AddInstance(EditCommand):
                     x=copy_instance[node].x,
                     y=copy_instance[node].y,
                     visible=copy_instance[node].visible,
+                    complete=mark_complete,
                 )
             else:
                 has_missing_nodes = True

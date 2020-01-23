@@ -35,7 +35,7 @@ from PySide2.QtWidgets import (
 )
 from PySide2.QtGui import QImage, QPixmap, QPainter, QPainterPath, QTransform
 from PySide2.QtGui import QPen, QBrush, QColor, QFont, QPolygonF
-from PySide2.QtGui import QKeyEvent
+from PySide2.QtGui import QKeyEvent, QMouseEvent
 from PySide2.QtCore import Qt, QRectF, QPointF, QMarginsF, QLineF
 
 import atexit
@@ -633,7 +633,7 @@ class GraphicsView(QGraphicsView):
 
     updatedViewer = QtCore.Signal()
     updatedSelection = QtCore.Signal()
-    instanceDoubleClicked = QtCore.Signal(Instance)
+    instanceDoubleClicked = QtCore.Signal(Instance, QMouseEvent)
     areaSelected = QtCore.Signal(float, float, float, float)
     pointSelected = QtCore.Signal(float, float)
     leftMouseButtonPressed = QtCore.Signal(float, float)
@@ -957,7 +957,7 @@ class GraphicsView(QGraphicsView):
             rect = rect.marginsAdded(QMarginsF(margin, margin, margin, margin))
         return rect
 
-    def mouseDoubleClickEvent(self, event):
+    def mouseDoubleClickEvent(self, event: QMouseEvent):
         """ Custom event handler, clears zoom.
         """
         scenePos = self.mapToScene(event.pos())
@@ -1382,12 +1382,12 @@ class QtNode(QGraphicsEllipseItem):
             self.parentObject().setRotation(angle)
             event.accept()
 
-    def mouseDoubleClickEvent(self, event):
+    def mouseDoubleClickEvent(self, event: QMouseEvent):
         """Custom event handler to emit signal on event."""
         scene = self.scene()
         if scene is not None:
             view = scene.views()[0]
-            view.instanceDoubleClicked.emit(self.parentObject().instance)
+            view.instanceDoubleClicked.emit(self.parentObject().instance, event)
 
 
 class QtEdge(QGraphicsPolygonItem):
