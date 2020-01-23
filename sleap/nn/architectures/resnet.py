@@ -408,8 +408,13 @@ class ResNetv1:
         return int(np.log2(self.features_output_stride))
 
     @property
+    def maximum_stride(self) -> int:
+        """Return the maximum stride that the input must be divisible by."""
+        return self.features_output_stride
+
+    @property
     def output_stride(self) -> int:
-        """Return output stride of this backbone."""
+        """Return stride of the output of the backbone."""
         if self.upsampling_stack is not None:
             return self.upsampling_stack.output_stride
         else:

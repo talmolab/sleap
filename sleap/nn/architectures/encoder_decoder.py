@@ -462,6 +462,17 @@ class EncoderDecoder:
             np.prod([block.upsampling_stride for block in self.decoder_stack])
         )
 
+    @property
+    def maximum_stride(self) -> int:
+        """Return the maximum stride that the input must be divisible by."""
+        return self.encoder_features_stride
+    
+    @property
+    def output_stride(self) -> int:
+        """Return stride of the output of the backbone."""
+        return self.decoder_features_stride
+    
+
     def make_stem(self, x_in: tf.Tensor, prefix: Text = "stem") -> tf.Tensor:
         """Instantiate the stem layers defined by the stem block configuration.
 
