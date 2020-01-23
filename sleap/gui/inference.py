@@ -877,6 +877,7 @@ def run_learning_pipeline(
         trained_job_paths=trained_job_paths,
         inference_params=inference_params,
         frames_to_predict=frames_to_predict,
+        labels_filename=labels_filename,
     )
 
     return new_labeled_frame_count
@@ -969,6 +970,7 @@ def run_gui_inference(
     trained_job_paths: List[str],
     frames_to_predict: Dict[Video, List[int]],
     inference_params: Dict[str, str],
+    labels_filename: str,
     gui: bool = True,
 ) -> int:
     """Run inference on specified frames using models from training_jobs.
@@ -1015,6 +1017,7 @@ def run_gui_inference(
                 trained_job_paths=trained_job_paths,
                 kwargs=inference_params,
                 waiting_callback=waiting,
+                labels_filename=labels_filename,
             )
 
             if success:
