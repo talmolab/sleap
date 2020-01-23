@@ -30,23 +30,12 @@ class HeadsTests(tf.test.TestCase):
 
     def test_part_affinity_fields_num_channels(self):
         paf_head = heads.PartAffinityFields(
-            edge_inds=[(0, 1), (1, 2), (0, 2)],
-            part_names=["a", "b", "c"])
+            edges=[("a", "b"), ("b", "c"), ("a", "c")])
         self.assertTrue(paf_head.num_channels, 6)
-
-    def test_part_affinity_fields_underdetermined_part_names(self):
-        with self.assertRaisesWithLiteralMatch(ValueError,
-            "Fewer part names specified (2) than expected from edge indices (3). "
-            "Check the edge indices for the part affinity field output head."):
-            paf_head = heads.PartAffinityFields(
-                edge_inds=[(0, 1), (1, 2), (0, 2)],
-                part_names=["a", "b"])
-        
 
     def test_output_head_invalid_type(self):
         with self.assertRaises(ValueError):
             output_head = heads.OutputHead(type="bad_type", config=None, stride=1)
-
 
     def test_output_head_from_cattr(self):
         json_dicts = json.loads(jsmin(

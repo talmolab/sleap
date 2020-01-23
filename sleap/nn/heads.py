@@ -125,30 +125,17 @@ class PartAffinityFields:
         max_distance: The maximum distance orthogonal to the source-destination line
             segment at which the part affinity field is non-zero. Points further than
             this distance (in full input scale pixels) will have 0 for both components.
-        edge_inds: List of (src_ind, dst_ind) tuples specifying the index of the source
-            and destination nodes (parts) that form the directed graph.
-        part_names: List of names of the nodes (parts) that correspond to the indices in
-            `edge_inds`.
+        edges: List of (src_part, dst_part) tuples specifying the names of the source
+            and destination parts.
     """
 
-    edge_inds: Sequence[Tuple[int, int]] = attr.ib()
-    part_names: Sequence[Text]
+    edges: Sequence[Tuple[Text, Text]] = attr.ib()
     max_distance: float = 5.0
-
-    @edge_inds.validator
-    def _check_edge_inds(self, attribute, value):
-        min_parts = max([max(src, dst) for (src, dst) in value]) + 1
-        if len(self.part_names) < min_parts:
-            raise ValueError(
-                f"Fewer part names specified ({len(self.part_names)}) than expected "
-                f"from edge indices ({min_parts}). Check the edge indices for the "
-                "part affinity field output head."
-            )
 
     @property
     def num_channels(self) -> int:
         """Return number of channels in the output tensor."""
-        return len(self.edge_inds) * 2
+        return len(self.edges) * 2
 
 
 OUTPUT_TYPES = [
