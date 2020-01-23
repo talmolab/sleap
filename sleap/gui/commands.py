@@ -1453,7 +1453,7 @@ class SetSelectedInstanceTrack(EditCommand):
             # Determine range that should be affected
             if context.state["has_frame_range"]:
                 # If range is selected in seekbar, use that
-                frame_range = tuple(*context.state["frame_range"])
+                frame_range = tuple(context.state["frame_range"])
             else:
                 # Otherwise, range is current to last frame
                 frame_range = (

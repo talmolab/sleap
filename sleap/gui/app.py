@@ -93,7 +93,6 @@ class MainWindow(QMainWindow):
         self.state["show edges"] = True
         self.state["edge style"] = "Line"
         self.state["fit"] = False
-        self.state["show trails"] = False
         self.state["color predicted"] = False
 
         self._initialize_gui()
@@ -389,12 +388,10 @@ class MainWindow(QMainWindow):
             key="edge style",
         )
 
-        add_menu_check_item(viewMenu, "show trails", "Show Trails")
-
         add_submenu_choices(
             menu=viewMenu,
             title="Trail Length",
-            options=(10, 20, 50),
+            options=(0, 10, 20, 50),
             key="trail_length",
         )
 
@@ -823,7 +820,6 @@ class MainWindow(QMainWindow):
                 ],
             )
 
-        overlay_state_connect(self.overlays["trails"], "show trails", "show")
         overlay_state_connect(self.overlays["trails"], "trail_length")
 
         overlay_state_connect(self.color_manager, "palette")
@@ -838,7 +834,7 @@ class MainWindow(QMainWindow):
             )
 
         # Set defaults
-        self.state["trail_length"] = 10
+        self.state["trail_length"] = 0
 
         # Emit signals for default that may have been set earlier
         self.state.emit("palette")
@@ -984,9 +980,6 @@ class MainWindow(QMainWindow):
 
         self.player.plot()
 
-        if self.state["fit"]:
-            self.player.zoomToFit()
-
     def _after_plot_update(self, player, frame_idx, selected_inst):
         """Called each time a new frame is drawn."""
 
@@ -1002,6 +995,9 @@ class MainWindow(QMainWindow):
         # Select instance if there was already selection
         if selected_inst is not None:
             player.view.selectInstance(selected_inst)
+
+        if self.state["fit"]:
+            player.zoomToFit()
 
         # Update related displays
         self.updateStatusMessage()
