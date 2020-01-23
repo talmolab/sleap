@@ -70,10 +70,15 @@ class SinglePartConfmaps:
             of these will produce a different confidence map centered at the part
             location.
         sigma: Spread of the confidence map around each part location.
+        centered: If True, indicates that this head expects a centered input image and
+            will produce confidence maps corresponding to the centered instance. This
+            implies that region proposals must first be generated to do the alignment
+            (e.g., from `CentroidConfmap` peaks).
     """
 
     part_names: Sequence[Text]
     sigma: float = 5.0
+    centered: bool = True
 
     @property
     def num_channels(self) -> int:
