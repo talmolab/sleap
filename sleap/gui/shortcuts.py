@@ -148,6 +148,10 @@ class Shortcuts(object):
             key_string = shortcuts.get(action, None)
             key_string = "" if key_string is None else key_string
 
+            if not key_string.strip():
+                shortcuts[action] = ""
+                continue
+
             try:
                 shortcuts[action] = eval(key_string)
             except:
