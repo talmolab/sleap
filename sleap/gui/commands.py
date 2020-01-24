@@ -1370,7 +1370,7 @@ class TransposeInstances(EditCommand):
 
 
 class DeleteSelectedInstance(EditCommand):
-    topics = [UpdateTopic.frame, UpdateTopic.project_instances]
+    topics = [UpdateTopic.frame, UpdateTopic.project_instances, UpdateTopic.suggestions]
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
@@ -1382,7 +1382,11 @@ class DeleteSelectedInstance(EditCommand):
 
 
 class DeleteSelectedInstanceTrack(EditCommand):
-    topics = [UpdateTopic.project_instances, UpdateTopic.tracks]
+    topics = [
+        UpdateTopic.project_instances,
+        UpdateTopic.tracks,
+        UpdateTopic.suggestions,
+    ]
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
@@ -1559,7 +1563,7 @@ class MergeProject(EditCommand):
 
 
 class AddInstance(EditCommand):
-    topics = [UpdateTopic.frame, UpdateTopic.project_instances]
+    topics = [UpdateTopic.frame, UpdateTopic.project_instances, UpdateTopic.suggestions]
 
     @staticmethod
     def get_previous_frame_index(context: CommandContext) -> Optional[int]:
