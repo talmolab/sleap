@@ -546,33 +546,40 @@ class MainWindow(QMainWindow):
         )
 
         predictionMenu.addSeparator()
+
         add_menu_item(
             predictionMenu,
-            "remove predictions",
+            "delete frame predictions",
+            "Delete Predictions on Current Frame",
+            self.commands.deleteFramePredictions,
+        )
+        add_menu_item(
+            predictionMenu,
+            "delete all predictions",
             "Delete All Predictions...",
             self.commands.deletePredictions,
         )
         add_menu_item(
             predictionMenu,
-            "remove clip predictions",
+            "delete clip predictions",
             "Delete Predictions from Clip...",
             self.commands.deleteClipPredictions,
         )
         add_menu_item(
             predictionMenu,
-            "remove area predictions",
+            "delete area predictions",
             "Delete Predictions from Area...",
             self.commands.deleteAreaPredictions,
         )
         add_menu_item(
             predictionMenu,
-            "remove score predictions",
+            "delete score predictions",
             "Delete Predictions with Low Score...",
             self.commands.deleteLowScorePredictions,
         )
         add_menu_item(
             predictionMenu,
-            "remove frame limit predictions",
+            "delete frame limit predictions",
             "Delete Predictions beyond Frame Limit...",
             self.commands.deleteFrameLimitPredictions,
         )
@@ -873,7 +880,7 @@ class MainWindow(QMainWindow):
         self._menu_actions["clear selection"].setEnabled(has_selected_instance)
         self._menu_actions["delete instance"].setEnabled(has_selected_instance)
 
-        self._menu_actions["remove clip predictions"].setEnabled(has_frame_range)
+        self._menu_actions["delete clip predictions"].setEnabled(has_frame_range)
         self._menu_actions["export clip"].setEnabled(has_frame_range)
 
         self._menu_actions["transpose"].setEnabled(has_multiple_instances)

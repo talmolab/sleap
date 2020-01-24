@@ -311,8 +311,12 @@ class CommandContext(object):
         """Deletes all predicted instances in project."""
         self.execute(DeleteAllPredictions)
 
+    def deleteFramePredictions(self):
+        """Deletes all predictions on current frame."""
+        self.execute(DeleteFramePredictions)
+
     def deleteClipPredictions(self):
-        """Deletes all instances within selected range of video frames."""
+        """Deletes all predictions within selected range of video frames."""
         self.execute(DeleteClipPredictions)
 
     def deleteAreaPredictions(self):
@@ -1191,6 +1195,26 @@ class DeleteAllPredictions(InstanceDeleteCommand):
             for inst in lf
             if type(inst) == PredictedInstance
         ]
+
+
+class DeleteFramePredictions(InstanceDeleteCommand):
+    @staticmethod
+    def _confirm_deletion(self, *args, **kwargs):
+        # Don't require confirmation when deleting from current frame
+        return True
+
+    @staticmethod
+    def get_frame_instance_list(context: CommandContext, params: dict):
+        predicted_instances = [
+            (lf, inst)
+            for lf in context.labels.find(
+                context.state["video"], frame_idx=context.state["frame_idx"]
+            )
+            for inst in lf
+            if type(inst) == PredictedInstance
+        ]
+
+        return predicted_instances
 
 
 class DeleteClipPredictions(InstanceDeleteCommand):

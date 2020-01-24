@@ -136,8 +136,9 @@ class Shortcuts(object):
         "fit",
         "learning",
         "export clip",
-        "delete clip",
-        "delete area",
+        "delete frame predictions",
+        "delete clip predictions",
+        "delete area predictions",
     )
 
     def __init__(self):
