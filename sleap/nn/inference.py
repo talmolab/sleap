@@ -159,7 +159,7 @@ class Predictor:
             predicted_instances_chunk = topdown.make_sample_grouped_predicted_instances(
                 sample_peak_pts,
                 sample_peak_vals,
-                np.unique(rps.sample_inds),
+                np.arange(len(sample_peak_vals), dtype=int),
                 topdown_peak_finder.inference_model.skeleton,
             )
 
