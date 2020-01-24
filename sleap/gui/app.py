@@ -1028,7 +1028,7 @@ class MainWindow(QMainWindow):
                 message += f" (selection: {start+1:,}-{end+1:,})"
 
             if len(self.labels.videos) > 1:
-                message += f" of video {self.labels.videos.index(current_video)}"
+                message += f" of video {self.labels.videos.index(current_video)+1}"
 
             message += f"{spacer}Labeled Frames: "
             if current_video is not None:
