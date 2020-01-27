@@ -149,6 +149,7 @@ class PreprocessingConfig:
             return True
         if self.anchor_part_name is not None:
             return True
+        return False
 
     @property
     def is_complete_for_inference(self) -> bool:
