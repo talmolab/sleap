@@ -471,25 +471,37 @@ class Labels(MutableSequence):
         """
         return [lf for lf in self.labeled_frames if lf.has_user_instances]
 
-    def get_video_user_labeled_frames(self, video: Video) -> List[LabeledFrame]:
-        """
-        Returns labeled frames for given video with user instances.
-        """
-        return [
-            lf
-            for lf in self.labeled_frames
-            if lf.has_user_instances and lf.video == video
-        ]
+    def get_labeled_frame_count(self, video: Optional[Video] = None, filter: Text = ""):
+        if filter not in ("", "user", "predicted"):
+            raise ValueError(
+                f"Labels.get_labeled_frame_count() invalid filter: {filter}"
+            )
 
-    def get_video_predicted_frames(self, video: Video) -> List[LabeledFrame]:
-        """
-        Returns labeled frames for given video with user instances.
-        """
-        return [
-            lf
-            for lf in self.labeled_frames
-            if lf.has_predicted_instances and lf.video == video
-        ]
+        if not hasattr(self, "_frame_count_cache"):
+            self._frame_count_cache = dict()
+        if video not in self._frame_count_cache:
+            self._frame_count_cache[video] = dict()
+        if self._frame_count_cache[video].get(filter, None) is None:
+
+            if filter == "":
+                filter_func = lambda lf: video is None or lf.video == video
+            elif filter == "user":
+                filter_func = (
+                    lambda lf: (video is None or lf.video == video)
+                    and lf.has_user_instances
+                )
+            elif filter == "predicted":
+                filter_func = (
+                    lambda lf: (video is None or lf.video == video)
+                    and lf.has_predicted_instances
+                )
+
+            count = sum((1 for lf in self.labeled_frames if filter_func(lf)))
+            self._frame_count_cache[video][filter] = count
+        return self._frame_count_cache[video][filter]
+
+    def _invalidate_cached_counts(self, video: Video):
+        self._frame_count_cache[video] = dict()
 
     # Methods for instances
 
@@ -642,6 +654,8 @@ class Labels(MutableSequence):
         self._track_remove_instance(frame, instance)
         frame.instances.remove(instance)
 
+        self._invalidate_cached_counts(frame.video)
+
     def add_instance(self, frame: LabeledFrame, instance: Instance):
         """Adds instance to frame, updating track occupancy."""
         if frame.video not in self._track_occupancy:
@@ -664,6 +678,8 @@ class Labels(MutableSequence):
             (frame.frame_idx, frame.frame_idx + 1)
         )
         frame.instances.append(instance)
+
+        self._invalidate_cached_counts(frame.video)
 
     def _make_track_occupany(self, video: Video) -> Dict[Video, RangeList]:
         """Build cached track occupancy data."""
