@@ -247,8 +247,9 @@ class MediaVideo:
     grayscale: bool = attr.ib()
     bgr: bool = attr.ib(default=True)
 
-    dataset: str = attr.ib(default="")  # unused, for compatibility with HDF5Video
-    input_format: str = attr.ib(default="")  # unused, for compatibility with HDF5Video
+    # Unused attributes still here so we don't break deserialization
+    dataset: str = attr.ib(default="")
+    input_format: str = attr.ib(default="")
 
     _detect_grayscale = False
     _reader_ = None
@@ -991,15 +992,24 @@ class Video:
         filename = Video.fixup_path(filename)
 
         if filename.lower().endswith(("h5", "hdf5")):
-            return cls(backend=HDF5Video(filename=filename, *args, **kwargs))
+            backend_class = HDF5Video
         elif filename.endswith(("npy")):
-            return cls(backend=NumpyVideo(filename=filename, *args, **kwargs))
+            backend_class = NumpyVideo
         elif filename.lower().endswith(("mp4", "avi")):
-            return cls(backend=MediaVideo(filename=filename, *args, **kwargs))
+            backend_class = MediaVideo
         elif os.path.isdir(filename) or "metadata.yaml" in filename:
-            return cls(backend=ImgStoreVideo(filename=filename, *args, **kwargs))
+            backend_class = ImgStoreVideo
         else:
             raise ValueError("Could not detect backend for specified filename.")
+
+        # Only pass through the kwargs that match attributes for the backend
+        attribute_kwargs = {
+            key: val
+            for (key, val) in kwargs.items()
+            if key in attr.fields_dict(backend_class).keys()
+        }
+
+        return cls(backend=backend_class(filename=filename, **attribute_kwargs))
 
     @classmethod
     def imgstore_from_filenames(

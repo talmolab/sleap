@@ -17,6 +17,17 @@ def test_from_filename():
     assert type(Video.from_filename(TEST_SMALL_ROBOT_MP4_FILE).backend) == MediaVideo
 
 
+def test_backend_extra_kwargs():
+    Video.from_filename(TEST_H5_FILE, grayscale=True, another_kwarg=False)
+    Video.from_filename(
+        TEST_SMALL_ROBOT_MP4_FILE, dataset="no dataset", fake_kwarg=True
+    )
+
+
+def test_grayscale_video():
+    assert Video.from_filename(TEST_SMALL_ROBOT_MP4_FILE, grayscale=True).shape[-1] == 1
+
+
 def test_hdf5_get_shape(hdf5_vid):
     assert hdf5_vid.shape == (42, 512, 512, 1)
 
