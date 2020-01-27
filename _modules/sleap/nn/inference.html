@@ -80,6 +80,7 @@
 <span class="sd">          * &quot;confmap&quot;: Instance of `peak_finding.ConfmapPeakFinder`</span>
 <span class="sd">          * &quot;paf&quot;: Instance of `paf_grouping.PAFGrouper`</span>
 <span class="sd">          * &quot;tracking&quot;: Instance of `tracking.Tracker`</span>
+<span class="sd">          * &quot;previous_predictions&quot;: `predicted.PredictedInstancePredictor`</span>
 
 <span class="sd">    Note: the pipeline will be determined by which policies are given.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -110,15 +111,27 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_grayscale_models</span><span class="p">:</span>
             <span class="n">video_kwargs</span><span class="p">[</span><span class="s2">&quot;grayscale&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
 
+        <span class="n">is_dummy_video</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="s2">&quot;tracking&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">policies</span> <span class="ow">and</span> <span class="s2">&quot;previous_predictions&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">policies</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">policies</span><span class="p">[</span><span class="s2">&quot;tracking&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">uses_image</span><span class="p">:</span>
+                <span class="c1"># We&#39;re just running the tracker for previous predictions</span>
+                <span class="c1"># and this tracker doesn&#39;t use the images, so we&#39;ll load</span>
+                <span class="c1"># &quot;dummy&quot; images.</span>
+                <span class="n">is_dummy_video</span> <span class="o">=</span> <span class="kc">True</span>
+
         <span class="n">video_ds</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">VideoLoader</span><span class="p">(</span>
-            <span class="n">filename</span><span class="o">=</span><span class="n">video_filename</span><span class="p">,</span> <span class="n">frame_inds</span><span class="o">=</span><span class="n">frames</span><span class="p">,</span> <span class="o">**</span><span class="n">video_kwargs</span>
+            <span class="n">filename</span><span class="o">=</span><span class="n">video_filename</span><span class="p">,</span>
+            <span class="n">frame_inds</span><span class="o">=</span><span class="n">frames</span><span class="p">,</span>
+            <span class="n">dummy</span><span class="o">=</span><span class="n">is_dummy_video</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">video_kwargs</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">predicted_frames</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="k">for</span> <span class="n">chunk_ind</span><span class="p">,</span> <span class="n">frame_inds</span><span class="p">,</span> <span class="n">imgs</span> <span class="ow">in</span> <span class="n">video_ds</span><span class="p">:</span>
+
             <span class="n">predicted_instances_chunk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict_chunk</span><span class="p">(</span>
-                <span class="n">imgs</span><span class="p">,</span> <span class="n">chunk_ind</span><span class="p">,</span> <span class="n">video_ds</span><span class="o">.</span><span class="n">chunk_size</span>
+                <span class="n">imgs</span><span class="p">,</span> <span class="n">chunk_ind</span><span class="p">,</span> <span class="n">video_ds</span><span class="o">.</span><span class="n">chunk_size</span><span class="p">,</span> <span class="n">frame_inds</span><span class="o">=</span><span class="n">frame_inds</span>
             <span class="p">)</span>
 
             <span class="n">sample_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">imgs</span><span class="p">))</span>
@@ -133,8 +146,11 @@
 
         <span class="k">return</span> <span class="n">predicted_frames</span></div>
 
-<div class="viewcode-block" id="Predictor.predict_chunk"><a class="viewcode-back" href="../../../inference.html#sleap.nn.inference.Predictor.predict_chunk">[docs]</a>    <span class="k">def</span> <span class="nf">predict_chunk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img_chunk</span><span class="p">,</span> <span class="n">chunk_ind</span><span class="p">,</span> <span class="n">chunk_size</span><span class="p">):</span>
+<div class="viewcode-block" id="Predictor.predict_chunk"><a class="viewcode-back" href="../../../inference.html#sleap.nn.inference.Predictor.predict_chunk">[docs]</a>    <span class="k">def</span> <span class="nf">predict_chunk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img_chunk</span><span class="p">,</span> <span class="n">chunk_ind</span><span class="p">,</span> <span class="n">chunk_size</span><span class="p">,</span> <span class="n">frame_inds</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Runs the inference components of pipeline for a chunk.&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="s2">&quot;previous_predictions&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">policies</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">policies</span><span class="p">[</span><span class="s2">&quot;previous_predictions&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get_chunk</span><span class="p">(</span><span class="n">frame_inds</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="s2">&quot;centroid&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">policies</span><span class="p">:</span>
             <span class="c1"># Detect centroids and pull out region proposals.</span>
@@ -176,7 +192,7 @@
             <span class="n">predicted_instances_chunk</span> <span class="o">=</span> <span class="n">topdown</span><span class="o">.</span><span class="n">make_sample_grouped_predicted_instances</span><span class="p">(</span>
                 <span class="n">sample_peak_pts</span><span class="p">,</span>
                 <span class="n">sample_peak_vals</span><span class="p">,</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">rps</span><span class="o">.</span><span class="n">sample_inds</span><span class="p">),</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sample_peak_vals</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">),</span>
                 <span class="n">topdown_peak_finder</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">skeleton</span><span class="p">,</span>
             <span class="p">)</span>
 
@@ -339,7 +355,6 @@
             <span class="n">action</span><span class="o">=</span><span class="s2">&quot;append&quot;</span><span class="p">,</span>
             <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to saved model (confmaps, pafs, ...) JSON. &quot;</span>
             <span class="s2">&quot;Multiple models can be specified, each preceded by --model.&quot;</span><span class="p">,</span>
-            <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
@@ -383,10 +398,14 @@
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">cli_args_to_policies</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
         <span class="n">policy_args</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">make_scoped_dictionary</span><span class="p">(</span><span class="nb">vars</span><span class="p">(</span><span class="n">args</span><span class="p">),</span> <span class="n">exclude_nones</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_paths_and_policy_args</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">models</span><span class="p">,</span> <span class="n">policy_args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_paths_and_policy_args</span><span class="p">(</span>
+            <span class="n">model_paths</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">models</span><span class="p">,</span> <span class="n">policy_args</span><span class="o">=</span><span class="n">policy_args</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="n">args</span><span class="p">,</span>
+        <span class="p">)</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_paths_and_policy_args</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">model_paths</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">policy_args</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">from_paths_and_policy_args</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">model_paths</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">policy_args</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">args</span><span class="p">:</span> <span class="nb">dict</span>
+    <span class="p">):</span>
         <span class="n">policy_args</span><span class="p">[</span><span class="s2">&quot;region&quot;</span><span class="p">][</span><span class="s2">&quot;merge_overlapping&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
 
         <span class="n">inferred_box_length</span> <span class="o">=</span> <span class="mi">160</span>  <span class="c1"># default if not set by user or inferrable</span>
@@ -402,35 +421,55 @@
 
         <span class="c1"># Load the information for these models</span>
         <span class="n">loaded_models</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">model_path</span> <span class="ow">in</span> <span class="n">model_paths</span><span class="p">:</span>
-            <span class="n">training_job</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">TrainingJob</span><span class="o">.</span><span class="n">load_json</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span>
-            <span class="n">inference_model</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">InferenceModel</span><span class="o">.</span><span class="n">from_training_job</span><span class="p">(</span><span class="n">training_job</span><span class="p">)</span>
-            <span class="n">policy_key</span> <span class="o">=</span> <span class="n">model_type_policy_key_map</span><span class="p">[</span><span class="n">training_job</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">output_type</span><span class="p">]</span>
 
-            <span class="n">loaded_models</span><span class="p">[</span><span class="n">policy_key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
-                <span class="n">job</span><span class="o">=</span><span class="n">training_job</span><span class="p">,</span> <span class="n">inference_model</span><span class="o">=</span><span class="n">inference_model</span>
-            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">model_paths</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">model_path</span> <span class="ow">in</span> <span class="n">model_paths</span><span class="p">:</span>
+                <span class="n">training_job</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">TrainingJob</span><span class="o">.</span><span class="n">load_json</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span>
+                <span class="n">inference_model</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">InferenceModel</span><span class="o">.</span><span class="n">from_training_job</span><span class="p">(</span><span class="n">training_job</span><span class="p">)</span>
+                <span class="n">policy_key</span> <span class="o">=</span> <span class="n">model_type_policy_key_map</span><span class="p">[</span><span class="n">training_job</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">output_type</span><span class="p">]</span>
 
-        <span class="c1"># Add policy classes which depend on models</span>
-        <span class="k">for</span> <span class="n">policy_key</span><span class="p">,</span> <span class="n">policy_model</span> <span class="ow">in</span> <span class="n">loaded_models</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">training_job</span> <span class="o">=</span> <span class="n">policy_model</span><span class="p">[</span><span class="s2">&quot;job&quot;</span><span class="p">]</span>
-            <span class="n">inference_model</span> <span class="o">=</span> <span class="n">policy_model</span><span class="p">[</span><span class="s2">&quot;inference_model&quot;</span><span class="p">]</span>
+                <span class="n">loaded_models</span><span class="p">[</span><span class="n">policy_key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+                    <span class="n">job</span><span class="o">=</span><span class="n">training_job</span><span class="p">,</span> <span class="n">inference_model</span><span class="o">=</span><span class="n">inference_model</span>
+                <span class="p">)</span>
 
-            <span class="k">if</span> <span class="n">policy_key</span> <span class="o">==</span> <span class="s2">&quot;confmap&quot;</span> <span class="ow">and</span> <span class="s2">&quot;paf&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">loaded_models</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                <span class="c1"># Use topdown class when we have confmaps and not pafs</span>
-                <span class="n">policy_class</span> <span class="o">=</span> <span class="n">POLICY_CLASSES</span><span class="p">[</span><span class="s2">&quot;topdown&quot;</span><span class="p">]</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">policy_class</span> <span class="o">=</span> <span class="n">POLICY_CLASSES</span><span class="p">[</span><span class="n">policy_key</span><span class="p">]</span>
+            <span class="c1"># Add policy classes which depend on models</span>
+            <span class="k">for</span> <span class="n">policy_key</span><span class="p">,</span> <span class="n">policy_model</span> <span class="ow">in</span> <span class="n">loaded_models</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">training_job</span> <span class="o">=</span> <span class="n">policy_model</span><span class="p">[</span><span class="s2">&quot;job&quot;</span><span class="p">]</span>
+                <span class="n">inference_model</span> <span class="o">=</span> <span class="n">policy_model</span><span class="p">[</span><span class="s2">&quot;inference_model&quot;</span><span class="p">]</span>
 
-            <span class="n">policy_object</span> <span class="o">=</span> <span class="n">policy_class</span><span class="p">(</span>
-                <span class="n">inference_model</span><span class="o">=</span><span class="n">inference_model</span><span class="p">,</span> <span class="o">**</span><span class="n">policy_args</span><span class="p">[</span><span class="n">policy_key</span><span class="p">]</span>
-            <span class="p">)</span>
+                <span class="k">if</span> <span class="n">policy_key</span> <span class="o">==</span> <span class="s2">&quot;confmap&quot;</span> <span class="ow">and</span> <span class="s2">&quot;paf&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">loaded_models</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="c1"># Use topdown class when we have confmaps and not pafs</span>
+                    <span class="n">policy_class</span> <span class="o">=</span> <span class="n">POLICY_CLASSES</span><span class="p">[</span><span class="s2">&quot;topdown&quot;</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">policy_class</span> <span class="o">=</span> <span class="n">POLICY_CLASSES</span><span class="p">[</span><span class="n">policy_key</span><span class="p">]</span>
 
-            <span class="n">policies</span><span class="p">[</span><span class="n">policy_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">policy_object</span>
+                <span class="n">policy_object</span> <span class="o">=</span> <span class="n">policy_class</span><span class="p">(</span>
+                    <span class="n">inference_model</span><span class="o">=</span><span class="n">inference_model</span><span class="p">,</span> <span class="o">**</span><span class="n">policy_args</span><span class="p">[</span><span class="n">policy_key</span><span class="p">]</span>
+                <span class="p">)</span>
 
-            <span class="k">if</span> <span class="n">training_job</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">bounding_box_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">training_job</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">bounding_box_size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="n">inferred_box_length</span> <span class="o">=</span> <span class="n">training_job</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">bounding_box_size</span>
+                <span class="n">policies</span><span class="p">[</span><span class="n">policy_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">policy_object</span>
+
+                <span class="k">if</span> <span class="n">training_job</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">bounding_box_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">training_job</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">bounding_box_size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">inferred_box_length</span> <span class="o">=</span> <span class="n">training_job</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">bounding_box_size</span>
+
+        <span class="c1"># No models specified so see if we&#39;re using previous predictions</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">previous_labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span>
+                    <span class="n">args</span><span class="o">.</span><span class="n">data_path</span><span class="p">,</span> <span class="n">video_callback</span><span class="o">=</span><span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">data_path</span><span class="p">)],</span>
+                <span class="p">)</span>
+                <span class="kn">from</span> <span class="nn">.predicted</span> <span class="kn">import</span> <span class="n">PredictedInstancePredictor</span>
+
+                <span class="n">policies</span><span class="p">[</span><span class="s2">&quot;previous_predictions&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">PredictedInstancePredictor</span><span class="p">(</span>
+                    <span class="n">labels</span><span class="o">=</span><span class="n">previous_labels</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Using previous predictions from </span><span class="si">{args.data_path}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">args</span><span class="o">.</span><span class="n">data_path</span> <span class="o">=</span> <span class="n">previous_labels</span><span class="o">.</span><span class="n">videos</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">filename</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setting video to </span><span class="si">{args.data_path}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="c1"># We weren&#39;t able to read file as Labels object</span>
+                <span class="k">pass</span>
 
         <span class="k">if</span> <span class="s2">&quot;topdown&quot;</span> <span class="ow">in</span> <span class="n">policies</span><span class="p">:</span>
             <span class="n">policy_args</span><span class="p">[</span><span class="s2">&quot;region&quot;</span><span class="p">][</span><span class="s2">&quot;merge_overlapping&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
@@ -471,9 +510,16 @@
         <span class="n">kwargs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
         <span class="n">frames</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">waiting_callback</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">labels_filename</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 
-        <span class="n">cli_args</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;python&quot;</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;sleap.nn.inference&quot;</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">filename</span><span class="p">]</span>
+        <span class="n">cli_args</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;python&quot;</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;sleap.nn.inference&quot;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">trained_job_paths</span> <span class="ow">and</span> <span class="s2">&quot;tracking.tracker&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="ow">and</span> <span class="n">labels_filename</span><span class="p">:</span>
+            <span class="c1"># No models so we must want to re-track previous predictions</span>
+            <span class="n">cli_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">labels_filename</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cli_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
 
         <span class="c1"># TODO: better support for video params</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">backend</span><span class="p">,</span> <span class="s2">&quot;dataset&quot;</span><span class="p">):</span>
@@ -503,7 +549,7 @@
         <span class="n">cli_args</span><span class="o">.</span><span class="n">extend</span><span class="p">((</span><span class="s2">&quot;-o&quot;</span><span class="p">,</span> <span class="n">output_path</span><span class="p">))</span>
 
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Command line call:&quot;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cli_args</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; </span><span class="se">\\\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cli_args</span><span class="p">))</span>
         <span class="nb">print</span><span class="p">()</span>
 
         <span class="k">with</span> <span class="n">sub</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">cli_args</span><span class="p">)</span> <span class="k">as</span> <span class="n">proc</span><span class="p">:</span>
@@ -525,22 +571,30 @@
     <span class="k">def</span> <span class="nf">check_valid_policies</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">policies</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 
         <span class="n">has_topdown</span> <span class="o">=</span> <span class="s2">&quot;topdown&quot;</span> <span class="ow">in</span> <span class="n">policies</span>
-
+        <span class="n">has_previous</span> <span class="o">=</span> <span class="s2">&quot;previous_predictions&quot;</span> <span class="ow">in</span> <span class="n">policies</span>
+        <span class="n">has_tracker</span> <span class="o">=</span> <span class="s2">&quot;tracking&quot;</span> <span class="ow">in</span> <span class="n">policies</span>
         <span class="n">non_topdowns</span> <span class="o">=</span> <span class="p">[</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">policies</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;confmap&quot;</span><span class="p">,</span> <span class="s2">&quot;paf&quot;</span><span class="p">)]</span>
 
-        <span class="k">if</span> <span class="n">has_topdown</span> <span class="ow">and</span> <span class="n">non_topdowns</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Cannot combine topdown model with non-topdown model&quot;</span>
-                <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{non_topdowns}</span><span class="s2">.&quot;</span>
-            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">has_previous</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">has_tracker</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;No tracker specified for running on previous predictions&quot;</span>
+                <span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">non_topdowns</span> <span class="ow">and</span> <span class="s2">&quot;confmap&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">non_topdowns</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Must have CONFIDENCE_MAP model.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">has_topdown</span> <span class="ow">and</span> <span class="n">non_topdowns</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Cannot combine topdown model with non-topdown model&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{non_topdowns}</span><span class="s2">.&quot;</span>
+                <span class="p">)</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">has_topdown</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">non_topdowns</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Must have either TOPDOWN or CONFIDENCE_MAP/PART_AFFINITY_FIELD models.&quot;</span>
-            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">non_topdowns</span> <span class="ow">and</span> <span class="s2">&quot;confmap&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">non_topdowns</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Must have CONFIDENCE_MAP model.&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">has_topdown</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">non_topdowns</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Must have either TOPDOWN or CONFIDENCE_MAP/PART_AFFINITY_FIELD models.&quot;</span>
+                <span class="p">)</span>
 
         <span class="k">return</span> <span class="kc">True</span></div>
 

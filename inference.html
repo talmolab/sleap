@@ -51,6 +51,7 @@
 <li><p>“confmap”: Instance of <cite>peak_finding.ConfmapPeakFinder</cite></p></li>
 <li><p>“paf”: Instance of <cite>paf_grouping.PAFGrouper</cite></p></li>
 <li><p>“tracking”: Instance of <cite>tracking.Tracker</cite></p></li>
+<li><p>“previous_predictions”: <cite>predicted.PredictedInstancePredictor</cite></p></li>
 </ul>
 </dd></dl>
 
@@ -69,7 +70,7 @@
 
 <dl class="method">
 <dt id="sleap.nn.inference.Predictor.predict_chunk">
-<code class="sig-name descname">predict_chunk</code><span class="sig-paren">(</span><em class="sig-param">img_chunk</em>, <em class="sig-param">chunk_ind</em>, <em class="sig-param">chunk_size</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/inference.html#Predictor.predict_chunk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.Predictor.predict_chunk" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">predict_chunk</code><span class="sig-paren">(</span><em class="sig-param">img_chunk</em>, <em class="sig-param">chunk_ind</em>, <em class="sig-param">chunk_size</em>, <em class="sig-param">frame_inds=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/inference.html#Predictor.predict_chunk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.Predictor.predict_chunk" title="Permalink to this definition">¶</a></dt>
 <dd><p>Runs the inference components of pipeline for a chunk.</p>
 </dd></dl>
 

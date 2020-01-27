@@ -65,7 +65,7 @@ whether to show node labels, etc.</p>
 
 <dl class="method">
 <dt id="sleap.gui.app.MainWindow.doubleClickInstance">
-<code class="sig-name descname">doubleClickInstance</code><span class="sig-paren">(</span><em class="sig-param">instance: sleap.instance.Instance</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.doubleClickInstance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.doubleClickInstance" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">doubleClickInstance</code><span class="sig-paren">(</span><em class="sig-param">instance: sleap.instance.Instance</em>, <em class="sig-param">event: PySide2.QtGui.QMouseEvent = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.doubleClickInstance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.doubleClickInstance" title="Permalink to this definition">¶</a></dt>
 <dd><p>Handles when the user has double-clicked an instance.</p>
 <p>If prediction, then copy to new user-instance.
 If already user instance, then add any missing nodes (in case
@@ -95,7 +95,7 @@ event handler would return.</p>
 
 <dl class="method">
 <dt id="sleap.gui.app.MainWindow.learningFinished">
-<code class="sig-name descname">learningFinished</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.learningFinished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.learningFinished" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">learningFinished</code><span class="sig-paren">(</span><em class="sig-param">new_count: int</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/app.html#MainWindow.learningFinished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.learningFinished" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called when inference finishes.</p>
 </dd></dl>
 
@@ -355,7 +355,7 @@ If no instance selected, returns None.</p>
 
 <dl class="method">
 <dt id="sleap.gui.video.GraphicsView.mouseDoubleClickEvent">
-<code class="sig-name descname">mouseDoubleClickEvent</code><span class="sig-paren">(</span><em class="sig-param">event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#GraphicsView.mouseDoubleClickEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.GraphicsView.mouseDoubleClickEvent" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">mouseDoubleClickEvent</code><span class="sig-paren">(</span><em class="sig-param">event: PySide2.QtGui.QMouseEvent</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#GraphicsView.mouseDoubleClickEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.GraphicsView.mouseDoubleClickEvent" title="Permalink to this definition">¶</a></dt>
 <dd><p>Custom event handler, clears zoom.</p>
 </dd></dl>
 
@@ -638,7 +638,7 @@ the very same <cite>Point</cite> object that’s defined outside our class.</p><
 
 <dl class="method">
 <dt id="sleap.gui.video.QtNode.mouseDoubleClickEvent">
-<code class="sig-name descname">mouseDoubleClickEvent</code><span class="sig-paren">(</span><em class="sig-param">event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtNode.mouseDoubleClickEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtNode.mouseDoubleClickEvent" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">mouseDoubleClickEvent</code><span class="sig-paren">(</span><em class="sig-param">event: PySide2.QtGui.QMouseEvent</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#QtNode.mouseDoubleClickEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.QtNode.mouseDoubleClickEvent" title="Permalink to this definition">¶</a></dt>
 <dd><p>Custom event handler to emit signal on event.</p>
 </dd></dl>
 
@@ -1047,7 +1047,7 @@ If selection is “add”, then show the appropriate gui for selecting job.</p>
 
 <dl class="function">
 <dt id="sleap.gui.inference.run_gui_inference">
-<code class="sig-prename descclassname">sleap.gui.inference.</code><code class="sig-name descname">run_gui_inference</code><span class="sig-paren">(</span><em class="sig-param">labels: sleap.io.dataset.Labels, trained_job_paths: List[str], frames_to_predict: Dict[sleap.io.video.Video, List[int]], inference_params: Dict[str, str], gui: bool = True</em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="_modules/sleap/gui/inference.html#run_gui_inference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.inference.run_gui_inference" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">sleap.gui.inference.</code><code class="sig-name descname">run_gui_inference</code><span class="sig-paren">(</span><em class="sig-param">labels: sleap.io.dataset.Labels, trained_job_paths: List[str], frames_to_predict: Dict[sleap.io.video.Video, List[int]], inference_params: Dict[str, str], labels_filename: str, gui: bool = True</em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="_modules/sleap/gui/inference.html#run_gui_inference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.inference.run_gui_inference" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run inference on specified frames using models from training_jobs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -2556,7 +2556,7 @@ heightUpdated: triggered when the height of slider changes</p>
 
 <dl class="class">
 <dt id="sleap.gui.overlays.tracks.TrackTrailOverlay">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.overlays.tracks.</code><code class="sig-name descname">TrackTrailOverlay</code><span class="sig-paren">(</span><em class="sig-param">labels: sleap.io.dataset.Labels = None</em>, <em class="sig-param">player: QtVideoPlayer = None</em>, <em class="sig-param">trail_length: int = 10</em>, <em class="sig-param">show: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/overlays/tracks.html#TrackTrailOverlay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.overlays.tracks.TrackTrailOverlay" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.overlays.tracks.</code><code class="sig-name descname">TrackTrailOverlay</code><span class="sig-paren">(</span><em class="sig-param">labels: sleap.io.dataset.Labels = None</em>, <em class="sig-param">player: QtVideoPlayer = None</em>, <em class="sig-param">trail_length: int = 0</em>, <em class="sig-param">show: bool = True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/overlays/tracks.html#TrackTrailOverlay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.overlays.tracks.TrackTrailOverlay" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class to show track trails as overlay on video frame.</p>
 <p>Initialize this object with both its data source and its visual output
 scene, and it handles both extracting the relevant data for a given
@@ -2906,7 +2906,7 @@ Shape of array should be (channels, height, width).</p></li>
 
 <dl class="method">
 <dt id="sleap.gui.dataviews.GenericTableModel.headerData">
-<code class="sig-name descname">headerData</code><span class="sig-paren">(</span><em class="sig-param">section</em>, <em class="sig-param">orientation: &lt;class 'PySide2.QtCore.Qt.Orientation'&gt;</em>, <em class="sig-param">role=PySide2.QtCore.Qt.ItemDataRole.DisplayRole</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#GenericTableModel.headerData"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.GenericTableModel.headerData" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">headerData</code><span class="sig-paren">(</span><em class="sig-param">idx: int</em>, <em class="sig-param">orientation: &lt;class 'PySide2.QtCore.Qt.Orientation'&gt;</em>, <em class="sig-param">role=PySide2.QtCore.Qt.ItemDataRole.DisplayRole</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#GenericTableModel.headerData"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.GenericTableModel.headerData" title="Permalink to this definition">¶</a></dt>
 <dd><p>Overrides Qt method, returns column (attribute) names.</p>
 </dd></dl>
 
@@ -2920,6 +2920,12 @@ Shape of array should be (channels, height, width).</p></li>
 <dt id="sleap.gui.dataviews.GenericTableModel.object_to_items">
 <code class="sig-name descname">object_to_items</code><span class="sig-paren">(</span><em class="sig-param">item_list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#GenericTableModel.object_to_items"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.GenericTableModel.object_to_items" title="Permalink to this definition">¶</a></dt>
 <dd><p>Virtual method, convert object to list of items to show in rows.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.dataviews.GenericTableModel.original_items">
+<em class="property">property </em><code class="sig-name descname">original_items</code><a class="headerlink" href="#sleap.gui.dataviews.GenericTableModel.original_items" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the original items (rather than the dictionary we build from it).</p>
 </dd></dl>
 
 <dl class="method">
@@ -2942,14 +2948,8 @@ Shape of array should be (channels, height, width).</p></li>
 
 <dl class="method">
 <dt id="sleap.gui.dataviews.GenericTableModel.sort">
-<code class="sig-name descname">sort</code><span class="sig-paren">(</span><em class="sig-param">column_idx: int</em>, <em class="sig-param">order: &lt;class 'PySide2.QtCore.Qt.SortOrder'&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#GenericTableModel.sort"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.GenericTableModel.sort" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">sort</code><span class="sig-paren">(</span><em class="sig-param">column_idx: int</em>, <em class="sig-param">order: &lt;class 'PySide2.QtCore.Qt.SortOrder'&gt; = PySide2.QtCore.Qt.SortOrder.AscendingOrder</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#GenericTableModel.sort"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.GenericTableModel.sort" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sorts table by given column and order.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.dataviews.GenericTableModel.uncached_items">
-<em class="property">property </em><code class="sig-name descname">uncached_items</code><a class="headerlink" href="#sleap.gui.dataviews.GenericTableModel.uncached_items" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets or sets the uncached items.</p>
 </dd></dl>
 
 </dd></dl>

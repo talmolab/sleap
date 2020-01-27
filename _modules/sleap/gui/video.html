@@ -44,8 +44,17 @@
 <span class="sd">    &gt;&gt;&gt; vp.addInstance(instance=my_instance, color=(r, g, b))</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">deque</span>
 
-<span class="n">FORCE_REQUEST_AFTER_TIME_IN_SECONDS</span> <span class="o">=</span> <span class="mi">1</span>
+
+<span class="c1"># FORCE_REQUESTS controls whether we emit a signal to process frame requests</span>
+<span class="c1"># if we haven&#39;t processed any for a certain amount of time.</span>
+<span class="c1"># Usually the processing gets triggered by a timer but if the user is (e.g.)</span>
+<span class="c1"># dragging the mouse, the timer doesn&#39;t trigger.</span>
+<span class="c1"># FORCE_REQUESTS lets us update the frames in real time, assuming the load time</span>
+<span class="c1"># is short enough to do that.</span>
+
+<span class="n">FORCE_REQUESTS</span> <span class="o">=</span> <span class="kc">True</span>
 
 
 <span class="kn">from</span> <span class="nn">PySide2</span> <span class="kn">import</span> <span class="n">QtWidgets</span><span class="p">,</span> <span class="n">QtCore</span>
@@ -59,7 +68,7 @@
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">PySide2.QtGui</span> <span class="kn">import</span> <span class="n">QImage</span><span class="p">,</span> <span class="n">QPixmap</span><span class="p">,</span> <span class="n">QPainter</span><span class="p">,</span> <span class="n">QPainterPath</span><span class="p">,</span> <span class="n">QTransform</span>
 <span class="kn">from</span> <span class="nn">PySide2.QtGui</span> <span class="kn">import</span> <span class="n">QPen</span><span class="p">,</span> <span class="n">QBrush</span><span class="p">,</span> <span class="n">QColor</span><span class="p">,</span> <span class="n">QFont</span><span class="p">,</span> <span class="n">QPolygonF</span>
-<span class="kn">from</span> <span class="nn">PySide2.QtGui</span> <span class="kn">import</span> <span class="n">QKeyEvent</span>
+<span class="kn">from</span> <span class="nn">PySide2.QtGui</span> <span class="kn">import</span> <span class="n">QKeyEvent</span><span class="p">,</span> <span class="n">QMouseEvent</span>
 <span class="kn">from</span> <span class="nn">PySide2.QtCore</span> <span class="kn">import</span> <span class="n">Qt</span><span class="p">,</span> <span class="n">QRectF</span><span class="p">,</span> <span class="n">QPointF</span><span class="p">,</span> <span class="n">QMarginsF</span><span class="p">,</span> <span class="n">QLineF</span>
 
 <span class="kn">import</span> <span class="nn">atexit</span>
@@ -98,9 +107,13 @@
     <span class="n">load_queue</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">video</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">_last_process_time</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">_force_request_wait_time</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">_recent_load_times</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">LoadImageWorker</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_recent_load_times</span> <span class="o">=</span> <span class="n">deque</span><span class="p">(</span><span class="n">maxlen</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 
         <span class="c1"># Connect signal to processing function so that we can add processing</span>
         <span class="c1"># event to event queue from the request handler.</span>
@@ -120,12 +133,21 @@
         <span class="n">frame_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_queue</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">load_queue</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="c1"># print(f&quot;\t{frame_idx} starting to load&quot;) # DEBUG</span>
-
         <span class="k">try</span><span class="p">:</span>
+
+            <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
             <span class="c1"># Get image data</span>
             <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">get_frame</span><span class="p">(</span><span class="n">frame_idx</span><span class="p">)</span>
-        <span class="k">except</span><span class="p">:</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_recent_load_times</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span><span class="p">)</span>
+
+            <span class="c1"># Set the time to wait before forcing a load request to a little</span>
+            <span class="c1"># longer than the average time it recently took to load a frame</span>
+            <span class="n">avg_load_time</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_recent_load_times</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_recent_load_times</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_force_request_wait_time</span> <span class="o">=</span> <span class="n">avg_load_time</span> <span class="o">*</span> <span class="mf">1.2</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">frame</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="k">if</span> <span class="n">frame</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -148,9 +170,10 @@
 
         <span class="n">since_last</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_last_process_time</span>
 
-        <span class="k">if</span> <span class="n">since_last</span> <span class="o">&gt;</span> <span class="n">FORCE_REQUEST_AFTER_TIME_IN_SECONDS</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_last_process_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span></div>
+        <span class="k">if</span> <span class="n">FORCE_REQUESTS</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">since_last</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_force_request_wait_time</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_last_process_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="QtVideoPlayer"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.QtVideoPlayer">[docs]</a><span class="k">class</span> <span class="nc">QtVideoPlayer</span><span class="p">(</span><span class="n">QWidget</span><span class="p">):</span>
@@ -409,6 +432,11 @@
         <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">selectable_instances</span><span class="p">:</span>
             <span class="n">inst</span><span class="o">.</span><span class="n">showEdges</span><span class="p">(</span><span class="n">show</span><span class="p">)</span></div>
 
+    <span class="k">def</span> <span class="nf">highlightPredictions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">highlight_text</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">predicted_instances</span><span class="p">:</span>
+            <span class="n">inst</span><span class="o">.</span><span class="n">highlight</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">inst</span><span class="o">.</span><span class="n">highlight_text</span> <span class="o">=</span> <span class="n">highlight_text</span>
+
 <div class="viewcode-block" id="QtVideoPlayer.zoomToFit"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.QtVideoPlayer.zoomToFit">[docs]</a>    <span class="k">def</span> <span class="nf">zoomToFit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Zoom view to fit all instances.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -638,7 +666,7 @@
 
     <span class="n">updatedViewer</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">()</span>
     <span class="n">updatedSelection</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">()</span>
-    <span class="n">instanceDoubleClicked</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">(</span><span class="n">Instance</span><span class="p">)</span>
+    <span class="n">instanceDoubleClicked</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">(</span><span class="n">Instance</span><span class="p">,</span> <span class="n">QMouseEvent</span><span class="p">)</span>
     <span class="n">areaSelected</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
     <span class="n">pointSelected</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
     <span class="n">leftMouseButtonPressed</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
@@ -759,7 +787,7 @@
 
 <span class="sd">        Order should match the order in which instances were added to scene.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="ow">not</span> <span class="n">x</span><span class="o">.</span><span class="n">predicted</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_instances</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">predicted</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_instances</span><span class="p">))</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">selectable_instances</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="s2">&quot;QtInstance&quot;</span><span class="p">]:</span>
@@ -962,7 +990,7 @@
             <span class="n">rect</span> <span class="o">=</span> <span class="n">rect</span><span class="o">.</span><span class="n">marginsAdded</span><span class="p">(</span><span class="n">QMarginsF</span><span class="p">(</span><span class="n">margin</span><span class="p">,</span> <span class="n">margin</span><span class="p">,</span> <span class="n">margin</span><span class="p">,</span> <span class="n">margin</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">rect</span></div>
 
-<div class="viewcode-block" id="GraphicsView.mouseDoubleClickEvent"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.GraphicsView.mouseDoubleClickEvent">[docs]</a>    <span class="k">def</span> <span class="nf">mouseDoubleClickEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+<div class="viewcode-block" id="GraphicsView.mouseDoubleClickEvent"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.GraphicsView.mouseDoubleClickEvent">[docs]</a>    <span class="k">def</span> <span class="nf">mouseDoubleClickEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">QMouseEvent</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Custom event handler, clears zoom.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">scenePos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapToScene</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">pos</span><span class="p">())</span>
@@ -1387,12 +1415,12 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">parentObject</span><span class="p">()</span><span class="o">.</span><span class="n">setRotation</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
             <span class="n">event</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="QtNode.mouseDoubleClickEvent"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.QtNode.mouseDoubleClickEvent">[docs]</a>    <span class="k">def</span> <span class="nf">mouseDoubleClickEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+<div class="viewcode-block" id="QtNode.mouseDoubleClickEvent"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.QtNode.mouseDoubleClickEvent">[docs]</a>    <span class="k">def</span> <span class="nf">mouseDoubleClickEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">QMouseEvent</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Custom event handler to emit signal on event.&quot;&quot;&quot;</span>
         <span class="n">scene</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">scene</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">view</span> <span class="o">=</span> <span class="n">scene</span><span class="o">.</span><span class="n">views</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">view</span><span class="o">.</span><span class="n">instanceDoubleClicked</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parentObject</span><span class="p">()</span><span class="o">.</span><span class="n">instance</span><span class="p">)</span></div></div>
+            <span class="n">view</span><span class="o">.</span><span class="n">instanceDoubleClicked</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parentObject</span><span class="p">()</span><span class="o">.</span><span class="n">instance</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="QtEdge"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.QtEdge">[docs]</a><span class="k">class</span> <span class="nc">QtEdge</span><span class="p">(</span><span class="n">QGraphicsPolygonItem</span><span class="p">):</span>
@@ -1584,15 +1612,30 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_bounding_rect</span> <span class="o">=</span> <span class="n">QRectF</span><span class="p">()</span>
 
         <span class="c1"># Show predicted instances behind non-predicted ones</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">setZValue</span><span class="p">(</span><span class="mi">0</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">predicted</span> <span class="k">else</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setZValue</span><span class="p">(</span><span class="mi">1</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">predicted</span> <span class="k">else</span> <span class="mi">2</span><span class="p">)</span>
 
-        <span class="c1"># Add box to go around instance</span>
+        <span class="c1"># Add box to go around instance for selection</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">box</span> <span class="o">=</span> <span class="n">QGraphicsRectItem</span><span class="p">(</span><span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
-        <span class="n">box_pen_widget</span> <span class="o">=</span> <span class="n">color_manager</span><span class="o">.</span><span class="n">get_item_pen_width</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="p">)</span>
-        <span class="n">box_pen</span> <span class="o">=</span> <span class="n">QPen</span><span class="p">(</span><span class="n">QColor</span><span class="p">(</span><span class="o">*</span><span class="n">color</span><span class="p">),</span> <span class="n">box_pen_widget</span><span class="p">)</span>
+        <span class="n">box_pen_width</span> <span class="o">=</span> <span class="n">color_manager</span><span class="o">.</span><span class="n">get_item_pen_width</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="p">)</span>
+        <span class="n">box_pen</span> <span class="o">=</span> <span class="n">QPen</span><span class="p">(</span><span class="n">QColor</span><span class="p">(</span><span class="o">*</span><span class="n">color</span><span class="p">),</span> <span class="n">box_pen_width</span><span class="p">)</span>
         <span class="n">box_pen</span><span class="o">.</span><span class="n">setStyle</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">DashLine</span><span class="p">)</span>
         <span class="n">box_pen</span><span class="o">.</span><span class="n">setCosmetic</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">box</span><span class="o">.</span><span class="n">setPen</span><span class="p">(</span><span class="n">box_pen</span><span class="p">)</span>
+
+        <span class="c1"># Add label for highlighted instance</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">highlight_label</span> <span class="o">=</span> <span class="n">QtTextWithBackground</span><span class="p">(</span><span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">highlight_label</span><span class="o">.</span><span class="n">setDefaultTextColor</span><span class="p">(</span><span class="n">QColor</span><span class="p">(</span><span class="s2">&quot;yellow&quot;</span><span class="p">))</span>
+        <span class="n">font</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">highlight_label</span><span class="o">.</span><span class="n">font</span><span class="p">()</span>
+        <span class="n">font</span><span class="o">.</span><span class="n">setPointSize</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">highlight_label</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="n">font</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">highlight_label</span><span class="o">.</span><span class="n">setOpacity</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">highlight_label</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+
+        <span class="c1"># Add box to go around instance for highlight</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">highlight_box</span> <span class="o">=</span> <span class="n">QGraphicsRectItem</span><span class="p">(</span><span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">highlight_pen</span> <span class="o">=</span> <span class="n">QPen</span><span class="p">(</span><span class="n">QColor</span><span class="p">(</span><span class="s2">&quot;yellow&quot;</span><span class="p">),</span> <span class="mi">8</span><span class="p">)</span>
+        <span class="n">highlight_pen</span><span class="o">.</span><span class="n">setCosmetic</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">highlight_box</span><span class="o">.</span><span class="n">setPen</span><span class="p">(</span><span class="n">highlight_pen</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">track_label</span> <span class="o">=</span> <span class="n">QtTextWithBackground</span><span class="p">(</span><span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">track_label</span><span class="o">.</span><span class="n">setDefaultTextColor</span><span class="p">(</span><span class="n">QColor</span><span class="p">(</span><span class="o">*</span><span class="n">color</span><span class="p">))</span>
@@ -1731,6 +1774,36 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">box</span><span class="o">.</span><span class="n">setRect</span><span class="p">(</span><span class="n">rect</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">track_label</span><span class="o">.</span><span class="n">setOpacity</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">track_label</span><span class="o">.</span><span class="n">setPos</span><span class="p">(</span><span class="n">rect</span><span class="o">.</span><span class="n">bottomLeft</span><span class="p">()</span> <span class="o">+</span> <span class="n">QPointF</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">highlight</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">highlight_box</span><span class="o">.</span><span class="n">opacity</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span>
+
+    <span class="nd">@highlight</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">highlight</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="mf">0.2</span> <span class="k">if</span> <span class="n">val</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">highlight_box</span><span class="o">.</span><span class="n">setOpacity</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
+        <span class="c1"># Update the position for the box</span>
+        <span class="n">rect</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getPointsBoundingRect</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">rect</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_bounding_rect</span> <span class="o">=</span> <span class="n">rect</span>
+            <span class="n">rect</span> <span class="o">=</span> <span class="n">rect</span><span class="o">.</span><span class="n">marginsAdded</span><span class="p">(</span><span class="n">QMarginsF</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">highlight_box</span><span class="o">.</span><span class="n">setRect</span><span class="p">(</span><span class="n">rect</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">rect</span><span class="o">.</span><span class="n">width</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">30</span><span class="p">:</span>
+                <span class="c1"># Show label if highlight box isn&#39;t too small</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">highlight_label</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="n">op</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">highlight_label</span><span class="o">.</span><span class="n">setPos</span><span class="p">(</span><span class="n">rect</span><span class="o">.</span><span class="n">topLeft</span><span class="p">()</span> <span class="o">-</span> <span class="n">QPointF</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">highlight_label</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">highlight_text</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+
+    <span class="nd">@highlight_text</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">highlight_text</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">highlight_label</span><span class="o">.</span><span class="n">setPlainText</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">selected</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>

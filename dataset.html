@@ -357,28 +357,6 @@ Defaults to the first frame of video.</p></li>
 </dd></dl>
 
 <dl class="method">
-<dt id="sleap.io.dataset.Labels.from_json">
-<em class="property">classmethod </em><code class="sig-name descname">from_json</code><span class="sig-paren">(</span><em class="sig-param">data: Union[str, dict], match_to: Optional[Labels] = None</em><span class="sig-paren">)</span> &#x2192; sleap.io.dataset.Labels<a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.from_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.from_json" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create instance of class from data in dictionary.</p>
-<p>Method is used by other methods that load from JSON.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> – Dictionary, deserialized from JSON.</p></li>
-<li><p><strong>match_to</strong> – If given, we’ll replace particular objects in the
-data dictionary with <em>matching</em> objects in the match_to
-<a class="reference internal" href="#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><code class="xref py py-class docutils literal notranslate"><span class="pre">Labels</span></code></a> object. This ensures that the newly
-instantiated <a class="reference internal" href="#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><code class="xref py py-class docutils literal notranslate"><span class="pre">Labels</span></code></a> can be merged without
-duplicate matching objects (e.g., <code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code> objects ).</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A new <a class="reference internal" href="#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><code class="xref py py-class docutils literal notranslate"><span class="pre">Labels</span></code></a> object.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
 <dt id="sleap.io.dataset.Labels.generate_training_data">
 <code class="sig-name descname">generate_training_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Tuple[Union[numpy.ndarray, List[numpy.ndarray]], List[numpy.ndarray]]<a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.generate_training_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.generate_training_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates images and points for training.</p>
@@ -482,93 +460,9 @@ or suggestions for all videos (if no video specified).</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="sleap.io.dataset.Labels.load_deeplabcut_csv">
-<em class="property">classmethod </em><code class="sig-name descname">load_deeplabcut_csv</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em><span class="sig-paren">)</span> &#x2192; sleap.io.dataset.Labels<a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.load_deeplabcut_csv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.load_deeplabcut_csv" title="Permalink to this definition">¶</a></dt>
-<dd><p>Load DeepLabCut csv file as dataset.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>filename</strong> – Path to csv file.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The <a class="reference internal" href="#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><code class="xref py py-class docutils literal notranslate"><span class="pre">Labels</span></code></a> dataset.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
 <dt id="sleap.io.dataset.Labels.load_file">
 <em class="property">classmethod </em><code class="sig-name descname">load_file</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.load_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.load_file" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load file, detecting format from filename.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.io.dataset.Labels.load_hdf5">
-<em class="property">classmethod </em><code class="sig-name descname">load_hdf5</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em>, <em class="sig-param">video_callback=None</em>, <em class="sig-param">match_to: Optional[Labels] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.load_hdf5"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.load_hdf5" title="Permalink to this definition">¶</a></dt>
-<dd><p>Deserialize HDF5 file as new <a class="reference internal" href="#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><code class="xref py py-class docutils literal notranslate"><span class="pre">Labels</span></code></a> instance.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>filename</strong> – Path to HDF5 file.</p></li>
-<li><p><strong>video_callback</strong> – A callback function that which can modify
-video paths before we try to create the corresponding
-<code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code> objects. Usually you’ll want to pass
-a callback created by <a class="reference internal" href="#sleap.io.dataset.Labels.make_video_callback" title="sleap.io.dataset.Labels.make_video_callback"><code class="xref py py-meth docutils literal notranslate"><span class="pre">make_video_callback()</span></code></a>
-or <a class="reference internal" href="#sleap.io.dataset.Labels.make_gui_video_callback" title="sleap.io.dataset.Labels.make_gui_video_callback"><code class="xref py py-meth docutils literal notranslate"><span class="pre">make_gui_video_callback()</span></code></a>.
-Alternately, if you pass a list of strings we’ll construct a
-non-gui callback with those strings as the search paths.</p></li>
-<li><p><strong>match_to</strong> – If given, we’ll replace particular objects in the
-data dictionary with <em>matching</em> objects in the match_to
-<a class="reference internal" href="#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><code class="xref py py-class docutils literal notranslate"><span class="pre">Labels</span></code></a> object. This ensures that the newly
-instantiated <a class="reference internal" href="#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><code class="xref py py-class docutils literal notranslate"><span class="pre">Labels</span></code></a> can be merged without
-duplicate matching objects (e.g., <code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code> objects ).</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A new <a class="reference internal" href="#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><code class="xref py py-class docutils literal notranslate"><span class="pre">Labels</span></code></a> object.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.io.dataset.Labels.load_json">
-<em class="property">classmethod </em><code class="sig-name descname">load_json</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em>, <em class="sig-param">video_callback: Optional[Callable] = None</em>, <em class="sig-param">match_to: Optional[Labels] = None</em><span class="sig-paren">)</span> &#x2192; sleap.io.dataset.Labels<a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.load_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.load_json" title="Permalink to this definition">¶</a></dt>
-<dd><p>Deserialize JSON file as new <a class="reference internal" href="#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><code class="xref py py-class docutils literal notranslate"><span class="pre">Labels</span></code></a> instance.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>filename</strong> – Path to JSON file.</p></li>
-<li><p><strong>video_callback</strong> – A callback function that which can modify
-video paths before we try to create the corresponding
-<code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code> objects. Usually you’ll want to pass
-a callback created by <a class="reference internal" href="#sleap.io.dataset.Labels.make_video_callback" title="sleap.io.dataset.Labels.make_video_callback"><code class="xref py py-meth docutils literal notranslate"><span class="pre">make_video_callback()</span></code></a>
-or <a class="reference internal" href="#sleap.io.dataset.Labels.make_gui_video_callback" title="sleap.io.dataset.Labels.make_gui_video_callback"><code class="xref py py-meth docutils literal notranslate"><span class="pre">make_gui_video_callback()</span></code></a>.
-Alternately, if you pass a list of strings we’ll construct a
-non-gui callback with those strings as the search paths.</p></li>
-<li><p><strong>match_to</strong> – If given, we’ll replace particular objects in the
-data dictionary with <em>matching</em> objects in the match_to
-<a class="reference internal" href="#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><code class="xref py py-class docutils literal notranslate"><span class="pre">Labels</span></code></a> object. This ensures that the newly
-instantiated <a class="reference internal" href="#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><code class="xref py py-class docutils literal notranslate"><span class="pre">Labels</span></code></a> can be merged without
-duplicate matching objects (e.g., <code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code> objects ).</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A new <a class="reference internal" href="#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><code class="xref py py-class docutils literal notranslate"><span class="pre">Labels</span></code></a> object.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.io.dataset.Labels.load_leap_matlab">
-<em class="property">classmethod </em><code class="sig-name descname">load_leap_matlab</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em>, <em class="sig-param">gui: bool = True</em><span class="sig-paren">)</span> &#x2192; sleap.io.dataset.Labels<a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.load_leap_matlab"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.load_leap_matlab" title="Permalink to this definition">¶</a></dt>
-<dd><p>Load LEAP MATLAB file as dataset.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>filename</strong> – Path to matlab file.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The <a class="reference internal" href="#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><code class="xref py py-class docutils literal notranslate"><span class="pre">Labels</span></code></a> dataset.</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="method">
@@ -626,6 +520,12 @@ we’ll automatically try to find the missing videos.</p>
 <dd class="field-even"><p>None</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.dataset.Labels.predicted_instances">
+<em class="property">property </em><code class="sig-name descname">predicted_instances</code><a class="headerlink" href="#sleap.io.dataset.Labels.predicted_instances" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns list of all user (non-predicted) instances.</p>
 </dd></dl>
 
 <dl class="method">
@@ -732,88 +632,6 @@ we’ll use for training (i.e., those with <cite>Instance</cite> objects ).</p><
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>A list of <code class="xref py py-class docutils literal notranslate"><span class="pre">ImgStoreVideo</span></code> objects with the stored
 frames.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.io.dataset.Labels.save_hdf5">
-<em class="property">static </em><code class="sig-name descname">save_hdf5</code><span class="sig-paren">(</span><em class="sig-param">labels: sleap.io.dataset.Labels</em>, <em class="sig-param">filename: str</em>, <em class="sig-param">append: bool = False</em>, <em class="sig-param">save_frame_data: bool = False</em>, <em class="sig-param">frame_data_format: str = 'png'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.save_hdf5"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.save_hdf5" title="Permalink to this definition">¶</a></dt>
-<dd><p>Serialize the labels dataset to an HDF5 file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>labels</strong> – The <a class="reference internal" href="#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><code class="xref py py-class docutils literal notranslate"><span class="pre">Labels</span></code></a> dataset to save</p></li>
-<li><p><strong>filename</strong> – The file to serialize the dataset to.</p></li>
-<li><p><strong>append</strong> – Whether to append these labeled frames to the file
-or not.</p></li>
-<li><p><strong>save_frame_data</strong> – Whether to save the image frame data for
-any labeled frame as well. This is useful for uploading
-the HDF5 for model training when video files are to
-large to move. This will only save video frames that
-have some labeled instances.</p></li>
-<li><p><strong>frame_data_format</strong> – <p>If save_frame_data is True, then this argument
-is used to set the data format to use when encoding images
-saved in HDF5. Supported formats include:</p>
-<ul>
-<li><p>”” for no encoding (ndarray)</p></li>
-<li><p>”png”</p></li>
-<li><p>”jpg”</p></li>
-<li><p>anything else supported by <cite>cv2.imencode</cite></p></li>
-</ul>
-</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.io.dataset.Labels.save_json">
-<em class="property">static </em><code class="sig-name descname">save_json</code><span class="sig-paren">(</span><em class="sig-param">labels: sleap.io.dataset.Labels</em>, <em class="sig-param">filename: str</em>, <em class="sig-param">compress: bool = False</em>, <em class="sig-param">save_frame_data: bool = False</em>, <em class="sig-param">frame_data_format: str = 'png'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.save_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.save_json" title="Permalink to this definition">¶</a></dt>
-<dd><p>Save a Labels instance to a JSON format.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>labels</strong> – The labels dataset to save.</p></li>
-<li><p><strong>filename</strong> – The filename to save the data to.</p></li>
-<li><p><strong>compress</strong> – Whether the data be zip compressed or not? If True,
-the JSON will be compressed using Python’s shutil.make_archive
-command into a PKZIP zip file. If compress is True then
-filename will have a .zip appended to it.</p></li>
-<li><p><strong>save_frame_data</strong> – Whether to save the image data for each frame.
-For each video in the dataset, all frames that have labels
-will be stored as an imgstore dataset.
-If save_frame_data is True then compress will be forced to True
-since the archive must contain both the JSON data and image
-data stored in ImgStores.</p></li>
-<li><p><strong>frame_data_format</strong> – <p>If save_frame_data is True, then this argument
-is used to set the data format to use when writing frame
-data to ImgStore objects. Supported formats should be:</p>
-<blockquote>
-<div><ul>
-<li><p>’pgm’,</p></li>
-<li><p>’bmp’,</p></li>
-<li><p>’ppm’,</p></li>
-<li><p>’tif’,</p></li>
-<li><p>’png’,</p></li>
-<li><p>’jpg’,</p></li>
-<li><p>’npy’,</p></li>
-<li><p>’mjpeg/avi’,</p></li>
-<li><p>’h264/mkv’,</p></li>
-<li><p>’avc1/mp4’</p></li>
-</ul>
-<p>Note: ‘h264/mkv’ and ‘avc1/mp4’ require separate installation
-of these codecs on your system. They are excluded from SLEAP
-because of their GPL license.</p>
-</div></blockquote>
-</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
