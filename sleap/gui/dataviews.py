@@ -4,6 +4,7 @@ Data table widgets and view models used in GUI app.
 
 from PySide2 import QtCore, QtWidgets, QtGui
 
+import numpy as np
 import os
 
 from operator import itemgetter
@@ -39,12 +40,7 @@ class GenericTableModel(QtCore.QAbstractTableModel):
         self.properties = properties or self.properties or []
         self.context = context
 
-        self.uncached_items = []
-
-        if items is not None:
-            self.items = items
-        else:
-            self._data = []
+        self.items = items
 
     def object_to_items(self, item_list):
         """Virtual method, convert object to list of items to show in rows."""
@@ -57,28 +53,33 @@ class GenericTableModel(QtCore.QAbstractTableModel):
 
     @items.setter
     def items(self, obj):
+        if not obj:
+            self._data = []
+            return
+
         self.obj = obj
         item_list = self.object_to_items(obj)
-        self.uncached_items = item_list
 
         self.beginResetModel()
         if hasattr(self, "item_to_data"):
             self._data = []
             for item in item_list:
                 item_data = self.item_to_data(obj, item)
+                item_data["_original_item"] = item
                 self._data.append(item_data)
         else:
             self._data = item_list
         self.endResetModel()
 
     @property
-    def uncached_items(self):
-        """Gets or sets the uncached items."""
-        return self._uncached_items
-
-    @uncached_items.setter
-    def uncached_items(self, val):
-        self._uncached_items = val
+    def original_items(self):
+        """
+        Gets the original items (rather than the dictionary we build from it).
+        """
+        try:
+            return [datum["_original_item"] for datum in self._data]
+        except:
+            return self._data
 
     def get_item_color(self, item: Any, key: str):
         """Virtual method, returns color for given item."""
@@ -104,7 +105,7 @@ class GenericTableModel(QtCore.QAbstractTableModel):
                 return getattr(item, key)
 
         elif role == QtCore.Qt.ForegroundRole:
-            return self.get_item_color(self.uncached_items[idx], key)
+            return self.get_item_color(self.original_items[idx], key)
 
         return None
 
@@ -129,18 +130,23 @@ class GenericTableModel(QtCore.QAbstractTableModel):
         return len(self.properties)
 
     def headerData(
-        self, section, orientation: QtCore.Qt.Orientation, role=QtCore.Qt.DisplayRole
+        self, idx: int, orientation: QtCore.Qt.Orientation, role=QtCore.Qt.DisplayRole
     ):
         """Overrides Qt method, returns column (attribute) names."""
         if role == QtCore.Qt.DisplayRole:
             if orientation == QtCore.Qt.Horizontal:
-                return self.properties[section]
+                return self.properties[idx]
             elif orientation == QtCore.Qt.Vertical:
-                return section
+                # Add 1 to the row index so that we index from 1 instead of 0
+                return str(idx+1)
 
         return None
 
-    def sort(self, column_idx: int, order: QtCore.Qt.SortOrder):
+    def sort(
+        self,
+        column_idx: int,
+        order: QtCore.Qt.SortOrder = QtCore.Qt.SortOrder.AscendingOrder,
+    ):
         """Sorts table by given column and order."""
         prop = self.properties[column_idx]
         reverse = order == QtCore.Qt.SortOrder.DescendingOrder
@@ -150,15 +156,24 @@ class GenericTableModel(QtCore.QAbstractTableModel):
             if "video" in self.properties and "frame" in self.properties:
                 sort_function = itemgetter("video", "frame")
 
+        def string_safe_sort(x):
+            sort_val = sort_function(x)
+            try:
+                return float(sort_val)
+            except ValueError:
+                return -np.inf
+            except TypeError:
+                return sort_val
+
         self.beginResetModel()
-        self._data.sort(key=sort_function, reverse=reverse)
+        self._data.sort(key=string_safe_sort, reverse=reverse)
         self.endResetModel()
 
     def get_from_idx(self, index: QtCore.QModelIndex):
         """Gets item from QModelIndex."""
         if not index.isValid():
             return None, None
-        item = self.uncached_items[index.row()]
+        item = self.original_items[index.row()]
         key = self.properties[index.column()]
         return item, key
 
@@ -230,7 +245,7 @@ class GenericTableView(QtWidgets.QTableView):
         if not item:
             return
 
-        idx = self.model().uncached_items.index(item)
+        idx = self.model().original_items.index(item)
         table_row_idx = self.model().createIndex(idx, 0)
         self.setCurrentIndex(table_row_idx)
 
@@ -241,7 +256,7 @@ class GenericTableView(QtWidgets.QTableView):
         idx = self.currentIndex()
         if not idx.isValid():
             return None
-        return self.model().uncached_items[idx.row()]
+        return self.model().original_items[idx.row()]
 
 
 class VideosTableModel(GenericTableModel):
@@ -361,9 +376,9 @@ class SuggestionsTableModel(GenericTableModel):
 
         item_dict["SuggestionFrame"] = item
 
-        video_string = f"{labels.videos.index(item.video)}: {os.path.basename(item.video.filename)}"
+        video_string = f"{labels.videos.index(item.video)+1}: {os.path.basename(item.video.filename)}"
 
-        item_dict["group"] = str(item.group) if item.group is not None else ""
+        item_dict["group"] = str(item.group+1) if item.group is not None else ""
         item_dict["group_int"] = item.group if item.group is not None else -1
         item_dict["video"] = video_string
         item_dict["frame"] = int(item.frame_idx) + 1  # start at frame 1 rather than 0

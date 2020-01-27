@@ -63,6 +63,7 @@ def test_app_workflow(qtbot, centered_pair_vid, small_robot_mp4_vid):
     # FIXME: for now we'll bypass the video adding gui
     app.labels.add_video(centered_pair_vid)
     app.labels.add_video(small_robot_mp4_vid)
+    app.on_data_update([UpdateTopic.video])
 
     assert len(app.labels.videos) == 2
 

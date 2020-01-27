@@ -9,7 +9,7 @@ import random
 
 from typing import Callable, Dict, Iterator, List, Optional
 
-from PySide2 import QtCore, QtWidgets
+from PySide2 import QtCore, QtGui
 from PySide2.QtCore import Qt, QEvent
 
 from PySide2.QtWidgets import QApplication, QMainWindow, QWidget, QDockWidget
@@ -93,7 +93,6 @@ class MainWindow(QMainWindow):
         self.state["show edges"] = True
         self.state["edge style"] = "Line"
         self.state["fit"] = False
-        self.state["show trails"] = False
         self.state["color predicted"] = False
 
         self._initialize_gui()
@@ -389,12 +388,10 @@ class MainWindow(QMainWindow):
             key="edge style",
         )
 
-        add_menu_check_item(viewMenu, "show trails", "Show Trails")
-
         add_submenu_choices(
             menu=viewMenu,
             title="Trail Length",
-            options=(10, 20, 50),
+            options=(0, 10, 20, 50),
             key="trail_length",
         )
 
@@ -549,33 +546,40 @@ class MainWindow(QMainWindow):
         )
 
         predictionMenu.addSeparator()
+
         add_menu_item(
             predictionMenu,
-            "remove predictions",
+            "delete frame predictions",
+            "Delete Predictions on Current Frame",
+            self.commands.deleteFramePredictions,
+        )
+        add_menu_item(
+            predictionMenu,
+            "delete all predictions",
             "Delete All Predictions...",
             self.commands.deletePredictions,
         )
         add_menu_item(
             predictionMenu,
-            "remove clip predictions",
+            "delete clip predictions",
             "Delete Predictions from Clip...",
             self.commands.deleteClipPredictions,
         )
         add_menu_item(
             predictionMenu,
-            "remove area predictions",
+            "delete area predictions",
             "Delete Predictions from Area...",
             self.commands.deleteAreaPredictions,
         )
         add_menu_item(
             predictionMenu,
-            "remove score predictions",
+            "delete score predictions",
             "Delete Predictions with Low Score...",
             self.commands.deleteLowScorePredictions,
         )
         add_menu_item(
             predictionMenu,
-            "remove frame limit predictions",
+            "delete frame limit predictions",
             "Delete Predictions beyond Frame Limit...",
             self.commands.deleteFrameLimitPredictions,
         )
@@ -823,7 +827,6 @@ class MainWindow(QMainWindow):
                 ],
             )
 
-        overlay_state_connect(self.overlays["trails"], "show trails", "show")
         overlay_state_connect(self.overlays["trails"], "trail_length")
 
         overlay_state_connect(self.color_manager, "palette")
@@ -838,7 +841,7 @@ class MainWindow(QMainWindow):
             )
 
         # Set defaults
-        self.state["trail_length"] = 10
+        self.state["trail_length"] = 0
 
         # Emit signals for default that may have been set earlier
         self.state.emit("palette")
@@ -877,7 +880,7 @@ class MainWindow(QMainWindow):
         self._menu_actions["clear selection"].setEnabled(has_selected_instance)
         self._menu_actions["delete instance"].setEnabled(has_selected_instance)
 
-        self._menu_actions["remove clip predictions"].setEnabled(has_frame_range)
+        self._menu_actions["delete clip predictions"].setEnabled(has_frame_range)
         self._menu_actions["export clip"].setEnabled(has_frame_range)
 
         self._menu_actions["transpose"].setEnabled(has_multiple_instances)
@@ -984,9 +987,6 @@ class MainWindow(QMainWindow):
 
         self.player.plot()
 
-        if self.state["fit"]:
-            self.player.zoomToFit()
-
     def _after_plot_update(self, player, frame_idx, selected_inst):
         """Called each time a new frame is drawn."""
 
@@ -1002,6 +1002,9 @@ class MainWindow(QMainWindow):
         # Select instance if there was already selection
         if selected_inst is not None:
             player.view.selectInstance(selected_inst)
+
+        if self.state["fit"]:
+            player.zoomToFit()
 
         # Update related displays
         self.updateStatusMessage()
@@ -1025,7 +1028,7 @@ class MainWindow(QMainWindow):
                 message += f" (selection: {start+1:,}-{end+1:,})"
 
             if len(self.labels.videos) > 1:
-                message += f" of video {self.labels.videos.index(current_video)}"
+                message += f" of video {self.labels.videos.index(current_video)+1}"
 
             message += f"{spacer}Labeled Frames: "
             if current_video is not None:
@@ -1246,11 +1249,12 @@ class MainWindow(QMainWindow):
         self._child_windows[mode].frame_selection = self._frames_for_prediction()
         self._child_windows[mode].open()
 
-    def learningFinished(self):
+    def learningFinished(self, new_count: int):
         """Called when inference finishes."""
         # we ran inference so update display/ui
         self.on_data_update([UpdateTopic.all])
-        self.commands.changestack_push("new predictions")
+        if new_count:
+            self.commands.changestack_push("new predictions")
 
     def visualizeOutputs(self):
         """Gui for adding overlay with live visualization of predictions."""
@@ -1287,7 +1291,7 @@ class MainWindow(QMainWindow):
 
         self.plotFrame()
 
-    def doubleClickInstance(self, instance: Instance):
+    def doubleClickInstance(self, instance: Instance, event: QtGui.QMouseEvent = None):
         """
         Handles when the user has double-clicked an instance.
 
@@ -1300,7 +1304,14 @@ class MainWindow(QMainWindow):
         """
         # When a predicted instance is double-clicked, add a new instance
         if hasattr(instance, "score"):
-            self.commands.newInstance(copy_instance=instance)
+            mark_complete = False
+            # Mark the nodes as "complete" if shift-key is down
+            if event is not None and event.modifiers() & Qt.ShiftModifier:
+                mark_complete = True
+
+            self.commands.newInstance(
+                copy_instance=instance, mark_complete=mark_complete
+            )
 
         # When a regular instance is double-clicked, add any missing points
         else:

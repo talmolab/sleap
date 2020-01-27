@@ -35,8 +35,16 @@ class InstanceOverlay:
 
         lf = self.labels.find(video, frame_idx, return_new=True)[0]
 
-        for instance in lf.instances_to_show:
+        instances = lf.instances_to_show
+
+        has_predicted = any((True for inst in instances if hasattr(inst, "score")))
+        has_user = any((True for inst in instances if not hasattr(inst, "score")))
+
+        for instance in instances:
             self.player.addInstance(instance=instance)
 
         self.player.showLabels(self.state.get("show labels", default=True))
         self.player.showEdges(self.state.get("show edges", default=True))
+
+        if has_user and has_predicted:
+            self.player.highlightPredictions("not in training data")

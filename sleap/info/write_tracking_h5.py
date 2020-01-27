@@ -8,7 +8,7 @@ of video.
 
 Call from command line as:
 
->>> python -m sleap.io.write_tracking_h5 <labels_filename>
+>>> python -m sleap.info.write_tracking_h5 <labels_filename>
 
 Will write file to `<labels_filename>.tracking.h5`.
 
