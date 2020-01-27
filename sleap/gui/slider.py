@@ -415,6 +415,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
         self._val_main = val
         x = self._toPos(val)
         self.handle.setPos(x, 0)
+        self.ensureVisible(self.handle, 0, 0)
 
     def setMinimum(self, min: float) -> float:
         """Sets minimum value for slider."""
