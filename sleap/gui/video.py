@@ -1713,13 +1713,16 @@ class QtInstance(QGraphicsObject):
 
     def getPointsBoundingRect(self) -> QRectF:
         """Returns a rect which contains all the nodes in the skeleton."""
-        rect = None
-        for item in self.edges:
-            rect = (
-                item.boundingRect()
-                if rect is None
-                else rect.united(item.boundingRect())
-            )
+        points = [node.point for node in self.nodes.values()]
+        top_left = QPointF(
+            min((point.x for point in points)),
+            min((point.y for point in points))
+        )
+        bottom_right = QPointF(
+            max((point.x for point in points)),
+            max((point.y for point in points))
+        )
+        rect = QRectF(top_left, bottom_right)
         return rect
 
     def updateBox(self, *args, **kwargs):
