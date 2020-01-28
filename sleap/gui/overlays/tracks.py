@@ -13,7 +13,7 @@ from typing import Iterable, List
 
 from PySide2 import QtCore, QtGui
 
-MAX_NODES_IN_TRAIL = 30
+MAX_NODES_IN_TRAIL = 4
 
 
 @attr.s(auto_attribs=True)
@@ -36,8 +36,8 @@ class TrackTrailOverlay:
 
     labels: Labels = None
     player: "QtVideoPlayer" = None
-    trail_length: int = 10
-    show: bool = False
+    trail_length: int = 0
+    show: bool = True
 
     def get_track_trails(self, frame_selection: Iterable["LabeledFrame"]):
         """Get data needed to draw track trail.
@@ -140,20 +140,26 @@ class TrackTrailOverlay:
             for trail in trails:
                 half = len(trail) // 2
 
-                color.setAlphaF(1)
                 pen.setColor(color)
-                polygon = self.map_to_qt_polygon(trail[:half])
-                self.player.scene.addPolygon(polygon, pen)
+                pen.setWidthF(2)
+                path = self.map_to_qt_path(trail[half:])
+                self.player.scene.addPath(path, pen)
 
-                color.setAlphaF(0.5)
                 pen.setColor(color)
-                polygon = self.map_to_qt_polygon(trail[half:])
-                self.player.scene.addPolygon(polygon, pen)
+                pen.setWidthF(1)
+                path = self.map_to_qt_path(trail[: max(len(trail), half + 1)])
+                self.player.scene.addPath(path, pen)
 
     @staticmethod
-    def map_to_qt_polygon(point_list):
+    def map_to_qt_path(point_list):
         """Converts a list of (x, y)-tuples to a `QPolygonF`."""
-        return QtGui.QPolygonF(list(itertools.starmap(QtCore.QPointF, point_list)))
+        if not point_list:
+            return QtGui.QPainterPath()
+
+        path = QtGui.QPainterPath(QtCore.QPointF(*point_list[0]))
+        for point in point_list:
+            path.lineTo(*point)
+        return path
 
 
 @attr.s(auto_attribs=True)

@@ -25,6 +25,99 @@ from sleap.nn import job
 from sleap.nn import model
 
 
+class OHKMLoss(tf.keras.losses.Loss):
+    """Online hard keypoint mining loss.
+
+    This loss serves to dynamically reweight the MSE of the top-K worst channels in each
+    batch. This is useful when fine tuning a model to improve performance on a hard
+    part to optimize for (e.g., small, hard to see, often not visible).
+
+    Note: This works with any type of channel, so it can work for PAFs as well.
+
+    Attributes:
+        K: Number of worst performing channels to compute loss for.
+        weight: Scalar factor to multiply with the MSE for the top-K worst channels.
+        name: Name of the loss tensor.
+    """
+
+    def __init__(self, K=2, weight=5, name="ohkm", **kwargs):
+        super(OHKMLoss, self).__init__(name=name, **kwargs)
+        self.K = K
+        self.weight = weight
+
+    def __call__(self, y_gt, y_pr, sample_weight=None):
+
+        # Squared difference
+        loss = tf.math.squared_difference(y_gt, y_pr)  # rank 4
+
+        # Store initial shape for normalization
+        batch_shape = tf.shape(loss)
+
+        # Reduce over everything but channels axis
+        loss = tf.reduce_sum(loss, axis=[0, 1, 2])
+
+        # Keep only top loss terms
+        k_vals, k_inds = tf.math.top_k(loss, k=self.K, sorted=False)
+
+        # Apply weights
+        k_loss = k_vals * self.weight
+
+        # Reduce over all channels
+        n_elements = tf.cast(
+            batch_shape[0] * batch_shape[1] * batch_shape[2] * self.K, tf.float32
+        )
+        k_loss = tf.reduce_sum(k_loss) / n_elements
+
+        return k_loss
+
+
+class NodeLoss(tf.keras.metrics.Metric):
+    """Compute node-specific loss.
+
+    Useful for monitoring the MSE for specific body parts (channels).
+
+    Attributes:
+        node_ind: Index of channel to compute MSE for.
+        name: Name of the loss tensor.
+    """
+
+    def __init__(self, node_ind, name="node_loss", **kwargs):
+        super(NodeLoss, self).__init__(name=name, **kwargs)
+        self.node_ind = node_ind
+        self.node_mse = self.add_weight(
+            name=name + ".mse", initializer="zeros", dtype=tf.float32
+        )
+        self.n_samples = self.add_weight(
+            name=name + ".n_samples", initializer="zeros", dtype=tf.int32
+        )
+        self.height = self.add_weight(
+            name=name + ".height", initializer="zeros", dtype=tf.int32
+        )
+        self.width = self.add_weight(
+            name=name + ".width", initializer="zeros", dtype=tf.int32
+        )
+
+    def update_state(self, y_gt, y_pr, sample_weight=None):
+        shape = tf.shape(y_gt)
+        n_samples = shape[0]
+        node_mse = tf.reduce_sum(
+            tf.math.squared_difference(
+                tf.gather(y_gt, self.node_ind, axis=3),
+                tf.gather(y_pr, self.node_ind, axis=3),
+            )
+        )  # rank 4
+
+        self.height.assign(shape[1])
+        self.width.assign(shape[2])
+        self.n_samples.assign_add(n_samples)
+        self.node_mse.assign_add(node_mse)
+
+    def result(self):
+        return self.node_mse / tf.cast(
+            self.n_samples * self.height * self.width, tf.float32
+        )
+
+
 @attr.s(auto_attribs=True)
 class Trainer:
     training_job: job.TrainingJob
@@ -688,9 +781,41 @@ class Trainer:
                 self.training_job.trainer.optimizer,
             )
 
-        loss_fn = tf.keras.losses.MeanSquaredError()
+        # Construct loss and metrics.
+        metrics = []
+        mse_loss = tf.keras.losses.MeanSquaredError()
+
+        if (
+            self.training_job.trainer.ohkm
+            and self.training_job.model.output_type != model.ModelOutputType.CENTROIDS
+        ):
+            # Add OHKM loss if not training centroids (they have a single channel).
+            ohkm_loss = OHKMLoss(
+                K=min(self.training_job.trainer.ohkm_K, self.n_output_channels - 1),
+                weight=self.training_job.trainer.ohkm_weight,
+            )
+
+            def loss_fn(y_gt, y_pr):
+                return mse_loss(y_gt, y_pr) + ohkm_loss(y_gt, y_pr)
+
+            metrics.append(ohkm_loss)
+
+        else:
+            loss_fn = mse_loss
+
+        if (
+            self.training_job.trainer.node_metrics
+            and self.training_job.model.output_type
+            in [model.ModelOutputType.CONFIDENCE_MAP,
+            model.ModelOutputType.TOPDOWN_CONFIDENCE_MAP]
+        ):
+            # Add node-wise metrics when training confidence map models.
+            for node_ind, node_name in enumerate(self.simple_skeleton.node_names):
+                metrics.append(NodeLoss(node_ind=node_ind, name=node_name))
+
         self._optimizer = optimizer
         self._loss_fn = loss_fn
+        self._metrics = metrics
 
         return optimizer, loss_fn
 
@@ -767,7 +892,9 @@ class Trainer:
         self.setup_callbacks()
         if extra_callbacks is not None:
             self.training_callbacks.extend(extra_callbacks)
-        self.model.compile(optimizer=self.optimizer, loss=self.loss_fn)
+        self.model.compile(
+            optimizer=self.optimizer, loss=self.loss_fn, metrics=self._metrics
+        )
 
         t0 = datetime.now()
         if self.verbosity > 0:
@@ -962,6 +1089,7 @@ def main():
     trainer = Trainer(
         training_job, tensorboard=args.tensorboard, zmq=args.zmq, verbosity=2
     )
+
     trained_model = trainer.train()
 
 

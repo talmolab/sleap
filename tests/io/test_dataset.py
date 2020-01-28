@@ -821,3 +821,16 @@ def test_path_fix(tmpdir):
     # Make sure we got the actual video path by searching that directory
     assert len(labels.videos) == 1
     assert labels.videos[0].filename == "tests/data/videos/small_robot.mp4"
+
+
+def test_local_path_save(tmpdir, monkeypatch):
+
+    filename = "test.h5"
+
+    # Set current working directory (monkeypatch isolates other tests)
+    monkeypatch.chdir(tmpdir)
+
+    # Try saving with relative path
+    Labels.save_file(filename=filename, labels=Labels())
+
+    assert os.path.exists(os.path.join(tmpdir, filename))

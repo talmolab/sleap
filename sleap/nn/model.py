@@ -312,7 +312,7 @@ class InferenceModel:
 
         # Load from disk.
         self.keras_model = tf.keras.models.load_model(
-            model_path, custom_objects={"tf": tf}
+            model_path, custom_objects={"tf": tf}, compile=False
         )
 
         # Store the path to the current model.

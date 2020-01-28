@@ -311,8 +311,12 @@ class CommandContext(object):
         """Deletes all predicted instances in project."""
         self.execute(DeleteAllPredictions)
 
+    def deleteFramePredictions(self):
+        """Deletes all predictions on current frame."""
+        self.execute(DeleteFramePredictions)
+
     def deleteClipPredictions(self):
-        """Deletes all instances within selected range of video frames."""
+        """Deletes all predictions within selected range of video frames."""
         self.execute(DeleteClipPredictions)
 
     def deleteAreaPredictions(self):
@@ -336,6 +340,7 @@ class CommandContext(object):
         copy_instance: Optional[Instance] = None,
         init_method: str = "best",
         location: Optional[QtCore.QPoint] = None,
+        mark_complete: bool = False,
     ):
         """
         Creates a new instance, copying node coordinates as appropriate.
@@ -352,6 +357,7 @@ class CommandContext(object):
             copy_instance=copy_instance,
             init_method=init_method,
             location=location,
+            mark_complete=mark_complete,
         )
 
     def setPointLocations(
@@ -820,18 +826,29 @@ class GoPrevSuggestedFrame(GoNextSuggestedFrame):
 class GoNextTrackFrame(NavCommand):
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
+        video = context.state["video"]
         cur_idx = context.state["frame_idx"]
-        track_ranges = context.labels.get_track_occupany(context.state["video"])
-        next_idx = min(
-            [
-                track_range.start
-                for track_range in track_ranges.values()
-                if track_range.start is not None and track_range.start > cur_idx
-            ],
-            default=-1,
-        )
-        if next_idx > -1:
+        track_ranges = context.labels.get_track_occupany(video)
+
+        later_tracks = [
+            (track_range.start, track)
+            for track, track_range in track_ranges.items()
+            if track_range.start is not None and track_range.start > cur_idx
+        ]
+
+        later_tracks.sort(key=operator.itemgetter(0))
+
+        if later_tracks:
+            next_idx, next_track = later_tracks[0]
             cls.go_to(context, next_idx)
+
+            # Select the instance in the new track
+            lf = context.labels.find(video, next_idx, return_new=True)[0]
+            track_instances = [
+                inst for inst in lf.instances_to_show if inst.track == next_track
+            ]
+            if track_instances:
+                context.state["instance"] = track_instances[0]
 
 
 class GoFrameGui(NavCommand):
@@ -1191,6 +1208,26 @@ class DeleteAllPredictions(InstanceDeleteCommand):
         ]
 
 
+class DeleteFramePredictions(InstanceDeleteCommand):
+    @staticmethod
+    def _confirm_deletion(self, *args, **kwargs):
+        # Don't require confirmation when deleting from current frame
+        return True
+
+    @staticmethod
+    def get_frame_instance_list(context: CommandContext, params: dict):
+        predicted_instances = [
+            (lf, inst)
+            for lf in context.labels.find(
+                context.state["video"], frame_idx=context.state["frame_idx"]
+            )
+            for inst in lf
+            if type(inst) == PredictedInstance
+        ]
+
+        return predicted_instances
+
+
 class DeleteClipPredictions(InstanceDeleteCommand):
     @staticmethod
     def get_frame_instance_list(context: CommandContext, params: dict):
@@ -1368,7 +1405,7 @@ class TransposeInstances(EditCommand):
 
 
 class DeleteSelectedInstance(EditCommand):
-    topics = [UpdateTopic.frame, UpdateTopic.project_instances]
+    topics = [UpdateTopic.frame, UpdateTopic.project_instances, UpdateTopic.suggestions]
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
@@ -1380,7 +1417,11 @@ class DeleteSelectedInstance(EditCommand):
 
 
 class DeleteSelectedInstanceTrack(EditCommand):
-    topics = [UpdateTopic.project_instances, UpdateTopic.tracks]
+    topics = [
+        UpdateTopic.project_instances,
+        UpdateTopic.tracks,
+        UpdateTopic.suggestions,
+    ]
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
@@ -1453,7 +1494,7 @@ class SetSelectedInstanceTrack(EditCommand):
             # Determine range that should be affected
             if context.state["has_frame_range"]:
                 # If range is selected in seekbar, use that
-                frame_range = tuple(*context.state["frame_range"])
+                frame_range = tuple(context.state["frame_range"])
             else:
                 # Otherwise, range is current to last frame
                 frame_range = (
@@ -1557,7 +1598,7 @@ class MergeProject(EditCommand):
 
 
 class AddInstance(EditCommand):
-    topics = [UpdateTopic.frame, UpdateTopic.project_instances]
+    topics = [UpdateTopic.frame, UpdateTopic.project_instances, UpdateTopic.suggestions]
 
     @staticmethod
     def get_previous_frame_index(context: CommandContext) -> Optional[int]:
@@ -1579,6 +1620,7 @@ class AddInstance(EditCommand):
         copy_instance = params.get("copy_instance", None)
         init_method = params.get("init_method", "best")
         location = params.get("location", None)
+        mark_complete = params.get("mark_complete", False)
 
         if context.state["labeled_frame"] is None:
             return
@@ -1659,6 +1701,7 @@ class AddInstance(EditCommand):
                     x=copy_instance[node].x,
                     y=copy_instance[node].y,
                     visible=copy_instance[node].visible,
+                    complete=mark_complete,
                 )
             else:
                 has_missing_nodes = True

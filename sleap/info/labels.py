@@ -30,7 +30,7 @@ if __name__ == "__main__":
 
         tracks = {inst.track for lf in lfs for inst in lf}
         concurrent_count = max((len(lf.instances) for lf in lfs))
-        user_frames = len(labels.get_video_user_labeled_frames(vid))
+        user_frames = labels.get_labeled_frame_count(vid, "user")
 
         total_user_frames += user_frames
 
