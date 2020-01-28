@@ -695,7 +695,8 @@ class Trainer:
         if (
             self.training_job.trainer.node_metrics
             and self.training_job.model.output_type
-            in [model.ModelOutputType.CONFIDENCE_MAP, TOPDOWN_CONFIDENCE_MAP]
+            in [model.ModelOutputType.CONFIDENCE_MAP,
+            model.ModelOutputType.TOPDOWN_CONFIDENCE_MAP]
         ):
             # Add node-wise metrics when training confidence map models.
             for node_ind, node_name in enumerate(self.simple_skeleton.node_names):
