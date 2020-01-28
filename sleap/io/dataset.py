@@ -501,6 +501,8 @@ class Labels(MutableSequence):
         return self._frame_count_cache[video][filter]
 
     def _invalidate_cached_counts(self, video: Video):
+        if not hasattr(self, "_frame_count_cache"):
+            return
         self._frame_count_cache[video] = dict()
 
     # Methods for instances
