@@ -826,18 +826,29 @@ class GoPrevSuggestedFrame(GoNextSuggestedFrame):
 class GoNextTrackFrame(NavCommand):
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
+        video = context.state["video"]
         cur_idx = context.state["frame_idx"]
-        track_ranges = context.labels.get_track_occupany(context.state["video"])
-        next_idx = min(
-            [
-                track_range.start
-                for track_range in track_ranges.values()
-                if track_range.start is not None and track_range.start > cur_idx
-            ],
-            default=-1,
-        )
-        if next_idx > -1:
+        track_ranges = context.labels.get_track_occupany(video)
+
+        later_tracks = [
+            (track_range.start, track)
+            for track, track_range in track_ranges.items()
+            if track_range.start is not None and track_range.start > cur_idx
+        ]
+
+        later_tracks.sort(key=operator.itemgetter(0))
+
+        if later_tracks:
+            next_idx, next_track = later_tracks[0]
             cls.go_to(context, next_idx)
+
+            # Select the instance in the new track
+            lf = context.labels.find(video, next_idx, return_new=True)[0]
+            track_instances = [
+                inst for inst in lf.instances_to_show if inst.track == next_track
+            ]
+            if track_instances:
+                context.state["instance"] = track_instances[0]
 
 
 class GoFrameGui(NavCommand):
