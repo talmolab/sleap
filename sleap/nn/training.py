@@ -487,17 +487,19 @@ class Trainer:
                 )
 
                 def viz_fn(training_set=False):
-
+                    """Plot confidence map TensorBoard visualizations."""
                     topdown = (
                         self.training_job.model.output_type
                         == model.ModelOutputType.TOPDOWN_CONFIDENCE_MAP
                     )
 
+                    # Draw a batch from the specified dataset.
                     if training_set:
                         X, Y_gt = list(self.ds_train.take(1))[0]
                     else:
                         X, Y_gt = list(self.ds_val.take(1))[0]
 
+                    # Select a single sample from the batch.
                     ind = np.random.randint(0, len(X))
                     X = X[ind : (ind + 1)]
 
@@ -505,9 +507,11 @@ class Trainer:
                         Y_gt = Y_gt[0]
                     Y_gt = Y_gt[ind : (ind + 1)]
 
+                    # Predict on single sample.
                     Y_pr = self.model.predict(X)
                     cm_scale = Y_pr.shape[1] / X.shape[1]
 
+                    # Find peaks.
                     if topdown:
                         peaks_gt, peak_vals_gt = peak_finding.find_global_peaks(Y_gt)
                         peaks_pr, peak_vals_pr = peak_finding.find_global_peaks(Y_pr)
@@ -524,9 +528,11 @@ class Trainer:
                             peak_finding.find_local_peaks(Y_pr)[0].numpy() / cm_scale
                         )
 
+                    # Drop singleton sample dimension.
                     img = X[0]
                     cm = Y_pr[0]
 
+                    # Plot.
                     fig = plt.figure(figsize=(6, 6))
                     ax = fig.add_axes([0, 0, 1, 1], frameon=False)
                     ax.get_xaxis().set_visible(False)
@@ -539,7 +545,6 @@ class Trainer:
                         extent=[-0.5, img.shape[1] - 0.5, -0.5, img.shape[0] - 0.5],
                     )
                     ax.imshow(
-                        # np.squeeze(Y_gt.numpy().max(axis=-1)),
                         np.squeeze(Y_pr.max(axis=-1)),
                         alpha=0.5,
                         origin="lower",
@@ -547,6 +552,8 @@ class Trainer:
                     )
 
                     if topdown:
+                        # Draw error line for topdown since no matching is required as
+                        # (there is only one peak per node type).
                         for p_gt, p_pr in zip(peaks_gt, peaks_pr):
                             ax.plot(
                                 [p_gt[2], p_pr[2]],
