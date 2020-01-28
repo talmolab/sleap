@@ -167,8 +167,8 @@ class VideoSlider(QtWidgets.QGraphicsView):
         self.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
 
         self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 
         self._color_manager = color_manager
 
@@ -358,8 +358,12 @@ class VideoSlider(QtWidgets.QGraphicsView):
 
         min_height, max_height = self.getMinMaxHeights()
 
-        self.setMaximumHeight(max_height)
-        self.setMinimumHeight(min_height)
+        # TODO: find the current height of the scrollbar
+        # self.horizontalScrollBar().height() gives the wrong value
+        scrollbar_height = 18
+
+        self.setMaximumHeight(max_height + scrollbar_height)
+        self.setMinimumHeight(min_height + scrollbar_height)
 
         # Redraw all marks with new height and y position
         marks = self.getMarks()
@@ -415,6 +419,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
         self._val_main = val
         x = self._toPos(val)
         self.handle.setPos(x, 0)
+        self.ensureVisible(self.handle, 3, 0)
 
     def setMinimum(self, min: float) -> float:
         """Sets minimum value for slider."""

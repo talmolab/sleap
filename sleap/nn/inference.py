@@ -516,7 +516,7 @@ class Predictor:
         cli_args.extend(("-o", output_path))
 
         print("Command line call:")
-        print("\n".join(cli_args))
+        print(" \\\n".join(cli_args))
         print()
 
         with sub.Popen(cli_args) as proc:
