@@ -130,6 +130,7 @@ class Trainer:
     control_zmq_port: int = 9000
     progress_report_zmq_port: int = 9001
     verbosity: int = 2
+    save_viz: bool = False
 
     _img_shape: Tuple[int, int, int] = None
     _n_output_channels: int = None
@@ -553,10 +554,36 @@ class Trainer:
                     min_delta=self.training_job.trainer.early_stopping_min_delta,
                     patience=self.training_job.trainer.early_stopping_patience,
                     verbose=self.verbosity,
+                    mode="min",
                 )
             )
 
         if self.training_job.run_path is not None:
+
+            if self.save_viz:
+                if self.training_job.model.output_type in [
+                    model.ModelOutputType.CONFIDENCE_MAP,
+                    model.ModelOutputType.TOPDOWN_CONFIDENCE_MAP,
+                    model.ModelOutputType.CENTROIDS,
+                ]:
+                    callback_list.append(
+                        callbacks.MatplotlibSaver(
+                            save_folder=os.path.join(self.training_job.run_path, "viz"),
+                            plot_fn=lambda: self.visualize_predictions(
+                                training_set=True
+                            ),
+                            prefix="train",
+                        )
+                    )
+                    callback_list.append(
+                        callbacks.MatplotlibSaver(
+                            save_folder=os.path.join(self.training_job.run_path, "viz"),
+                            plot_fn=lambda: self.visualize_predictions(
+                                training_set=False
+                            ),
+                            prefix="val",
+                        )
+                    )
 
             if self.training_job.trainer.csv_logging:
                 callback_list.append(
@@ -579,91 +606,6 @@ class Trainer:
                     )
                 )
 
-                def viz_fn(training_set=False):
-                    """Plot confidence map TensorBoard visualizations."""
-                    topdown = (
-                        self.training_job.model.output_type
-                        == model.ModelOutputType.TOPDOWN_CONFIDENCE_MAP
-                    )
-
-                    # Draw a batch from the specified dataset.
-                    if training_set:
-                        X, Y_gt = list(self.ds_train.take(1))[0]
-                    else:
-                        X, Y_gt = list(self.ds_val.take(1))[0]
-
-                    # Select a single sample from the batch.
-                    ind = np.random.randint(0, len(X))
-                    X = X[ind : (ind + 1)]
-
-                    if isinstance(Y_gt, (list, tuple)):
-                        Y_gt = Y_gt[0]
-                    Y_gt = Y_gt[ind : (ind + 1)]
-
-                    # Predict on single sample.
-                    Y_pr = self.model.predict(X)
-                    cm_scale = Y_pr.shape[1] / X.shape[1]
-
-                    # Find peaks.
-                    if topdown:
-                        peaks_gt, peak_vals_gt = peak_finding.find_global_peaks(Y_gt)
-                        peaks_pr, peak_vals_pr = peak_finding.find_global_peaks(Y_pr)
-                        peaks_gt = peaks_gt.numpy() / cm_scale
-                        peaks_pr = peaks_pr.numpy() / cm_scale
-                        peaks_gt[peak_vals_gt < 0.3, :] = np.nan
-                        peaks_pr[peak_vals_pr < 0.3, :] = np.nan
-
-                    else:
-                        peaks_gt = (
-                            peak_finding.find_local_peaks(Y_gt)[0].numpy() / cm_scale
-                        )
-                        peaks_pr = (
-                            peak_finding.find_local_peaks(Y_pr)[0].numpy() / cm_scale
-                        )
-
-                    # Drop singleton sample dimension.
-                    img = X[0]
-                    cm = Y_pr[0]
-
-                    # Plot.
-                    fig = plt.figure(figsize=(6, 6))
-                    ax = fig.add_axes([0, 0, 1, 1], frameon=False)
-                    ax.get_xaxis().set_visible(False)
-                    ax.get_yaxis().set_visible(False)
-                    plt.autoscale(tight=True)
-                    ax.imshow(
-                        np.squeeze(img),
-                        cmap="gray",
-                        origin="lower",
-                        extent=[-0.5, img.shape[1] - 0.5, -0.5, img.shape[0] - 0.5],
-                    )
-                    ax.imshow(
-                        np.squeeze(Y_pr.max(axis=-1)),
-                        alpha=0.5,
-                        origin="lower",
-                        extent=[-0.5, img.shape[1] - 0.5, -0.5, img.shape[0] - 0.5],
-                    )
-
-                    if topdown:
-                        # Draw error line for topdown since no matching is required as
-                        # (there is only one peak per node type).
-                        for p_gt, p_pr in zip(peaks_gt, peaks_pr):
-                            ax.plot(
-                                [p_gt[2], p_pr[2]],
-                                [p_gt[1], p_pr[1]],
-                                "r-",
-                                alpha=0.5,
-                                lw=2,
-                            )
-
-                    ax.plot(peaks_gt[:, 2], peaks_gt[:, 1], ".", alpha=0.6, ms=10)
-                    ax.plot(peaks_pr[:, 2], peaks_pr[:, 1], ".", alpha=0.6, ms=10)
-                    ax.set_xticks([])
-                    ax.set_yticks([])
-                    ax.grid(False)
-
-                    return fig
-
                 if self.training_job.model.output_type in [
                     model.ModelOutputType.CONFIDENCE_MAP,
                     model.ModelOutputType.TOPDOWN_CONFIDENCE_MAP,
@@ -672,14 +614,18 @@ class Trainer:
                     callback_list.append(
                         callbacks.TensorBoardMatplotlibWriter(
                             log_dir=os.path.join(self.tensorboard_dir, "train"),
-                            plot_fn=lambda: viz_fn(training_set=True),
+                            plot_fn=lambda: self.visualize_predictions(
+                                training_set=True
+                            ),
                             tag="viz_train",
                         )
                     )
                     callback_list.append(
                         callbacks.TensorBoardMatplotlibWriter(
                             log_dir=os.path.join(self.tensorboard_dir, "validation"),
-                            plot_fn=lambda: viz_fn(training_set=False),
+                            plot_fn=lambda: self.visualize_predictions(
+                                training_set=False
+                            ),
                             tag="viz_val",
                         )
                     )
@@ -806,8 +752,10 @@ class Trainer:
         if (
             self.training_job.trainer.node_metrics
             and self.training_job.model.output_type
-            in [model.ModelOutputType.CONFIDENCE_MAP,
-            model.ModelOutputType.TOPDOWN_CONFIDENCE_MAP]
+            in [
+                model.ModelOutputType.CONFIDENCE_MAP,
+                model.ModelOutputType.TOPDOWN_CONFIDENCE_MAP,
+            ]
         ):
             # Add node-wise metrics when training confidence map models.
             for node_ind, node_name in enumerate(self.simple_skeleton.node_names):
@@ -980,6 +928,100 @@ class Trainer:
 
         return run_path, success
 
+    def visualize_predictions(
+        self, training_set: bool = False, figsize=(6, 6)
+    ) -> matplotlib.figure.Figure:
+        """Plot confidence map visualizations.
+
+        This method is primarily intended to be used as a callback for TensorBoard or
+        other forms of visualization during training.
+
+        Args:
+            training_set: If True, will sample from the training set for data to visualize.
+                If False, the validation set will be sampled.
+            figsize: Size of the output figure (width, height) in inches. See `plt.figure`
+                for more info on sizing.
+
+        Returns:
+            A `matplotlib.figure.Figure` instance. This object provides `show` and
+            `savefig` methods which can be used to display or render the visualized
+            plots.
+
+            This will NOT display any figure until one of the above methods are called.
+        """
+        topdown = (
+            self.training_job.model.output_type
+            == model.ModelOutputType.TOPDOWN_CONFIDENCE_MAP
+        )
+
+        # Draw a batch from the specified dataset.
+        if training_set:
+            X, Y_gt = next(iter(self.ds_train))
+        else:
+            X, Y_gt = next(iter(self.ds_val))
+
+        # Select a single sample from the batch.
+        ind = np.random.randint(0, len(X))
+        X = X[ind : (ind + 1)]
+
+        if isinstance(Y_gt, (list, tuple)):
+            Y_gt = Y_gt[0]
+        Y_gt = Y_gt[ind : (ind + 1)]
+
+        # Predict on single sample.
+        Y_pr = self.model.predict(X)
+        cm_scale = Y_pr.shape[1] / X.shape[1]
+
+        # Find peaks.
+        if topdown:
+            peaks_gt, peak_vals_gt = peak_finding.find_global_peaks(Y_gt)
+            peaks_pr, peak_vals_pr = peak_finding.find_global_peaks(Y_pr)
+            peaks_gt = peaks_gt.numpy() / cm_scale
+            peaks_pr = peaks_pr.numpy() / cm_scale
+            peaks_gt[peak_vals_gt < 0.3, :] = np.nan
+            peaks_pr[peak_vals_pr < 0.3, :] = np.nan
+
+        else:
+            peaks_gt = peak_finding.find_local_peaks(Y_gt)[0].numpy() / cm_scale
+            peaks_pr = peak_finding.find_local_peaks(Y_pr)[0].numpy() / cm_scale
+
+        # Drop singleton sample dimension.
+        img = X[0]
+        cm = Y_pr[0]
+
+        # Plot.
+        fig = plt.figure(figsize=figsize)
+        ax = fig.add_axes([0, 0, 1, 1], frameon=False)
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
+        plt.autoscale(tight=True)
+        ax.imshow(
+            np.squeeze(img),
+            cmap="gray",
+            origin="lower",
+            extent=[-0.5, img.shape[1] - 0.5, -0.5, img.shape[0] - 0.5],
+        )
+        ax.imshow(
+            np.squeeze(Y_pr.max(axis=-1)),
+            alpha=0.5,
+            origin="lower",
+            extent=[-0.5, img.shape[1] - 0.5, -0.5, img.shape[0] - 0.5],
+        )
+
+        if topdown:
+            # Draw error line for topdown since no matching is required as
+            # (there is only one peak per node type).
+            for p_gt, p_pr in zip(peaks_gt, peaks_pr):
+                ax.plot([p_gt[2], p_pr[2]], [p_gt[1], p_pr[1]], "r-", alpha=0.5, lw=2)
+
+        ax.plot(peaks_gt[:, 2], peaks_gt[:, 1], ".", alpha=0.6, ms=10)
+        ax.plot(peaks_pr[:, 2], peaks_pr[:, 1], ".", alpha=0.6, ms=10)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.grid(False)
+
+        return fig
+
 
 def main():
     """CLI for training."""
@@ -1003,6 +1045,11 @@ def main():
         "--tensorboard",
         action="store_true",
         help="Enables TensorBoard logging to the run path.",
+    )
+    parser.add_argument(
+        "--save_viz",
+        action="store_true",
+        help="Enables saving of prediction visualizations to the run folder.",
     )
     parser.add_argument(
         "--zmq", action="store_true", help="Enables ZMQ logging (for GUI)."
@@ -1087,7 +1134,11 @@ def main():
     print("Initializing training...")
     # Create a trainer and run!
     trainer = Trainer(
-        training_job, tensorboard=args.tensorboard, zmq=args.zmq, verbosity=2
+        training_job,
+        tensorboard=args.tensorboard,
+        save_viz=args.save_viz,
+        zmq=args.zmq,
+        verbosity=2,
     )
 
     trained_model = trainer.train()
