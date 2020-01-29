@@ -1178,7 +1178,10 @@ class InstanceDeleteCommand(EditCommand):
     def _do_deletion(context: CommandContext, lf_inst_list: List[int]):
         # Delete the instances
         for lf, inst in lf_inst_list:
-            context.labels.remove_instance(lf, inst)
+            context.labels.remove_instance(lf, inst, in_transaction=True)
+
+        # Update caches since we skipped doing this after each deletion
+        context.labels._build_lookup_caches()
 
         # Update visuals
         context.changestack_push("delete instances")

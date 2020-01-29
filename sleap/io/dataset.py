@@ -651,12 +651,16 @@ class Labels(MutableSequence):
                 (frame.frame_idx, frame.frame_idx + 1)
             )
 
-    def remove_instance(self, frame: LabeledFrame, instance: Instance):
+    def remove_instance(
+        self, frame: LabeledFrame, instance: Instance, in_transaction: bool = False
+    ):
         """Removes instance from frame, updating track occupancy."""
-        self._track_remove_instance(frame, instance)
+        if not in_transaction:
+            self._track_remove_instance(frame, instance)
         frame.instances.remove(instance)
 
-        self._invalidate_cached_counts(frame.video)
+        if not in_transaction:
+            self._invalidate_cached_counts(frame.video)
 
     def add_instance(self, frame: LabeledFrame, instance: Instance):
         """Adds instance to frame, updating track occupancy."""
