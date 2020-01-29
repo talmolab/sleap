@@ -361,7 +361,7 @@ def compute_visibility_conf(positive_pairs):
     }
 
 
-def evaluate(labels_gt, labels_pr, oks_stddev=0.001, oks_scale=None, match_threshold=0):
+def evaluate(labels_gt, labels_pr, oks_stddev=0.025, oks_scale=None, match_threshold=0):
 
     frame_pairs = find_frame_pairs(labels_gt, labels_pr)
     positive_pairs, false_negatives = match_frame_pairs(
