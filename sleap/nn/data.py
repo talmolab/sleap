@@ -1030,7 +1030,7 @@ def make_centroid_confmap_dataset(
         the centroid points. If more than one instance is present, they are max-reduced.
     """
 
-    def gen_cm_fn(img, pts):
+    def gen_cm_fn(img, pts, ctr_pts=None):
 
         pts = tf.cast(pts, tf.float32)
 
