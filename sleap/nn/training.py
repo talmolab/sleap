@@ -11,12 +11,111 @@ from datetime import datetime
 import numpy as np
 import tensorflow as tf
 
+import matplotlib
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+from sleap.nn import peak_finding
+
 from sleap import Labels, Skeleton
 from sleap.util import get_package_file
 from sleap.nn import callbacks
 from sleap.nn import data
 from sleap.nn import job
 from sleap.nn import model
+
+
+class OHKMLoss(tf.keras.losses.Loss):
+    """Online hard keypoint mining loss.
+
+    This loss serves to dynamically reweight the MSE of the top-K worst channels in each
+    batch. This is useful when fine tuning a model to improve performance on a hard
+    part to optimize for (e.g., small, hard to see, often not visible).
+
+    Note: This works with any type of channel, so it can work for PAFs as well.
+
+    Attributes:
+        K: Number of worst performing channels to compute loss for.
+        weight: Scalar factor to multiply with the MSE for the top-K worst channels.
+        name: Name of the loss tensor.
+    """
+
+    def __init__(self, K=2, weight=5, name="ohkm", **kwargs):
+        super(OHKMLoss, self).__init__(name=name, **kwargs)
+        self.K = K
+        self.weight = weight
+
+    def __call__(self, y_gt, y_pr, sample_weight=None):
+
+        # Squared difference
+        loss = tf.math.squared_difference(y_gt, y_pr)  # rank 4
+
+        # Store initial shape for normalization
+        batch_shape = tf.shape(loss)
+
+        # Reduce over everything but channels axis
+        loss = tf.reduce_sum(loss, axis=[0, 1, 2])
+
+        # Keep only top loss terms
+        k_vals, k_inds = tf.math.top_k(loss, k=self.K, sorted=False)
+
+        # Apply weights
+        k_loss = k_vals * self.weight
+
+        # Reduce over all channels
+        n_elements = tf.cast(
+            batch_shape[0] * batch_shape[1] * batch_shape[2] * self.K, tf.float32
+        )
+        k_loss = tf.reduce_sum(k_loss) / n_elements
+
+        return k_loss
+
+
+class NodeLoss(tf.keras.metrics.Metric):
+    """Compute node-specific loss.
+
+    Useful for monitoring the MSE for specific body parts (channels).
+
+    Attributes:
+        node_ind: Index of channel to compute MSE for.
+        name: Name of the loss tensor.
+    """
+
+    def __init__(self, node_ind, name="node_loss", **kwargs):
+        super(NodeLoss, self).__init__(name=name, **kwargs)
+        self.node_ind = node_ind
+        self.node_mse = self.add_weight(
+            name=name + ".mse", initializer="zeros", dtype=tf.float32
+        )
+        self.n_samples = self.add_weight(
+            name=name + ".n_samples", initializer="zeros", dtype=tf.int32
+        )
+        self.height = self.add_weight(
+            name=name + ".height", initializer="zeros", dtype=tf.int32
+        )
+        self.width = self.add_weight(
+            name=name + ".width", initializer="zeros", dtype=tf.int32
+        )
+
+    def update_state(self, y_gt, y_pr, sample_weight=None):
+        shape = tf.shape(y_gt)
+        n_samples = shape[0]
+        node_mse = tf.reduce_sum(
+            tf.math.squared_difference(
+                tf.gather(y_gt, self.node_ind, axis=3),
+                tf.gather(y_pr, self.node_ind, axis=3),
+            )
+        )  # rank 4
+
+        self.height.assign(shape[1])
+        self.width.assign(shape[2])
+        self.n_samples.assign_add(n_samples)
+        self.node_mse.assign_add(node_mse)
+
+    def result(self):
+        return self.node_mse / tf.cast(
+            self.n_samples * self.height * self.width, tf.float32
+        )
 
 
 @attr.s(auto_attribs=True)
@@ -31,6 +130,7 @@ class Trainer:
     control_zmq_port: int = 9000
     progress_report_zmq_port: int = 9001
     verbosity: int = 2
+    save_viz: bool = False
 
     _img_shape: Tuple[int, int, int] = None
     _n_output_channels: int = None
@@ -454,10 +554,36 @@ class Trainer:
                     min_delta=self.training_job.trainer.early_stopping_min_delta,
                     patience=self.training_job.trainer.early_stopping_patience,
                     verbose=self.verbosity,
+                    mode="min",
                 )
             )
 
         if self.training_job.run_path is not None:
+
+            if self.save_viz:
+                if self.training_job.model.output_type in [
+                    model.ModelOutputType.CONFIDENCE_MAP,
+                    model.ModelOutputType.TOPDOWN_CONFIDENCE_MAP,
+                    model.ModelOutputType.CENTROIDS,
+                ]:
+                    callback_list.append(
+                        callbacks.MatplotlibSaver(
+                            save_folder=os.path.join(self.training_job.run_path, "viz"),
+                            plot_fn=lambda: self.visualize_predictions(
+                                training_set=True
+                            ),
+                            prefix="train",
+                        )
+                    )
+                    callback_list.append(
+                        callbacks.MatplotlibSaver(
+                            save_folder=os.path.join(self.training_job.run_path, "viz"),
+                            plot_fn=lambda: self.visualize_predictions(
+                                training_set=False
+                            ),
+                            prefix="val",
+                        )
+                    )
 
             if self.training_job.trainer.csv_logging:
                 callback_list.append(
@@ -479,6 +605,30 @@ class Trainer:
                         profile_batch=2 if self.tensorboard_profiling else 0,
                     )
                 )
+
+                if self.training_job.model.output_type in [
+                    model.ModelOutputType.CONFIDENCE_MAP,
+                    model.ModelOutputType.TOPDOWN_CONFIDENCE_MAP,
+                    model.ModelOutputType.CENTROIDS,
+                ]:
+                    callback_list.append(
+                        callbacks.TensorBoardMatplotlibWriter(
+                            log_dir=os.path.join(self.tensorboard_dir, "train"),
+                            plot_fn=lambda: self.visualize_predictions(
+                                training_set=True
+                            ),
+                            tag="viz_train",
+                        )
+                    )
+                    callback_list.append(
+                        callbacks.TensorBoardMatplotlibWriter(
+                            log_dir=os.path.join(self.tensorboard_dir, "validation"),
+                            plot_fn=lambda: self.visualize_predictions(
+                                training_set=False
+                            ),
+                            tag="viz_val",
+                        )
+                    )
 
             if self.training_job.trainer.save_every_epoch:
                 if self.training_job.newest_model_filename is None:
@@ -577,9 +727,43 @@ class Trainer:
                 self.training_job.trainer.optimizer,
             )
 
-        loss_fn = tf.keras.losses.MeanSquaredError()
+        # Construct loss and metrics.
+        metrics = []
+        mse_loss = tf.keras.losses.MeanSquaredError()
+
+        if (
+            self.training_job.trainer.ohkm
+            and self.training_job.model.output_type != model.ModelOutputType.CENTROIDS
+        ):
+            # Add OHKM loss if not training centroids (they have a single channel).
+            ohkm_loss = OHKMLoss(
+                K=min(self.training_job.trainer.ohkm_K, self.n_output_channels - 1),
+                weight=self.training_job.trainer.ohkm_weight,
+            )
+
+            def loss_fn(y_gt, y_pr):
+                return mse_loss(y_gt, y_pr) + ohkm_loss(y_gt, y_pr)
+
+            metrics.append(ohkm_loss)
+
+        else:
+            loss_fn = mse_loss
+
+        if (
+            self.training_job.trainer.node_metrics
+            and self.training_job.model.output_type
+            in [
+                model.ModelOutputType.CONFIDENCE_MAP,
+                model.ModelOutputType.TOPDOWN_CONFIDENCE_MAP,
+            ]
+        ):
+            # Add node-wise metrics when training confidence map models.
+            for node_ind, node_name in enumerate(self.simple_skeleton.node_names):
+                metrics.append(NodeLoss(node_ind=node_ind, name=node_name))
+
         self._optimizer = optimizer
         self._loss_fn = loss_fn
+        self._metrics = metrics
 
         return optimizer, loss_fn
 
@@ -656,7 +840,9 @@ class Trainer:
         self.setup_callbacks()
         if extra_callbacks is not None:
             self.training_callbacks.extend(extra_callbacks)
-        self.model.compile(optimizer=self.optimizer, loss=self.loss_fn)
+        self.model.compile(
+            optimizer=self.optimizer, loss=self.loss_fn, metrics=self._metrics
+        )
 
         t0 = datetime.now()
         if self.verbosity > 0:
@@ -742,6 +928,100 @@ class Trainer:
 
         return run_path, success
 
+    def visualize_predictions(
+        self, training_set: bool = False, figsize=(6, 6)
+    ) -> matplotlib.figure.Figure:
+        """Plot confidence map visualizations.
+
+        This method is primarily intended to be used as a callback for TensorBoard or
+        other forms of visualization during training.
+
+        Args:
+            training_set: If True, will sample from the training set for data to visualize.
+                If False, the validation set will be sampled.
+            figsize: Size of the output figure (width, height) in inches. See `plt.figure`
+                for more info on sizing.
+
+        Returns:
+            A `matplotlib.figure.Figure` instance. This object provides `show` and
+            `savefig` methods which can be used to display or render the visualized
+            plots.
+
+            This will NOT display any figure until one of the above methods are called.
+        """
+        topdown = (
+            self.training_job.model.output_type
+            == model.ModelOutputType.TOPDOWN_CONFIDENCE_MAP
+        )
+
+        # Draw a batch from the specified dataset.
+        if training_set:
+            X, Y_gt = next(iter(self.ds_train))
+        else:
+            X, Y_gt = next(iter(self.ds_val))
+
+        # Select a single sample from the batch.
+        ind = np.random.randint(0, len(X))
+        X = X[ind : (ind + 1)]
+
+        if isinstance(Y_gt, (list, tuple)):
+            Y_gt = Y_gt[0]
+        Y_gt = Y_gt[ind : (ind + 1)]
+
+        # Predict on single sample.
+        Y_pr = self.model.predict(X)
+        cm_scale = Y_pr.shape[1] / X.shape[1]
+
+        # Find peaks.
+        if topdown:
+            peaks_gt, peak_vals_gt = peak_finding.find_global_peaks(Y_gt)
+            peaks_pr, peak_vals_pr = peak_finding.find_global_peaks(Y_pr)
+            peaks_gt = peaks_gt.numpy() / cm_scale
+            peaks_pr = peaks_pr.numpy() / cm_scale
+            peaks_gt[peak_vals_gt < 0.3, :] = np.nan
+            peaks_pr[peak_vals_pr < 0.3, :] = np.nan
+
+        else:
+            peaks_gt = peak_finding.find_local_peaks(Y_gt)[0].numpy() / cm_scale
+            peaks_pr = peak_finding.find_local_peaks(Y_pr)[0].numpy() / cm_scale
+
+        # Drop singleton sample dimension.
+        img = X[0]
+        cm = Y_pr[0]
+
+        # Plot.
+        fig = plt.figure(figsize=figsize)
+        ax = fig.add_axes([0, 0, 1, 1], frameon=False)
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
+        plt.autoscale(tight=True)
+        ax.imshow(
+            np.squeeze(img),
+            cmap="gray",
+            origin="lower",
+            extent=[-0.5, img.shape[1] - 0.5, -0.5, img.shape[0] - 0.5],
+        )
+        ax.imshow(
+            np.squeeze(Y_pr.max(axis=-1)),
+            alpha=0.5,
+            origin="lower",
+            extent=[-0.5, img.shape[1] - 0.5, -0.5, img.shape[0] - 0.5],
+        )
+
+        if topdown:
+            # Draw error line for topdown since no matching is required as
+            # (there is only one peak per node type).
+            for p_gt, p_pr in zip(peaks_gt, peaks_pr):
+                ax.plot([p_gt[2], p_pr[2]], [p_gt[1], p_pr[1]], "r-", alpha=0.5, lw=2)
+
+        ax.plot(peaks_gt[:, 2], peaks_gt[:, 1], ".", alpha=0.6, ms=10)
+        ax.plot(peaks_pr[:, 2], peaks_pr[:, 1], ".", alpha=0.6, ms=10)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.grid(False)
+
+        return fig
+
 
 def main():
     """CLI for training."""
@@ -767,7 +1047,12 @@ def main():
         help="Enables TensorBoard logging to the run path.",
     )
     parser.add_argument(
-        "--zmq", action="store_true", help="Enables ZMQ logging (for GUI).",
+        "--save_viz",
+        action="store_true",
+        help="Enables saving of prediction visualizations to the run folder.",
+    )
+    parser.add_argument(
+        "--zmq", action="store_true", help="Enables ZMQ logging (for GUI)."
     )
     parser.add_argument(
         "--run_name",
@@ -849,8 +1134,13 @@ def main():
     print("Initializing training...")
     # Create a trainer and run!
     trainer = Trainer(
-        training_job, tensorboard=args.tensorboard, zmq=args.zmq, verbosity=2
+        training_job,
+        tensorboard=args.tensorboard,
+        save_viz=args.save_viz,
+        zmq=args.zmq,
+        verbosity=2,
     )
+
     trained_model = trainer.train()
 
 

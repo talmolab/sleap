@@ -27,6 +27,7 @@ class TrainingEditor(QtWidgets.QDialog):
         self,
         profile_filename: Optional[str] = None,
         saved_files: list = [],
+        skeleton: Optional["Skeleton"] = None,
         *args,
         **kwargs
     ):
@@ -36,17 +37,26 @@ class TrainingEditor(QtWidgets.QDialog):
 
         self.form_widgets = dict()
         self.form_widgets["model"] = YamlFormWidget(
-            form_yaml, "model", "Network Architecture"
+            form_yaml, "model", title="Network Architecture"
         )
         self.form_widgets["datagen"] = YamlFormWidget(
-            form_yaml, "datagen", "Data Generation/Preprocessing"
+            form_yaml, "datagen", title="Data Generation/Preprocessing"
         )
-        self.form_widgets["trainer"] = YamlFormWidget(form_yaml, "trainer", "Trainer")
+        self.form_widgets["trainer"] = YamlFormWidget(
+            form_yaml, "trainer", title="Trainer"
+        )
         self.form_widgets["output"] = YamlFormWidget(form_yaml, "output")
         self.form_widgets["buttons"] = YamlFormWidget(form_yaml, "buttons")
         self.form_widgets["spacer"] = YamlFormWidget(form_yaml, "spacer")
 
         self.form_widgets["buttons"].mainAction.connect(self._save_as)
+
+        if hasattr(skeleton, "node_names"):
+            print(skeleton.node_names)
+            print(self.form_widgets["datagen"].form_layout.field_options_lists)
+            self.form_widgets["datagen"].set_field_options(
+                "instance_crop_ctr_node_ind", skeleton.node_names,
+            )
 
         col1_layout = QtWidgets.QVBoxLayout()
         col2_layout = QtWidgets.QVBoxLayout()

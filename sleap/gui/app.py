@@ -391,7 +391,7 @@ class MainWindow(QMainWindow):
         add_submenu_choices(
             menu=viewMenu,
             title="Trail Length",
-            options=(0, 10, 20, 50),
+            options=(0, 10, 20, 50, 100, 200, 500),
             key="trail_length",
         )
 
@@ -1032,18 +1032,21 @@ class MainWindow(QMainWindow):
 
             message += f"{spacer}Labeled Frames: "
             if current_video is not None:
-                message += (
-                    f"{len(self.labels.get_video_user_labeled_frames(current_video))}"
+                message += str(
+                    self.labels.get_labeled_frame_count(current_video, "user")
                 )
 
                 if len(self.labels.videos) > 1:
                     message += " in video, "
             if len(self.labels.videos) > 1:
-                message += f"{len(self.labels.user_labeled_frames)} in project"
+                project_user_frame_count = self.labels.get_labeled_frame_count(
+                    filter="user"
+                )
+                message += f"{project_user_frame_count} in project"
 
             if current_video is not None:
-                pred_frame_count = len(
-                    self.labels.get_video_predicted_frames(current_video)
+                pred_frame_count = self.labels.get_labeled_frame_count(
+                    current_video, "predicted"
                 )
                 if pred_frame_count:
                     message += f"{spacer}Predicted Frames: {pred_frame_count:,}"

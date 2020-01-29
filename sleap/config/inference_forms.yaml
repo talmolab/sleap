@@ -60,12 +60,12 @@ expert:
   type: bool
   default: False
 
-- name: min_crop_size
-  label: Minimum crop size
-  type: list
-  dtype: int
-  options: 0,64,128,256,512
-  default: 0
+#- name: min_crop_size
+#  label: Minimum crop size
+#  type: list
+#  dtype: int
+#  options: 0,64,128,256,512
+#  default: 0
 
 #- name: negative_samples
 #  label: Negative samples (if cropping)
@@ -73,25 +73,25 @@ expert:
 #  default: 0
 #  range: 0,1000
 
-- name: batch_size
-  label: Batch Size
-  type: int
-  default: 2
-
-- name: scale
-  label: Image rescaling factor
-  type: double
-  default: 1
-
-- name: sigma_confmaps
-  label: Sigma for confmaps
-  type: double
-  default: 5.0
-
-- name: sigma_pafs
-  label: Sigma for pafs
-  type: double
-  default: 5.0
+#- name: batch_size
+#  label: Batch Size
+#  type: int
+#  default: 2
+#
+#- name: scale
+#  label: Image rescaling factor
+#  type: double
+#  default: 1
+#
+#- name: sigma_confmaps
+#  label: Sigma for confmaps
+#  type: double
+#  default: 5.0
+#
+#- name: sigma_pafs
+#  label: Sigma for pafs
+#  type: double
+#  default: 5.0
 
 - name: _predict_frames
   label: Predict On

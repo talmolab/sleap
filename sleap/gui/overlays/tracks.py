@@ -1,19 +1,17 @@
 """
 Module that handles track-related overlays (including track color).
 """
-
 from sleap.instance import Track
 from sleap.io.dataset import Labels
 from sleap.io.video import Video
 
 import attr
-import itertools
 
 from typing import Iterable, List
 
 from PySide2 import QtCore, QtGui
 
-MAX_NODES_IN_TRAIL = 30
+MAX_NODES_IN_TRAIL = 1
 
 
 @attr.s(auto_attribs=True)
@@ -53,7 +51,10 @@ class TrackTrailOverlay:
 
         all_track_trails = dict()
 
-        nodes = self.labels.nodes
+        if not frame_selection:
+            return
+
+        nodes = self.labels.skeletons[0].nodes
         if len(nodes) > MAX_NODES_IN_TRAIL:
             nodes = nodes[:MAX_NODES_IN_TRAIL]
 
@@ -136,24 +137,47 @@ class TrackTrailOverlay:
             color = QtGui.QColor(*self.player.color_manager.get_track_color(track))
             pen = QtGui.QPen()
             pen.setCosmetic(True)
+            pen.setColor(color)
+
+            seg_count = 2 if self.trail_length <= 50 else 3
+            seg_len = self.trail_length // seg_count
 
             for trail in trails:
-                half = len(trail) // 2
+                if not trail:
+                    continue
 
-                color.setAlphaF(1)
-                pen.setColor(color)
-                polygon = self.map_to_qt_polygon(trail[:half])
-                self.player.scene.addPolygon(polygon, pen)
+                # Break list into fixed length segments so that shorter trails
+                # will still have the same number of frames in the earlier
+                # segments and will just have shorter or missing later segments.
 
-                color.setAlphaF(0.5)
-                pen.setColor(color)
-                polygon = self.map_to_qt_polygon(trail[half:])
-                self.player.scene.addPolygon(polygon, pen)
+                segments = []
+                for seg_idx in range(seg_count):
+                    start = max(0, len(trail) - (seg_idx + 1) * seg_len)
+                    end = min(len(trail), 1 + len(trail) - seg_idx * seg_len)
+                    segments.append(trail[start:end])
+                    if start == 0:
+                        break
+
+                # Draw each segment, which each later segment (i.e., the part of
+                # trail further back from current frame) with a thinner line.
+
+                width = 2.0
+                for segment in segments:
+                    pen.setWidthF(width)
+                    path = self.map_to_qt_path(segment)
+                    self.player.scene.addPath(path, pen)
+                    width /= 2
 
     @staticmethod
-    def map_to_qt_polygon(point_list):
-        """Converts a list of (x, y)-tuples to a `QPolygonF`."""
-        return QtGui.QPolygonF(list(itertools.starmap(QtCore.QPointF, point_list)))
+    def map_to_qt_path(point_list):
+        """Converts a list of (x, y)-tuples to a `QPainterPath`."""
+        if not point_list:
+            return QtGui.QPainterPath()
+
+        path = QtGui.QPainterPath(QtCore.QPointF(*point_list[0]))
+        for point in point_list:
+            path.lineTo(*point)
+        return path
 
 
 @attr.s(auto_attribs=True)

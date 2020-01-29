@@ -121,6 +121,16 @@ datagen:
   type: double
   default: 0.0
 
+- name: instance_crop_ctr_node_ind
+  label: Center Node
+  type: list
+  type-options: optional_index
+
+- name: instance_crop_use_ctr_node
+  label: Use center node
+  type: bool
+  default: False
+
 trainer:
 
 - name: val_size
