@@ -25,13 +25,14 @@ def test_track_trails(centered_pair_predictions):
 
     assert len(trails) == min(24, MAX_NODES_IN_TRAIL)
 
+    # points for first (HEAD) node
     test_trail = [
-        (206.0, 189.0),
-        (205.0, 188.0),
-        (206.0, 187.0),
-        (208.0, 186.0),
-        (209.0, 185.0),
-        (210.0, 184.0),
+        (192.0, 189.0),
+        (192.0, 188.0),
+        (193.0, 187.0),
+        (194.0, 186.0),
+        (195.0, 185.0),
+        (196.0, 185.0),
     ]
-    print(trails)
+
     assert test_trail in trails
