@@ -391,7 +391,7 @@ class MainWindow(QMainWindow):
         add_submenu_choices(
             menu=viewMenu,
             title="Trail Length",
-            options=(0, 10, 20, 50),
+            options=(0, 10, 20, 50, 100, 200, 500),
             key="trail_length",
         )
 

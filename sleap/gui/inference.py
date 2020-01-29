@@ -539,7 +539,12 @@ class InferenceDialog(QtWidgets.QDialog):
     def _view_profile(self, filename: str, menu_name: str, windows=[]):
         """Opens profile editor in new dialog window."""
         saved_files = []
-        win = TrainingEditor(filename, saved_files=saved_files, parent=self)
+        win = TrainingEditor(
+            filename,
+            saved_files=saved_files,
+            skeleton=self.labels.skeletons[0],
+            parent=self,
+        )
         windows.append(win)
         win.exec_()
 
