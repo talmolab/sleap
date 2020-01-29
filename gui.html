@@ -1642,7 +1642,7 @@ the name of one of the class methods.</p></li>
 <span class="target" id="module-sleap.gui.training_editor"></span><p>Module for viewing and modifying training profiles.</p>
 <dl class="class">
 <dt id="sleap.gui.training_editor.TrainingEditor">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.training_editor.</code><code class="sig-name descname">TrainingEditor</code><span class="sig-paren">(</span><em class="sig-param">profile_filename: Optional[str] = None</em>, <em class="sig-param">saved_files: list = []</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/training_editor.html#TrainingEditor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.training_editor.TrainingEditor" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.training_editor.</code><code class="sig-name descname">TrainingEditor</code><span class="sig-paren">(</span><em class="sig-param">profile_filename: Optional[str] = None</em>, <em class="sig-param">saved_files: list = []</em>, <em class="sig-param">skeleton: Optional[Skeleton] = None</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/training_editor.html#TrainingEditor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.training_editor.TrainingEditor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Dialog for viewing and modifying training profiles.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1677,8 +1677,19 @@ list (which will be updated in code that created TrainingEditor).</p></li>
 (main button has type “button” and default “main action”)</p>
 <dl class="class">
 <dt id="sleap.gui.formbuilder.FieldComboWidget">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.formbuilder.</code><code class="sig-name descname">FieldComboWidget</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/formbuilder.html#FieldComboWidget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.formbuilder.FieldComboWidget" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.formbuilder.</code><code class="sig-name descname">FieldComboWidget</code><span class="sig-paren">(</span><em class="sig-param">result_as_idx: bool = False</em>, <em class="sig-param">add_blank_option: bool = False</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/formbuilder.html#FieldComboWidget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.formbuilder.FieldComboWidget" title="Permalink to this definition">¶</a></dt>
 <dd><p>A custom ComboBox widget with method to easily add set of options.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>result_as_idx</strong> – If True, then set/get for value will use idx of option
+rather than string.</p></li>
+<li><p><strong>add_blank_option</strong> – If True, then blank (“”) option will be added at
+beginning of list (which will return “” as val instead of idx if
+result_as_idx is True).</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="method">
 <dt id="sleap.gui.formbuilder.FieldComboWidget.set_options">
 <code class="sig-name descname">set_options</code><span class="sig-paren">(</span><em class="sig-param">options_list: List[str], select_item: Optional[str] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/formbuilder.html#FieldComboWidget.set_options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.formbuilder.FieldComboWidget.set_options" title="Permalink to this definition">¶</a></dt>
@@ -1935,7 +1946,7 @@ instantiated using this path.</p>
 
 <dl class="method">
 <dt id="sleap.gui.formbuilder.YamlFormWidget.set_field_options">
-<code class="sig-name descname">set_field_options</code><span class="sig-paren">(</span><em class="sig-param">field_name: str, options_list: List[str]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/formbuilder.html#YamlFormWidget.set_field_options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.formbuilder.YamlFormWidget.set_field_options" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">set_field_options</code><span class="sig-paren">(</span><em class="sig-param">field_name: str, options_list: List[str], **kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/formbuilder.html#YamlFormWidget.set_field_options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.formbuilder.YamlFormWidget.set_field_options" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets option list for specified field.</p>
 </dd></dl>
 
@@ -2644,9 +2655,9 @@ within trail_length).</p></li>
 </dd></dl>
 
 <dl class="method">
-<dt id="sleap.gui.overlays.tracks.TrackTrailOverlay.map_to_qt_polygon">
-<em class="property">static </em><code class="sig-name descname">map_to_qt_polygon</code><span class="sig-paren">(</span><em class="sig-param">point_list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/overlays/tracks.html#TrackTrailOverlay.map_to_qt_polygon"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.overlays.tracks.TrackTrailOverlay.map_to_qt_polygon" title="Permalink to this definition">¶</a></dt>
-<dd><p>Converts a list of (x, y)-tuples to a <cite>QPolygonF</cite>.</p>
+<dt id="sleap.gui.overlays.tracks.TrackTrailOverlay.map_to_qt_path">
+<em class="property">static </em><code class="sig-name descname">map_to_qt_path</code><span class="sig-paren">(</span><em class="sig-param">point_list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/overlays/tracks.html#TrackTrailOverlay.map_to_qt_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.overlays.tracks.TrackTrailOverlay.map_to_qt_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a list of (x, y)-tuples to a <cite>QPainterPath</cite>.</p>
 </dd></dl>
 
 </dd></dl>

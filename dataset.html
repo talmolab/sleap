@@ -400,22 +400,10 @@ frame, with NaN-padded xy coordinates for each visible body part.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="sleap.io.dataset.Labels.get_video_predicted_frames">
-<code class="sig-name descname">get_video_predicted_frames</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em><span class="sig-paren">)</span> &#x2192; List[sleap.instance.LabeledFrame]<a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.get_video_predicted_frames"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.get_video_predicted_frames" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns labeled frames for given video with user instances.</p>
-</dd></dl>
-
-<dl class="method">
 <dt id="sleap.io.dataset.Labels.get_video_suggestions">
 <code class="sig-name descname">get_video_suggestions</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em><span class="sig-paren">)</span> &#x2192; list<a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.get_video_suggestions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.get_video_suggestions" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the list of suggested frames for the specified video
 or suggestions for all videos (if no video specified).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.io.dataset.Labels.get_video_user_labeled_frames">
-<code class="sig-name descname">get_video_user_labeled_frames</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em><span class="sig-paren">)</span> &#x2192; List[sleap.instance.LabeledFrame]<a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.get_video_user_labeled_frames"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.get_video_user_labeled_frames" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns labeled frames for given video with user instances.</p>
 </dd></dl>
 
 <dl class="method">
@@ -536,7 +524,7 @@ we’ll automatically try to find the missing videos.</p>
 
 <dl class="method">
 <dt id="sleap.io.dataset.Labels.remove_instance">
-<code class="sig-name descname">remove_instance</code><span class="sig-paren">(</span><em class="sig-param">frame: sleap.instance.LabeledFrame</em>, <em class="sig-param">instance: sleap.instance.Instance</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.remove_instance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.remove_instance" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">remove_instance</code><span class="sig-paren">(</span><em class="sig-param">frame: sleap.instance.LabeledFrame</em>, <em class="sig-param">instance: sleap.instance.Instance</em>, <em class="sig-param">in_transaction: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.remove_instance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.remove_instance" title="Permalink to this definition">¶</a></dt>
 <dd><p>Removes instance from frame, updating track occupancy.</p>
 </dd></dl>
 

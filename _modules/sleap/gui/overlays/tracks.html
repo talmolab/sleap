@@ -34,19 +34,17 @@
 <span></span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Module that handles track-related overlays (including track color).</span>
 <span class="sd">&quot;&quot;&quot;</span>
-
 <span class="kn">from</span> <span class="nn">sleap.instance</span> <span class="kn">import</span> <span class="n">Track</span>
 <span class="kn">from</span> <span class="nn">sleap.io.dataset</span> <span class="kn">import</span> <span class="n">Labels</span>
 <span class="kn">from</span> <span class="nn">sleap.io.video</span> <span class="kn">import</span> <span class="n">Video</span>
 
 <span class="kn">import</span> <span class="nn">attr</span>
-<span class="kn">import</span> <span class="nn">itertools</span>
 
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span>
 
 <span class="kn">from</span> <span class="nn">PySide2</span> <span class="kn">import</span> <span class="n">QtCore</span><span class="p">,</span> <span class="n">QtGui</span>
 
-<span class="n">MAX_NODES_IN_TRAIL</span> <span class="o">=</span> <span class="mi">30</span>
+<span class="n">MAX_NODES_IN_TRAIL</span> <span class="o">=</span> <span class="mi">1</span>
 
 
 <div class="viewcode-block" id="TrackTrailOverlay"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.tracks.TrackTrailOverlay">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -86,7 +84,10 @@
 
         <span class="n">all_track_trails</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
 
-        <span class="n">nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">nodes</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">frame_selection</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">nodes</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">MAX_NODES_IN_TRAIL</span><span class="p">:</span>
             <span class="n">nodes</span> <span class="o">=</span> <span class="n">nodes</span><span class="p">[:</span><span class="n">MAX_NODES_IN_TRAIL</span><span class="p">]</span>
 
@@ -169,24 +170,47 @@
             <span class="n">color</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QColor</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">color_manager</span><span class="o">.</span><span class="n">get_track_color</span><span class="p">(</span><span class="n">track</span><span class="p">))</span>
             <span class="n">pen</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QPen</span><span class="p">()</span>
             <span class="n">pen</span><span class="o">.</span><span class="n">setCosmetic</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">pen</span><span class="o">.</span><span class="n">setColor</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
+
+            <span class="n">seg_count</span> <span class="o">=</span> <span class="mi">2</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">trail_length</span> <span class="o">&lt;=</span> <span class="mi">50</span> <span class="k">else</span> <span class="mi">3</span>
+            <span class="n">seg_len</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trail_length</span> <span class="o">//</span> <span class="n">seg_count</span>
 
             <span class="k">for</span> <span class="n">trail</span> <span class="ow">in</span> <span class="n">trails</span><span class="p">:</span>
-                <span class="n">half</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">trail</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">trail</span><span class="p">:</span>
+                    <span class="k">continue</span>
 
-                <span class="n">color</span><span class="o">.</span><span class="n">setAlphaF</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-                <span class="n">pen</span><span class="o">.</span><span class="n">setColor</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
-                <span class="n">polygon</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">map_to_qt_polygon</span><span class="p">(</span><span class="n">trail</span><span class="p">[:</span><span class="n">half</span><span class="p">])</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">addPolygon</span><span class="p">(</span><span class="n">polygon</span><span class="p">,</span> <span class="n">pen</span><span class="p">)</span>
+                <span class="c1"># Break list into fixed length segments so that shorter trails</span>
+                <span class="c1"># will still have the same number of frames in the earlier</span>
+                <span class="c1"># segments and will just have shorter or missing later segments.</span>
 
-                <span class="n">color</span><span class="o">.</span><span class="n">setAlphaF</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
-                <span class="n">pen</span><span class="o">.</span><span class="n">setColor</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
-                <span class="n">polygon</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">map_to_qt_polygon</span><span class="p">(</span><span class="n">trail</span><span class="p">[</span><span class="n">half</span><span class="p">:])</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">addPolygon</span><span class="p">(</span><span class="n">polygon</span><span class="p">,</span> <span class="n">pen</span><span class="p">)</span></div>
+                <span class="n">segments</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">seg_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">seg_count</span><span class="p">):</span>
+                    <span class="n">start</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">trail</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">seg_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">seg_len</span><span class="p">)</span>
+                    <span class="n">end</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">trail</span><span class="p">),</span> <span class="mi">1</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">trail</span><span class="p">)</span> <span class="o">-</span> <span class="n">seg_idx</span> <span class="o">*</span> <span class="n">seg_len</span><span class="p">)</span>
+                    <span class="n">segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">trail</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">])</span>
+                    <span class="k">if</span> <span class="n">start</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="k">break</span>
 
-<div class="viewcode-block" id="TrackTrailOverlay.map_to_qt_polygon"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.tracks.TrackTrailOverlay.map_to_qt_polygon">[docs]</a>    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">map_to_qt_polygon</span><span class="p">(</span><span class="n">point_list</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Converts a list of (x, y)-tuples to a `QPolygonF`.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QPolygonF</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">starmap</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">QPointF</span><span class="p">,</span> <span class="n">point_list</span><span class="p">)))</span></div></div>
+                <span class="c1"># Draw each segment, which each later segment (i.e., the part of</span>
+                <span class="c1"># trail further back from current frame) with a thinner line.</span>
+
+                <span class="n">width</span> <span class="o">=</span> <span class="mf">2.0</span>
+                <span class="k">for</span> <span class="n">segment</span> <span class="ow">in</span> <span class="n">segments</span><span class="p">:</span>
+                    <span class="n">pen</span><span class="o">.</span><span class="n">setWidthF</span><span class="p">(</span><span class="n">width</span><span class="p">)</span>
+                    <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">map_to_qt_path</span><span class="p">(</span><span class="n">segment</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">addPath</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">pen</span><span class="p">)</span>
+                    <span class="n">width</span> <span class="o">/=</span> <span class="mi">2</span></div>
+
+<div class="viewcode-block" id="TrackTrailOverlay.map_to_qt_path"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.tracks.TrackTrailOverlay.map_to_qt_path">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">map_to_qt_path</span><span class="p">(</span><span class="n">point_list</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Converts a list of (x, y)-tuples to a `QPainterPath`.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">point_list</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QPainterPath</span><span class="p">()</span>
+
+        <span class="n">path</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QPainterPath</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">QPointF</span><span class="p">(</span><span class="o">*</span><span class="n">point_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">point_list</span><span class="p">:</span>
+            <span class="n">path</span><span class="o">.</span><span class="n">lineTo</span><span class="p">(</span><span class="o">*</span><span class="n">point</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">path</span></div></div>
 
 
 <div class="viewcode-block" id="TrackListOverlay"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.tracks.TrackListOverlay">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>

@@ -60,6 +60,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">profile_filename</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">saved_files</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[],</span>
+        <span class="n">skeleton</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;Skeleton&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">*</span><span class="n">args</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>
@@ -69,17 +70,26 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">YamlFormWidget</span><span class="p">(</span>
-            <span class="n">form_yaml</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="p">,</span> <span class="s2">&quot;Network Architecture&quot;</span>
+            <span class="n">form_yaml</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Network Architecture&quot;</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;datagen&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">YamlFormWidget</span><span class="p">(</span>
-            <span class="n">form_yaml</span><span class="p">,</span> <span class="s2">&quot;datagen&quot;</span><span class="p">,</span> <span class="s2">&quot;Data Generation/Preprocessing&quot;</span>
+            <span class="n">form_yaml</span><span class="p">,</span> <span class="s2">&quot;datagen&quot;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Data Generation/Preprocessing&quot;</span>
         <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;trainer&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">YamlFormWidget</span><span class="p">(</span><span class="n">form_yaml</span><span class="p">,</span> <span class="s2">&quot;trainer&quot;</span><span class="p">,</span> <span class="s2">&quot;Trainer&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;trainer&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">YamlFormWidget</span><span class="p">(</span>
+            <span class="n">form_yaml</span><span class="p">,</span> <span class="s2">&quot;trainer&quot;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Trainer&quot;</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;output&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">YamlFormWidget</span><span class="p">(</span><span class="n">form_yaml</span><span class="p">,</span> <span class="s2">&quot;output&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;buttons&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">YamlFormWidget</span><span class="p">(</span><span class="n">form_yaml</span><span class="p">,</span> <span class="s2">&quot;buttons&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;spacer&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">YamlFormWidget</span><span class="p">(</span><span class="n">form_yaml</span><span class="p">,</span> <span class="s2">&quot;spacer&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;buttons&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">mainAction</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_save_as</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">skeleton</span><span class="p">,</span> <span class="s2">&quot;node_names&quot;</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">skeleton</span><span class="o">.</span><span class="n">node_names</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;datagen&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">form_layout</span><span class="o">.</span><span class="n">field_options_lists</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;datagen&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_field_options</span><span class="p">(</span>
+                <span class="s2">&quot;instance_crop_ctr_node_ind&quot;</span><span class="p">,</span> <span class="n">skeleton</span><span class="o">.</span><span class="n">node_names</span><span class="p">,</span>
+            <span class="p">)</span>
 
         <span class="n">col1_layout</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QVBoxLayout</span><span class="p">()</span>
         <span class="n">col2_layout</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QVBoxLayout</span><span class="p">()</span>

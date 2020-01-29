@@ -424,7 +424,7 @@
         <span class="n">add_submenu_choices</span><span class="p">(</span>
             <span class="n">menu</span><span class="o">=</span><span class="n">viewMenu</span><span class="p">,</span>
             <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Trail Length&quot;</span><span class="p">,</span>
-            <span class="n">options</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span>
+            <span class="n">options</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">500</span><span class="p">),</span>
             <span class="n">key</span><span class="o">=</span><span class="s2">&quot;trail_length&quot;</span><span class="p">,</span>
         <span class="p">)</span>
 
@@ -1065,18 +1065,21 @@
 
             <span class="n">message</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{spacer}</span><span class="s2">Labeled Frames: &quot;</span>
             <span class="k">if</span> <span class="n">current_video</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">message</span> <span class="o">+=</span> <span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;{len(self.labels.get_video_user_labeled_frames(current_video))}&quot;</span>
+                <span class="n">message</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">get_labeled_frame_count</span><span class="p">(</span><span class="n">current_video</span><span class="p">,</span> <span class="s2">&quot;user&quot;</span><span class="p">)</span>
                 <span class="p">)</span>
 
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">videos</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
                     <span class="n">message</span> <span class="o">+=</span> <span class="s2">&quot; in video, &quot;</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">videos</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="n">message</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;{len(self.labels.user_labeled_frames)} in project&quot;</span>
+                <span class="n">project_user_frame_count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">get_labeled_frame_count</span><span class="p">(</span>
+                    <span class="nb">filter</span><span class="o">=</span><span class="s2">&quot;user&quot;</span>
+                <span class="p">)</span>
+                <span class="n">message</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{project_user_frame_count}</span><span class="s2"> in project&quot;</span>
 
             <span class="k">if</span> <span class="n">current_video</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">pred_frame_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">get_video_predicted_frames</span><span class="p">(</span><span class="n">current_video</span><span class="p">)</span>
+                <span class="n">pred_frame_count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">get_labeled_frame_count</span><span class="p">(</span>
+                    <span class="n">current_video</span><span class="p">,</span> <span class="s2">&quot;predicted&quot;</span>
                 <span class="p">)</span>
                 <span class="k">if</span> <span class="n">pred_frame_count</span><span class="p">:</span>
                     <span class="n">message</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{spacer}</span><span class="s2">Predicted Frames: </span><span class="si">{pred_frame_count:,}</span><span class="s2">&quot;</span>

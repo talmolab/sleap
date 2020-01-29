@@ -572,7 +572,12 @@
     <span class="k">def</span> <span class="nf">_view_profile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">menu_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">windows</span><span class="o">=</span><span class="p">[]):</span>
         <span class="sd">&quot;&quot;&quot;Opens profile editor in new dialog window.&quot;&quot;&quot;</span>
         <span class="n">saved_files</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">win</span> <span class="o">=</span> <span class="n">TrainingEditor</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">saved_files</span><span class="o">=</span><span class="n">saved_files</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">win</span> <span class="o">=</span> <span class="n">TrainingEditor</span><span class="p">(</span>
+            <span class="n">filename</span><span class="p">,</span>
+            <span class="n">saved_files</span><span class="o">=</span><span class="n">saved_files</span><span class="p">,</span>
+            <span class="n">skeleton</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="n">windows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">win</span><span class="p">)</span>
         <span class="n">win</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
 

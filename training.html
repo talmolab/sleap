@@ -37,6 +37,90 @@
 <div class="section" id="module-sleap.nn.training">
 <span id="sleap-nn-training"></span><h2>sleap.nn.training<a class="headerlink" href="#module-sleap.nn.training" title="Permalink to this headline">¶</a></h2>
 <p>SLEAP model training.</p>
+<dl class="class">
+<dt id="sleap.nn.training.NodeLoss">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.training.</code><code class="sig-name descname">NodeLoss</code><span class="sig-paren">(</span><em class="sig-param">node_ind</em>, <em class="sig-param">name='node_loss'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/training.html#NodeLoss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.NodeLoss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute node-specific loss.</p>
+<p>Useful for monitoring the MSE for specific body parts (channels).</p>
+<dl class="attribute">
+<dt id="sleap.nn.training.NodeLoss.node_ind">
+<code class="sig-name descname">node_ind</code><a class="headerlink" href="#sleap.nn.training.NodeLoss.node_ind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Index of channel to compute MSE for.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sleap.nn.training.NodeLoss.name">
+<code class="sig-name descname">name</code><a class="headerlink" href="#sleap.nn.training.NodeLoss.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name of the loss tensor.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.training.NodeLoss.result">
+<code class="sig-name descname">result</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/training.html#NodeLoss.result"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.NodeLoss.result" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes and returns the metric value tensor.</p>
+<p>Result computation is an idempotent operation that simply calculates the
+metric value using the state variables.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.training.NodeLoss.update_state">
+<code class="sig-name descname">update_state</code><span class="sig-paren">(</span><em class="sig-param">y_gt</em>, <em class="sig-param">y_pr</em>, <em class="sig-param">sample_weight=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/training.html#NodeLoss.update_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.NodeLoss.update_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Accumulates statistics for the metric.</p>
+<p>Note: This function is executed as a graph function in graph mode.
+This means:</p>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li><p>Operations on the same resource are executed in textual order.
+This should make it easier to do things like add the updated
+value of a variable to another, for example.</p></li>
+<li><p>You don’t need to worry about collecting the update ops to execute.
+All update ops added to the graph by this function will be executed.</p></li>
+</ol>
+<p>As a result, code should generally work the same way with graph or
+eager execution.</p>
+</div></blockquote>
+<p>Please use <cite>tf.config.experimental_run_functions_eagerly(True)</cite> to execute
+this function eagerly for debugging or profiling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>*args</strong> – </p></li>
+<li><p><strong>**kwargs</strong> – A mini-batch of inputs to the Metric.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sleap.nn.training.OHKMLoss">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.training.</code><code class="sig-name descname">OHKMLoss</code><span class="sig-paren">(</span><em class="sig-param">K=2</em>, <em class="sig-param">weight=5</em>, <em class="sig-param">name='ohkm'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/training.html#OHKMLoss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.OHKMLoss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Online hard keypoint mining loss.</p>
+<p>This loss serves to dynamically reweight the MSE of the top-K worst channels in each
+batch. This is useful when fine tuning a model to improve performance on a hard
+part to optimize for (e.g., small, hard to see, often not visible).</p>
+<p>Note: This works with any type of channel, so it can work for PAFs as well.</p>
+<dl class="attribute">
+<dt id="sleap.nn.training.OHKMLoss.K">
+<code class="sig-name descname">K</code><a class="headerlink" href="#sleap.nn.training.OHKMLoss.K" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of worst performing channels to compute loss for.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sleap.nn.training.OHKMLoss.weight">
+<code class="sig-name descname">weight</code><a class="headerlink" href="#sleap.nn.training.OHKMLoss.weight" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scalar factor to multiply with the MSE for the top-K worst channels.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sleap.nn.training.OHKMLoss.name">
+<code class="sig-name descname">name</code><a class="headerlink" href="#sleap.nn.training.OHKMLoss.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name of the loss tensor.</p>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="function">
 <dt id="sleap.nn.training.main">
 <code class="sig-prename descclassname">sleap.nn.training.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/training.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.training.main" title="Permalink to this definition">¶</a></dt>

@@ -140,9 +140,9 @@
         <span class="sd">&quot;&quot;&quot;Returns dict of form data.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_layout</span><span class="o">.</span><span class="n">get_form_data</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="YamlFormWidget.set_field_options"><a class="viewcode-back" href="../../../gui.html#sleap.gui.formbuilder.YamlFormWidget.set_field_options">[docs]</a>    <span class="k">def</span> <span class="nf">set_field_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">options_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+<div class="viewcode-block" id="YamlFormWidget.set_field_options"><a class="viewcode-back" href="../../../gui.html#sleap.gui.formbuilder.YamlFormWidget.set_field_options">[docs]</a>    <span class="k">def</span> <span class="nf">set_field_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">options_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Sets option list for specified field.&quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">form_layout</span><span class="o">.</span><span class="n">set_field_options</span><span class="p">(</span><span class="n">field_name</span><span class="p">,</span> <span class="n">options_list</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">form_layout</span><span class="o">.</span><span class="n">set_field_options</span><span class="p">(</span><span class="n">field_name</span><span class="p">,</span> <span class="n">options_list</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="YamlFormWidget.trigger_main_action"><a class="viewcode-back" href="../../../gui.html#sleap.gui.formbuilder.YamlFormWidget.trigger_main_action">[docs]</a>    <span class="k">def</span> <span class="nf">trigger_main_action</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Emit mainAction signal with form data.&quot;&quot;&quot;</span>
@@ -185,6 +185,7 @@
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">objectName</span><span class="p">())</span>
             <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QLabel</span><span class="p">,</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QPushButton</span><span class="p">)</span>
         <span class="p">}</span>
+
         <span class="n">stacked_data</span> <span class="o">=</span> <span class="p">[</span><span class="n">w</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">widgets</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="o">==</span> <span class="n">StackBuilderWidget</span><span class="p">]</span>
         <span class="k">for</span> <span class="n">stack</span> <span class="ow">in</span> <span class="n">stacked_data</span><span class="p">:</span>
             <span class="n">data</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">stack</span><span class="p">)</span>
@@ -244,12 +245,10 @@
 <div class="viewcode-block" id="FormBuilderLayout.set_widget_value"><a class="viewcode-back" href="../../../gui.html#sleap.gui.formbuilder.FormBuilderLayout.set_widget_value">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">set_widget_value</span><span class="p">(</span><span class="n">widget</span><span class="p">:</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QWidget</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Set value for specific widget.&quot;&quot;&quot;</span>
-        <span class="c1"># if widget.property(&quot;field_data_type&quot;) == &quot;sci&quot;:</span>
-        <span class="c1">#     val = str(val)</span>
 
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">widget</span><span class="p">,</span> <span class="s2">&quot;isChecked&quot;</span><span class="p">):</span>
             <span class="n">widget</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">widget</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">):</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">widget</span><span class="p">,</span> <span class="s2">&quot;setValue&quot;</span><span class="p">):</span>
             <span class="n">widget</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
         <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">widget</span><span class="p">,</span> <span class="s2">&quot;currentText&quot;</span><span class="p">):</span>
             <span class="n">widget</span><span class="o">.</span><span class="n">setCurrentText</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">val</span><span class="p">))</span>
@@ -340,7 +339,16 @@
 
             <span class="c1"># list: show drop-down menu</span>
             <span class="k">elif</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;list&quot;</span><span class="p">:</span>
-                <span class="n">field</span> <span class="o">=</span> <span class="n">FieldComboWidget</span><span class="p">()</span>
+                <span class="n">type_options</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type-options&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+                <span class="n">result_as_optional_idx</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">if</span> <span class="n">type_options</span> <span class="o">==</span> <span class="s2">&quot;optional_index&quot;</span><span class="p">:</span>
+                    <span class="n">result_as_optional_idx</span> <span class="o">=</span> <span class="kc">True</span>
+
+                <span class="n">field</span> <span class="o">=</span> <span class="n">FieldComboWidget</span><span class="p">(</span>
+                    <span class="n">result_as_idx</span><span class="o">=</span><span class="n">result_as_optional_idx</span><span class="p">,</span>
+                    <span class="n">add_blank_option</span><span class="o">=</span><span class="n">result_as_optional_idx</span><span class="p">,</span>
+                <span class="p">)</span>
 
                 <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">field_options_lists</span><span class="p">:</span>
                     <span class="n">field</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">field_options_lists</span><span class="p">[</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]])</span>
@@ -518,12 +526,27 @@
 <div class="viewcode-block" id="FieldComboWidget"><a class="viewcode-back" href="../../../gui.html#sleap.gui.formbuilder.FieldComboWidget">[docs]</a><span class="k">class</span> <span class="nc">FieldComboWidget</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QComboBox</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A custom ComboBox widget with method to easily add set of options.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        result_as_idx: If True, then set/get for value will use idx of option</span>
+<span class="sd">            rather than string.</span>
+<span class="sd">        add_blank_option: If True, then blank (&quot;&quot;) option will be added at</span>
+<span class="sd">            beginning of list (which will return &quot;&quot; as val instead of idx if</span>
+<span class="sd">            result_as_idx is True).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">result_as_idx</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">add_blank_option</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">FieldComboWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">setSizeAdjustPolicy</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QComboBox</span><span class="o">.</span><span class="n">AdjustToContents</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">setMinimumContentsLength</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">result_as_idx</span> <span class="o">=</span> <span class="n">result_as_idx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_blank_option</span> <span class="o">=</span> <span class="n">add_blank_option</span>
 
 <div class="viewcode-block" id="FieldComboWidget.set_options"><a class="viewcode-back" href="../../../gui.html#sleap.gui.formbuilder.FieldComboWidget.set_options">[docs]</a>    <span class="k">def</span> <span class="nf">set_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">options_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">select_item</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -537,14 +560,32 @@
 <span class="sd">            None.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">options_list</span> <span class="o">=</span> <span class="n">options_list</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_blank_option</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">options_list</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">item</span> <span class="o">==</span> <span class="s2">&quot;---&quot;</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">insertSeparator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">())</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">select_item</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">select_item</span> <span class="ow">in</span> <span class="n">options_list</span><span class="p">:</span>
-            <span class="n">idx</span> <span class="o">=</span> <span class="n">options_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">select_item</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">setCurrentIndex</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span></div></div>
+        <span class="k">if</span> <span class="n">select_item</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">select_item</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">result_as_idx</span><span class="p">:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">currentIndex</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_blank_option</span><span class="p">:</span>
+                <span class="n">val</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">currentText</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">val</span>
+
+    <span class="k">def</span> <span class="nf">setValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="o">==</span> <span class="nb">int</span> <span class="ow">and</span> <span class="n">val</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">options_list</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">result_as_idx</span><span class="p">:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options_list</span><span class="p">[</span><span class="n">val</span><span class="p">]</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">FieldComboWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">setCurrentText</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">val</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="ResizingStackedWidget"><a class="viewcode-back" href="../../../gui.html#sleap.gui.formbuilder.ResizingStackedWidget">[docs]</a><span class="k">class</span> <span class="nc">ResizingStackedWidget</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QStackedWidget</span><span class="p">):</span>
