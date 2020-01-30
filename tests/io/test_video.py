@@ -275,17 +275,3 @@ def test_hdf5_indexing(small_robot_mp4_vid, tmpdir):
 
     with pytest.raises(ValueError):
         hdf5_vid2.get_frames([0, 1, 2])
-
-
-def test_invalid_frames(hdf5_vid):
-    # Try getting the last 10 frames and the next 10 frames (which won't exist)
-    frames = hdf5_vid[hdf5_vid.last_frame_idx - 9 : hdf5_vid.last_frame_idx + 10]
-
-    # Make sure we did get the last 10 frames
-    assert len(frames) == 10
-
-    # Try getting all invalid frames
-    frames = hdf5_vid[2000:2020]
-
-    # Make sure we didn't get anything (but also didn't throw an exception)
-    assert frames is None

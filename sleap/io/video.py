@@ -360,10 +360,6 @@ class MediaVideo:
 
         ret, frame = self.__reader.read()
 
-        if frame is None:
-            print(f"Unable to load frame {idx}.")
-            return frame
-
         if grayscale is None:
             grayscale = self.grayscale
 
@@ -877,13 +873,7 @@ class Video:
         """
         if np.isscalar(idxs):
             idxs = [idxs]
-        frames = [self.get_frame(idx) for idx in idxs]
-        try:
-            return np.stack([frame for frame in frames if frame is not None], axis=0)
-        except ValueError as e:
-            print(e)
-            print(f"Unable to load any of the frames: {idxs}")
-            return None
+        return np.stack([self.get_frame(idx) for idx in idxs], axis=0)
 
     def __getitem__(self, idxs):
         if isinstance(idxs, slice):
