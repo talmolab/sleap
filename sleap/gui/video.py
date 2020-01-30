@@ -66,6 +66,23 @@ import qimage2ndarray
 class LoadImageWorker(QtCore.QObject):
     """
     Object to load video frames in background thread.
+
+    Requests to load a frame image are sent by calling the `request` method with
+    the frame idx; the video attribute should already be set to the correct
+    video.
+
+    These requests are added to a FILO queue polled by the `doProcessing`
+    method, called whenever there's time during the Qt event loop.
+    (It's also added to the event queue if it hasn't been called for a while
+    and we get a request, since the timer doesn't seem to emit events if the
+    user has been holding down the mouse for a while.)
+
+    The actual frame loading is wrapped with a mutex lock so that we only load
+    a single frame at a time; this helps us not get a bunch of older frame
+    requests running concurrently.
+
+    Once the frame loads, the `QImage` is sent via the `result` signal.
+    (Qt handles the cross-thread communication if we use signals.)
     """
 
     result = QtCore.Signal(QImage)
@@ -80,6 +97,7 @@ class LoadImageWorker(QtCore.QObject):
     def __init__(self, *args, **kwargs):
         super(LoadImageWorker, self).__init__(*args, **kwargs)
 
+        self._processing_mutex = QtCore.QMutex()
         self._recent_load_times = deque(maxlen=5)
 
         # Connect signal to processing function so that we can add processing
@@ -97,6 +115,16 @@ class LoadImageWorker(QtCore.QObject):
         if not self.load_queue:
             return
 
+        # Use a mutex lock to ensure that we're only loading one frame at a time
+        self._processing_mutex.lock()
+
+        # Maybe we had to wait to acquire the lock, so make sure there are still
+        # frames to load
+        if not self.load_queue:
+            return
+
+        # Get the most recent request and clear all the others, since there's no
+        # reason to load frames for older requests
         frame_idx = self.load_queue[-1]
         self.load_queue = []
 
@@ -112,16 +140,17 @@ class LoadImageWorker(QtCore.QObject):
             # Set the time to wait before forcing a load request to a little
             # longer than the average time it recently took to load a frame
             avg_load_time = sum(self._recent_load_times) / len(self._recent_load_times)
-            self._force_request_wait_time = avg_load_time * 1.2
+            self._force_request_wait_time = avg_load_time
 
         except Exception as e:
             frame = None
 
+        # Release the lock so other threads can start processing frame requests
+        self._processing_mutex.unlock()
+
         if frame is not None:
             # Convert ndarray to QImage
             qimage = qimage2ndarray.array2qimage(frame)
-
-            # print(f"\t{frame_idx} result") # DEBUG
 
             # Emit result
             self.result.emit(qimage)
@@ -158,7 +187,6 @@ class QtVideoPlayer(QWidget):
     """
 
     changedPlot = QtCore.Signal(QWidget, int, Instance)
-    requestImage = QtCore.Signal(int)
 
     def __init__(
         self,
@@ -214,9 +242,6 @@ class QtVideoPlayer(QWidget):
         self._video_image_loader.result.connect(
             lambda qimage: self.view.setImage(qimage)
         )
-
-        # Connect request signals from self to worker
-        self.requestImage.connect(self._video_image_loader.request)
 
         def update_selection_state(a, b):
             self.state.set("frame_range", (a, b))
@@ -377,9 +402,12 @@ class QtVideoPlayer(QWidget):
         # Emit signal for the instances to be drawn for this frame
         self.changedPlot.emit(self, idx, self.state["instance"])
 
-        # Emit signal for the image to loaded and shown for this frame
+        # Request for the image to load and be shown for this frame
+        # (note that we're calling method directly rather than connecting
+        # the method to a signal because Qt was holding onto the signal events
+        # for too long before they were received by the loader).
         self._video_image_loader.video = self.video
-        self.requestImage.emit(idx)
+        self._video_image_loader.request(idx)
 
     def showLabels(self, show):
         """ Show/hide node labels for all instances in viewer.
@@ -1715,12 +1743,10 @@ class QtInstance(QGraphicsObject):
         """Returns a rect which contains all the nodes in the skeleton."""
         points = [node.point for node in self.nodes.values()]
         top_left = QPointF(
-            min((point.x for point in points)),
-            min((point.y for point in points))
+            min((point.x for point in points)), min((point.y for point in points))
         )
         bottom_right = QPointF(
-            max((point.x for point in points)),
-            max((point.y for point in points))
+            max((point.x for point in points)), max((point.y for point in points))
         )
         rect = QRectF(top_left, bottom_right)
         return rect
