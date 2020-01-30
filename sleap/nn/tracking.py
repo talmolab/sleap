@@ -1,6 +1,7 @@
 from collections import deque, defaultdict
 import attr
 import numpy as np
+import operator
 import cv2
 from scipy.optimize import linear_sum_assignment
 from typing import Callable, Deque, Dict, List, Optional, Tuple, TypeVar
@@ -342,9 +343,11 @@ class Tracker:
             instance similarity value.
         matching_function: A function that takes a matrix of pairwise similarities
             and determines the matches to use.
-        candidate_maker: An class instance with a `get_candidates` method
+        candidate_maker: A class instance with a `get_candidates` method
             which returns a list of Instances-like objects  which we can match
             the predicted instances in a frame against.
+        cleaner: A class with a `run` method which attempts to clean tracks
+            after the other tracking has run for all frames.
         min_new_track_points: We won't spawn a new track for an instance with
             fewer than this many points.
     """
@@ -353,6 +356,7 @@ class Tracker:
     similarity_function: Callable = instance_similarity
     matching_function: Callable = greedy_matching
     candidate_maker: object = attr.ib(factory=FlowCandidateMaker)
+    cleaner: Optional[Callable] = None
     min_new_track_points: int = 0
 
     track_matching_queue: Deque[MatchedInstance] = attr.ib()
@@ -519,6 +523,11 @@ class Tracker:
 
         return tracked_instances
 
+    def final_pass(self, frames: List[LabeledFrame]):
+        """Called after tracking has run on all chunks."""
+        if self.cleaner:
+            self.cleaner.run(frames)
+
     def get_name(self):
         tracker_name = self.candidate_maker.__class__.__name__
         similarity_name = self.similarity_function.__name__
@@ -537,6 +546,7 @@ class Tracker:
         img_scale: float = 1.0,
         of_window_size: int = 21,
         of_max_levels: int = 3,
+        clean_instance_count: int = 0,
         **kwargs,
     ) -> "Tracker":
 
@@ -560,12 +570,17 @@ class Tracker:
             candidate_maker.of_window_size = of_window_size
             candidate_maker.of_max_levels = of_max_levels
 
+        cleaner = None
+        if clean_instance_count:
+            cleaner = TrackCleaner(instance_count=clean_instance_count)
+
         return cls(
             track_window=track_window,
             min_new_track_points=min_new_track_points,
             similarity_function=similarity_function,
             matching_function=matching_function,
             candidate_maker=candidate_maker,
+            cleaner=cleaner,
         )
 
     @classmethod
@@ -578,6 +593,14 @@ class Tracker:
         option["options"] = list(tracker_policies.keys()) + [
             "None",
         ]
+        options.append(option)
+
+        option = dict(name="clean_instance_count", default=0)
+        option["type"] = int
+        option["help"] = (
+            "If non-zero, then attempt to clean tracking results "
+            "assuming there are this many instances per frame."
+        )
         options.append(option)
 
         option = dict(name="similarity", default="instance")
@@ -658,6 +681,86 @@ class SimpleTracker(Tracker):
     similarity_function: Callable = instance_iou
     matching_function: Callable = hungarian_matching
     candidate_maker: object = attr.ib(factory=SimpleCandidateMaker)
+
+
+@attr.s(auto_attribs=True)
+class TrackCleaner:
+    """
+    Class for merging breaks in the predicted tracks.
+
+    Method:
+    1. You specify how many instances there should be in each frame.
+    2. The lowest scoring instances beyond this limit are deleting from each frame.
+    3. Going frame by frame, any time there's exactly one missing track and exactly
+       one new track, we merge the new track into the missing track.
+
+    You should review the results to check for "swaps". This can be done using the
+    velocity threshold suggestion method.
+
+    Attributes:
+        instance_count: The maximum number of instances we want per frame.
+    """
+
+    instance_count: int
+
+    def run(self, frames: List["LabeledFrame"]):
+        """
+        Attempts to merge tracks for given frames.
+
+        Args:
+            frames: The list of `LabeldFrame` objects with predictions.
+
+        Returns:
+            None; modifies frames in place.
+        """
+
+        frames.sort(key=lambda lf: lf.frame_idx)
+
+        lf_inst_list = []
+        # Find all frames with more instances than the desired threshold
+        for lf in frames:
+            if len(lf.predicted_instances) > self.instance_count:
+                # Get all but the instance_count many instances with the highest score
+                extra_instances = sorted(
+                    lf.predicted_instances, key=operator.attrgetter("score")
+                )[: -self.instance_count]
+                lf_inst_list.extend([(lf, inst) for inst in extra_instances])
+
+        # Remove instances over per frame threshold
+        for lf, inst in lf_inst_list:
+            lf.instances.remove(inst)
+
+        # Move instances in new tracks into tracks that disappeared on previous frame
+        fix_track_map = dict()
+        last_good_frame_tracks = {inst.track for inst in frames[0].instances}
+        for lf in frames:
+            frame_tracks = {inst.track for inst in lf.instances}
+
+            tracks_fixed_before = frame_tracks.intersection(set(fix_track_map.keys()))
+            if tracks_fixed_before:
+                for inst in lf.instances:
+                    if (
+                        inst.track in fix_track_map
+                        and fix_track_map[inst.track] not in frame_tracks
+                    ):
+                        inst.track = fix_track_map[inst.track]
+                        frame_tracks = {inst.track for inst in lf.instances}
+
+            extra_tracks = frame_tracks - last_good_frame_tracks
+            missing_tracks = last_good_frame_tracks - frame_tracks
+
+            if len(extra_tracks) == 1 and len(missing_tracks) == 1:
+                for inst in lf.instances:
+                    if inst.track in extra_tracks:
+                        old_track = inst.track
+                        new_track = missing_tracks.pop()
+                        fix_track_map[old_track] = new_track
+                        inst.track = new_track
+
+                        break
+            else:
+                if len(frame_tracks) == self.instance_count:
+                    last_good_frame_tracks = frame_tracks
 
 
 def run_tracker(frames, tracker):
