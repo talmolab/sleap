@@ -1025,7 +1025,7 @@ class MainWindow(QMainWindow):
             message = f"Frame: {frame_idx+1:,}/{len(current_video):,}"
             if self.player.seekbar.hasSelection():
                 start, end = self.state["frame_range"]
-                message += f" (selection: {start+1:,}-{end+1:,})"
+                message += f" (selection: {start+1:,}-{end:,})"
 
             if len(self.labels.videos) > 1:
                 message += f" of video {self.labels.videos.index(current_video)+1}"
@@ -1195,11 +1195,12 @@ class MainWindow(QMainWindow):
         selection["frame"] = {current_video: [self.state["frame_idx"]]}
 
         # Use negative number in list for range (i.e., "0,-123" means "0-123")
+        # The ranges should be [X, Y) like standard Python ranges
         clip_range = self.state.get("frame_range", default=(0, 0))
         if clip_range[1] > 0:
-            clip_range = (clip_range[0], -clip_range[1] + 1)
+            clip_range = (clip_range[0], -clip_range[1])
         selection["clip"] = {current_video: clip_range}
-        selection["video"] = {current_video: (0, -current_video.num_frames + 1)}
+        selection["video"] = {current_video: (0, -current_video.num_frames)}
 
         selection["suggestions"] = {
             video: remove_user_labeled(video, self.labels.get_video_suggestions(video))

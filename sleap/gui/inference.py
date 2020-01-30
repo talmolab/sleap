@@ -181,15 +181,15 @@ class InferenceDialog(QtWidgets.QDialog):
                     return 0
                 count = 0
                 for frame_list in videos_frames.values():
-                    # Check for range, given as X, -Y
+                    # Check for [x, Y] range given as X, -Y
+                    # (we're not using typical [X, Y)-style range here)
                     if len(frame_list) == 2 and frame_list[1] < 0:
-                        count += -frame_list[1] - frame_list[0] + 1
-                    else:
+                        count += -frame_list[1] - frame_list[0]
+                    elif frame_list != (0, 0):
                         count += len(frame_list)
                 return count
 
             # Determine which options are available given _frame_selection
-
             total_random = count_total_frames(self._frame_selection["random"])
             total_suggestions = count_total_frames(self._frame_selection["suggestions"])
             clip_length = count_total_frames(self._frame_selection["clip"])
@@ -394,11 +394,17 @@ class InferenceDialog(QtWidgets.QDialog):
                 frames_to_predict = self._frame_selection["random"]
             elif predict_frames_choice.startswith("selected clip"):
                 frames_to_predict = self._frame_selection["clip"]
-                with_tracking = True
             elif predict_frames_choice.startswith("suggested"):
                 frames_to_predict = self._frame_selection["suggestions"]
             elif predict_frames_choice.startswith("entire video"):
                 frames_to_predict = self._frame_selection["video"]
+
+            # Convert [X, Y+1) ranges to [X, Y] ranges for inference cli
+            for video, frame_list in frames_to_predict.items():
+                # Check for [A, -B] list representing [A, B) range
+                if len(frame_list) == 2 and frame_list[1] < 0:
+                    frame_list = (frame_list[0], frame_list[1] + 1)
+                    frames_to_predict[video] = frame_list
 
         # for key, val in training_jobs.items():
         #     print(key)

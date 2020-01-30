@@ -244,7 +244,7 @@ class QtVideoPlayer(QWidget):
         )
 
         def update_selection_state(a, b):
-            self.state.set("frame_range", (a, b))
+            self.state.set("frame_range", (a, b + 1))
             self.state.set("has_frame_range", (a < b))
 
         self.seekbar.selectionChanged.connect(update_selection_state)
