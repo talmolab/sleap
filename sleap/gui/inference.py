@@ -953,7 +953,6 @@ def run_gui_training(
                     viz_window = QtImageDirectoryWidget.make_training_vizualizer(
                         job.run_path
                     )
-                    viz_window.show()
                     win.on_epoch.connect(viz_window.poll)
 
             print(f"Start training {str(model_type)}...")

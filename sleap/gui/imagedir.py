@@ -66,9 +66,15 @@ class QtImageDirectoryWidget(QtVideoPlayer):
         files = glob.glob(path)
         files.sort()
 
+        if not files:
+            return
+
         if files != self.files:
             was_on_last_image = False
-            if self.video and self.state["frame_idx"] == self.video.last_frame_idx:
+            if self.video is None:
+                was_on_last_image = True
+                self.show()
+            elif self.state["frame_idx"] == self.video.last_frame_idx:
                 was_on_last_image = True
 
             self.files = files
@@ -84,7 +90,7 @@ class QtImageDirectoryWidget(QtVideoPlayer):
 
     @classmethod
     def make_training_vizualizer(cls, run_path: Text):
-        dir = os.path.join(run_path, "viz/")
+        dir = os.path.join(run_path, "viz")
         filters = [("Validation", "val.*.png"), ("Training", "train.*.png")]
         win = QtImageDirectoryWidget(dir, filters=filters)
         return win
