@@ -871,10 +871,11 @@ def run_learning_pipeline(
         job.labels_filename = labels_filename
 
     # TODO: only require labels_filename if we're training?
-    # save_dir = os.path.join(os.path.dirname(labels_filename), "models")
 
     # Train the TrainingJobs
-    trained_jobs = run_gui_training(labels_filename, training_jobs)
+    trained_jobs = run_gui_training(
+        labels_filename, training_jobs, gui=True, save_viz=True
+    )
 
     # Check that all the models were trained
     if None in trained_jobs.values():
@@ -903,6 +904,7 @@ def run_gui_training(
     labels_filename: str,
     training_jobs: Dict["ModelOutputType", "TrainingJob"],
     gui: bool = True,
+    save_viz: bool = False,
 ) -> Dict["ModelOutputType", str]:
     """
     Run training for each training job.
@@ -910,8 +912,8 @@ def run_gui_training(
     Args:
         labels: Labels object from which we'll get training data.
         training_jobs: Dict of the jobs to train.
-        save_dir: Path to the directory where we'll save inference results.
         gui: Whether to show gui windows and process gui events.
+        save_viz: Whether to save visualizations from training.
 
     Returns:
         Dict of paths to trained jobs corresponding with input training jobs.
@@ -923,6 +925,7 @@ def run_gui_training(
 
     if gui:
         from sleap.nn.monitor import LossViewer
+        from sleap.gui.imagedir import QtImageDirectoryWidget
 
         # open training monitor window
         win = LossViewer()
@@ -937,14 +940,21 @@ def run_gui_training(
             print(f"Using already trained model: {trained_jobs[model_type]}")
 
         else:
-            # Clear save dir and run name for job we're about to train
-            job.save_dir = None
-            job.run_name = None
+            # Update save dir and run name for job we're about to train
+            # so we have access to them here (rather than letting
+            # train_subprocess update them).
+            training.Trainer.set_run_name(job, labels_filename)
 
             if gui:
                 print("Resetting monitor window.")
                 win.reset(what=str(model_type))
                 win.setWindowTitle(f"Training Model - {str(model_type)}")
+                if save_viz:
+                    viz_window = QtImageDirectoryWidget.make_training_vizualizer(
+                        job.run_path
+                    )
+                    viz_window.show()
+                    win.on_epoch.connect(viz_window.poll)
 
             print(f"Start training {str(model_type)}...")
 
@@ -954,7 +964,11 @@ def run_gui_training(
 
             # Run training
             trained_job_path, success = training.Trainer.train_subprocess(
-                job, labels_filename, waiting
+                job,
+                labels_filename,
+                waiting_callback=waiting,
+                update_run_name=False,
+                save_viz=save_viz,
             )
 
             if success:
