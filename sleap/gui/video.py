@@ -335,6 +335,7 @@ class QtVideoPlayer(QWidget):
         self.seekbar.setMinimum(0)
         self.seekbar.setMaximum(self.video.last_frame_idx)
         self.seekbar.setEnabled(True)
+        self.seekbar.resizeEvent()
 
         if plot:
             self.plot()
@@ -587,19 +588,19 @@ class QtVideoPlayer(QWidget):
 
         if event.key() == Qt.Key.Key_Shift:
             self._shift_key_down = True
-        elif event.key() == Qt.Key.Key_Left:
+        elif event.key() == Qt.Key.Key_Left and self.video:
             self.state.increment("frame_idx", step=-1, mod=self.video.frames)
-        elif event.key() == Qt.Key.Key_Right:
+        elif event.key() == Qt.Key.Key_Right and self.video:
             self.state.increment("frame_idx", step=1, mod=self.video.frames)
-        elif event.key() == Qt.Key.Key_Up:
+        elif event.key() == Qt.Key.Key_Up and self.video:
             self.state.increment("frame_idx", step=-50, mod=self.video.frames)
-        elif event.key() == Qt.Key.Key_Down:
+        elif event.key() == Qt.Key.Key_Down and self.video:
             self.state.increment("frame_idx", step=50, mod=self.video.frames)
-        elif event.key() == Qt.Key.Key_Space:
+        elif event.key() == Qt.Key.Key_Space and self.video:
             self.state.increment("frame_idx", step=500, mod=self.video.frames)
         elif event.key() == Qt.Key.Key_Home:
             self.state["frame_idx"] = 0
-        elif event.key() == Qt.Key.Key_End:
+        elif event.key() == Qt.Key.Key_End and self.video:
             self.state["frame_idx"] = self.video.frames - 1
         elif event.key() == Qt.Key.Key_Escape:
             self.view.click_mode = ""
@@ -1877,16 +1878,25 @@ class QtTextWithBackground(QGraphicsTextItem):
         super(QtTextWithBackground, self).paint(painter, option, *args, **kwargs)
 
 
-def video_demo(labels, standalone=False):
-    """Demo function for showing (first) video from dataset."""
-    video = labels.videos[0]
+def video_demo(video=None, labels=None, standalone=False):
+    """Demo function for showing video."""
+
+    if not video and not labels:
+        return
+
+    if labels and not video:
+        video = labels.videos[0]
+
     if standalone:
         app = QApplication([])
     window = QtVideoPlayer(video=video)
 
-    window.changedPlot.connect(
-        lambda vp, idx, select_idx: plot_instances(vp.view.scene, idx, labels, video)
-    )
+    if labels:
+        window.changedPlot.connect(
+            lambda vp, idx, select_idx: plot_instances(
+                vp.view.scene, idx, labels, video
+            )
+        )
 
     window.show()
     window.plot()
@@ -1940,4 +1950,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     labels = Labels.load_json(args.data_path)
-    video_demo(labels, standalone=True)
+    video_demo(labels=labels, standalone=True)
