@@ -872,9 +872,11 @@ def run_learning_pipeline(
 
     # TODO: only require labels_filename if we're training?
 
+    save_viz = inference_params.get("_save_viz", False)
+
     # Train the TrainingJobs
     trained_jobs = run_gui_training(
-        labels_filename, training_jobs, gui=True, save_viz=True
+        labels_filename, training_jobs, gui=True, save_viz=save_viz
     )
 
     # Check that all the models were trained

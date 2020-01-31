@@ -104,6 +104,11 @@ expert:
   type: bool
   default: False
 
+- name: _save_viz
+  label: Visualize Predictions During Training
+  type: bool
+  default: False
+
 - name: _view_datagen
   label: View Training Image Inputs...
   type: button
@@ -184,6 +189,11 @@ learning:
 
 - name: _save_predictions
   label: Save Predictions in Separate File
+  type: bool
+  default: False
+
+- name: _save_viz
+  label: Visualize Predictions During Training
   type: bool
   default: False
 
