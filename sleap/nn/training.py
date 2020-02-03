@@ -981,9 +981,13 @@ class Trainer:
             Y_gt = Y_gt[0]
         Y_gt = Y_gt[ind : (ind + 1)]
 
+        stop_training = self.model.stop_training
+
         # Predict on single sample.
         Y_pr = self.model.predict(X)
         cm_scale = Y_pr.shape[1] / X.shape[1]
+
+        self.model.stop_training = stop_training
 
         # Find peaks.
         if topdown:
