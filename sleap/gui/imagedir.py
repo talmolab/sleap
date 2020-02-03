@@ -33,6 +33,8 @@ class QtImageDirectoryWidget(QtVideoPlayer):
             lambda vp, idx, select_idx: self.setWindowTitle(self.getFrameTitle(idx))
         )
 
+        self.resize(360, 400)
+
         if self.filters:
             self.filter_menu = QtWidgets.QComboBox()
             self.filter_menu.addItems([filter[0] for filter in self.filters])
