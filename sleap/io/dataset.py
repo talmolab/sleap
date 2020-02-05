@@ -5,7 +5,7 @@ This contains labeled frame data (user annotations and/or predictions),
 together with all the other data that is saved for a SLEAP project
 (videos, skeletons, negative training sample anchors, etc.).
 """
-
+import itertools
 import os
 from collections import MutableSequence
 from typing import Callable, List, Union, Dict, Optional, Tuple, Text
@@ -548,6 +548,38 @@ class Labels(MutableSequence):
                 for instance in label.instances:
                     if skeleton is None or instance.skeleton == skeleton:
                         yield instance
+
+    def get_template_instance_points(self, skeleton: Skeleton):
+        if not hasattr(self, "_template_instance_points"):
+            self._template_instance_points = None
+
+        # Use cache unless there are a small number of labeled frames so far
+        # or we don't have a cached template instance yet.
+        if self._template_instance_points is None or len(self.labeled_frames) < 100:
+
+            # Make sure there are some labeled frames
+            if self.labeled_frames and any(self.instances()):
+                from sleap.info import align
+
+                first_n_instances = itertools.islice(self.instances(), 1000)
+                template_points = align.get_template_points_array(first_n_instances)
+                self._template_instance_points = template_points
+            else:
+                # No labeled frames so use force-directed graph layou
+                import networkx as nx
+
+                node_positions = nx.spring_layout(G=skeleton.graph, scale=50)
+
+                self._template_instance_points = np.stack(
+                    [
+                        node_positions[node]
+                        if node in node_positions
+                        else np.random.random_integers(0, 50, 2)
+                        for node in skeleton.nodes
+                    ]
+                )
+
+        return self._template_instance_points
 
     # Methods for tracks
 

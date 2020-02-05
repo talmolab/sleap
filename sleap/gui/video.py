@@ -300,6 +300,13 @@ class QtVideoPlayer(QWidget):
         menu.addAction("Default", lambda: self.context.newInstance(init_method="best"))
 
         menu.addAction(
+            "Average",
+            lambda: self.context.newInstance(
+                init_method="template", location=scene_pos
+            ),
+        )
+
+        menu.addAction(
             "Force Directed",
             lambda: self.context.newInstance(
                 init_method="force_directed", location=scene_pos
