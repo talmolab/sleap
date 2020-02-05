@@ -98,6 +98,19 @@ def align_instances(
     return rotated
 
 
+def align_instances_on_most_stable(
+    all_points_arrays: np.ndarray, min_stable_dist: float = 4.0
+) -> np.ndarray:
+    """
+    Gets most stable pair of nodes and aligned instances along these nodes.
+    """
+    node_a, node_b = get_most_stable_node_pair(
+        all_points_arrays, min_dist=min_stable_dist
+    )
+    aligned = align_instances(all_points_arrays, node_a, node_b, rotate_on_node_a=False)
+    return aligned
+
+
 def get_mean_and_std_for_points(
     aligned_points_arrays: np.ndarray,
 ) -> Tuple[np.ndarray, np.ndarray]:
