@@ -430,6 +430,7 @@ class MainWindow(QMainWindow):
 
         instance_adding_methods = dict(
             best="Best",
+            template="Average Instance",
             force_directed="Force Directed",
             random="Random",
             prior_frame="Copy prior frame",
