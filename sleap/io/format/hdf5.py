@@ -58,13 +58,11 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
         return True
 
     @classmethod
-    def read(
+    def read_headers(
         cls,
         file: format.filehandle.FileHandle,
         video_callback=None,
         match_to: Optional[Labels] = None,
-        *args,
-        **kwargs,
     ):
         f = file.file
 
@@ -98,6 +96,21 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
             video_callback(dicts["videos"])
 
         labels = labels_json.LabelsJsonAdaptor.from_json_data(dicts, match_to=match_to)
+
+        return labels
+
+    @classmethod
+    def read(
+        cls,
+        file: format.filehandle.FileHandle,
+        video_callback=None,
+        match_to: Optional[Labels] = None,
+        *args,
+        **kwargs,
+    ):
+
+        f = file.File
+        labels = cls.read_headers(file, video_callback, match_to)
 
         frames_dset = f["frames"][:]
         instances_dset = f["instances"][:]

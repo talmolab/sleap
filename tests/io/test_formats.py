@@ -1,4 +1,4 @@
-from sleap.io.format import dispatch, adaptor, text, genericjson
+from sleap.io.format import dispatch, adaptor, text, genericjson, hdf5, filehandle
 import pytest
 import os
 
@@ -95,6 +95,18 @@ def test_hdf5_v1(tmpdir):
     # Make sure we can read the file we just wrote
     y = disp.read(filename)
     assert len(y.labeled_frames) == 1100
+
+
+def test_hdf5_v1():
+    filename = "tests/data/hdf5_format_v1/centered_pair_predictions.h5"
+
+    labels = hdf5.LabelsV1Adaptor.read_headers(filehandle.FileHandle(filename))
+
+    assert len(labels.videos) == 1
+    assert (
+        labels.videos[0].backend.filename
+        == "tests/data/json_format_v1/centered_pair_low_quality.mp4"
+    )
 
 
 def test_json_v1(tmpdir, centered_pair_labels):
