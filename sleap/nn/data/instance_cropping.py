@@ -181,14 +181,16 @@ class InstanceCropper:
     Attributes:
         crop_width: Width of the crops in pixels.
         crop_height: Height of the crops in pixels.
-        drop_full_image: If True, the output examples will no longer contain the
-            original raw images. This is useful for reducing memory consumption of large
-            pipelines if the full images are no longer required.
+        keep_full_image: If True, the output examples will contain the full images
+            provided as input to the instance cropped. This can be useful for pipelines
+            that use both full and cropped images, at the cost of increased memory
+            requirements usage. Setting this to False can substantially improve
+            performance of large pipelines if the full images are no longer required.
     """
 
     crop_width: int
     crop_height: int
-    drop_full_image: bool = True
+    keep_full_image: bool = False
 
     @property
     def input_keys(self) -> List[Text]:
@@ -205,10 +207,10 @@ class InstanceCropper:
             "center_instance_ind",
             "all_instances",
             "centroid",
-            "image_height",
-            "image_width",
+            "full_image_height",
+            "full_image_width",
         ]
-        if not self.drop_full_image:
+        if self.keep_full_image:
             output_keys.append("image")
         return output_keys
 
@@ -252,12 +254,12 @@ class InstanceCropper:
                 "centroid": The centroid coordinate that was used to generate this crop,
                     specified as a tf.float32 tensor of shape (2,) in absolute image
                     coordinates.
-                "image_height": The height of the original image from which the crop was
-                    generated, specified as a scalar tf.int32 tensor.
-                "image_width": The width of the original image from which the crop was
+                "full_image_height": The height of the full image from which the crop
+                    was generated, specified as a scalar tf.int32 tensor.
+                "full_image_width": The width of the full image from which the crop was
                     generated, specified as a scalar tf.int32 tensor.
 
-            If `drop_full_image` is False, examples will also have an "image" key
+            If `keep_full_image` is True, examples will also have an "image" key
             containing the same image as the input.
 
             Additional keys will be replicated in each example under the same name.
@@ -267,7 +269,7 @@ class InstanceCropper:
         keys_to_expand = [
             key for key in test_example.keys() if key not in self.input_keys
         ]
-        if not self.drop_full_image:
+        if self.keep_full_image:
             keys_to_expand.append("image")
 
         def crop_instances(frame_data):
@@ -302,7 +304,7 @@ class InstanceCropper:
                 tf.stack([tf.range(n_instances), tf.range(n_instances)], axis=1),
             )
 
-            # Create multi-instance example. 
+            # Create multi-instance example.
             instances_data = {
                 "instance_image": instance_images,
                 "bbox": bboxes,
@@ -310,10 +312,12 @@ class InstanceCropper:
                 "center_instance_ind": tf.range(n_instances, dtype=tf.int32),
                 "all_instances": all_instances,
                 "centroid": frame_data["centroids"],
-                "image_height": tf.repeat(
+                "full_image_height": tf.repeat(
                     tf.shape(frame_data["image"])[0], n_instances
                 ),
-                "image_width": tf.repeat(tf.shape(frame_data["image"])[1], n_instances),
+                "full_image_width": tf.repeat(
+                    tf.shape(frame_data["image"])[1], n_instances
+                ),
             }
             for key in keys_to_expand:
                 instances_data[key] = tf.repeat(

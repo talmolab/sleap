@@ -56,7 +56,7 @@ def test_instance_cropper(min_labels):
         center_on_anchor_part=True, anchor_part_names="A",
         skeletons=labels_reader.labels.skeletons)
     instance_cropper = instance_cropping.InstanceCropper(
-        crop_width=160, crop_height=160)
+        crop_width=160, crop_height=160, keep_full_image=False)
 
     ds = instance_centroid_finder.transform_dataset(labels_reader.make_dataset())
     ds = instance_cropper.transform_dataset(ds)
@@ -81,11 +81,11 @@ def test_instance_cropper(min_labels):
     assert example["centroid"].shape == (2,)
     assert example["centroid"].dtype == tf.float32
 
-    assert example["image_height"] == 384
-    assert example["image_height"].dtype == tf.int32
+    assert example["full_image_height"] == 384
+    assert example["full_image_height"].dtype == tf.int32
 
-    assert example["image_width"] == 384
-    assert example["image_width"].dtype == tf.int32
+    assert example["full_image_width"] == 384
+    assert example["full_image_width"].dtype == tf.int32
 
     assert example["video_ind"] == 0
     assert example["video_ind"].dtype == tf.int32
@@ -98,3 +98,31 @@ def test_instance_cropper(min_labels):
 
     assert example["skeleton_inds"].shape == (2,)
     assert example["skeleton_inds"].dtype == tf.int32
+
+    assert "image" not in example
+
+
+def test_instance_cropper_keeping_full_image(min_labels):
+    labels_reader = providers.LabelsReader(min_labels)
+    instance_centroid_finder = instance_centroids.InstanceCentroidFinder(
+        center_on_anchor_part=True, anchor_part_names="A",
+        skeletons=labels_reader.labels.skeletons)
+    instance_cropper = instance_cropping.InstanceCropper(
+        crop_width=160, crop_height=160, keep_full_image=True)
+
+    ds = instance_centroid_finder.transform_dataset(labels_reader.make_dataset())
+    ds = instance_cropper.transform_dataset(ds)
+
+    example = next(iter(ds))
+
+    assert example["instance_image"].shape == (160, 160, 1)
+    assert example["instance_image"].dtype == tf.uint8
+
+    assert example["full_image_height"] == 384
+    assert example["full_image_height"].dtype == tf.int32
+
+    assert example["full_image_width"] == 384
+    assert example["full_image_width"].dtype == tf.int32
+
+    assert example["image"].shape == (384, 384, 1)
+    assert example["image"].dtype == tf.uint8
