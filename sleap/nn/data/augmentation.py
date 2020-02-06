@@ -1,5 +1,11 @@
 """Transformers for applying data augmentation."""
 
+# Monkey patch for: https://github.com/aleju/imgaug/issues/537
+# TODO: Fix when PyPI/conda packages are available for version fencing.
+import numpy
+if hasattr(numpy.random, "_bit_generator"):
+    numpy.random.bit_generator = numpy.random._bit_generator
+
 import tensorflow as tf
 import attr
 from typing import List, Text
