@@ -27,7 +27,7 @@ def test_labels_reader(min_labels):
     assert example["instances"].shape == (2, 2, 2)
     assert example["instances"].dtype == tf.float32
 
-    assert example["scale"] == 1.0
+    np.testing.assert_array_equal(example["scale"], (1.0, 1.0))
     assert example["scale"].dtype == tf.float32
 
     np.testing.assert_array_equal(example["skeleton_inds"], [0, 0])
@@ -50,7 +50,7 @@ def test_video_reader_mp4():
     assert example["frame_ind"] == 0
     assert example["frame_ind"].dtype == tf.int64
 
-    assert example["scale"] == 1.0
+    np.testing.assert_array_equal(example["scale"], (1.0, 1.0))
     assert example["scale"].dtype == tf.float32
 
 

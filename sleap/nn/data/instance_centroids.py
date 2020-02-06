@@ -69,11 +69,11 @@ class InstanceCentroidFinder:
     """
 
     center_on_anchor_part: bool = False
-    anchor_part_names: Optional[List[Text]] = attr.ib(default=None,
-        converter=attr.converters.optional(ensure_list)
+    anchor_part_names: Optional[List[Text]] = attr.ib(
+        default=None, converter=attr.converters.optional(ensure_list)
     )
-    skeletons: Optional[List[sleap.Skeleton]] = attr.ib(default=None,
-        converter=attr.converters.optional(ensure_list)
+    skeletons: Optional[List[sleap.Skeleton]] = attr.ib(
+        default=None, converter=attr.converters.optional(ensure_list)
     )
 
     @property

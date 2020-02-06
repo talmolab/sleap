@@ -77,7 +77,7 @@ def make_confmaps(
         -((tf.reshape(xv, [1, -1, 1]) - x) ** 2 + (tf.reshape(yv, [-1, 1, 1]) - y) ** 2)
         / (2 * sigma ** 2)
     )
-    cm = tf.math.maximum(0., cm)  # Replaces NaNs with 0.
+    cm = tf.math.maximum(0.0, cm)  # Replaces NaNs with 0.
     return cm
 
 
@@ -127,7 +127,8 @@ class MultiConfidenceMapGenerator:
     
     Attributes:
         sigma: Standard deviation of the 2D Gaussian distribution sampled to generate
-            confidence maps.
+            confidence maps. This defines the spread in units of the input image's grid,
+            i.e., it does not take scaling in previous steps into account.
         output_stride: Relative stride of the generated confidence maps. This is
             effectively the reciprocal of the output scale, i.e., increase this to
             generate confidence maps that are smaller than the input images.
@@ -143,9 +144,9 @@ class MultiConfidenceMapGenerator:
     def input_keys(self) -> List[Text]:
         """Return the keys that incoming elements are expected to have."""
         if self.centroids:
-            return ["image", "scale", "centroids"]
+            return ["image", "centroids"]
         else:
-            return ["image", "scale", "instances"]
+            return ["image", "instances"]
 
     @property
     def output_keys(self) -> List[Text]:
@@ -167,13 +168,19 @@ class MultiConfidenceMapGenerator:
             A `tf.data.Dataset` with the same keys as the input, as well as a
             "confidence_maps" or "centroid_confidence_maps" key containing the generated
             confidence maps.
+
+        Notes:
+            The output stride is relative to the current scale of the image. To map
+            points on the confidence maps to the raw image, first multiply them by the
+            output stride, and then scale the x- and y-coordinates by the "scale" key.
+
+            Importantly, the sigma will be proportional to the current image grid, not
+            the original grid prior to scaling operations.
         """
-        # Infer image dimensions to generate sampling grid.
+        # Infer image dimensions to generate the full scale sampling grid.
         test_example = next(iter(input_ds))
-        image_height = int(
-            float(test_example["image"].shape[0]) / test_example["scale"]
-        )
-        image_width = int(float(test_example["image"].shape[1]) / test_example["scale"])
+        image_height = test_example["image"].shape[0]
+        image_width = test_example["image"].shape[1]
 
         # Generate sampling grid vectors.
         xv, yv = make_grid_vectors(
@@ -210,7 +217,8 @@ class InstanceConfidenceMapGenerator:
 
     Attributes:
         sigma: Standard deviation of the 2D Gaussian distribution sampled to generate
-            confidence maps.
+            confidence maps. This defines the spread in units of the input image's grid,
+            i.e., it does not take scaling in previous steps into account.
         output_stride: Relative stride of the generated confidence maps. This is
             effectively the reciprocal of the output scale, i.e., increase this to
             generate confidence maps that are smaller than the input images.
@@ -253,6 +261,14 @@ class InstanceConfidenceMapGenerator:
             "instance_confidence_maps" and, if the attribute `all_instances` is True,
             "all_instance_confidence_maps" keys containing the generated confidence
             maps.
+
+        Notes:
+            The output stride is relative to the current scale of the image. To map
+            points on the confidence maps to the raw image, first multiply them by the
+            output stride, and then scale the x- and y-coordinates by the "scale" key.
+
+            Importantly, the sigma will be proportional to the current image grid, not
+            the original grid prior to scaling operations.
         """
         # Infer image dimensions to generate sampling grid.
         test_example = next(iter(input_ds))

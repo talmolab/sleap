@@ -171,6 +171,10 @@ class ImgaugAugmenter:
         Returns:
             A `tf.data.Dataset` with the same keys as the input, but with images and
             instance points updated with the applied augmentations.
+
+        Notes:
+            The "scale" key in examples are not modified when scaling augmentation is
+            applied.
         """
         # Define augmentation function to map over each sample.
         def py_augment(image, instances):

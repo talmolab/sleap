@@ -93,7 +93,7 @@ def test_instance_cropper(min_labels):
     assert example["frame_ind"] == 0
     assert example["frame_ind"].dtype == tf.int64
 
-    assert example["scale"] == 1.
+    np.testing.assert_array_equal(example["scale"], (1.0, 1.0))
     assert example["scale"].dtype == tf.float32
 
     assert example["skeleton_inds"].shape == (2,)

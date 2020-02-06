@@ -99,9 +99,13 @@ class LabelsReader:
                     labeled frame comes from. Tensor will be a scalar of dtype tf.int32.
                 "frame_ind": Index of the frame within the video that the labeled frame
                     comes from. Tensor will be a scalar of dtype tf.int64.
-                "scale": The relative scale of the image and points. This is always 1.0
-                    when reading the raw data, but can be adjusted by downstream
-                    processing. Tensor will be a scalar of dtype tf.int32.
+                "scale": The relative scaling factor of each image dimension specified
+                    as a tf.float32 tensor of shape (2,) representing the
+                    (x_scale, y_scale) of the example. This is always (1.0, 1.0) when
+                    the images are initially read, but may be modified downstream in
+                    order to keep track of scaling operations. This is especially
+                    important to keep track of changes to the aspect ratio of the image
+                    grid in order to properly map points to image coordinates.
                 "instances": Tensor of shape (n_instances, n_nodes, 2) of dtype float32
                     containing all of the instances in the frame.
                 "skeleton_inds": Tensor of shape (n_instances,) of dtype tf.int32 that
@@ -149,7 +153,7 @@ class LabelsReader:
                 "raw_image_size": raw_image_size,
                 "video_ind": video_ind,
                 "frame_ind": frame_ind,
-                "scale": 1.0,
+                "scale": tf.ones([2], dtype=tf.float32),
                 "instances": instances,
                 "skeleton_inds": skeleton_inds,
             }
@@ -225,8 +229,13 @@ class VideoReader:
                 "frame_ind": Index of the frame within the video that the frame comes
                     from. This is the same as the input index, but is also provided for
                     convenience in downstream processing.
-                "scale": This is always 1.0 when reading the raw data, but can be
-                    adjusted by downstream processing.
+                "scale": The relative scaling factor of each image dimension specified
+                    as a tf.float32 tensor of shape (2,) representing the
+                    (x_scale, y_scale) of the example. This is always (1.0, 1.0) when
+                    the images are initially read, but may be modified downstream in
+                    order to keep track of scaling operations. This is especially
+                    important to keep track of changes to the aspect ratio of the image
+                    grid in order to properly map points to image coordinates.
         """
         # Grab an image to test for the dtype.
         test_image = tf.convert_to_tensor(self.video.get_frame(0))
@@ -250,7 +259,7 @@ class VideoReader:
                 "image": image,
                 "raw_image_size": raw_image_size,
                 "frame_ind": frame_ind,
-                "scale": 1.0,
+                "scale": tf.ones([2], dtype=tf.float32),
             }
 
         if ds_index is None:
