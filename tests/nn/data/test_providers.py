@@ -15,6 +15,9 @@ def test_labels_reader(min_labels):
     assert example["image"].shape == (384, 384, 1)
     assert example["image"].dtype == tf.uint8
 
+    assert example["raw_image_size"].dtype == tf.int32
+    np.testing.assert_array_equal(example["raw_image_size"], (384, 384, 1))
+
     assert example["video_ind"] == 0
     assert example["video_ind"].dtype == tf.int32
 
@@ -41,6 +44,9 @@ def test_video_reader_mp4():
     assert example["image"].shape == (320, 560, 3)
     assert example["image"].dtype == tf.uint8
 
+    assert example["raw_image_size"].dtype == tf.int32
+    np.testing.assert_array_equal(example["raw_image_size"], (320, 560, 3))
+
     assert example["frame_ind"] == 0
     assert example["frame_ind"].dtype == tf.int64
 
@@ -59,6 +65,9 @@ def test_video_reader_mp4_grayscale():
     assert example["image"].shape == (320, 560, 1)
     assert example["image"].dtype == tf.uint8
 
+    assert example["raw_image_size"].dtype == tf.int32
+    np.testing.assert_array_equal(example["raw_image_size"], (320, 560, 1))
+
 
 def test_video_reader_hdf5():
     video_reader = providers.VideoReader.from_filepath(
@@ -70,3 +79,6 @@ def test_video_reader_hdf5():
 
     assert example["image"].shape == (512, 512, 1)
     assert example["image"].dtype == tf.uint8
+
+    assert example["raw_image_size"].dtype == tf.int32
+    np.testing.assert_array_equal(example["raw_image_size"], (512, 512, 1))

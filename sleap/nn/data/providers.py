@@ -66,6 +66,7 @@ class LabelsReader:
         """Return the output keys that the dataset will produce."""
         return [
             "image",
+            "raw_image_size",
             "video_ind",
             "frame_ind",
             "scale",
@@ -90,6 +91,10 @@ class LabelsReader:
             with a single `LabeledFrame`. Items will be converted to tensors. These are:
                 "image": Tensors of shape (height, width, channels) containing the full
                     raw frame image. The dtype is determined by the input data.
+                "raw_image_size": The image size when it was first read as a tf.int32
+                    tensor of shape (3,) representing [height, width, channels]. This is
+                    useful for keeping track of absolute image coordinates if downstream
+                    processing modules resize, crop or pad the image.
                 "video_ind": Index of the video within the `Labels.videos` list that the
                     labeled frame comes from. Tensor will be a scalar of dtype tf.int32.
                 "frame_ind": Index of the frame within the video that the labeled frame
@@ -112,7 +117,9 @@ class LabelsReader:
             lf = self.labels[int(ind.numpy())]
             video_ind = self.labels.videos.index(lf.video)
             frame_ind = lf.frame_idx
-            image = tf.convert_to_tensor(lf.image)
+            raw_image = lf.image
+            image = tf.convert_to_tensor(raw_image)
+            raw_image_size = tf.convert_to_tensor(raw_image.shape, dtype=tf.int32)
             instances = [
                 tf.convert_to_tensor(inst.points_array, dtype=tf.float32)
                 for inst in lf.instances
@@ -120,18 +127,26 @@ class LabelsReader:
             skeleton_inds = [
                 self.labels.skeletons.index(inst.skeleton) for inst in lf.instances
             ]
-            return image, instances, video_ind, frame_ind, skeleton_inds
+            return image, raw_image_size, instances, video_ind, frame_ind, skeleton_inds
 
         def fetch_lf(ind):
             """Local function that fetches a sample given the index."""
-            image, instances, video_ind, frame_ind, skeleton_inds = tf.py_function(
+            (
+                image,
+                raw_image_size,
+                instances,
+                video_ind,
+                frame_ind,
+                skeleton_inds,
+            ) = tf.py_function(
                 py_fetch_lf,
                 [ind],
-                [image_dtype, tf.float32, tf.int32, tf.int64, tf.int32],
+                [image_dtype, tf.int32, tf.float32, tf.int32, tf.int64, tf.int32],
             )
 
             return {
                 "image": image,
+                "raw_image_size": raw_image_size,
                 "video_ind": video_ind,
                 "frame_ind": frame_ind,
                 "scale": 1.0,
@@ -184,7 +199,7 @@ class VideoReader:
     @property
     def output_keys(self) -> List[Text]:
         """Return the output keys that the dataset will produce."""
-        return ["image", "frame_ind", "scale"]
+        return ["image", "raw_image_size", "frame_ind", "scale"]
 
     def make_dataset(
         self, ds_index: Optional[tf.data.Dataset] = None
@@ -203,6 +218,10 @@ class VideoReader:
             with a single video frame. Items will be converted to tensors. These are:
                 "image": Tensors of shape (height, width, channels) containing the full
                     raw frame image.
+                "raw_image_size": The image size when it was first read as a tf.int32
+                    tensor of shape (3,) representing [height, width, channels]. This is
+                    useful for keeping track of absolute image coordinates if downstream
+                    processing modules resize, crop or pad the image.
                 "frame_ind": Index of the frame within the video that the frame comes
                     from. This is the same as the input index, but is also provided for
                     convenience in downstream processing.
@@ -216,16 +235,23 @@ class VideoReader:
         def py_fetch_frame(ind):
             """Local function that will not be autographed."""
             frame_ind = int(ind.numpy())
-            image = tf.convert_to_tensor(self.video.get_frame(frame_ind))
-            return image, frame_ind
+            raw_image = self.video.get_frame(frame_ind)
+            image = tf.convert_to_tensor(raw_image)
+            raw_image_size = tf.convert_to_tensor(raw_image.shape, dtype=tf.int32)
+            return image, raw_image_size, frame_ind
 
         def fetch_frame(ind):
             """Local function that fetches a sample given the index."""
-            image, frame_ind = tf.py_function(
-                py_fetch_frame, [ind], [image_dtype, tf.int64]
+            image, raw_image_size, frame_ind = tf.py_function(
+                py_fetch_frame, [ind], [image_dtype, tf.int32, tf.int64]
             )
 
-            return {"image": image, "frame_ind": frame_ind, "scale": 1.0}
+            return {
+                "image": image,
+                "raw_image_size": raw_image_size,
+                "frame_ind": frame_ind,
+                "scale": 1.0,
+            }
 
         if ds_index is None:
             # Create default indexing dataset.
