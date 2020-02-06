@@ -109,7 +109,7 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
         **kwargs,
     ):
 
-        f = file.File
+        f = file.file
         labels = cls.read_headers(file, video_callback, match_to)
 
         frames_dset = f["frames"][:]
