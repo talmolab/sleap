@@ -1,6 +1,8 @@
 """Miscellaneous utility functions for data processing."""
 
+import tensorflow as tf
 from typing import Any, List
+
 
 def ensure_list(x: Any) -> List[Any]:
     """Convert the input into a list if it is not already."""
