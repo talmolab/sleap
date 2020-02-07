@@ -6,29 +6,13 @@ tf.config.experimental.set_visible_devices([], device_type="GPU")  # hide GPUs f
 from sleap.nn.data import providers
 from sleap.nn.data import instance_centroids
 from sleap.nn.data import instance_cropping
+from sleap.nn.data.utils import make_grid_vectors
 from sleap.nn.data.confidence_maps import (
-    make_grid_vectors,
     make_confmaps,
     make_multi_confmaps,
     MultiConfidenceMapGenerator,
     InstanceConfidenceMapGenerator,
 )
-
-
-def test_make_grid_vector():
-    xv, yv = make_grid_vectors(image_height=4, image_width=3, output_stride=1)
-
-    assert xv.dtype == tf.float32
-    assert xv.shape == (3,)
-    assert yv.dtype == tf.float32
-    assert yv.shape == (4,)
-
-    np.testing.assert_allclose(xv, [0, 1, 2])
-    np.testing.assert_allclose(yv, [0, 1, 2, 3])
-
-    xv, yv = make_grid_vectors(image_height=4, image_width=3, output_stride=2)
-    np.testing.assert_allclose(xv, [0, 2])
-    np.testing.assert_allclose(yv, [0, 2])
 
 
 def test_make_confmaps():
