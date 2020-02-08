@@ -725,7 +725,17 @@ class GraphicsView(QGraphicsView):
 
         if self._pixmapHandle:
             # add the pixmap back
-            self._pixmapHandle = self.scene.addPixmap(pixmap)
+            self._pixmapHandle = self._add_pixmap(pixmap)
+
+    def _add_pixmap(self, pixmap):
+        """Adds a pixmap to the scene and transforms it to midpoint coordinates."""
+        pixmap_graphics_item = self.scene.addPixmap(pixmap)
+
+        transform = pixmap_graphics_item.transform()
+        transform.translate(-0.5, -0.5)
+        pixmap_graphics_item.setTransform(transform)
+
+        return pixmap_graphics_item
 
     def setImage(self, image: Union[QImage, QPixmap]):
         """
@@ -751,13 +761,17 @@ class GraphicsView(QGraphicsView):
         if self.hasImage():
             self._pixmapHandle.setPixmap(pixmap)
         else:
-            self._pixmapHandle = self.scene.addPixmap(pixmap)
+            self._pixmapHandle = self._add_pixmap(pixmap)
 
             # Ensure that image is behind everything else
             self._pixmapHandle.setZValue(-1)
 
-        # Set scene size to image size.
-        self.setSceneRect(QRectF(pixmap.rect()))
+        # Set scene size to image size, translated to midpoint coordinates.
+        # (If we don't translate the rect, the image will be cut off by
+        # 1/2 pixel at the top left and have a 1/2 pixel border at bottom right)
+        rect = QRectF(pixmap.rect())
+        rect.translate(-0.5, -0.5)
+        self.setSceneRect(rect)
         self.updateViewer()
 
     def updateViewer(self):
