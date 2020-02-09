@@ -83,7 +83,7 @@ class AugmentationConfig:
 
     def make_iaa_augmenter(self) -> iaa.Sequential:
         """Create a sequential `imgaug` augmenter with the specified parameters.
-        
+
         Returns:
             An instance of `imgaug.augmenters.Sequential` with the specified
             augmentation operations.
@@ -132,11 +132,11 @@ class AugmentationConfig:
 @attr.s(auto_attribs=True)
 class ImgaugAugmenter:
     """Data transformer based on the `imgaug` library.
-    
+
     This class can generate a `tf.data.Dataset` from an existing one that generates
     image and instance data. Element of the output dataset will have a set of
     augmentation transformations applied.
-    
+
     Attributes:
         augmenter: An instance of `imgaug.augmenters.Sequential` that will be applied to
             each element of the input dataset.
@@ -147,11 +147,11 @@ class ImgaugAugmenter:
     @classmethod
     def from_config(cls, augmentation_config: AugmentationConfig) -> "ImgaugAugmenter":
         """Create an augmenter from a set of configuration parameters.
-        
+
         Args:
             augmentation_config: Instance of `AugmentationConfig` that can instantiate
                 an imgaug sequential augmenter.
-        
+
         Returns:
             An instance of this class with the specified augmentation configuration.
         """
