@@ -28,3 +28,20 @@ def test_expand_to_rank():
         ),
         [[0, 1, 2]],
     )
+
+
+
+def test_make_grid_vector():
+    xv, yv = utils.make_grid_vectors(image_height=4, image_width=3, output_stride=1)
+
+    assert xv.dtype == tf.float32
+    assert xv.shape == (3,)
+    assert yv.dtype == tf.float32
+    assert yv.shape == (4,)
+
+    np.testing.assert_allclose(xv, [0, 1, 2])
+    np.testing.assert_allclose(yv, [0, 1, 2, 3])
+
+    xv, yv = utils.make_grid_vectors(image_height=4, image_width=3, output_stride=2)
+    np.testing.assert_allclose(xv, [0, 2])
+    np.testing.assert_allclose(yv, [0, 2])
