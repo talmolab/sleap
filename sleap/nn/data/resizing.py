@@ -9,7 +9,7 @@ def find_padding_for_stride(
     image_height: int, image_width: int, max_stride: int
 ) -> Tuple[int, int]:
     """Compute padding required to ensure image is divisible by a stride.
-    
+
     This function is useful for determining how to pad images such that they will not
     have issues with divisibility after repeated pooling steps.
 
