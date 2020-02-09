@@ -55,7 +55,7 @@ def make_multi_confmaps(
     instances: tf.Tensor, xv: tf.Tensor, yv: tf.Tensor, sigma: float
 ) -> tf.Tensor:
     """Make confidence maps for multiple instances through max reduction.
-    
+
     Args:
         instances: A tensor of shape (n_instances, n_nodes, 2) and dtype tf.float32
             containing instance points where the last axis corresponds to (x, y) pixel
@@ -69,7 +69,7 @@ def make_multi_confmaps(
             `sleap.nn.data.utils.make_grid_vectors`.
         sigma: Standard deviation of the 2D Gaussian distribution sampled to generate
             confidence maps.
-        
+
     Returns:
         Confidence maps as a tensor of shape (grid_height, grid_width, n_nodes) of dtype
         tf.float32.

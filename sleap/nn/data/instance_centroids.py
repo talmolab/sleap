@@ -9,16 +9,16 @@ from sleap.nn.data.utils import ensure_list
 
 def find_points_bbox_midpoint(points: tf.Tensor) -> tf.Tensor:
     """Find the midpoint of the bounding box of a set of points.
-    
+
     Args:
         instances: A tf.Tensor of dtype tf.float32 and of shape (..., n_points, 2),
             i.e., rank >= 2.
-    
+
     Returns:
         The midpoints between the bounds of each set of points. The output will be of
         shape (..., 2), reducing the rank of the input by 1. NaNs will be ignored in the
         calculation.
-        
+
     Notes:
         The midpoint is calculated as:
             xy_mid = xy_min + ((xy_max - xy_min) / 2)
@@ -33,13 +33,13 @@ def find_points_bbox_midpoint(points: tf.Tensor) -> tf.Tensor:
 
 def get_instance_anchors(instances: tf.Tensor, anchor_inds: tf.Tensor) -> tf.Tensor:
     """Gather the anchor points of a set of instances.
-    
+
     Args:
         instances: A tensor of shape (n_instances, n_nodes, 2) containing instance
             points. This must be rank-3 even if a single instance is present.
         anchor_inds: A tensor of shape (n_instances,) and dtype tf.int32. These specify
             the index of the anchor node for each instance.
-    
+
     Returns:
         A tensor of shape (n_instances, 2) containing the anchor points for each
         each instance. This is basically a slice along the nodes axis, where each
