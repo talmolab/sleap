@@ -22,7 +22,7 @@ def ensure_min_image_rank(image: tf.Tensor) -> tf.Tensor:
     See also: sleap.nn.data.utils.expand_to_rank
     """
     if tf.rank(image) < 3:
-        return expand_to_rank(image, min_rank, prepend=False)
+        return expand_to_rank(image, 3, prepend=False)
     else:
         return image
 
@@ -231,7 +231,7 @@ def scale_to_imagenet_torch_mode(image: tf.Tensor) -> tf.Tensor:
 
         This preprocessing mode is required when using pretrained DenseNet models.
     """
-    image = ensure_min_rank(image, min_rank=3)  # at least [height, width, 1]
+    image = ensure_min_image_rank(image)  # at least [height, width, 1]
     image = ensure_rgb(image)  # 3 channels
     image = ensure_float(image)  # float32 in range [0., 1.]
     imagenet_mean = tf.convert_to_tensor([0.485, 0.456, 0.406], tf.float32)  # [R, G, B]
