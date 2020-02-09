@@ -39,6 +39,30 @@ def mat_labels():
     return Labels.load_leap_matlab(TEST_MAT_LABELS, gui=False)
 
 
+TEST_LEGACY_GRID_LABELS = "tests/data/test_grid/test_grid_labels.legacy.h5"
+TEST_MIDPOINT_GRID_LABELS = "tests/data/test_grid/test_grid_labels.midpoint.h5"
+
+
+@pytest.fixture
+def legacy_grid_labels_path():
+    return TEST_LEGACY_GRID_LABELS
+
+
+@pytest.fixture
+def legacy_grid_labels():
+    return Labels.load_file(TEST_LEGACY_GRID_LABELS)
+
+
+@pytest.fixture
+def midpoint_grid_labels_path():
+    return TEST_MIDPOINT_GRID_LABELS
+
+
+@pytest.fixture
+def midpoint_grid_labels():
+    return Labels.load_file(TEST_MIDPOINT_GRID_LABELS)
+
+
 @pytest.fixture
 def simple_predictions():
 
