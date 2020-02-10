@@ -97,7 +97,7 @@ def make_multi_confmaps(
 @attr.s(auto_attribs=True)
 class MultiConfidenceMapGenerator:
     """Transformer to generate multi-instance confidence maps.
-    
+
     Attributes:
         sigma: Standard deviation of the 2D Gaussian distribution sampled to generate
             confidence maps. This defines the spread in units of the input image's grid,
