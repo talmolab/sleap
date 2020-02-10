@@ -391,7 +391,7 @@ class MainWindow(QMainWindow):
         add_submenu_choices(
             menu=viewMenu,
             title="Trail Length",
-            options=(0, 10, 20, 50),
+            options=(0, 10, 20, 50, 100, 200, 500),
             key="trail_length",
         )
 
@@ -430,6 +430,7 @@ class MainWindow(QMainWindow):
 
         instance_adding_methods = dict(
             best="Best",
+            template="Average Instance",
             force_directed="Force Directed",
             random="Random",
             prior_frame="Copy prior frame",
@@ -1025,25 +1026,28 @@ class MainWindow(QMainWindow):
             message = f"Frame: {frame_idx+1:,}/{len(current_video):,}"
             if self.player.seekbar.hasSelection():
                 start, end = self.state["frame_range"]
-                message += f" (selection: {start+1:,}-{end+1:,})"
+                message += f" (selection: {start+1:,}-{end:,})"
 
             if len(self.labels.videos) > 1:
                 message += f" of video {self.labels.videos.index(current_video)+1}"
 
             message += f"{spacer}Labeled Frames: "
             if current_video is not None:
-                message += (
-                    f"{len(self.labels.get_video_user_labeled_frames(current_video))}"
+                message += str(
+                    self.labels.get_labeled_frame_count(current_video, "user")
                 )
 
                 if len(self.labels.videos) > 1:
                     message += " in video, "
             if len(self.labels.videos) > 1:
-                message += f"{len(self.labels.user_labeled_frames)} in project"
+                project_user_frame_count = self.labels.get_labeled_frame_count(
+                    filter="user"
+                )
+                message += f"{project_user_frame_count} in project"
 
             if current_video is not None:
-                pred_frame_count = len(
-                    self.labels.get_video_predicted_frames(current_video)
+                pred_frame_count = self.labels.get_labeled_frame_count(
+                    current_video, "predicted"
                 )
                 if pred_frame_count:
                     message += f"{spacer}Predicted Frames: {pred_frame_count:,}"
@@ -1192,11 +1196,12 @@ class MainWindow(QMainWindow):
         selection["frame"] = {current_video: [self.state["frame_idx"]]}
 
         # Use negative number in list for range (i.e., "0,-123" means "0-123")
+        # The ranges should be [X, Y) like standard Python ranges
         clip_range = self.state.get("frame_range", default=(0, 0))
         if clip_range[1] > 0:
-            clip_range = (clip_range[0], -clip_range[1] + 1)
+            clip_range = (clip_range[0], -clip_range[1])
         selection["clip"] = {current_video: clip_range}
-        selection["video"] = {current_video: (0, -current_video.num_frames + 1)}
+        selection["video"] = {current_video: (0, -current_video.num_frames)}
 
         selection["suggestions"] = {
             video: remove_user_labeled(video, self.labels.get_video_suggestions(video))

@@ -66,6 +66,23 @@ import qimage2ndarray
 class LoadImageWorker(QtCore.QObject):
     """
     Object to load video frames in background thread.
+
+    Requests to load a frame image are sent by calling the `request` method with
+    the frame idx; the video attribute should already be set to the correct
+    video.
+
+    These requests are added to a FILO queue polled by the `doProcessing`
+    method, called whenever there's time during the Qt event loop.
+    (It's also added to the event queue if it hasn't been called for a while
+    and we get a request, since the timer doesn't seem to emit events if the
+    user has been holding down the mouse for a while.)
+
+    The actual frame loading is wrapped with a mutex lock so that we only load
+    a single frame at a time; this helps us not get a bunch of older frame
+    requests running concurrently.
+
+    Once the frame loads, the `QImage` is sent via the `result` signal.
+    (Qt handles the cross-thread communication if we use signals.)
     """
 
     result = QtCore.Signal(QImage)
@@ -80,6 +97,7 @@ class LoadImageWorker(QtCore.QObject):
     def __init__(self, *args, **kwargs):
         super(LoadImageWorker, self).__init__(*args, **kwargs)
 
+        self._processing_mutex = QtCore.QMutex()
         self._recent_load_times = deque(maxlen=5)
 
         # Connect signal to processing function so that we can add processing
@@ -97,6 +115,16 @@ class LoadImageWorker(QtCore.QObject):
         if not self.load_queue:
             return
 
+        # Use a mutex lock to ensure that we're only loading one frame at a time
+        self._processing_mutex.lock()
+
+        # Maybe we had to wait to acquire the lock, so make sure there are still
+        # frames to load
+        if not self.load_queue:
+            return
+
+        # Get the most recent request and clear all the others, since there's no
+        # reason to load frames for older requests
         frame_idx = self.load_queue[-1]
         self.load_queue = []
 
@@ -112,16 +140,17 @@ class LoadImageWorker(QtCore.QObject):
             # Set the time to wait before forcing a load request to a little
             # longer than the average time it recently took to load a frame
             avg_load_time = sum(self._recent_load_times) / len(self._recent_load_times)
-            self._force_request_wait_time = avg_load_time * 1.2
+            self._force_request_wait_time = avg_load_time
 
         except Exception as e:
             frame = None
 
+        # Release the lock so other threads can start processing frame requests
+        self._processing_mutex.unlock()
+
         if frame is not None:
             # Convert ndarray to QImage
             qimage = qimage2ndarray.array2qimage(frame)
-
-            # print(f"\t{frame_idx} result") # DEBUG
 
             # Emit result
             self.result.emit(qimage)
@@ -158,7 +187,6 @@ class QtVideoPlayer(QWidget):
     """
 
     changedPlot = QtCore.Signal(QWidget, int, Instance)
-    requestImage = QtCore.Signal(int)
 
     def __init__(
         self,
@@ -215,11 +243,8 @@ class QtVideoPlayer(QWidget):
             lambda qimage: self.view.setImage(qimage)
         )
 
-        # Connect request signals from self to worker
-        self.requestImage.connect(self._video_image_loader.request)
-
         def update_selection_state(a, b):
-            self.state.set("frame_range", (a, b))
+            self.state.set("frame_range", (a, b + 1))
             self.state.set("has_frame_range", (a < b))
 
         self.seekbar.selectionChanged.connect(update_selection_state)
@@ -275,6 +300,13 @@ class QtVideoPlayer(QWidget):
         menu.addAction("Default", lambda: self.context.newInstance(init_method="best"))
 
         menu.addAction(
+            "Average",
+            lambda: self.context.newInstance(
+                init_method="template", location=scene_pos
+            ),
+        )
+
+        menu.addAction(
             "Force Directed",
             lambda: self.context.newInstance(
                 init_method="force_directed", location=scene_pos
@@ -310,6 +342,7 @@ class QtVideoPlayer(QWidget):
         self.seekbar.setMinimum(0)
         self.seekbar.setMaximum(self.video.last_frame_idx)
         self.seekbar.setEnabled(True)
+        self.seekbar.resizeEvent()
 
         if plot:
             self.plot()
@@ -377,9 +410,12 @@ class QtVideoPlayer(QWidget):
         # Emit signal for the instances to be drawn for this frame
         self.changedPlot.emit(self, idx, self.state["instance"])
 
-        # Emit signal for the image to loaded and shown for this frame
+        # Request for the image to load and be shown for this frame
+        # (note that we're calling method directly rather than connecting
+        # the method to a signal because Qt was holding onto the signal events
+        # for too long before they were received by the loader).
         self._video_image_loader.video = self.video
-        self.requestImage.emit(idx)
+        self._video_image_loader.request(idx)
 
     def showLabels(self, show):
         """ Show/hide node labels for all instances in viewer.
@@ -559,19 +595,19 @@ class QtVideoPlayer(QWidget):
 
         if event.key() == Qt.Key.Key_Shift:
             self._shift_key_down = True
-        elif event.key() == Qt.Key.Key_Left:
+        elif event.key() == Qt.Key.Key_Left and self.video:
             self.state.increment("frame_idx", step=-1, mod=self.video.frames)
-        elif event.key() == Qt.Key.Key_Right:
+        elif event.key() == Qt.Key.Key_Right and self.video:
             self.state.increment("frame_idx", step=1, mod=self.video.frames)
-        elif event.key() == Qt.Key.Key_Up:
+        elif event.key() == Qt.Key.Key_Up and self.video:
             self.state.increment("frame_idx", step=-50, mod=self.video.frames)
-        elif event.key() == Qt.Key.Key_Down:
+        elif event.key() == Qt.Key.Key_Down and self.video:
             self.state.increment("frame_idx", step=50, mod=self.video.frames)
-        elif event.key() == Qt.Key.Key_Space:
+        elif event.key() == Qt.Key.Key_Space and self.video:
             self.state.increment("frame_idx", step=500, mod=self.video.frames)
         elif event.key() == Qt.Key.Key_Home:
             self.state["frame_idx"] = 0
-        elif event.key() == Qt.Key.Key_End:
+        elif event.key() == Qt.Key.Key_End and self.video:
             self.state["frame_idx"] = self.video.frames - 1
         elif event.key() == Qt.Key.Key_Escape:
             self.view.click_mode = ""
@@ -689,7 +725,17 @@ class GraphicsView(QGraphicsView):
 
         if self._pixmapHandle:
             # add the pixmap back
-            self._pixmapHandle = self.scene.addPixmap(pixmap)
+            self._pixmapHandle = self._add_pixmap(pixmap)
+
+    def _add_pixmap(self, pixmap):
+        """Adds a pixmap to the scene and transforms it to midpoint coordinates."""
+        pixmap_graphics_item = self.scene.addPixmap(pixmap)
+
+        transform = pixmap_graphics_item.transform()
+        transform.translate(-0.5, -0.5)
+        pixmap_graphics_item.setTransform(transform)
+
+        return pixmap_graphics_item
 
     def setImage(self, image: Union[QImage, QPixmap]):
         """
@@ -715,13 +761,17 @@ class GraphicsView(QGraphicsView):
         if self.hasImage():
             self._pixmapHandle.setPixmap(pixmap)
         else:
-            self._pixmapHandle = self.scene.addPixmap(pixmap)
+            self._pixmapHandle = self._add_pixmap(pixmap)
 
             # Ensure that image is behind everything else
             self._pixmapHandle.setZValue(-1)
 
-        # Set scene size to image size.
-        self.setSceneRect(QRectF(pixmap.rect()))
+        # Set scene size to image size, translated to midpoint coordinates.
+        # (If we don't translate the rect, the image will be cut off by
+        # 1/2 pixel at the top left and have a 1/2 pixel border at bottom right)
+        rect = QRectF(pixmap.rect())
+        rect.translate(-0.5, -0.5)
+        self.setSceneRect(rect)
         self.updateViewer()
 
     def updateViewer(self):
@@ -1713,13 +1763,14 @@ class QtInstance(QGraphicsObject):
 
     def getPointsBoundingRect(self) -> QRectF:
         """Returns a rect which contains all the nodes in the skeleton."""
-        rect = None
-        for item in self.edges:
-            rect = (
-                item.boundingRect()
-                if rect is None
-                else rect.united(item.boundingRect())
-            )
+        points = [node.point for node in self.nodes.values()]
+        top_left = QPointF(
+            min((point.x for point in points)), min((point.y for point in points))
+        )
+        bottom_right = QPointF(
+            max((point.x for point in points)), max((point.y for point in points))
+        )
+        rect = QRectF(top_left, bottom_right)
         return rect
 
     def updateBox(self, *args, **kwargs):
@@ -1848,16 +1899,25 @@ class QtTextWithBackground(QGraphicsTextItem):
         super(QtTextWithBackground, self).paint(painter, option, *args, **kwargs)
 
 
-def video_demo(labels, standalone=False):
-    """Demo function for showing (first) video from dataset."""
-    video = labels.videos[0]
+def video_demo(video=None, labels=None, standalone=False):
+    """Demo function for showing video."""
+
+    if not video and not labels:
+        return
+
+    if labels and not video:
+        video = labels.videos[0]
+
     if standalone:
         app = QApplication([])
     window = QtVideoPlayer(video=video)
 
-    window.changedPlot.connect(
-        lambda vp, idx, select_idx: plot_instances(vp.view.scene, idx, labels, video)
-    )
+    if labels:
+        window.changedPlot.connect(
+            lambda vp, idx, select_idx: plot_instances(
+                vp.view.scene, idx, labels, video
+            )
+        )
 
     window.show()
     window.plot()
@@ -1911,4 +1971,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     labels = Labels.load_json(args.data_path)
-    video_demo(labels, standalone=True)
+    video_demo(labels=labels, standalone=True)

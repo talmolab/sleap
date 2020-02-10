@@ -107,9 +107,9 @@ class YamlFormWidget(QtWidgets.QGroupBox):
         """Returns dict of form data."""
         return self.form_layout.get_form_data()
 
-    def set_field_options(self, field_name: str, options_list: List[str]):
+    def set_field_options(self, field_name: str, options_list: List[str], **kwargs):
         """Sets option list for specified field."""
-        self.form_layout.set_field_options(field_name, options_list)
+        self.form_layout.set_field_options(field_name, options_list, **kwargs)
 
     def trigger_main_action(self):
         """Emit mainAction signal with form data."""
@@ -152,6 +152,7 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
             if len(w.objectName())
             and type(w) not in (QtWidgets.QLabel, QtWidgets.QPushButton)
         }
+
         stacked_data = [w.get_data() for w in widgets if type(w) == StackBuilderWidget]
         for stack in stacked_data:
             data.update(stack)
@@ -211,12 +212,10 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
     @staticmethod
     def set_widget_value(widget: QtWidgets.QWidget, val):
         """Set value for specific widget."""
-        # if widget.property("field_data_type") == "sci":
-        #     val = str(val)
 
         if hasattr(widget, "isChecked"):
             widget.setChecked(val)
-        elif hasattr(widget, "value"):
+        elif hasattr(widget, "setValue"):
             widget.setValue(val)
         elif hasattr(widget, "currentText"):
             widget.setCurrentText(str(val))
@@ -307,7 +306,16 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
 
             # list: show drop-down menu
             elif item["type"] == "list":
-                field = FieldComboWidget()
+                type_options = item.get("type-options", "")
+
+                result_as_optional_idx = False
+                if type_options == "optional_index":
+                    result_as_optional_idx = True
+
+                field = FieldComboWidget(
+                    result_as_idx=result_as_optional_idx,
+                    add_blank_option=result_as_optional_idx,
+                )
 
                 if item["name"] in self.field_options_lists:
                     field.set_options(self.field_options_lists[item["name"]])
@@ -485,12 +493,27 @@ class StackBuilderWidget(QtWidgets.QWidget):
 class FieldComboWidget(QtWidgets.QComboBox):
     """
     A custom ComboBox widget with method to easily add set of options.
+
+    Args:
+        result_as_idx: If True, then set/get for value will use idx of option
+            rather than string.
+        add_blank_option: If True, then blank ("") option will be added at
+            beginning of list (which will return "" as val instead of idx if
+            result_as_idx is True).
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(
+        self,
+        result_as_idx: bool = False,
+        add_blank_option: bool = False,
+        *args,
+        **kwargs,
+    ):
         super(FieldComboWidget, self).__init__(*args, **kwargs)
         self.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToContents)
         self.setMinimumContentsLength(3)
+        self.result_as_idx = result_as_idx
+        self.add_blank_option = add_blank_option
 
     def set_options(self, options_list: List[str], select_item: Optional[str] = None):
         """
@@ -504,14 +527,32 @@ class FieldComboWidget(QtWidgets.QComboBox):
             None.
         """
         self.clear()
+        self.options_list = options_list
+
+        if self.add_blank_option:
+            self.addItem("")
         for item in options_list:
             if item == "---":
                 self.insertSeparator(self.count())
             else:
                 self.addItem(item)
-        if select_item is not None and select_item in options_list:
-            idx = options_list.index(select_item)
-            self.setCurrentIndex(idx)
+        if select_item is not None:
+            self.setValue(select_item)
+
+    def value(self):
+        if self.result_as_idx:
+            val = self.currentIndex()
+            if self.add_blank_option:
+                val -= 1
+        else:
+            val = self.currentText()
+
+        return val
+
+    def setValue(self, val):
+        if type(val) == int and val <= len(self.options_list) and self.result_as_idx:
+            val = self.options_list[val]
+        super(FieldComboWidget, self).setCurrentText(str(val))
 
 
 class ResizingStackedWidget(QtWidgets.QStackedWidget):

@@ -153,7 +153,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
         self,
         orientation=-1,  # for compatibility with QSlider
         min=0,
-        max=100,
+        max=1,
         val=0,
         marks=None,
         color_manager: Optional[ColorManager] = None,
@@ -167,11 +167,12 @@ class VideoSlider(QtWidgets.QGraphicsView):
         self.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
 
         self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 
         self._color_manager = color_manager
 
+        self.tick_index_offset = 1
         self.zoom_factor = 1
 
         self._track_rows = 0
@@ -358,8 +359,12 @@ class VideoSlider(QtWidgets.QGraphicsView):
 
         min_height, max_height = self.getMinMaxHeights()
 
-        self.setMaximumHeight(max_height)
-        self.setMinimumHeight(min_height)
+        # TODO: find the current height of the scrollbar
+        # self.horizontalScrollBar().height() gives the wrong value
+        scrollbar_height = 18
+
+        self.setMaximumHeight(max_height + scrollbar_height)
+        self.setMinimumHeight(min_height + scrollbar_height)
 
         # Redraw all marks with new height and y position
         marks = self.getMarks()
@@ -415,6 +420,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
         self._val_main = val
         x = self._toPos(val)
         self.handle.setPos(x, 0)
+        self.ensureVisible(self.handle, 3, 0)
 
     def setMinimum(self, min: float) -> float:
         """Sets minimum value for slider."""
@@ -661,13 +667,18 @@ class VideoSlider(QtWidgets.QGraphicsView):
     def _add_tick_marks(self):
         val_range = self.slider_visible_value_range
 
-        val_order = 10
-        while val_range // val_order > 24:
-            val_order *= 10
+        if val_range < 20:
+            val_order = 1
+        else:
+            val_order = 10
+            while val_range // val_order > 24:
+                val_order *= 10
 
         self._tick_marks = []
 
-        for tick_pos in range(self._val_min + val_order - 1, self._val_max, val_order):
+        for tick_pos in range(
+            self._val_min + val_order - 1, self._val_max + 1, val_order
+        ):
             self._tick_marks.append(SliderMark("tick", tick_pos))
 
         for tick_mark in self._tick_marks:
@@ -737,7 +748,9 @@ class VideoSlider(QtWidgets.QGraphicsView):
             self._mark_items[new_mark].setZValue(0)
 
             # Add a text label to show in header area
-            mark_label_text = f"{new_mark.val + 1:g}"  # sci notation if large
+            mark_label_text = (
+                f"{new_mark.val + self.tick_index_offset:g}"  # sci notation if large
+            )
             self._mark_labels[new_mark] = self.scene.addSimpleText(
                 mark_label_text, self._base_font
             )

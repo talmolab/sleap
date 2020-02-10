@@ -54,6 +54,10 @@ class TrainerConfig:
     optimizer: str = "adam"
     amsgrad: bool = True
     learning_rate: float = 1e-3
+    ohkm: bool = False
+    ohkm_K: int = 2
+    ohkm_weight: float = 5.
+    node_metrics: bool = False
 
     # Training callbacks:
     reduce_lr_on_plateau: bool = True
