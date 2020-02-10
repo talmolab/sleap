@@ -232,14 +232,8 @@ def get_edge_points(
     """
     source_inds = tf.cast(tf.gather(edge_inds, 0, axis=1), tf.int32)
     destination_inds = tf.cast(tf.gather(edge_inds, 1, axis=1), tf.int32)
-    # source_inds, destination_inds = tf.split(edge_inds, 2, axis=1)
     edge_sources = tf.gather(instances, source_inds, axis=1)
     edge_destinations = tf.gather(instances, destination_inds, axis=1)
-
-    # n_instances = len(instances)
-    # n_edges = len(edge_inds)
-    # edge_sources = tf.ensure_shape(edge_sources, (n_instances, n_edges, 2))
-    # edge_destinations = tf.ensure_shape(edge_destinations, (n_instances, n_edges, 2))
     return edge_sources, edge_destinations
 
 
