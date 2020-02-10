@@ -21,8 +21,9 @@ dependencies:
     - tensorflow==2.1
     - opencv-python-headless==3.4.1.15
     - PySide2==5.12.0
-    - imgaug
+    - imgaug==0.3.0
     - cattrs==1.0.0rc0
     - qimage2ndarray==1.8
     - imgstore
     - jsmin
+    - "--editable=./"

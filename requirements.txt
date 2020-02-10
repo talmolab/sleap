@@ -11,7 +11,7 @@ psutil
 PySide2
 pyzmq
 pyyaml
-imgaug
+imgaug==0.3.0
 scikit-image
 scikit-learn
 imgstore
