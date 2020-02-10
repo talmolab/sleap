@@ -2,7 +2,7 @@
 
 import tensorflow as tf
 import attr
-from typing import Tuple
+from typing import List, Text, Optional, Tuple
 
 
 def find_padding_for_stride(
@@ -92,3 +92,67 @@ def resize_image(image: tf.Tensor, scale: tf.Tensor) -> tf.Tensor:
         ),
         image.dtype,
     )
+
+
+@attr.s(auto_attribs=True)
+class Resizer:
+    """Data transformer to resize or pad images.
+
+    This is useful as a transformation to data streams that require resizing or padding
+    in order to be downsampled or meet divisibility criteria.
+
+    Attributes:
+        image_key: String name of the key containing the images to resize.
+        scale: Scalar float specifying scaling factor to resize images by.
+        pad_to_stride: Maximum stride in a model that the images must be divisible by.
+            If > 1, this will pad the bottom and right of the images to ensure they meet
+            this divisibility criteria. Padding is applied after the scaling specified
+            in the `scale` attribute.
+    """
+
+    image_key: Text = "image"
+    scale: float = 1.0
+    pad_to_stride: int = 1
+
+    @property
+    def input_keys(self) -> List[Text]:
+        """Return the keys that incoming elements are expected to have."""
+        return [self.image_key]
+
+    @property
+    def output_keys(self) -> List[Text]:
+        """Return the keys that outgoing elements will have."""
+        return self.input_keys
+
+    def transform_dataset(self, ds_input: tf.data.Dataset) -> tf.data.Dataset:
+        """Create a dataset that contains centroids computed from the inputs.
+
+        Args:
+            ds_input: A dataset with image key specified in the `image_key` attribute.
+
+        Returns:
+            A `tf.data.Dataset` with elements containing the same images with
+            normalization applied.
+        """
+
+        def resize(example):
+            """Local processing function for dataset mapping."""
+            if self.scale != 1.0:
+                # Ensure image is rank-3 for resizing ops.
+                example[self.image_key] = tf.ensure_shape(
+                    example[self.image_key], (None, None, None)
+                )
+                example[self.image_key] = resize_image(
+                    example[self.image_key], self.scale
+                )
+            if self.pad_to_stride > 1:
+                example[self.image_key] = pad_to_stride(
+                    example[self.image_key], max_stride=self.pad_to_stride
+                )
+            return example
+
+        # Map transformation.
+        ds_output = ds_input.map(
+            resize, num_parallel_calls=tf.data.experimental.AUTOTUNE
+        )
+        return ds_output

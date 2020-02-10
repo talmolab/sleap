@@ -4,6 +4,7 @@ import tensorflow as tf
 tf.config.experimental.set_visible_devices([], device_type="GPU")  # hide GPUs for test
 
 from sleap.nn.data import resizing
+from sleap.nn.data import providers
 
 
 def test_find_padding_for_stride():
@@ -39,3 +40,23 @@ def test_resize_image():
         tf.ones([4, 8, 1], dtype=tf.uint8), scale=0.5).dtype == tf.uint8
     assert resizing.resize_image(
         tf.ones([4, 8, 1], dtype=tf.float32), scale=0.5).dtype == tf.float32
+
+
+def test_resizer(min_labels):
+    labels_reader = providers.LabelsReader(min_labels)
+    ds_data = labels_reader.make_dataset()
+
+    resizer = resizing.Resizer(image_key="image", scale=0.25)
+    ds = resizer.transform_dataset(ds_data)
+    example = next(iter(ds))
+    assert example["image"].shape == (96, 96, 1)
+
+    resizer = resizing.Resizer(image_key="image", pad_to_stride=100)
+    ds = resizer.transform_dataset(ds_data)
+    example = next(iter(ds))
+    assert example["image"].shape == (400, 400, 1)
+
+    resizer = resizing.Resizer(image_key="image", scale=0.25, pad_to_stride=100)
+    ds = resizer.transform_dataset(ds_data)
+    example = next(iter(ds))
+    assert example["image"].shape == (100, 100, 1)
