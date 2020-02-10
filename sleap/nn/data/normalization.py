@@ -2,6 +2,8 @@
 
 import tensorflow as tf
 from sleap.nn.data.utils import expand_to_rank
+import attr
+from typing import List, Text, Optional
 
 
 def ensure_min_image_rank(image: tf.Tensor) -> tf.Tensor:
@@ -241,3 +243,85 @@ def scale_to_imagenet_torch_mode(image: tf.Tensor) -> tf.Tensor:
     imagenet_std = tf.convert_to_tensor([0.229, 0.224, 0.225], tf.float32)  # [R, G, B]
     image = image / expand_to_rank(imagenet_std, tf.rank(image))
     return image
+
+
+@attr.s(auto_attribs=True)
+class Normalizer:
+    """Data transformer to normalize images.
+
+    This is useful as a transformation to data streams that require specific data ranges
+    such as for pretrained models with specific preprocessing constraints.
+
+    Attributes:
+        image_key: String name of the key containing the images to normalize.
+        ensure_float: If True, converts the image to a `tf.float32` if not already.
+        imagenet_mode: Specifies an ImageNet-based normalization mode commonly used in
+            `tf.keras.applications`-based pretrained models. No effect if not set.
+            Valid values are:
+            "tf": Values will be scaled to [-1, 1].
+            "caffe": Values will be scaled to [0, 255], RGB channels flipped to BGR, and
+                subtracted by a fixed mean.
+            "torch": Values will be scaled to [0, 1], subtracted by a fixed mean, and
+                    scaled by fixed standard deviation.
+    """
+
+    image_key: Text = "image"
+    ensure_float: bool = True
+    ensure_rgb: bool = False
+    ensure_grayscale: bool = False
+    imagenet_mode: Optional[Text] = attr.ib(
+        default=None,
+        validator=attr.validators.optional(
+            attr.validators.in_(["tf", "caffe", "torch"])
+        ),
+    )
+
+    @property
+    def input_keys(self) -> List[Text]:
+        """Return the keys that incoming elements are expected to have."""
+        return [self.image_key]
+
+    @property
+    def output_keys(self) -> List[Text]:
+        """Return the keys that outgoing elements will have."""
+        return self.input_keys
+
+    def transform_dataset(self, ds_input: tf.data.Dataset) -> tf.data.Dataset:
+        """Create a dataset that contains centroids computed from the inputs.
+
+        Args:
+            ds_input: A dataset with image key specified in the `image_key` attribute.
+
+        Returns:
+            A `tf.data.Dataset` with elements containing the same images with
+            normalization applied.
+        """
+
+        def normalize(example):
+            """Local processing function for dataset mapping."""
+            if self.ensure_float:
+                example[self.image_key] = ensure_float(example[self.image_key])
+            if self.ensure_rgb:
+                example[self.image_key] = ensure_rgb(example[self.image_key])
+            if self.ensure_grayscale:
+                example[self.image_key] = ensure_grayscale(example[self.image_key])
+            if self.imagenet_mode == "tf":
+                example[self.image_key] = scale_to_imagenet_tf_mode(
+                    example[self.image_key]
+                )
+            if self.imagenet_mode == "caffe":
+                example[self.image_key] = scale_to_imagenet_caffe_mode(
+                    example[self.image_key]
+                )
+            if self.imagenet_mode == "torch":
+                example[self.image_key] = scale_to_imagenet_torch_mode(
+                    example[self.image_key]
+                )
+
+            return example
+
+        # Map transformation.
+        ds_output = ds_input.map(
+            normalize, num_parallel_calls=tf.data.experimental.AUTOTUNE
+        )
+        return ds_output

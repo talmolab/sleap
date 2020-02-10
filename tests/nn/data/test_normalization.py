@@ -5,6 +5,7 @@ import tensorflow as tf
 tf.config.experimental.set_visible_devices([], device_type="GPU")  # hide GPUs for test
 
 from sleap.nn.data import normalization
+from sleap.nn.data import providers
 
 
 def test_ensure_min_image_rank():
@@ -65,3 +66,14 @@ def test_scale_image_range():
         min_val=-1.0,
         max_val=1.0
     ), [-1, 0, 1])
+
+
+def test_normalizer(min_labels):
+    labels_reader = providers.LabelsReader(min_labels)
+    normalizer = normalization.Normalizer(image_key="image", ensure_float=True)
+
+    ds = labels_reader.make_dataset()
+    ds = normalizer.transform_dataset(ds)
+    example = next(iter(ds))
+
+    assert example["image"].dtype == tf.float32
