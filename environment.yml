@@ -27,3 +27,4 @@ dependencies:
     - imgstore
     - jsmin
     - "--editable=./"
+    - "--requirement=./dev_requirements.txt"
