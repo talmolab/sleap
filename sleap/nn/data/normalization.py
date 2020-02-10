@@ -255,14 +255,16 @@ class Normalizer:
     Attributes:
         image_key: String name of the key containing the images to normalize.
         ensure_float: If True, converts the image to a `tf.float32` if not already.
+        ensure_rgb: If True, converts the image to RGB if not already.
+        ensure_grayscale: If True, converts the image to grayscale if not already.
         imagenet_mode: Specifies an ImageNet-based normalization mode commonly used in
             `tf.keras.applications`-based pretrained models. No effect if not set.
             Valid values are:
-            "tf": Values will be scaled to [-1, 1].
-            "caffe": Values will be scaled to [0, 255], RGB channels flipped to BGR, and
-                subtracted by a fixed mean.
-            "torch": Values will be scaled to [0, 1], subtracted by a fixed mean, and
-                    scaled by fixed standard deviation.
+            "tf": Values will be scaled to [-1, 1], expanded to RGB if grayscale.
+            "caffe": Values will be scaled to [0, 255], expanded to RGB if grayscale,
+                RGB channels flipped to BGR, and subtracted by a fixed mean.
+            "torch": Values will be scaled to [0, 1], expanded to RGB if grayscale,
+                subtracted by a fixed mean, and scaled by fixed standard deviation.
     """
 
     image_key: Text = "image"
