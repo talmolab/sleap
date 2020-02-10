@@ -28,7 +28,12 @@ def test_expand_to_rank():
         ),
         [[0, 1, 2]],
     )
-
+    np.testing.assert_array_equal(
+        utils.expand_to_rank(
+            tf.reshape(tf.range(2 * 3 * 4), [2, 3, 4]),
+            target_rank=2),
+        tf.reshape(tf.range(2 * 3 * 4), [2, 3, 4])
+    )
 
 
 def test_make_grid_vector():
@@ -45,3 +50,9 @@ def test_make_grid_vector():
     xv, yv = utils.make_grid_vectors(image_height=4, image_width=3, output_stride=2)
     np.testing.assert_allclose(xv, [0, 2])
     np.testing.assert_allclose(yv, [0, 2])
+
+
+def test_gaussian_pdf():
+    assert utils.gaussian_pdf(0, sigma=1) == 1.0
+    assert utils.gaussian_pdf(1, sigma=1) == 0.6065306597126334
+    assert utils.gaussian_pdf(1, sigma=2) == 0.8824969025845955

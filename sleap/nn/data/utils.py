@@ -15,7 +15,8 @@ def expand_to_rank(x: tf.Tensor, target_rank: int, prepend: bool = True) -> tf.T
     """Expand a tensor to a target rank by adding singleton dimensions.
 
     Args:
-        x: Any `tf.Tensor` with rank <= `target_rank`.
+        x: Any `tf.Tensor` with rank <= `target_rank`. If the rank is higher than
+            `target_rank`, the tensor will be returned with the same shape.
         target_rank: Rank to expand the input to.
         prepend: If True, singleton dimensions are added before the first axis of the
             data. If False, singleton dimensions are added after the last axis.
@@ -26,7 +27,8 @@ def expand_to_rank(x: tf.Tensor, target_rank: int, prepend: bool = True) -> tf.T
         The output has the same exact data as the input tensor and will be identical if
         they are both flattened.
     """
-    singleton_dims = tf.ones([target_rank - tf.rank(x)], tf.int32)
+    n_singleton_dims = tf.maximum(target_rank - tf.rank(x), 0)
+    singleton_dims = tf.ones([n_singleton_dims], tf.int32)
     if prepend:
         new_shape = tf.concat([singleton_dims, tf.shape(x)], axis=0)
     else:
@@ -65,3 +67,16 @@ def make_grid_vectors(
     xv = tf.cast(tf.range(0, image_width, delta=output_stride), tf.float32)
     yv = tf.cast(tf.range(0, image_height, delta=output_stride), tf.float32)
     return xv, yv
+
+
+def gaussian_pdf(x: tf.Tensor, sigma: float) -> tf.Tensor:
+    """Compute the PDF of an unnormalized 0-centered Gaussian distribution.
+
+    Args:
+        x: Any tensor of dtype tf.float32 with values to compute the PDF for.
+
+    Returns:
+        A tensor of the same shape as `x`, but with values of a PDF of an unnormalized
+        Gaussian distribution. Values of 0 have an unnormalized PDF value of 1.0.
+    """
+    return tf.exp(-(tf.square(x)) / (2 * tf.square(sigma)))
