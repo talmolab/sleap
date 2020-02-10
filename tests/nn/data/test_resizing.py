@@ -45,18 +45,25 @@ def test_resize_image():
 def test_resizer(min_labels):
     labels_reader = providers.LabelsReader(min_labels)
     ds_data = labels_reader.make_dataset()
+    data_example = next(iter(ds_data))
 
     resizer = resizing.Resizer(image_key="image", scale=0.25)
     ds = resizer.transform_dataset(ds_data)
     example = next(iter(ds))
     assert example["image"].shape == (96, 96, 1)
+    np.testing.assert_array_equal(example["scale"], (0.25, 0.25))
+    np.testing.assert_allclose(example["instances"], data_example["instances"] * 0.25)
 
     resizer = resizing.Resizer(image_key="image", pad_to_stride=100)
     ds = resizer.transform_dataset(ds_data)
     example = next(iter(ds))
     assert example["image"].shape == (400, 400, 1)
+    np.testing.assert_array_equal(example["scale"], (1.0, 1.0))
+    np.testing.assert_allclose(example["instances"], data_example["instances"])
 
     resizer = resizing.Resizer(image_key="image", scale=0.25, pad_to_stride=100)
     ds = resizer.transform_dataset(ds_data)
     example = next(iter(ds))
     assert example["image"].shape == (100, 100, 1)
+    np.testing.assert_array_equal(example["scale"], (0.25, 0.25))
+    np.testing.assert_allclose(example["instances"], data_example["instances"] * 0.25)

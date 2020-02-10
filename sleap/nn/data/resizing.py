@@ -103,6 +103,8 @@ class Resizer:
 
     Attributes:
         image_key: String name of the key containing the images to resize.
+        points_key: String name of the key containing points to adjust for the resizing
+            operation.
         scale: Scalar float specifying scaling factor to resize images by.
         pad_to_stride: Maximum stride in a model that the images must be divisible by.
             If > 1, this will pad the bottom and right of the images to ensure they meet
@@ -111,13 +113,14 @@ class Resizer:
     """
 
     image_key: Text = "image"
+    points_key: Text = "instances"
     scale: float = 1.0
     pad_to_stride: int = 1
 
     @property
     def input_keys(self) -> List[Text]:
         """Return the keys that incoming elements are expected to have."""
-        return [self.image_key]
+        return [self.image_key, self.points_key, "scale"]
 
     @property
     def output_keys(self) -> List[Text]:
@@ -128,13 +131,17 @@ class Resizer:
         """Create a dataset that contains centroids computed from the inputs.
 
         Args:
-            ds_input: A dataset with image key specified in the `image_key` attribute.
+            ds_input: A dataset with the image specified in the `image_key` attribute,
+                points specified in the `points_key` attribute, and the "scale" key for
+                tracking scaling transformations.
 
         Returns:
-            A `tf.data.Dataset` with elements containing the same images with
-            normalization applied.
-        """
+            A `tf.data.Dataset` with elements containing the same images and points with
+            resizing applied.
 
+            The "scale" key of the example will be multipled by the `scale` attribute of
+            this transformer.
+        """
         def resize(example):
             """Local processing function for dataset mapping."""
             if self.scale != 1.0:
@@ -145,6 +152,8 @@ class Resizer:
                 example[self.image_key] = resize_image(
                     example[self.image_key], self.scale
                 )
+                example[self.points_key] = example[self.points_key] * self.scale
+                example["scale"] = example["scale"] * self.scale
             if self.pad_to_stride > 1:
                 example[self.image_key] = pad_to_stride(
                     example[self.image_key], max_stride=self.pad_to_stride
