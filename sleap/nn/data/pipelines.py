@@ -25,6 +25,7 @@ from sleap.nn.data.confidence_maps import (
     InstanceConfidenceMapGenerator,
 )
 from sleap.nn.data.edge_maps import PartAffinityFieldsGenerator
+from sleap.nn.data.dataset_ops import Shuffler, Batcher, Repeater, Prefetcher
 from sleap.nn.data.utils import ensure_list
 
 
@@ -38,6 +39,10 @@ TRANSFORMERS = (
     MultiConfidenceMapGenerator,
     InstanceConfidenceMapGenerator,
     PartAffinityFieldsGenerator,
+    Shuffler,
+    Batcher,
+    Repeater,
+    Prefetcher,
 )
 Provider = TypeVar("Provider", *PROVIDERS)
 Transformer = TypeVar("Transformer", *TRANSFORMERS)
@@ -56,7 +61,9 @@ class Pipeline:
     transformers: List[Transformer] = attr.ib(converter=ensure_list)
 
     @classmethod
-    def from_sequence(cls, sequence: Sequence[Union[Provider, Transformer]]) -> "Pipeline":
+    def from_sequence(
+        cls, sequence: Sequence[Union[Provider, Transformer]]
+    ) -> "Pipeline":
         """Create a pipeline from a sequence of providers and transformers.
 
         Args:
@@ -74,7 +81,8 @@ class Pipeline:
                 transformers.append(block)
             else:
                 raise ValueError(
-                    f"Unrecognized pipeline block type (index = {i}): {type(block)}")
+                    f"Unrecognized pipeline block type (index = {i}): {type(block)}"
+                )
         return cls(providers=providers, transformers=transformers)
 
     def validate_pipeline(self) -> List[Text]:
@@ -93,10 +101,14 @@ class Pipeline:
 
         for i, transformer in enumerate(self.transformers):
             # Required keys that are in the example:
-            input_keys_in_example = list(set(example_keys) & set(transformer.input_keys))
+            input_keys_in_example = list(
+                set(example_keys) & set(transformer.input_keys)
+            )
 
             # Required keys that are missing from the example:
-            input_keys_not_in_example = list(set(transformer.input_keys) - set(example_keys))
+            input_keys_not_in_example = list(
+                set(transformer.input_keys) - set(example_keys)
+            )
 
             # Keys in the example that are not required by transformer:
             extra_example_keys = list(set(example_keys) - set(transformer.output_keys))
@@ -108,7 +120,9 @@ class Pipeline:
             if len(input_keys_not_in_example) > 0:
                 raise ValueError(
                     f"Missing required keys for transformer (index = {i}, "
-                    f"type = {type(transformer)}): {input_keys_not_in_example}")
+                    f"type = {type(transformer)}): {input_keys_not_in_example}.\n"
+                    f"Available: {extra_example_keys}"
+                )
 
             # The new example keys will be the outputs of the transformer and the
             # previous extraneous keys.
@@ -133,6 +147,8 @@ class Pipeline:
 
         # Create providers.
         # TODO: Multi-provider pipelines by merging the example dictionaries.
+        #       Need something like an optional side-packet into in providers. Or a
+        #       transformer that just merges all the keys after a Dataset.zip?
         ds = self.providers[0].make_dataset()
 
         # Apply transformers.
@@ -140,3 +156,124 @@ class Pipeline:
             ds = transformer.transform_dataset(ds)
 
         return ds
+
+
+@attr.s(auto_attribs=True)
+class BottomUpPipeline:
+    """Standard bottom up pipeline."""
+
+    data_provider: Provider
+    shuffler: Shuffler
+    augmenter: ImgaugAugmenter
+    normalizer: Normalizer
+    resizer: Resizer
+    multi_confmap_generator: MultiConfidenceMapGenerator
+    # multi_confmap_predictor: MultiConfidenceMapPredictor
+    paf_generator: PartAffinityFieldsGenerator
+    # paf_matcher: PAFMatcher
+    batcher: Batcher
+    repeater: Repeater
+    prefetcher: Prefetcher
+
+    def make_training_pipeline(self) -> Pipeline:
+        """Make training pipeline."""
+        return Pipeline.from_sequence(
+            [
+                self.data_provider,
+                self.shuffler,
+                self.augmenter,
+                self.normalizer,
+                self.resizer,
+                self.multi_confmap_generator,
+                self.paf_generator,
+                self.batcher,
+                self.repeater,
+                self.prefetcher,
+            ]
+        )
+
+    def make_training_dataset(self) -> tf.data.Dataset:
+        """Instantiate the training pipeline to create a dataset."""
+        return self.make_training_pipeline().make_dataset()
+
+    def make_inference_pipeline(self) -> Pipeline:
+        """Make inference pipeline."""
+        return Pipeline.from_sequence(
+            [
+                self.data_provider,
+                self.normalizer,
+                self.resizer,
+                self.batcher,
+                self.prefetcher,
+                # TODO:
+                # self.multi_confmap_predictor,
+                # self.paf_matcher,
+            ]
+        )
+
+    def make_inference_dataset(self) -> tf.data.Dataset:
+        """Instantiate the inference pipeline to create a dataset."""
+        return self.make_inference_pipeline().make_dataset()
+
+
+@attr.s(auto_attribs=True)
+class TopDownPipeline:
+    """Standard top down pipeline."""
+
+    data_provider: Provider
+    shuffler: Shuffler
+    augmenter: ImgaugAugmenter
+    normalizer: Normalizer
+    resizer: Resizer
+    centroid_finder: InstanceCentroidFinder
+    centroid_confmap_generator: MultiConfidenceMapGenerator
+    # centroid_predictor: InstanceCentroidPredictor
+    instance_cropper: InstanceCropper
+    instance_confmap_generator: InstanceConfidenceMapGenerator
+    # instance_confmap_predictor: InstanceConfidenceMapPredictor
+    batcher: Batcher
+    repeater: Repeater
+    prefetcher: Prefetcher
+
+    def make_training_pipeline(self, centroid: bool = False) -> Pipeline:
+        """Make training pipeline."""
+        if centroid:
+            middle_blocks = [self.centroid_confmap_generator]
+        else:
+            middle_blocks = [self.instance_cropper, self.instance_confmap_generator]
+        return Pipeline.from_sequence(
+            [
+                self.data_provider,
+                self.shuffler,
+                self.augmenter,
+                self.normalizer,
+                self.resizer,
+                self.centroid_finder,
+            ]
+            + middle_blocks
+            + [self.batcher, self.repeater, self.prefetcher]
+        )
+
+    def make_training_dataset(self) -> tf.data.Dataset:
+        """Instantiate the training pipeline to create a dataset."""
+        return self.make_training_pipeline().make_dataset()
+
+    def make_inference_pipeline(self) -> Pipeline:
+        """Make inference pipeline."""
+        return Pipeline.from_sequence(
+            [
+                self.data_provider,
+                self.normalizer,
+                self.resizer,
+                self.batcher,
+                self.prefetcher,
+                # TODO:
+                # self.centroid_predictor,
+                self.instance_cropper,  # TODO: update to work with batches as well
+                # self.single_part_predictor,
+            ]
+        )
+
+    def make_inference_dataset(self) -> tf.data.Dataset:
+        """Instantiate the inference pipeline to create a dataset."""
+        return self.make_inference_pipeline().make_dataset()
