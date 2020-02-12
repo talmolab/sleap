@@ -226,7 +226,7 @@ class TopDownPipeline:
     normalizer: Normalizer
     resizer: Resizer
     centroid_finder: InstanceCentroidFinder
-    centroid_confmap_generator: MultiConfidenceMapGenerator
+    # centroid_confmap_generator: MultiConfidenceMapGenerator
     # centroid_predictor: InstanceCentroidPredictor
     instance_cropper: InstanceCropper
     instance_confmap_generator: InstanceConfidenceMapGenerator
@@ -251,7 +251,11 @@ class TopDownPipeline:
                 self.centroid_finder,
             ]
             + middle_blocks
-            + [self.batcher, self.repeater, self.prefetcher]
+            + [
+            self.batcher,
+            self.prefetcher,
+            self.repeater
+            ]
         )
 
     def make_training_dataset(self) -> tf.data.Dataset:
