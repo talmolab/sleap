@@ -239,8 +239,14 @@ class Model:
         arch_idx = available_arch_names.index(model_dict["backbone_name"])
         backbone_cls = available_archs[arch_idx]
 
+        backbone_kwargs = {
+            key: val
+            for (key, val) in model_dict["backbone"].items()
+            if key in attr.fields_dict(backbone_cls).keys()
+        }
+
         return Model(
-            backbone=backbone_cls(**model_dict["backbone"]),
+            backbone=backbone_cls(**backbone_kwargs),
             output_type=ModelOutputType(model_dict["output_type"]),
             skeletons=model_dict["skeletons"],
         )
