@@ -7,11 +7,11 @@
     <title>sleap.gui.inference &#8212; SLEAP  documentation</title>
     <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../../_static/doctools.js"></script>
-    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
    
@@ -214,15 +214,15 @@
                     <span class="k">return</span> <span class="mi">0</span>
                 <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
                 <span class="k">for</span> <span class="n">frame_list</span> <span class="ow">in</span> <span class="n">videos_frames</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-                    <span class="c1"># Check for range, given as X, -Y</span>
+                    <span class="c1"># Check for [x, Y] range given as X, -Y</span>
+                    <span class="c1"># (we&#39;re not using typical [X, Y)-style range here)</span>
                     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">frame_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">frame_list</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-                        <span class="n">count</span> <span class="o">+=</span> <span class="o">-</span><span class="n">frame_list</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">frame_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
-                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">count</span> <span class="o">+=</span> <span class="o">-</span><span class="n">frame_list</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">frame_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="k">elif</span> <span class="n">frame_list</span> <span class="o">!=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
                         <span class="n">count</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">frame_list</span><span class="p">)</span>
                 <span class="k">return</span> <span class="n">count</span>
 
             <span class="c1"># Determine which options are available given _frame_selection</span>
-
             <span class="n">total_random</span> <span class="o">=</span> <span class="n">count_total_frames</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span><span class="p">[</span><span class="s2">&quot;random&quot;</span><span class="p">])</span>
             <span class="n">total_suggestions</span> <span class="o">=</span> <span class="n">count_total_frames</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span><span class="p">[</span><span class="s2">&quot;suggestions&quot;</span><span class="p">])</span>
             <span class="n">clip_length</span> <span class="o">=</span> <span class="n">count_total_frames</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span><span class="p">[</span><span class="s2">&quot;clip&quot;</span><span class="p">])</span>
@@ -427,11 +427,17 @@
                 <span class="n">frames_to_predict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span><span class="p">[</span><span class="s2">&quot;random&quot;</span><span class="p">]</span>
             <span class="k">elif</span> <span class="n">predict_frames_choice</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;selected clip&quot;</span><span class="p">):</span>
                 <span class="n">frames_to_predict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span><span class="p">[</span><span class="s2">&quot;clip&quot;</span><span class="p">]</span>
-                <span class="n">with_tracking</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="k">elif</span> <span class="n">predict_frames_choice</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;suggested&quot;</span><span class="p">):</span>
                 <span class="n">frames_to_predict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span><span class="p">[</span><span class="s2">&quot;suggestions&quot;</span><span class="p">]</span>
             <span class="k">elif</span> <span class="n">predict_frames_choice</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;entire video&quot;</span><span class="p">):</span>
                 <span class="n">frames_to_predict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span><span class="p">[</span><span class="s2">&quot;video&quot;</span><span class="p">]</span>
+
+            <span class="c1"># Convert [X, Y+1) ranges to [X, Y] ranges for inference cli</span>
+            <span class="k">for</span> <span class="n">video</span><span class="p">,</span> <span class="n">frame_list</span> <span class="ow">in</span> <span class="n">frames_to_predict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="c1"># Check for [A, -B] list representing [A, B) range</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">frame_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">frame_list</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">frame_list</span> <span class="o">=</span> <span class="p">(</span><span class="n">frame_list</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">frame_list</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="n">frames_to_predict</span><span class="p">[</span><span class="n">video</span><span class="p">]</span> <span class="o">=</span> <span class="n">frame_list</span>
 
         <span class="c1"># for key, val in training_jobs.items():</span>
         <span class="c1">#     print(key)</span>
@@ -898,10 +904,13 @@
         <span class="n">job</span><span class="o">.</span><span class="n">labels_filename</span> <span class="o">=</span> <span class="n">labels_filename</span>
 
     <span class="c1"># TODO: only require labels_filename if we&#39;re training?</span>
-    <span class="c1"># save_dir = os.path.join(os.path.dirname(labels_filename), &quot;models&quot;)</span>
+
+    <span class="n">save_viz</span> <span class="o">=</span> <span class="n">inference_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_save_viz&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 
     <span class="c1"># Train the TrainingJobs</span>
-    <span class="n">trained_jobs</span> <span class="o">=</span> <span class="n">run_gui_training</span><span class="p">(</span><span class="n">labels_filename</span><span class="p">,</span> <span class="n">training_jobs</span><span class="p">)</span>
+    <span class="n">trained_jobs</span> <span class="o">=</span> <span class="n">run_gui_training</span><span class="p">(</span>
+        <span class="n">labels_filename</span><span class="p">,</span> <span class="n">training_jobs</span><span class="p">,</span> <span class="n">gui</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">save_viz</span><span class="o">=</span><span class="n">save_viz</span>
+    <span class="p">)</span>
 
     <span class="c1"># Check that all the models were trained</span>
     <span class="k">if</span> <span class="kc">None</span> <span class="ow">in</span> <span class="n">trained_jobs</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
@@ -930,6 +939,7 @@
     <span class="n">labels_filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">training_jobs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="s2">&quot;ModelOutputType&quot;</span><span class="p">,</span> <span class="s2">&quot;TrainingJob&quot;</span><span class="p">],</span>
     <span class="n">gui</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">save_viz</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="s2">&quot;ModelOutputType&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Run training for each training job.</span>
@@ -937,8 +947,8 @@
 <span class="sd">    Args:</span>
 <span class="sd">        labels: Labels object from which we&#39;ll get training data.</span>
 <span class="sd">        training_jobs: Dict of the jobs to train.</span>
-<span class="sd">        save_dir: Path to the directory where we&#39;ll save inference results.</span>
 <span class="sd">        gui: Whether to show gui windows and process gui events.</span>
+<span class="sd">        save_viz: Whether to save visualizations from training.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Dict of paths to trained jobs corresponding with input training jobs.</span>
@@ -950,6 +960,7 @@
 
     <span class="k">if</span> <span class="n">gui</span><span class="p">:</span>
         <span class="kn">from</span> <span class="nn">sleap.nn.monitor</span> <span class="kn">import</span> <span class="n">LossViewer</span>
+        <span class="kn">from</span> <span class="nn">sleap.gui.imagedir</span> <span class="kn">import</span> <span class="n">QtImageDirectoryWidget</span>
 
         <span class="c1"># open training monitor window</span>
         <span class="n">win</span> <span class="o">=</span> <span class="n">LossViewer</span><span class="p">()</span>
@@ -964,14 +975,21 @@
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Using already trained model: </span><span class="si">{trained_jobs[model_type]}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># Clear save dir and run name for job we&#39;re about to train</span>
-            <span class="n">job</span><span class="o">.</span><span class="n">save_dir</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="n">job</span><span class="o">.</span><span class="n">run_name</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="c1"># Update save dir and run name for job we&#39;re about to train</span>
+            <span class="c1"># so we have access to them here (rather than letting</span>
+            <span class="c1"># train_subprocess update them).</span>
+            <span class="n">training</span><span class="o">.</span><span class="n">Trainer</span><span class="o">.</span><span class="n">set_run_name</span><span class="p">(</span><span class="n">job</span><span class="p">,</span> <span class="n">labels_filename</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">gui</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Resetting monitor window.&quot;</span><span class="p">)</span>
                 <span class="n">win</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">what</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">model_type</span><span class="p">))</span>
                 <span class="n">win</span><span class="o">.</span><span class="n">setWindowTitle</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Training Model - {str(model_type)}&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">save_viz</span><span class="p">:</span>
+                    <span class="n">viz_window</span> <span class="o">=</span> <span class="n">QtImageDirectoryWidget</span><span class="o">.</span><span class="n">make_training_vizualizer</span><span class="p">(</span>
+                        <span class="n">job</span><span class="o">.</span><span class="n">run_path</span>
+                    <span class="p">)</span>
+                    <span class="n">viz_window</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">win</span><span class="o">.</span><span class="n">x</span><span class="p">()</span> <span class="o">+</span> <span class="n">win</span><span class="o">.</span><span class="n">width</span><span class="p">()</span> <span class="o">+</span> <span class="mi">20</span><span class="p">,</span> <span class="n">win</span><span class="o">.</span><span class="n">y</span><span class="p">())</span>
+                    <span class="n">win</span><span class="o">.</span><span class="n">on_epoch</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">viz_window</span><span class="o">.</span><span class="n">poll</span><span class="p">)</span>
 
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Start training {str(model_type)}...&quot;</span><span class="p">)</span>
 
@@ -981,7 +999,11 @@
 
             <span class="c1"># Run training</span>
             <span class="n">trained_job_path</span><span class="p">,</span> <span class="n">success</span> <span class="o">=</span> <span class="n">training</span><span class="o">.</span><span class="n">Trainer</span><span class="o">.</span><span class="n">train_subprocess</span><span class="p">(</span>
-                <span class="n">job</span><span class="p">,</span> <span class="n">labels_filename</span><span class="p">,</span> <span class="n">waiting</span>
+                <span class="n">job</span><span class="p">,</span>
+                <span class="n">labels_filename</span><span class="p">,</span>
+                <span class="n">waiting_callback</span><span class="o">=</span><span class="n">waiting</span><span class="p">,</span>
+                <span class="n">update_run_name</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">save_viz</span><span class="o">=</span><span class="n">save_viz</span><span class="p">,</span>
             <span class="p">)</span>
 
             <span class="k">if</span> <span class="n">success</span><span class="p">:</span>
@@ -1153,7 +1175,7 @@
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
 
 
 
@@ -1170,7 +1192,7 @@
       &copy;2019, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.3.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

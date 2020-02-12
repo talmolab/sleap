@@ -7,11 +7,11 @@
     <title>sleap.gui.app &#8212; SLEAP  documentation</title>
     <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../../_static/doctools.js"></script>
-    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
    
@@ -463,6 +463,7 @@
 
         <span class="n">instance_adding_methods</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
             <span class="n">best</span><span class="o">=</span><span class="s2">&quot;Best&quot;</span><span class="p">,</span>
+            <span class="n">template</span><span class="o">=</span><span class="s2">&quot;Average Instance&quot;</span><span class="p">,</span>
             <span class="n">force_directed</span><span class="o">=</span><span class="s2">&quot;Force Directed&quot;</span><span class="p">,</span>
             <span class="n">random</span><span class="o">=</span><span class="s2">&quot;Random&quot;</span><span class="p">,</span>
             <span class="n">prior_frame</span><span class="o">=</span><span class="s2">&quot;Copy prior frame&quot;</span><span class="p">,</span>
@@ -1058,7 +1059,7 @@
             <span class="n">message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Frame: {frame_idx+1:,}/{len(current_video):,}&quot;</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">seekbar</span><span class="o">.</span><span class="n">hasSelection</span><span class="p">():</span>
                 <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;frame_range&quot;</span><span class="p">]</span>
-                <span class="n">message</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; (selection: {start+1:,}-{end+1:,})&quot;</span>
+                <span class="n">message</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; (selection: {start+1:,}-</span><span class="si">{end:,}</span><span class="s2">)&quot;</span>
 
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">videos</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="n">message</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; of video {self.labels.videos.index(current_video)+1}&quot;</span>
@@ -1228,11 +1229,12 @@
         <span class="n">selection</span><span class="p">[</span><span class="s2">&quot;frame&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">current_video</span><span class="p">:</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;frame_idx&quot;</span><span class="p">]]}</span>
 
         <span class="c1"># Use negative number in list for range (i.e., &quot;0,-123&quot; means &quot;0-123&quot;)</span>
+        <span class="c1"># The ranges should be [X, Y) like standard Python ranges</span>
         <span class="n">clip_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;frame_range&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
         <span class="k">if</span> <span class="n">clip_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">clip_range</span> <span class="o">=</span> <span class="p">(</span><span class="n">clip_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="n">clip_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">clip_range</span> <span class="o">=</span> <span class="p">(</span><span class="n">clip_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="n">clip_range</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
         <span class="n">selection</span><span class="p">[</span><span class="s2">&quot;clip&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">current_video</span><span class="p">:</span> <span class="n">clip_range</span><span class="p">}</span>
-        <span class="n">selection</span><span class="p">[</span><span class="s2">&quot;video&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">current_video</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">current_video</span><span class="o">.</span><span class="n">num_frames</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)}</span>
+        <span class="n">selection</span><span class="p">[</span><span class="s2">&quot;video&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">current_video</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">current_video</span><span class="o">.</span><span class="n">num_frames</span><span class="p">)}</span>
 
         <span class="n">selection</span><span class="p">[</span><span class="s2">&quot;suggestions&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
             <span class="n">video</span><span class="p">:</span> <span class="n">remove_user_labeled</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">get_video_suggestions</span><span class="p">(</span><span class="n">video</span><span class="p">))</span>
@@ -1441,7 +1443,7 @@
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
 
 
 
@@ -1458,7 +1460,7 @@
       &copy;2019, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.3.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

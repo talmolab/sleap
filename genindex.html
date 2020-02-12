@@ -8,11 +8,11 @@
     <title>Index &#8212; SLEAP  documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="#" />
     <link rel="search" title="Search" href="search.html" />
    
@@ -200,6 +200,8 @@
 </li>
       </ul></li>
       <li><a href="video.html#sleap.io.video.HDF5Video.check">check() (sleap.io.video.HDF5Video method)</a>
+</li>
+      <li><a href="inference.html#sleap.nn.tracking.Tracker.cleaner">cleaner (sleap.nn.tracking.Tracker attribute)</a>
 </li>
       <li><a href="gui.html#sleap.gui.video.GraphicsView.clear">clear() (sleap.gui.video.GraphicsView method)</a>
 </li>
@@ -392,6 +394,8 @@
       <li><a href="gui.html#sleap.gui.slider.SliderMark.filled">filled (sleap.gui.slider.SliderMark attribute)</a>
 </li>
       <li><a href="gui.html#sleap.gui.slider.SliderMark.filled">filled() (sleap.gui.slider.SliderMark property)</a>
+</li>
+      <li><a href="inference.html#sleap.nn.tracking.Tracker.final_pass">final_pass() (sleap.nn.tracking.Tracker method)</a>
 </li>
       <li><a href="instance.html#sleap.instance.LabeledFrame.find">find() (sleap.instance.LabeledFrame method)</a>
 
@@ -720,6 +724,8 @@
       <li><a href="misc.html#sleap.rangelist.RangeList.insert_list">insert_list() (sleap.rangelist.RangeList method)</a>
 </li>
       <li><a href="instance.html#sleap.instance.Instance">Instance (class in sleap.instance)</a>
+</li>
+      <li><a href="inference.html#sleap.nn.tracking.TrackCleaner.instance_count">instance_count (sleap.nn.tracking.TrackCleaner attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -1352,7 +1358,11 @@
 </li>
       </ul></li>
       <li><a href="gui.html#sleap.gui.inference.InferenceDialog.run">run() (sleap.gui.inference.InferenceDialog method)</a>
+
+      <ul>
+        <li><a href="inference.html#sleap.nn.tracking.TrackCleaner.run">(sleap.nn.tracking.TrackCleaner method)</a>
 </li>
+      </ul></li>
       <li><a href="gui.html#sleap.gui.inference.run_gui_inference">run_gui_inference() (in module sleap.gui.inference)</a>
 </li>
       <li><a href="gui.html#sleap.gui.inference.run_gui_training">run_gui_training() (in module sleap.gui.inference)</a>
@@ -1665,15 +1675,17 @@
 </li>
       <li><a href="inference.html#sleap.nn.inference.Predictor.track_chunk">track_chunk() (sleap.nn.inference.Predictor method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="inference.html#sleap.nn.inference.Predictor.track_next_sample">track_next_sample() (sleap.nn.inference.Predictor method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="dataset.html#sleap.io.dataset.Labels.track_set_instance">track_set_instance() (sleap.io.dataset.Labels method)</a>
 </li>
       <li><a href="dataset.html#sleap.io.dataset.Labels.track_swap">track_swap() (sleap.io.dataset.Labels method)</a>
 </li>
       <li><a href="inference.html#sleap.nn.tracking.Tracker.track_window">track_window (sleap.nn.tracking.Tracker attribute)</a>
+</li>
+      <li><a href="inference.html#sleap.nn.tracking.TrackCleaner">TrackCleaner (class in sleap.nn.tracking)</a>
 </li>
       <li><a href="inference.html#sleap.nn.tracking.Tracker">Tracker (class in sleap.nn.tracking)</a>
 </li>
@@ -1915,7 +1927,7 @@
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
 
 
 
@@ -1932,7 +1944,7 @@
       &copy;2019, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.3.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

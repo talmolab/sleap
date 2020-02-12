@@ -7,11 +7,11 @@
     <title>GUI &#8212; SLEAP  documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Misc" href="misc.html" />
@@ -454,6 +454,19 @@ given in absolute coordinates for displayed frame.</p>
 <dt id="sleap.gui.video.LoadImageWorker">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.gui.video.</code><code class="sig-name descname">LoadImageWorker</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#LoadImageWorker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.LoadImageWorker" title="Permalink to this definition">¶</a></dt>
 <dd><p>Object to load video frames in background thread.</p>
+<p>Requests to load a frame image are sent by calling the <cite>request</cite> method with
+the frame idx; the video attribute should already be set to the correct
+video.</p>
+<p>These requests are added to a FILO queue polled by the <cite>doProcessing</cite>
+method, called whenever there’s time during the Qt event loop.
+(It’s also added to the event queue if it hasn’t been called for a while
+and we get a request, since the timer doesn’t seem to emit events if the
+user has been holding down the mouse for a while.)</p>
+<p>The actual frame loading is wrapped with a mutex lock so that we only load
+a single frame at a time; this helps us not get a bunch of older frame
+requests running concurrently.</p>
+<p>Once the frame loads, the <cite>QImage</cite> is sent via the <cite>result</cite> signal.
+(Qt handles the cross-thread communication if we use signals.)</p>
 </dd></dl>
 
 <dl class="class">
@@ -972,8 +985,8 @@ enough instances.</p></li>
 
 <dl class="function">
 <dt id="sleap.gui.video.video_demo">
-<code class="sig-prename descclassname">sleap.gui.video.</code><code class="sig-name descname">video_demo</code><span class="sig-paren">(</span><em class="sig-param">labels</em>, <em class="sig-param">standalone=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#video_demo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.video_demo" title="Permalink to this definition">¶</a></dt>
-<dd><p>Demo function for showing (first) video from dataset.</p>
+<code class="sig-prename descclassname">sleap.gui.video.</code><code class="sig-name descname">video_demo</code><span class="sig-paren">(</span><em class="sig-param">video=None</em>, <em class="sig-param">labels=None</em>, <em class="sig-param">standalone=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#video_demo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.video_demo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Demo function for showing video.</p>
 </dd></dl>
 
 </div>
@@ -1067,15 +1080,15 @@ If selection is “add”, then show the appropriate gui for selecting job.</p>
 
 <dl class="function">
 <dt id="sleap.gui.inference.run_gui_training">
-<code class="sig-prename descclassname">sleap.gui.inference.</code><code class="sig-name descname">run_gui_training</code><span class="sig-paren">(</span><em class="sig-param">labels_filename: str, training_jobs: Dict[ModelOutputType, TrainingJob], gui: bool = True</em><span class="sig-paren">)</span> &#x2192; Dict[sleap.nn.model.ModelOutputType, str]<a class="reference internal" href="_modules/sleap/gui/inference.html#run_gui_training"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.inference.run_gui_training" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">sleap.gui.inference.</code><code class="sig-name descname">run_gui_training</code><span class="sig-paren">(</span><em class="sig-param">labels_filename: str, training_jobs: Dict[ModelOutputType, TrainingJob], gui: bool = True, save_viz: bool = False</em><span class="sig-paren">)</span> &#x2192; Dict[sleap.nn.model.ModelOutputType, str]<a class="reference internal" href="_modules/sleap/gui/inference.html#run_gui_training"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.inference.run_gui_training" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run training for each training job.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>labels</strong> – Labels object from which we’ll get training data.</p></li>
 <li><p><strong>training_jobs</strong> – Dict of the jobs to train.</p></li>
-<li><p><strong>save_dir</strong> – Path to the directory where we’ll save inference results.</p></li>
 <li><p><strong>gui</strong> – Whether to show gui windows and process gui events.</p></li>
+<li><p><strong>save_viz</strong> – Whether to save visualizations from training.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -2037,7 +2050,7 @@ instantiated using this path.</p>
 
 <dl class="class">
 <dt id="sleap.gui.slider.VideoSlider">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.slider.</code><code class="sig-name descname">VideoSlider</code><span class="sig-paren">(</span><em class="sig-param">orientation=-1</em>, <em class="sig-param">min=0</em>, <em class="sig-param">max=100</em>, <em class="sig-param">val=0</em>, <em class="sig-param">marks=None</em>, <em class="sig-param">color_manager: Optional[sleap.gui.color.ColorManager] = None</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.slider.</code><code class="sig-name descname">VideoSlider</code><span class="sig-paren">(</span><em class="sig-param">orientation=-1</em>, <em class="sig-param">min=0</em>, <em class="sig-param">max=1</em>, <em class="sig-param">val=0</em>, <em class="sig-param">marks=None</em>, <em class="sig-param">color_manager: Optional[sleap.gui.color.ColorManager] = None</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/slider.html#VideoSlider"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.slider.VideoSlider" title="Permalink to this definition">¶</a></dt>
 <dd><p>Drop-in replacement for QSlider with additional features.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -3176,7 +3189,7 @@ selected edge source node.</p></li>
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
 
 
 
@@ -3193,7 +3206,7 @@ selected edge source node.</p></li>
       &copy;2019, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.3.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

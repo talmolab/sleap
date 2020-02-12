@@ -7,11 +7,11 @@
     <title>sleap.gui.slider &#8212; SLEAP  documentation</title>
     <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../../_static/doctools.js"></script>
-    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
    
@@ -186,7 +186,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">orientation</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>  <span class="c1"># for compatibility with QSlider</span>
         <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-        <span class="nb">max</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+        <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="n">val</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
         <span class="n">marks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">color_manager</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ColorManager</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -205,6 +205,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_color_manager</span> <span class="o">=</span> <span class="n">color_manager</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">tick_index_offset</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">zoom_factor</span> <span class="o">=</span> <span class="mi">1</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_track_rows</span> <span class="o">=</span> <span class="mi">0</span>
@@ -699,13 +700,18 @@
     <span class="k">def</span> <span class="nf">_add_tick_marks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">val_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">slider_visible_value_range</span>
 
-        <span class="n">val_order</span> <span class="o">=</span> <span class="mi">10</span>
-        <span class="k">while</span> <span class="n">val_range</span> <span class="o">//</span> <span class="n">val_order</span> <span class="o">&gt;</span> <span class="mi">24</span><span class="p">:</span>
-            <span class="n">val_order</span> <span class="o">*=</span> <span class="mi">10</span>
+        <span class="k">if</span> <span class="n">val_range</span> <span class="o">&lt;</span> <span class="mi">20</span><span class="p">:</span>
+            <span class="n">val_order</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">val_order</span> <span class="o">=</span> <span class="mi">10</span>
+            <span class="k">while</span> <span class="n">val_range</span> <span class="o">//</span> <span class="n">val_order</span> <span class="o">&gt;</span> <span class="mi">24</span><span class="p">:</span>
+                <span class="n">val_order</span> <span class="o">*=</span> <span class="mi">10</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_tick_marks</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="k">for</span> <span class="n">tick_pos</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_val_min</span> <span class="o">+</span> <span class="n">val_order</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_val_max</span><span class="p">,</span> <span class="n">val_order</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">tick_pos</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_val_min</span> <span class="o">+</span> <span class="n">val_order</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_val_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">val_order</span>
+        <span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_tick_marks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">SliderMark</span><span class="p">(</span><span class="s2">&quot;tick&quot;</span><span class="p">,</span> <span class="n">tick_pos</span><span class="p">))</span>
 
         <span class="k">for</span> <span class="n">tick_mark</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tick_marks</span><span class="p">:</span>
@@ -775,7 +781,9 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_mark_items</span><span class="p">[</span><span class="n">new_mark</span><span class="p">]</span><span class="o">.</span><span class="n">setZValue</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
             <span class="c1"># Add a text label to show in header area</span>
-            <span class="n">mark_label_text</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;{new_mark.val + 1:g}&quot;</span>  <span class="c1"># sci notation if large</span>
+            <span class="n">mark_label_text</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;{new_mark.val + self.tick_index_offset:g}&quot;</span>  <span class="c1"># sci notation if large</span>
+            <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_mark_labels</span><span class="p">[</span><span class="n">new_mark</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">addSimpleText</span><span class="p">(</span>
                 <span class="n">mark_label_text</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_base_font</span>
             <span class="p">)</span>
@@ -1247,7 +1255,7 @@
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
 
 
 
@@ -1264,7 +1272,7 @@
       &copy;2019, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.3.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

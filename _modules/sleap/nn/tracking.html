@@ -7,11 +7,11 @@
     <title>sleap.nn.tracking &#8212; SLEAP  documentation</title>
     <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../../_static/doctools.js"></script>
-    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
    
@@ -34,6 +34,7 @@
 <span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">deque</span><span class="p">,</span> <span class="n">defaultdict</span>
 <span class="kn">import</span> <span class="nn">attr</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">operator</span>
 <span class="kn">import</span> <span class="nn">cv2</span>
 <span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">linear_sum_assignment</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Deque</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">TypeVar</span>
@@ -375,9 +376,11 @@
 <span class="sd">            instance similarity value.</span>
 <span class="sd">        matching_function: A function that takes a matrix of pairwise similarities</span>
 <span class="sd">            and determines the matches to use.</span>
-<span class="sd">        candidate_maker: An class instance with a `get_candidates` method</span>
+<span class="sd">        candidate_maker: A class instance with a `get_candidates` method</span>
 <span class="sd">            which returns a list of Instances-like objects  which we can match</span>
 <span class="sd">            the predicted instances in a frame against.</span>
+<span class="sd">        cleaner: A class with a `run` method which attempts to clean tracks</span>
+<span class="sd">            after the other tracking has run for all frames.</span>
 <span class="sd">        min_new_track_points: We won&#39;t spawn a new track for an instance with</span>
 <span class="sd">            fewer than this many points.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -386,6 +389,7 @@
     <span class="n">similarity_function</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">instance_similarity</span>
     <span class="n">matching_function</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">greedy_matching</span>
     <span class="n">candidate_maker</span><span class="p">:</span> <span class="nb">object</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">factory</span><span class="o">=</span><span class="n">FlowCandidateMaker</span><span class="p">)</span>
+    <span class="n">cleaner</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">min_new_track_points</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
 
     <span class="n">track_matching_queue</span><span class="p">:</span> <span class="n">Deque</span><span class="p">[</span><span class="n">MatchedInstance</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>
@@ -552,6 +556,11 @@
 
         <span class="k">return</span> <span class="n">tracked_instances</span></div>
 
+<div class="viewcode-block" id="Tracker.final_pass"><a class="viewcode-back" href="../../../inference.html#sleap.nn.tracking.Tracker.final_pass">[docs]</a>    <span class="k">def</span> <span class="nf">final_pass</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frames</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">LabeledFrame</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;Called after tracking has run on all chunks.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cleaner</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cleaner</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span></div>
+
     <span class="k">def</span> <span class="nf">get_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">tracker_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">candidate_maker</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
         <span class="n">similarity_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">similarity_function</span><span class="o">.</span><span class="vm">__name__</span>
@@ -570,6 +579,7 @@
         <span class="n">img_scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
         <span class="n">of_window_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">21</span><span class="p">,</span>
         <span class="n">of_max_levels</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="n">clean_instance_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Tracker&quot;</span><span class="p">:</span>
 
@@ -593,12 +603,17 @@
             <span class="n">candidate_maker</span><span class="o">.</span><span class="n">of_window_size</span> <span class="o">=</span> <span class="n">of_window_size</span>
             <span class="n">candidate_maker</span><span class="o">.</span><span class="n">of_max_levels</span> <span class="o">=</span> <span class="n">of_max_levels</span>
 
+        <span class="n">cleaner</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">clean_instance_count</span><span class="p">:</span>
+            <span class="n">cleaner</span> <span class="o">=</span> <span class="n">TrackCleaner</span><span class="p">(</span><span class="n">instance_count</span><span class="o">=</span><span class="n">clean_instance_count</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
             <span class="n">track_window</span><span class="o">=</span><span class="n">track_window</span><span class="p">,</span>
             <span class="n">min_new_track_points</span><span class="o">=</span><span class="n">min_new_track_points</span><span class="p">,</span>
             <span class="n">similarity_function</span><span class="o">=</span><span class="n">similarity_function</span><span class="p">,</span>
             <span class="n">matching_function</span><span class="o">=</span><span class="n">matching_function</span><span class="p">,</span>
             <span class="n">candidate_maker</span><span class="o">=</span><span class="n">candidate_maker</span><span class="p">,</span>
+            <span class="n">cleaner</span><span class="o">=</span><span class="n">cleaner</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="nd">@classmethod</span>
@@ -611,6 +626,14 @@
         <span class="n">option</span><span class="p">[</span><span class="s2">&quot;options&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">tracker_policies</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">+</span> <span class="p">[</span>
             <span class="s2">&quot;None&quot;</span><span class="p">,</span>
         <span class="p">]</span>
+        <span class="n">options</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">option</span><span class="p">)</span>
+
+        <span class="n">option</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;clean_instance_count&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">option</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span>
+        <span class="n">option</span><span class="p">[</span><span class="s2">&quot;help&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;If non-zero, then attempt to clean tracking results &quot;</span>
+            <span class="s2">&quot;assuming there are this many instances per frame.&quot;</span>
+        <span class="p">)</span>
         <span class="n">options</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">option</span><span class="p">)</span>
 
         <span class="n">option</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;similarity&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;instance&quot;</span><span class="p">)</span>
@@ -691,6 +714,86 @@
     <span class="n">similarity_function</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">instance_iou</span>
     <span class="n">matching_function</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">hungarian_matching</span>
     <span class="n">candidate_maker</span><span class="p">:</span> <span class="nb">object</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">factory</span><span class="o">=</span><span class="n">SimpleCandidateMaker</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TrackCleaner"><a class="viewcode-back" href="../../../inference.html#sleap.nn.tracking.TrackCleaner">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">TrackCleaner</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for merging breaks in the predicted tracks.</span>
+
+<span class="sd">    Method:</span>
+<span class="sd">    1. You specify how many instances there should be in each frame.</span>
+<span class="sd">    2. The lowest scoring instances beyond this limit are deleting from each frame.</span>
+<span class="sd">    3. Going frame by frame, any time there&#39;s exactly one missing track and exactly</span>
+<span class="sd">       one new track, we merge the new track into the missing track.</span>
+
+<span class="sd">    You should review the results to check for &quot;swaps&quot;. This can be done using the</span>
+<span class="sd">    velocity threshold suggestion method.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        instance_count: The maximum number of instances we want per frame.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">instance_count</span><span class="p">:</span> <span class="nb">int</span>
+
+<div class="viewcode-block" id="TrackCleaner.run"><a class="viewcode-back" href="../../../inference.html#sleap.nn.tracking.TrackCleaner.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frames</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="s2">&quot;LabeledFrame&quot;</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Attempts to merge tracks for given frames.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            frames: The list of `LabeldFrame` objects with predictions.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None; modifies frames in place.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">frames</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">lf</span><span class="p">:</span> <span class="n">lf</span><span class="o">.</span><span class="n">frame_idx</span><span class="p">)</span>
+
+        <span class="n">lf_inst_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Find all frames with more instances than the desired threshold</span>
+        <span class="k">for</span> <span class="n">lf</span> <span class="ow">in</span> <span class="n">frames</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lf</span><span class="o">.</span><span class="n">predicted_instances</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance_count</span><span class="p">:</span>
+                <span class="c1"># Get all but the instance_count many instances with the highest score</span>
+                <span class="n">extra_instances</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+                    <span class="n">lf</span><span class="o">.</span><span class="n">predicted_instances</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">operator</span><span class="o">.</span><span class="n">attrgetter</span><span class="p">(</span><span class="s2">&quot;score&quot;</span><span class="p">)</span>
+                <span class="p">)[:</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">instance_count</span><span class="p">]</span>
+                <span class="n">lf_inst_list</span><span class="o">.</span><span class="n">extend</span><span class="p">([(</span><span class="n">lf</span><span class="p">,</span> <span class="n">inst</span><span class="p">)</span> <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">extra_instances</span><span class="p">])</span>
+
+        <span class="c1"># Remove instances over per frame threshold</span>
+        <span class="k">for</span> <span class="n">lf</span><span class="p">,</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">lf_inst_list</span><span class="p">:</span>
+            <span class="n">lf</span><span class="o">.</span><span class="n">instances</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">inst</span><span class="p">)</span>
+
+        <span class="c1"># Move instances in new tracks into tracks that disappeared on previous frame</span>
+        <span class="n">fix_track_map</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">last_good_frame_tracks</span> <span class="o">=</span> <span class="p">{</span><span class="n">inst</span><span class="o">.</span><span class="n">track</span> <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">frames</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">instances</span><span class="p">}</span>
+        <span class="k">for</span> <span class="n">lf</span> <span class="ow">in</span> <span class="n">frames</span><span class="p">:</span>
+            <span class="n">frame_tracks</span> <span class="o">=</span> <span class="p">{</span><span class="n">inst</span><span class="o">.</span><span class="n">track</span> <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">lf</span><span class="o">.</span><span class="n">instances</span><span class="p">}</span>
+
+            <span class="n">tracks_fixed_before</span> <span class="o">=</span> <span class="n">frame_tracks</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">fix_track_map</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+            <span class="k">if</span> <span class="n">tracks_fixed_before</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">lf</span><span class="o">.</span><span class="n">instances</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="p">(</span>
+                        <span class="n">inst</span><span class="o">.</span><span class="n">track</span> <span class="ow">in</span> <span class="n">fix_track_map</span>
+                        <span class="ow">and</span> <span class="n">fix_track_map</span><span class="p">[</span><span class="n">inst</span><span class="o">.</span><span class="n">track</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">frame_tracks</span>
+                    <span class="p">):</span>
+                        <span class="n">inst</span><span class="o">.</span><span class="n">track</span> <span class="o">=</span> <span class="n">fix_track_map</span><span class="p">[</span><span class="n">inst</span><span class="o">.</span><span class="n">track</span><span class="p">]</span>
+                        <span class="n">frame_tracks</span> <span class="o">=</span> <span class="p">{</span><span class="n">inst</span><span class="o">.</span><span class="n">track</span> <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">lf</span><span class="o">.</span><span class="n">instances</span><span class="p">}</span>
+
+            <span class="n">extra_tracks</span> <span class="o">=</span> <span class="n">frame_tracks</span> <span class="o">-</span> <span class="n">last_good_frame_tracks</span>
+            <span class="n">missing_tracks</span> <span class="o">=</span> <span class="n">last_good_frame_tracks</span> <span class="o">-</span> <span class="n">frame_tracks</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">extra_tracks</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">missing_tracks</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">lf</span><span class="o">.</span><span class="n">instances</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">inst</span><span class="o">.</span><span class="n">track</span> <span class="ow">in</span> <span class="n">extra_tracks</span><span class="p">:</span>
+                        <span class="n">old_track</span> <span class="o">=</span> <span class="n">inst</span><span class="o">.</span><span class="n">track</span>
+                        <span class="n">new_track</span> <span class="o">=</span> <span class="n">missing_tracks</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                        <span class="n">fix_track_map</span><span class="p">[</span><span class="n">old_track</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_track</span>
+                        <span class="n">inst</span><span class="o">.</span><span class="n">track</span> <span class="o">=</span> <span class="n">new_track</span>
+
+                        <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">frame_tracks</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance_count</span><span class="p">:</span>
+                    <span class="n">last_good_frame_tracks</span> <span class="o">=</span> <span class="n">frame_tracks</span></div></div>
 
 
 <span class="k">def</span> <span class="nf">run_tracker</span><span class="p">(</span><span class="n">frames</span><span class="p">,</span> <span class="n">tracker</span><span class="p">):</span>
@@ -824,7 +927,7 @@
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
 
 
 
@@ -841,7 +944,7 @@
       &copy;2019, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.3.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>
