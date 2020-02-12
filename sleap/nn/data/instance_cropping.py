@@ -149,7 +149,7 @@ def crop_bboxes(image: tf.Tensor, bboxes: tf.Tensor) -> tf.Tensor:
     # Compute bounding box size to use for crops.
     y1x1 = tf.gather_nd(bboxes, [[0, 0], [0, 1]])
     y2x2 = tf.gather_nd(bboxes, [[0, 2], [0, 3]])
-    box_size = tf.cast((y2x2 - y1x1) + 1, tf.int32)  # (height, width)
+    box_size = tf.cast(tf.math.round((y2x2 - y1x1) + 1), tf.int32)  # (height, width)
 
     # Normalize bounding boxes.
     image_height = tf.shape(image)[0]

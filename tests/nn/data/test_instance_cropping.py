@@ -49,6 +49,17 @@ def test_crop_bboxes():
     np.testing.assert_array_equal(crops, np.expand_dims(img.numpy()[:3, :3, :], axis=0))
     assert crops.dtype == img.dtype
 
+def test_crop_bboxes_rounding():
+    # Test for rounding truncation bug when computing bounding box size for cropping.
+    bboxes = instance_cropping.make_centered_bboxes(
+        tf.cast([[464.42838, 550.14276]], tf.float32),
+        box_height=100, box_width=100
+    )
+    crops = instance_cropping.crop_bboxes(
+        tf.zeros([16, 16, 1], tf.float32),
+        bboxes=bboxes
+    )
+    assert crops.shape == (1, 100, 100, 1)
 
 def test_instance_cropper(min_labels):
     labels_reader = providers.LabelsReader(min_labels)
