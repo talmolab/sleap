@@ -25,7 +25,7 @@ from sleap.nn.data.confidence_maps import (
     InstanceConfidenceMapGenerator,
 )
 from sleap.nn.data.edge_maps import PartAffinityFieldsGenerator
-from sleap.nn.data.dataset_ops import Shuffler, Batcher, Repeater, Prefetcher
+from sleap.nn.data.dataset_ops import Shuffler, Batcher, Repeater, Prefetcher, Preloader
 from sleap.nn.data.utils import ensure_list
 
 
@@ -43,6 +43,7 @@ TRANSFORMERS = (
     Batcher,
     Repeater,
     Prefetcher,
+    Preloader,
 )
 Provider = TypeVar("Provider", *PROVIDERS)
 Transformer = TypeVar("Transformer", *TRANSFORMERS)
@@ -180,6 +181,7 @@ class BottomUpPipeline:
         return Pipeline.from_sequence(
             [
                 self.data_provider,
+                Preloader(),
                 self.shuffler,
                 self.augmenter,
                 self.normalizer,
@@ -244,6 +246,7 @@ class TopDownPipeline:
         return Pipeline.from_sequence(
             [
                 self.data_provider,
+                Preloader(),
                 self.shuffler,
                 self.augmenter,
                 self.normalizer,
