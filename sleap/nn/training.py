@@ -868,16 +868,35 @@ class Trainer:
         return self.model
 
     @classmethod
+    def set_run_name(
+        cls, training_job: job.TrainingJob, labels_filename: str,
+    ):
+        training_job.save_dir = os.path.join(os.path.dirname(labels_filename), "models")
+        training_job.run_name = training_job.new_run_name(check_existing=True)
+
+        # Make the run directory if it doesn't exist, since when we load the
+        # saved job the save_dir will be reset if the dir doesn't exist
+        os.makedirs(training_job.run_path)
+
+    @classmethod
     def train_subprocess(
         cls,
         training_job: job.TrainingJob,
         labels_filename: str,
         waiting_callback: Optional[Callable] = None,
+        update_run_name: bool = True,
+        save_viz: bool = False,
     ):
         """Runs training inside subprocess."""
         import subprocess as sub
         import time
         import tempfile
+
+        if update_run_name:
+            cls.set_run_name(training_job, labels_filename)
+
+        run_name = training_job.run_name
+        run_path = training_job.run_path
 
         with tempfile.TemporaryDirectory() as temp_dir:
 
@@ -887,15 +906,6 @@ class Trainer:
                 datetime.now().strftime("%y%m%d_%H%M%S") + "_training_job.json"
             )
             training_job_path = os.path.join(temp_dir, temp_filename)
-
-            training_job.save_dir = os.path.join(
-                os.path.dirname(labels_filename), "models"
-            )
-
-            run_name = training_job.new_run_name(check_existing=True)
-            run_path = os.path.join(training_job.save_dir, run_name)
-
-            print(training_job)
             job.TrainingJob.save_json(training_job, training_job_path)
 
             # Build CLI arguments for training
@@ -909,6 +919,9 @@ class Trainer:
                 "--run_name",
                 run_name,
             ]
+
+            if save_viz:
+                cli_args.append("--save_viz")
 
             print(cli_args)
 
@@ -968,9 +981,13 @@ class Trainer:
             Y_gt = Y_gt[0]
         Y_gt = Y_gt[ind : (ind + 1)]
 
+        stop_training = self.model.stop_training
+
         # Predict on single sample.
         Y_pr = self.model.predict(X)
         cm_scale = Y_pr.shape[1] / X.shape[1]
+
+        self.model.stop_training = stop_training
 
         # Find peaks.
         if topdown:

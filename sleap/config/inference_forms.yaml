@@ -104,6 +104,11 @@ expert:
   type: bool
   default: False
 
+- name: _save_viz
+  label: Visualize Predictions During Training
+  type: bool
+  default: False
+
 - name: _view_datagen
   label: View Training Image Inputs...
   type: button
@@ -184,6 +189,11 @@ learning:
 
 - name: _save_predictions
   label: Save Predictions in Separate File
+  type: bool
+  default: False
+
+- name: _save_viz
+  label: Visualize Predictions During Training
   type: bool
   default: False
 
@@ -287,9 +297,13 @@ inference:
       default: greedy
       options: greedy,hungarian
     - name: tracking.window
-      label: Elapsed frame window
+      label: Elapsed Frame Window
       type: int
       default: 5
+    - name: tracking.clean_instance_count
+      label: Target Number of Tracks (0 for all)
+      type: int
+      default: 0
 
   simple:
     - name: tracking.similarity
@@ -303,9 +317,13 @@ inference:
       default: hungarian
       options: greedy,hungarian
     - name: tracking.window
-      label: Elapsed frame window
+      label: Elapsed Frame Window
       type: int
       default: 5
+    - name: tracking.clean_instance_count
+      label: Target Number of Tracks (0 for all)
+      type: int
+      default: 0
 
 - name: _predict_frames
   label: Predict On

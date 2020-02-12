@@ -201,8 +201,8 @@ def save_labeled_video(
 
     t0 = clock()
 
-    q1 = Queue()
-    q2 = Queue()
+    q1 = Queue(maxsize=10)
+    q2 = Queue(maxsize=10)
     progress_queue = Queue()
 
     thread_read = Thread(target=reader, args=(q1, video, frames))
@@ -402,8 +402,9 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    video_callback = Labels.make_video_callback([os.path.dirname(args.data_path)])
-    labels = Labels.load_json(args.data_path, video_callback=video_callback)
+    labels = Labels.load_file(
+        args.data_path, video_callback=[os.path.dirname(args.data_path)]
+    )
 
     vid = labels.videos[0]
 

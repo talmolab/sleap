@@ -181,15 +181,15 @@ class InferenceDialog(QtWidgets.QDialog):
                     return 0
                 count = 0
                 for frame_list in videos_frames.values():
-                    # Check for range, given as X, -Y
+                    # Check for [x, Y] range given as X, -Y
+                    # (we're not using typical [X, Y)-style range here)
                     if len(frame_list) == 2 and frame_list[1] < 0:
-                        count += -frame_list[1] - frame_list[0] + 1
-                    else:
+                        count += -frame_list[1] - frame_list[0]
+                    elif frame_list != (0, 0):
                         count += len(frame_list)
                 return count
 
             # Determine which options are available given _frame_selection
-
             total_random = count_total_frames(self._frame_selection["random"])
             total_suggestions = count_total_frames(self._frame_selection["suggestions"])
             clip_length = count_total_frames(self._frame_selection["clip"])
@@ -394,11 +394,17 @@ class InferenceDialog(QtWidgets.QDialog):
                 frames_to_predict = self._frame_selection["random"]
             elif predict_frames_choice.startswith("selected clip"):
                 frames_to_predict = self._frame_selection["clip"]
-                with_tracking = True
             elif predict_frames_choice.startswith("suggested"):
                 frames_to_predict = self._frame_selection["suggestions"]
             elif predict_frames_choice.startswith("entire video"):
                 frames_to_predict = self._frame_selection["video"]
+
+            # Convert [X, Y+1) ranges to [X, Y] ranges for inference cli
+            for video, frame_list in frames_to_predict.items():
+                # Check for [A, -B] list representing [A, B) range
+                if len(frame_list) == 2 and frame_list[1] < 0:
+                    frame_list = (frame_list[0], frame_list[1] + 1)
+                    frames_to_predict[video] = frame_list
 
         # for key, val in training_jobs.items():
         #     print(key)
@@ -865,10 +871,13 @@ def run_learning_pipeline(
         job.labels_filename = labels_filename
 
     # TODO: only require labels_filename if we're training?
-    # save_dir = os.path.join(os.path.dirname(labels_filename), "models")
+
+    save_viz = inference_params.get("_save_viz", False)
 
     # Train the TrainingJobs
-    trained_jobs = run_gui_training(labels_filename, training_jobs)
+    trained_jobs = run_gui_training(
+        labels_filename, training_jobs, gui=True, save_viz=save_viz
+    )
 
     # Check that all the models were trained
     if None in trained_jobs.values():
@@ -897,6 +906,7 @@ def run_gui_training(
     labels_filename: str,
     training_jobs: Dict["ModelOutputType", "TrainingJob"],
     gui: bool = True,
+    save_viz: bool = False,
 ) -> Dict["ModelOutputType", str]:
     """
     Run training for each training job.
@@ -904,8 +914,8 @@ def run_gui_training(
     Args:
         labels: Labels object from which we'll get training data.
         training_jobs: Dict of the jobs to train.
-        save_dir: Path to the directory where we'll save inference results.
         gui: Whether to show gui windows and process gui events.
+        save_viz: Whether to save visualizations from training.
 
     Returns:
         Dict of paths to trained jobs corresponding with input training jobs.
@@ -917,6 +927,7 @@ def run_gui_training(
 
     if gui:
         from sleap.nn.monitor import LossViewer
+        from sleap.gui.imagedir import QtImageDirectoryWidget
 
         # open training monitor window
         win = LossViewer()
@@ -931,14 +942,21 @@ def run_gui_training(
             print(f"Using already trained model: {trained_jobs[model_type]}")
 
         else:
-            # Clear save dir and run name for job we're about to train
-            job.save_dir = None
-            job.run_name = None
+            # Update save dir and run name for job we're about to train
+            # so we have access to them here (rather than letting
+            # train_subprocess update them).
+            training.Trainer.set_run_name(job, labels_filename)
 
             if gui:
                 print("Resetting monitor window.")
                 win.reset(what=str(model_type))
                 win.setWindowTitle(f"Training Model - {str(model_type)}")
+                if save_viz:
+                    viz_window = QtImageDirectoryWidget.make_training_vizualizer(
+                        job.run_path
+                    )
+                    viz_window.move(win.x() + win.width() + 20, win.y())
+                    win.on_epoch.connect(viz_window.poll)
 
             print(f"Start training {str(model_type)}...")
 
@@ -948,7 +966,11 @@ def run_gui_training(
 
             # Run training
             trained_job_path, success = training.Trainer.train_subprocess(
-                job, labels_filename, waiting
+                job,
+                labels_filename,
+                waiting_callback=waiting,
+                update_run_name=False,
+                save_viz=save_viz,
             )
 
             if success:

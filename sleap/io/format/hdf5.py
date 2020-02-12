@@ -21,7 +21,10 @@ from typing import Optional
 
 
 class LabelsV1Adaptor(format.adaptor.Adaptor):
-    FORMAT_ID = 1
+    FORMAT_ID = 1.1
+
+    # 1.0 points with gridline coordinates, top left corner at (0, 0)
+    # 1.1 points with midpixel coordinates, top left corner at (-0.5, -0.5)
 
     @property
     def handles(self):
@@ -44,7 +47,7 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
             return False
         if not file.is_hdf5:
             return False
-        if file.format_id not in (None, self.FORMAT_ID):
+        if file.format_id is not None and file.format_id >= 2:
             return False
         return True
 
@@ -58,13 +61,11 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
         return True
 
     @classmethod
-    def read(
+    def read_headers(
         cls,
         file: format.filehandle.FileHandle,
         video_callback=None,
         match_to: Optional[Labels] = None,
-        *args,
-        **kwargs,
     ):
         f = file.file
 
@@ -99,15 +100,37 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
 
         labels = labels_json.LabelsJsonAdaptor.from_json_data(dicts, match_to=match_to)
 
+        return labels
+
+    @classmethod
+    def read(
+        cls,
+        file: format.filehandle.FileHandle,
+        video_callback=None,
+        match_to: Optional[Labels] = None,
+        *args,
+        **kwargs,
+    ):
+
+        f = file.file
+        labels = cls.read_headers(file, video_callback, match_to)
+
         frames_dset = f["frames"][:]
         instances_dset = f["instances"][:]
         points_dset = f["points"][:]
         pred_points_dset = f["pred_points"][:]
 
+        # Shift the *non-predicted* points since these used to be saved with
+        # a gridline coordinate system.
+        if (file.format_id or 0) < 1.1:
+            points_dset[:]["x"] -= 0.5
+            points_dset[:]["y"] -= 0.5
+
         # Rather than instantiate a bunch of Point\PredictedPoint objects, we will
         # use inplace numpy recarrays. This will save a lot of time and memory
         # when reading things in.
         points = PointArray(buf=points_dset, shape=len(points_dset))
+
         pred_points = PredictedPointArray(
             buf=pred_points_dset, shape=len(pred_points_dset)
         )
