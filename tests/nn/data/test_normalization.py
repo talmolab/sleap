@@ -77,3 +77,27 @@ def test_normalizer(min_labels):
     example = next(iter(ds))
 
     assert example["image"].dtype == tf.float32
+
+
+def test_normalizer_from_config():
+    normalizer = normalization.Normalizer.from_config(
+        config=normalization.PreprocessingConfig(
+            ensure_rgb=False, ensure_grayscale=False, imagenet_mode=None
+            )
+        )
+    assert normalizer.image_key == "image"
+    assert normalizer.ensure_float == True
+    assert normalizer.ensure_rgb == False
+    assert normalizer.ensure_grayscale == False
+    assert normalizer.imagenet_mode is None
+
+    normalizer = normalization.Normalizer.from_config(
+        config=normalization.PreprocessingConfig(
+            ensure_rgb=False, ensure_grayscale=False, imagenet_mode="tf"
+            )
+        )
+    assert normalizer.image_key == "image"
+    assert normalizer.ensure_float == True
+    assert normalizer.ensure_rgb == False
+    assert normalizer.ensure_grayscale == False
+    assert normalizer.imagenet_mode is "tf"

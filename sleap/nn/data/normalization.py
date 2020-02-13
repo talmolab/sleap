@@ -4,6 +4,7 @@ import tensorflow as tf
 from sleap.nn.data.utils import expand_to_rank
 import attr
 from typing import List, Text, Optional
+from sleap.nn.config import PreprocessingConfig
 
 
 def ensure_min_image_rank(image: tf.Tensor) -> tf.Tensor:
@@ -277,6 +278,24 @@ class Normalizer:
             attr.validators.in_(["tf", "caffe", "torch"])
         ),
     )
+
+    @classmethod
+    def from_config(cls, config: PreprocessingConfig) -> "Normalizer":
+        """Build an instance of this class from its configuration options.
+
+        Args:
+            config: An `PreprocessingConfig` instance with the desired parameters.
+
+        Returns:
+            An instance of this class.
+        """
+        return cls(
+            image_key="image",
+            ensure_float=True,
+            ensure_rgb=config.ensure_rgb,
+            ensure_grayscale=config.ensure_grayscale,
+            imagenet_mode=config.imagenet_mode,
+        )
 
     @property
     def input_keys(self) -> List[Text]:
