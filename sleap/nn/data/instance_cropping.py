@@ -194,7 +194,9 @@ class InstanceCropper:
     keep_full_image: bool = False
 
     @classmethod
-    def from_config(cls, config: InstanceCroppingConfig, crop_size: Optional[int] = None) -> "InstanceCropper":
+    def from_config(
+        cls, config: InstanceCroppingConfig, crop_size: Optional[int] = None
+    ) -> "InstanceCropper":
         """Build an instance of this class from its configuration options.
 
         Args:
@@ -216,7 +218,7 @@ class InstanceCropper:
         if not isinstance(crop_size, int):
             raise ValueError(
                 "Crop size not specified in config and not provided in the arguments."
-                )
+            )
 
         return cls(crop_width=crop_size, crop_height=crop_size, keep_full_image=False)
 

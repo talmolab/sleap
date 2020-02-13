@@ -140,6 +140,7 @@ def test_instance_cropper_keeping_full_image(min_labels):
     assert example["image"].shape == (384, 384, 1)
     assert example["image"].dtype == tf.uint8
 
+
 def test_instance_cropper_from_config():
     cropper = instance_cropping.InstanceCropper.from_config(
         config=InstanceCroppingConfig(crop_size=16),
