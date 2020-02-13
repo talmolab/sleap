@@ -1,10 +1,13 @@
+import pytest
 import numpy as np
 import tensorflow as tf
 
 tf.config.experimental.set_visible_devices([], device_type="GPU")  # hide GPUs for test
 
+import sleap
 from sleap.nn.data import providers
 from sleap.nn.data import instance_centroids
+from sleap.nn.config import InstanceCroppingConfig
 
 
 def test_find_points_bbox_midpoint():
@@ -66,3 +69,24 @@ def test_instance_centroid_finder_anchored(min_labels):
     np.testing.assert_allclose(example["centroids"],
         [[92.65221, 202.72598],
          [205.93005, 187.88963]])
+
+def test_instance_centroid_finder_from_config():
+    finder = instance_centroids.InstanceCentroidFinder.from_config(
+        config=InstanceCroppingConfig(center_on_part=None),
+        skeletons=None
+        )
+    assert finder.center_on_anchor_part == False
+
+    finder = instance_centroids.InstanceCentroidFinder.from_config(
+        config=InstanceCroppingConfig(center_on_part="A"),
+        skeletons=sleap.Skeleton.from_names_and_edge_inds(["A", "B"]),
+        )
+    assert finder.center_on_anchor_part == True
+    assert finder.anchor_part_names == ["A"]
+    assert finder.skeletons[0].node_names == ["A", "B"]
+
+    with pytest.raises(ValueError):
+        finder = instance_centroids.InstanceCentroidFinder.from_config(
+            config=InstanceCroppingConfig(center_on_part="A"),
+            skeletons=None,
+            )
