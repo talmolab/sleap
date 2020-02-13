@@ -3,7 +3,7 @@
 import numpy as np
 import tensorflow as tf
 import attr
-from typing import Text, Optional, List
+from typing import Text, Optional, List, Sequence, Union
 import sleap
 
 
@@ -17,9 +17,16 @@ class LabelsReader:
     
     Attributes:
         labels: The `sleap.Labels` instance to generate data from.
+        example_indices: List or numpy array of ints with the labeled frame indices to
+            use when iterating over the labels. Use this to specify subsets of the
+            labels to use. Particularly handy for creating data splits. If not provided,
+            the entire labels dataset will be read. These indices will be applicable to
+            the labeled frames in `labels` attribute, which may have changed in ordering
+            or filtered.
     """
 
     labels: sleap.Labels
+    example_indices: Optional[Union[Sequence[int], np.ndarray]] = None
 
     @classmethod
     def from_user_instances(cls, labels: sleap.Labels) -> "LabelsReader":
@@ -29,7 +36,9 @@ class LabelsReader:
             labels: A `sleap.Labels` instance containing user instances.
         
         Returns:
-            A `LabelsReader` instance that can create a dataset for pipelining.
+            A `LabelsReader` instance that can create a dataset for pipelining. Note
+            that the examples may change in ordering relative to the input `labels`, so
+            be sure to use the `labels` attribute in the returned instance.
         """
         user_labels = sleap.Labels(
             [
@@ -60,7 +69,10 @@ class LabelsReader:
 
     def __len__(self) -> int:
         """Return the number of elements in the dataset."""
-        return len(self.labels)
+        if self.example_indices is None:
+            return len(self.labels)
+        else:
+            return len(self.example_indices)
 
     @property
     def output_keys(self) -> List[Text]:
@@ -68,6 +80,7 @@ class LabelsReader:
         return [
             "image",
             "raw_image_size",
+            "example_ind",
             "video_ind",
             "frame_ind",
             "scale",
@@ -79,13 +92,6 @@ class LabelsReader:
         self, ds_index: Optional[tf.data.Dataset] = None
     ) -> tf.data.Dataset:
         """Return a `tf.data.Dataset` whose elements are data from labeled frames.
-        
-        Args:
-            ds_index: If provided, the returned dataset will be mapped onto this
-                dataset. This can be used to provide an explicit range of samples to
-                read. Elements of this dataset must be integers.
-                If not provided, an indexing dataset will be created containing all of
-                the indices available, i.e., `tf.data.Dataset.range(len(self))`.
 
         Returns:
             A dataset whose elements are dictionaries with the loaded data associated
@@ -96,6 +102,8 @@ class LabelsReader:
                     tensor of shape (3,) representing [height, width, channels]. This is
                     useful for keeping track of absolute image coordinates if downstream
                     processing modules resize, crop or pad the image.
+                "example_ind": Index of the individual labeled frame within the labels
+                    stored in the `labels` attribute of this reader.
                 "video_ind": Index of the video within the `Labels.videos` list that the
                     labeled frame comes from. Tensor will be a scalar of dtype tf.int32.
                 "frame_ind": Index of the frame within the video that the labeled frame
@@ -141,6 +149,7 @@ class LabelsReader:
 
         def fetch_lf(ind):
             """Local function that fetches a sample given the index."""
+            ind = tf.cast(ind, tf.int64)
             (
                 image,
                 raw_image_size,
@@ -157,6 +166,7 @@ class LabelsReader:
             return {
                 "image": image,
                 "raw_image_size": raw_image_size,
+                "example_ind": ind,
                 "video_ind": video_ind,
                 "frame_ind": frame_ind,
                 "scale": tf.ones([2], dtype=tf.float32),
@@ -164,9 +174,12 @@ class LabelsReader:
                 "skeleton_inds": skeleton_inds,
             }
 
-        if ds_index is None:
+        if self.example_indices is None:
             # Create default indexing dataset.
             ds_index = tf.data.Dataset.range(len(self))
+        else:
+            # Create indexing dataset from provided indices.
+            ds_index = tf.data.Dataset.from_tensor_slices(self.example_indices)
 
         # Create reader dataset.
         # Note: We don't parallelize here for thread safety.
@@ -184,44 +197,50 @@ class VideoReader:
     
     Attributes:
         video: The `sleap.Video` instance to generate data from.
+        example_indices: List or numpy array of ints with the frame indices to use when
+            iterating over the video. Use this to specify subsets of the video to read.
+            If not provided, the entire video will be read.
     """
 
     video: sleap.Video
+    example_indices: Optional[Union[Sequence[int], np.ndarray]] = None
 
     @classmethod
-    def from_filepath(cls, filename: Text, **kwargs) -> "VideoReader":
+    def from_filepath(
+        cls,
+        filename: Text,
+        example_indices: Optional[Union[Sequence[int], np.ndarray]] = None,
+        **kwargs
+    ) -> "VideoReader":
         """Create a `LabelsReader` from a saved labels file.
         
         Args:
             filename: Path to a video file.
+            example_indices: List or numpy array of ints with the frame indices to use
+                when iterating over the video. Use this to specify subsets of the video
+                to read. If not provided, the entire video will be read.
             **kwargs: Any other video keyword argument (e.g., grayscale, dataset).
         
         Returns:
             A `VideoReader` instance that can create a dataset for pipelining.
         """
         video = sleap.Video.from_filename(filename, **kwargs)
-        return cls(video=video)
+        return cls(video=video, example_indices=example_indices)
 
     def __len__(self) -> int:
         """Return the number of elements in the dataset."""
-        return len(self.video)
+        if self.example_indices is None:
+            return len(self.video)
+        else:
+            return len(self.example_indices)
 
     @property
     def output_keys(self) -> List[Text]:
         """Return the output keys that the dataset will produce."""
         return ["image", "raw_image_size", "frame_ind", "scale"]
 
-    def make_dataset(
-        self, ds_index: Optional[tf.data.Dataset] = None
-    ) -> tf.data.Dataset:
-        """Return a `tf.data.Dataset` whose elements are data from labeled frames.
-        
-        Args:
-            ds_index: If provided, the returned dataset will be mapped onto this
-                dataset. This can be used to provide an explicit range of samples to
-                read. Elements of this dataset must be integers.
-                If not provided, an indexing dataset will be created containing all of
-                the indices available, i.e., `tf.data.Dataset.range(len(self))`.
+    def make_dataset(self) -> tf.data.Dataset:
+        """Return a `tf.data.Dataset` whose elements are data from video frames.
 
         Returns:
             A dataset whose elements are dictionaries with the loaded data associated
@@ -256,6 +275,7 @@ class VideoReader:
 
         def fetch_frame(ind):
             """Local function that fetches a sample given the index."""
+            ind = tf.cast(ind, tf.int64)
             image, raw_image_size, frame_ind = tf.py_function(
                 py_fetch_frame, [ind], [image_dtype, tf.int32, tf.int64]
             )
@@ -267,9 +287,12 @@ class VideoReader:
                 "scale": tf.ones([2], dtype=tf.float32),
             }
 
-        if ds_index is None:
+        if self.example_indices is None:
             # Create default indexing dataset.
             ds_index = tf.data.Dataset.range(len(self))
+        else:
+            # Create indexing dataset from provided indices.
+            ds_index = tf.data.Dataset.from_tensor_slices(self.example_indices)
 
         # Create reader dataset.
         # Note: We don't parallelize here for thread safety.

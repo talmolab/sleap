@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 tf.config.experimental.set_visible_devices([], device_type="GPU")  # hide GPUs for test
 from tests.fixtures.videos import TEST_H5_FILE, TEST_SMALL_ROBOT_MP4_FILE
-
+import sleap
 from sleap.nn.data import providers
 
 def test_labels_reader(min_labels):
@@ -18,6 +18,9 @@ def test_labels_reader(min_labels):
     assert example["raw_image_size"].dtype == tf.int32
     np.testing.assert_array_equal(example["raw_image_size"], (384, 384, 1))
 
+    assert example["example_ind"] == 0
+    assert example["example_ind"].dtype == tf.int64
+
     assert example["video_ind"] == 0
     assert example["video_ind"].dtype == tf.int32
 
@@ -32,6 +35,18 @@ def test_labels_reader(min_labels):
 
     np.testing.assert_array_equal(example["skeleton_inds"], [0, 0])
     assert example["skeleton_inds"].dtype == tf.int32
+
+
+def test_labels_reader_subset(min_labels):
+    labels = sleap.Labels([min_labels[0], min_labels[0], min_labels[0]])
+    assert len(labels) == 3
+
+    labels_reader = providers.LabelsReader(labels, example_indices=[2, 1])
+    assert len(labels_reader) == 2
+    examples = list(iter(labels_reader.make_dataset()))
+    assert len(examples) == 2
+    assert examples[0]["example_ind"] == 2
+    assert examples[1]["example_ind"] == 1
 
 
 def test_video_reader_mp4():
@@ -52,6 +67,23 @@ def test_video_reader_mp4():
 
     np.testing.assert_array_equal(example["scale"], (1.0, 1.0))
     assert example["scale"].dtype == tf.float32
+
+
+def test_video_reader_mp4_subset():
+    video_reader = providers.VideoReader.from_filepath(
+        TEST_SMALL_ROBOT_MP4_FILE,
+        example_indices=[2, 1, 4]
+        )
+
+    assert len(video_reader) == 3
+
+    ds = video_reader.make_dataset()
+    examples = list(iter(ds))
+
+    assert examples[0]["frame_ind"].dtype == tf.int64
+    assert examples[0]["frame_ind"] == 2
+    assert examples[1]["frame_ind"] == 1
+    assert examples[2]["frame_ind"] == 4
 
 
 def test_video_reader_mp4_grayscale():
