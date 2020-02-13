@@ -6,6 +6,7 @@ import numpy
 if hasattr(numpy.random, "_bit_generator"):
     numpy.random.bit_generator = numpy.random._bit_generator
 
+import numpy as np
 import tensorflow as tf
 import attr
 from typing import List, Text
@@ -190,22 +191,23 @@ class ImgaugAugmenter:
             aug_det = self.augmenter.to_deterministic()
 
             # Augment the image.
-            aug_img = aug_det.augment_image(image)
+            aug_img = aug_det.augment_image(image.numpy())
 
             # Augment each set of points for each instance.
             aug_instances = []
             for instance in instances:
-                kps = ia.KeypointsOnImage.from_xy_array(instance, tuple(image.shape))
+                kps = ia.KeypointsOnImage.from_xy_array(instance.numpy(), tuple(image.shape))
                 aug_instance = aug_det.augment_keypoints(kps).to_xy_array()
                 aug_instances.append(aug_instance)
 
             # Convert the results to tensors.
-            aug_img = tf.convert_to_tensor(aug_img, dtype=image.dtype)
+            # aug_img = tf.convert_to_tensor(aug_img, dtype=image.dtype)
 
             # This will get converted to a rank 3 tensor (n_instances, n_nodes, 2).
-            aug_instances = [
-                tf.convert_to_tensor(x, dtype=instances.dtype) for x in aug_instances
-            ]
+            aug_instances = np.stack(aug_instances, axis=0)
+            # aug_instances = [
+            #     tf.convert_to_tensor(x, dtype=instances.dtype) for x in aug_instances
+            # ]
 
             return aug_img, aug_instances
 
@@ -216,6 +218,8 @@ class ImgaugAugmenter:
                 [frame_data["image"], frame_data["instances"]],
                 [frame_data["image"].dtype, frame_data["instances"].dtype],
             )
+            image.set_shape(frame_data["image"].get_shape())
+            instances.set_shape(frame_data["instances"].get_shape())
             frame_data.update({"image": image, "instances": instances})
             return frame_data
 

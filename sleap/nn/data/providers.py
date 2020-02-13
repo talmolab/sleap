@@ -1,5 +1,6 @@
 """Data providers for pipeline I/O."""
 
+import numpy as np
 import tensorflow as tf
 import attr
 from typing import Text, Optional, List
@@ -119,19 +120,24 @@ class LabelsReader:
         def py_fetch_lf(ind):
             """Local function that will not be autographed."""
             lf = self.labels[int(ind.numpy())]
-            video_ind = self.labels.videos.index(lf.video)
-            frame_ind = lf.frame_idx
+            video_ind = np.array(self.labels.videos.index(lf.video)).astype("int32")
+            frame_ind = np.array(lf.frame_idx).astype("int64")
             raw_image = lf.image
-            image = tf.convert_to_tensor(raw_image)
-            raw_image_size = tf.convert_to_tensor(raw_image.shape, dtype=tf.int32)
-            instances = [
-                tf.convert_to_tensor(inst.points_array, dtype=tf.float32)
-                for inst in lf.instances
-            ]
-            skeleton_inds = [
-                self.labels.skeletons.index(inst.skeleton) for inst in lf.instances
-            ]
-            return image, raw_image_size, instances, video_ind, frame_ind, skeleton_inds
+            raw_image_size = np.array(raw_image.shape).astype("int32")
+            instances = np.stack(
+                [inst.points_array.astype("float32") for inst in lf.instances], axis=0
+            )
+            skeleton_inds = np.array(
+                [self.labels.skeletons.index(inst.skeleton) for inst in lf.instances]
+            ).astype("int32")
+            return (
+                raw_image,
+                raw_image_size,
+                instances,
+                video_ind,
+                frame_ind,
+                skeleton_inds,
+            )
 
         def fetch_lf(ind):
             """Local function that fetches a sample given the index."""
@@ -245,9 +251,8 @@ class VideoReader:
             """Local function that will not be autographed."""
             frame_ind = int(ind.numpy())
             raw_image = self.video.get_frame(frame_ind)
-            image = tf.convert_to_tensor(raw_image)
-            raw_image_size = tf.convert_to_tensor(raw_image.shape, dtype=tf.int32)
-            return image, raw_image_size, frame_ind
+            raw_image_size = np.array(raw_image.shape).astype("int32")
+            return raw_image, raw_image_size, np.array(frame_ind).astype("int64")
 
         def fetch_frame(ind):
             """Local function that fetches a sample given the index."""
