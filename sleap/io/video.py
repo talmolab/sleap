@@ -13,6 +13,8 @@ import logging
 
 from typing import Iterable, List, Optional, Tuple, Union
 
+from sleap.util import json_loads, json_dumps
+
 logger = logging.getLogger(__name__)
 
 
@@ -40,6 +42,7 @@ class HDF5Video:
     dataset: str = attr.ib(default=None)
     input_format: str = attr.ib(default="channels_last")
     convert_range: bool = attr.ib(default=True)
+    enable_source_video: bool = attr.ib(default=True)
 
     def __attrs_post_init__(self):
         """Called by attrs after __init__()."""
@@ -81,6 +84,13 @@ class HDF5Video:
                 for current_idx in range(len(original_idx_lists)):
                     original_idx = original_idx_lists[current_idx]
                     self.__original_to_current_frame_idx[original_idx] = current_idx
+
+            source_video_group = f"{base_dataset_path}/source_video"
+            if source_video_group in self.__file_h5:
+                d = json_loads(
+                    self.__file_h5.require_group(source_video_group).attrs["json"]
+                )
+                self._source_video_ = Video.cattr().structure(d, Video)
 
         else:
             self.__dataset_h5 = None
@@ -193,6 +203,18 @@ class HDF5Video:
         # TODO
         pass
 
+    def _try_frame_from_source_video(self, idx) -> np.ndarray:
+        try:
+            return self._source_video.get_frame(idx)
+        except:
+            raise ValueError(f"Frame index {idx} not in original index.")
+
+    @property
+    def _source_video(self) -> "HDF5Video":
+        if self.enable_source_video and hasattr(self, "_source_video_"):
+            return self._source_video_
+        return None
+
     def get_frame(self, idx) -> np.ndarray:
         """
         Get a frame from the underlying HDF5 video data.
@@ -208,7 +230,7 @@ class HDF5Video:
             if idx in self.__original_to_current_frame_idx:
                 idx = self.__original_to_current_frame_idx[idx]
             else:
-                raise ValueError(f"Frame index {idx} not in original index.")
+                return self._try_frame_from_source_video(idx)
 
         frame = self.__dataset_h5[idx]
 
@@ -1200,6 +1222,10 @@ class Video:
 
             if index_by_original:
                 f.create_dataset(dataset + "/frame_numbers", data=frame_numbers_data)
+
+            source_video_group = f.require_group(dataset + "/source_video")
+            source_video_dict = Video.cattr().unstructure(self)
+            source_video_group.attrs["json"] = json_dumps(source_video_dict)
 
         return self.__class__(
             backend=HDF5Video(
