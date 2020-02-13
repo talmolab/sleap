@@ -7,7 +7,7 @@ import numpy as np
 import tensorflow as tf
 from sleap.nn.data.utils import expand_to_rank
 import attr
-from typing import List, Text, Optional
+from typing import List, Text, Optional, Any
 
 
 @attr.s(auto_attribs=True)
@@ -261,7 +261,15 @@ class Preloader:
     
     This transformer can lead to considerable performance improvements at the cost of
     memory consumption.
+
+    This is functionally equivalent to `tf.data.Dataset.cache`, except the cached
+    examples are accessible directly via the `examples` attribute.
+
+    Attributes:
+        examples: Stored list of preloaded elements.
     """
+
+    examples: List[Any] = attr.ib(init=False, factory=list)
 
     @property
     def input_keys(self) -> List[Text]:
@@ -288,14 +296,14 @@ class Preloader:
             iteration.
         """
         # Preload examples from the input dataset.
-        examples = list(iter(ds_input))
+        self.examples = list(iter(ds_input))
 
         # Store example metadata.
-        keys = list(examples[0].keys())
-        dtypes = [examples[0][key].dtype for key in keys]
+        keys = list(self.examples[0].keys())
+        dtypes = [self.examples[0][key].dtype for key in keys]
 
         def gen():
-            for example in examples:
+            for example in self.examples:
                 yield tuple(example[key] for key in keys)
 
         ds_output = tf.data.Dataset.from_generator(gen, output_types=tuple(dtypes))
