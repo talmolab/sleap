@@ -1,3 +1,4 @@
+import pytest
 import numpy as np
 import tensorflow as tf
 
@@ -67,3 +68,32 @@ def test_resizer(min_labels):
     assert example["image"].shape == (100, 100, 1)
     np.testing.assert_array_equal(example["scale"], (0.25, 0.25))
     np.testing.assert_allclose(example["instances"], data_example["instances"] * 0.25)
+
+
+def test_resizer_from_config():
+    resizer = resizing.Resizer.from_config(
+        config=resizing.PreprocessingConfig(input_scaling=0.5, pad_to_stride=32))
+    assert resizer.image_key == "image"
+    assert resizer.points_key == "instances"
+    assert resizer.scale == 0.5
+    assert resizer.pad_to_stride == 32
+
+    resizer = resizing.Resizer.from_config(
+        config=resizing.PreprocessingConfig(input_scaling=0.5, pad_to_stride=32),
+        pad_to_stride=16)
+    assert resizer.image_key == "image"
+    assert resizer.points_key == "instances"
+    assert resizer.scale == 0.5
+    assert resizer.pad_to_stride == 32
+
+    resizer = resizing.Resizer.from_config(
+        config=resizing.PreprocessingConfig(input_scaling=0.5, pad_to_stride="auto"),
+        pad_to_stride=32)
+    assert resizer.image_key == "image"
+    assert resizer.points_key == "instances"
+    assert resizer.scale == 0.5
+    assert resizer.pad_to_stride == 32
+
+    with pytest.raises(ValueError):
+        resizer = resizing.Resizer.from_config(
+            config=resizing.PreprocessingConfig(input_scaling=0.5, pad_to_stride="auto"))
