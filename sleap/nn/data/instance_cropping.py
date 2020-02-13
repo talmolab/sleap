@@ -4,6 +4,7 @@ import tensorflow as tf
 import attr
 from typing import Optional, List, Text
 import sleap
+from sleap.nn.config import InstanceCroppingConfig
 
 
 def normalize_bboxes(
@@ -191,6 +192,33 @@ class InstanceCropper:
     crop_width: int
     crop_height: int
     keep_full_image: bool = False
+
+    @classmethod
+    def from_config(cls, config: InstanceCroppingConfig, crop_size: Optional[int] = None) -> "InstanceCropper":
+        """Build an instance of this class from its configuration options.
+
+        Args:
+            config: An `InstanceCroppingConfig` instance with the desired parameters.
+            crop_size: Integer specifying the crop height and width. This is only
+                required and will only be used if the `config.crop_size` attribute does
+                not specify an explicit integer crop size (e.g., it is set to "auto").
+
+        Returns:
+            An instance of this class.
+
+        Raises:
+            ValueError: If the `crop_size` is not specified in either the config
+                attribute or function arguments.
+        """
+        if isinstance(config.crop_size, int):
+            crop_size = config.crop_size
+
+        if not isinstance(crop_size, int):
+            raise ValueError(
+                "Crop size not specified in config and not provided in the arguments."
+                )
+
+        return cls(crop_width=crop_size, crop_height=crop_size, keep_full_image=False)
 
     @property
     def input_keys(self) -> List[Text]:
