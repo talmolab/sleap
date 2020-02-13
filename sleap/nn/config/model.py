@@ -1,5 +1,6 @@
 import attr
 from typing import Optional, Text, List, Sequence, Tuple
+from sleap.nn.config.utils import oneof
 
 
 @attr.s(auto_attribs=True)
@@ -39,13 +40,18 @@ class PartAffinityFieldsHeadConfig:
 
 
 @attr.s(auto_attribs=True)
+class MultiInstanceConfig:
+    multi_instance: MultiInstanceConfmapsHeadConfig = attr.ib(factory=MultiInstanceConfmapsHeadConfig)
+    pafs: PartAffinityFieldsHeadConfig = attr.ib(factory=PartAffinityFieldsHeadConfig)
+
+
+@oneof
+@attr.s(auto_attribs=True)
 class HeadsConfig:
     single_instance: Optional[SingleInstanceConfmapsHeadConfig] = None
     centroid: Optional[CentroidsHeadConfig] = None
     centered_instance: Optional[CenteredInstanceConfmapsHeadConfig] = None
-    multi_instance: Optional[MultiInstanceConfmapsHeadConfig] = None
-    pafs: Optional[PartAffinityFieldsHeadConfig] = None
-    # TODO: implement mutual exclusivity in validators
+    multi_instance: Optional[MultiInstanceConfig] = None
 
 
 @attr.s(auto_attribs=True)
@@ -112,13 +118,13 @@ class ResNetConfig:
     output_stride: int = 4
 
 
+@oneof
 @attr.s(auto_attribs=True)
 class BackboneConfig:
     leap: Optional[LEAPConfig] = None
     unet: Optional[UNetConfig] = None
     hourglass: Optional[HourglassConfig] = None
     resnet: Optional[ResNetConfig] = None
-    # TODO: implement mutual exclusivity in validators?
 
 
 @attr.s(auto_attribs=True)
