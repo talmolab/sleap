@@ -86,6 +86,30 @@ class Pipeline:
                 )
         return cls(providers=providers, transformers=transformers)
 
+    @classmethod
+    def from_pipelines(cls, sequence: Sequence["Pipeline"]) -> "Pipeline":
+        """Create a new pipeline instance by chaining together multiple pipelines.
+
+        Args:
+            sequence: A sequence of `Pipeline` instances.
+
+        Returns:
+            A new `Pipeline` instance formed by concatenating the individual pipelines.
+        """
+        blocks = []
+        for pipeline in sequence:
+            blocks.extend(pipeline.providers)
+            blocks.extend(pipeline.transformers)
+        return cls.from_sequence(blocks)
+
+    def __add__(self, other: "Pipeline") -> "Pipeline":
+        """Overload for + operator concatenation."""
+        return self.from_pipelines([self, other])
+
+    def __or__(self, other: "Pipeline") -> "Pipeline":
+        """Overload for | operator concatenation."""
+        return self.from_pipelines([self, other])
+
     def validate_pipeline(self) -> List[Text]:
         """Check that all pipeline blocks meet the data requirements.
 
