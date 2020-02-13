@@ -176,27 +176,46 @@ class BottomUpPipeline:
     repeater: Repeater
     prefetcher: Prefetcher
 
-    def make_training_pipeline(self) -> Pipeline:
-        """Make training pipeline."""
-        return Pipeline.from_sequence(
-            [
-                self.data_provider,
-                Preloader(),
-                self.shuffler,
-                self.augmenter,
-                self.normalizer,
-                self.resizer,
-                self.multi_confmap_generator,
-                self.paf_generator,
-                self.batcher,
-                self.repeater,
-                self.prefetcher,
-            ]
-        )
+    def make_training_pipeline(self, preload: bool = False) -> Pipeline:
+        """Make training pipeline.
 
-    def make_training_dataset(self) -> tf.data.Dataset:
-        """Instantiate the training pipeline to create a dataset."""
-        return self.make_training_pipeline().make_dataset()
+        Args:
+            preload: If True, preload all examples in the dataset when the pipeline is
+                constructed. This increases performance at the cost of memory.
+
+        Returns:
+            The constructed `Pipeline` instance.
+        """
+        blocks = [self.data_provider]
+
+        # Optional preprocessing:
+        if preload:
+            blocks.append(Preloader())
+        if self.shuffler is not None:
+            blocks.append(self.shuffler)
+        if self.augmenter is not None:
+            blocks.append(self.augmenter)
+        if self.normalizer is not None:
+            blocks.append(self.normalizer)
+        if self.resizer is not None:
+            blocks.append(self.resizer)
+
+        blocks.extend([self.multi_confmap_generator, self.paf_generator])
+
+        blocks.extend([self.batcher, self.repeater, self.prefetcher])
+        return Pipeline.from_sequence(blocks)
+
+    def make_training_dataset(self, preload: bool = False) -> tf.data.Dataset:
+        """Instantiate the training pipeline to create a dataset.
+
+        Args:
+            preload: If True, preload all examples in the dataset when the pipeline is
+                constructed. This increases performance at the cost of memory.
+
+        Returns:
+            The constructed `tf.data.Dataset` instance.
+        """
+        return self.make_training_pipeline(preload=preload).make_dataset()
 
     def make_inference_pipeline(self) -> Pipeline:
         """Make inference pipeline."""
@@ -237,33 +256,55 @@ class TopDownPipeline:
     repeater: Repeater
     prefetcher: Prefetcher
 
-    def make_training_pipeline(self, centroid: bool = False) -> Pipeline:
-        """Make training pipeline."""
-        if centroid:
-            middle_blocks = [self.centroid_confmap_generator]
-        else:
-            middle_blocks = [self.instance_cropper, self.instance_confmap_generator]
-        return Pipeline.from_sequence(
-            [
-                self.data_provider,
-                Preloader(),
-                self.shuffler,
-                self.augmenter,
-                self.normalizer,
-                self.resizer,
-                self.centroid_finder,
-            ]
-            + middle_blocks
-            + [
-            self.batcher,
-            self.prefetcher,
-            self.repeater
-            ]
-        )
+    def make_training_pipeline(
+        self, centroid: bool = False, preload: bool = False
+    ) -> Pipeline:
+        """Make training pipeline.
 
-    def make_training_dataset(self) -> tf.data.Dataset:
-        """Instantiate the training pipeline to create a dataset."""
-        return self.make_training_pipeline().make_dataset()
+        Args:
+            preload: If True, preload all examples in the dataset when the pipeline is
+                constructed. This increases performance at the cost of memory.
+
+        Returns:
+            The constructed `Pipeline` instance.
+        """
+        blocks = [self.data_provider]
+
+        # Optional preprocessing:
+        if preload:
+            blocks.append(Preloader())
+        if self.shuffler is not None:
+            blocks.append(self.shuffler)
+        if self.augmenter is not None:
+            blocks.append(self.augmenter)
+        if self.normalizer is not None:
+            blocks.append(self.normalizer)
+        if self.resizer is not None:
+            blocks.append(self.resizer)
+
+        # Centroid calculation from instance points.
+        blocks.append(self.centroid_finder)
+
+        # Training a centroid detection model.
+        if centroid:
+            blocks.append(self.centroid_confmap_generator)
+        else:
+            # Training a part detection model.
+            blocks.extend([self.instance_cropper, self.instance_confmap_generator])
+        blocks.extend([self.batcher, self.prefetcher, self.repeater])
+        return Pipeline.from_sequence(blocks)
+
+    def make_training_dataset(self, preload: bool = False) -> tf.data.Dataset:
+        """Instantiate the training pipeline to create a dataset.
+
+        Args:
+            preload: If True, preload all examples in the dataset when the pipeline is
+                constructed. This increases performance at the cost of memory.
+
+        Returns:
+            The constructed `tf.data.Dataset` instance.
+        """
+        return self.make_training_pipeline(preload=preload).make_dataset()
 
     def make_inference_pipeline(self) -> Pipeline:
         """Make inference pipeline."""
