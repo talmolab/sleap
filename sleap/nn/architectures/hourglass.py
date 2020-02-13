@@ -1,6 +1,6 @@
-"""This module provides a generalized implementation of Unet.
+"""This module provides a generalized implementation of (stacked) hourglass.
 
-See the `Unet` class docstring for more information.
+See the `Hourglass` class docstring for more information.
 """
 
 import tensorflow as tf
@@ -9,7 +9,7 @@ import attr
 from typing import Text, Optional, List
 
 from sleap.nn.architectures import encoder_decoder
-from sleap.nn.architectures import common
+from sleap.nn.architectures.common import IntermediateFeature
 
 
 def conv(
@@ -163,7 +163,7 @@ class UpsamplingBlock(encoder_decoder.DecoderBlock):
         self,
         x: tf.Tensor,
         current_stride: Optional[int] = None,
-        skip_source: Optional[common.IntermediateFeature] = None,
+        skip_source: Optional[IntermediateFeature] = None,
         prefix: Text = "upsample",
     ) -> tf.Tensor:
         """Instantiate the upsampling block from an input tensor.
