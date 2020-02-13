@@ -3,6 +3,7 @@
 # Monkey patch for: https://github.com/aleju/imgaug/issues/537
 # TODO: Fix when PyPI/conda packages are available for version fencing.
 import numpy
+
 if hasattr(numpy.random, "_bit_generator"):
     numpy.random.bit_generator = numpy.random._bit_generator
 
@@ -12,122 +13,7 @@ import attr
 from typing import List, Text
 import imgaug as ia
 import imgaug.augmenters as iaa
-
-
-@attr.s(auto_attribs=True)
-class AugmentationConfig:
-    """Parameters for configuring an augmentation stack.
-
-    The augmentations will be applied in the the order of the attributes.
-
-    Attributes:
-        rotate: If True, rotational augmentation will be applied. Rotation is relative
-            to the center of the image. See `imgaug.augmenters.geometric.Affine`.
-        rotation_min_angle: Minimum rotation angle in degrees in [-180, 180].
-        rotation_max_angle: Maximum rotation angle in degrees in [-180, 180].
-        translate: If True, translational augmentation will be applied. The values are
-            sampled independently for x and y coordinates. See
-            `imgaug.augmenters.geometric.Affine`.
-        translate_min: Minimum translation in integer pixel units.
-        translate_max: Maximum translation in integer pixel units.
-        scale: If True, scaling augmentation will be applied. See
-            `imgaug.augmenters.geometric.Affine`.
-        scale_min: Minimum scaling factor.
-        scale_max: Maximum scaling factor.
-        uniform_noise: If True, uniformly distributed noise will be added to the image.
-            This is effectively adding a different random value to each pixel to
-            simulate shot noise. See `imgaug.augmenters.arithmetic.AddElementwise`.
-        uniform_noise_min_val: Minimum value to add.
-        uniform_noise_max_val: Maximum value to add.
-        gaussian_noise: If True, normally distributed noise will be added to the image.
-            This is similar to uniform noise, but can provide a tigher bound around a
-            mean noise magnitude. This is applied independently to each pixel.
-            See `imgaug.augmenters.arithmetic.AdditiveGaussianNoise`.
-        gaussian_noise_mean: Mean of the distribution to sample from.
-        gaussian_noise_stddev: Standard deviation of the distribution to sample from.
-        contrast: If True, gamma constrast adjustment will be applied to the image.
-            This scales all pixel values by `x ** gamma` where `x` is the pixel value in
-            the [0, 1] range. Values in [0, 255] are first scaled to [0, 1]. See
-            `imgaug.augmenters.contrast.GammaContrast`.
-        contrast_min_gamma: Minimum gamma to use for augmentation. Reasonable values are
-            in [0.5, 2.0].
-        contrast_max_gamma: Maximum gamma to use for augmentation. Reasonable values are
-            in [0.5, 2.0].
-        brightness: If True, the image brightness will be augmented. This adjustment
-            simply adds the same value to all pixels in the image to simulate broadfield
-            illumination change. See `imgaug.augmenters.arithmetic.Add`.
-        brightness_min_val: Minimum value to add to all pixels.
-        brightness_max_val: Maximum value to add to all pixels.
-    """
-
-    rotate: bool = False
-    rotation_min_angle: float = -180
-    rotation_max_angle: float = 180
-    translate: bool = False
-    translate_min: int = -5
-    translate_max: int = 5
-    scale: bool = False
-    scale_min: float = 0.9
-    scale_max: float = 1.1
-    uniform_noise: bool = False
-    uniform_noise_min_val: float = 0.0
-    uniform_noise_max_val: float = 10.0
-    gaussian_noise: bool = False
-    gaussian_noise_mean: float = 5.0
-    gaussian_noise_stddev: float = 1.0
-    contrast: bool = False
-    contrast_min_gamma: float = 0.5
-    contrast_max_gamma: float = 2.0
-    brightness: bool = False
-    brightness_min_val: float = 0.0
-    brightness_max_val: float = 10.0
-
-    def make_iaa_augmenter(self) -> iaa.Sequential:
-        """Create a sequential `imgaug` augmenter with the specified parameters.
-
-        Returns:
-            An instance of `imgaug.augmenters.Sequential` with the specified
-            augmentation operations.
-        """
-        aug_stack = []
-        if self.rotate:
-            aug_stack.append(
-                iaa.Affine(rotate=(self.rotation_min_angle, self.rotation_max_angle))
-            )
-        if self.translate:
-            aug_stack.append(
-                iaa.Affine(
-                    translate_px={
-                        "x": (self.translate_min, self.translate_max),
-                        "y": (self.translate_min, self.translate_max),
-                    }
-                )
-            )
-        if self.scale:
-            aug_stack.append(iaa.Affine(scale=(self.scale_min, self.scale_max)))
-        if self.uniform_noise:
-            aug_stack.append(
-                iaa.AddElementwise(
-                    value=(self.uniform_noise_min_noise, self.uniform_noise_max_val)
-                )
-            )
-        if self.gaussian_noise:
-            aug_stack.append(
-                iaa.AdditiveGaussianNoise(
-                    loc=self.gaussian_noise_mean, scale=self.gaussian_noise_stddev
-                )
-            )
-        if self.contrast:
-            aug_stack.append(
-                iaa.GammaContrast(
-                    gamma=(self.contrast_min_gamma, self.contrast_max_gamma)
-                )
-            )
-        if self.brightness:
-            aug_stack.append(
-                iaa.Add(value=(self.brightness_min_val, self.brightness_max_val))
-            )
-        return iaa.Sequential(aug_stack)
+from sleap.nn.config import AugmentationConfig
 
 
 @attr.s(auto_attribs=True)
@@ -146,17 +32,57 @@ class ImgaugAugmenter:
     augmenter: iaa.Sequential
 
     @classmethod
-    def from_config(cls, augmentation_config: AugmentationConfig) -> "ImgaugAugmenter":
+    def from_config(cls, config: AugmentationConfig) -> "ImgaugAugmenter":
         """Create an augmenter from a set of configuration parameters.
 
         Args:
-            augmentation_config: Instance of `AugmentationConfig` that can instantiate
-                an imgaug sequential augmenter.
+            config: An `AugmentationConfig` instance with the desired parameters.
 
         Returns:
             An instance of this class with the specified augmentation configuration.
         """
-        return cls(augmenter=augmentation_config.make_iaa_augmenter())
+        aug_stack = []
+        if config.rotate:
+            aug_stack.append(
+                iaa.Affine(
+                    rotate=(config.rotation_min_angle, config.rotation_max_angle)
+                )
+            )
+        if config.translate:
+            aug_stack.append(
+                iaa.Affine(
+                    translate_px={
+                        "x": (config.translate_min, config.translate_max),
+                        "y": (config.translate_min, config.translate_max),
+                    }
+                )
+            )
+        if config.scale:
+            aug_stack.append(iaa.Affine(scale=(config.scale_min, config.scale_max)))
+        if config.uniform_noise:
+            aug_stack.append(
+                iaa.AddElementwise(
+                    value=(config.uniform_noise_min_noise, config.uniform_noise_max_val)
+                )
+            )
+        if config.gaussian_noise:
+            aug_stack.append(
+                iaa.AdditiveGaussianNoise(
+                    loc=config.gaussian_noise_mean, scale=config.gaussian_noise_stddev
+                )
+            )
+        if config.contrast:
+            aug_stack.append(
+                iaa.GammaContrast(
+                    gamma=(config.contrast_min_gamma, config.contrast_max_gamma)
+                )
+            )
+        if config.brightness:
+            aug_stack.append(
+                iaa.Add(value=(config.brightness_min_val, config.brightness_max_val))
+            )
+
+        return cls(augmenter=iaa.Sequential(aug_stack))
 
     @property
     def input_keys(self) -> List[Text]:
@@ -196,7 +122,9 @@ class ImgaugAugmenter:
             # Augment each set of points for each instance.
             aug_instances = []
             for instance in instances:
-                kps = ia.KeypointsOnImage.from_xy_array(instance.numpy(), tuple(image.shape))
+                kps = ia.KeypointsOnImage.from_xy_array(
+                    instance.numpy(), tuple(image.shape)
+                )
                 aug_instance = aug_det.augment_keypoints(kps).to_xy_array()
                 aug_instances.append(aug_instance)
 

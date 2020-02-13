@@ -28,8 +28,7 @@ import attr
 from typing import Optional, Union, Text, List
 
 import sleap
-from sleap.nn.data.augmentation import AugmentationConfig
-from sleap.nn.model_config import ModelConfig
+# from sleap.nn.model_config import ModelConfig
 
 
 @attr.s(auto_attribs=True)
@@ -161,6 +160,75 @@ class DataConfig:
     labels: LabelsConfig = attr.ib(factory=LabelsConfig)
     preprocessing: PreprocessingConfig = attr.ib(factory=PreprocessingConfig)
     instance_cropping: InstanceCroppingConfig = attr.ib(factory=InstanceCroppingConfig)
+
+
+@attr.s(auto_attribs=True)
+class AugmentationConfig:
+    """Parameters for configuring an augmentation stack.
+
+    The augmentations will be applied in the the order of the attributes.
+
+    Attributes:
+        rotate: If True, rotational augmentation will be applied. Rotation is relative
+            to the center of the image. See `imgaug.augmenters.geometric.Affine`.
+        rotation_min_angle: Minimum rotation angle in degrees in [-180, 180].
+        rotation_max_angle: Maximum rotation angle in degrees in [-180, 180].
+        translate: If True, translational augmentation will be applied. The values are
+            sampled independently for x and y coordinates. See
+            `imgaug.augmenters.geometric.Affine`.
+        translate_min: Minimum translation in integer pixel units.
+        translate_max: Maximum translation in integer pixel units.
+        scale: If True, scaling augmentation will be applied. See
+            `imgaug.augmenters.geometric.Affine`.
+        scale_min: Minimum scaling factor.
+        scale_max: Maximum scaling factor.
+        uniform_noise: If True, uniformly distributed noise will be added to the image.
+            This is effectively adding a different random value to each pixel to
+            simulate shot noise. See `imgaug.augmenters.arithmetic.AddElementwise`.
+        uniform_noise_min_val: Minimum value to add.
+        uniform_noise_max_val: Maximum value to add.
+        gaussian_noise: If True, normally distributed noise will be added to the image.
+            This is similar to uniform noise, but can provide a tigher bound around a
+            mean noise magnitude. This is applied independently to each pixel.
+            See `imgaug.augmenters.arithmetic.AdditiveGaussianNoise`.
+        gaussian_noise_mean: Mean of the distribution to sample from.
+        gaussian_noise_stddev: Standard deviation of the distribution to sample from.
+        contrast: If True, gamma constrast adjustment will be applied to the image.
+            This scales all pixel values by `x ** gamma` where `x` is the pixel value in
+            the [0, 1] range. Values in [0, 255] are first scaled to [0, 1]. See
+            `imgaug.augmenters.contrast.GammaContrast`.
+        contrast_min_gamma: Minimum gamma to use for augmentation. Reasonable values are
+            in [0.5, 2.0].
+        contrast_max_gamma: Maximum gamma to use for augmentation. Reasonable values are
+            in [0.5, 2.0].
+        brightness: If True, the image brightness will be augmented. This adjustment
+            simply adds the same value to all pixels in the image to simulate broadfield
+            illumination change. See `imgaug.augmenters.arithmetic.Add`.
+        brightness_min_val: Minimum value to add to all pixels.
+        brightness_max_val: Maximum value to add to all pixels.
+    """
+
+    rotate: bool = False
+    rotation_min_angle: float = -180
+    rotation_max_angle: float = 180
+    translate: bool = False
+    translate_min: int = -5
+    translate_max: int = 5
+    scale: bool = False
+    scale_min: float = 0.9
+    scale_max: float = 1.1
+    uniform_noise: bool = False
+    uniform_noise_min_val: float = 0.0
+    uniform_noise_max_val: float = 10.0
+    gaussian_noise: bool = False
+    gaussian_noise_mean: float = 5.0
+    gaussian_noise_stddev: float = 1.0
+    contrast: bool = False
+    contrast_min_gamma: float = 0.5
+    contrast_max_gamma: float = 2.0
+    brightness: bool = False
+    brightness_min_val: float = 0.0
+    brightness_max_val: float = 10.0
 
 
 @attr.s(auto_attribs=True)
