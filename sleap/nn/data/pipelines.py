@@ -58,8 +58,8 @@ class Pipeline:
         transformers: A single or a list of transformers.
     """
 
-    providers: List[Provider] = attr.ib(converter=ensure_list)
-    transformers: List[Transformer] = attr.ib(converter=ensure_list)
+    providers: List[Provider] = attr.ib(converter=ensure_list, factory=list)
+    transformers: List[Transformer] = attr.ib(converter=ensure_list, factory=list)
 
     @classmethod
     def from_sequence(
