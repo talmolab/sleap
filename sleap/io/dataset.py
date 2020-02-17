@@ -1227,10 +1227,6 @@ class Labels(MutableSequence):
         # Make sure that all directories for path exist
         os.makedirs(os.path.dirname(filename), exist_ok=True)
 
-        # Detect filetype and use appropriate save method
-        # if not filename.endswith((".json", ".zip", ".h5")) and default_suffix:
-        #     filename += f".{default_suffix}"
-
         from .format import write
 
         write(filename, labels, *args, **kwargs)
@@ -1372,13 +1368,21 @@ class Labels(MutableSequence):
         return new_vids
 
     @classmethod
-    def make_video_callback(cls, search_paths: Optional[List] = None) -> Callable:
+    def make_gui_video_callback(cls, search_paths: Optional[List] = None) -> Callable:
+        return cls.make_video_callback(search_paths=search_paths, use_gui=True)
+
+    @classmethod
+    def make_video_callback(
+        cls, search_paths: Optional[List] = None, use_gui: bool = False
+    ) -> Callable:
         """
-        Create a non-GUI callback for finding missing videos.
+        Create a callback for finding missing videos.
 
         The callback can be used while loading a saved project and
         allows the user to find videos which have been moved (or have
         paths from a different system).
+
+        The callback function returns True to signal "abort".
 
         Args:
             search_paths: If specified, this is a list of paths where
@@ -1405,59 +1409,18 @@ class Labels(MutableSequence):
                         filenames[i] = fixed_path
                         missing[i] = False
 
+            if use_gui:
+                # If there are still missing paths, prompt user
+                if sum(missing):
+                    okay = MissingFilesDialog(filenames, missing).exec_()
+                    if not okay:
+                        return True  # True for stop
+
             # Replace the video filenames with changes by user
             for i, item in enumerate(video_list):
                 item["backend"]["filename"] = filenames[i]
 
         return video_callback
-
-    @classmethod
-    def make_gui_video_callback(cls, search_paths: Optional[List] = None) -> Callable:
-        """
-        Create a callback with GUI for finding missing videos.
-
-        The callback can be used while loading a saved project and
-        allows the user to find videos which have been moved (or have
-        paths from a different system).
-
-        The callback function returns True to signal "abort".
-
-        Args:
-            search_paths: If specified, this is a list of paths where
-                we'll automatically try to find the missing videos.
-
-        Returns:
-            The callback function.
-        """
-        search_paths = search_paths or []
-
-        def gui_video_callback(video_list, new_paths=search_paths):
-            filenames = [item["backend"]["filename"] for item in video_list]
-            missing = pathutils.list_file_missing(filenames)
-
-            # Try changing the prefix using saved patterns
-            if sum(missing):
-                pathutils.fix_paths_with_saved_prefix(filenames, missing)
-
-            # Check for file in search_path directories
-            if sum(missing) and new_paths:
-                for i, filename in enumerate(filenames):
-                    fixed_path = find_path_using_paths(filename, new_paths)
-                    if fixed_path != filename:
-                        filenames[i] = fixed_path
-                        missing[i] = False
-
-            # If there are still missing paths, prompt user
-            if sum(missing):
-                okay = MissingFilesDialog(filenames, missing).exec_()
-                if not okay:
-                    return True  # True for stop
-
-            # Replace the video filenames with changes by user
-            for i, item in enumerate(video_list):
-                item["backend"]["filename"] = filenames[i]
-
-        return gui_video_callback
 
     def export_training_data(self, save_path: Text):
         """Exports a set of images and points for training with minimal metadata.
