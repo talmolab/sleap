@@ -59,6 +59,7 @@ class LabelsDataCache:
             self._lf_by_video = dict()
             self._frame_idx_map = dict()
             self._track_occupancy = dict()
+            self._frame_count_cache = dict()
 
             for video in self.labels.videos:
                 self._lf_by_video[video] = [
@@ -206,7 +207,7 @@ class LabelsDataCache:
             (frame.frame_idx, frame.frame_idx + 1)
         )
 
-        self.invalidate_counts(frame.video)
+        self.update_counts_for_frame(frame)
 
     def remove_instance(self, frame: LabeledFrame, instance: Instance):
         if instance.track not in self._track_occupancy[frame.video]:
@@ -218,7 +219,7 @@ class LabelsDataCache:
                 (frame.frame_idx, frame.frame_idx + 1)
             )
 
-        self.invalidate_counts(frame.video)
+        self.update_counts_for_frame(frame)
 
     def get_frame_count(self, video: Optional[Video] = None, filter: Text = ""):
         if filter not in ("", "user", "predicted"):
@@ -226,33 +227,52 @@ class LabelsDataCache:
                 f"Labels.get_labeled_frame_count() invalid filter: {filter}"
             )
 
-        if not hasattr(self, "_frame_count_cache"):
-            self._frame_count_cache = dict()
         if video not in self._frame_count_cache:
             self._frame_count_cache[video] = dict()
         if self._frame_count_cache[video].get(filter, None) is None:
+            self._frame_count_cache[video][filter] = self.get_filtered_frame_idxs(
+                video, filter
+            )
 
-            if filter == "":
-                filter_func = lambda lf: video is None or lf.video == video
-            elif filter == "user":
-                filter_func = (
-                    lambda lf: (video is None or lf.video == video)
-                    and lf.has_user_instances
-                )
-            elif filter == "predicted":
-                filter_func = (
-                    lambda lf: (video is None or lf.video == video)
-                    and lf.has_predicted_instances
-                )
+        return len(self._frame_count_cache[video][filter])
 
-            count = sum((1 for lf in self.labels if filter_func(lf)))
-            self._frame_count_cache[video][filter] = count
-        return self._frame_count_cache[video][filter]
+    def get_filtered_frame_idxs(self, video: Optional[Video] = None, filter: Text = ""):
+        if filter == "":
+            filter_func = lambda lf: video is None or lf.video == video
+        elif filter == "user":
+            filter_func = (
+                lambda lf: (video is None or lf.video == video)
+                and lf.has_user_instances
+            )
+        elif filter == "predicted":
+            filter_func = (
+                lambda lf: (video is None or lf.video == video)
+                and lf.has_predicted_instances
+            )
+        else:
+            raise ValueError(f"Invalid filter: {filter}")
 
-    def invalidate_counts(self, video: Video):
-        if not hasattr(self, "_frame_count_cache"):
+        return {lf.frame_idx for lf in self.labels if filter_func(lf)}
+
+    def update_counts_for_frame(self, frame: LabeledFrame):
+        video = frame.video
+
+        if video is None or video not in self._frame_count_cache:
             return
-        self._frame_count_cache[video] = dict()
+
+        frame_idx = frame.frame_idx
+
+        if "user" in self._frame_count_cache[video]:
+            if frame.has_user_instances:
+                self._frame_count_cache[video]["user"].add(frame_idx)
+            else:
+                self._frame_count_cache[video]["user"].discard(frame_idx)
+
+        if "predicted" in self._frame_count_cache[video]:
+            if frame.has_predicted_instances:
+                self._frame_count_cache[video]["predicted"].add(frame_idx)
+            else:
+                self._frame_count_cache[video]["predicted"].discard(frame_idx)
 
 
 @attr.s(auto_attribs=True)
