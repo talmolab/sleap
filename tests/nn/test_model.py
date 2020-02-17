@@ -7,7 +7,7 @@ import json
 from jsmin import jsmin
 import cattr
 
-from sleap.nn import model_config
+from sleap.nn.model import ModelConfig
 
 
 class ModelConfigTests(tf.test.TestCase):
@@ -15,7 +15,6 @@ class ModelConfigTests(tf.test.TestCase):
         json_dicts = json.loads(jsmin(
             """
             {
-                "preprocessing": {},
                 "architecture": "Unet",
                 "backbone": {
                     "filters": 16,
@@ -44,7 +43,7 @@ class ModelConfigTests(tf.test.TestCase):
             """
             ))
 
-        config = cattr.structure(json_dicts, model_config.ModelConfig)
+        config = cattr.structure(json_dicts, ModelConfig)
         keras_model = config.make_model((160, 160, 1))
 
         with self.subTest("keras model output shapes"):
@@ -81,7 +80,7 @@ class ModelConfigTests(tf.test.TestCase):
 
         skeletons = [sleap.Skeleton.from_names_and_edge_inds(
             node_names=["a", "b", "c"], edge_inds=[[0, 1], [1, 2], [0, 2]])]
-        config = model_config.ModelConfig.from_legacy_job_cattr(json_dicts, skeletons=skeletons)
+        config = ModelConfig.from_legacy_job_cattr(json_dicts, skeletons=skeletons)
         keras_model = config.make_model((160, 160, 1))
 
         with self.subTest("keras model output shapes"):

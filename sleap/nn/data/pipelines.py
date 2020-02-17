@@ -25,7 +25,7 @@ from sleap.nn.data.confidence_maps import (
     InstanceConfidenceMapGenerator,
 )
 from sleap.nn.data.edge_maps import PartAffinityFieldsGenerator
-from sleap.nn.data.dataset_ops import Shuffler, Batcher, Repeater, Prefetcher
+from sleap.nn.data.dataset_ops import Shuffler, Batcher, Repeater, Prefetcher, Preloader
 from sleap.nn.data.utils import ensure_list
 
 
@@ -43,6 +43,7 @@ TRANSFORMERS = (
     Batcher,
     Repeater,
     Prefetcher,
+    Preloader,
 )
 Provider = TypeVar("Provider", *PROVIDERS)
 Transformer = TypeVar("Transformer", *TRANSFORMERS)
@@ -57,12 +58,12 @@ class Pipeline:
         transformers: A single or a list of transformers.
     """
 
-    providers: List[Provider] = attr.ib(converter=ensure_list)
-    transformers: List[Transformer] = attr.ib(converter=ensure_list)
+    providers: List[Provider] = attr.ib(converter=ensure_list, factory=list)
+    transformers: List[Transformer] = attr.ib(converter=ensure_list, factory=list)
 
     @classmethod
-    def from_sequence(
-        cls, sequence: Sequence[Union[Provider, Transformer]]
+    def from_blocks(
+        cls, blocks: Union[Union[Provider, Transformer], Sequence[Union[Provider, Transformer]]]
     ) -> "Pipeline":
         """Create a pipeline from a sequence of providers and transformers.
 
@@ -72,9 +73,11 @@ class Pipeline:
         Returns:
             An instantiated pipeline with all blocks chained.
         """
+        if isinstance(blocks, PROVIDERS + TRANSFORMERS):
+            blocks = [blocks]
         providers = []
         transformers = []
-        for i, block in enumerate(sequence):
+        for i, block in enumerate(blocks):
             if isinstance(block, PROVIDERS):
                 providers.append(block)
             elif isinstance(block, TRANSFORMERS):
@@ -84,6 +87,66 @@ class Pipeline:
                     f"Unrecognized pipeline block type (index = {i}): {type(block)}"
                 )
         return cls(providers=providers, transformers=transformers)
+
+    @classmethod
+    def from_pipelines(cls, pipelines: Sequence["Pipeline"]) -> "Pipeline":
+        """Create a new pipeline instance by chaining together multiple pipelines.
+
+        Args:
+            pipelines: A sequence of `Pipeline` instances.
+
+        Returns:
+            A new `Pipeline` instance formed by concatenating the individual pipelines.
+        """
+        blocks = []
+        for pipeline in pipelines:
+            blocks.extend(pipeline.providers)
+            blocks.extend(pipeline.transformers)
+        return cls.from_blocks(blocks)
+
+    def __add__(self, other: "Pipeline") -> "Pipeline":
+        """Overload for + operator concatenation."""
+        return self.from_pipelines([self, other])
+
+    def __or__(self, other: "Pipeline") -> "Pipeline":
+        """Overload for | operator concatenation."""
+        return self.from_pipelines([self, other])
+
+    def append(self, other: Union["Pipeline", Transformer, List[Transformer]]):
+        """Append one or more blocks to this pipeline instance.
+
+        Args:
+            other: A single `Pipeline`, `Transformer` or list of `Transformer`s to
+                append to the end of this pipeline.
+
+        Raises:
+            ValueError: If blocks provided are not a `Pipeline`, `Transformer` or list
+                of `Transformer`s.
+        """
+        if isinstance(other, TRANSFORMERS):
+            self.transformers.append(other)
+        elif isinstance(other, list):
+            if all(isinstance(block, TRANSFORMERS) for block in other):
+                self.transformers.extend(other)
+            else:
+                raise ValueError(
+                "Cannot append blocks that are not pipelines or transformers.")
+        elif hasattr(other, "providers") and hasattr(other, "transformers"):
+            self.providers.extend(other.providers)
+            self.transformers.extend(other.transformers)
+        else:
+            raise ValueError(
+                "Cannot append blocks that are not pipelines or transformers.")
+
+    def __iadd__(self, other: Union["Pipeline", Transformer, List[Transformer]]):
+        """Overload for += for appending blocks to existing instance."""
+        self.append(other)
+        return self
+
+    def __ior__(self, other: Union["Pipeline", Transformer]):
+        """Overload for |= for appending blocks to existing instance."""
+        self.append(other)
+        return self
 
     def validate_pipeline(self) -> List[Text]:
         """Check that all pipeline blocks meet the data requirements.
@@ -175,30 +238,50 @@ class BottomUpPipeline:
     repeater: Repeater
     prefetcher: Prefetcher
 
-    def make_training_pipeline(self) -> Pipeline:
-        """Make training pipeline."""
-        return Pipeline.from_sequence(
-            [
-                self.data_provider,
-                self.shuffler,
-                self.augmenter,
-                self.normalizer,
-                self.resizer,
-                self.multi_confmap_generator,
-                self.paf_generator,
-                self.batcher,
-                self.repeater,
-                self.prefetcher,
-            ]
-        )
+    def make_training_pipeline(self, preload: bool = False) -> Pipeline:
+        """Make training pipeline.
 
-    def make_training_dataset(self) -> tf.data.Dataset:
-        """Instantiate the training pipeline to create a dataset."""
-        return self.make_training_pipeline().make_dataset()
+        Args:
+            preload: If True, preload all examples in the dataset when the pipeline is
+                constructed. This increases performance at the cost of memory.
+
+        Returns:
+            The constructed `Pipeline` instance.
+        """
+        blocks = [self.data_provider]
+
+        # Optional preprocessing:
+        if preload:
+            blocks.append(Preloader())
+        if self.shuffler is not None:
+            blocks.append(self.shuffler)
+        if self.augmenter is not None:
+            blocks.append(self.augmenter)
+        if self.normalizer is not None:
+            blocks.append(self.normalizer)
+        if self.resizer is not None:
+            blocks.append(self.resizer)
+
+        blocks.extend([self.multi_confmap_generator, self.paf_generator])
+
+        blocks.extend([self.batcher, self.repeater, self.prefetcher])
+        return Pipeline.from_blocks(blocks)
+
+    def make_training_dataset(self, preload: bool = False) -> tf.data.Dataset:
+        """Instantiate the training pipeline to create a dataset.
+
+        Args:
+            preload: If True, preload all examples in the dataset when the pipeline is
+                constructed. This increases performance at the cost of memory.
+
+        Returns:
+            The constructed `tf.data.Dataset` instance.
+        """
+        return self.make_training_pipeline(preload=preload).make_dataset()
 
     def make_inference_pipeline(self) -> Pipeline:
         """Make inference pipeline."""
-        return Pipeline.from_sequence(
+        return Pipeline.from_blocks(
             [
                 self.data_provider,
                 self.normalizer,
@@ -235,36 +318,59 @@ class TopDownPipeline:
     repeater: Repeater
     prefetcher: Prefetcher
 
-    def make_training_pipeline(self, centroid: bool = False) -> Pipeline:
-        """Make training pipeline."""
-        if centroid:
-            middle_blocks = [self.centroid_confmap_generator]
-        else:
-            middle_blocks = [self.instance_cropper, self.instance_confmap_generator]
-        return Pipeline.from_sequence(
-            [
-                self.data_provider,
-                self.shuffler,
-                self.augmenter,
-                self.normalizer,
-                self.resizer,
-                self.centroid_finder,
-            ]
-            + middle_blocks
-            + [
-            self.batcher,
-            self.prefetcher,
-            self.repeater
-            ]
-        )
+    def make_training_pipeline(
+        self, centroid: bool = False, preload: bool = False
+    ) -> Pipeline:
+        """Make training pipeline.
 
-    def make_training_dataset(self) -> tf.data.Dataset:
-        """Instantiate the training pipeline to create a dataset."""
-        return self.make_training_pipeline().make_dataset()
+        Args:
+            preload: If True, preload all examples in the dataset when the pipeline is
+                constructed. This increases performance at the cost of memory.
+
+        Returns:
+            The constructed `Pipeline` instance.
+        """
+        blocks = [self.data_provider]
+
+        # Optional preprocessing:
+        if preload:
+            blocks.append(Preloader())
+        if self.shuffler is not None:
+            blocks.append(self.shuffler)
+        if self.augmenter is not None:
+            blocks.append(self.augmenter)
+        if self.normalizer is not None:
+            blocks.append(self.normalizer)
+        if self.resizer is not None:
+            blocks.append(self.resizer)
+
+        # Centroid calculation from instance points.
+        blocks.append(self.centroid_finder)
+
+        # Training a centroid detection model.
+        if centroid:
+            blocks.append(self.centroid_confmap_generator)
+        else:
+            # Training a part detection model.
+            blocks.extend([self.instance_cropper, self.instance_confmap_generator])
+        blocks.extend([self.batcher, self.prefetcher, self.repeater])
+        return Pipeline.from_blocks(blocks)
+
+    def make_training_dataset(self, preload: bool = False) -> tf.data.Dataset:
+        """Instantiate the training pipeline to create a dataset.
+
+        Args:
+            preload: If True, preload all examples in the dataset when the pipeline is
+                constructed. This increases performance at the cost of memory.
+
+        Returns:
+            The constructed `tf.data.Dataset` instance.
+        """
+        return self.make_training_pipeline(preload=preload).make_dataset()
 
     def make_inference_pipeline(self) -> Pipeline:
         """Make inference pipeline."""
-        return Pipeline.from_sequence(
+        return Pipeline.from_blocks(
             [
                 self.data_provider,
                 self.normalizer,

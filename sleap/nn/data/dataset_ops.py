@@ -7,7 +7,7 @@ import numpy as np
 import tensorflow as tf
 from sleap.nn.data.utils import expand_to_rank
 import attr
-from typing import List, Text, Optional
+from typing import List, Text, Optional, Any
 
 
 @attr.s(auto_attribs=True)
@@ -66,8 +66,8 @@ class Shuffler:
         if self.shuffle:
             return ds_input.shuffle(
                 buffer_size=self.buffer_size,
-                reshuffle_each_iteration=self.reshuffle_each_iteration
-                )
+                reshuffle_each_iteration=self.reshuffle_each_iteration,
+            )
         else:
             return ds_input
 
@@ -125,6 +125,7 @@ class Batcher:
             Any keys that had variable length elements within the batch will be padded
             with NaNs to the size of the largest element's length for that key.
         """
+
         def expand(example):
             """Expand all keys to a minimum rank of 1."""
             for key in example:
@@ -134,17 +135,27 @@ class Batcher:
         def unrag(example):
             """Convert all keys back to dense tensors NaN padded."""
             for key in example:
-                example[key] = example[key].to_tensor(default_value=tf.cast(np.nan, example[key].dtype))
+                example[key] = example[key].to_tensor(
+                    default_value=tf.cast(np.nan, example[key].dtype)
+                )
             return example
 
         # Ensure that all keys have a rank of at least 1 (i.e., scalars).
-        ds_output = ds_input.map(expand, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+        ds_output = ds_input.map(
+            expand, num_parallel_calls=tf.data.experimental.AUTOTUNE
+        )
 
         # Batch elements as ragged tensors.
-        ds_output = ds_output.apply(tf.data.experimental.dense_to_ragged_batch(batch_size=self.batch_size, drop_remainder=self.drop_remainder))
+        ds_output = ds_output.apply(
+            tf.data.experimental.dense_to_ragged_batch(
+                batch_size=self.batch_size, drop_remainder=self.drop_remainder
+            )
+        )
 
         # Convert elements back into dense tensors with padding.
-        ds_output = ds_output.map(unrag, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+        ds_output = ds_output.map(
+            unrag, num_parallel_calls=tf.data.experimental.AUTOTUNE
+        )
 
         return ds_output
 
@@ -242,3 +253,61 @@ class Prefetcher:
             return ds_input.prefetch(buffer_size=self.buffer_size)
         else:
             return ds_input
+
+
+@attr.s(auto_attribs=True)
+class Preloader:
+    """Preload elements of the underlying dataset to generate in-memory examples.
+    
+    This transformer can lead to considerable performance improvements at the cost of
+    memory consumption.
+
+    This is functionally equivalent to `tf.data.Dataset.cache`, except the cached
+    examples are accessible directly via the `examples` attribute.
+
+    Attributes:
+        examples: Stored list of preloaded elements.
+    """
+
+    examples: List[Any] = attr.ib(init=False, factory=list)
+
+    @property
+    def input_keys(self) -> List[Text]:
+        """Return the keys that incoming elements are expected to have."""
+        return []
+
+    @property
+    def output_keys(self) -> List[Text]:
+        """Return the keys that outgoing elements will have."""
+        return []
+
+    def transform_dataset(self, ds_input: tf.data.Dataset) -> tf.data.Dataset:
+        """Create a dataset that generates preloaded elements.
+
+        Args:
+            ds_input: Any `tf.data.Dataset` that generates examples as a dictionary of
+                tensors. Should not be repeating infinitely.
+
+        Return:
+            A dataset that generates the same examples.
+
+            This is similar to prefetching, except that examples are yielded through a
+            generator and loaded when this method is called rather than during pipeline
+            iteration.
+        """
+        # Preload examples from the input dataset.
+        self.examples = list(iter(ds_input))
+
+        # Store example metadata.
+        keys = list(self.examples[0].keys())
+        dtypes = [self.examples[0][key].dtype for key in keys]
+
+        def gen():
+            for example in self.examples:
+                yield tuple(example[key] for key in keys)
+
+        ds_output = tf.data.Dataset.from_generator(gen, output_types=tuple(dtypes))
+        ds_output = ds_output.map(
+            lambda *example: {key: val for key, val in zip(keys, example)}
+        )
+        return ds_output

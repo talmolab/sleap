@@ -2,9 +2,10 @@
 
 import tensorflow as tf
 import attr
-from typing import Optional, List, Text
+from typing import Optional, List, Text, Union
 import sleap
 from sleap.nn.data.utils import ensure_list
+from sleap.nn.config import InstanceCroppingConfig
 
 
 def find_points_bbox_midpoint(points: tf.Tensor) -> tf.Tensor:
@@ -75,6 +76,46 @@ class InstanceCentroidFinder:
     skeletons: Optional[List[sleap.Skeleton]] = attr.ib(
         default=None, converter=attr.converters.optional(ensure_list)
     )
+
+    @classmethod
+    def from_config(
+        cls,
+        config: InstanceCroppingConfig,
+        skeletons: Optional[Union[sleap.Skeleton, List[sleap.Skeleton]]] = None,
+    ) -> "InstanceCentroidFinder":
+        """Build an instance of this class from its configuration options.
+
+        Args:
+            config: An `InstanceCroppingConfig` instance with the desired parameters.
+            skeletons: List of skeletons to use. This must be provided if doing instance
+                cropping centered on an anchor part.
+
+        Returns:
+            An instance of this class.
+
+            This will assume that `center_on_anchor_part` is False when the
+            `config.center_on_part` attribute is not a string.
+
+        Raises:
+            ValueError: If the skeletons are not provided in the arguments and the
+                config specifies an anchor part name.
+        """
+        if isinstance(config.center_on_part, str):
+            if skeletons is None:
+                raise ValueError(
+                    "Skeletons must be provided when the config specifies an anchor "
+                    "part (config.center_on_anchor_part = "
+                    f"{config.center_on_part})."
+                )
+            return cls(
+                center_on_anchor_part=True,
+                anchor_part_names=config.center_on_part,
+                skeletons=skeletons,
+            )
+        else:
+            return cls(
+                center_on_anchor_part=False, anchor_part_names=None, skeletons=None
+            )
 
     @property
     def input_keys(self) -> List[Text]:

@@ -3,6 +3,7 @@
 import tensorflow as tf
 import attr
 from typing import List, Text, Optional, Tuple
+from sleap.nn.config import PreprocessingConfig
 
 
 def find_padding_for_stride(
@@ -116,6 +117,38 @@ class Resizer:
     points_key: Text = "instances"
     scale: float = 1.0
     pad_to_stride: int = 1
+
+    @classmethod
+    def from_config(cls, config: PreprocessingConfig, pad_to_stride: Optional[int] = None) -> "Resizer":
+        """Build an instance of this class from its configuration options.
+
+        Args:
+            config: An `PreprocessingConfig` instance with the desired parameters. If
+                `config.pad_to_stride` is not an explicit integer, the `pad_to_stride`
+                parameter must be provided.
+            pad_to_stride: An integer specifying the `pad_to_stride` if
+                `config.pad_to_stride` is not an explicit integer (e.g., set to "auto").
+
+        Returns:
+            An instance of this class.
+
+        Raises:
+            ValueError: If `config.pad_to_stride` is not set to an integer and the
+                `pad_to_stride` argument is not provided.
+        """
+        if isinstance(config.pad_to_stride, int):
+            pad_to_stride = config.pad_to_stride
+        if not isinstance(pad_to_stride, int):
+            raise ValueError(
+                "Pad to stride must be specified in the arguments if not explicitly "
+                f"set to an integer (config.pad_to_stride = {config.pad_to_stride}).")
+
+        return cls(
+            image_key="image",
+            points_key="instances",
+            scale=config.input_scaling,
+            pad_to_stride=pad_to_stride,
+        )
 
     @property
     def input_keys(self) -> List[Text]:

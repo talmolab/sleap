@@ -1,3 +1,4 @@
+import pytest
 import numpy as np
 import tensorflow as tf
 
@@ -6,6 +7,7 @@ tf.config.experimental.set_visible_devices([], device_type="GPU")  # hide GPUs f
 from sleap.nn.data import providers
 from sleap.nn.data import instance_centroids
 from sleap.nn.data import instance_cropping
+from sleap.nn.config import InstanceCroppingConfig
 
 
 def test_normalize_bboxes():
@@ -137,3 +139,25 @@ def test_instance_cropper_keeping_full_image(min_labels):
 
     assert example["image"].shape == (384, 384, 1)
     assert example["image"].dtype == tf.uint8
+
+
+def test_instance_cropper_from_config():
+    cropper = instance_cropping.InstanceCropper.from_config(
+        config=InstanceCroppingConfig(crop_size=16),
+        crop_size=None,
+    )
+    assert cropper.crop_width == 16
+    assert cropper.crop_height == 16
+
+    cropper = instance_cropping.InstanceCropper.from_config(
+        config=InstanceCroppingConfig(crop_size=16),
+        crop_size=24,
+    )
+    assert cropper.crop_width == 16
+    assert cropper.crop_height == 16
+
+    with pytest.raises(ValueError):
+        cropper = instance_cropping.InstanceCropper.from_config(
+            config=InstanceCroppingConfig(crop_size="auto"),
+            crop_size=None,
+        )

@@ -7,3 +7,4 @@ from sleap.nn.data import pipelines
 from sleap.nn.data import providers
 from sleap.nn.data import resizing
 from sleap.nn.data import utils
+from sleap.nn.data import pipelines

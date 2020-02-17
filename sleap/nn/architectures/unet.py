@@ -7,14 +7,6 @@ import attr
 from typing import List, Optional
 from sleap.nn.architectures import encoder_decoder
 
-from sleap.nn.architectures.common import conv, expand_to_n
-from tensorflow.keras.layers import (
-    Conv2DTranspose,
-    Concatenate,
-    MaxPool2D,
-    UpSampling2D,
-)
-
 
 @attr.s(auto_attribs=True)
 class Unet(encoder_decoder.EncoderDecoder):
@@ -32,6 +24,7 @@ class Unet(encoder_decoder.EncoderDecoder):
             and runtime.
         filters_rate: Factor to increase the number of filters by in each block.
         kernel_size: Size of convolutional kernels (== height == width).
+        stem_kernel_size: Size of convolutional kernels in stem blocks.
         stem_blocks: If >0, will create additional "down" blocks for initial
             downsampling. These will be configured identically to the down blocks below.
         down_blocks: Number of blocks with pooling in the encoder. More down blocks will
@@ -61,6 +54,7 @@ class Unet(encoder_decoder.EncoderDecoder):
     filters: int = 64
     filters_rate: float = 2
     kernel_size: int = 3
+    stem_kernel_size: int = 3
     convs_per_block: int = 2
     stem_blocks: int = 0
     down_blocks: int = 4
@@ -84,7 +78,7 @@ class Unet(encoder_decoder.EncoderDecoder):
                     pooling_stride=2,
                     num_convs=self.convs_per_block,
                     filters=block_filters,
-                    kernel_size=self.kernel_size,
+                    kernel_size=self.stem_kernel_size,
                     use_bias=True,
                     batch_norm=False,
                     activation="relu",
