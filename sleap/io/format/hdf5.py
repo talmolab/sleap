@@ -187,7 +187,7 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
         labels.labeled_frames = frames
 
         # Do the stuff that should happen after we have labeled frames
-        labels._build_lookup_caches()
+        labels.update_cache()
 
         return labels
 

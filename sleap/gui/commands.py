@@ -1173,7 +1173,7 @@ class InstanceDeleteCommand(EditCommand):
             context.labels.remove_instance(lf, inst, in_transaction=True)
 
         # Update caches since we skipped doing this after each deletion
-        context.labels._build_lookup_caches()
+        context.labels.update_cache()
 
         # Update visuals
         context.changestack_push("delete instances")
