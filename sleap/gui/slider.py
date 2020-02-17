@@ -264,7 +264,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
         track_row = 0
 
         # Add marks with track
-        track_occupancy = labels.get_track_occupany(video)
+        track_occupancy = labels.get_track_occupancy(video)
         for track in labels.tracks:
             if track in track_occupancy and not track_occupancy[track].is_empty:
                 if track_row > 0 and self.isNewColTrack(track_row):

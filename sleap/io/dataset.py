@@ -211,7 +211,7 @@ class Labels(MutableSequence):
             self._frame_idx_map[video] = {
                 lf.frame_idx: lf for lf in self._lf_by_video[video]
             }
-            self._track_occupancy[video] = self._make_track_occupany(video)
+            self._track_occupancy[video] = self._make_track_occupancy(video)
 
     # Below are convenience methods for working with Labels as list.
     # Maybe we should just inherit from list? Maybe this class shouldn't
@@ -585,9 +585,9 @@ class Labels(MutableSequence):
 
     def get_track_count(self, video: Video) -> int:
         """Returns the number of occupied tracks for a given video."""
-        return len(self.get_track_occupany(video))
+        return len(self.get_track_occupancy(video))
 
-    def get_track_occupany(self, video: Video) -> List:
+    def get_track_occupancy(self, video: Video) -> List:
         """Returns track occupancy list for given video"""
         try:
             return self._track_occupancy[video]
@@ -640,10 +640,10 @@ class Labels(MutableSequence):
             None.
         """
         # Get ranges in track occupancy cache
-        _, within_old, _ = self._get_track_occupany(video, old_track).cut_range(
+        _, within_old, _ = self._get_track_occupancy(video, old_track).cut_range(
             frame_range
         )
-        _, within_new, _ = self._get_track_occupany(video, new_track).cut_range(
+        _, within_new, _ = self._get_track_occupancy(video, new_track).cut_range(
             frame_range
         )
 
@@ -719,7 +719,7 @@ class Labels(MutableSequence):
 
         self._invalidate_cached_counts(frame.video)
 
-    def _make_track_occupany(self, video: Video) -> Dict[Video, RangeList]:
+    def _make_track_occupancy(self, video: Video) -> Dict[Video, RangeList]:
         """Build cached track occupancy data."""
         frame_idx_map = self._frame_idx_map[video]
 
@@ -733,7 +733,7 @@ class Labels(MutableSequence):
                 tracks[instance.track].add(frame_idx)
         return tracks
 
-    def _get_track_occupany(self, video: Video, track: Track) -> RangeList:
+    def _get_track_occupancy(self, video: Video, track: Track) -> RangeList:
         """
         Accessor for track occupancy cache that adds video/track as needed.
         """

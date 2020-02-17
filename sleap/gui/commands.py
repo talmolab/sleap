@@ -820,7 +820,7 @@ class GoNextTrackFrame(NavCommand):
     def do_action(cls, context: CommandContext, params: dict):
         video = context.state["video"]
         cur_idx = context.state["frame_idx"]
-        track_ranges = context.labels.get_track_occupany(video)
+        track_ranges = context.labels.get_track_occupancy(video)
 
         later_tracks = [
             (track_range.start, track)
