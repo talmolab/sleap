@@ -42,11 +42,11 @@ class HDF5Video:
     dataset: str = attr.ib(default=None)
     input_format: str = attr.ib(default="channels_last")
     convert_range: bool = attr.ib(default=True)
-    enable_source_video: bool = attr.ib(default=True)
 
     def __attrs_post_init__(self):
         """Called by attrs after __init__()."""
 
+        self.enable_source_video = True
         self._test_frame_ = None
 
         self.__original_to_current_frame_idx = dict()
@@ -120,6 +120,14 @@ class HDF5Video:
         # Return stored test frame
         return self._test_frame_
 
+    @property
+    def enable_source_video(self):
+        return self._enable_source_video
+
+    @enable_source_video.setter
+    def enable_source_video(self, val):
+        self._enable_source_video = val
+
     def matches(self, other: "HDF5Video") -> bool:
         """
         Check if attributes match those of another video.
@@ -139,12 +147,11 @@ class HDF5Video:
 
     def close(self):
         """Closes the HDF5 file object (if it's open)."""
-        if self.__file_h5:
-            try:
-                self.__file_h5.close()
-            except:
-                pass
-            self.__file_h5 = None
+        try:
+            self.__file_h5.close()
+        except:
+            pass
+        self.__file_h5 = None
 
     def __del__(self):
         """Releases file object."""
@@ -1252,7 +1259,6 @@ class Video:
                 x["filename"] = Video.fixup_path(x["filename"])
             if "file" in x:
                 x["file"] = Video.fixup_path(x["file"])
-
             return cl(**x)
 
         vid_cattr = cattr.Converter()
