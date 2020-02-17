@@ -11,6 +11,9 @@ from PySide2 import QtCore, QtWidgets, QtGui, QtCharts
 
 
 class LossViewer(QtWidgets.QMainWindow):
+
+    on_epoch = QtCore.Signal()
+
     def __init__(self, zmq_context=None, show_controller=True, parent=None):
         super(LossViewer, self).__init__(parent)
 
@@ -327,6 +330,7 @@ class LossViewer(QtWidgets.QMainWindow):
                             msg["logs"]["val_loss"],
                             "val_loss",
                         )
+                    self.on_epoch.emit()
                 elif msg["event"] == "batch_end":
                     self.last_batch_number = msg["logs"]["batch"]
                     self.add_datapoint(

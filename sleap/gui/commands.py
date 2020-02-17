@@ -826,18 +826,29 @@ class GoPrevSuggestedFrame(GoNextSuggestedFrame):
 class GoNextTrackFrame(NavCommand):
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
+        video = context.state["video"]
         cur_idx = context.state["frame_idx"]
-        track_ranges = context.labels.get_track_occupany(context.state["video"])
-        next_idx = min(
-            [
-                track_range.start
-                for track_range in track_ranges.values()
-                if track_range.start is not None and track_range.start > cur_idx
-            ],
-            default=-1,
-        )
-        if next_idx > -1:
+        track_ranges = context.labels.get_track_occupany(video)
+
+        later_tracks = [
+            (track_range.start, track)
+            for track, track_range in track_ranges.items()
+            if track_range.start is not None and track_range.start > cur_idx
+        ]
+
+        later_tracks.sort(key=operator.itemgetter(0))
+
+        if later_tracks:
+            next_idx, next_track = later_tracks[0]
             cls.go_to(context, next_idx)
+
+            # Select the instance in the new track
+            lf = context.labels.find(video, next_idx, return_new=True)[0]
+            track_instances = [
+                inst for inst in lf.instances_to_show if inst.track == next_track
+            ]
+            if track_instances:
+                context.state["instance"] = track_instances[0]
 
 
 class GoFrameGui(NavCommand):
@@ -1167,7 +1178,10 @@ class InstanceDeleteCommand(EditCommand):
     def _do_deletion(context: CommandContext, lf_inst_list: List[int]):
         # Delete the instances
         for lf, inst in lf_inst_list:
-            context.labels.remove_instance(lf, inst)
+            context.labels.remove_instance(lf, inst, in_transaction=True)
+
+        # Update caches since we skipped doing this after each deletion
+        context.labels._build_lookup_caches()
 
         # Update visuals
         context.changestack_push("delete instances")
@@ -1710,6 +1724,13 @@ class AddInstance(EditCommand):
                 AddMissingInstanceNodes.add_random_nodes(
                     context=context, instance=new_instance, visible=is_visible
                 )
+            elif init_method == "template":
+                AddMissingInstanceNodes.add_nodes_from_template(
+                    context=context,
+                    instance=new_instance,
+                    visible=is_visible,
+                    center_point=location,
+                )
             else:
                 AddMissingInstanceNodes.add_best_nodes(
                     context=context, instance=new_instance, visible=is_visible
@@ -1789,11 +1810,7 @@ class AddMissingInstanceNodes(EditCommand):
 
     @classmethod
     def add_best_nodes(cls, context, instance, visible):
-        current_node_count = len(instance.nodes)
-        if current_node_count:
-            cls.add_random_nodes(context, instance, visible)
-        else:
-            cls.add_force_directed_nodes(context, instance, visible)
+        cls.add_nodes_from_template(context, instance, visible)
 
     @classmethod
     def add_random_nodes(cls, context, instance, visible):
@@ -1817,6 +1834,41 @@ class AddMissingInstanceNodes(EditCommand):
     @staticmethod
     def get_rect_center_xy(rect: QtCore.QRectF):
         """Returns x, y at center of rect."""
+
+    @classmethod
+    def add_nodes_from_template(
+        cls,
+        context,
+        instance,
+        visible: bool = False,
+        center_point: QtCore.QPoint = None,
+    ):
+        from sleap.info import align
+
+        # Get the "template" instance
+        template_points = context.labels.get_template_instance_points(
+            skeleton=instance.skeleton
+        )
+
+        # Align the template on to the current instance with missing points
+        if instance.points:
+            aligned_template = align.align_instance_points(
+                source_points_array=template_points,
+                target_points_array=instance.points_array,
+            )
+        else:
+            template_mean = np.nanmean(template_points, axis=0)
+
+            center_point = center_point or context.app.player.getVisibleRect().center()
+            center = np.array([center_point.x(), center_point.y()])
+
+            aligned_template = template_points + (center - template_mean)
+
+        # Make missing points from the aligned template
+        for i, node in enumerate(instance.skeleton.nodes):
+            if node not in instance:
+                x, y = aligned_template[i]
+                instance[node] = Point(x=x, y=y, visible=visible)
 
     @classmethod
     def add_force_directed_nodes(

@@ -138,7 +138,7 @@ class GenericTableModel(QtCore.QAbstractTableModel):
                 return self.properties[idx]
             elif orientation == QtCore.Qt.Vertical:
                 # Add 1 to the row index so that we index from 1 instead of 0
-                return str(idx+1)
+                return str(idx + 1)
 
         return None
 
@@ -378,7 +378,7 @@ class SuggestionsTableModel(GenericTableModel):
 
         video_string = f"{labels.videos.index(item.video)+1}: {os.path.basename(item.video.filename)}"
 
-        item_dict["group"] = str(item.group+1) if item.group is not None else ""
+        item_dict["group"] = str(item.group + 1) if item.group is not None else ""
         item_dict["group_int"] = item.group if item.group is not None else -1
         item_dict["video"] = video_string
         item_dict["frame"] = int(item.frame_idx) + 1  # start at frame 1 rather than 0

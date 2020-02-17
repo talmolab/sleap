@@ -5,7 +5,7 @@ This contains labeled frame data (user annotations and/or predictions),
 together with all the other data that is saved for a SLEAP project
 (videos, skeletons, negative training sample anchors, etc.).
 """
-
+import itertools
 import os
 from collections import MutableSequence
 from typing import Callable, List, Union, Dict, Optional, Tuple, Text
@@ -501,6 +501,8 @@ class Labels(MutableSequence):
         return self._frame_count_cache[video][filter]
 
     def _invalidate_cached_counts(self, video: Video):
+        if not hasattr(self, "_frame_count_cache"):
+            return
         self._frame_count_cache[video] = dict()
 
     # Methods for instances
@@ -546,6 +548,38 @@ class Labels(MutableSequence):
                 for instance in label.instances:
                     if skeleton is None or instance.skeleton == skeleton:
                         yield instance
+
+    def get_template_instance_points(self, skeleton: Skeleton):
+        if not hasattr(self, "_template_instance_points"):
+            self._template_instance_points = None
+
+        # Use cache unless there are a small number of labeled frames so far
+        # or we don't have a cached template instance yet.
+        if self._template_instance_points is None or len(self.labeled_frames) < 100:
+
+            # Make sure there are some labeled frames
+            if self.labeled_frames and any(self.instances()):
+                from sleap.info import align
+
+                first_n_instances = itertools.islice(self.instances(), 1000)
+                template_points = align.get_template_points_array(first_n_instances)
+                self._template_instance_points = template_points
+            else:
+                # No labeled frames so use force-directed graph layou
+                import networkx as nx
+
+                node_positions = nx.spring_layout(G=skeleton.graph, scale=50)
+
+                self._template_instance_points = np.stack(
+                    [
+                        node_positions[node]
+                        if node in node_positions
+                        else np.random.random_integers(0, 50, 2)
+                        for node in skeleton.nodes
+                    ]
+                )
+
+        return self._template_instance_points
 
     # Methods for tracks
 
@@ -649,12 +683,16 @@ class Labels(MutableSequence):
                 (frame.frame_idx, frame.frame_idx + 1)
             )
 
-    def remove_instance(self, frame: LabeledFrame, instance: Instance):
+    def remove_instance(
+        self, frame: LabeledFrame, instance: Instance, in_transaction: bool = False
+    ):
         """Removes instance from frame, updating track occupancy."""
-        self._track_remove_instance(frame, instance)
+        if not in_transaction:
+            self._track_remove_instance(frame, instance)
         frame.instances.remove(instance)
 
-        self._invalidate_cached_counts(frame.video)
+        if not in_transaction:
+            self._invalidate_cached_counts(frame.video)
 
     def add_instance(self, frame: LabeledFrame, instance: Instance):
         """Adds instance to frame, updating track occupancy."""

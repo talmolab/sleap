@@ -111,6 +111,11 @@ class Predictor:
 
             predicted_frames.extend(frames)
 
+        # Postprocessing after we've finished all the chunks
+
+        if "tracking" in self.policies:
+            self.policies["tracking"].final_pass(frames=predicted_frames)
+
         return predicted_frames
 
     def predict_chunk(self, img_chunk, chunk_ind, chunk_size, frame_inds=None):
