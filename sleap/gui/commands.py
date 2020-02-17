@@ -407,14 +407,6 @@ class CommandContext(object):
         """
         self.execute(TransposeInstances)
 
-    def markNegativeAnchor(self):
-        """Allows user to add negative training sample anchor."""
-        self.execute(MarkNegativeAnchor)
-
-    def clearFrameNegativeAnchors(self):
-        """Removes negative training sample anchors on current frame."""
-        self.execute(ClearFrameNegativeAnchors)
-
     def importPredictions(self):
         """Starts gui for importing another dataset into currently one."""
         self.execute(MergeProject)
@@ -1522,35 +1514,6 @@ class SetTrackName(EditCommand):
         track = params["track"]
         name = params["name"]
         track.name = name
-
-
-class ClearFrameNegativeAnchors(EditCommand):
-    topics = [UpdateTopic.frame]
-
-    @staticmethod
-    def do_action(context: CommandContext, params: dict):
-        context.labels.remove_negative_anchors(
-            context.state["video"], context.state["frame_idx"]
-        )
-
-
-class MarkNegativeAnchor(EditCommand):
-    topics = [UpdateTopic.frame]
-
-    @classmethod
-    def ask_and_do(cls, context: CommandContext, params: dict):
-        def click_callback(x, y):
-            context.app.updateStatusMessage()
-            context.labels.add_negative_anchor(
-                context.state["video"], context.state["frame_idx"], (x, y)
-            )
-            cls.do_with_signal(context, params)
-
-        # Prompt the user to select area
-        context.app.updateStatusMessage(
-            f"Please click where you want a negative sample..."
-        )
-        context.app.player.onPointSelection(click_callback)
 
 
 class GenerateSuggestions(EditCommand):

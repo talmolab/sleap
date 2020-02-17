@@ -907,39 +907,6 @@ class Labels(MutableSequence):
         if video in self._frame_idx_map:
             del self._frame_idx_map[video]
 
-    # Methods for negative anchors
-
-    def add_negative_anchor(self, video: Video, frame_idx: int, where: tuple):
-        """Adds a location for a negative training sample.
-
-        Args:
-            video: the `Video` for this negative sample
-            frame_idx: frame index
-            where: (x, y)
-        """
-        if video not in self.negative_anchors:
-            self.negative_anchors[video] = []
-        self.negative_anchors[video].append((frame_idx, *where))
-
-    def remove_negative_anchors(self, video: Video, frame_idx: int):
-        """Removes negative training samples for given video and frame.
-
-        Args:
-            video: the `Video` for which we're removing negative samples
-            frame_idx: frame index
-        Returns:
-            None
-        """
-        if video not in self.negative_anchors:
-            return
-
-        anchors = [
-            (idx, x, y)
-            for idx, x, y in self.negative_anchors[video]
-            if idx != frame_idx
-        ]
-        self.negative_anchors[video] = anchors
-
     # Methods for saving/loading
 
     @classmethod

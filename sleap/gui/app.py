@@ -37,14 +37,11 @@ from sleap.gui.dataviews import (
 from sleap.gui.filedialog import FileDialog
 from sleap.gui.formbuilder import YamlFormWidget
 from sleap.gui.shortcuts import Shortcuts, ShortcutDialog
-from sleap.gui.suggestions import VideoFrameSuggestions
 from sleap.gui.state import GuiState
 
 from sleap.gui.overlays.tracks import TrackTrailOverlay, TrackListOverlay
 from sleap.gui.color import ColorManager
 from sleap.gui.overlays.instance import InstanceOverlay
-from sleap.gui.overlays.anchors import NegativeAnchorOverlay
-from sleap.util import get_config_file
 
 
 class MainWindow(QMainWindow):
@@ -527,20 +524,6 @@ class MainWindow(QMainWindow):
         predictionMenu.addSeparator()
         add_menu_item(
             predictionMenu,
-            "negative sample",
-            "Mark Negative Training Sample...",
-            self.commands.markNegativeAnchor,
-        )
-        add_menu_item(
-            predictionMenu,
-            "clear negative samples",
-            "Clear Current Frame Negative Samples",
-            self.commands.clearFrameNegativeAnchors,
-        )
-
-        predictionMenu.addSeparator()
-        add_menu_item(
-            predictionMenu,
             "visualize models",
             "Visualize Model Outputs...",
             self.visualizeOutputs,
@@ -812,7 +795,6 @@ class MainWindow(QMainWindow):
     def load_overlays(self):
         """Load all standard video overlays."""
         self.overlays["track_labels"] = TrackListOverlay(self.labels, self.player)
-        self.overlays["negative"] = NegativeAnchorOverlay(self.labels, self.player)
         self.overlays["trails"] = TrackTrailOverlay(self.labels, self.player)
         self.overlays["instance"] = InstanceOverlay(
             self.labels, self.player, self.state
