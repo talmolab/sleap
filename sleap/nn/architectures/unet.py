@@ -143,13 +143,13 @@ class UNet(encoder_decoder.EncoderDecoder):
 
     @classmethod
     def from_config(cls, config: UNetConfig) -> "UNet":
-        """Create an augmenter from a set of configuration parameters.
+        """Create a model from a set of configuration parameters.
 
         Args:
             config: An `UNetConfig` instance with the desired parameters.
 
         Returns:
-            An instance of this class with the specified augmentation configuration.
+            An instance of this class with the specified configuration.
         """
         stem_blocks = 0
         if config.stem_stride is not None:

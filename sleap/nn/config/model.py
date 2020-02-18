@@ -56,6 +56,20 @@ class HeadsConfig:
 
 @attr.s(auto_attribs=True)
 class LEAPConfig:
+    """LEAP backbone configuration.
+
+    Attributes:
+        max_stride: Determines the number of downsampling blocks in the network,
+            increasing receptive field size at the cost of network size.
+        output_stride: Determines the number of upsampling blocks in the network.
+        filters: Base number of filters in the network.
+        filters_rate: Factor to scale the number of filters by at each block.
+        up_interpolate: If True, use bilinear upsampling instead of transposed
+            convolutions for upsampling. This can save computations but may lower
+            overall accuracy.
+        stacks: Number of repeated stacks of the network (excluding the stem).
+    """
+
     max_stride: int = 8  # determines down blocks
     output_stride: int = 1  # determines up blocks
     filters: int = 64
