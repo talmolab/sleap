@@ -5,6 +5,7 @@ tf.config.experimental.set_visible_devices([], device_type="GPU")  # hide GPUs f
 
 from sleap.nn.architectures import upsampling
 from sleap.nn.architectures import resnet
+from sleap.nn.config import ResNetConfig
 
 
 class ResnetTests(tf.test.TestCase):
@@ -165,3 +166,29 @@ class ResnetTests(tf.test.TestCase):
             self.assertEqual(np.sum(param_counts), 58213248)
         with self.subTest("total parameter count"):
             self.assertEqual(model.count_params(), 58364672)
+
+    def test_resnet50_from_config(self):
+        resnet50 = resnet.ResNet50.from_config(ResNetConfig(
+            version="ResNet50",
+            weights="random",
+            upsampling=None,
+            max_stride=32,
+            output_stride=32,
+            ))
+        x_in = tf.keras.layers.Input((160, 160, 1))
+        x, x_mid = resnet50.make_backbone(x_in)
+        model = tf.keras.Model(x_in, x)
+        param_counts = [
+            np.prod(train_var.shape) for train_var in model.trainable_weights
+        ]
+
+        with self.subTest("number of layers"):
+            self.assertEqual(len(model.layers), 175)
+        with self.subTest("number of trainable weights"):
+            self.assertEqual(len(model.trainable_weights), 212)
+        with self.subTest("trainable parameter count"):
+            self.assertEqual(np.sum(param_counts), 23528320)
+        with self.subTest("total parameter count"):
+            self.assertEqual(model.count_params(), 23581440)
+        with self.subTest("output shape"):
+            self.assertAllEqual(model.output.shape, (None, 5, 5, 2048))

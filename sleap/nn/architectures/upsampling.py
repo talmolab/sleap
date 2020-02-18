@@ -16,6 +16,7 @@ import attr
 from typing import Union, Sequence, List, Tuple, Optional
 
 from sleap.nn.architectures.common import IntermediateFeature
+from sleap.nn.config import UpsamplingConfig
 
 
 @attr.s(auto_attribs=True)
@@ -43,6 +44,8 @@ class UpsamplingStack:
         transposed_conv_batchnorm: Specifies whether batch norm should be applied after
             the transposed convolution (and before the ReLU activation). No effect if
             bilinear upsampling is used.
+        make_skip_connection: If True, incoming feature tensors form skip connection
+            with upsampled features. If False, no skip connection will be formed.
         skip_add: If True, incoming feature tensors form skip connection with upsampled
             features via element-wise addition. Height/width are matched via stride and
             a 1x1 linear conv is applied if the channel counts do no match up. If False,
@@ -74,12 +77,43 @@ class UpsamplingStack:
     transposed_conv_kernel_size: int = 4
     transposed_conv_batchnorm: bool = True
 
+    make_skip_connection: bool = True
     skip_add: bool = False
 
     refine_convs: int = 2
     refine_convs_filters: int = 64
     refine_convs_filters_rate: float = 1
     refine_convs_batchnorm: bool = True
+
+    @classmethod
+    def from_config(
+        cls, config: UpsamplingConfig, output_stride: int
+    ) -> "UpsamplingStack":
+        """Create a model from a set of configuration parameters.
+
+        Args:
+            config: An `UpsamplingConfig` instance with the desired parameters.
+            output_stride: The desired final stride of the output tensor of the stack.
+
+        Returns:
+            An instance of this class with the specified configuration.
+        """
+        return cls(
+            output_stride=output_stride,
+            upsampling_stride=config.block_stride,
+            transposed_conv=config.method == "transposed_conv",
+            transposed_conv_filters=config.filters,
+            transposed_conv_filters_rate=config.filters_rate,
+            transposed_conv_kernel_size=config.transposed_conv_kernel_size,
+            transposed_conv_batchnorm=config.batch_norm,
+            make_skip_connection=config.skip_connections is not None,
+            skip_add=config.skip_connections is not None
+            and config.skip_connections == "add",
+            refine_convs=config.refine_convs,
+            refine_convs_filters=config.filters,
+            refine_convs_filters_rate=config.filters_rate,
+            refine_convs_batchnorm=config.batch_norm,
+        )
 
     def make_stack(
         self,
@@ -121,7 +155,6 @@ class UpsamplingStack:
                 with `upsampling_stride = 2` this will take 2 upsampling steps, and
                 with `upsampling_stride = 4` this will take 1 upsampling step.
         """
-
         # Calculate the number of upsampling steps.
         num_blocks = int(
             (np.log(current_stride) - np.log(self.output_stride))
@@ -167,7 +200,7 @@ class UpsamplingStack:
             current_stride = new_stride
 
             # Form skip connection if there are any available at this stride level.
-            if skip_sources is not None:
+            if skip_sources is not None and self.make_skip_connection:
                 added_skip = False
                 for skip_source in skip_sources:
                     if not added_skip and skip_source.stride == current_stride:

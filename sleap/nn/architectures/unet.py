@@ -1,16 +1,18 @@
-"""This module provides a generalized implementation of Unet.
+"""This module provides a generalized implementation of UNet.
 
-See the `Unet` class docstring for more information.
+See the `UNet` class docstring for more information.
 """
 
 import attr
 from typing import List, Optional
 from sleap.nn.architectures import encoder_decoder
+from sleap.nn.config import UNetConfig
+import numpy as np
 
 
 @attr.s(auto_attribs=True)
-class Unet(encoder_decoder.EncoderDecoder):
-    """Unet encoder-decoder architecture for fully convolutional networks.
+class UNet(encoder_decoder.EncoderDecoder):
+    """UNet encoder-decoder architecture for fully convolutional networks.
 
     This is the canonical architecture described in `Ronneberger et al., 2015
     <https://arxiv.org/abs/1505.04597>`_.
@@ -92,7 +94,9 @@ class Unet(encoder_decoder.EncoderDecoder):
         """Define the encoder stack."""
         blocks = []
         for block in range(self.down_blocks + 1):
-            block_filters = int(self.filters * (self.filters_rate ** (block + self.stem_blocks)))
+            block_filters = int(
+                self.filters * (self.filters_rate ** (block + self.stem_blocks))
+            )
             blocks.append(
                 encoder_decoder.SimpleConvBlock(
                     pool=(block > 0),
@@ -113,10 +117,13 @@ class Unet(encoder_decoder.EncoderDecoder):
         """Define the decoder stack."""
         blocks = []
         for block in range(self.up_blocks):
-            block_filters = int(self.filters * (
-                self.filters_rate **
-                (self.stem_blocks + self.down_blocks - block - 1)
-            ))
+            block_filters = int(
+                self.filters
+                * (
+                    self.filters_rate
+                    ** (self.stem_blocks + self.down_blocks - block - 1)
+                )
+            )
             blocks.append(
                 encoder_decoder.SimpleUpsamplingBlock(
                     upsampling_stride=2,
@@ -133,3 +140,33 @@ class Unet(encoder_decoder.EncoderDecoder):
                 )
             )
         return blocks
+
+    @classmethod
+    def from_config(cls, config: UNetConfig) -> "UNet":
+        """Create a model from a set of configuration parameters.
+
+        Args:
+            config: An `UNetConfig` instance with the desired parameters.
+
+        Returns:
+            An instance of this class with the specified configuration.
+        """
+        stem_blocks = 0
+        if config.stem_stride is not None:
+            stem_blocks = np.log2(config.stem_stride).astype(int)
+        down_blocks = np.log2(config.max_stride).astype(int) - stem_blocks
+        up_blocks = np.log2(config.max_stride / config.output_stride).astype(int)
+
+        return cls(
+            filters=config.filters,
+            filters_rate=config.filters_rate,
+            kernel_size=3,
+            stem_kernel_size=7,
+            convs_per_block=2,
+            stem_blocks=stem_blocks,
+            down_blocks=down_blocks,
+            middle_block=config.middle_block,
+            up_blocks=up_blocks,
+            up_interpolate=config.up_interpolate,
+            stacks=config.stacks,
+        )

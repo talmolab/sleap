@@ -56,6 +56,20 @@ class HeadsConfig:
 
 @attr.s(auto_attribs=True)
 class LEAPConfig:
+    """LEAP backbone configuration.
+
+    Attributes:
+        max_stride: Determines the number of downsampling blocks in the network,
+            increasing receptive field size at the cost of network size.
+        output_stride: Determines the number of upsampling blocks in the network.
+        filters: Base number of filters in the network.
+        filters_rate: Factor to scale the number of filters by at each block.
+        up_interpolate: If True, use bilinear upsampling instead of transposed
+            convolutions for upsampling. This can save computations but may lower
+            overall accuracy.
+        stacks: Number of repeated stacks of the network (excluding the stem).
+    """
+
     max_stride: int = 8  # determines down blocks
     output_stride: int = 1  # determines up blocks
     filters: int = 64
@@ -66,9 +80,29 @@ class LEAPConfig:
 
 @attr.s(auto_attribs=True)
 class UNetConfig:
-    stem_stride: Optional[int] = None  # if not None, use stem
-    max_stride: int = 16  # determines down blocks
-    output_stride: int = 1  # determines up blocks
+    """UNet backbone configuration.
+
+    Attributes:
+        stem_stride: If not None, controls how many stem blocks to use for initial
+            downsampling. These are useful for learned downsampling that is able to
+            retain spatial information while reducing large input image sizes.
+        max_stride: Determines the number of downsampling blocks in the network,
+            increasing receptive field size at the cost of network size.
+        output_stride: Determines the number of upsampling blocks in the network.
+        filters: Base number of filters in the network.
+        filters_rate: Factor to scale the number of filters by at each block.
+        middle_block: If True, add an intermediate block between the downsampling and
+            upsampling branch for additional processing for features at the largest
+            receptive field size.
+        up_interpolate: If True, use bilinear upsampling instead of transposed
+            convolutions for upsampling. This can save computations but may lower
+            overall accuracy.
+        stacks: Number of repeated stacks of the network (excluding the stem).
+    """
+
+    stem_stride: Optional[int] = None
+    max_stride: int = 16
+    output_stride: int = 1
     filters: int = 64
     filters_rate: float = 2
     middle_block: bool = True
@@ -78,9 +112,23 @@ class UNetConfig:
 
 @attr.s(auto_attribs=True)
 class HourglassConfig:
-    stem_stride: int = 4  # if not None, use stem
-    max_stride: int = 64  # determines down blocks
-    output_stride: int = 4  # determines up blocks
+    """Hourglass backbone configuration.
+
+    Attributes:
+        stem_stride: Controls how many stem blocks to use for initial downsampling.
+            These are useful for learned downsampling that is able to retain spatial
+            information while reducing large input image sizes.
+        max_stride: Determines the number of downsampling blocks in the network,
+            increasing receptive field size at the cost of network size.
+        output_stride: Determines the number of upsampling blocks in the network.
+        filters: Base number of filters in the network.
+        filters_increase: Constant to increase the number of filters by at each block.
+        stacks: Number of repeated stacks of the network (excluding the stem).
+    """
+
+    stem_stride: int = 4
+    max_stride: int = 64
+    output_stride: int = 4
     stem_filters: int = 128
     filters: int = 256
     filter_increase: int = 128
@@ -89,6 +137,37 @@ class HourglassConfig:
 
 @attr.s(auto_attribs=True)
 class UpsamplingConfig:
+    """Upsampling stack configuration.
+
+    Attributes:
+        method: If "transposed_conv", use a strided transposed convolution to perform
+            learnable upsampling. If "interpolation", bilinear upsampling will be used
+            instead.
+        skip_connections: If "add", incoming feature tensors form skip connection with
+            upsampled features via element-wise addition. Height/width are matched via
+            stride and a 1x1 linear conv is applied if the channel counts do no match
+            up. If "concatenate", the skip connection is formed via channel-wise
+            concatenation. If None, skip connections will not be formed.
+        block_stride: The striding of the upsampling *layer* (not tensor). This is
+            typically set to 2, such that the tensor doubles in size with each
+            upsampling step, but can be set higher to upsample to the desired
+            `output_stride` directly in fewer steps.
+        filters: Integer that specifies the base number of filters in each convolution
+            layer. This will be scaled by the `filters_rate` at every upsampling step.
+        filters_rate: Factor to scale the number of filters in the convolution layers
+            after each upsampling step. If set to 1, the number of filters won't change.
+        refine_convs: If greater than 0, specifies the number of 3x3 convolutions that
+            will be applied after the upsampling step for refinement. These layers can
+            serve the purpose of "mixing" the skip connection fused features, or to
+            refine the current feature map after upsampling, which can help to prevent
+            aliasing and checkerboard effects. If 0, no additional convolutions will be
+            applied.
+        conv_batchnorm: Specifies whether batch norm should be applied after each
+            convolution (and before the ReLU activation).
+        transposed_conv_kernel_size: Size of the kernel for the transposed convolution.
+            No effect if bilinear upsampling is used.
+    """
+
     method: Text = attr.ib(
         default="interpolation",
         validator=attr.validators.in_(["interpolation", "transposed_conv"]),
@@ -107,6 +186,22 @@ class UpsamplingConfig:
 
 @attr.s(auto_attribs=True)
 class ResNetConfig:
+    """ResNet backbone configuration.
+
+    Attributes:
+        version: Name of the ResNetV1 variant. Can be one of: "ResNet50", "ResNet101",
+            or "ResNet152".
+        weights: Controls how the network weights are initialized. If "random", the
+            network is not pretrained. If "frozen", the network uses pretrained weights
+            and keeps them fixed. If "tunable", the network uses pretrained weights and
+            allows them to be trainable.
+        upsampling: A `UpsamplingConfig` that defines an upsampling branch if not None.
+        max_stride: Stride of the backbone feature activations. These should be <= 32.
+        output_stride: Stride of the final output. If the upsampling branch is not
+            defined, the output stride is controlled via dilated convolutions or reduced
+            pooling in the backbone.
+    """
+
     version: Text = attr.ib(
         default="ResNet50",
         validator=attr.validators.in_(["ResNet50", "ResNet101", "ResNet152"]),
@@ -114,13 +209,25 @@ class ResNetConfig:
     weights: Text = attr.ib(
         default="frozen", validator=attr.validators.in_(["random", "frozen", "tunable"])
     )
-    upsampling: UpsamplingConfig = attr.ib(factory=UpsamplingConfig)
+    upsampling: Optional[UpsamplingConfig] = None
+    max_stride: int = 32
     output_stride: int = 4
 
 
 @oneof
 @attr.s(auto_attribs=True)
 class BackboneConfig:
+    """Configurations related to the model backbone.
+
+    Only one field can be set and will determine which backbone architecture to use.
+
+    Attributes:
+        leap: A `LEAPConfig` instance.
+        unet: A `UNetConfig` instance.
+        hourglass: A `HourglassConfig` instance.
+        resnet: A `ResNetConfig` instance.
+    """
+
     leap: Optional[LEAPConfig] = None
     unet: Optional[UNetConfig] = None
     hourglass: Optional[HourglassConfig] = None
@@ -129,5 +236,12 @@ class BackboneConfig:
 
 @attr.s(auto_attribs=True)
 class ModelConfig:
+    """Configurations related to model architecture.
+
+    Attributes:
+        backbone: Configurations related to the main network architecture.
+        heads: Configurations related to the output heads.
+    """
+
     backbone: BackboneConfig = attr.ib(factory=BackboneConfig)
     heads: HeadsConfig = attr.ib(factory=HeadsConfig)

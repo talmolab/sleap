@@ -5,8 +5,10 @@ See the `LeapCNN` class docstring for more information.
 
 import attr
 from typing import List
+import numpy as np
 
 from sleap.nn.architectures import encoder_decoder
+from sleap.nn.config import LEAPConfig
 
 
 @attr.s(auto_attribs=True)
@@ -99,3 +101,27 @@ class LeapCNN(encoder_decoder.EncoderDecoder):
                 )
             )
         return blocks
+
+    @classmethod
+    def from_config(cls, config: LEAPConfig) -> "LeapCNN":
+        """Create a model from a set of configuration parameters.
+
+        Args:
+            config: An `LEAPConfig` instance with the desired parameters.
+
+        Returns:
+            An instance of this class with the specified configuration.
+        """
+        down_blocks = np.log2(config.max_stride).astype(int)
+        up_blocks = np.log2(config.max_stride / config.output_stride).astype(int)
+
+        return cls(
+            filters=config.filters,
+            filters_rate=config.filters_rate,
+            down_blocks=down_blocks,
+            down_convs_per_block=3,
+            up_blocks=up_blocks,
+            up_interpolate=config.up_interpolate,
+            up_convs_per_block=2,
+            stacks=config.stacks,
+        )

@@ -13,7 +13,7 @@ from typing import TypeVar, Text, Any, Dict, Sequence, List, Optional, Tuple, Un
 import sleap
 from sleap.nn.architectures.common import IntermediateFeature
 from sleap.nn.architectures.leap import LeapCNN
-from sleap.nn.architectures.unet import Unet
+from sleap.nn.architectures.unet import UNet
 from sleap.nn.architectures.hourglass import Hourglass
 from sleap.nn.architectures.resnet import ResNet50, ResNet101, ResNet152
 from sleap.nn import heads
@@ -21,7 +21,7 @@ from sleap.nn import heads
 
 # TODO: Define interface required for architectures (maximum_stride, output_stride,
 # make_backbone).
-ARCHITECTURES = [LeapCNN, Unet, Hourglass, ResNet50, ResNet101, ResNet152]
+ARCHITECTURES = [LeapCNN, UNet, Hourglass, ResNet50, ResNet101, ResNet152]
 ARCHITECTURE_NAMES = [cls.__name__ for cls in ARCHITECTURES]
 Architecture = TypeVar("Architecture", *ARCHITECTURES)
 
@@ -132,8 +132,8 @@ class ModelConfig:
         # Setup backbone.
         arch_dict = data_dicts["backbone"]
         if data_dicts["backbone_name"] == "UNet":
-            architecture = "Unet"
-            backbone = Unet(
+            architecture = "UNet"
+            backbone = UNet(
                 stacks=1,
                 filters=arch_dict.get("num_filters", 16),
                 filters_rate=2,
