@@ -26,6 +26,7 @@ from sleap.nn.data.confidence_maps import (
 )
 from sleap.nn.data.edge_maps import PartAffinityFieldsGenerator
 from sleap.nn.data.dataset_ops import Shuffler, Batcher, Repeater, Prefetcher, Preloader
+from sleap.nn.data.training import KeyMapper
 from sleap.nn.data.utils import ensure_list
 
 
@@ -44,6 +45,7 @@ TRANSFORMERS = (
     Repeater,
     Prefetcher,
     Preloader,
+    KeyMapper,
 )
 Provider = TypeVar("Provider", *PROVIDERS)
 Transformer = TypeVar("Transformer", *TRANSFORMERS)
@@ -100,6 +102,8 @@ class Pipeline:
         """
         blocks = []
         for pipeline in pipelines:
+            if isinstance(pipeline, PROVIDERS + TRANSFORMERS):
+                pipeline = cls.from_blocks(pipeline)
             blocks.extend(pipeline.providers)
             blocks.extend(pipeline.transformers)
         return cls.from_blocks(blocks)
