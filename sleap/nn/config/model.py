@@ -66,6 +66,26 @@ class LEAPConfig:
 
 @attr.s(auto_attribs=True)
 class UNetConfig:
+    """UNet backbone configuration.
+
+    Attributes:
+        stem_stride: If not None, controls how many stem blocks to use for initial
+            downsampling. These are useful for learned downsampling that is able to
+            retain spatial information while reducing large input image sizes.
+        max_stride: Determines the number of downsampling blocks in the network,
+            increasing receptive field size at the cost of network size.
+        output_stride: Determines the number of upsampling blocks in the network.
+        filters: Base number of filters in the network.
+        filters_rate: Factor to scale the number of filters by at each block.
+        middle_block: If True, add an intermediate block between the downsampling and
+            upsampling branch for additional processing for features at the largest
+            receptive field size.
+        up_interpolate: If True, use bilinear upsampling instead of transposed
+            convolutions for upsampling. This can save computations but may lower
+            overall accuracy.
+        stacks: Number of repeated stacks of the network (excluding the stem).
+    """
+
     stem_stride: Optional[int] = None  # if not None, use stem
     max_stride: int = 16  # determines down blocks
     output_stride: int = 1  # determines up blocks

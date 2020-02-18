@@ -6,7 +6,7 @@ tf.config.experimental.set_visible_devices([], device_type="GPU")  # hide GPUs f
 from sleap.nn.architectures import hourglass
 
 
-class UnetTests(tf.test.TestCase):
+class HourglassTests(tf.test.TestCase):
     def test_hourglass_reference(self):
         # Reference implementation from the original paper.
         arch = hourglass.Hourglass(

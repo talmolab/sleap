@@ -15,7 +15,7 @@ class ModelConfigTests(tf.test.TestCase):
         json_dicts = json.loads(jsmin(
             """
             {
-                "architecture": "Unet",
+                "architecture": "UNet",
                 "backbone": {
                     "filters": 16,
                     "down_blocks": 5,
