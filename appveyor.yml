@@ -78,7 +78,7 @@ test_script:
 on_success:
 #  - cmd: coveralls
   - cmd: python setup.py bdist_wheel
-  - cmd: python -m twine --non-interactive --skip-existing --disable-progress-bar upload dist/*
+  - cmd: python -m twine upload dist/* --non-interactive --skip-existing --disable-progress-bar
 
 # here we are going to override common configuration
 for:
