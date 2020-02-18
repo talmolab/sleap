@@ -11,6 +11,7 @@ environment:
   TWINE_USERNAME: ntabris
   TWINE_PASSWORD:
     secure: wZhRRgqJ8AdK4LpRBLPg8kA/udXvNrOpeMaaEGnUdUQ=
+  # use the test PyPi server until we're ready for public release
   TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
 
   BUILD_DIR: "build"
@@ -73,12 +74,10 @@ build: off
 test_script:
   - cmd: activate sleap_appveyor
   - cmd: where python
-#  - cmd: pytest --cov=sleap tests/
+  - cmd: pytest --cov=sleap tests/
 
 on_success:
-#  - cmd: coveralls
-  - cmd: python setup.py bdist_wheel
-  - cmd: python -m twine upload dist/* --non-interactive --skip-existing --disable-progress-bar
+  - cmd: coveralls
 
 # here we are going to override common configuration
 for:
@@ -111,11 +110,13 @@ for:
     - cd ..\..\sleap\docs
     - make html push
 
-  # Deploy the PyPi wheel and the windows conda package to the sleap channel,
-  # only on tagged builds though.
+  # Deploy packages on tagged builds
   after_deploy:
     - cmd: cd ..\
-#    - cmd: python setup.py bdist_wheel; python -m twine --non-interactive --skip-existing --disable-progress-bar upload dist/*
+    # Deploy wheel to PyPi
+    - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (python setup.py bdist_wheel)
+    - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (python -m twine upload dist/* --non-interactive --skip-existing --disable-progress-bar)
+    # Deploy (Windows) Conda package to anaconda sleap channel
     - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (conda build .conda --output-folder %BUILD_DIR%)
     - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (anaconda upload --force %BUILD_DIR%\win-64\*.tar.bz2)
     - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (anaconda logout)
