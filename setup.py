@@ -6,14 +6,19 @@ from setuptools import setup, find_packages
 from codecs import open
 from os import path
 
-# Get the sleap version
-from sleap.version import __version__ as sleap_version
+import re
 
 here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the README file
 with open(path.join(here, "README.rst"), encoding="utf-8") as f:
     long_description = f.read()
+
+# Get the sleap version
+with open(path.join(here, "sleap/version.py")) as f:
+    version_file = f.read()
+    print(version_file)
+    sleap_version = re.search("\d.+(?=['\"])", version_file).group(0)
 
 
 def get_requirements(require_name=None):
