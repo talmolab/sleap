@@ -4,12 +4,14 @@ See the `Hourglass` class docstring for more information.
 """
 
 import tensorflow as tf
+import numpy as np
 
 import attr
 from typing import Text, Optional, List
 
 from sleap.nn.architectures import encoder_decoder
 from sleap.nn.architectures.common import IntermediateFeature
+from sleap.nn.config import HourglassConfig
 
 
 def conv(
@@ -278,3 +280,27 @@ class Hourglass(encoder_decoder.EncoderDecoder):
                 )
             )
         return decoder_blocks
+
+    @classmethod
+    def from_config(cls, config: HourglassConfig) -> "Hourglass":
+        """Create a model from a set of configuration parameters.
+
+        Args:
+            config: An `HourglassConfig` instance with the desired parameters.
+
+        Returns:
+            An instance of this class with the specified configuration.
+        """
+        stem_blocks = np.log2(config.stem_stride).astype(int)
+        down_blocks = np.log2(config.max_stride).astype(int) - stem_blocks
+        up_blocks = np.log2(config.max_stride / config.output_stride).astype(int)
+        return cls(
+            down_blocks=down_blocks,
+            up_blocks=up_blocks,
+            stem_filters=config.stem_filters,
+            stem_stride=config.stem_stride,
+            filters=config.filters,
+            filter_increase=config.filter_increase,
+            interp_method="nearest",
+            stacks=config.stacks,
+        )

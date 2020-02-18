@@ -100,9 +100,9 @@ class UNetConfig:
         stacks: Number of repeated stacks of the network (excluding the stem).
     """
 
-    stem_stride: Optional[int] = None  # if not None, use stem
-    max_stride: int = 16  # determines down blocks
-    output_stride: int = 1  # determines up blocks
+    stem_stride: Optional[int] = None
+    max_stride: int = 16
+    output_stride: int = 1
     filters: int = 64
     filters_rate: float = 2
     middle_block: bool = True
@@ -112,9 +112,23 @@ class UNetConfig:
 
 @attr.s(auto_attribs=True)
 class HourglassConfig:
-    stem_stride: int = 4  # if not None, use stem
-    max_stride: int = 64  # determines down blocks
-    output_stride: int = 4  # determines up blocks
+    """Hourglass backbone configuration.
+
+    Attributes:
+        stem_stride: Controls how many stem blocks to use for initial downsampling.
+            These are useful for learned downsampling that is able to retain spatial
+            information while reducing large input image sizes.
+        max_stride: Determines the number of downsampling blocks in the network,
+            increasing receptive field size at the cost of network size.
+        output_stride: Determines the number of upsampling blocks in the network.
+        filters: Base number of filters in the network.
+        filters_increase: Constant to increase the number of filters by at each block.
+        stacks: Number of repeated stacks of the network (excluding the stem).
+    """
+
+    stem_stride: int = 4
+    max_stride: int = 64
+    output_stride: int = 4
     stem_filters: int = 128
     filters: int = 256
     filter_increase: int = 128
