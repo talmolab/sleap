@@ -4,6 +4,7 @@ import tensorflow as tf
 tf.config.experimental.set_visible_devices([], device_type="GPU")  # hide GPUs for test
 
 from sleap.nn.architectures import upsampling
+from sleap.nn.config import UpsamplingConfig
 
 
 class UpsamplingTests(tf.test.TestCase):
@@ -179,3 +180,27 @@ class UpsamplingTests(tf.test.TestCase):
         self.assertIsInstance(
             model.get_layer("upsample_s16_to_s8_skip_add"), tf.keras.layers.Add
         )
+
+    def test_upsampling_stack(self):
+        upsampling_stack = upsampling.UpsamplingStack.from_config(UpsamplingConfig(
+                method="transposed_conv",
+                skip_connections="concatenate",
+                block_stride=2,
+                filters=64,
+                filters_rate=1.,
+                refine_convs=1,
+                batch_norm=True,
+                transposed_conv_kernel_size=4,
+            ), output_stride=4
+        )
+        x, intermediate_feats = upsampling_stack.make_stack(
+            tf.keras.Input((8, 8, 32)), current_stride=16
+        )
+        model = tf.keras.Model(tf.keras.utils.get_source_inputs(x), x)
+
+        self.assertAllEqual(x.shape, (None, 32, 32, 64))
+        self.assertEqual(len(intermediate_feats), 2)
+        self.assertEqual(intermediate_feats[0].stride, 8)
+        self.assertEqual(intermediate_feats[1].stride, 4)
+        self.assertEqual(len(model.layers), 13)
+        self.assertIsInstance(model.layers[1], tf.keras.layers.Conv2DTranspose)

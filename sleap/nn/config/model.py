@@ -137,6 +137,37 @@ class HourglassConfig:
 
 @attr.s(auto_attribs=True)
 class UpsamplingConfig:
+    """Upsampling stack configuration.
+
+    Attributes:
+        method: If "transposed_conv", use a strided transposed convolution to perform
+            learnable upsampling. If "interpolation", bilinear upsampling will be used
+            instead.
+        skip_connections: If "add", incoming feature tensors form skip connection with
+            upsampled features via element-wise addition. Height/width are matched via
+            stride and a 1x1 linear conv is applied if the channel counts do no match
+            up. If "concatenate", the skip connection is formed via channel-wise
+            concatenation. If None, skip connections will not be formed.
+        block_stride: The striding of the upsampling *layer* (not tensor). This is
+            typically set to 2, such that the tensor doubles in size with each
+            upsampling step, but can be set higher to upsample to the desired
+            `output_stride` directly in fewer steps.
+        filters: Integer that specifies the base number of filters in each convolution
+            layer. This will be scaled by the `filters_rate` at every upsampling step.
+        filters_rate: Factor to scale the number of filters in the convolution layers
+            after each upsampling step. If set to 1, the number of filters won't change.
+        refine_convs: If greater than 0, specifies the number of 3x3 convolutions that
+            will be applied after the upsampling step for refinement. These layers can
+            serve the purpose of "mixing" the skip connection fused features, or to
+            refine the current feature map after upsampling, which can help to prevent
+            aliasing and checkerboard effects. If 0, no additional convolutions will be
+            applied.
+        conv_batchnorm: Specifies whether batch norm should be applied after each
+            convolution (and before the ReLU activation).
+        transposed_conv_kernel_size: Size of the kernel for the transposed convolution.
+            No effect if bilinear upsampling is used.
+    """
+
     method: Text = attr.ib(
         default="interpolation",
         validator=attr.validators.in_(["interpolation", "transposed_conv"]),
