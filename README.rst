@@ -13,7 +13,8 @@
 Social LEAP Estimates Animal Pose (SLEAP)
 =========================================
 
-.. image:: docs/_static/sleap_movie.gif
+.. image:: https://sleap.ai/docs/_static/sleap_movie.gif
+    :alt: SLEAP demo movie
     :width: 600px
 
 |

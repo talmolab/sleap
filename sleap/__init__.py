@@ -9,3 +9,5 @@ from sleap.io.dataset import Labels
 from sleap.io.video import Video
 from sleap.instance import LabeledFrame, Instance, PredictedInstance
 from sleap.skeleton import Skeleton
+
+from sleap.version import __version__
