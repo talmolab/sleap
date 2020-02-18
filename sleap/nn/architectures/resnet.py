@@ -16,6 +16,7 @@ import attr
 
 from typing import Tuple, Optional, Text, Callable, Mapping, Sequence, Any, List
 from sleap.nn.architectures.upsampling import IntermediateFeature, UpsamplingStack
+from sleap.nn.config import ResNetConfig
 
 
 BASE_WEIGHTS_PATH = (
@@ -302,7 +303,8 @@ def make_backbone_fn(
                     dilation_rate *= 2
             else:
                 raise ValueError(
-                    f"Could not adjust output stride. Current: {current_stride}, desired: {output_stride}"
+                    f"Could not adjust output stride. Current: {current_stride}, "
+                    f"desired: {output_stride}"
                 )
 
             stack_config.update(dilation_rate=dilation_rate, stride1=stride1)
@@ -401,6 +403,43 @@ class ResNetv1:
     pretrained: bool = True
     frozen: bool = False
     skip_connections: bool = False
+
+    @classmethod
+    def from_config(cls, config: ResNetConfig) -> "ResNetv1":
+        """Create a model from a set of configuration parameters.
+
+        Args:
+            config: An `ResNetConfig` instance with the desired parameters.
+
+        Returns:
+            An instance of this class with the specified configuration.
+        """
+        if config.version == "ResNet50":
+            new_cls = ResNet50
+        elif config.version == "ResNet101":
+            new_cls = ResNet101
+        elif config.version == "ResNet152":
+            new_cls = ResNet152
+        else:
+            raise ValueError(
+                f"Invalid ResNet version in the configuration: {config.version}"
+            )
+
+        upsampling_stack = None
+        skip_connections = False
+        if config.upsampling is not None:
+            upsampling_stack = UpsamplingStack.from_config(
+                config=config.upsampling, output_stride=config.output_stride
+            )
+            skip_connections = config.upsampling.skip_connections is not None
+
+        return new_cls(
+            upsampling_stack=upsampling_stack,
+            features_output_stride=config.max_stride,
+            pretrained=config.weights != "random",
+            frozen=config.weights == "frozen",
+            skip_connections=skip_connections,
+        )
 
     @property
     def down_blocks(self) -> int:
@@ -543,11 +582,11 @@ class ResNet50(ResNetv1):
     def _fixed_stack_configs(self) -> Sequence[Mapping[Text, Any]]:
         """ResNet50 layer stack configuration."""
         return [
-        dict(filters=64, blocks=3, stride1=1, name="conv2"),
-        dict(filters=128, blocks=4, stride1=2, name="conv3"),
-        dict(filters=256, blocks=6, stride1=2, name="conv4"),
-        dict(filters=512, blocks=3, stride1=2, name="conv5"),
-    ]
+            dict(filters=64, blocks=3, stride1=1, name="conv2"),
+            dict(filters=128, blocks=4, stride1=2, name="conv3"),
+            dict(filters=256, blocks=6, stride1=2, name="conv4"),
+            dict(filters=512, blocks=3, stride1=2, name="conv5"),
+        ]
 
     def __attrs_post_init__(self):
         """Enforce fixed attributes."""
@@ -597,11 +636,11 @@ class ResNet101(ResNetv1):
     def _fixed_stack_configs(self) -> Sequence[Mapping[Text, Any]]:
         """ResNet101 layer stack configuration."""
         return [
-        dict(filters=64, blocks=3, stride1=1, name="conv2"),
-        dict(filters=128, blocks=4, stride1=2, name="conv3"),
-        dict(filters=256, blocks=23, stride1=2, name="conv4"),
-        dict(filters=512, blocks=3, stride1=2, name="conv5"),
-    ]
+            dict(filters=64, blocks=3, stride1=1, name="conv2"),
+            dict(filters=128, blocks=4, stride1=2, name="conv3"),
+            dict(filters=256, blocks=23, stride1=2, name="conv4"),
+            dict(filters=512, blocks=3, stride1=2, name="conv5"),
+        ]
 
     def __attrs_post_init__(self):
         """Enforce fixed attributes."""
@@ -651,11 +690,11 @@ class ResNet152(ResNetv1):
     def _fixed_stack_configs(self) -> Sequence[Mapping[Text, Any]]:
         """ResNet152 layer stack configuration."""
         return [
-        dict(filters=64, blocks=3, stride1=1, name="conv2"),
-        dict(filters=128, blocks=8, stride1=2, name="conv3"),
-        dict(filters=256, blocks=36, stride1=2, name="conv4"),
-        dict(filters=512, blocks=3, stride1=2, name="conv5"),
-    ]
+            dict(filters=64, blocks=3, stride1=1, name="conv2"),
+            dict(filters=128, blocks=8, stride1=2, name="conv3"),
+            dict(filters=256, blocks=36, stride1=2, name="conv4"),
+            dict(filters=512, blocks=3, stride1=2, name="conv5"),
+        ]
 
     def __attrs_post_init__(self):
         """Enforce fixed attributes."""

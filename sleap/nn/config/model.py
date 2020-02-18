@@ -186,6 +186,22 @@ class UpsamplingConfig:
 
 @attr.s(auto_attribs=True)
 class ResNetConfig:
+    """ResNet backbone configuration.
+
+    Attributes:
+        version: Name of the ResNetV1 variant. Can be one of: "ResNet50", "ResNet101",
+            or "ResNet152".
+        weights: Controls how the network weights are initialized. If "random", the
+            network is not pretrained. If "frozen", the network uses pretrained weights
+            and keeps them fixed. If "tunable", the network uses pretrained weights and
+            allows them to be trainable.
+        upsampling: A `UpsamplingConfig` that defines an upsampling branch if not None.
+        max_stride: Stride of the backbone feature activations. These should be <= 32.
+        output_stride: Stride of the final output. If the upsampling branch is not
+            defined, the output stride is controlled via dilated convolutions or reduced
+            pooling in the backbone.
+    """
+
     version: Text = attr.ib(
         default="ResNet50",
         validator=attr.validators.in_(["ResNet50", "ResNet101", "ResNet152"]),
@@ -193,13 +209,25 @@ class ResNetConfig:
     weights: Text = attr.ib(
         default="frozen", validator=attr.validators.in_(["random", "frozen", "tunable"])
     )
-    upsampling: UpsamplingConfig = attr.ib(factory=UpsamplingConfig)
+    upsampling: Optional[UpsamplingConfig] = None
+    max_stride: int = 32
     output_stride: int = 4
 
 
 @oneof
 @attr.s(auto_attribs=True)
 class BackboneConfig:
+    """Configurations related to the model backbone.
+
+    Only one field can be set and will determine which backbone architecture to use.
+
+    Attributes:
+        leap: A `LEAPConfig` instance.
+        unet: A `UNetConfig` instance.
+        hourglass: A `HourglassConfig` instance.
+        resnet: A `ResNetConfig` instance.
+    """
+
     leap: Optional[LEAPConfig] = None
     unet: Optional[UNetConfig] = None
     hourglass: Optional[HourglassConfig] = None
@@ -208,5 +236,12 @@ class BackboneConfig:
 
 @attr.s(auto_attribs=True)
 class ModelConfig:
+    """Configurations related to model architecture.
+
+    Attributes:
+        backbone: Configurations related to the main network architecture.
+        heads: Configurations related to the output heads.
+    """
+
     backbone: BackboneConfig = attr.ib(factory=BackboneConfig)
     heads: HeadsConfig = attr.ib(factory=HeadsConfig)
