@@ -17,7 +17,6 @@ with open(path.join(here, "README.rst"), encoding="utf-8") as f:
 # Get the sleap version
 with open(path.join(here, "sleap/version.py")) as f:
     version_file = f.read()
-    print(version_file)
     sleap_version = re.search("\d.+(?=['\"])", version_file).group(0)
 
 
