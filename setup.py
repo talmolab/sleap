@@ -48,6 +48,7 @@ setup(
             "sleap-label=sleap.gui.app:main",
             "sleap-train=sleap.nn.training:main",
             "sleap-track=sleap.nn.inference:main",
+            "sleap-diagnostic=sleap.diagnostic:main",
         ],
     },
     python_requires=">=3.6",
