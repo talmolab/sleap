@@ -80,7 +80,7 @@ on_success:
   - cmd: coveralls
 
 cache:
-  - C:\Miniconda36-x64\pkgs -> environment.yml
+  - C:\Miniconda36-x64\pkgs\*.bz2 -> environment.yml
 
 # here we are going to override common configuration
 for:
