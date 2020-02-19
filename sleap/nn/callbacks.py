@@ -23,8 +23,8 @@ logger = logging.getLogger(__name__)
 
 
 class TrainingControllerZMQ(tf.keras.callbacks.Callback):
-    def __init__(self, address="tcp://127.0.0.1", port=9000, topic="", poll_timeout=10):
-        self.address = "%s:%d" % (address, port)
+    def __init__(self, address="tcp://127.0.0.1:9000", topic="", poll_timeout=10):
+        self.address = address
         self.topic = topic
         self.timeout = poll_timeout
 
@@ -74,8 +74,8 @@ class TrainingControllerZMQ(tf.keras.callbacks.Callback):
 
 
 class ProgressReporterZMQ(tf.keras.callbacks.Callback):
-    def __init__(self, address="tcp://127.0.0.1", port=9001, what="not_set"):
-        self.address = "%s:%d" % (address, port)
+    def __init__(self, address="tcp://127.0.0.1:9001", what="not_set"):
+        self.address = address
         self.what = what
         # Initialize ZMQ
         self.context = zmq.Context()
@@ -187,6 +187,14 @@ class ModelCheckpointOnEvent(tf.keras.callbacks.Callback):
         if self.event == "train_begin":
             self.model.save(self.filepath)
 
+    def on_epoch_end(self, epoch, logs=None):
+        """Called at the end of each epoch."""
+        if self.event == "epoch_end":
+            if "%" in self.filepath:
+                self.model.save(self.filepath % epoch)
+            else:
+                self.model.save(self.filepath)
+
     def on_train_end(self, logs=None):
         """Called at the end of training."""
         if self.event == "train_end":
@@ -235,7 +243,7 @@ class TensorBoardMatplotlibWriter(tf.keras.callbacks.Callback):
 
 
 class MatplotlibSaver(tf.keras.callbacks.Callback):
-    """Callback for saving images rendered with matplolib during training.
+    """Callback for saving images rendered with matplotlib during training.
 
     This is useful for saving visualizations of the training to disk. It will be called
     at the end of each epoch.
