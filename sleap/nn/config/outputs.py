@@ -149,8 +149,8 @@ class OutputsConfig:
             runs. These are not used for anything during training or inference, so they
             can be used to store arbitrary user-specified metadata.
         save_visualizations: If True, will render and save visualizations of the model
-            predictions as PNGs to "{run_folder}/viz/{split}/{04d}.png", where the
-            split is one of "train", "val", "test", and the filenames are the epoch.
+            predictions as PNGs to "{run_folder}/viz/{split}.{epoch:04d}.png", where the
+            split is one of "train", "validation", "test".
         log_to_csv: If True, loss and metrics will be saved to a simple CSV after each
             epoch to "{run_folder}/training_log.csv"
         checkpointing: Configuration options related to model checkpointing.
