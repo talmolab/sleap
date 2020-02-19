@@ -7,6 +7,21 @@ import sleap
 from sleap.nn.config import InstanceCroppingConfig
 
 
+def find_instance_crop_size(
+    labels: sleap.Labels, padding: int = 0, maximum_stride: int = 2
+) -> int:
+    max_length = 0.0
+    for inst in labels.user_instances:
+        pts = inst.points_array
+        max_length = np.maximum(max_length, np.nanmax(pts[:, 0]) - np.nanmin(pts[:, 0]))
+        max_length = np.maximum(max_length, np.nanmax(pts[:, 1]) - np.nanmin(pts[:, 1]))
+
+    max_length += float(padding)
+    crop_size = np.math.ceil(max_length / float(maximum_stride)) * maximum_stride
+
+    return int(crop_size)
+
+
 def normalize_bboxes(
     bboxes: tf.Tensor, image_height: int, image_width: int
 ) -> tf.Tensor:
