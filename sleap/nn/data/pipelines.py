@@ -27,7 +27,11 @@ from sleap.nn.data.confidence_maps import (
 from sleap.nn.data.edge_maps import PartAffinityFieldsGenerator
 from sleap.nn.data.dataset_ops import Shuffler, Batcher, Repeater, Prefetcher, Preloader
 from sleap.nn.data.training import KeyMapper
-from sleap.nn.data.inference import KerasModelPredictor, GlobalPeakFinder
+from sleap.nn.data.inference import (
+    KerasModelPredictor,
+    GlobalPeakFinder,
+    LocalPeakFinder,
+)
 from sleap.nn.data.utils import ensure_list
 
 
@@ -49,6 +53,7 @@ TRANSFORMERS = (
     KeyMapper,
     KerasModelPredictor,
     GlobalPeakFinder,
+    LocalPeakFinder,
 )
 Provider = TypeVar("Provider", *PROVIDERS)
 Transformer = TypeVar("Transformer", *TRANSFORMERS)
@@ -68,7 +73,10 @@ class Pipeline:
 
     @classmethod
     def from_blocks(
-        cls, blocks: Union[Union[Provider, Transformer], Sequence[Union[Provider, Transformer]]]
+        cls,
+        blocks: Union[
+            Union[Provider, Transformer], Sequence[Union[Provider, Transformer]]
+        ],
     ) -> "Pipeline":
         """Create a pipeline from a sequence of providers and transformers.
 
@@ -137,13 +145,15 @@ class Pipeline:
                 self.transformers.extend(other)
             else:
                 raise ValueError(
-                "Cannot append blocks that are not pipelines or transformers.")
+                    "Cannot append blocks that are not pipelines or transformers."
+                )
         elif hasattr(other, "providers") and hasattr(other, "transformers"):
             self.providers.extend(other.providers)
             self.transformers.extend(other.transformers)
         else:
             raise ValueError(
-                "Cannot append blocks that are not pipelines or transformers.")
+                "Cannot append blocks that are not pipelines or transformers."
+            )
 
     def __iadd__(self, other: Union["Pipeline", Transformer, List[Transformer]]):
         """Overload for += for appending blocks to existing instance."""
