@@ -12,7 +12,6 @@ import numpy as np
 import attr
 from typing import Sequence, Text, Optional, List, Tuple, Union, TypeVar
 
-
 import sleap
 from sleap.nn.data.providers import LabelsReader, VideoReader
 from sleap.nn.data.augmentation import AugmentationConfig, ImgaugAugmenter
@@ -33,6 +32,14 @@ from sleap.nn.data.inference import (
     LocalPeakFinder,
 )
 from sleap.nn.data.utils import ensure_list
+
+from sleap.nn.config import DataConfig, OptimizationConfig
+from sleap.nn.heads import (
+    MultiInstanceConfmapsHead,
+    PartAffinityFieldsHead,
+    CentroidConfmapsHead,
+    CenteredInstanceConfmapsHead,
+)
 
 
 PROVIDERS = (LabelsReader, VideoReader)
@@ -240,167 +247,351 @@ class Pipeline:
 
 @attr.s(auto_attribs=True)
 class BottomUpPipeline:
-    """Standard bottom up pipeline."""
+    """Pipeline builder for confidence maps + part affinity fields models.
 
-    data_provider: Provider
-    shuffler: Shuffler
-    augmenter: ImgaugAugmenter
-    normalizer: Normalizer
-    resizer: Resizer
-    multi_confmap_generator: MultiConfidenceMapGenerator
-    # multi_confmap_predictor: MultiConfidenceMapPredictor
-    paf_generator: PartAffinityFieldsGenerator
-    # paf_matcher: PAFMatcher
-    batcher: Batcher
-    repeater: Repeater
-    prefetcher: Prefetcher
+    Attributes:
+        data_config: Data-related configuration.
+        optimization_config: Optimization-related configuration.
+        confmaps_head: Instantiated head describing the output confidence maps tensor.
+        pafs_head: Instantiated head describing the output PAFs tensor.
+    """
 
-    def make_training_pipeline(self, preload: bool = False) -> Pipeline:
-        """Make training pipeline.
+    data_config: DataConfig
+    optimization_config: OptimizationConfig
+    confmaps_head: MultiInstanceConfmapsHead
+    pafs_head: PartAffinityFieldsHead
 
-        Args:
-            preload: If True, preload all examples in the dataset when the pipeline is
-                constructed. This increases performance at the cost of memory.
-
-        Returns:
-            The constructed `Pipeline` instance.
-        """
-        blocks = [self.data_provider]
-
-        # Optional preprocessing:
-        if preload:
-            blocks.append(Preloader())
-        if self.shuffler is not None:
-            blocks.append(self.shuffler)
-        if self.augmenter is not None:
-            blocks.append(self.augmenter)
-        if self.normalizer is not None:
-            blocks.append(self.normalizer)
-        if self.resizer is not None:
-            blocks.append(self.resizer)
-
-        blocks.extend([self.multi_confmap_generator, self.paf_generator])
-
-        blocks.extend([self.batcher, self.repeater, self.prefetcher])
-        return Pipeline.from_blocks(blocks)
-
-    def make_training_dataset(self, preload: bool = False) -> tf.data.Dataset:
-        """Instantiate the training pipeline to create a dataset.
+    def make_base_pipeline(self, data_provider: Provider) -> Pipeline:
+        """Create base pipeline with input data only.
 
         Args:
-            preload: If True, preload all examples in the dataset when the pipeline is
-                constructed. This increases performance at the cost of memory.
+            data_provider: A `Provider` that generates data examples, typically a
+                `LabelsReader` instance.
 
         Returns:
-            The constructed `tf.data.Dataset` instance.
+            A `Pipeline` instance configured to produce input examples.
         """
-        return self.make_training_pipeline(preload=preload).make_dataset()
+        pipeline = Pipeline(providers=data_provider)
+        pipeline += Normalizer.from_config(self.data_config.preprocessing)
+        pipeline += Resizer.from_config(self.data_config.preprocessing)
+        return pipeline
 
-    def make_inference_pipeline(self) -> Pipeline:
-        """Make inference pipeline."""
-        return Pipeline.from_blocks(
-            [
-                self.data_provider,
-                self.normalizer,
-                self.resizer,
-                self.batcher,
-                self.prefetcher,
-                # TODO:
-                # self.multi_confmap_predictor,
-                # self.paf_matcher,
-            ]
+    def make_training_pipeline(self, data_provider: Provider) -> Pipeline:
+        """Create full training pipeline.
+
+        Args:
+            data_provider: A `Provider` that generates data examples, typically a
+                `LabelsReader` instance.
+
+        Returns:
+            A `Pipeline` instance configured to produce all data keys required for
+            training.
+
+        Notes:
+            This does not remap keys to model outputs. Use `KeyMapper` to pull out keys
+            with the appropriate format for the instantiated `tf.keras.Model`.
+        """
+        pipeline = Pipeline(providers=data_provider)
+
+        if self.optimization_config.preload_data:
+            pipeline += Preloader()
+
+        if self.optimization_config.online_shuffling:
+            pipeline += Shuffler(self.optimization_config.shuffle_buffer_size)
+
+        pipeline += ImgaugAugmenter.from_config(
+            self.optimization_config.augmentation_config
+        )
+        pipeline += Normalizer.from_config(self.data_config.preprocessing)
+        pipeline += Resizer.from_config(self.data_config.preprocessing)
+
+        pipeline += MultiConfidenceMapGenerator(
+            sigma=self.confmaps_head.sigma,
+            output_stride=self.confmaps_head.output_stride,
+            centroids=False,
+        )
+        pipeline += PartAffinityFieldsGenerator(
+            sigma=self.pafs_head.sigma,
+            output_stride=self.pafs_head.output_stride,
+            skeletons=self.data_config.labels.skeletons,
+            flatten_channels=True,
         )
 
-    def make_inference_dataset(self) -> tf.data.Dataset:
-        """Instantiate the inference pipeline to create a dataset."""
-        return self.make_inference_pipeline().make_dataset()
+        pipeline += Batcher(
+            batch_size=self.optimization_config.batch_size, drop_remainder=True
+        )
+
+        if self.optimization_config.prefetch:
+            pipeline += Prefetcher()
+
+        pipeline += Repeater()
+        return pipeline
+
+    def make_viz_pipeline(
+        self, data_provider: Provider, keras_model: tf.keras.Model
+    ) -> Pipeline:
+        """Create visualization pipeline.
+
+        Args:
+            data_provider: A `Provider` that generates data examples, typically a
+                `LabelsReader` instance.
+            keras_model: A `tf.keras.Model` that can be used for inference.
+
+        Returns:
+            A `Pipeline` instance configured to fetch data and run inference to generate
+            predictions useful for visualization during training.
+        """
+        pipeline = self.make_base_pipeline(data_provider=data_provider)
+        pipeline += Prefetcher()
+        pipeline += Repeater()
+        pipeline += KerasModelPredictor(
+            keras_model=keras_model,
+            model_input_keys="image",
+            model_output_keys=[
+                "predicted_confidence_maps",
+                "predicted_part_affinity_fields",
+            ],
+        )
+        pipeline += LocalPeakFinder(
+            confmaps_stride=self.confmaps_head.output_stride,
+            peak_threshold=0.2,
+            confmaps_key="predicted_confidence_maps",
+            peaks_key="predicted_peaks",
+            peak_vals_key="predicted_peak_confidences",
+            peak_sample_inds_key="predicted_peak_sample_inds",
+            peak_channel_inds_key="predicted_peak_channel_inds",
+        )
+        # TODO: PAF grouping inference
+        return pipeline
 
 
 @attr.s(auto_attribs=True)
-class TopDownPipeline:
-    """Standard top down pipeline."""
+class CentroidConfmapsPipeline:
+    """Pipeline builder for centroid confidence map models.
 
-    data_provider: Provider
-    shuffler: Shuffler
-    augmenter: ImgaugAugmenter
-    normalizer: Normalizer
-    resizer: Resizer
-    centroid_finder: InstanceCentroidFinder
-    # centroid_confmap_generator: MultiConfidenceMapGenerator
-    # centroid_predictor: InstanceCentroidPredictor
-    instance_cropper: InstanceCropper
-    instance_confmap_generator: InstanceConfidenceMapGenerator
-    # instance_confmap_predictor: InstanceConfidenceMapPredictor
-    batcher: Batcher
-    repeater: Repeater
-    prefetcher: Prefetcher
+    Attributes:
+        data_config: Data-related configuration.
+        optimization_config: Optimization-related configuration.
+        centroid_confmap_head: Instantiated head describing the output centroid
+            confidence maps tensor.
+    """
 
-    def make_training_pipeline(
-        self, centroid: bool = False, preload: bool = False
-    ) -> Pipeline:
-        """Make training pipeline.
+    data_config: DataConfig
+    optimization_config: OptimizationConfig
+    centroid_confmap_head: CentroidConfmapsHead
+
+    def make_base_pipeline(self, data_provider: Provider) -> Pipeline:
+        """Create base pipeline with input data only.
 
         Args:
-            preload: If True, preload all examples in the dataset when the pipeline is
-                constructed. This increases performance at the cost of memory.
+            data_provider: A `Provider` that generates data examples, typically a
+                `LabelsReader` instance.
 
         Returns:
-            The constructed `Pipeline` instance.
+            A `Pipeline` instance configured to produce input examples.
         """
-        blocks = [self.data_provider]
+        pipeline = Pipeline(providers=data_provider)
+        pipeline += Normalizer.from_config(self.data_config.preprocessing)
+        pipeline += Resizer.from_config(self.data_config.preprocessing)
+        pipeline += InstanceCentroidFinder.from_config(
+            self.data_config.instance_cropping,
+            skeletons=self.data_config.labels.skeletons,
+        )
+        return pipeline
 
-        # Optional preprocessing:
-        if preload:
-            blocks.append(Preloader())
-        if self.shuffler is not None:
-            blocks.append(self.shuffler)
-        if self.augmenter is not None:
-            blocks.append(self.augmenter)
-        if self.normalizer is not None:
-            blocks.append(self.normalizer)
-        if self.resizer is not None:
-            blocks.append(self.resizer)
-
-        # Centroid calculation from instance points.
-        blocks.append(self.centroid_finder)
-
-        # Training a centroid detection model.
-        if centroid:
-            blocks.append(self.centroid_confmap_generator)
-        else:
-            # Training a part detection model.
-            blocks.extend([self.instance_cropper, self.instance_confmap_generator])
-        blocks.extend([self.batcher, self.prefetcher, self.repeater])
-        return Pipeline.from_blocks(blocks)
-
-    def make_training_dataset(self, preload: bool = False) -> tf.data.Dataset:
-        """Instantiate the training pipeline to create a dataset.
+    def make_training_pipeline(self, data_provider: Provider) -> Pipeline:
+        """Create full training pipeline.
 
         Args:
-            preload: If True, preload all examples in the dataset when the pipeline is
-                constructed. This increases performance at the cost of memory.
+            data_provider: A `Provider` that generates data examples, typically a
+                `LabelsReader` instance.
 
         Returns:
-            The constructed `tf.data.Dataset` instance.
-        """
-        return self.make_training_pipeline(preload=preload).make_dataset()
+            A `Pipeline` instance configured to produce all data keys required for
+            training.
 
-    def make_inference_pipeline(self) -> Pipeline:
-        """Make inference pipeline."""
-        return Pipeline.from_blocks(
-            [
-                self.data_provider,
-                self.normalizer,
-                self.resizer,
-                self.batcher,
-                self.prefetcher,
-                # TODO:
-                # self.centroid_predictor,
-                self.instance_cropper,  # TODO: update to work with batches as well
-                # self.single_part_predictor,
-            ]
+        Notes:
+            This does not remap keys to model outputs. Use `KeyMapper` to pull out keys
+            with the appropriate format for the instantiated `tf.keras.Model`.
+        """
+        pipeline = Pipeline(providers=data_provider)
+
+        if self.optimization_config.preload_data:
+            pipeline += Preloader()
+
+        if self.optimization_config.online_shuffling:
+            pipeline += Shuffler(self.optimization_config.shuffle_buffer_size)
+
+        pipeline += ImgaugAugmenter.from_config(
+            self.optimization_config.augmentation_config
+        )
+        pipeline += Normalizer.from_config(self.data_config.preprocessing)
+        pipeline += Resizer.from_config(self.data_config.preprocessing)
+
+        pipeline += InstanceCentroidFinder.from_config(
+            self.data_config.instance_cropping,
+            skeletons=self.data_config.labels.skeletons,
+        )
+        pipeline += MultiConfidenceMapGenerator(
+            sigma=self.centroid_confmap_head.sigma,
+            output_stride=self.centroid_confmap_head.output_stride,
+            centroids=True,
         )
 
-    def make_inference_dataset(self) -> tf.data.Dataset:
-        """Instantiate the inference pipeline to create a dataset."""
-        return self.make_inference_pipeline().make_dataset()
+        pipeline += Batcher(
+            batch_size=self.optimization_config.batch_size, drop_remainder=True
+        )
+
+        if self.optimization_config.prefetch:
+            pipeline += Prefetcher()
+
+        pipeline += Repeater()
+        return pipeline
+
+    def make_viz_pipeline(
+        self, data_provider: Provider, keras_model: tf.keras.Model
+    ) -> Pipeline:
+        """Create visualization pipeline.
+
+        Args:
+            data_provider: A `Provider` that generates data examples, typically a
+                `LabelsReader` instance.
+            keras_model: A `tf.keras.Model` that can be used for inference.
+
+        Returns:
+            A `Pipeline` instance configured to fetch data and run inference to generate
+            predictions useful for visualization during training.
+        """
+        pipeline = self.make_base_pipeline(data_provider=data_provider)
+        pipeline += Prefetcher()
+        pipeline += Repeater()
+        pipeline += KerasModelPredictor(
+            keras_model=keras_model,
+            model_input_keys="image",
+            model_output_keys="predicted_centroid_confidence_maps",
+        )
+        pipeline += LocalPeakFinder(
+            confmaps_stride=self.centroid_confmap_head.output_stride,
+            peak_threshold=0.2,
+            confmaps_key="predicted_centroid_confidence_maps",
+            peaks_key="predicted_centroids",
+            peak_vals_key="predicted_centroid_confidences",
+            peak_sample_inds_key="predicted_centroid_sample_inds",
+            peak_channel_inds_key="predicted_centroid_channel_inds",
+        )
+        return pipeline
+
+
+@attr.s(auto_attribs=True)
+class TopdownConfmapsPipeline:
+    """Pipeline builder for instance-centered confidence map models.
+
+    Attributes:
+        data_config: Data-related configuration.
+        optimization_config: Optimization-related configuration.
+        instance_confmap_head: Instantiated head describing the output centered
+            confidence maps tensor.
+    """
+
+    data_config: DataConfig
+    optimization_config: OptimizationConfig
+    instance_confmap_head: CenteredInstanceConfmapsHead
+
+    def make_base_pipeline(self, data_provider: Provider) -> Pipeline:
+        """Create base pipeline with input data only.
+
+        Args:
+            data_provider: A `Provider` that generates data examples, typically a
+                `LabelsReader` instance.
+
+        Returns:
+            A `Pipeline` instance configured to produce input examples.
+        """
+        pipeline = Pipeline(providers=data_provider)
+        pipeline += Normalizer.from_config(self.data_config.preprocessing)
+        pipeline += Resizer.from_config(self.data_config.preprocessing)
+        pipeline += InstanceCentroidFinder.from_config(
+            self.data_config.instance_cropping,
+            skeletons=self.data_config.labels.skeletons,
+        )
+        pipeline += InstanceCropper.from_config(self.data_config.instance_cropping)
+        return pipeline
+
+    def make_training_pipeline(self, data_provider: Provider) -> Pipeline:
+        """Create full training pipeline.
+
+        Args:
+            data_provider: A `Provider` that generates data examples, typically a
+                `LabelsReader` instance.
+
+        Returns:
+            A `Pipeline` instance configured to produce all data keys required for
+            training.
+
+        Notes:
+            This does not remap keys to model outputs. Use `KeyMapper` to pull out keys
+            with the appropriate format for the instantiated `tf.keras.Model`.
+        """
+        pipeline = Pipeline(providers=data_provider)
+
+        if self.optimization_config.preload_data:
+            pipeline += Preloader()
+
+        if self.optimization_config.online_shuffling:
+            pipeline += Shuffler(self.optimization_config.shuffle_buffer_size)
+
+        pipeline += ImgaugAugmenter.from_config(
+            self.optimization_config.augmentation_config
+        )
+        pipeline += Normalizer.from_config(self.data_config.preprocessing)
+        pipeline += Resizer.from_config(self.data_config.preprocessing)
+
+        pipeline += InstanceCentroidFinder.from_config(
+            self.data_config.instance_cropping,
+            skeletons=self.data_config.labels.skeletons,
+        )
+        pipeline += InstanceCropper.from_config(self.data_config.instance_cropping)
+        pipeline += InstanceConfidenceMapGenerator(
+            sigma=self.instance_confmap_head.sigma,
+            output_stride=self.instance_confmap_head.output_stride,
+            all_instances=False,
+        )
+
+        pipeline += Batcher(
+            batch_size=self.optimization_config.batch_size, drop_remainder=True
+        )
+
+        if self.optimization_config.prefetch:
+            pipeline += Prefetcher()
+
+        pipeline += Repeater()
+        return pipeline
+
+    def make_viz_pipeline(
+        self, data_provider: Provider, keras_model: tf.keras.Model
+    ) -> Pipeline:
+        """Create visualization pipeline.
+
+        Args:
+            data_provider: A `Provider` that generates data examples, typically a
+                `LabelsReader` instance.
+            keras_model: A `tf.keras.Model` that can be used for inference.
+
+        Returns:
+            A `Pipeline` instance configured to fetch data and run inference to generate
+            predictions useful for visualization during training.
+        """
+        pipeline = self.make_base_pipeline(data_provider=data_provider)
+        pipeline += Prefetcher()
+        pipeline += Repeater()
+        pipeline += KerasModelPredictor(
+            keras_model=keras_model,
+            model_input_keys="instance_image",
+            model_output_keys="predicted_instance_confidence_maps",
+        )
+        pipeline += GlobalPeakFinder(
+            confmaps_key="predicted_instance_confidence_maps",
+            confmaps_stride=self.instance_confmap_head.output_stride,
+            peak_threshold=0.2,
+        )
+        return pipeline
