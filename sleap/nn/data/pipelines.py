@@ -27,6 +27,7 @@ from sleap.nn.data.confidence_maps import (
 from sleap.nn.data.edge_maps import PartAffinityFieldsGenerator
 from sleap.nn.data.dataset_ops import Shuffler, Batcher, Repeater, Prefetcher, Preloader
 from sleap.nn.data.training import KeyMapper
+from sleap.nn.data.inference import KerasModelPredictor, GlobalPeakFinder
 from sleap.nn.data.utils import ensure_list
 
 
@@ -46,6 +47,8 @@ TRANSFORMERS = (
     Prefetcher,
     Preloader,
     KeyMapper,
+    KerasModelPredictor,
+    GlobalPeakFinder,
 )
 Provider = TypeVar("Provider", *PROVIDERS)
 Transformer = TypeVar("Transformer", *TRANSFORMERS)
