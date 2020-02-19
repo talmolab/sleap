@@ -52,20 +52,20 @@ class TensorBoardConfig:
             training, so this is only recommended to be anything other than "epoch" if
             training interactively. This value only affects the monitored losses and
             metrics, not other summaries like visualizations.
-        part_metrics: If True, metrics will be reported for each keypoint type for
-            models with part confidence maps and edge type for PAF models.
         architecture_graph: If True, the architecture of the model will be saved
             and can be viewed graphically in TensorBoard. This is only saved at the
             beginning of training, but can consume a lot of disk space for large models,
             as well as potentially freezing the browser tab when rendered.
+        profile_graph: If True, profiles the second batch of examples to collect compute
+            statistics.
         visualizations: If True, visualizations of the model predictions are rendered
             and logged for display in TensorBoard -> Images.
     """
 
     write_logs: bool = False
     loss_frequency: Union[Text, int] = "epoch"
-    part_metrics: bool = True
     architecture_graph: bool = False
+    profile_graph: bool = False
     visualizations: bool = True
 
 
