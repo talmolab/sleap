@@ -1,6 +1,7 @@
 """Transformers for cropping instances for topdown processing."""
 
 import tensorflow as tf
+import numpy as np
 import attr
 from typing import Optional, List, Text
 import sleap
