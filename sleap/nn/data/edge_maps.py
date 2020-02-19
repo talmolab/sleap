@@ -251,6 +251,9 @@ class PartAffinityFieldsGenerator:
             generate confidence maps that are smaller than the input images.
         skeletons: List of `sleap.Skeleton`s to use for looking up the index of the
             edges.
+        flatten_channels: If False, the generated tensors are of shape
+            [height, width, n_edges, 2]. If True, generated tensors are of shape
+            [height, width, n_edges * 2] by flattening the last 2 axes.
     """
 
     sigma: float = attr.ib(default=1.0, converter=float)
@@ -258,6 +261,7 @@ class PartAffinityFieldsGenerator:
     skeletons: Optional[List[sleap.Skeleton]] = attr.ib(
         default=None, converter=attr.converters.optional(ensure_list)
     )
+    flatten_channels: bool = False
 
     @property
     def input_keys(self) -> List[Text]:
@@ -284,6 +288,11 @@ class PartAffinityFieldsGenerator:
             (grid_height, grid_width, n_edges, 2) containing the combined part affinity
             fields of all instances in the frame.
 
+            If the `flatten_channels` attribute is set to True, the last 2 axes of the
+            "part_affinity_fields" are flattened to produce a tensor of shape
+            (grid_height, grid_width, n_edges * 2). This is a convenient form when
+            training models as a rank-4 (batched) tensor will generally be expected.
+
         Notes:
             The output stride is relative to the current scale of the image. To map
             points on the part affinity fields to the raw image, first multiply them by
@@ -304,6 +313,8 @@ class PartAffinityFieldsGenerator:
             image_width=image_width,
             output_stride=self.output_stride,
         )
+        grid_height = len(yv)
+        grid_width = len(xv)
 
         # Pull out edge indices.
         # TODO: Multi-skeleton support.
@@ -318,13 +329,20 @@ class PartAffinityFieldsGenerator:
             edge_sources = tf.ensure_shape(edge_sources, (None, n_edges, 2))
             edge_destinations = tf.ensure_shape(edge_destinations, (None, n_edges, 2))
 
-            example["part_affinity_fields"] = make_multi_pafs(
+            pafs = make_multi_pafs(
                 xv=xv,
                 yv=yv,
                 edge_sources=edge_sources,
                 edge_destinations=edge_destinations,
                 sigma=self.sigma,
             )
+            pafs = tf.ensure_shape(pafs, (grid_height, grid_width, n_edges, 2))
+
+            if self.flatten_channels:
+                pafs = tf.reshape(pafs, [grid_height, grid_width, n_edges * 2])
+                pafs = tf.ensure_shape(pafs, (grid_height, grid_width, n_edges * 2))
+
+            example["part_affinity_fields"] = pafs
 
             return example
 

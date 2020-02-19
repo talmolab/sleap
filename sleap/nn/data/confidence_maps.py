@@ -125,9 +125,9 @@ class MultiConfidenceMapGenerator:
     def output_keys(self) -> List[Text]:
         """Return the keys that outgoing elements will have."""
         if self.centroids:
-            return self.input_keys + ["confidence_maps"]
-        else:
             return self.input_keys + ["centroid_confidence_maps"]
+        else:
+            return self.input_keys + ["confidence_maps"]
 
     def transform_dataset(self, input_ds: tf.data.Dataset) -> tf.data.Dataset:
         """Create a dataset that contains the generated confidence maps.

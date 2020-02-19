@@ -44,4 +44,25 @@ def oneof(attrs_cls, must_be_set: bool = False):
     # Replace with wrapped __init__.
     attrs_cls.__init__ = new_init_fn
 
+    # Define convenience method for getting the set attribute.
+    def which_oneof(self):
+        attribs_with_value = [
+            attrib for attrib in attribs if getattr(self, attrib.name) is not None
+        ]
+
+        if len(attribs_with_value) > 1:
+            # Raise error if more than one attribute is set.
+            raise ValueError("Only one attribute of this class can be set (not None).")
+
+        if len(attribs_with_value) == 0:
+            if must_be_set:
+                # Raise error if none are set.
+                raise ValueError("At least one attribute of this class must be set.")
+            else:
+                return None
+
+        return getattr(self, attribs_with_value[0].name)
+
+    attrs_cls.which_oneof = which_oneof
+
     return attrs_cls

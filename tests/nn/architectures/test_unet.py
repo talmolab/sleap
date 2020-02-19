@@ -137,13 +137,13 @@ class UnetTests(tf.test.TestCase):
         ]
 
         with self.subTest("number of layers"):
-            self.assertEqual(len(model.layers), 140)
+            self.assertEqual(len(model.layers), 144)
         with self.subTest("number of trainable weights"):
-            self.assertEqual(len(model.trainable_weights), 128)
+            self.assertEqual(len(model.trainable_weights), 132)
         with self.subTest("trainable parameter count"):
-            self.assertEqual(np.sum(param_counts), 23401968)
+            self.assertEqual(np.sum(param_counts), 23531120)
         with self.subTest("total parameter count"):
-            self.assertEqual(model.count_params(), 23407344)
+            self.assertEqual(model.count_params(), 23536496)
         with self.subTest("output shape"):
             self.assertAllEqual(
                 [out.shape for out in model.output],

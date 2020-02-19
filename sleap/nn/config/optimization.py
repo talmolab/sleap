@@ -96,7 +96,7 @@ class HardKeypointMiningConfig:
     """
 
     online_mining: bool = True
-    hard_to_easy_ratio: float = 0.5
+    hard_to_easy_ratio: float = 2.0
     min_hard_keypoints: int = 2
     max_hard_keypoints: Optional[int] = None
     loss_scale: float = 5.0
@@ -119,6 +119,8 @@ class LearningRateScheduleConfig:
             `plateau_min_delta` in order for a plateau to be detected.
         plateau_cooldown: Number of epochs after a reduction step before epochs without
             improvement will begin to be counted again.
+        min_learning_rate: The minimum absolute value that the learning rate can be
+            reduced to.
     """
 
     reduce_on_plateau: bool = True
@@ -126,6 +128,7 @@ class LearningRateScheduleConfig:
     plateau_min_delta: float = 1e-6
     plateau_patience: int = 5
     plateau_cooldown: int = 3
+    min_learning_rate: float = 1e-8
 
 
 @attr.s(auto_attribs=True)
@@ -141,14 +144,11 @@ class EarlyStoppingConfig:
             epoch as not in a plateau.
         plateau_patience: Number of epochs without an improvement of at least
             `plateau_min_delta` in order for a plateau to be detected.
-        plateau_cooldown: Number of epochs after a reduction step before epochs without
-            improvement will begin to be counted again.
     """
 
     stop_training_on_plateau: bool = True
     plateau_min_delta: float = 1e-6
     plateau_patience: int = 10
-    plateau_cooldown: int = 3
 
 
 @attr.s(auto_attribs=True)
@@ -196,6 +196,9 @@ class OptimizationConfig:
             `batches_per_epoch` is set to "auto". No effect if the batches per epoch is
             explicitly specified. This should be set to 200-400 to compensate for short
             loops through the data when there are few examples.
+        val_batches_per_epoch: Same as `batches_per_epoch`, but for the validation set.
+        min_val_batches_per_epoch: Same as `min_batches_per_epoch`, but for the
+            validation set.
         epochs: Maximum number of epochs to train for. Training can be stopped manually
             or automatically if early stopping is enabled and a plateau is detected.
         optimizer: Name of the optimizer to use for training. This is typically "adam"
@@ -221,6 +224,8 @@ class OptimizationConfig:
     batch_size: int = 8
     batches_per_epoch: Union[int, Text] = "auto"
     min_batches_per_epoch: int = 200
+    val_batches_per_epoch: Union[int, Text] = "auto"
+    min_val_batches_per_epoch: int = 10
     epochs: int = 100
     optimizer: Text = "adam"
     initial_learning_rate: float = 1e-4

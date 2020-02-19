@@ -68,7 +68,7 @@ class PreprocessingConfig:
             This can considerably increase performance and memory requirements at the
             cost of accuracy. Generally, it should only be used when the raw images are
             at a much higher resolution than the smallest features in the data.
-        pad_to_stride: Number of pixels that the image size must be divisible by. This
+        pad_to_stride: Number of pixels that the image size must be divisible by.
             If > 1, this will pad the bottom and right of the images to ensure they meet
             this divisibility criteria. Padding is applied after the scaling specified
             in the `input_scale` attribute. If set to "auto", this will be automatically
