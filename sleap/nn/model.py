@@ -188,7 +188,7 @@ class Model:
                                     strides=1,
                                     padding="same",
                                     name=f"{type(output).__name__}_{i}",
-                                )(x)
+                                )(feat.tensor)
                             )
                         break
 
@@ -198,6 +198,7 @@ class Model:
                     f"{output.stride}."
                 )
             x_outs.append(x_head)
+        # TODO: Warn/error if x_main was not connected to any heads?
 
         # Create model.
         keras_model = tf.keras.Model(inputs=x_in, outputs=x_outs)
