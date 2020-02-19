@@ -10,6 +10,7 @@ from sleap.nn.config.model import (
     CenteredInstanceConfmapsHeadConfig,
     MultiInstanceConfmapsHeadConfig,
     PartAffinityFieldsHeadConfig,
+    MultiInstanceConfig,
     HeadsConfig,
     LEAPConfig,
     UNetConfig,

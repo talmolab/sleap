@@ -41,13 +41,26 @@ class PartAffinityFieldsHeadConfig:
 
 @attr.s(auto_attribs=True)
 class MultiInstanceConfig:
-    multi_instance: MultiInstanceConfmapsHeadConfig = attr.ib(factory=MultiInstanceConfmapsHeadConfig)
+    multi_instance: MultiInstanceConfmapsHeadConfig = attr.ib(
+        factory=MultiInstanceConfmapsHeadConfig
+    )
     pafs: PartAffinityFieldsHeadConfig = attr.ib(factory=PartAffinityFieldsHeadConfig)
 
 
 @oneof
 @attr.s(auto_attribs=True)
 class HeadsConfig:
+    """Configurations related to the model output head type.
+
+    Only one attribute of this class can be set, which defines the model output type.
+
+    Attributes:
+        single_instance: An instance of `SingleInstanceConfmapsHeadConfig`.
+        centroid: An instance of `CentroidsHeadConfig`.
+        centered_instance: An instance of `CenteredInstanceConfmapsHeadConfig`.
+        multi_instance: An instance of `MultiInstanceConfig`.
+    """
+
     single_instance: Optional[SingleInstanceConfmapsHeadConfig] = None
     centroid: Optional[CentroidsHeadConfig] = None
     centered_instance: Optional[CenteredInstanceConfmapsHeadConfig] = None
