@@ -39,6 +39,9 @@ install:
   # Display conda version
   - conda info -a
 
+  # Copy cached packages back into package cache dir used by conda
+  - mv C:\Miniconda36-x64\pkgs\bz2\* C:\Miniconda36-x64\pkgs\
+
   # If this is a tag build, we will need to upload a deployment, set up login
   - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (conda install conda-build=3.17 anaconda-client conda-verify)
   
@@ -67,6 +70,10 @@ install:
   # Install dev requirements too.
   - pip install -r dev_requirements.txt
 
+  # Move package bz2 files into their own directory so we can cache just these
+  - mkdir C:\Miniconda36-x64\pkgs\bz2
+  - mv C:\Miniconda36-x64\pkgs\*.bz2 C:\Miniconda36-x64\pkgs\bz2\
+
   # Install sleap package
   - pip install .
 
@@ -80,7 +87,7 @@ on_success:
   - cmd: coveralls
 
 cache:
-  - C:\Miniconda36-x64\pkgs\*.bz2 -> environment.yml
+  - C:\Miniconda36-x64\pkgs\bz2\ -> environment.yml
 
 # here we are going to override common configuration
 for:
