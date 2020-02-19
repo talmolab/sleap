@@ -40,6 +40,7 @@ install:
   - conda info -a
 
   # Copy cached packages back into package cache dir used by conda
+  - mkdir -p C:\Miniconda36-x64\pkgs\bz2\
   - mv C:\Miniconda36-x64\pkgs\bz2\* C:\Miniconda36-x64\pkgs\
 
   # If this is a tag build, we will need to upload a deployment, set up login
