@@ -37,19 +37,19 @@ class KerasModelPredictor:
         def predict(example):
             with tf.device(device_name):
                 X = []
-                input_ranks = []
                 for input_key in self.model_input_keys:
-                    input_ranks.append(tf.rank(example[input_key]))
+                    input_rank = tf.rank(example[input_key])
                     X.append(
                         expand_to_rank(example[input_key], target_rank=4, prepend=True)
                     )
 
-                    Y = self.keras_model(X)
+                Y = self.keras_model(X)
 
-                for output_key, y, input_rank in zip(
-                    self.model_output_keys, Y, input_ranks
-                ):
+                for output_key, y in zip(self.model_output_keys, Y):
+                    if isinstance(y, list):
+                        y = y[0]
                     if input_rank < tf.rank(y):
+                        # y = tf.reshape(y, [tf.shape(y)[-3], tf.shape(y)[-2], tf.shape(y)[-1]])
                         y = tf.squeeze(y, axis=0)
                     example[output_key] = y
 

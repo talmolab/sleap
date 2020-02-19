@@ -313,6 +313,8 @@ class PartAffinityFieldsGenerator:
             image_width=image_width,
             output_stride=self.output_stride,
         )
+        grid_height = len(yv)
+        grid_width = len(xv)
 
         # Pull out edge indices.
         # TODO: Multi-skeleton support.
@@ -334,9 +336,11 @@ class PartAffinityFieldsGenerator:
                 edge_destinations=edge_destinations,
                 sigma=self.sigma,
             )
+            pafs = tf.ensure_shape(pafs, (grid_height, grid_width, n_edges, 2))
 
             if self.flatten_channels:
-                pafs = tf.reshape(pafs, [tf.shape(pafs)[0], tf.shape(pafs)[1], -1])
+                pafs = tf.reshape(pafs, [grid_height, grid_width, n_edges * 2])
+                pafs = tf.ensure_shape(pafs, (grid_height, grid_width, n_edges * 2))
 
             example["part_affinity_fields"] = pafs
 
