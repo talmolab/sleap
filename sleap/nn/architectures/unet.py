@@ -71,11 +71,11 @@ class UNet(encoder_decoder.EncoderDecoder):
             return None
 
         blocks = []
-        for block in range(self.stem_blocks):
+        for block in range(self.stem_blocks + 1):
             block_filters = int(self.filters * (self.filters_rate ** block))
             blocks.append(
                 encoder_decoder.SimpleConvBlock(
-                    pool=True,
+                    pool=(block > 0),
                     pool_before_convs=True,
                     pooling_stride=2,
                     num_convs=self.convs_per_block,
