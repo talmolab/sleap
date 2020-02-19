@@ -83,6 +83,7 @@ on_success:
 
 cache:
   - C:\Miniconda36-x64\pkgs -> environment.yml
+  - '%LOCALAPPDATA%\pip\Cache'
 
 # here we are going to override common configuration
 for:
