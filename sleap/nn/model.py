@@ -103,7 +103,7 @@ class Model:
             )
 
         elif isinstance(head_config, MultiInstanceConfig):
-            part_names = head_config.multi_instance.part_names
+            part_names = head_config.confmaps.part_names
             if part_names is None:
                 if skeleton is None:
                     raise ValueError(
@@ -123,7 +123,7 @@ class Model:
 
             heads = [
                 MultiInstanceConfmapsHead.from_config(
-                    head_config.multi_instance, part_names=part_names
+                    head_config.confmaps, part_names=part_names
                 ),
                 PartAffinityFieldsHead.from_config(head_config.pafs, edges=edges),
             ]

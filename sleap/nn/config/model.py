@@ -41,7 +41,7 @@ class PartAffinityFieldsHeadConfig:
 
 @attr.s(auto_attribs=True)
 class MultiInstanceConfig:
-    multi_instance: MultiInstanceConfmapsHeadConfig = attr.ib(
+    confmaps: MultiInstanceConfmapsHeadConfig = attr.ib(
         factory=MultiInstanceConfmapsHeadConfig
     )
     pafs: PartAffinityFieldsHeadConfig = attr.ib(factory=PartAffinityFieldsHeadConfig)
