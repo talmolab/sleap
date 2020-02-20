@@ -4,21 +4,117 @@ from sleap.nn.config.utils import oneof
 
 
 @attr.s(auto_attribs=True)
-class CentroidsHeadConfig:
-    anchor_part: Optional[Text] = None
-    sigma: float = 5.0
-    output_stride: int = 1
-
-
-@attr.s(auto_attribs=True)
 class SingleInstanceConfmapsHeadConfig:
+    """Configurations for single instance confidence map heads.
+
+    These heads are used in single instance models that make the assumption that only
+    one of each body part is present in the image. These heads produce confidence maps
+    with a single peak for each part type which can be detected via global peak finding.
+
+    Do not use this head if there is more than one animal present in the image.
+
+    Attributes:
+        part_names: Text name of the body parts (nodes) that the head will be configured
+            to produce. The number of parts determines the number of channels in the
+            output. If not specified, all body parts in the skeleton will be used.
+        sigma: Spread of the Gaussian distribution of the confidence maps as a scalar
+            float. Smaller values are more precise but may be difficult to learn as they
+            have a lower density within the image space. Larger values are easier to
+            learn but are less precise with respect to the peak coordinate. This spread
+            is in units of pixels of the model input image, i.e., the image resolution
+            after any input scaling is applied.
+        output_stride: The stride of the output confidence maps relative to the input
+            image. This is the reciprocal of the resolution, e.g., an output stride of 2
+            results in confidence maps that are 0.5x the size of the input. Increasing
+            this value can considerably speed up model performance and decrease memory
+            requirements, at the cost of decreased spatial resolution.
+    """
+
     part_names: Optional[List[Text]] = None
     sigma: float = 5.0
     output_stride: int = 1
 
 
 @attr.s(auto_attribs=True)
+class CentroidsHeadConfig:
+    """Configurations for centroid confidence map heads.
+
+    These heads are used in topdown models that rely on centroid detection to detect
+    instances for cropping before predicting the remaining body parts.
+
+    Multiple centroids can be present (one per instance), so their coordinates can be
+    recovered in infernece via local peak finding.
+
+    Attributes:
+        anchor_part: Text name of a body part (node) to use as the anchor point. If
+            None, the midpoint of the bounding box of all visible instance points will
+            be used as the anchor. The bounding box midpoint will also be used if the
+            anchor part is specified but not visible in the instance. Setting a reliable
+            anchor point can significantly improve topdown model accuracy as they
+            benefit from a consistent geometry of the body parts relative to the center
+            of the image.
+        sigma: Spread of the Gaussian distribution of the confidence maps as a scalar
+            float. Smaller values are more precise but may be difficult to learn as they
+            have a lower density within the image space. Larger values are easier to
+            learn but are less precise with respect to the peak coordinate. This spread
+            is in units of pixels of the model input image, i.e., the image resolution
+            after any input scaling is applied.
+        output_stride: The stride of the output confidence maps relative to the input
+            image. This is the reciprocal of the resolution, e.g., an output stride of 2
+            results in confidence maps that are 0.5x the size of the input. Increasing
+            this value can considerably speed up model performance and decrease memory
+            requirements, at the cost of decreased spatial resolution.
+    """
+
+    anchor_part: Optional[Text] = None
+    sigma: float = 5.0
+    output_stride: int = 1
+
+
+@attr.s(auto_attribs=True)
 class CenteredInstanceConfmapsHeadConfig:
+    """Configurations for centered instance confidence map heads.
+
+    These heads are used in topdown multi-instance models that make the assumption that
+    there is an instance reliably centered in the cropped input image. These heads are
+    useful when centroids are easy to detect as they learn complex relationships between
+    the geometry of body parts, even when animals are occluded.
+
+    This comes at the cost of a strong reliance on the accuracy of the instance-centered
+    cropping, i.e., it is heavily limited by the accuracy of the centroid model.
+
+    Additionally, since one image crop is evaluated per instance, topdown models scale
+    linearly with the number of animals in the frame, which can result in poor
+    performance when many instances are present.
+
+    Use this head when centroids are easy to detect, preferably using a consistent body
+    part as an anchor, and when there are few animals that cover a small region of the
+    full frame.
+
+    Attributes:
+        anchor_part: Text name of a body part (node) to use as the anchor point. If
+            None, the midpoint of the bounding box of all visible instance points will
+            be used as the anchor. The bounding box midpoint will also be used if the
+            anchor part is specified but not visible in the instance. Setting a reliable
+            anchor point can significantly improve topdown model accuracy as they
+            benefit from a consistent geometry of the body parts relative to the center
+            of the image.
+        part_names: Text name of the body parts (nodes) that the head will be configured
+            to produce. The number of parts determines the number of channels in the
+            output. If not specified, all body parts in the skeleton will be used.
+        sigma: Spread of the Gaussian distribution of the confidence maps as a scalar
+            float. Smaller values are more precise but may be difficult to learn as they
+            have a lower density within the image space. Larger values are easier to
+            learn but are less precise with respect to the peak coordinate. This spread
+            is in units of pixels of the model input image, i.e., the image resolution
+            after any input scaling is applied.
+        output_stride: The stride of the output confidence maps relative to the input
+            image. This is the reciprocal of the resolution, e.g., an output stride of 2
+            results in confidence maps that are 0.5x the size of the input. Increasing
+            this value can considerably speed up model performance and decrease memory
+            requirements, at the cost of decreased spatial resolution.
+    """
+
     anchor_part: Optional[Text] = None
     part_names: Optional[List[Text]] = None
     sigma: float = 5.0
@@ -27,6 +123,43 @@ class CenteredInstanceConfmapsHeadConfig:
 
 @attr.s(auto_attribs=True)
 class MultiInstanceConfmapsHeadConfig:
+    """Configurations for multi-instance confidence map heads.
+
+    These heads are used in bottom-up multi-instance models that do not make any
+    assumption about the connectivity of the body parts. These heads will generate
+    multiple local peaks for each body part type and must be detected using local peak
+    finding.
+
+    Although this head alone is sufficient to detect multiple copies of each body part
+    type, it provides no information as to which sets of points should be grouped
+    together to the same instance. If this is required, a head that provides
+    connectivity or grouping information is required, e.g., part affinity fields.
+
+    Use this head when multiple instances of each body part are present and do not need
+    to be grouped or will be grouped using additional information.
+
+    This head type has the advantage that it only needs to evaluate each frame once to
+    find all peaks, in contrast to topdown models that must be evaluated for each crop.
+    This constant scaling with the number of instances can be especially beneficial when
+    there are many animals present in the frame.
+
+    Attributes:
+        part_names: Text name of the body parts (nodes) that the head will be configured
+            to produce. The number of parts determines the number of channels in the
+            output. If not specified, all body parts in the skeleton will be used.
+        sigma: Spread of the Gaussian distribution of the confidence maps as a scalar
+            float. Smaller values are more precise but may be difficult to learn as they
+            have a lower density within the image space. Larger values are easier to
+            learn but are less precise with respect to the peak coordinate. This spread
+            is in units of pixels of the model input image, i.e., the image resolution
+            after any input scaling is applied.
+        output_stride: The stride of the output confidence maps relative to the input
+            image. This is the reciprocal of the resolution, e.g., an output stride of 2
+            results in confidence maps that are 0.5x the size of the input. Increasing
+            this value can considerably speed up model performance and decrease memory
+            requirements, at the cost of decreased spatial resolution.
+    """
+
     part_names: Optional[List[Text]] = None
     sigma: float = 5.0
     output_stride: int = 1
@@ -34,6 +167,46 @@ class MultiInstanceConfmapsHeadConfig:
 
 @attr.s(auto_attribs=True)
 class PartAffinityFieldsHeadConfig:
+    """Configurations for multi-instance part affinity field heads.
+
+    These heads are used in bottom-up multi-instance models that require information
+    about body part connectivity in order to group multiple detections of each body part
+    type into distinct instances.
+
+    Part affinity fields are an image-space representation of the directed graph that
+    defines the skeleton. Pixels that are close to the line (directed edge) formed
+    between pairs of nodes of the same instance will contain unit vectors pointing along
+    the direction of the the connection. The similarity between this line and the
+    average of the unit vectors at the pixels underneath the line can be used as a
+    matching score to associate candidate pairs of body part detections.
+
+    Use this head when multiple instances of each body part are present and need to be
+    grouped to coherent instances.
+
+    This head type has the advantage that it only needs to evaluate each frame once to
+    find all peaks, in contrast to topdown models that must be evaluated for each crop.
+    This constant scaling with the number of instances can be especially beneficial when
+    there are many animals present in the frame.
+
+    Attributes:
+        edges: List of 2-tuples of the form `(source_node, destination_node)` that
+            define pairs of text names of the directed edges of the graph. If not set,
+            all edges in the skeleton will be used.
+        sigma: Spread of the Gaussian distribution that weigh the part affinity fields
+            as a function of their distance from the edge they represent. Smaller values
+            are more precise but may be difficult to learn as they have a lower density
+            within the image space. Larger values are easier to learn but are less
+            precise with respect to the edge distance, so can be less useful in
+            disambiguating between edges that are nearby and parallel in direction. This
+            spread is in units of pixels of the model input image, i.e., the image
+            resolution after any input scaling is applied.
+        output_stride: The stride of the output part affinity fields relative to the
+            input image. This is the reciprocal of the resolution, e.g., an output
+            stride of 2 results in PAFs that are 0.5x the size of the input. Increasing
+            this value can considerably speed up model performance and decrease memory
+            requirements, at the cost of decreased spatial resolution.
+    """
+
     edges: Optional[Sequence[Tuple[Text, Text]]] = None
     sigma: float = 15.0
     output_stride: int = 1
@@ -41,6 +214,20 @@ class PartAffinityFieldsHeadConfig:
 
 @attr.s(auto_attribs=True)
 class MultiInstanceConfig:
+    """Configuration for combined multi-instance confidence map and PAF model heads.
+
+    This configuration specifies a multi-head model that outputs both multi-instance
+    confidence maps and part affinity fields, which together enable multi-instance pose
+    estimation in a bottom-up fashion, i.e., no instance cropping or centroids are
+    required.
+
+    Attributes:
+        confmaps: Part confidence map configuration (see the description in
+            `MultiInstanceConfmapsHeadConfig`).
+        pafs: Part affinity fields configuration (see the description in
+            `PartAffinityFieldsHeadConfig`).
+    """
+
     confmaps: MultiInstanceConfmapsHeadConfig = attr.ib(
         factory=MultiInstanceConfmapsHeadConfig
     )

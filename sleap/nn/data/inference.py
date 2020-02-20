@@ -185,7 +185,7 @@ def find_local_peaks(
         sample each peak belongs to.
         
         peak_channel_inds: int32 tensor of shape (n_peaks,) containing the indices of
-        the sample each peak belongs to.
+        the channel each peak belongs to.
     """
     # Build custom local NMS kernel.
     kernel = tf.reshape(
