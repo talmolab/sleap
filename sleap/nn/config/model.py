@@ -158,11 +158,15 @@ class MultiInstanceConfmapsHeadConfig:
             results in confidence maps that are 0.5x the size of the input. Increasing
             this value can considerably speed up model performance and decrease memory
             requirements, at the cost of decreased spatial resolution.
+        loss_weight: Scalar float used to weigh the loss term for this head during
+            training. Increase this to encourage the optimization to focus on improving
+            this specific output in multi-head models.
     """
 
     part_names: Optional[List[Text]] = None
     sigma: float = 5.0
     output_stride: int = 1
+    loss_weight: float = 1.0
 
 
 @attr.s(auto_attribs=True)
@@ -205,11 +209,15 @@ class PartAffinityFieldsHeadConfig:
             stride of 2 results in PAFs that are 0.5x the size of the input. Increasing
             this value can considerably speed up model performance and decrease memory
             requirements, at the cost of decreased spatial resolution.
+        loss_weight: Scalar float used to weigh the loss term for this head during
+            training. Increase this to encourage the optimization to focus on improving
+            this specific output in multi-head models.
     """
 
     edges: Optional[Sequence[Tuple[Text, Text]]] = None
     sigma: float = 15.0
     output_stride: int = 1
+    loss_weight: float = 1.0
 
 
 @attr.s(auto_attribs=True)
