@@ -312,16 +312,20 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
                 field.stateChanged.connect(lambda: self.valueChanged.emit())
 
             # list: show drop-down menu
-            elif item["type"] == "list":
+            elif item["type"] in ("list", "optional_list"):
                 type_options = item.get("type-options", "")
 
                 result_as_optional_idx = False
+                add_blank_option = False
                 if type_options == "optional_index":
                     result_as_optional_idx = True
+                    add_blank_option = True
+                if item["type"] == "optional_list":
+                    add_blank_option = True
 
-                field = FieldComboWidget(
+                field = TextOrListWidget(
                     result_as_idx=result_as_optional_idx,
-                    add_blank_option=result_as_optional_idx,
+                    add_blank_option=add_blank_option,
                 )
 
                 if item["name"] in self.field_options_lists:
@@ -331,7 +335,7 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
                         item["options"].split(","), select_item=item.get("default", "")
                     )
 
-                field.currentIndexChanged.connect(lambda: self.valueChanged.emit())
+                field.valueChanged.connect(lambda: self.valueChanged.emit())
 
             # button
             elif item["type"] == "button":
@@ -620,6 +624,53 @@ class FieldComboWidget(QtWidgets.QComboBox):
         if type(val) == int and val <= len(self.options_list) and self.result_as_idx:
             val = self.options_list[val]
         super(FieldComboWidget, self).setCurrentText(str(val))
+
+
+class TextOrListWidget(QtWidgets.QWidget):
+    valueChanged = QtCore.Signal()
+
+    def __init__(self, result_as_idx=False, add_blank_option=False, *args, **kwargs):
+        super(TextOrListWidget, self).__init__(*args, **kwargs)
+
+        layout = QtWidgets.QHBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+
+        self.text_widget = QtWidgets.QLineEdit()
+        self.list_widget = FieldComboWidget(
+            result_as_idx=result_as_idx, add_blank_option=add_blank_option,
+        )
+
+        self.setMode("text")
+
+        layout.addWidget(self.text_widget)
+        layout.addWidget(self.list_widget)
+
+        self.setLayout(layout)
+
+        self.list_widget.currentIndexChanged.connect(self.emitValueChanged)
+        self.text_widget.textChanged.connect(self.emitValueChanged)
+
+    def emitValueChanged(self, *args):
+        self.valueChanged.emit()
+
+    def setMode(self, mode):
+        self.mode = mode
+        self.text_widget.setVisible(self.mode == "text")
+        self.list_widget.setVisible(self.mode == "list")
+
+    def value(self):
+        if self.mode == "text":
+            return self.text_widget.text()
+        else:
+            return self.list_widget.value()
+
+    def setValue(self, val):
+        self.text_widget.setText(val)
+        self.list_widget.setValue(val)
+
+    def set_options(self, *args, **kwargs):
+        self.setMode("list")
+        self.list_widget.set_options(*args, **kwargs)
 
 
 class ResizingStackedWidget(QtWidgets.QStackedWidget):

@@ -87,3 +87,20 @@ def test_auto_double_widget(qtbot):
 
     widget.setValue("auto")
     assert widget.value() is None
+
+
+def test_text_or_list_widget(qtbot):
+    widget = formbuilder.TextOrListWidget()
+
+    widget.setValue("foo")
+    assert widget.value() == "foo"
+    assert widget.mode == "text"
+
+    widget.set_options(["a", "b", "c"])
+    assert widget.mode == "list"
+
+    widget.setValue("b")
+    assert widget.value() == "b"
+
+    widget.setMode("text")
+    assert widget.value() == "b"
