@@ -55,3 +55,35 @@ def test_formbuilder(qtbot):
 
     form_data = layout.get_form_data()
     assert form_data["node"] == "new option"
+
+
+def test_optional_spin_widget(qtbot):
+    widget = formbuilder.OptionalSpinWidget()
+
+    widget.setValue(3)
+    assert widget.value() == 3
+
+    widget.check_widget.setChecked(True)
+    assert widget.value() is None
+
+    widget.check_widget.setChecked(False)
+    assert widget.value() == 3
+
+    widget.setValue("none")
+    assert widget.value() is None
+
+
+def test_auto_double_widget(qtbot):
+    widget = formbuilder.OptionalSpinWidget(type="double", none_string="auto")
+
+    widget.setValue(3.2)
+    assert widget.value() == 3.2
+
+    widget.check_widget.setChecked(True)
+    assert widget.value() is None
+
+    widget.check_widget.setChecked(False)
+    assert widget.value() == 3.2
+
+    widget.setValue("auto")
+    assert widget.value() is None

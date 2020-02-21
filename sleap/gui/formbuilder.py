@@ -298,6 +298,13 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
                 field.setValue(item["default"])
                 field.valueChanged.connect(lambda: self.valueChanged.emit())
 
+            elif item["type"] in ("optional_int", "optional_double", "auto_int"):
+                spin_type = item["type"].split("_")[-1]
+                none_string = "auto" if item["type"].startswith("auto") else "none"
+                field = OptionalSpinWidget(type=spin_type, none_string=none_string)
+                field.setValue(item["default"])
+                field.valueChanged.connect(lambda: self.valueChanged.emit())
+
             # bool: show checkbox
             elif item["type"] == "bool":
                 field = QtWidgets.QCheckBox()
@@ -332,7 +339,7 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
                 self.buttons[item["name"]] = field
 
             # string
-            elif item["type"] == "string":
+            elif item["type"] in ("string", "optional_string"):
                 field = QtWidgets.QLineEdit()
                 val = item.get("default", "")
                 val = "" if val is None else val
@@ -354,8 +361,14 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
             # Store name and type on widget
             field.setObjectName(item["name"])
             field.setProperty("field_data_type", item.get("dtype", item["type"]))
+
+            # Set tooltip for field
+            if "help" in item:
+                field.setToolTip(item["help"])
+
             # Store widget by name
             self.fields[item["name"]] = field
+
             # Add field (and label if appropriate) to form layout
             if item["type"] in ("stacked"):
                 self.addRow(field)
@@ -429,7 +442,6 @@ class StackBuilderWidget(QtWidgets.QWidget):
         self.page_layouts = dict()
 
         for page in self.option_list:
-
             # add page
             self.page_layouts[page] = FormBuilderLayout(
                 stack_data[page], field_options_lists=self.field_options_lists
@@ -488,6 +500,61 @@ class StackBuilderWidget(QtWidgets.QWidget):
         """Calls set_field_options for every subform."""
         for subform in self.page_layouts.values():
             subform.set_field_options(*args, **kwargs)
+
+
+class OptionalSpinWidget(QtWidgets.QWidget):
+
+    valueChanged = QtCore.Signal()
+
+    def __init__(self, type="int", none_string="none", *args, **kwargs):
+        super(OptionalSpinWidget, self).__init__(*args, **kwargs)
+
+        self.none_string = none_string
+
+        layout = QtWidgets.QHBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+
+        self.spin_widget = (
+            QtWidgets.QDoubleSpinBox() if type is "double" else QtWidgets.QSpinBox()
+        )
+        self.check_widget = QtWidgets.QCheckBox(self.none_string.title())
+
+        self.spin_widget.valueChanged.connect(self.updateState)
+        self.check_widget.stateChanged.connect(self.updateState)
+
+        layout.addWidget(self.spin_widget)
+        layout.addWidget(self.check_widget)
+
+        self.setLayout(layout)
+
+    def updateState(self, valueChanged=True):
+        self.spin_widget.setDisabled(self.check_widget.isChecked())
+        if valueChanged:
+            self.valueChanged.emit()
+
+    def isNoneVal(self, val) -> bool:
+        if val is None:
+            return True
+        if hasattr(val, "lower"):
+            if self.none_string.lower() in ("", "none"):
+                if val.lower() in ("none"):
+                    return True
+            elif self.none_string.lower() in ("auto"):
+                if val.lower() in ("auto"):
+                    return True
+        return False
+
+    def value(self):
+        if self.check_widget.isChecked():
+            return None
+        return self.spin_widget.value()
+
+    def setValue(self, val):
+        is_none = self.isNoneVal(val)
+        self.check_widget.setChecked(is_none)
+        if not is_none:
+            self.spin_widget.setValue(val)
+        self.updateState(valueChanged=False)
 
 
 class FieldComboWidget(QtWidgets.QComboBox):
