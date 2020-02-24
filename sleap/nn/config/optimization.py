@@ -182,7 +182,7 @@ class OptimizationConfig:
             numbers may lead to overfitting, but may be beneficial to the optimization
             process when few but varied examples are available.
         batches_per_epoch: Number of minibatches (steps) to train for in an epoch. If
-            set to "auto", this is set to the number of batches in the training data or
+            set to None, this is set to the number of batches in the training data or
             `min_batches_per_epoch`, whichever is largest. At the end of each epoch, the
             validation and test sets are evaluated, the model is saved if its
             performance improved, visualizations are generated, learning rate may be
@@ -193,7 +193,7 @@ class OptimizationConfig:
             too high, the training procedure may take longer, especially since several
             hyperparameter tuning heuristics only consider epoch-to-epoch performance.
         min_batches_per_epoch: The minimum number of batches per epoch if
-            `batches_per_epoch` is set to "auto". No effect if the batches per epoch is
+            `batches_per_epoch` is set to None. No effect if the batches per epoch is
             explicitly specified. This should be set to 200-400 to compensate for short
             loops through the data when there are few examples.
         val_batches_per_epoch: Same as `batches_per_epoch`, but for the validation set.
@@ -222,9 +222,9 @@ class OptimizationConfig:
     shuffle_buffer_size: int = 128
     prefetch: bool = True
     batch_size: int = 8
-    batches_per_epoch: Union[int, Text] = "auto"
+    batches_per_epoch: Union[int, Text] = None
     min_batches_per_epoch: int = 200
-    val_batches_per_epoch: Union[int, Text] = "auto"
+    val_batches_per_epoch: Union[int, Text] = None
     min_val_batches_per_epoch: int = 10
     epochs: int = 100
     optimizer: Text = "adam"

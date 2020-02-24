@@ -219,7 +219,7 @@ class InstanceCropper:
             config: An `InstanceCroppingConfig` instance with the desired parameters.
             crop_size: Integer specifying the crop height and width. This is only
                 required and will only be used if the `config.crop_size` attribute does
-                not specify an explicit integer crop size (e.g., it is set to "auto").
+                not specify an explicit integer crop size (e.g., it is set to None).
 
         Returns:
             An instance of this class.
