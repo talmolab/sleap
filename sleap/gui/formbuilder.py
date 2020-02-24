@@ -50,6 +50,7 @@ class YamlFormWidget(QtWidgets.QGroupBox):
         self.form_layout = FormBuilderLayout(
             items_to_create[self.which_form], field_options_lists=field_options_lists
         )
+
         self.setLayout(self.form_layout)
 
         if items_to_create[self.which_form]:
@@ -111,6 +112,9 @@ class YamlFormWidget(QtWidgets.QGroupBox):
         """Sets option list for specified field."""
         self.form_layout.set_field_options(field_name, options_list, **kwargs)
 
+    def set_field_enabled(self, field_name: str, is_enabled):
+        self.form_layout.set_field_enabled(field_name, is_enabled)
+
     def trigger_main_action(self):
         """Emit mainAction signal with form data."""
         self.mainAction.emit(self.get_form_data())
@@ -129,6 +133,8 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
 
     def __init__(self, items_to_create, field_options_lists=None, *args, **kwargs):
         super(FormBuilderLayout, self).__init__(*args, **kwargs)
+
+        self.form_text_widget = None
 
         self.buttons = dict()
         self.fields = dict()
@@ -162,7 +168,7 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
         """Set specified user-editable data.
 
         Args:
-            data: dictionary of datay, key should match field name
+            data: dictionary of data, key should match field name
         """
         widgets = self.fields
         for name, val in data.items():
@@ -186,6 +192,13 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
         for field_name, field in self.fields.items():
             if field_name in self.field_options_lists:
                 field.set_options(self.field_options_lists[field_name])
+
+    def set_field_enabled(self, field_name: str, is_enabled: bool):
+        """Sets whether the field is enabled/disabled."""
+        fields = self.find_field(field_name)
+
+        for field in fields:
+            field.setEnabled(is_enabled)
 
     def find_field(self, field_name: str):
         """
@@ -248,7 +261,6 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
         elif hasattr(widget, "currentIndex"):
             val = widget.currentIndex()
         else:
-            print(widget)
             val = None
         if widget.property("field_data_type") == "sci":
             val = float(val)
@@ -280,8 +292,17 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
         if not items_to_create:
             return
         for item in items_to_create:
+            if item["type"] == "text":
+                field = QtWidgets.QLabel(item["text"])
+                field.setWordWrap(True)
+
+                # We don't need to keep track of this text-only field so we'll
+                # add it to the form and skip the other things we usually do.
+                self.addRow(field)
+                continue
+
             # double: show spinbox (number w/ up/down controls)
-            if item["type"] == "double":
+            elif item["type"] == "double":
                 field = QtWidgets.QDoubleSpinBox()
                 field.setValue(item["default"])
                 field.valueChanged.connect(lambda: self.valueChanged.emit())
@@ -354,6 +375,7 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
                 field = StackBuilderWidget(
                     item, field_options_lists=self.field_options_lists
                 )
+                field.valueChanged.connect(lambda: self.valueChanged.emit())
 
             # If we don't recognize the type, just show a text box
             else:
@@ -429,6 +451,8 @@ class StackBuilderWidget(QtWidgets.QWidget):
             passed to :meth:`FormBuilderLayout.build_form()`.
     """
 
+    valueChanged = QtCore.Signal()
+
     def __init__(self, stack_data, field_options_lists=None, *args, **kwargs):
         super(StackBuilderWidget, self).__init__(*args, **kwargs)
 
@@ -450,6 +474,8 @@ class StackBuilderWidget(QtWidgets.QWidget):
             self.page_layouts[page] = FormBuilderLayout(
                 stack_data[page], field_options_lists=self.field_options_lists
             )
+
+            self.page_layouts[page].valueChanged.connect(self.valueChanged)
 
             page_widget = QtWidgets.QGroupBox()
             page_widget.setLayout(self.page_layouts[page])
@@ -479,6 +505,7 @@ class StackBuilderWidget(QtWidgets.QWidget):
             self.stacked_widget.show()
         else:
             self.stacked_widget.hide()
+        self.valueChanged.emit()
 
     def value(self):
         """Returns value of menu."""
@@ -491,6 +518,9 @@ class StackBuilderWidget(QtWidgets.QWidget):
         idx = self.option_list.index(value)
         self.combo_box.setCurrentIndex(idx)
         self.switch_to_idx(idx)
+
+    def setEnabled(self, val):
+        self.combo_box.setEnabled(val)
 
     def get_data(self):
         """Returns value from currently shown subform."""
@@ -548,9 +578,15 @@ class OptionalSpinWidget(QtWidgets.QWidget):
                     return True
         return False
 
+    def noneVal(self):
+        if self.none_string.lower() in ("", "none"):
+            return None
+        else:
+            return self.none_string
+
     def value(self):
         if self.check_widget.isChecked():
-            return None
+            return self.noneVal()
         return self.spin_widget.value()
 
     def setValue(self, val):

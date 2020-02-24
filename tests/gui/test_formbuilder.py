@@ -80,13 +80,19 @@ def test_auto_double_widget(qtbot):
     assert widget.value() == 3.2
 
     widget.check_widget.setChecked(True)
-    assert widget.value() is None
+    assert widget.value() is "auto"
 
     widget.check_widget.setChecked(False)
     assert widget.value() == 3.2
 
     widget.setValue("auto")
-    assert widget.value() is None
+    assert widget.value() == "auto"
+
+    widget.setValue(3.2)
+    assert widget.value() == 3.2
+
+    widget.setValue(None)
+    assert widget.value() == "auto"
 
 
 def test_text_or_list_widget(qtbot):
