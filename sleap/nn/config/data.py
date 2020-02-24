@@ -71,7 +71,7 @@ class PreprocessingConfig:
         pad_to_stride: Number of pixels that the image size must be divisible by.
             If > 1, this will pad the bottom and right of the images to ensure they meet
             this divisibility criteria. Padding is applied after the scaling specified
-            in the `input_scale` attribute. If set to "auto", this will be automatically
+            in the `input_scale` attribute. If set to None, this will be automatically
             detected from the model architecture. This must be divisible by the model's
             max stride (typically 32). This padding will be ignored when instance
             cropping inputs since the crop size should already be divisible by the
@@ -87,7 +87,7 @@ class PreprocessingConfig:
         ),
     )
     input_scaling: float = 1.0
-    pad_to_stride: Union[Text, int] = "auto"
+    pad_to_stride: Optional[int] = None
 
 
 @attr.s(auto_attribs=True)
@@ -104,7 +104,7 @@ class InstanceCroppingConfig:
         crop_size: Integer size of bounding box height and width to crop out of the full
             image. This should be greater than the largest size of the instances in
             pixels. The crop is applied after any input scaling, so be sure to adjust
-            this to changes in the input image scale. If set to "auto", this will be
+            this to changes in the input image scale. If set to None, this will be
             automatically detected from the data during training or from the model input
             layer during inference. This must be divisible by the model's max stride
             (typically 32).
@@ -115,7 +115,7 @@ class InstanceCroppingConfig:
     """
 
     center_on_part: Optional[Text] = None
-    crop_size: Union[int, Text] = "auto"
+    crop_size: Optional[int] = None
     crop_size_detection_padding: int = 16
 
 

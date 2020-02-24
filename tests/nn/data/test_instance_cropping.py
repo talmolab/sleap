@@ -158,6 +158,6 @@ def test_instance_cropper_from_config():
 
     with pytest.raises(ValueError):
         cropper = instance_cropping.InstanceCropper.from_config(
-            config=InstanceCroppingConfig(crop_size="auto"),
+            config=InstanceCroppingConfig(crop_size=None),
             crop_size=None,
         )

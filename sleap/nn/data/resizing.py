@@ -119,7 +119,9 @@ class Resizer:
     pad_to_stride: int = 1
 
     @classmethod
-    def from_config(cls, config: PreprocessingConfig, pad_to_stride: Optional[int] = None) -> "Resizer":
+    def from_config(
+        cls, config: PreprocessingConfig, pad_to_stride: Optional[int] = None
+    ) -> "Resizer":
         """Build an instance of this class from its configuration options.
 
         Args:
@@ -127,7 +129,7 @@ class Resizer:
                 `config.pad_to_stride` is not an explicit integer, the `pad_to_stride`
                 parameter must be provided.
             pad_to_stride: An integer specifying the `pad_to_stride` if
-                `config.pad_to_stride` is not an explicit integer (e.g., set to "auto").
+                `config.pad_to_stride` is not an explicit integer (e.g., set to None).
 
         Returns:
             An instance of this class.
@@ -141,7 +143,8 @@ class Resizer:
         if not isinstance(pad_to_stride, int):
             raise ValueError(
                 "Pad to stride must be specified in the arguments if not explicitly "
-                f"set to an integer (config.pad_to_stride = {config.pad_to_stride}).")
+                f"set to an integer (config.pad_to_stride = {config.pad_to_stride})."
+            )
 
         return cls(
             image_key="image",
@@ -175,6 +178,7 @@ class Resizer:
             The "scale" key of the example will be multipled by the `scale` attribute of
             this transformer.
         """
+
         def resize(example):
             """Local processing function for dataset mapping."""
             if self.scale != 1.0:

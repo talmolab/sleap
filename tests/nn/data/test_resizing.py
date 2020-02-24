@@ -87,7 +87,7 @@ def test_resizer_from_config():
     assert resizer.pad_to_stride == 32
 
     resizer = resizing.Resizer.from_config(
-        config=resizing.PreprocessingConfig(input_scaling=0.5, pad_to_stride="auto"),
+        config=resizing.PreprocessingConfig(input_scaling=0.5, pad_to_stride=None),
         pad_to_stride=32)
     assert resizer.image_key == "image"
     assert resizer.points_key == "instances"
@@ -96,4 +96,4 @@ def test_resizer_from_config():
 
     with pytest.raises(ValueError):
         resizer = resizing.Resizer.from_config(
-            config=resizing.PreprocessingConfig(input_scaling=0.5, pad_to_stride="auto"))
+            config=resizing.PreprocessingConfig(input_scaling=0.5, pad_to_stride=None))
