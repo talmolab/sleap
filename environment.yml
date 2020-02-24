@@ -26,5 +26,6 @@ dependencies:
     - qimage2ndarray==1.8
     - imgstore
     - jsmin
+    - seaborn
     - "--editable=./"
     - "--requirement=./dev_requirements.txt"
