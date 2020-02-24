@@ -174,9 +174,14 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
         for name, val in data.items():
             # print(f"Attempting to set {name} to {val}")
             if name in widgets:
+                # print(f"set {name} to {val}")
                 self.set_widget_value(widgets[name], val)
             else:
+                # print(f"cannot set {name} for {widgets}")
                 pass
+
+        for stacked_widget in self.stacked:
+            stacked_widget.set_form_data(data)
 
     def set_field_options(self, field_name: str, options_list: List[str]):
         """Sets custom list of options for specified field."""
@@ -304,7 +309,9 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
             # double: show spinbox (number w/ up/down controls)
             elif item["type"] == "double":
                 field = QtWidgets.QDoubleSpinBox()
+
                 field.setValue(item["default"])
+
                 field.valueChanged.connect(lambda: self.valueChanged.emit())
 
             # int: show spinbox (number w/ up/down controls)
@@ -535,6 +542,9 @@ class StackBuilderWidget(QtWidgets.QWidget):
         for subform in self.page_layouts.values():
             subform.set_field_options(*args, **kwargs)
 
+    def set_form_data(self, data):
+        for layout in self.page_layouts.values():
+            layout.set_form_data(data)
 
 class OptionalSpinWidget(QtWidgets.QWidget):
 
