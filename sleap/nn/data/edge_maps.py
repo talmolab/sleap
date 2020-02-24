@@ -190,7 +190,7 @@ def make_multi_pafs(
     Returns:
         A set of part affinity fields generated for each instance. These will be in a
         tensor of shape (grid_height, grid_width, n_edges, 2). If multiple instance
-        PAFs are defined on the same pixel, they will be max reduced.
+        PAFs are defined on the same pixel, they will be summed.
     """
     grid_height = tf.shape(yv)[0]
     grid_width = tf.shape(xv)[0]
@@ -198,16 +198,15 @@ def make_multi_pafs(
     n_instances = tf.shape(edge_sources)[0]
     pafs = tf.zeros((grid_height, grid_width, n_edges, 2), tf.float32)
     for i in range(n_instances):
-        pafs = tf.maximum(
-            pafs,
-            make_pafs(
-                xv=xv,
-                yv=yv,
-                edge_source=tf.gather(edge_sources, i, axis=0),
-                edge_destination=tf.gather(edge_destinations, i, axis=0),
-                sigma=sigma,
-            ),
+        paf = make_pafs(
+            xv=xv,
+            yv=yv,
+            edge_source=tf.gather(edge_sources, i, axis=0),
+            edge_destination=tf.gather(edge_destinations, i, axis=0),
+            sigma=sigma,
         )
+        pafs += tf.where(tf.math.is_nan(paf), 0., paf)
+
     return pafs
 
 
