@@ -310,6 +310,12 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
             elif item["type"] == "double":
                 field = QtWidgets.QDoubleSpinBox()
 
+                min, max = -1000, 1000
+                if "range" in item.keys():
+                    min, max = list(map(float, item["range"].split(",")))
+                field.setRange(min, max)
+                field.setSingleStep(0.25)
+
                 field.setValue(item["default"])
 
                 field.valueChanged.connect(lambda: self.valueChanged.emit())
