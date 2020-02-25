@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import seaborn as sns
-from typing import Union, Tuple
+from typing import Union, Tuple, Optional, Text
 
 
 def imgfig(
@@ -22,7 +22,7 @@ def imgfig(
     Returns:
         A matplotlib.figure.Figure to use for plotting.
     """
-    if not isinstance(size, [tuple, list]):
+    if not isinstance(size, (tuple, list)):
         size = (size, size)
     fig = plt.figure(figsize=(scale * size[0], scale * size[1]), dpi=dpi)
     ax = fig.add_axes([0, 0, 1, 1], frameon=False)
@@ -47,7 +47,7 @@ def plot_img(
         scale=scale,
     )
     fig.gca().imshow(
-        img,
+        img.squeeze(axis=-1),
         cmap="gray" if img.shape[-1] == 1 else None,
         origin="lower",
         extent=[-0.5, img.shape[1] - 0.5, -0.5, img.shape[0] - 0.5],
@@ -59,23 +59,23 @@ def plot_confmaps(confmaps: np.ndarray, output_scale: float = 1.0):
     """Plot confidence maps reduced over channels."""
     ax = plt.gca()
     return ax.imshow(
-        np.squeeze(cms.max(axis=-1)),
+        np.squeeze(confmaps.max(axis=-1)),
         alpha=0.5,
         origin="lower",
         extent=[
             -0.5,
-            cms.shape[1] / output_scale - 0.5,
+            confmaps.shape[1] / output_scale - 0.5,
             -0.5,
-            cms.shape[0] / output_scale - 0.5,
+            confmaps.shape[0] / output_scale - 0.5,
         ],
     )
 
 
-def plot_peaks(pts_gt: np.ndarray, pts_pr: np.ndarray):
+def plot_peaks(pts_gt: np.ndarray, pts_pr: np.ndarray, paired: bool = False):
     """Plot ground truth and detected peaks."""
     handles = []
     ax = plt.gca()
-    if pts_gt.shape == pts_pr.shape:
+    if paired:
         for p_gt, p_pr in zip(pts_gt, pts_pr):
             handles.append(
                 ax.plot([p_gt[0], p_pr[0]], [p_gt[1], p_pr[1]], "r-", alpha=0.5, lw=2)
@@ -98,14 +98,18 @@ def plot_peaks(pts_gt: np.ndarray, pts_pr: np.ndarray):
 
 
 def plot_pafs(
-    pafs: np.ndarray, output_scale=1.0, stride=1, scale=4.0, width=1.0, cmap=None
+    pafs: np.ndarray,
+    output_scale: float = 1.0,
+    stride: int = 1,
+    scale: float = 4.0,
+    width: float = 1.0,
+    cmap: Optional[Text] = None,
 ):
     """Quiver plot for a single frame of pafs."""
     if cmap is None:
         cmap = sns.color_palette("tab20")
 
-    if pafs.shape[-1] != 2:
-        pafs = pafs.reshape((pafs.shape[0], pafs.shape[1], -1, 2))
+    pafs = pafs.reshape((pafs.shape[0], pafs.shape[1], -1, 2))
 
     h_quivers = []
     for k in range(pafs.shape[-2]):
