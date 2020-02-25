@@ -1,5 +1,5 @@
 import attr
-from typing import Optional, Union, Text, List
+from typing import Optional, Text, List
 
 
 @attr.s(auto_attribs=True)
@@ -47,11 +47,10 @@ class TensorBoardConfig:
             correctly in the dashboard.
         loss_frequency: How often loss and metrics will be written out to disk. This can
             be "epoch" to only write summaries at the end of every epoch, "batch" to
-            write summaries after every batch, or an integer to specify the frequency as
-            a number of batches. High frequency writing can considerably slow down
-            training, so this is only recommended to be anything other than "epoch" if
-            training interactively. This value only affects the monitored losses and
-            metrics, not other summaries like visualizations.
+            write summaries after every batch. High frequency writing can considerably
+            slow down training, so this is not recommended to be anything other than
+            "epoch" if training interactively. This value only affects the monitored
+            losses and metrics, not other summaries like visualizations.
         architecture_graph: If True, the architecture of the model will be saved
             and can be viewed graphically in TensorBoard. This is only saved at the
             beginning of training, but can consume a lot of disk space for large models,
@@ -63,7 +62,7 @@ class TensorBoardConfig:
     """
 
     write_logs: bool = False
-    loss_frequency: Union[Text, int] = "epoch"
+    loss_frequency: Text = "epoch"
     architecture_graph: bool = False
     profile_graph: bool = False
     visualizations: bool = True

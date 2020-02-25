@@ -122,9 +122,9 @@ class DataReaders:
         # Build class.
         # TODO: use labels_config.search_path_hints for loading
         return cls.from_labels(
-            training=labels_config.training_labels,
-            validation=labels_config.validation_labels,
-            test=labels_config.test_labels,
+            training=training,
+            validation=validation,
+            test=test,
         )
 
     @classmethod
