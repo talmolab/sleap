@@ -1,3 +1,9 @@
+"""This module defines the main SLEAP model class for defining a trainable model.
+
+This is a higher level wrapper around `tf.keras.Model` that holds all the configuration
+parameters required to construct the actual model. This allows for easy querying of the
+model configuration without actually instantiating the model itself.
+"""
 import tensorflow as tf
 
 import attr
@@ -60,13 +66,32 @@ Head = TypeVar("Head", *HEADS)
 
 @attr.s(auto_attribs=True)
 class Model:
+    """SLEAP model that describes an architecture and output types.
+
+    Attributes:
+        backbone: An `Architecture` class that provides methods for building a
+            tf.keras.Model given an input.
+        heads: List of `Head`s that define the outputs of the network.
+        keras_model: The current `tf.keras.Model` instance if one has been created.
+    """
+
     backbone: Architecture
     heads: List[Head] = attr.ib(converter=ensure_list)
+    keras_model: Optional[tf.keras.Model] = None
 
     @classmethod
     def from_config(
-        cls, config: ModelConfig, skeleton: Optional[sleap.Skeleton] = None
+        cls, config: ModelConfig, skeleton: Optional[sleap.Skeleton] = None, update_config: bool = False
     ) -> "Model":
+        """Create a SLEAP model from configurations.
+
+        Arguments:
+            config: The configurations as a `ModelConfig` instance.
+            skeleton: A `sleap.Skeleton` to use if not provided in the config.
+
+        Returns:
+            An instance of `Model` built with the specified configurations.
+        """
         # Figure out which backbone class to use.
         backbone_config = config.backbone.which_oneof()
         backbone_cls = BACKBONE_CONFIG_TO_CLS[type(backbone_config)]
@@ -82,6 +107,8 @@ class Model:
                         "incomplete."
                     )
                 part_names = skeleton.node_names
+                if update_config:
+                    head_config.part_names = part_names
             heads = SingleInstanceConfmapsHead.from_config(
                 head_config, part_names=part_names
             )
@@ -98,6 +125,8 @@ class Model:
                         "incomplete."
                     )
                 part_names = skeleton.node_names
+                if update_config:
+                    head_config.part_names = part_names
             heads = CenteredInstanceConfmapsHead.from_config(
                 head_config, part_names=part_names
             )
@@ -111,6 +140,8 @@ class Model:
                         "incomplete."
                     )
                 part_names = skeleton.node_names
+                if update_config:
+                    head_config.part_names = part_names
 
             edges = head_config.pafs.edges
             if edges is None:
@@ -120,6 +151,8 @@ class Model:
                         "incomplete."
                     )
                 edges = skeleton.edge_names
+                if update_config:
+                    head_config.pafs.edges = edges
 
             heads = [
                 MultiInstanceConfmapsHead.from_config(
@@ -132,6 +165,7 @@ class Model:
 
     @property
     def maximum_stride(self) -> int:
+        """Return the maximum stride of the model backbone."""
         return self.backbone.maximum_stride
 
     def make_model(self, input_shape: Tuple[int, int, int]) -> tf.keras.Model:
@@ -201,5 +235,5 @@ class Model:
         # TODO: Warn/error if x_main was not connected to any heads?
 
         # Create model.
-        keras_model = tf.keras.Model(inputs=x_in, outputs=x_outs)
-        return keras_model
+        self.keras_model = tf.keras.Model(inputs=x_in, outputs=x_outs)
+        return self.keras_model
