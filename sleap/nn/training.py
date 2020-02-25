@@ -2,6 +2,7 @@
 
 import os
 from datetime import datetime
+from time import time
 import logging
 
 import tensorflow as tf
@@ -489,15 +490,21 @@ class Trainer(ABC):
     def from_config(
         cls,
         config: TrainingJobConfig,
-        training_labels=None,
-        validation_labels=None,
-        test_labels=None,
+        training_labels: Optional[Union[Text, sleap.Labels]] = None,
+        validation_labels: Optional[Union[Text, sleap.Labels, float]] = None,
+        test_labels: Optional[Union[Text, sleap.Labels]] = None,
     ) -> "Trainer":
         """Initialize the trainer from a training job configuration.
         
         Args:
-            config: A TrainingJobConfig instance.
-            training_labels_path: If provided, overwrites the training labels path in the config.
+            config: A `TrainingJobConfig` instance.
+            training_labels: Training labels to use instead of the ones in the config,
+                if any. If a path is specified, it will overwrite the one in the config.
+            validation_labels: Validation labels to use instead of the ones in the
+                 config, if any. If a path is specified, it will overwrite the one in
+                 the config.
+            test_labels: Teset labels to use instead of the ones in the config, if any.
+                If a path is specified, it will overwrite the one in the config.
         """
         # Copy input config before we make any changes.
         initial_config = copy.deepcopy(config)
@@ -701,6 +708,7 @@ class Trainer(ABC):
     def setup(self):
         """Set up data pipeline and model for training."""
         logger.info(f"Setting up for training...")
+        t0 = time()
         self._update_config()
         self._setup_pipeline_builder()
         self._setup_model()
@@ -708,7 +716,7 @@ class Trainer(ABC):
         self._setup_optimization()
         self._setup_outputs()
         self._setup_visualization()
-        logger.info(f"Finished trainer set up.")
+        logger.info(f"Finished trainer set up. [{time() - t0:.1f}s]")
 
     def train(self):
         """Execute the optimization loop to train the model."""
@@ -716,8 +724,10 @@ class Trainer(ABC):
             self.setup()
 
         logger.info(f"Creating tf.data.Datasets for training data generation...")
+        t0 = time()
         training_ds = self.training_pipeline.make_dataset()
         validation_ds = self.validation_pipeline.make_dataset()
+        logger.info(f"Finished creating training datasets. [{time() - t0:.1f}s]")
 
         logger.info(f"Starting training loop...")
         history = self.keras_model.fit(
@@ -799,7 +809,12 @@ class CentroidConfmapsModelTrainer(Trainer):
             pts_gt = example["centroids"].numpy()
             pts_pr = example["predicted_centroids"].numpy()
 
-            fig = plot_img(img, dpi=72, scale=1.0)
+            scale = 1.0
+            if img.shape[0] < 512:
+                scale = 2.0
+            if img.shape[0] < 256:
+                scale = 4.0
+            fig = plot_img(img, dpi=72 * scale, scale=scale)
             plot_confmaps(cms, output_scale=cms.shape[0] / img.shape[0])
             plot_peaks(pts_gt, pts_pr, paired=False)
             return fig
@@ -900,7 +915,12 @@ class TopdownConfmapsModelTrainer(Trainer):
             pts_gt = example["center_instance"].numpy()
             pts_pr = example["predicted_center_instance_points"].numpy()
 
-            fig = plot_img(img, dpi=72, scale=1.0)
+            scale = 1.0
+            if img.shape[0] < 512:
+                scale = 2.0
+            if img.shape[0] < 256:
+                scale = 4.0
+            fig = plot_img(img, dpi=72 * scale, scale=scale)
             plot_confmaps(cms, output_scale=cms.shape[0] / img.shape[0])
             plot_peaks(pts_gt, pts_pr, paired=True)
             return fig
@@ -991,7 +1011,12 @@ class BottomUpModelTrainer(Trainer):
             pts_gt = example["instances"].numpy()
             pts_pr = example["predicted_peaks"].numpy()
 
-            fig = plot_img(img, dpi=72, scale=1.0)
+            scale = 1.0
+            if img.shape[0] < 512:
+                scale = 2.0
+            if img.shape[0] < 256:
+                scale = 4.0
+            fig = plot_img(img, dpi=72 * scale, scale=scale)
             plot_confmaps(cms, output_scale=cms.shape[0] / img.shape[0])
             plot_peaks(pts_gt, pts_pr, paired=False)
             return fig
@@ -1000,7 +1025,12 @@ class BottomUpModelTrainer(Trainer):
             img = example["image"].numpy()
             pafs = example["predicted_part_affinity_fields"].numpy()
 
-            fig = plot_img(img, dpi=72, scale=1.0)
+            scale = 1.0
+            if img.shape[0] < 512:
+                scale = 2.0
+            if img.shape[0] < 256:
+                scale = 4.0
+            fig = plot_img(img, dpi=72 * scale, scale=scale)
             plot_pafs(
                 pafs,
                 output_scale=pafs.shape[0] / img.shape[0],
