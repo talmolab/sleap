@@ -1,5 +1,5 @@
 import attr
-from typing import Optional, Union, Text
+from typing import Optional, Text
 
 
 @attr.s(auto_attribs=True)
@@ -222,9 +222,9 @@ class OptimizationConfig:
     shuffle_buffer_size: int = 128
     prefetch: bool = True
     batch_size: int = 8
-    batches_per_epoch: Union[int, Text] = None
+    batches_per_epoch: Optional[int] = None
     min_batches_per_epoch: int = 200
-    val_batches_per_epoch: Union[int, Text] = None
+    val_batches_per_epoch: Optional[int] = None
     min_val_batches_per_epoch: int = 10
     epochs: int = 100
     optimizer: Text = "adam"

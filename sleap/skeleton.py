@@ -1176,4 +1176,4 @@ class Skeleton:
 
 
 cattr.register_unstructure_hook(Skeleton, lambda skeleton: Skeleton.to_dict(skeleton))
-cattr.register_structure_hook(Skeleton, lambda dicts, cls: Skeleton.from_json(dicts))
+cattr.register_structure_hook(Skeleton, lambda dicts, cls: Skeleton.from_dict(dicts))

@@ -1,5 +1,5 @@
 import attr
-from typing import Optional, Union, Text, List
+from typing import Optional, Text, List
 import sleap
 
 
@@ -8,24 +8,24 @@ class LabelsConfig:
     """Labels configuration.
 
     Attributes:
-        training_labels: A `sleap.Labels` instance or filepath to a saved labels file
-            containing user labeled frames to use for generating the training set.
-        validation_labels: A `sleap.Labels` instance or filepath to a saved labels file
-            containing user labeled frames to use for generating validation data. These
-            will not be trained on directly, but will be used to tune hyperparameters
-            such as learning rate or early stopping. If not specified, the validation
-            set will be sampled from the training labels.
+        training_labels: A filepath to a saved labels file containing user labeled
+            frames to use for generating the training set.
+        validation_labels: A filepath to a saved labels file containing user labeled
+            frames to use for generating validation data. These will not be trained on
+            directly, but will be used to tune hyperparameters such as learning rate or
+            early stopping. If not specified, the validation set will be sampled from
+            the training labels.
         validation_fraction: Float between 0 and 1 specifying the fraction of the
             training set to sample for generating the validation set. The remaining
             labeled frames will be left in the training set. If the `validation_labels`
             are already specified, this has no effect.
-        test_labels: A `sleap.Labels` instance or filepath to a saved labels file
-            containing user labeled frames to use for generating the test set. This is
-            typically a held out set of examples that are never used for training or
-            hyperparameter tuning (like the validation set). This is optional, but
-            useful for benchmarking as metrics can be computed from these data during
-            model optimization. This is also useful to explicitly keep track of the test
-            set that should be used when multiple splits are created for training.
+        test_labels: A filepath to a saved labels file containing user labeled frames to
+            use for generating the test set. This is typically a held out set of
+            examples that are never used for training or hyperparameter tuning (like the
+            validation set). This is optional, but useful for benchmarking as metrics
+            can be computed from these data during model optimization. This is also
+            useful to explicitly keep track of the test set that should be used when
+            multiple splits are created for training.
         search_path_hints: List of paths to use for searching for missing data. This is
             useful when labels and data are moved across computers, network storage, or
             operating systems that may have different absolute paths than those stored
@@ -36,10 +36,10 @@ class LabelsConfig:
             must be specified for inference in order to generate predicted instances.
     """
 
-    training_labels: Optional[Union[Text, sleap.Labels]] = None
-    validation_labels: Optional[Union[Text, sleap.Labels]] = None
+    training_labels: Optional[Text] = None
+    validation_labels: Optional[Text] = None
     validation_fraction: float = 0.1
-    test_labels: Optional[Union[Text, sleap.Labels]] = None
+    test_labels: Optional[Text] = None
     search_path_hints: List[Text] = attr.ib(factory=list)
     skeletons: List[sleap.Skeleton] = attr.ib(factory=list)
 

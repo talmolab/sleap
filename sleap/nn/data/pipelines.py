@@ -18,18 +18,27 @@ from sleap.nn.data.augmentation import AugmentationConfig, ImgaugAugmenter
 from sleap.nn.data.normalization import Normalizer
 from sleap.nn.data.resizing import Resizer
 from sleap.nn.data.instance_centroids import InstanceCentroidFinder
-from sleap.nn.data.instance_cropping import InstanceCropper
+from sleap.nn.data.instance_cropping import InstanceCropper, PredictedInstanceCropper
 from sleap.nn.data.confidence_maps import (
     MultiConfidenceMapGenerator,
     InstanceConfidenceMapGenerator,
 )
 from sleap.nn.data.edge_maps import PartAffinityFieldsGenerator
-from sleap.nn.data.dataset_ops import Shuffler, Batcher, Repeater, Prefetcher, Preloader
+from sleap.nn.data.dataset_ops import (
+    Shuffler,
+    Batcher,
+    Unbatcher,
+    Repeater,
+    Prefetcher,
+    Preloader,
+)
 from sleap.nn.data.training import KeyMapper
+from sleap.nn.data.general import KeyFilter, KeyRenamer
 from sleap.nn.data.inference import (
     KerasModelPredictor,
     GlobalPeakFinder,
     LocalPeakFinder,
+    PredictedCenterInstanceNormalizer,
 )
 from sleap.nn.data.utils import ensure_list
 
@@ -54,6 +63,7 @@ TRANSFORMERS = (
     PartAffinityFieldsGenerator,
     Shuffler,
     Batcher,
+    Unbatcher,
     Repeater,
     Prefetcher,
     Preloader,
@@ -61,6 +71,10 @@ TRANSFORMERS = (
     KerasModelPredictor,
     GlobalPeakFinder,
     LocalPeakFinder,
+    PredictedInstanceCropper,
+    PredictedCenterInstanceNormalizer,
+    KeyFilter,
+    KeyRenamer,
 )
 Provider = TypeVar("Provider", *PROVIDERS)
 Transformer = TypeVar("Transformer", *TRANSFORMERS)
@@ -591,6 +605,7 @@ class TopdownConfmapsPipeline:
         )
         pipeline += GlobalPeakFinder(
             confmaps_key="predicted_instance_confidence_maps",
+            peaks_key="predicted_center_instance_points",
             confmaps_stride=self.instance_confmap_head.output_stride,
             peak_threshold=0.2,
         )

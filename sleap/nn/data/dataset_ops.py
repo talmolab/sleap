@@ -161,6 +161,25 @@ class Batcher:
 
 
 @attr.s(auto_attribs=True)
+class Unbatcher:
+    """Unbatching transformer for use in pipelines."""
+
+    @property
+    def input_keys(self) -> List[Text]:
+        """Return the keys that incoming elements are expected to have."""
+        return []
+
+    @property
+    def output_keys(self) -> List[Text]:
+        """Return the keys that outgoing elements will have."""
+        return []
+
+    def transform_dataset(self, ds_input: tf.data.Dataset) -> tf.data.Dataset:
+        """Create a dataset with unbatched elements."""
+        return ds_input.unbatch()
+
+
+@attr.s(auto_attribs=True)
 class Repeater:
     """Repeating transformer for use in pipelines.
 

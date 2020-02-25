@@ -9,3 +9,7 @@ from sleap.io.dataset import Labels
 from sleap.io.video import Video
 from sleap.instance import LabeledFrame, Instance, PredictedInstance
 from sleap.skeleton import Skeleton
+
+# Import a lightweight subset of sleap.nn.
+import sleap.nn.config
+import sleap.nn.system
