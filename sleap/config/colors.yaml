@@ -1,6 +1,8 @@
 alphabet:
+# 26 visually distinct colors
 # Source: "A Colour Alphabet and the Limits of Colour Coding", Paul Green-Armytage
 # https://graphicdesign.stackexchange.com/questions/3682/where-can-i-find-a-large-palette-set-of-contrasting-colors-for-coloring-many-d
+# https://github.com/Netflix/atlas/wiki/Color-Palettes#armytage (Apache 2.0 license)
 - 240,163,255
 - 0,117,220
 - 153,63,0
@@ -38,6 +40,8 @@ five+:
 - 255,127,0
 
 solarized:
+# Solarized copyright (c) 2011 Ethan Schoonover (MIT license)
+# source: https://github.com/altercation/solarized
 - 181,137,0
 - 203,75,22
 - 220,50,47
@@ -55,18 +59,3 @@ standard:
 - 119,172,48
 - 77,190,238
 - 162,20,47
-
-twelve:
-# Source: http://colorbrewer2.org/#type=qualitative&scheme=Paired&n=12
-- 31,120,180
-- 51,160,44
-- 227,26,28
-- 255,127,0
-- 106,61,154
-- 177,89,40
-- 166,206,227
-- 178,223,138
-- 251,154,153
-- 253,191,111
-- 202,178,214
-- 255,255,153
