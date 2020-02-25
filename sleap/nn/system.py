@@ -109,7 +109,7 @@ def is_initialized(gpu: Optional[tf.config.PhysicalDevice] = None) -> bool:
     return is_initialized
 
 
-def disable_gpu_preallocation():
+def disable_preallocation():
     """Disable preallocation of full GPU memory on all available GPUs.
     
     This enables memory growth policy so that TensorFlow will not pre-allocate all
@@ -124,7 +124,7 @@ def disable_gpu_preallocation():
         tf.config.experimental.set_memory_growth(gpu, True)
 
 
-def enable_gpu_preallocation():
+def enable_preallocation():
     """Enable preallocation of full GPU memory on all available GPUs.
     
     This disables memory growth policy so that TensorFlow will pre-allocate all
@@ -145,3 +145,21 @@ def initialize_devices():
     If preallocation was enabled on the GPUs, this will trigger memory allocation.
     """
     tf.config.list_logical_devices()
+
+
+def summary():
+    """Print a summary of the state of the system."""
+    gpus = get_available_gpus()
+    all_gpus = get_all_gpus()
+    if len(all_gpus) > 0:
+        print(f"GPUs: {len(gpus)}/{len(all_gpus)} available")
+        for gpu in all_gpus:
+            print(f"  Device: {gpu.name}")
+            print(f"         Available: {gpu in gpus}")
+            print(f"        Initalized: {is_initialized(gpu)}")
+            print(
+                f"     Memory growth: {tf.config.experimental.get_memory_growth(gpu)}"
+            )
+
+    else:
+        print("GPUs: None detected.")
