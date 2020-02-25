@@ -53,12 +53,14 @@ from PySide2.QtWidgets import (
     QGraphicsPolygonItem,
 )
 
+from sleap.prefs import prefs
 from sleap.skeleton import Node
 from sleap.instance import Instance, Point
 from sleap.io.video import Video
 from sleap.gui.slider import VideoSlider
 from sleap.gui.state import GuiState
 from sleap.gui.color import ColorManager
+from sleap.gui.shortcuts import Shortcuts
 
 import qimage2ndarray
 
@@ -203,6 +205,7 @@ class QtVideoPlayer(QWidget):
 
         self.color_manager = color_manager or ColorManager()
         self.state = state or GuiState()
+        self.shortcuts = Shortcuts()
         self.context = context
         self.view = GraphicsView(self.state, self)
         self.video = None
@@ -595,23 +598,42 @@ class QtVideoPlayer(QWidget):
 
         if event.key() == Qt.Key.Key_Shift:
             self._shift_key_down = True
-        elif event.key() == Qt.Key.Key_Left and self.video:
+        elif event.key() == self.shortcuts["frame prev"] and self.video:
             self.state.increment("frame_idx", step=-1, mod=self.video.frames)
-        elif event.key() == Qt.Key.Key_Right and self.video:
+
+        elif event.key() == self.shortcuts["frame next"] and self.video:
             self.state.increment("frame_idx", step=1, mod=self.video.frames)
-        elif event.key() == Qt.Key.Key_Up and self.video:
-            self.state.increment("frame_idx", step=-50, mod=self.video.frames)
-        elif event.key() == Qt.Key.Key_Down and self.video:
-            self.state.increment("frame_idx", step=50, mod=self.video.frames)
-        elif event.key() == Qt.Key.Key_Space and self.video:
-            self.state.increment("frame_idx", step=500, mod=self.video.frames)
+
+        elif event.key() == self.shortcuts["frame prev medium step"] and self.video:
+            self.state.increment(
+                "frame_idx", step=-prefs["medium step size"], mod=self.video.frames
+            )
+
+        elif event.key() == self.shortcuts["frame next medium step"] and self.video:
+            self.state.increment(
+                "frame_idx", step=prefs["medium step size"], mod=self.video.frames
+            )
+
+        elif event.key() == self.shortcuts["frame prev large step"] and self.video:
+            self.state.increment(
+                "frame_idx", step=-prefs["large step size"], mod=self.video.frames
+            )
+
+        elif event.key() == self.shortcuts["frame next large step"] and self.video:
+            self.state.increment(
+                "frame_idx", step=prefs["large step size"], mod=self.video.frames
+            )
+
         elif event.key() == Qt.Key.Key_Home:
             self.state["frame_idx"] = 0
+
         elif event.key() == Qt.Key.Key_End and self.video:
             self.state["frame_idx"] = self.video.frames - 1
+
         elif event.key() == Qt.Key.Key_Escape:
             self.view.click_mode = ""
             self.state["instance"] = None
+
         elif event.key() == Qt.Key.Key_K:
             self.state["frame_idx"] = self.seekbar.getEndContiguousMark(
                 self.state["frame_idx"]

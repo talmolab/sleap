@@ -139,6 +139,12 @@ class Shortcuts(object):
         "delete frame predictions",
         "delete clip predictions",
         "delete area predictions",
+        "frame next",
+        "frame prev",
+        "frame next medium step",
+        "frame prev medium step",
+        "frame next large step",
+        "frame prev large step",
     )
 
     def __init__(self):

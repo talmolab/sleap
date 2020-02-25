@@ -43,6 +43,8 @@ from sleap.gui.overlays.tracks import TrackTrailOverlay, TrackListOverlay
 from sleap.gui.color import ColorManager
 from sleap.gui.overlays.instance import InstanceOverlay
 
+from sleap.prefs import prefs
+
 
 class MainWindow(QMainWindow):
     """The SLEAP GUI application.
@@ -90,7 +92,7 @@ class MainWindow(QMainWindow):
         self.state["show edges"] = True
         self.state["edge style"] = "Line"
         self.state["fit"] = False
-        self.state["color predicted"] = False
+        self.state["color predicted"] = prefs["color predicted"]
 
         self._initialize_gui()
 
@@ -370,7 +372,7 @@ class MainWindow(QMainWindow):
             key="distinctly_color",
         )
 
-        self.state["palette"] = "standard"
+        self.state["palette"] = prefs["palette"]
         self.state["distinctly_color"] = "instances"
 
         viewMenu.addSeparator()
@@ -824,7 +826,7 @@ class MainWindow(QMainWindow):
             )
 
         # Set defaults
-        self.state["trail_length"] = 0
+        self.state["trail_length"] = prefs["trail length"]
 
         # Emit signals for default that may have been set earlier
         self.state.emit("palette")
