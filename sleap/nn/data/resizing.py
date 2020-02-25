@@ -117,7 +117,7 @@ class Resizer:
     """
 
     image_key: Text = "image"
-    points_key: Text = "instances"
+    points_key: Optional[Text] = "instances"
     scale: float = 1.0
     pad_to_stride: int = 1
     keep_full_image: bool = False
@@ -130,6 +130,7 @@ class Resizer:
         pad_to_stride: Optional[int] = None,
         keep_full_image: bool = False,
         full_image_key: Text = "full_image",
+        points_key: Optional[Text] = "instances"
     ) -> "Resizer":
         """Build an instance of this class from its configuration options.
 
@@ -142,6 +143,8 @@ class Resizer:
             keep_full_image: If True, keeps the (original size) full image in the
                 examples. This is useful for multi-scale inference.
             full_image_key: String name of the key containing the full images.
+            points_key: String name of the key containing points to adjust for the
+                resizing operation.
 
         Returns:
             An instance of this class.
@@ -160,7 +163,7 @@ class Resizer:
 
         return cls(
             image_key="image",
-            points_key="instances",
+            points_key=points_key,
             scale=config.input_scaling,
             pad_to_stride=pad_to_stride,
             keep_full_image=keep_full_image,
@@ -170,7 +173,10 @@ class Resizer:
     @property
     def input_keys(self) -> List[Text]:
         """Return the keys that incoming elements are expected to have."""
-        return [self.image_key, self.points_key, "scale"]
+        input_keys = [self.image_key, "scale"]
+        if self.points_key is not None:
+            input_keys.append(self.points_key)
+        return input_keys
 
     @property
     def output_keys(self) -> List[Text]:
@@ -213,7 +219,8 @@ class Resizer:
                 example[self.image_key] = resize_image(
                     example[self.image_key], self.scale
                 )
-                example[self.points_key] = example[self.points_key] * self.scale
+                if self.points_key:
+                    example[self.points_key] = example[self.points_key] * self.scale
                 example["scale"] = example["scale"] * self.scale
 
             if self.pad_to_stride > 1:
