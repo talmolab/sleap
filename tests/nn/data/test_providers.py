@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-tf.config.experimental.set_visible_devices([], device_type="GPU")  # hide GPUs for test
+from sleap.nn.system import use_cpu_only; use_cpu_only()  # hide GPUs for test
 from tests.fixtures.videos import TEST_H5_FILE, TEST_SMALL_ROBOT_MP4_FILE
 import sleap
 from sleap.nn.data import providers
