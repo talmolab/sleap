@@ -31,8 +31,8 @@ from sleap.nn.config import (
 from sleap.nn.model import Model
 
 # Data
-from sleap.nn.data.pipelines import LabelsReader
 from sleap.nn.config import LabelsConfig
+from sleap.nn.data.pipelines import LabelsReader
 from sleap.nn.data.pipelines import (
     Pipeline,
     CentroidConfmapsPipeline,
@@ -40,6 +40,7 @@ from sleap.nn.data.pipelines import (
     BottomUpPipeline,
     KeyMapper,
 )
+from sleap.nn.data.training import split_labels
 
 # Optimization
 from sleap.nn.config import OptimizationConfig
@@ -141,8 +142,7 @@ class DataReaders:
         if isinstance(validation, str):
             validation = sleap.Labels.load_file(validation)
         elif isinstance(validation, float):
-            # TODO: split
-            pass
+            training, validation = split_labels(training, [-1, validation])
 
         if isinstance(test, str):
             test = sleap.Labels.load_file(test)
