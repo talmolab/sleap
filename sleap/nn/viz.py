@@ -71,29 +71,47 @@ def plot_confmaps(confmaps: np.ndarray, output_scale: float = 1.0):
     )
 
 
-def plot_peaks(pts_gt: np.ndarray, pts_pr: np.ndarray, paired: bool = False):
+def plot_peaks(
+    pts_gt: np.ndarray, pts_pr: Optional[np.ndarray] = None, paired: bool = False
+):
     """Plot ground truth and detected peaks."""
     handles = []
     ax = plt.gca()
-    if paired:
+    if paired and pts_pr is not None:
         for p_gt, p_pr in zip(pts_gt, pts_pr):
             handles.append(
                 ax.plot([p_gt[0], p_pr[0]], [p_gt[1], p_pr[1]], "r-", alpha=0.5, lw=2)
             )
-    handles.append(
-        ax.plot(
-            pts_gt[..., 0].ravel(),
-            pts_gt[..., 1].ravel(),
-            "g.",
-            alpha=0.7,
-            ms=10,
-            mew=1,
-            mec="w",
+    if pts_pr is not None:
+        handles.append(
+            ax.plot(
+                pts_gt[..., 0].ravel(),
+                pts_gt[..., 1].ravel(),
+                "g.",
+                alpha=0.7,
+                ms=10,
+                mew=1,
+                mec="w",
+            )
         )
-    )
-    handles.append(
-        ax.plot(pts_pr[:, 0], pts_pr[:, 1], "r.", alpha=0.7, ms=10, mew=1, mec="w")
-    )
+        handles.append(
+            ax.plot(pts_pr[:, 0], pts_pr[:, 1], "r.", alpha=0.7, ms=10, mew=1, mec="w")
+        )
+    else:
+        cmap = sns.color_palette("tab20")
+        for i, pt in enumerate(pts_gt):
+            handles.append(
+                ax.plot(
+                    pt[0],
+                    pt[1],
+                    ".",
+                    alpha=0.7,
+                    ms=15,
+                    mew=1,
+                    mfc=cmap[i % len(cmap)],
+                    mec="w",
+                )
+            )
     return handles
 
 
