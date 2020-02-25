@@ -591,6 +591,7 @@ class TopdownConfmapsPipeline:
         )
         pipeline += GlobalPeakFinder(
             confmaps_key="predicted_instance_confidence_maps",
+            peaks_key="predicted_center_instance_points",
             confmaps_stride=self.instance_confmap_head.output_stride,
             peak_threshold=0.2,
         )
