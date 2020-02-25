@@ -200,10 +200,13 @@ class VideoReader:
         example_indices: List or numpy array of ints with the frame indices to use when
             iterating over the video. Use this to specify subsets of the video to read.
             If not provided, the entire video will be read.
+        video_ind: Scalar index of video to keep with each example. Helpful when running
+            inference across videos.
     """
 
     video: sleap.Video
     example_indices: Optional[Union[Sequence[int], np.ndarray]] = None
+    video_ind: int = 0
 
     @classmethod
     def from_filepath(
@@ -237,7 +240,7 @@ class VideoReader:
     @property
     def output_keys(self) -> List[Text]:
         """Return the output keys that the dataset will produce."""
-        return ["image", "raw_image_size", "frame_ind", "scale"]
+        return ["image", "raw_image_size", "video_ind", "frame_ind", "scale"]
 
     def make_dataset(self) -> tf.data.Dataset:
         """Return a `tf.data.Dataset` whose elements are data from video frames.
@@ -283,6 +286,7 @@ class VideoReader:
             return {
                 "image": image,
                 "raw_image_size": raw_image_size,
+                "video_ind": self.video_ind,
                 "frame_ind": frame_ind,
                 "scale": tf.ones([2], dtype=tf.float32),
             }
