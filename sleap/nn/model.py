@@ -81,7 +81,10 @@ class Model:
 
     @classmethod
     def from_config(
-        cls, config: ModelConfig, skeleton: Optional[sleap.Skeleton] = None, update_config: bool = False
+        cls,
+        config: ModelConfig,
+        skeleton: Optional[sleap.Skeleton] = None,
+        update_config: bool = False,
     ) -> "Model":
         """Create a SLEAP model from configurations.
 
