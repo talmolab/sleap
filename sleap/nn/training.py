@@ -594,7 +594,10 @@ class Trainer(ABC):
         # Create the tf.keras.Model instance.
         self.model.make_model(input_shape)
         logger.info("Created Keras model.")
+        logger.info(f"  Backbone: {type(self.model.backbone).__name__}")
+        logger.info(f"  Max stride: {self.model.maximum_stride}")
         logger.info(f"  Parameters: {self.model.keras_model.count_params():3,d}")
+        logger.info("  Heads: " + ", ".join([type(head).__name__ for head in self.model.heads]))
 
     @property
     def keras_model(self) -> tf.keras.Model:
@@ -667,7 +670,6 @@ class Trainer(ABC):
             self.run_path = setup_new_run_folder(
                 self.config.outputs, base_run_name=type(self.model.backbone).__name__
             )
-            logger.info(f"Created run path: {self.run_path}")
 
         # Setup output callbacks.
         self.output_callbacks = setup_output_callbacks(
@@ -677,6 +679,7 @@ class Trainer(ABC):
         if self.run_path is not None and self.config.outputs.save_outputs:
             # Create run directory.
             os.makedirs(self.run_path, exist_ok=True)
+            logger.info(f"Created run path: {self.run_path}")
 
             # Save configs.
             if self.initial_config is not None:
@@ -711,9 +714,11 @@ class Trainer(ABC):
         t0 = time()
         self._update_config()
         self._setup_pipeline_builder()
+        logger.info(f"Setting up model...")
         self._setup_model()
         self._setup_pipelines()
         self._setup_optimization()
+        logger.info(f"Setting up outputs...")
         self._setup_outputs()
         self._setup_visualization()
         logger.info(f"Finished trainer set up. [{time() - t0:.1f}s]")
@@ -1057,22 +1062,23 @@ class BottomUpModelTrainer(Trainer):
             )
         )
 
-        self.visualization_callbacks.extend(
-            setup_visualization(
-                self.config.outputs,
-                run_path=self.run_path,
-                viz_fn=lambda: visualize_pafs_example(next(training_viz_ds_iter)),
-                name=f"train_pafs",
-            )
-        )
-        self.visualization_callbacks.extend(
-            setup_visualization(
-                self.config.outputs,
-                run_path=self.run_path,
-                viz_fn=lambda: visualize_pafs_example(next(validation_viz_ds_iter)),
-                name=f"validation_pafs",
-            )
-        )
+        # Memory leak:
+        # self.visualization_callbacks.extend(
+        #     setup_visualization(
+        #         self.config.outputs,
+        #         run_path=self.run_path,
+        #         viz_fn=lambda: visualize_pafs_example(next(training_viz_ds_iter)),
+        #         name=f"train_pafs",
+        #     )
+        # )
+        # self.visualization_callbacks.extend(
+        #     setup_visualization(
+        #         self.config.outputs,
+        #         run_path=self.run_path,
+        #         viz_fn=lambda: visualize_pafs_example(next(validation_viz_ds_iter)),
+        #         name=f"validation_pafs",
+        #     )
+        # )
 
 
 def main():

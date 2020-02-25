@@ -1,5 +1,6 @@
 import attr
 from typing import Optional, Text, List
+import os
 
 
 @attr.s(auto_attribs=True)
@@ -168,3 +169,30 @@ class OutputsConfig:
     checkpointing: CheckpointingConfig = attr.ib(factory=CheckpointingConfig)
     tensorboard: TensorBoardConfig = attr.ib(factory=TensorBoardConfig)
     zmq: ZMQConfig = attr.ib(factory=ZMQConfig)
+
+    @property
+    def run_path(self) -> Text:
+        """Return the complete run path where all training outputs are stored.
+
+        This path is determined by other attributes using the pattern:
+            `{runs_folder}/{run_name_prefix}{run_name}{run_name_suffix}`
+
+        If `run_name_suffix` is set to None, it will be ignored.
+
+        Raises:
+            ValueError: If `run_name` is not set.
+
+        Notes:
+            This does not perform any checks for existence or validity and should only
+            be used when the above fields are complete.
+
+            This path will not be updated if the files are moved. To ensure this path is
+            valid, use a relative path for the `runs_folder` or manually update it.
+        """
+        if self.run_name is None:
+            raise ValueError(
+                "Run path cannot be determined when the run name is not set.")
+        folder_name = self.run_name_prefix + self.run_name
+        if self.run_name_suffix is not None:
+            folder_name += self.run_name_suffix
+        return os.path.join(self.runs_folder, folder_name)
