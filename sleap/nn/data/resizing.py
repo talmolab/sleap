@@ -111,16 +111,25 @@ class Resizer:
             If > 1, this will pad the bottom and right of the images to ensure they meet
             this divisibility criteria. Padding is applied after the scaling specified
             in the `scale` attribute.
+        keep_full_image: If True, keeps the (original size) full image in the examples.
+            This is useful for multi-scale inference.
+        full_image_key: String name of the key containing the full images.
     """
 
     image_key: Text = "image"
     points_key: Text = "instances"
     scale: float = 1.0
     pad_to_stride: int = 1
+    keep_full_image: bool = False
+    full_image_key: Text = "full_image"
 
     @classmethod
     def from_config(
-        cls, config: PreprocessingConfig, pad_to_stride: Optional[int] = None
+        cls,
+        config: PreprocessingConfig,
+        pad_to_stride: Optional[int] = None,
+        keep_full_image: bool = False,
+        full_image_key: Text = "full_image",
     ) -> "Resizer":
         """Build an instance of this class from its configuration options.
 
@@ -130,6 +139,9 @@ class Resizer:
                 parameter must be provided.
             pad_to_stride: An integer specifying the `pad_to_stride` if
                 `config.pad_to_stride` is not an explicit integer (e.g., set to None).
+            keep_full_image: If True, keeps the (original size) full image in the
+                examples. This is useful for multi-scale inference.
+            full_image_key: String name of the key containing the full images.
 
         Returns:
             An instance of this class.
@@ -151,6 +163,8 @@ class Resizer:
             points_key="instances",
             scale=config.input_scaling,
             pad_to_stride=pad_to_stride,
+            keep_full_image=keep_full_image,
+            full_image_key=full_image_key,
         )
 
     @property
@@ -161,7 +175,10 @@ class Resizer:
     @property
     def output_keys(self) -> List[Text]:
         """Return the keys that outgoing elements will have."""
-        return self.input_keys
+        output_keys = self.input_keys
+        if self.keep_full_image:
+            output_keys.append(self.full_image_key)
+        return output_keys
 
     def transform_dataset(self, ds_input: tf.data.Dataset) -> tf.data.Dataset:
         """Create a dataset that contains centroids computed from the inputs.
@@ -177,10 +194,17 @@ class Resizer:
 
             The "scale" key of the example will be multipled by the `scale` attribute of
             this transformer.
+
+            If the `keep_full_image` attribute is True, a key specified by
+            `full_image_key` will be added with the to the example containing the image
+            before any processing.
         """
 
         def resize(example):
             """Local processing function for dataset mapping."""
+            if self.keep_full_image:
+                example[self.full_image_key] = example[self.image_key]
+
             if self.scale != 1.0:
                 # Ensure image is rank-3 for resizing ops.
                 example[self.image_key] = tf.ensure_shape(
@@ -191,6 +215,7 @@ class Resizer:
                 )
                 example[self.points_key] = example[self.points_key] * self.scale
                 example["scale"] = example["scale"] * self.scale
+
             if self.pad_to_stride > 1:
                 example[self.image_key] = pad_to_stride(
                     example[self.image_key], max_stride=self.pad_to_stride

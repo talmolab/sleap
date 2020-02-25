@@ -44,12 +44,13 @@ class KerasModelPredictor:
                     )
 
                 Y = self.keras_model(X)
+                if not isinstance(Y, list):
+                    Y = [Y]
 
                 for output_key, y in zip(self.model_output_keys, Y):
                     if isinstance(y, list):
                         y = y[0]
                     if input_rank < tf.rank(y):
-                        # y = tf.reshape(y, [tf.shape(y)[-3], tf.shape(y)[-2], tf.shape(y)[-1]])
                         y = tf.squeeze(y, axis=0)
                     example[output_key] = y
 
@@ -273,4 +274,53 @@ class LocalPeakFinder:
             return example
 
         output_ds = input_ds.map(find_peaks)
+        return output_ds
+
+
+@attr.s(auto_attribs=True)
+class PredictedCenterInstanceNormalizer:
+    
+    centroids_key: Text = "centroid"
+    peaks_key: Text = "predicted_center_instance_points"
+    
+    new_centroid_key: Text = "predicted_centroid"
+    new_peaks_key: Text = "predicted_instance"
+
+    @property
+    def input_keys(self) -> List[Text]:
+        """Return the keys that incoming elements are expected to have."""
+        return [self.peaks_key, self.centroids_key, "scale", "bbox"]
+
+    @property
+    def output_keys(self) -> List[Text]:
+        """Return the keys that outgoing elements will have."""
+        output_keys = [
+            self.new_centroid_key,
+            self.new_peaks_key
+        ]
+        return output_keys
+
+    def transform_dataset(self, input_ds: tf.data.Dataset) -> tf.data.Dataset:
+        """Create a dataset that contains instance cropped data."""
+        
+        def norm_instance(example):
+            """Local processing function for dataset mapping."""
+            centroids = example[self.centroids_key] / example["scale"]
+
+            bboxes = example["bbox"]
+            bboxes = expand_to_rank(bboxes, 2)
+            bboxes_x1y1 = tf.gather(bboxes, [1, 0], axis=1)
+
+            pts = example[self.peaks_key]
+            pts += bboxes_x1y1
+            
+            example[self.new_centroid_key] = centroids
+            example[self.new_peaks_key] = pts
+            return example
+
+        # Map the main processing function to each example.
+        output_ds = input_ds.map(
+            norm_instance, num_parallel_calls=tf.data.experimental.AUTOTUNE
+        )
+
         return output_ds

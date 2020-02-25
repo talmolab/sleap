@@ -380,3 +380,84 @@ class InstanceCropper:
         output_ds = output_ds.unbatch()
 
         return output_ds
+
+
+@attr.s(auto_attribs=True)
+class PredictedInstanceCropper:
+
+    crop_width: int
+    crop_height: int
+    centroids_key: Text = "predicted_centroids"
+    full_image_key: Text = "full_image"
+
+    @property
+    def input_keys(self) -> List[Text]:
+        """Return the keys that incoming elements are expected to have."""
+        return [
+            self.full_image_key,
+            self.centroids_key,
+            "scale",
+            "video_ind",
+            "frame_ind",
+        ]
+
+    @property
+    def output_keys(self) -> List[Text]:
+        """Return the keys that outgoing elements will have."""
+        output_keys = [
+            "instance_image",
+            "bbox",
+            "center_instance_ind",
+            "centroid",
+            "full_image_height",
+            "full_image_width",
+            "scale",
+            "video_ind",
+            "frame_ind",
+        ]
+        return output_keys
+
+    def transform_dataset(self, input_ds: tf.data.Dataset) -> tf.data.Dataset:
+        """Create a dataset that contains instance cropped data."""
+        keys_to_expand = [self.full_image_key, "scale", "video_ind", "frame_ind"]
+
+        def crop_instances(frame_data):
+            """Local processing function for dataset mapping."""
+            # Make bounding boxes from centroids.
+            full_centroids = frame_data[self.centroids_key] / frame_data["scale"]
+            bboxes = make_centered_bboxes(
+                full_centroids, box_height=self.crop_height, box_width=self.crop_width
+            )
+
+            # Crop images from bounding boxes.
+            instance_images = crop_bboxes(frame_data[self.full_image_key], bboxes)
+            n_instances = tf.shape(bboxes)[0]
+
+            # Create multi-instance example.
+            instances_data = {
+                "instance_image": instance_images,
+                "bbox": bboxes,
+                "center_instance_ind": tf.range(n_instances, dtype=tf.int32),
+                "centroid": frame_data[self.centroids_key],
+                "full_image_height": tf.repeat(
+                    tf.shape(frame_data[self.full_image_key])[0], n_instances
+                ),
+                "full_image_width": tf.repeat(
+                    tf.shape(frame_data[self.full_image_key])[1], n_instances
+                ),
+            }
+            for key in keys_to_expand:
+                instances_data[key] = tf.repeat(
+                    tf.expand_dims(frame_data[key], axis=0), n_instances, axis=0
+                )
+            return instances_data
+
+        # Map the main processing function to each example.
+        output_ds = input_ds.map(
+            crop_instances, num_parallel_calls=tf.data.experimental.AUTOTUNE
+        )
+
+        # Unbatch to split frame-level examples into individual instance-level examples.
+        output_ds = output_ds.unbatch()
+
+        return output_ds
