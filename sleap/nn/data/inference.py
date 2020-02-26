@@ -297,21 +297,37 @@ class LocalPeakFinder:
 @attr.s(auto_attribs=True)
 class PredictedCenterInstanceNormalizer:
 
-    centroids_key: Text = "centroid"
+    centroid_key: Text = "centroid"
+    centroid_confidence_key: Text = "centroid_confidence"
     peaks_key: Text = "predicted_center_instance_points"
+    peak_confidences_key: Text = "predicted_center_instance_confidences"
 
     new_centroid_key: Text = "predicted_centroid"
+    new_centroid_confidence_key: Text = "predicted_centroid_confidence"
     new_peaks_key: Text = "predicted_instance"
+    new_peak_confidences_key: Text = "predicted_instance_confidences"
 
     @property
     def input_keys(self) -> List[Text]:
         """Return the keys that incoming elements are expected to have."""
-        return [self.peaks_key, self.centroids_key, "scale", "bbox"]
+        return [
+            self.centroid_key,
+            self.centroid_confidence_key,
+            self.peaks_key,
+            self.peak_confidences_key,
+            "scale",
+            "bbox",
+        ]
 
     @property
     def output_keys(self) -> List[Text]:
         """Return the keys that outgoing elements will have."""
-        output_keys = [self.new_centroid_key, self.new_peaks_key]
+        output_keys = [
+            self.new_centroid_key,
+            self.new_centroid_confidence_key,
+            self.new_peaks_key,
+            self.new_peak_confidences_key,
+        ]
         return output_keys
 
     def transform_dataset(self, input_ds: tf.data.Dataset) -> tf.data.Dataset:
@@ -319,7 +335,7 @@ class PredictedCenterInstanceNormalizer:
 
         def norm_instance(example):
             """Local processing function for dataset mapping."""
-            centroids = example[self.centroids_key] / example["scale"]
+            centroids = example[self.centroid_key] / example["scale"]
 
             bboxes = example["bbox"]
             bboxes = expand_to_rank(bboxes, 2)
@@ -329,7 +345,11 @@ class PredictedCenterInstanceNormalizer:
             pts += bboxes_x1y1
 
             example[self.new_centroid_key] = centroids
+            example[self.new_centroid_confidence_key] = example[
+                self.centroid_confidence_key
+            ]
             example[self.new_peaks_key] = pts
+            example[self.new_peak_confidences_key] = example[self.peak_confidences_key]
             return example
 
         # Map the main processing function to each example.

@@ -388,6 +388,7 @@ class PredictedInstanceCropper:
     crop_width: int
     crop_height: int
     centroids_key: Text = "predicted_centroids"
+    centroid_confidences_key: Text = "predicted_centroid_confidences"
     full_image_key: Text = "full_image"
 
     @property
@@ -396,6 +397,7 @@ class PredictedInstanceCropper:
         return [
             self.full_image_key,
             self.centroids_key,
+            self.centroid_confidences_key,
             "scale",
             "video_ind",
             "frame_ind",
@@ -409,6 +411,7 @@ class PredictedInstanceCropper:
             "bbox",
             "center_instance_ind",
             "centroid",
+            "centroid_confidence",
             "full_image_height",
             "full_image_width",
             "scale",
@@ -439,6 +442,7 @@ class PredictedInstanceCropper:
                 "bbox": bboxes,
                 "center_instance_ind": tf.range(n_instances, dtype=tf.int32),
                 "centroid": frame_data[self.centroids_key],
+                "centroid_confidence": frame_data[self.centroid_confidences_key],
                 "full_image_height": tf.repeat(
                     tf.shape(frame_data[self.full_image_key])[0], n_instances
                 ),
