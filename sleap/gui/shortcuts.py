@@ -115,8 +115,7 @@ class Shortcuts(object):
         "next video",
         "prev video",
         "goto frame",
-        "mark frame",
-        "goto marked",
+        "select to frame",
         "add instance",
         "delete instance",
         "delete track",
@@ -149,8 +148,19 @@ class Shortcuts(object):
 
     def __init__(self):
         shortcuts = util.get_config_yaml("shortcuts.yaml")
+        defaults = util.get_config_yaml("shortcuts.yaml", get_defaults=True)
 
-        for action in shortcuts:
+        self._shortcuts = self._process_shortcut_dict(shortcuts)
+        self._defaults = self._process_shortcut_dict(defaults)
+
+    def _process_shortcut_dict(self, shortcuts: dict) -> dict:
+        for action in shortcuts.keys():
+
+            # Ignore shortcuts which aren't in currently supported list
+            if action not in self._names:
+                continue
+
+            # Use "" if there's no shortcut set
             key_string = shortcuts.get(action, None)
             key_string = "" if key_string is None else key_string
 
@@ -162,12 +172,19 @@ class Shortcuts(object):
                 shortcuts[action] = eval(key_string)
             except:
                 shortcuts[action] = QKeySequence.fromString(key_string)
-
-        self._shortcuts = shortcuts
+        return shortcuts
 
     def save(self):
         """Saves all shortcuts to shortcut file."""
-        util.save_config_yaml("shortcuts.yaml", self._shortcuts)
+        data = dict()
+        for key, val in self._shortcuts.items():
+            # Only save shortcuts with names in supported list
+            if key not in self._names:
+                continue
+
+            data[key] = val.toString() if isinstance(val, QKeySequence) else val
+
+        util.save_config_yaml("shortcuts.yaml", data)
 
     def __getitem__(self, idx: Union[slice, int, str]) -> Union[str, Dict[str, str]]:
         """
@@ -188,18 +205,21 @@ class Shortcuts(object):
             # value
             idx = self._names[idx]
             return self[idx]
-        else:
-            # value
-            if idx in self._shortcuts:
-                return self._shortcuts[idx]
-        return ""
+
+        # if idx not in self._names:
+        #     print(f"No shortcut matching '{idx}'")
+
+        return self._shortcuts.get(idx, self._defaults.get(idx, ""))
 
     def __setitem__(self, idx: Union[str, int], val: str):
         """Sets shortcut by index."""
         if type(idx) == int:
-            idx = self._names[idx]
-            self[idx] = val
+            key = self._names[idx]
+            self[key] = val
         else:
+            if idx not in self._names:
+                raise KeyError(f"No shortcut matching '{idx}'")
+
             self._shortcuts[idx] = val
 
     def __len__(self):
