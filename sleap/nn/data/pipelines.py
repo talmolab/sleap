@@ -40,6 +40,7 @@ from sleap.nn.data.inference import (
     LocalPeakFinder,
     PredictedCenterInstanceNormalizer,
 )
+from sleap.nn.paf_grouping import PartAffinityFieldInstanceGrouper
 from sleap.nn.data.utils import ensure_list
 
 from sleap.nn.config import DataConfig, OptimizationConfig
@@ -75,6 +76,7 @@ TRANSFORMERS = (
     PredictedCenterInstanceNormalizer,
     KeyFilter,
     KeyRenamer,
+    PartAffinityFieldInstanceGrouper,
 )
 Provider = TypeVar("Provider", *PROVIDERS)
 Transformer = TypeVar("Transformer", *TRANSFORMERS)

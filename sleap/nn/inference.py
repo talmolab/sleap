@@ -24,6 +24,7 @@ from sleap.nn.data.pipelines import (
     GlobalPeakFinder,
     KeyFilter,
     PredictedCenterInstanceNormalizer,
+    PartAffinityFieldInstanceGrouper,
 )
 
 
