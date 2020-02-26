@@ -252,7 +252,7 @@ class LabelsDataCache:
         else:
             raise ValueError(f"Invalid filter: {filter}")
 
-        return {lf.frame_idx for lf in self.labels if filter_func(lf)}
+        return [lf.frame_idx for lf in self.labels if filter_func(lf)]
 
     def update_counts_for_frame(self, frame: LabeledFrame):
         video = frame.video
