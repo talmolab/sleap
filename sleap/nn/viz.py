@@ -162,3 +162,83 @@ def plot_pafs(
         h_quivers.append(h_quivers_k)
 
     return h_quivers
+
+
+def plot_instance(
+    instance, skeleton=None, cmap=None, lw=2, ms=10, bbox=None, scale=1.0, **kwargs
+):
+    """Plot a single instance with edge coloring."""
+
+    if cmap is None:
+        cmap = sns.color_palette("tab20")
+
+    if skeleton is None:
+        skeleton = instance.skeleton
+
+    h_lines = []
+    for k, (src_node, dst_node) in enumerate(skeleton.edges):
+        src_pt = instance.points_array[instance.skeleton.node_to_index(src_node)]
+        dst_pt = instance.points_array[instance.skeleton.node_to_index(dst_node)]
+
+        x = np.array([src_pt[0], dst_pt[0]])
+        y = np.array([src_pt[1], dst_pt[1]])
+
+        if bbox is not None:
+            x -= bbox[1]
+            y -= bbox[0]
+
+        x *= scale
+        y *= scale
+
+        h_lines_k = plt.plot(x, y, ".-", ms=ms, lw=lw, c=cmap[k % len(cmap)], **kwargs)
+
+        h_lines.append(h_lines_k)
+
+    return h_lines
+
+
+def plot_instances(
+    instances, skeleton=None, cmap=None, color_by_track=False, tracks=None, **kwargs
+):
+    """Plot a list of instances with identity coloring."""
+
+    if cmap is None:
+        cmap = sns.color_palette("tab10")
+
+    if color_by_track and tracks is None:
+        # Infer tracks for ordering if not provided.
+        tracks = set()
+        for instance in instances:
+            tracks.add(instance.track)
+
+        # Sort by spawned frame.
+        tracks = sorted(list(tracks), key=lambda track: track.name)
+
+    h_lines = []
+    for i, instance in enumerate(instances):
+        if color_by_track:
+            if instance.track is None:
+                raise ValueError(
+                    "Instances must have a set track when coloring by track."
+                )
+
+            if instance.track not in tracks:
+                raise ValueError("Instance has a track not found in specified tracks.")
+
+            color = cmap[tracks.index(instance.track) % len(cmap)]
+
+        else:
+            # Color by identity (order in list).
+            color = cmap[i % len(cmap)]
+
+        h_lines_i = plot_instance(instance, skeleton=skeleton, cmap=[color], **kwargs)
+        h_lines.append(h_lines_i)
+
+    return h_lines
+
+
+def plot_bbox(bbox, **kwargs):
+    if hasattr(bbox, "bounding_box"):
+        bbox = bbox.bounding_box
+    y1, x1, y2, x2 = bbox
+    plt.plot([x1, x2, x2, x1, x1], [y1, y1, y2, y2, y1], "-", **kwargs)
