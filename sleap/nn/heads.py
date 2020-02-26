@@ -1,3 +1,5 @@
+"""Model head definitions for defining model output types."""
+
 import attr
 from typing import Optional, Text, List, Sequence, Tuple
 

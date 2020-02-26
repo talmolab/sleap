@@ -858,7 +858,7 @@ class PredictedInstance(Instance):
             raise ValueError("PredictedInstance should not have from_predicted.")
 
     @classmethod
-    def from_instance(cls, instance: Instance, score: float):
+    def from_instance(cls, instance: Instance, score: float) -> "PredictedInstance":
         """
         Create a :class:`PredictedInstance` from an :class:`Instance`.
 
@@ -881,6 +881,43 @@ class PredictedInstance(Instance):
         kw_args["points"] = PredictedPointArray.from_array(instance._points)
         kw_args["score"] = score
         return cls(**kw_args)
+
+    @classmethod
+    def from_arrays(
+        cls,
+        points: np.ndarray,
+        point_confidences: np.ndarray,
+        instance_score: float,
+        skeleton: Skeleton,
+    ) -> "PredictedInstance":
+        """Create a predicted instance from data arrays.
+
+        Args:
+            points: A numpy array of shape (n_nodes, 2) and dtype float32 that contains
+                the points in (x, y) coordinates of each node. Missing nodes should be
+                represented as NaNs.
+            point_confidences: A numpy array of shape (n_nodes,) and dtype float32 that
+                contains the confidence/score of the points.
+            instance_score: Scalar float representing the overall instance score, e.g.,
+                the PAF grouping score.
+            skeleton: A sleap.Skeleton instance with n_nodes nodes to associate with the
+                predicted instance.
+
+        Returns:
+            A new PredictedInstance.
+        """
+        predicted_points = dict()
+        for point, confidence, node_name in zip(
+            points, point_confidences, skeleton.node_names
+        ):
+            if np.isnan(point).any():
+                continue
+
+            predicted_points[node_name] = PredictedPoint(
+                x=point[0], y=point[1], score=confidence
+            )
+
+        return cls(points=predicted_points, skeleton=skeleton, score=instance_score)
 
 
 def make_instance_cattr() -> cattr.Converter:

@@ -5,7 +5,7 @@ environment by wrapping `tf.config` module functions.
 """
 
 import tensorflow as tf
-from typing import List, Optional
+from typing import List, Optional, Text
 
 
 def get_all_gpus() -> List[tf.config.PhysicalDevice]:
@@ -111,7 +111,7 @@ def is_initialized(gpu: Optional[tf.config.PhysicalDevice] = None) -> bool:
 
 def disable_preallocation():
     """Disable preallocation of full GPU memory on all available GPUs.
-    
+
     This enables memory growth policy so that TensorFlow will not pre-allocate all
     available GPU memory.
 
@@ -126,7 +126,7 @@ def disable_preallocation():
 
 def enable_preallocation():
     """Enable preallocation of full GPU memory on all available GPUs.
-    
+
     This disables memory growth policy so that TensorFlow will pre-allocate all
     available GPU memory.
 
@@ -163,3 +163,23 @@ def summary():
 
     else:
         print("GPUs: None detected.")
+
+
+def best_logical_device_name() -> Text:
+    """Return the name of the best logical device for performance.
+
+    This is particularly useful to use with `tf.device()` for explicit tensor placement.
+
+    Returns:
+        The name of the first logical GPU device if available, or alternatively the CPU.
+
+    Notes:
+        This will initialize the logical devices if they were not already!
+    """
+    gpus = tf.config.list_logical_devices("GPU")
+    if len(gpus) > 0:
+        device_name = gpus[0].name
+    else:
+        cpus = tf.config.list_logical_devices("CPU")
+        device_name = cpus[0].name
+    return device_name

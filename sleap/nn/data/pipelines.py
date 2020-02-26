@@ -16,7 +16,7 @@ import sleap
 from sleap.nn.data.providers import LabelsReader, VideoReader
 from sleap.nn.data.augmentation import AugmentationConfig, ImgaugAugmenter
 from sleap.nn.data.normalization import Normalizer
-from sleap.nn.data.resizing import Resizer
+from sleap.nn.data.resizing import Resizer, PointsRescaler
 from sleap.nn.data.instance_centroids import InstanceCentroidFinder
 from sleap.nn.data.instance_cropping import InstanceCropper, PredictedInstanceCropper
 from sleap.nn.data.confidence_maps import (
@@ -40,6 +40,7 @@ from sleap.nn.data.inference import (
     LocalPeakFinder,
     PredictedCenterInstanceNormalizer,
 )
+from sleap.nn.paf_grouping import PartAffinityFieldInstanceGrouper
 from sleap.nn.data.utils import ensure_list
 
 from sleap.nn.config import DataConfig, OptimizationConfig
@@ -75,6 +76,8 @@ TRANSFORMERS = (
     PredictedCenterInstanceNormalizer,
     KeyFilter,
     KeyRenamer,
+    PartAffinityFieldInstanceGrouper,
+    PointsRescaler,
 )
 Provider = TypeVar("Provider", *PROVIDERS)
 Transformer = TypeVar("Transformer", *TRANSFORMERS)
