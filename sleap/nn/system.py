@@ -111,7 +111,7 @@ def is_initialized(gpu: Optional[tf.config.PhysicalDevice] = None) -> bool:
 
 def disable_preallocation():
     """Disable preallocation of full GPU memory on all available GPUs.
-    
+
     This enables memory growth policy so that TensorFlow will not pre-allocate all
     available GPU memory.
 
@@ -126,7 +126,7 @@ def disable_preallocation():
 
 def enable_preallocation():
     """Enable preallocation of full GPU memory on all available GPUs.
-    
+
     This disables memory growth policy so that TensorFlow will pre-allocate all
     available GPU memory.
 

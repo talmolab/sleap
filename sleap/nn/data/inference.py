@@ -5,6 +5,7 @@ import numpy as np
 import attr
 from typing import List, Text, Optional, Tuple
 from sleap.nn.data.utils import expand_to_rank, ensure_list
+from sleap.nn.system import best_logical_device_name
 
 
 @attr.s(auto_attribs=True)
@@ -27,12 +28,7 @@ class KerasModelPredictor:
     def transform_dataset(self, input_ds: tf.data.Dataset) -> tf.data.Dataset:
         device_name = self.device_name
         if device_name is None:
-            gpus = tf.config.list_logical_devices("GPU")
-            if len(gpus) > 0:
-                device_name = gpus[0].name
-            else:
-                cpus = tf.config.list_logical_devices("CPU")
-                device_name = cpus[0].name
+            device_name = best_logical_device_name()
 
         def predict(example):
             with tf.device(device_name):
@@ -56,7 +52,9 @@ class KerasModelPredictor:
 
                 return example
 
-        output_ds = input_ds.map(predict)
+        output_ds = input_ds.map(
+            predict, num_parallel_calls=tf.data.experimental.AUTOTUNE
+        )
         return output_ds
 
 
@@ -125,6 +123,7 @@ class GlobalPeakFinder:
     peaks_key: Text = "predicted_center_instance_points"
     peak_vals_key: Text = "predicted_center_instance_confidences"
     keep_confmaps: bool = True
+    device_name: Optional[Text] = None
 
     @property
     def input_keys(self) -> List[Text]:
@@ -138,28 +137,35 @@ class GlobalPeakFinder:
         return output_keys
 
     def transform_dataset(self, input_ds: tf.data.Dataset) -> tf.data.Dataset:
+        device_name = self.device_name
+        if device_name is None:
+            device_name = best_logical_device_name()
+
         def find_peaks(example):
-            confmaps = example[self.confmaps_key]
-            confmaps = expand_to_rank(confmaps, target_rank=4, prepend=True)
-            peaks, peak_vals = find_global_peaks(
-                confmaps, threshold=self.peak_threshold
-            )
+            with tf.device(device_name):
+                confmaps = example[self.confmaps_key]
+                confmaps = expand_to_rank(confmaps, target_rank=4, prepend=True)
+                peaks, peak_vals = find_global_peaks(
+                    confmaps, threshold=self.peak_threshold
+                )
 
-            peaks *= tf.cast(self.confmaps_stride, tf.float32)
+                peaks *= tf.cast(self.confmaps_stride, tf.float32)
 
-            if tf.rank(example[self.confmaps_key]) == 3:
-                peaks = tf.squeeze(peaks, axis=0)
-                peak_vals = tf.squeeze(peak_vals, axis=0)
+                if tf.rank(example[self.confmaps_key]) == 3:
+                    peaks = tf.squeeze(peaks, axis=0)
+                    peak_vals = tf.squeeze(peak_vals, axis=0)
 
-            example[self.peaks_key] = peaks
-            example[self.peak_vals_key] = peak_vals
+                example[self.peaks_key] = peaks
+                example[self.peak_vals_key] = peak_vals
 
-            if not self.keep_confmaps:
-                example.pop(self.confmaps_key)
+                if not self.keep_confmaps:
+                    example.pop(self.confmaps_key)
 
-            return example
+                return example
 
-        output_ds = input_ds.map(find_peaks)
+        output_ds = input_ds.map(
+            find_peaks, num_parallel_calls=tf.data.experimental.AUTOTUNE
+        )
         return output_ds
 
 
@@ -181,10 +187,10 @@ def find_local_peaks(
 
         peak_vals: float32 tensor of shape (n_peaks,) containing the values at the peak
         points.
-        
+
         peak_sample_inds: int32 tensor of shape (n_peaks,) containing the indices of the
         sample each peak belongs to.
-        
+
         peak_channel_inds: int32 tensor of shape (n_peaks,) containing the indices of
         the channel each peak belongs to.
     """
@@ -236,6 +242,7 @@ class LocalPeakFinder:
     peak_sample_inds_key: Text = "predicted_centroid_sample_inds"
     peak_channel_inds_key: Text = "predicted_centroid_channel_inds"
     keep_confmaps: bool = True
+    device_name: Optional[Text] = None
 
     @property
     def input_keys(self) -> List[Text]:
@@ -254,35 +261,45 @@ class LocalPeakFinder:
         return output_keys
 
     def transform_dataset(self, input_ds: tf.data.Dataset) -> tf.data.Dataset:
+        device_name = self.device_name
+        if device_name is None:
+            device_name = best_logical_device_name()
+
         def find_peaks(example):
-            confmaps = example[self.confmaps_key]
-            confmaps = expand_to_rank(confmaps, target_rank=4, prepend=True)
-            peaks, peak_vals, peak_sample_inds, peak_channel_inds = find_local_peaks(
-                confmaps, threshold=self.peak_threshold
-            )
+            with tf.device(device_name):
+                confmaps = example[self.confmaps_key]
+                confmaps = expand_to_rank(confmaps, target_rank=4, prepend=True)
+                (
+                    peaks,
+                    peak_vals,
+                    peak_sample_inds,
+                    peak_channel_inds,
+                ) = find_local_peaks(confmaps, threshold=self.peak_threshold)
 
-            peaks *= tf.cast(self.confmaps_stride, tf.float32)
+                peaks *= tf.cast(self.confmaps_stride, tf.float32)
 
-            example[self.peaks_key] = peaks
-            example[self.peak_vals_key] = peak_vals
-            example[self.peak_sample_inds_key] = peak_sample_inds
-            example[self.peak_channel_inds_key] = peak_channel_inds
+                example[self.peaks_key] = peaks
+                example[self.peak_vals_key] = peak_vals
+                example[self.peak_sample_inds_key] = peak_sample_inds
+                example[self.peak_channel_inds_key] = peak_channel_inds
 
-            if not self.keep_confmaps:
-                example.pop(self.confmaps_key)
+                if not self.keep_confmaps:
+                    example.pop(self.confmaps_key)
 
-            return example
+                return example
 
-        output_ds = input_ds.map(find_peaks)
+        output_ds = input_ds.map(
+            find_peaks, num_parallel_calls=tf.data.experimental.AUTOTUNE
+        )
         return output_ds
 
 
 @attr.s(auto_attribs=True)
 class PredictedCenterInstanceNormalizer:
-    
+
     centroids_key: Text = "centroid"
     peaks_key: Text = "predicted_center_instance_points"
-    
+
     new_centroid_key: Text = "predicted_centroid"
     new_peaks_key: Text = "predicted_instance"
 
@@ -294,15 +311,12 @@ class PredictedCenterInstanceNormalizer:
     @property
     def output_keys(self) -> List[Text]:
         """Return the keys that outgoing elements will have."""
-        output_keys = [
-            self.new_centroid_key,
-            self.new_peaks_key
-        ]
+        output_keys = [self.new_centroid_key, self.new_peaks_key]
         return output_keys
 
     def transform_dataset(self, input_ds: tf.data.Dataset) -> tf.data.Dataset:
         """Create a dataset that contains instance cropped data."""
-        
+
         def norm_instance(example):
             """Local processing function for dataset mapping."""
             centroids = example[self.centroids_key] / example["scale"]
@@ -313,7 +327,7 @@ class PredictedCenterInstanceNormalizer:
 
             pts = example[self.peaks_key]
             pts += bboxes_x1y1
-            
+
             example[self.new_centroid_key] = centroids
             example[self.new_peaks_key] = pts
             return example
