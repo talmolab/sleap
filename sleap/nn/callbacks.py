@@ -203,7 +203,12 @@ class TensorBoardMatplotlibWriter(tf.keras.callbacks.Callback):
         tag: Text to append to the summary label in TensorBoard.
     """
 
-    def __init__(self, log_dir: Text, plot_fn: Callable[[], matplotlib.figure.Figure], tag: Text = "viz"):
+    def __init__(
+        self,
+        log_dir: Text,
+        plot_fn: Callable[[], matplotlib.figure.Figure],
+        tag: Text = "viz",
+    ):
         self.log_dir = log_dir
         self.plot_fn = plot_fn
         self.tag = tag
@@ -257,7 +262,12 @@ class MatplotlibSaver(tf.keras.callbacks.Callback):
         if a prefix is not specified.
     """
 
-    def __init__(self, save_folder: Text, plot_fn: Callable[[], matplotlib.figure.Figure], prefix: Optional[Text] = None):
+    def __init__(
+        self,
+        save_folder: Text,
+        plot_fn: Callable[[], matplotlib.figure.Figure],
+        prefix: Optional[Text] = None,
+    ):
         """Initialize callback."""
         self.save_folder = save_folder
         self.plot_fn = plot_fn
@@ -277,10 +287,7 @@ class MatplotlibSaver(tf.keras.callbacks.Callback):
         prefix = ""
         if self.prefix is not None:
             prefix = self.prefix + "."
-        figure_path = os.path.join(
-            self.save_folder,
-            f"{prefix}{epoch:04d}.png"
-            )
+        figure_path = os.path.join(self.save_folder, f"{prefix}{epoch:04d}.png")
 
         # Save rendered figure.
         figure.savefig(figure_path, format="png", pad_inches=0)
