@@ -584,12 +584,16 @@ class Trainer(ABC):
     def _setup_model(self):
         """Set up the keras model."""
         # Infer the input shape by evaluating the data pipeline.
+        logger.info("Building test pipeline...")
+        t0 = time()
         base_pipeline = self.pipeline_builder.make_base_pipeline(
             self.data_readers.training_labels_reader
         )
         base_example = next(iter(base_pipeline.make_dataset()))
         input_shape = base_example[self.input_keys[0]].shape
         # TODO: extend input shape determination for multi-input
+        logger.info(f"Loaded test example. [{time() - t0:.3f}s]")
+        logger.info(f"  Input shape: {input_shape}")
 
         # Create the tf.keras.Model instance.
         self.model.make_model(input_shape)
@@ -713,13 +717,17 @@ class Trainer(ABC):
         logger.info(f"Setting up for training...")
         t0 = time()
         self._update_config()
+        logger.info(f"Setting up pipeline builders...")
         self._setup_pipeline_builder()
         logger.info(f"Setting up model...")
         self._setup_model()
+        logger.info(f"Setting up data pipelines...")
         self._setup_pipelines()
+        logger.info(f"Setting up optimization...")
         self._setup_optimization()
         logger.info(f"Setting up outputs...")
         self._setup_outputs()
+        logger.info(f"Setting up visualization...")
         self._setup_visualization()
         logger.info(f"Finished trainer set up. [{time() - t0:.1f}s]")
 
@@ -735,6 +743,7 @@ class Trainer(ABC):
         logger.info(f"Finished creating training datasets. [{time() - t0:.1f}s]")
 
         logger.info(f"Starting training loop...")
+        t0 = time()
         history = self.keras_model.fit(
             training_ds,
             epochs=self.config.optimization.epochs,
@@ -744,7 +753,7 @@ class Trainer(ABC):
             callbacks=self.callbacks,
             verbose=2,
         )
-        logger.info(f"Finished training loop.")
+        logger.info(f"Finished training loop. [{(time() - t0) / 60:.1f} min]")
 
 
 @attr.s(auto_attribs=True)
