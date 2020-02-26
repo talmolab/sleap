@@ -144,7 +144,7 @@ class Model:
                     )
                 part_names = skeleton.node_names
                 if update_config:
-                    head_config.part_names = part_names
+                    head_config.confmaps.part_names = part_names
 
             edges = head_config.pafs.edges
             if edges is None:

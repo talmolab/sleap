@@ -31,8 +31,8 @@ from sleap.nn.config import (
 from sleap.nn.model import Model
 
 # Data
-from sleap.nn.data.pipelines import LabelsReader
 from sleap.nn.config import LabelsConfig
+from sleap.nn.data.pipelines import LabelsReader
 from sleap.nn.data.pipelines import (
     Pipeline,
     CentroidConfmapsPipeline,
@@ -40,6 +40,7 @@ from sleap.nn.data.pipelines import (
     BottomUpPipeline,
     KeyMapper,
 )
+from sleap.nn.data.training import split_labels
 
 # Optimization
 from sleap.nn.config import OptimizationConfig
@@ -121,11 +122,7 @@ class DataReaders:
 
         # Build class.
         # TODO: use labels_config.search_path_hints for loading
-        return cls.from_labels(
-            training=training,
-            validation=validation,
-            test=test,
-        )
+        return cls.from_labels(training=training, validation=validation, test=test,)
 
     @classmethod
     def from_labels(
@@ -135,14 +132,14 @@ class DataReaders:
         test: Optional[Union[Text, sleap.Labels]] = None,
     ) -> "DataReaders":
         """Create data readers from sleap.Labels datasets as data providers."""
+
         if isinstance(training, str):
             training = sleap.Labels.load_file(training)
 
         if isinstance(validation, str):
             validation = sleap.Labels.load_file(validation)
         elif isinstance(validation, float):
-            # TODO: split
-            pass
+            training, validation = split_labels(training, [-1, validation])
 
         if isinstance(test, str):
             test = sleap.Labels.load_file(test)
@@ -220,7 +217,7 @@ def setup_metrics(
 
 
 def setup_optimization_callbacks(
-    config: OptimizationConfig
+    config: OptimizationConfig,
 ) -> List[tf.keras.callbacks.Callback]:
     """Set up optimization callbacks from config."""
     callbacks = []
@@ -285,10 +282,7 @@ def setup_new_run_folder(
                 )
 
         # Build run path.
-        run_path = os.path.join(
-            config.runs_folder,
-            f"{config.run_name_prefix}{config.run_name}{config.run_name_suffix}",
-        )
+        run_path = config.run_path
 
     return run_path
 
@@ -306,7 +300,7 @@ def setup_zmq_callbacks(zmq_config: ZMQConfig) -> List[tf.keras.callbacks.Callba
         )
 
     if zmq_config.publish_updates:
-        callbacks.append(ProgressReporterZMQ(address=zmq_config.zmq.publish_address))
+        callbacks.append(ProgressReporterZMQ(address=zmq_config.publish_address))
 
     return callbacks
 
@@ -597,7 +591,9 @@ class Trainer(ABC):
         logger.info(f"  Backbone: {type(self.model.backbone).__name__}")
         logger.info(f"  Max stride: {self.model.maximum_stride}")
         logger.info(f"  Parameters: {self.model.keras_model.count_params():3,d}")
-        logger.info("  Heads: " + ", ".join([type(head).__name__ for head in self.model.heads]))
+        logger.info(
+            "  Heads: " + ", ".join([type(head).__name__ for head in self.model.heads])
+        )
 
     @property
     def keras_model(self) -> tf.keras.Model:
@@ -854,7 +850,7 @@ class TopdownConfmapsModelTrainer(Trainer):
             self.config.data.preprocessing.pad_to_stride = 1
 
         if self.config.data.instance_cropping.crop_size is None:
-            self.config.data.instance_cropping.crop_size = find_instance_crop_size(
+            self.config.data.instance_cropping.crop_size = self.config.data.instance_cropping.find_instance_crop_size(
                 self.data_readers.training_labels,
                 padding=self.config.data.instance_cropping.crop_size_detection_padding,
                 maximum_stride=self.model.maximum_stride,
@@ -1083,6 +1079,8 @@ class BottomUpModelTrainer(Trainer):
 
 def main():
     """Create CLI for training and run."""
+    import argparse
+
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "training_job_path", help="Path to training job profile JSON file."
@@ -1157,15 +1155,15 @@ def main():
 
     logger.info(f"Training labels file: {args.labels_path}")
     logger.info(f"Training profile: {job_filename}")
-    logger.info()
+    logger.info("")
 
     # Log configuration to console.
     logger.info("Arguments:")
     logger.info(json.dumps(vars(args), indent=4))
-    logger.info()
+    logger.info("")
     logger.info("Training job:")
     logger.info(job_config.to_json())
-    logger.info()
+    logger.info("")
 
     logger.info("Initializing trainer...")
     # Create a trainer and run!
