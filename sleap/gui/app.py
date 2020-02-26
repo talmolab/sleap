@@ -1038,6 +1038,7 @@ class MainWindow(QMainWindow):
                     message += (
                         f" ({pred_frame_count/current_video.num_frames*100:.2f}%)"
                     )
+                    message += " in video"
 
         self.statusBar().showMessage(message)
 
