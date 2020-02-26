@@ -10,11 +10,11 @@ import sleap
 @attr.s(auto_attribs=True)
 class LabelsReader:
     """Data provider from a `sleap.Labels` instance.
-    
+
     This class can generate `tf.data.Dataset`s from a set of labels for use in data
     pipelines. Each element in the dataset will contain the data contained in a single
     `LabeledFrame`.
-    
+
     Attributes:
         labels: The `sleap.Labels` instance to generate data from.
         example_indices: List or numpy array of ints with the labeled frame indices to
@@ -31,10 +31,10 @@ class LabelsReader:
     @classmethod
     def from_user_instances(cls, labels: sleap.Labels) -> "LabelsReader":
         """Create a `LabelsReader` using the user instances in a `Labels` set.
-        
+
         Args:
             labels: A `sleap.Labels` instance containing user instances.
-        
+
         Returns:
             A `LabelsReader` instance that can create a dataset for pipelining. Note
             that the examples may change in ordering relative to the input `labels`, so
@@ -53,11 +53,11 @@ class LabelsReader:
         cls, filename: Text, user_instances: bool = True
     ) -> "LabelsReader":
         """Create a `LabelsReader` from a saved labels file.
-        
+
         Args:
             filename: Path to a saved labels file.
             user_instances: If True, will use only labeled frames with user instances.
-        
+
         Returns:
             A `LabelsReader` instance that can create a dataset for pipelining.
         """
@@ -87,6 +87,11 @@ class LabelsReader:
             "instances",
             "skeleton_inds",
         ]
+
+    @property
+    def videos(self) -> List[sleap.Video]:
+        """Return the list of videos that `video_ind` in examples match up with."""
+        return self.labels.videos
 
     def make_dataset(
         self, ds_index: Optional[tf.data.Dataset] = None
@@ -128,7 +133,7 @@ class LabelsReader:
         def py_fetch_lf(ind):
             """Local function that will not be autographed."""
             lf = self.labels[int(ind.numpy())]
-            video_ind = np.array(self.labels.videos.index(lf.video)).astype("int32")
+            video_ind = np.array(self.videos.index(lf.video)).astype("int32")
             frame_ind = np.array(lf.frame_idx).astype("int64")
             raw_image = lf.image
             raw_image_size = np.array(raw_image.shape).astype("int32")
@@ -191,10 +196,10 @@ class LabelsReader:
 @attr.s(auto_attribs=True)
 class VideoReader:
     """Data provider from a `sleap.Video` instance.
-    
+
     This class can generate `tf.data.Dataset`s from a video for use in data pipelines.
     Each element in the dataset will contain the image data from a single frame.
-    
+
     Attributes:
         video: The `sleap.Video` instance to generate data from.
         example_indices: List or numpy array of ints with the frame indices to use when
@@ -206,7 +211,6 @@ class VideoReader:
 
     video: sleap.Video
     example_indices: Optional[Union[Sequence[int], np.ndarray]] = None
-    video_ind: int = 0
 
     @classmethod
     def from_filepath(
@@ -216,14 +220,14 @@ class VideoReader:
         **kwargs
     ) -> "VideoReader":
         """Create a `LabelsReader` from a saved labels file.
-        
+
         Args:
             filename: Path to a video file.
             example_indices: List or numpy array of ints with the frame indices to use
                 when iterating over the video. Use this to specify subsets of the video
                 to read. If not provided, the entire video will be read.
             **kwargs: Any other video keyword argument (e.g., grayscale, dataset).
-        
+
         Returns:
             A `VideoReader` instance that can create a dataset for pipelining.
         """
@@ -236,6 +240,11 @@ class VideoReader:
             return len(self.video)
         else:
             return len(self.example_indices)
+
+    @property
+    def videos(self) -> List[sleap.Video]:
+        """Return the list of videos that `video_ind` in examples match up with."""
+        return [self.video]
 
     @property
     def output_keys(self) -> List[Text]:
@@ -254,6 +263,8 @@ class VideoReader:
                     tensor of shape (3,) representing [height, width, channels]. This is
                     useful for keeping track of absolute image coordinates if downstream
                     processing modules resize, crop or pad the image.
+                "video_ind": Index of the video (always 0). Can be used to index into
+                    the `videos` attribute of the provider.
                 "frame_ind": Index of the frame within the video that the frame comes
                     from. This is the same as the input index, but is also provided for
                     convenience in downstream processing.
@@ -286,7 +297,7 @@ class VideoReader:
             return {
                 "image": image,
                 "raw_image_size": raw_image_size,
-                "video_ind": self.video_ind,
+                "video_ind": 0,
                 "frame_ind": frame_ind,
                 "scale": tf.ones([2], dtype=tf.float32),
             }
