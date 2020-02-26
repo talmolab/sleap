@@ -335,7 +335,10 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
             elif item["type"] in ("optional_int", "optional_double", "auto_int"):
                 spin_type = item["type"].split("_")[-1]
                 none_string = "auto" if item["type"].startswith("auto") else "none"
-                field = OptionalSpinWidget(type=spin_type, none_string=none_string)
+                none_label = item.get("none_label", None)
+                field = OptionalSpinWidget(
+                    type=spin_type, none_string=none_string, none_label=none_label
+                )
                 field.setValue(item["default"])
                 field.valueChanged.connect(lambda: self.valueChanged.emit())
 
@@ -552,11 +555,19 @@ class StackBuilderWidget(QtWidgets.QWidget):
         for layout in self.page_layouts.values():
             layout.set_form_data(data)
 
+
 class OptionalSpinWidget(QtWidgets.QWidget):
 
     valueChanged = QtCore.Signal()
 
-    def __init__(self, type="int", none_string="none", *args, **kwargs):
+    def __init__(
+        self,
+        type="int",
+        none_string="none",
+        none_label: Optional[str] = None,
+        *args,
+        **kwargs,
+    ):
         super(OptionalSpinWidget, self).__init__(*args, **kwargs)
 
         self.none_string = none_string
@@ -567,7 +578,8 @@ class OptionalSpinWidget(QtWidgets.QWidget):
         self.spin_widget = (
             QtWidgets.QDoubleSpinBox() if type is "double" else QtWidgets.QSpinBox()
         )
-        self.check_widget = QtWidgets.QCheckBox(self.none_string.title())
+        none_label = none_label if none_label is not None else self.none_string.title()
+        self.check_widget = QtWidgets.QCheckBox(none_label)
 
         self.spin_widget.valueChanged.connect(self.updateState)
         self.check_widget.stateChanged.connect(self.updateState)
