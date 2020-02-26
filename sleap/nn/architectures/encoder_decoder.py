@@ -46,7 +46,7 @@ class EncoderBlock:
     pool: bool = True
     pooling_stride: int = 2
 
-    def make_block(x_in: tf.Tensor) -> tf.Tensor:
+    def make_block(self, x_in: tf.Tensor) -> tf.Tensor:
         """Instantiate the encoder block from an input tensor."""
         raise NotImplementedError(
             "Subclasses of EncoderBlock must implement make_block."
@@ -75,6 +75,7 @@ class SimpleConvBlock(EncoderBlock):
             If False, the mini-block will look like:
                 conv -> activation function -> BN
         activation: Name of activation function (typically "relu" or "linear").
+        block_prefix: String to append to the prefix provided at block creation time.
 
     Note:
         This block is used in LeapCNN and UNet.
@@ -88,6 +89,7 @@ class SimpleConvBlock(EncoderBlock):
     batch_norm: bool = False
     batch_norm_before_activation: bool = True
     activation: Text = "relu"
+    block_prefix: Text = ""
 
     def make_block(self, x_in: tf.Tensor, prefix: Text = "conv_block") -> tf.Tensor:
         """Create the block from an input tensor.
@@ -101,6 +103,7 @@ class SimpleConvBlock(EncoderBlock):
         Returns:
             The output tensor after applying all operations in the block.
         """
+        prefix += self.block_prefix
         x = x_in
         if self.pool and self.pool_before_convs:
             x = tf.keras.layers.MaxPool2D(
@@ -225,6 +228,8 @@ class SimpleUpsamplingBlock(DecoderBlock):
             upsampling and the skip connection (if present) and all `refine_convs_*`
             attributes will have no effect. If greater than 1, all layers will be
             identical with respect to these attributes.
+        refine_convs_first_filters: If not None, the first refinement conv layer will
+            have this many filters, otherwise `refine_convs_filters`.
         refine_convs_filters: Specifies the number of filters to use for the refinement
             convolutions.
         refine_convs_kernel_size: Size of the kernel for the refinement convolution.
@@ -259,6 +264,7 @@ class SimpleUpsamplingBlock(DecoderBlock):
     skip_add: bool = False
 
     refine_convs: int = 2
+    refine_convs_first_filters: Optional[int] = None
     refine_convs_filters: int = 64
     refine_convs_use_bias: bool = True
     refine_convs_kernel_size: int = 3
@@ -357,8 +363,11 @@ class SimpleUpsamplingBlock(DecoderBlock):
 
         # Add further convolutions to refine after upsampling and/or skip.
         for i in range(self.refine_convs):
+            filters = self.refine_convs_filters
+            if i == 0 and self.refine_convs_first_filters is not None:
+                filters = self.refine_convs_first_filters
             x = tf.keras.layers.Conv2D(
-                filters=self.refine_convs_filters,
+                filters=filters,
                 kernel_size=self.refine_convs_kernel_size,
                 strides=1,
                 padding="same",
