@@ -247,7 +247,9 @@ def get_package_file(filename: str) -> str:
     return result
 
 
-def get_config_file(shortname: str, ignore_file_not_found: bool = False) -> str:
+def get_config_file(
+    shortname: str, ignore_file_not_found: bool = False, get_defaults: bool = False
+) -> str:
     """
     Returns the full path to the specified config file.
 
@@ -261,6 +263,7 @@ def get_config_file(shortname: str, ignore_file_not_found: bool = False) -> str:
         shortname: The short filename, e.g., shortcuts.yaml
         ignore_file_not_found: If True, then return path for config file
             regardless of whether it exists.
+        get_defaults: If True, then just return the path to default config file.
 
     Raises:
         FileNotFoundError: If the specified config file cannot be found.
@@ -268,28 +271,33 @@ def get_config_file(shortname: str, ignore_file_not_found: bool = False) -> str:
     Returns:
         The full path to the specified config file.
     """
-    desired_path = os.path.expanduser(f"~/.sleap/{shortname}")
 
-    # Make sure there's a ~/.sleap/ directory to store user version of the
-    # config file.
-    try:
-        os.makedirs(os.path.expanduser("~/.sleap"))
-    except FileExistsError as e:
-        pass
+    if not get_defaults:
+        desired_path = os.path.expanduser(f"~/.sleap/{shortname}")
 
-    # If we don't care whether the file exists, just return the path
-    if ignore_file_not_found:
-        return desired_path
+        # Make sure there's a ~/.sleap/ directory to store user version of the
+        # config file.
+        try:
+            os.makedirs(os.path.expanduser("~/.sleap"))
+        except FileExistsError as e:
+            pass
+
+        # If we don't care whether the file exists, just return the path
+        if ignore_file_not_found:
+            return desired_path
 
     # If we do care whether the file exists, check the package version of the
     # config file if we can't find the user version.
 
-    if not os.path.exists(desired_path):
+    if get_defaults or not os.path.exists(desired_path):
         package_path = get_package_file(f"sleap/config/{shortname}")
         if not os.path.exists(package_path):
             raise FileNotFoundError(
                 f"Cannot locate {shortname} config file at {desired_path} or {package_path}."
             )
+
+        if get_defaults:
+            return package_path
 
         # Copy package version of config file into user config directory.
         shutil.copy(package_path, desired_path)
@@ -297,8 +305,8 @@ def get_config_file(shortname: str, ignore_file_not_found: bool = False) -> str:
     return desired_path
 
 
-def get_config_yaml(shortname: str) -> dict:
-    config_path = get_config_file(shortname)
+def get_config_yaml(shortname: str, get_defaults: bool = False) -> dict:
+    config_path = get_config_file(shortname, get_defaults=get_defaults)
     with open(config_path, "r") as f:
         return yaml.load(f, Loader=yaml.SafeLoader)
 

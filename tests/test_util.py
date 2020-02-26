@@ -66,7 +66,7 @@ def test_weak_match():
 def test_config():
     import os
 
-    filename = get_config_file("shortcuts.yaml")
+    filename = get_config_file("shortcuts.yaml", get_defaults=True)
     assert os.path.exists(filename)
 
 
