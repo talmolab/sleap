@@ -863,7 +863,7 @@ class TopdownConfmapsModelTrainer(Trainer):
             self.config.data.preprocessing.pad_to_stride = 1
 
         if self.config.data.instance_cropping.crop_size is None:
-            self.config.data.instance_cropping.crop_size = find_instance_crop_size(
+            self.config.data.instance_cropping.crop_size = sleap.nn.data.instance_cropping.find_instance_crop_size(
                 self.data_readers.training_labels,
                 padding=self.config.data.instance_cropping.crop_size_detection_padding,
                 maximum_stride=self.model.maximum_stride,
