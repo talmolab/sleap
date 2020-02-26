@@ -1340,7 +1340,7 @@ class Labels(MutableSequence):
         self, output_dir: str = "./", format: str = "png", all_labels: bool = False
     ):
         """
-        Write all labeled frames from all videos to imgstore datasets.
+        Write images for labeled frames from all videos to imgstore datasets.
 
         This only writes frames that have been labeled. Videos without
         any labeled frames will be included as empty imgstores.
@@ -1385,7 +1385,9 @@ class Labels(MutableSequence):
         self, output_path: str, format: str = "png", all_labels: bool = False
     ):
         """
-        Write labeled frames from all videos to hdf5 file.
+        Write images for labeled frames from all videos to hdf5 file.
+
+        Note that this will make an HDF5 video, not an HDF5 labels dataset.
 
         Args:
             output_path: Path to HDF5 file.
