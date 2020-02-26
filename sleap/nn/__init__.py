@@ -10,5 +10,6 @@ import sleap.nn.model
 import sleap.nn.paf_grouping
 import sleap.nn.peak_finding
 import sleap.nn.system
+import sleap.nn.training
 import sleap.nn.tracking
 import sleap.nn.viz
