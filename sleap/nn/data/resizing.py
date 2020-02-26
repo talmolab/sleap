@@ -4,6 +4,7 @@ import tensorflow as tf
 import attr
 from typing import List, Text, Optional, Tuple
 from sleap.nn.config import PreprocessingConfig
+from sleap.nn.data.utils import expand_to_rank
 
 
 def find_padding_for_stride(
@@ -234,3 +235,51 @@ class Resizer:
             resize, num_parallel_calls=tf.data.experimental.AUTOTUNE
         )
         return ds_output
+
+
+@attr.s(auto_attribs=True)
+class PointsRescaler:
+    """Transformer to apply or invert scaling operations on points."""
+
+    points_key: Text = "predicted_instances"
+    scale_key: Text = "scale"
+    invert: bool = True
+
+    @property
+    def input_keys(self) -> List[Text]:
+        """Return the keys that incoming elements are expected to have."""
+        return [self.points_key, self.scale_key]
+
+    @property
+    def output_keys(self) -> List[Text]:
+        """Return the keys that outgoing elements will have."""
+        return self.input_keys
+
+    def transform_dataset(self, input_ds: tf.data.Dataset) -> tf.data.Dataset:
+        """Create a dataset that contains instance cropped data."""
+
+        def rescale_points(example):
+            """Local processing function for dataset mapping."""
+            # Pull out data.
+            points = example[self.points_key]
+            scale = example[self.scale_key]
+
+            # Make sure the scale lines up with the last dimension of the points.
+            scale = expand_to_rank(scale, tf.rank(points))
+
+            # Scale.
+            if self.invert:
+                points /= scale
+            else:
+                points *= scale
+
+            # Update example.
+            example[self.points_key] = points
+            return example
+
+        # Map the main processing function to each example.
+        output_ds = input_ds.map(
+            rescale_points, num_parallel_calls=tf.data.experimental.AUTOTUNE
+        )
+
+        return output_ds
