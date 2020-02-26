@@ -46,6 +46,8 @@ LABELS_JSON_FILE_VERSION = "2.0.0"
 
 @attr.s(auto_attribs=True)
 class LabelsDataCache:
+    """Class for maintaining cache of data in labels dataset."""
+
     labels: "Labels"
 
     def __attrs_post_init__(self):
@@ -82,6 +84,7 @@ class LabelsDataCache:
     def find_frames(
         self, video: Video, frame_idx: Optional[Union[int, range]] = None
     ) -> Optional[List[LabeledFrame]]:
+        """Returns list of LabeledFrames matching video/frame_idx, or None."""
         if frame_idx is not None:
             if video not in self._frame_idx_map:
                 return None
@@ -103,6 +106,7 @@ class LabelsDataCache:
             return self._lf_by_video[video]
 
     def find_fancy_frame_idxs(self, video, from_frame_idx, reverse):
+        """Returns a list of frame idxs, with optional start position/order."""
         if video not in self._frame_idx_map:
             return None
 
@@ -151,16 +155,19 @@ class LabelsDataCache:
         return self._track_occupancy[video][track]
 
     def get_video_track_occupancy(self, video: Video) -> Dict[Track, RangeList]:
+        """Returns track occupancy information for specified video."""
         if video not in self._track_occupancy:
             self._track_occupancy[video] = dict()
 
         return self._track_occupancy[video]
 
     def remove_frame(self, frame: LabeledFrame):
+        """Updates cache as needed."""
         self._lf_by_video[frame.video].remove(frame)
         del self._frame_idx_map[frame.video][frame.frame_idx]
 
     def remove_video(self, video: Video):
+        """Updates cache as needed."""
         # Remove from caches
         if video in self._lf_by_video:
             del self._lf_by_video[video]
@@ -174,6 +181,7 @@ class LabelsDataCache:
         old_track: Optional[Track],
         frame_range: tuple,
     ):
+        """Updates cache as needed."""
 
         # Get ranges in track occupancy cache
         _, within_old, _ = self.get_track_occupancy(video, old_track).cut_range(
@@ -193,9 +201,11 @@ class LabelsDataCache:
         self._track_occupancy[video][new_track].insert_list(within_old)
 
     def add_track(self, video: Video, track: Track):
+        """Updates cache as needed."""
         self._track_occupancy[video][track] = RangeList()
 
     def add_instance(self, frame: LabeledFrame, instance: Instance):
+        """Updates cache as needed."""
         if frame.video not in self._track_occupancy:
             self._track_occupancy[frame.video] = dict()
 
@@ -210,6 +220,7 @@ class LabelsDataCache:
         self.update_counts_for_frame(frame)
 
     def remove_instance(self, frame: LabeledFrame, instance: Instance):
+        """Updates cache as needed."""
         if instance.track not in self._track_occupancy[frame.video]:
             return
 
@@ -222,6 +233,9 @@ class LabelsDataCache:
         self.update_counts_for_frame(frame)
 
     def get_frame_count(self, video: Optional[Video] = None, filter: Text = ""):
+        """
+        Returns (possibly cached) count of frames matching video/filter.
+        """
         if filter not in ("", "user", "predicted"):
             raise ValueError(
                 f"Labels.get_labeled_frame_count() invalid filter: {filter}"
@@ -237,6 +251,9 @@ class LabelsDataCache:
         return len(self._frame_count_cache[video][filter])
 
     def get_filtered_frame_idxs(self, video: Optional[Video] = None, filter: Text = ""):
+        """
+        Returns list of (video_idx, frame_idx) tuples matching video/filter.
+        """
         if filter == "":
             filter_func = lambda lf: video is None or lf.video == video
         elif filter == "user":
@@ -252,27 +269,74 @@ class LabelsDataCache:
         else:
             raise ValueError(f"Invalid filter: {filter}")
 
-        return [lf.frame_idx for lf in self.labels if filter_func(lf)]
+        # Make a set of (video_idx, frame_idx) tuples.
+        # We'll use a set since it's faster to remove items, and we need the
+        # video_idx so that we count frames from distinct videos with the same
+        # frame index.
+
+        if video:
+            video_idx = self.labels.videos.index(video)
+            return {(video_idx, lf.frame_idx) for lf in self.labels if filter_func(lf)}
+
+        return {
+            (self.labels.videos.index(lf.video), lf.frame_idx)
+            for lf in self.labels
+            if filter_func(lf)
+        }
 
     def update_counts_for_frame(self, frame: LabeledFrame):
+        """
+        Updated the cached count. Should be called after frame is modified.
+        """
         video = frame.video
 
         if video is None or video not in self._frame_count_cache:
             return
 
         frame_idx = frame.frame_idx
+        video_idx = self.labels.videos.index(video)
 
-        if "user" in self._frame_count_cache[video]:
-            if frame.has_user_instances:
-                self._frame_count_cache[video]["user"].add(frame_idx)
-            else:
-                self._frame_count_cache[video]["user"].discard(frame_idx)
+        # Update count of frames with user instances
+        if frame.has_user_instances:
+            self._add_count_cache(video, video_idx, frame_idx, "user")
+        else:
+            self._del_count_cache(video, video_idx, frame_idx, "user")
 
-        if "predicted" in self._frame_count_cache[video]:
-            if frame.has_predicted_instances:
-                self._frame_count_cache[video]["predicted"].add(frame_idx)
-            else:
-                self._frame_count_cache[video]["predicted"].discard(frame_idx)
+        # Update count of frames with predicted instances
+        if frame.has_predicted_instances:
+            self._add_count_cache(video, video_idx, frame_idx, "predicted")
+        else:
+            self._del_count_cache(video, video_idx, frame_idx, "predicted")
+
+        # Update count of all labeled frames
+        if len(frame.instances):
+            self._add_count_cache(video, video_idx, frame_idx, "")
+        else:
+            self._del_count_cache(video, video_idx, frame_idx, "")
+
+    def _add_count_cache(self, video, video_idx, frame_idx, type_key: str):
+        idx_pair = (video_idx, frame_idx)
+
+        # Update count for this specific video
+        if type_key in self._frame_count_cache[video]:
+            self._frame_count_cache[video][type_key].add(idx_pair)
+
+        # Update total for all videos
+        if None in self._frame_count_cache:
+            if type_key in self._frame_count_cache[None]:
+                self._frame_count_cache[None][type_key].add(idx_pair)
+
+    def _del_count_cache(self, video, video_idx, frame_idx, type_key: str):
+        idx_pair = (video_idx, frame_idx)
+
+        # Update count for this specific video
+        if type_key in self._frame_count_cache[video]:
+            self._frame_count_cache[video][type_key].discard(idx_pair)
+
+        # Update total for all videos
+        if None in self._frame_count_cache:
+            if type_key in self._frame_count_cache[None]:
+                self._frame_count_cache[None][type_key].discard(idx_pair)
 
 
 @attr.s(auto_attribs=True)
@@ -810,9 +874,9 @@ class Labels(MutableSequence):
         self, frame: LabeledFrame, instance: Instance, in_transaction: bool = False
     ):
         """Removes instance from frame, updating track occupancy."""
+        frame.instances.remove(instance)
         if not in_transaction:
             self._cache.remove_instance(frame, instance)
-        frame.instances.remove(instance)
 
     def add_instance(self, frame: LabeledFrame, instance: Instance):
         """Adds instance to frame, updating track occupancy."""
