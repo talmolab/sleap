@@ -122,11 +122,7 @@ class DataReaders:
 
         # Build class.
         # TODO: use labels_config.search_path_hints for loading
-        return cls.from_labels(
-            training=training,
-            validation=validation,
-            test=test,
-        )
+        return cls.from_labels(training=training, validation=validation, test=test)
 
     @classmethod
     def from_labels(
@@ -193,6 +189,7 @@ def setup_losses(config: OptimizationConfig) -> Callable[[tf.Tensor], tf.Tensor]
 
     if config.hard_keypoint_mining.online_mining:
         losses.append(OHKMLoss.from_config(config.hard_keypoint_mining))
+        logging.info(f"  OHKM enabled: {config.hard_keypoint_mining}")
 
     def loss_fn(y_gt, y_pr):
         loss = 0
@@ -237,6 +234,7 @@ def setup_optimization_callbacks(
                 verbose=1,
             )
         )
+    logging.info(f"  Learning rate schedule: {config.learning_rate_schedule}")
 
     if config.early_stopping.stop_training_on_plateau:
         callbacks.append(
@@ -248,6 +246,7 @@ def setup_optimization_callbacks(
                 verbose=1,
             )
         )
+    logging.info(f"  Early stopping: {config.early_stopping}")
 
     return callbacks
 
@@ -304,9 +303,10 @@ def setup_zmq_callbacks(zmq_config: ZMQConfig) -> List[tf.keras.callbacks.Callba
                 poll_timeout=zmq_config.controller_polling_timeout,
             )
         )
-
+        logger.info(f"  ZMQ controller subcribed to: {zmq_config.controller_address}")
     if zmq_config.publish_updates:
-        callbacks.append(ProgressReporterZMQ(address=zmq_config.zmq.publish_address))
+        callbacks.append(ProgressReporterZMQ(address=zmq_config.publish_address))
+        logger.info(f"  ZMQ progress reporter publish on: {zmq_config.publish_address}")
 
     return callbacks
 
@@ -598,10 +598,13 @@ class Trainer(ABC):
         # Create the tf.keras.Model instance.
         self.model.make_model(input_shape)
         logger.info("Created Keras model.")
-        logger.info(f"  Backbone: {type(self.model.backbone).__name__}")
+        logger.info(f"  Backbone: {self.model.backbone}")
         logger.info(f"  Max stride: {self.model.maximum_stride}")
         logger.info(f"  Parameters: {self.model.keras_model.count_params():3,d}")
-        logger.info("  Heads: " + ", ".join([type(head).__name__ for head in self.model.heads]))
+        # logger.info("  Heads: " + ", ".join([type(head).__name__ for head in self.model.heads]))
+        logger.info("  Heads: ")
+        for i, head in enumerate(self.model.heads):
+            logger.info(f"  heads[{i}] = {head}")
 
     @property
     def keras_model(self) -> tf.keras.Model:
@@ -633,12 +636,14 @@ class Trainer(ABC):
             )
             + key_mapper
         )
+        logger.info(f"Training set: n = {len(self.data_readers.training_labels)}")
         self.validation_pipeline = (
             self.pipeline_builder.make_training_pipeline(
                 self.data_readers.validation_labels_reader
             )
             + key_mapper
         )
+        logger.info(f"Validation set: n = {len(self.data_readers.validation_labels)}")
 
     def _setup_optimization(self):
         """Set up optimizer, loss functions and compile the model."""
