@@ -331,14 +331,24 @@ class BottomUpPipeline:
             flatten_channels=True,
         )
 
-        pipeline += Batcher(
-            batch_size=self.optimization_config.batch_size, drop_remainder=True
-        )
+        if len(data_provider) >= self.optimization_config.batch_size:
+            # Batching before repeating is preferred since it preserves epoch boundaries
+            # such that no sample is repeated within the epoch. But this breaks if there
+            # are fewer samples than the batch size.
+            pipeline += Batcher(
+                batch_size=self.optimization_config.batch_size, drop_remainder=True
+            )
+            pipeline += Repeater()
+
+        else:
+            pipeline += Repeater()
+            pipeline += Batcher(
+                batch_size=self.optimization_config.batch_size, drop_remainder=True
+            )
 
         if self.optimization_config.prefetch:
             pipeline += Prefetcher()
 
-        pipeline += Repeater()
         return pipeline
 
     def make_viz_pipeline(
@@ -452,14 +462,24 @@ class CentroidConfmapsPipeline:
             centroids=True,
         )
 
-        pipeline += Batcher(
-            batch_size=self.optimization_config.batch_size, drop_remainder=True
-        )
+        if len(data_provider) >= self.optimization_config.batch_size:
+            # Batching before repeating is preferred since it preserves epoch boundaries
+            # such that no sample is repeated within the epoch. But this breaks if there
+            # are fewer samples than the batch size.
+            pipeline += Batcher(
+                batch_size=self.optimization_config.batch_size, drop_remainder=True
+            )
+            pipeline += Repeater()
+
+        else:
+            pipeline += Repeater()
+            pipeline += Batcher(
+                batch_size=self.optimization_config.batch_size, drop_remainder=True
+            )
 
         if self.optimization_config.prefetch:
             pipeline += Prefetcher()
 
-        pipeline += Repeater()
         return pipeline
 
     def make_viz_pipeline(
@@ -571,14 +591,24 @@ class TopdownConfmapsPipeline:
             all_instances=False,
         )
 
-        pipeline += Batcher(
-            batch_size=self.optimization_config.batch_size, drop_remainder=True
-        )
+        if len(data_provider) >= self.optimization_config.batch_size:
+            # Batching before repeating is preferred since it preserves epoch boundaries
+            # such that no sample is repeated within the epoch. But this breaks if there
+            # are fewer samples than the batch size.
+            pipeline += Batcher(
+                batch_size=self.optimization_config.batch_size, drop_remainder=True
+            )
+            pipeline += Repeater()
+
+        else:
+            pipeline += Repeater()
+            pipeline += Batcher(
+                batch_size=self.optimization_config.batch_size, drop_remainder=True
+            )
 
         if self.optimization_config.prefetch:
             pipeline += Prefetcher()
 
-        pipeline += Repeater()
         return pipeline
 
     def make_viz_pipeline(
