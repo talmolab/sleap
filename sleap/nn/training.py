@@ -405,14 +405,14 @@ def setup_visualization(
 ) -> List[tf.keras.callbacks.Callback]:
     """Set up visualization callbacks from config."""
     callbacks = []
-    if config.save_visualizations:
+    if config.save_visualizations and config.save_outputs:
         callbacks.append(
             MatplotlibSaver(
                 save_folder=os.path.join(run_path, "viz"), plot_fn=viz_fn, prefix=name
             )
         )
 
-    if config.tensorboard.write_logs and config.tensorboard.visualizations:
+    if config.tensorboard.write_logs and config.tensorboard.visualizations and config.save_outputs:
         callbacks.append(
             TensorBoardMatplotlibWriter(
                 log_dir=os.path.join(run_path, name), plot_fn=viz_fn, tag=name
