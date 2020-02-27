@@ -17,7 +17,7 @@ class QtImageDirectoryWidget(QtVideoPlayer):
     Arguments:
         directory: The path for which to search for image files.
         filters: Filename filters, given as (display name, filter)-tuples,
-            e.g., ("Validation", "val.*.png")
+            e.g., ("Validation", "validation.*.png")
     """
 
     def __init__(
@@ -93,7 +93,7 @@ class QtImageDirectoryWidget(QtVideoPlayer):
     @classmethod
     def make_training_vizualizer(cls, run_path: Text):
         dir = os.path.join(run_path, "viz")
-        filters = [("Validation", "val.*.png"), ("Training", "train.*.png")]
+        filters = [("Validation", "validation.*.png"), ("Training", "train.*.png")]
         win = QtImageDirectoryWidget(dir, filters=filters)
         return win
 
