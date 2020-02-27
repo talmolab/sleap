@@ -301,7 +301,7 @@ class UNetConfig:
         filters_rate: Factor to scale the number of filters by at each block.
         middle_block: If True, add an intermediate block between the downsampling and
             upsampling branch for additional processing for features at the largest
-            receptive field size.
+            receptive field size. This will not introduce an extra pooling step.
         up_interpolate: If True, use bilinear upsampling instead of transposed
             convolutions for upsampling. This can save computations but may lower
             overall accuracy.

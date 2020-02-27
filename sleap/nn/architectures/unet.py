@@ -4,10 +4,42 @@ See the `UNet` class docstring for more information.
 """
 
 import attr
-from typing import List, Optional
+from typing import List, Optional, Text
 from sleap.nn.architectures import encoder_decoder
 from sleap.nn.config import UNetConfig
 import numpy as np
+import tensorflow as tf
+
+
+@attr.s(auto_attribs=True)
+class PoolingBlock(encoder_decoder.EncoderBlock):
+    """Pooling-only encoder block.
+
+    Used to compensate for UNet having a skip source before the pooling, so the blocks
+    need to end with a conv, not the pooling layer. This is added to the end of the
+    encoder stack to ensure that the number of down blocks is equal to the number of
+    pooling steps.
+
+    Attributes:
+        pool: If True, applies max pooling at the end of the block.
+        pooling_stride: Stride of the max pooling operation. If 1, the output of this
+            block will be at the same stride (== 1/scale) as the input.
+    """
+
+    pool: bool = True
+    pooling_stride: int = 2
+
+    def make_block(self, x_in: tf.Tensor, prefix: Text = "conv_block") -> tf.Tensor:
+        """Instantiate the encoder block from an input tensor."""
+        x = x_in
+        if self.pool:
+            x = tf.keras.layers.MaxPool2D(
+                pool_size=2,
+                strides=self.pooling_stride,
+                padding="same",
+                name=f"{prefix}_last_pool",
+            )(x)
+        return x
 
 
 @attr.s(auto_attribs=True)
@@ -71,7 +103,7 @@ class UNet(encoder_decoder.EncoderDecoder):
             return None
 
         blocks = []
-        for block in range(self.stem_blocks + 1):
+        for block in range(self.stem_blocks):
             block_filters = int(self.filters * (self.filters_rate ** block))
             blocks.append(
                 encoder_decoder.SimpleConvBlock(
@@ -93,13 +125,13 @@ class UNet(encoder_decoder.EncoderDecoder):
     def encoder_stack(self) -> List[encoder_decoder.SimpleConvBlock]:
         """Define the encoder stack."""
         blocks = []
-        for block in range(self.down_blocks + 1):
+        for block in range(self.down_blocks):
             block_filters = int(
                 self.filters * (self.filters_rate ** (block + self.stem_blocks))
             )
             blocks.append(
                 encoder_decoder.SimpleConvBlock(
-                    pool=(block > 0),
+                    pool=(block > 0) or (self.stem_blocks > 0),
                     pool_before_convs=True,
                     pooling_stride=2,
                     num_convs=self.convs_per_block,
@@ -110,6 +142,53 @@ class UNet(encoder_decoder.EncoderDecoder):
                     activation="relu",
                 )
             )
+
+        # Always finish with a pooling block to account for pooling before convs.
+        blocks.append(PoolingBlock(pool=True, pooling_stride=2))
+
+        # Create a middle block (like the CARE implementation).
+        if self.middle_block:
+            if self.convs_per_block > 1:
+                # First convs are one exponent higher than the last encoder block.
+                block_filters = int(
+                    self.filters
+                    * (self.filters_rate ** (self.down_blocks + self.stem_blocks))
+                )
+                blocks.append(
+                    encoder_decoder.SimpleConvBlock(
+                        pool=False,
+                        pool_before_convs=False,
+                        pooling_stride=2,
+                        num_convs=self.convs_per_block - 1,
+                        filters=block_filters,
+                        kernel_size=self.kernel_size,
+                        use_bias=True,
+                        batch_norm=False,
+                        activation="relu",
+                        block_prefix="_middle_expand"
+                    )
+                )
+
+            # Contract the channels with an exponent lower than the last encoder block.
+            block_filters = int(
+                self.filters
+                * (self.filters_rate ** (self.down_blocks + self.stem_blocks - 1))
+            )
+            blocks.append(
+                encoder_decoder.SimpleConvBlock(
+                    pool=False,
+                    pool_before_convs=False,
+                    pooling_stride=2,
+                    num_convs=1,
+                    filters=block_filters,
+                    kernel_size=self.kernel_size,
+                    use_bias=True,
+                    batch_norm=False,
+                    activation="relu",
+                    block_prefix="_middle_contract"
+                )
+            )
+
         return blocks
 
     @property
@@ -117,26 +196,36 @@ class UNet(encoder_decoder.EncoderDecoder):
         """Define the decoder stack."""
         blocks = []
         for block in range(self.up_blocks):
-            block_filters = int(
+            # block_filters = int(
+            #     self.filters
+            #     * (
+            #         self.filters_rate
+            #         ** (self.stem_blocks + self.down_blocks - block - 1)
+            #     )
+            # )
+            block_filters_in = int(
                 self.filters
-                * (
-                    self.filters_rate
-                    ** (self.stem_blocks + self.down_blocks - block - 1)
-                )
+                * (self.filters_rate ** (self.down_blocks + self.stem_blocks - 1 - block))
+            )
+            block_filters_out = int(
+                self.filters
+                * (self.filters_rate ** (self.down_blocks + self.stem_blocks - 2 - block))
             )
             blocks.append(
                 encoder_decoder.SimpleUpsamplingBlock(
                     upsampling_stride=2,
                     transposed_conv=(not self.up_interpolate),
-                    transposed_conv_filters=block_filters,
+                    transposed_conv_filters=block_filters_in,
                     transposed_conv_kernel_size=self.kernel_size,
                     transposed_conv_batch_norm=False,
                     interp_method="bilinear",
                     skip_connection=True,
                     skip_add=False,
                     refine_convs=self.convs_per_block,
-                    refine_convs_filters=block_filters,
+                    refine_convs_first_filters=block_filters_in,
+                    refine_convs_filters=block_filters_out,
                     refine_convs_kernel_size=self.kernel_size,
+                    refine_convs_batch_norm=False,
                 )
             )
         return blocks
