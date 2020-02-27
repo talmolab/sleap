@@ -45,7 +45,7 @@ def oneof(attrs_cls, must_be_set: bool = False):
     attrs_cls.__init__ = new_init_fn
 
     # Define convenience method for getting the set attribute.
-    def which_oneof(self):
+    def which_oneof_attrib_name(self):
         attribs_with_value = [
             attrib for attrib in attribs if getattr(self, attrib.name) is not None
         ]
@@ -61,8 +61,17 @@ def oneof(attrs_cls, must_be_set: bool = False):
             else:
                 return None
 
-        return getattr(self, attribs_with_value[0].name)
+        return attribs_with_value[0].name
 
+    def which_oneof(self):
+        attrib_name = self.which_oneof_attrib_name()
+
+        if attrib_name is None:
+            return None
+
+        return getattr(self, attrib_name)
+
+    attrs_cls.which_oneof_attrib_name = which_oneof_attrib_name
     attrs_cls.which_oneof = which_oneof
 
     return attrs_cls
