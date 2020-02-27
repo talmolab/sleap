@@ -97,6 +97,9 @@ def make_training_config_from_key_val_dict(key_val_dict):
 
 
 class TrainingDialog(QtWidgets.QDialog):
+
+    learningFinished = QtCore.Signal(int)
+
     def __init__(
         self,
         labels_filename: Text,
@@ -390,34 +393,29 @@ class TrainingDialog(QtWidgets.QDialog):
     def run(self):
         """Run with current dialog settings."""
 
-        # import pprint
-        # pp = pprint.PrettyPrinter(indent=1)
-
         pipeline_form_data = self.pipeline_form_widget.get_form_data()
         frames_to_predict = self.get_selected_frames_to_predict(pipeline_form_data)
 
         configs = self.get_every_head_config_data(pipeline_form_data)
-        run_learning_pipeline(
+
+        # Close the dialog now that we have the data from it
+        self.accept()
+
+        # Run training/inference pipeline using the TrainingJobs
+        new_counts = run_learning_pipeline(
             labels_filename=self.labels_filename,
             labels=self.labels,
             training_jobs=configs,
             inference_params=pipeline_form_data,
             frames_to_predict=frames_to_predict,
         )
-        # for head_name, cfg in self.get_every_head_config_data().items():
-        # print()
-        # print(f"============{head_name}============")
-        # print()
-        # pp.pprint(cattr.unstructure(cfg))
 
-        # train_subprocess(
-        #     cfg,
-        #     labels_filename="tests/data/json_format_v1/centered_pair.json",
-        #     # skip_training=True
-        # )
+        self.learningFinished.emit(new_counts)
 
-        # Close the dialog now that we have the data from it
-        self.accept()
+        if new_counts >= 0:
+            QtWidgets.QMessageBox(
+                text=f"Inference has finished. Instances were predicted on {new_counts} frames."
+            ).exec_()
 
 
 class TrainingPipelineWidget(QtWidgets.QWidget):

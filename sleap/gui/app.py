@@ -1229,7 +1229,7 @@ class MainWindow(QMainWindow):
         Returns:
             None.
         """
-        from sleap.gui.inference import InferenceDialog
+        from sleap.gui.inference import TrainingDialog
 
         if "inference" in self.overlays:
             QMessageBox(
@@ -1246,8 +1246,8 @@ class MainWindow(QMainWindow):
             return
 
         if self._child_windows.get(mode, None) is None:
-            self._child_windows[mode] = InferenceDialog(
-                self.state["filename"], self.labels, mode
+            self._child_windows[mode] = TrainingDialog(
+                self.state["filename"], self.labels,
             )
             self._child_windows[mode].learningFinished.connect(self.learningFinished)
 
