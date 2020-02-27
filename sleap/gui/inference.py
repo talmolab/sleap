@@ -16,7 +16,7 @@ from typing import Any, Callable, Dict, List, Optional, Text
 
 from PySide2 import QtWidgets, QtCore
 
-from sleap.nn.training import Trainer
+SKIP_TRAINING = False
 
 NODE_LIST_FIELDS = [
     "data.instance_cropping.center_on_part",
@@ -60,7 +60,9 @@ class ScopedKeyDict:
         flattened_dict = dict()
         for key, val in hierarch_dicts:
             if isinstance(val, Dict):
-                flattened_dict.update(cls._make_flattened_dict(val, f"{scope_string}{key}."))
+                flattened_dict.update(
+                    cls._make_flattened_dict(val, f"{scope_string}{key}.")
+                )
             else:
                 flattened_dict[f"{scope_string}.{key}"] = val
         return flattened_dict
@@ -96,12 +98,12 @@ def make_training_config_from_key_val_dict(key_val_dict):
 
 class TrainingDialog(QtWidgets.QDialog):
     def __init__(
-            self,
-            labels_filename: Text,
-            labels: Optional[Labels] = None,
-            skeleton: Optional["Skeleton"] = None,
-            *args,
-            **kwargs
+        self,
+        labels_filename: Text,
+        labels: Optional[Labels] = None,
+        skeleton: Optional["Skeleton"] = None,
+        *args,
+        **kwargs,
     ):
         super(TrainingDialog, self).__init__()
 
@@ -115,6 +117,8 @@ class TrainingDialog(QtWidgets.QDialog):
         self.labels = labels
         self.skeleton = skeleton
 
+        self._frame_selection = None
+
         self.current_pipeline = ""
 
         self.tabs = dict()
@@ -122,8 +126,7 @@ class TrainingDialog(QtWidgets.QDialog):
 
         # Layout for buttons
         buttons = QtWidgets.QDialogButtonBox()
-        self.cancel_button = buttons.addButton(
-            QtWidgets.QDialogButtonBox.Cancel)
+        self.cancel_button = buttons.addButton(QtWidgets.QDialogButtonBox.Cancel)
         self.run_button = buttons.addButton(
             "Run", QtWidgets.QDialogButtonBox.AcceptRole
         )
@@ -159,13 +162,82 @@ class TrainingDialog(QtWidgets.QDialog):
         buttons.accepted.connect(self.run)
         buttons.rejected.connect(self.reject)
 
+    @property
+    def frame_selection(self) -> Dict[str, Dict[Video, List[int]]]:
+        """
+        Returns dictionary with frames that user has selected for inference.
+        """
+        return self._frame_selection
+
+    @frame_selection.setter
+    def frame_selection(self, frame_selection: Dict[str, Dict[Video, List[int]]]):
+        """Sets options of frames on which to run inference."""
+        self._frame_selection = frame_selection
+
+        if "_predict_frames" in self.pipeline_form_widget.fields.keys():
+            prediction_options = []
+
+            def count_total_frames(videos_frames):
+                if not videos_frames:
+                    return 0
+                count = 0
+                for frame_list in videos_frames.values():
+                    # Check for [x, Y] range given as X, -Y
+                    # (we're not using typical [X, Y)-style range here)
+                    if len(frame_list) == 2 and frame_list[1] < 0:
+                        count += -frame_list[1] - frame_list[0]
+                    elif frame_list != (0, 0):
+                        count += len(frame_list)
+                return count
+
+            total_random = 0
+            total_suggestions = 0
+            clip_length = 0
+            video_length = 0
+
+            # Determine which options are available given _frame_selection
+            if "random" in self._frame_selection:
+                total_random = count_total_frames(self._frame_selection["random"])
+            if "suggestions" in self._frame_selection:
+                total_suggestions = count_total_frames(
+                    self._frame_selection["suggestions"]
+                )
+            if "clip" in self._frame_selection:
+                clip_length = count_total_frames(self._frame_selection["clip"])
+            if "video" in self._frame_selection:
+                video_length = count_total_frames(self._frame_selection["video"])
+
+            # Build list of options
+
+            # if self.mode != "inference":
+            prediction_options.append("nothing")
+            prediction_options.append("current frame")
+
+            option = f"random frames ({total_random} total frames)"
+            prediction_options.append(option)
+            default_option = option
+
+            if total_suggestions > 0:
+                option = f"suggested frames ({total_suggestions} total frames)"
+                prediction_options.append(option)
+                default_option = option
+
+            if clip_length > 0:
+                option = f"selected clip ({clip_length} frames)"
+                prediction_options.append(option)
+                default_option = option
+
+            prediction_options.append(f"entire video ({video_length} frames)")
+
+            self.pipeline_form_widget.fields["_predict_frames"].set_options(
+                prediction_options, default_option
+            )
+
     def connect_signals(self):
         self.pipeline_form_widget.valueChanged.connect(self.on_tab_data_change)
 
         for head_name, tab in self.tabs.items():
-            tab.valueChanged.connect(
-                lambda n=head_name: self.on_tab_data_change(n)
-            )
+            tab.valueChanged.connect(lambda n=head_name: self.on_tab_data_change(n))
 
     def disconnect_signals(self):
         self.pipeline_form_widget.valueChanged.disconnect()
@@ -178,8 +250,7 @@ class TrainingDialog(QtWidgets.QDialog):
 
         for head_name in heads:
             self.tabs[head_name] = TrainingEditorWidget(
-                skeleton=self.skeleton,
-                head=head_name
+                skeleton=self.skeleton, head=head_name
             )
 
     def adjust_data_to_update_other_tabs(self, source_data, updated_data=None):
@@ -237,7 +308,7 @@ class TrainingDialog(QtWidgets.QDialog):
             "single_instance": "Single Instance Model Configuration",
             "centroid": "Centroid Model Configuration",
             "centered_instance": "Centered Instance Model Configuration",
-            "multi_instance": "Bottom-Up Model Configuration"
+            "multi_instance": "Bottom-Up Model Configuration",
         }
         self.tab_widget.addTab(self.tabs[tab_name], tab_labels[tab_name])
         self.shown_tab_names.append(tab_name)
@@ -272,9 +343,7 @@ class TrainingDialog(QtWidgets.QDialog):
                     continue
             head_data[key] = val
 
-    def get_every_head_config_data(self):
-        pipeline_cfg_key_val_dict = self.pipeline_form_widget.get_form_data()
-
+    def get_every_head_config_data(self, pipeline_form_data):
         cfgs = dict()
 
         for tab_name in self.shown_tab_names:
@@ -283,13 +352,40 @@ class TrainingDialog(QtWidgets.QDialog):
             self.merge_pipeline_and_head_config_data(
                 head_name=tab_name,
                 head_data=tab_cfg_key_val_dict,
-                pipeline_data=pipeline_cfg_key_val_dict,
+                pipeline_data=pipeline_form_data,
             )
 
             print(tab_cfg_key_val_dict)
-            cfgs[tab_name] = make_training_config_from_key_val_dict(tab_cfg_key_val_dict)
+            cfgs[tab_name] = make_training_config_from_key_val_dict(
+                tab_cfg_key_val_dict
+            )
 
         return cfgs
+
+    def get_selected_frames_to_predict(self, pipeline_form_data):
+        frames_to_predict = dict()
+
+        if self._frame_selection is not None:
+            predict_frames_choice = pipeline_form_data.get("_predict_frames", "")
+            if predict_frames_choice.startswith("current frame"):
+                frames_to_predict = self._frame_selection["frame"]
+            elif predict_frames_choice.startswith("random"):
+                frames_to_predict = self._frame_selection["random"]
+            elif predict_frames_choice.startswith("selected clip"):
+                frames_to_predict = self._frame_selection["clip"]
+            elif predict_frames_choice.startswith("suggested"):
+                frames_to_predict = self._frame_selection["suggestions"]
+            elif predict_frames_choice.startswith("entire video"):
+                frames_to_predict = self._frame_selection["video"]
+
+            # Convert [X, Y+1) ranges to [X, Y] ranges for inference cli
+            for video, frame_list in frames_to_predict.items():
+                # Check for [A, -B] list representing [A, B) range
+                if len(frame_list) == 2 and frame_list[1] < 0:
+                    frame_list = (frame_list[0], frame_list[1] + 1)
+                    frames_to_predict[video] = frame_list
+
+        return frames_to_predict
 
     def run(self):
         """Run with current dialog settings."""
@@ -297,25 +393,28 @@ class TrainingDialog(QtWidgets.QDialog):
         # import pprint
         # pp = pprint.PrettyPrinter(indent=1)
 
-        configs = self.get_every_head_config_data()
+        pipeline_form_data = self.pipeline_form_widget.get_form_data()
+        frames_to_predict = self.get_selected_frames_to_predict(pipeline_form_data)
+
+        configs = self.get_every_head_config_data(pipeline_form_data)
         run_learning_pipeline(
             labels_filename=self.labels_filename,
             labels=self.labels,
             training_jobs=configs,
-            inference_params=dict(),  # TODO
-            frames_to_predict=dict(),  # TODO
+            inference_params=pipeline_form_data,
+            frames_to_predict=frames_to_predict,
         )
         # for head_name, cfg in self.get_every_head_config_data().items():
-            # print()
-            # print(f"============{head_name}============")
-            # print()
-            # pp.pprint(cattr.unstructure(cfg))
+        # print()
+        # print(f"============{head_name}============")
+        # print()
+        # pp.pprint(cattr.unstructure(cfg))
 
-            # train_subprocess(
-            #     cfg,
-            #     labels_filename="tests/data/json_format_v1/centered_pair.json",
-            #     # skip_training=True
-            # )
+        # train_subprocess(
+        #     cfg,
+        #     labels_filename="tests/data/json_format_v1/centered_pair.json",
+        #     # skip_training=True
+        # )
 
         # Close the dialog now that we have the data from it
         self.accept()
@@ -345,6 +444,10 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
         self.form_widget.form_layout.valueChanged.connect(self.valueChanged)
 
         self.setLayout(self.form_widget.form_layout)
+
+    @property
+    def fields(self):
+        return self.form_widget.fields
 
     def get_form_data(self):
         return self.form_widget.get_form_data()
@@ -384,7 +487,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         skeleton: Optional["Skeleton"] = None,
         head: Optional[Text] = None,
         *args,
-        **kwargs
+        **kwargs,
     ):
         super(TrainingEditorWidget, self).__init__()
 
@@ -406,9 +509,9 @@ class TrainingEditorWidget(QtWidgets.QWidget):
                 )
 
         if head:
-            self.set_fields_from_key_val_dict({
-                "_heads_name": head,
-            })
+            self.set_fields_from_key_val_dict(
+                {"_heads_name": head,}
+            )
 
             self.form_widgets["model"].set_field_enabled("_heads_name", False)
 
@@ -459,7 +562,7 @@ def run_learning_pipeline(
     labels_filename: str,
     labels: Labels,
     training_jobs: Dict[Text, TrainingJobConfig],
-    inference_params: Dict[str, str],
+    inference_params: Dict[str, Any],
     frames_to_predict: Dict[Video, List[int]] = None,
 ) -> int:
     """Run training (as needed) and inference.
@@ -549,7 +652,8 @@ def run_gui_training(
             # train_subprocess update them).
             # training.Trainer.set_run_name(job, labels_filename)
             job.outputs.runs_folder = os.path.join(
-                os.path.dirname(labels_filename), "models")
+                os.path.dirname(labels_filename), "models"
+            )
             training.setup_new_run_folder(job.outputs)
 
             if gui:
@@ -690,7 +794,6 @@ def train_subprocess(
     waiting_callback: Optional[Callable] = None,
     update_run_name: bool = True,
     save_viz: bool = False,
-    skip_training: bool = False,
 ):
     """Runs training inside subprocess."""
 
@@ -703,9 +806,7 @@ def train_subprocess(
 
         # Write a temporary file of the TrainingJob so that we can respect
         # any changed made to the job attributes after it was loaded.
-        temp_filename = (
-            datetime.now().strftime("%y%m%d_%H%M%S") + "_training_job.json"
-        )
+        temp_filename = datetime.now().strftime("%y%m%d_%H%M%S") + "_training_job.json"
         training_job_path = os.path.join(temp_dir, temp_filename)
         job_config.save_json(training_job_path)
 
@@ -726,7 +827,7 @@ def train_subprocess(
 
         print(cli_args)
 
-        if not skip_training:
+        if not SKIP_TRAINING:
             # Run training in a subprocess
             with sub.Popen(cli_args) as proc:
 
@@ -746,12 +847,12 @@ def train_subprocess(
 
 
 def predict_subprocess(
-        video: "Video",
-        trained_job_paths: List[str],
-        kwargs: Dict[str, str],
-        frames: Optional[List[int]] = None,
-        waiting_callback: Optional[Callable] = None,
-        labels_filename: Optional[str] = None,
+    video: "Video",
+    trained_job_paths: List[str],
+    kwargs: Dict[str, str],
+    frames: Optional[List[int]] = None,
+    waiting_callback: Optional[Callable] = None,
+    labels_filename: Optional[str] = None,
 ):
     cli_args = ["python", "-m", "sleap.nn.inference"]
 
@@ -770,11 +871,7 @@ def predict_subprocess(
 
     # Make path where we'll save predictions
     output_path = ".".join(
-        (
-            video.filename,
-            datetime.now().strftime("%y%m%d_%H%M%S"),
-            "predictions.h5",
-        )
+        (video.filename, datetime.now().strftime("%y%m%d_%H%M%S"), "predictions.h5",)
     )
 
     for job_path in trained_job_paths:
@@ -810,15 +907,17 @@ def predict_subprocess(
 
 if __name__ == "__main__":
 
-
     app = QtWidgets.QApplication([])
 
     from sleap import Skeleton
+
     # skeleton = Skeleton.load_json("tests/data/skeleton/fly_skeleton_legs.json")
 
-    win = TrainingDialog(
-        labels_filename="tests/data/json_format_v1/centered_pair.json"
-    )
+    filename = "tests/data/json_format_v1/centered_pair.json"
+    labels = Labels.load_file(filename)
+    win = TrainingDialog(labels_filename=filename, labels=labels)
+
+    win.frame_selection = {"clip": {labels.videos[0]: (1, 2, 3, 4)}}
     # win.training_editor_widget.set_fields_from_key_val_dict({
     #     "_backbone_name": "unet",
     #     "_heads_name": "centered_instance",
@@ -828,5 +927,3 @@ if __name__ == "__main__":
 
     win.show()
     app.exec_()
-
-
