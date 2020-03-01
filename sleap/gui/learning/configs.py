@@ -21,6 +21,23 @@ class ConfigFileInfo:
     filename: Text
     head_name: Text
 
+    @property
+    def has_trained_model(self):
+        if self.config.outputs.run_name:
+
+            # Check if the model file exists.
+            # TODO: inference only checks for the best model, so that's also
+            # what we'll do here, but both should check for other models
+            # depending on the training config settings.
+
+            model_dir = self.config.outputs.run_path
+            model_shortname = "best_model.h5"
+            model_path = os.path.join(model_dir, model_shortname)
+            if os.path.exists(model_path):
+                return True
+
+        return False
+
 
 class TrainingConfigFilesWidget(FieldComboWidget):
     setConfig = QtCore.Signal(TrainingJobConfig)
@@ -56,6 +73,9 @@ class TrainingConfigFilesWidget(FieldComboWidget):
             filename = cfg_info.filename
 
             display_name = f"{cfg.outputs.run_name_prefix or ''}{cfg.outputs.run_name}{cfg.outputs.run_name_suffix or ''} ({filename})"
+
+            if cfg_info.has_trained_model:
+                display_name += " *"
 
             if select is not None:
                 if select.config == cfg_info.config:
