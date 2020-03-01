@@ -14,6 +14,14 @@ from typing import Any, Callable, Dict, List, Optional, Union, Text
 from PySide2 import QtWidgets, QtCore
 
 
+@attr.s(auto_attribs=True, slots=True)
+class ConfigFileInfo:
+    config: TrainingJobConfig
+    path: Text
+    filename: Text
+    head_name: Text
+
+
 class TrainingConfigFilesWidget(FieldComboWidget):
     setConfig = QtCore.Signal(TrainingJobConfig)
     # setDataDict = QtCore.Signal(dict)
@@ -33,7 +41,7 @@ class TrainingConfigFilesWidget(FieldComboWidget):
 
         self.currentIndexChanged.connect(self.onSelectionIdxChange)
 
-    def update(self, select: Optional[Dict] = None):
+    def update(self, select: Optional[ConfigFileInfo] = None):
         cfg_list = self._cfg_getter.get_filtered_configs(filter=self._head_name)
         self._cfg_list = cfg_list
 
@@ -44,13 +52,13 @@ class TrainingConfigFilesWidget(FieldComboWidget):
 
         # add options for config files
         for cfg_info in cfg_list:
-            cfg = cfg_info["config"]
-            filename = cfg_info["filename"]
+            cfg = cfg_info.config
+            filename = cfg_info.filename
 
             display_name = f"{cfg.outputs.run_name_prefix or ''}{cfg.outputs.run_name}{cfg.outputs.run_name_suffix or ''} ({filename})"
 
             if select is not None:
-                if select["config"] == cfg_info["config"]:
+                if select.config == cfg_info.config:
                     select_key = display_name
 
             option_list.append(display_name)
@@ -65,9 +73,7 @@ class TrainingConfigFilesWidget(FieldComboWidget):
 
     def getConfigByMenuIdx(self, menu_idx):
         cfg_idx = menu_idx - 1
-        return (
-            self._cfg_list[cfg_idx]["config"] if cfg_idx < len(self._cfg_list) else None
-        )
+        return self._cfg_list[cfg_idx].config if cfg_idx < len(self._cfg_list) else None
 
     def onSelectionIdxChange(self, menu_idx):
         if self.value() == self.SELECT_FILE_OPTION:
@@ -133,19 +139,9 @@ class TrainingConfigsGetter:
         return configs
 
     def get_filtered_configs(self, filter: Text):
-        return [
-            cfg_info for cfg_info in self._configs if cfg_info["head_name"] == filter
-        ]
+        return [cfg_info for cfg_info in self._configs if cfg_info.head_name == filter]
 
-    def insert_first(self, cfg_info: Dict[Text, Any]):
-        if (
-            "path" not in cfg_info
-            or "filename" not in cfg_info
-            or "config" not in cfg_info
-            or "head_name" not in cfg_info
-        ):
-            raise ValueError("insert_first needs a cfg_info dict")
-
+    def insert_first(self, cfg_info: ConfigFileInfo):
         self._configs.insert(0, cfg_info)
 
     def try_loading_path(self, path: Text):
@@ -163,13 +159,9 @@ class TrainingConfigsGetter:
 
             # If filter isn't set or matches head name, add config to list
             if self.head_filter in (None, key):
-                cfg_info = {
-                    "path": path,
-                    "filename": filename,
-                    "config": cfg,
-                    "head_name": key,
-                }
-                return cfg_info
+                return ConfigFileInfo(
+                    path=path, filename=filename, config=cfg, head_name=key
+                )
 
         return None
 
