@@ -1,16 +1,8 @@
-import attr
 import cattr
-import os
-import subprocess as sub
-import tempfile
-import time
-
-from datetime import datetime
 
 from sleap import Labels, Video
-from sleap.nn import training
-from sleap.nn.config import TrainingJobConfig
 from sleap.gui.formbuilder import YamlFormWidget
+from sleap.gui.learning import runners, utils, configs
 
 from typing import Any, Callable, Dict, List, Optional, Text
 
@@ -23,77 +15,6 @@ NODE_LIST_FIELDS = [
     "model.heads.centered_instance.anchor_part",
     "model.heads.centroid.anchor_part",
 ]
-
-
-@attr.s(auto_attribs=True)
-class ScopedKeyDict:
-
-    key_val_dict: Dict[Text, Any]
-
-    @classmethod
-    def set_hierarchical_key_val(cls, current_dict, key, val):
-        # Ignore "private" keys starting with "_"
-        if key[0] == "_":
-            return
-
-        if "." not in key:
-            current_dict[key] = val
-        else:
-            top_key, *subkey_list = key.split(".")
-            if top_key not in current_dict:
-                current_dict[top_key] = dict()
-            subkey = ".".join(subkey_list)
-            cls.set_hierarchical_key_val(current_dict[top_key], subkey, val)
-
-    def to_hierarchical_dict(self):
-        hierarch_dict = dict()
-        for key, val in self.key_val_dict.items():
-            self.set_hierarchical_key_val(hierarch_dict, key, val)
-        return hierarch_dict
-
-    @classmethod
-    def from_hierarchical_dict(cls, hierarch_dict):
-        return cls(key_val_dict=cls._make_flattened_dict(hierarch_dict))
-
-    @classmethod
-    def _make_flattened_dict(cls, hierarch_dicts, scope_string=""):
-        flattened_dict = dict()
-        for key, val in hierarch_dicts:
-            if isinstance(val, Dict):
-                flattened_dict.update(
-                    cls._make_flattened_dict(val, f"{scope_string}{key}.")
-                )
-            else:
-                flattened_dict[f"{scope_string}.{key}"] = val
-        return flattened_dict
-
-
-def apply_cfg_transforms_to_key_val_dict(key_val_dict):
-    if "outputs.tags" in key_val_dict and isinstance(key_val_dict["outputs.tags"], str):
-        key_val_dict["outputs.tags"] = [
-            tag.strip() for tag in key_val_dict["outputs.tags"].split(",")
-        ]
-
-    if "_ensure_channels" in key_val_dict:
-        ensure_channels = key_val_dict["_ensure_channels"].lower()
-        ensure_rgb = False
-        ensure_grayscale = False
-        if ensure_channels == "rgb":
-            ensure_rgb = True
-        elif ensure_channels == "grayscale":
-            ensure_grayscale = True
-
-        key_val_dict["data.preprocessing.ensure_rgb"] = ensure_rgb
-        key_val_dict["data.preprocessing.ensure_grayscale"] = ensure_grayscale
-
-
-def make_training_config_from_key_val_dict(key_val_dict):
-    apply_cfg_transforms_to_key_val_dict(key_val_dict)
-    cfg_dict = ScopedKeyDict(key_val_dict).to_hierarchical_dict()
-
-    cfg = cattr.structure(cfg_dict, TrainingJobConfig)
-
-    return cfg
 
 
 class TrainingDialog(QtWidgets.QDialog):
@@ -144,7 +65,6 @@ class TrainingDialog(QtWidgets.QDialog):
 
         self.tab_widget = QtWidgets.QTabWidget()
 
-        # self.training_editor_widget = TrainingEditorWidget(skeleton=skeleton)
         self.tab_widget.addTab(self.pipeline_form_widget, "Training Pipeline")
         self.make_tabs()
 
@@ -168,13 +88,13 @@ class TrainingDialog(QtWidgets.QDialog):
     @property
     def frame_selection(self) -> Dict[str, Dict[Video, List[int]]]:
         """
-        Returns dictionary with frames that user has selected for inference.
+        Returns dictionary with frames that user has selected for learning.
         """
         return self._frame_selection
 
     @frame_selection.setter
     def frame_selection(self, frame_selection: Dict[str, Dict[Video, List[int]]]):
-        """Sets options of frames on which to run inference."""
+        """Sets options of frames on which to run learning."""
         self._frame_selection = frame_selection
 
         if "_predict_frames" in self.pipeline_form_widget.fields.keys():
@@ -212,7 +132,7 @@ class TrainingDialog(QtWidgets.QDialog):
 
             # Build list of options
 
-            # if self.mode != "inference":
+            # if self.mode != "learning":
             prediction_options.append("nothing")
             prediction_options.append("current frame")
 
@@ -251,9 +171,13 @@ class TrainingDialog(QtWidgets.QDialog):
     def make_tabs(self):
         heads = ("single_instance", "centroid", "centered_instance", "multi_instance")
 
+        self._cfg_getter = configs.TrainingConfigsGetter.make_from_labels_filename(
+            labels_filename=self.labels_filename
+        )
+
         for head_name in heads:
             self.tabs[head_name] = TrainingEditorWidget(
-                skeleton=self.skeleton, head=head_name
+                skeleton=self.skeleton, head=head_name, cfg_getter=self._cfg_getter
             )
 
     def adjust_data_to_update_other_tabs(self, source_data, updated_data=None):
@@ -359,7 +283,7 @@ class TrainingDialog(QtWidgets.QDialog):
             )
 
             print(tab_cfg_key_val_dict)
-            cfgs[tab_name] = make_training_config_from_key_val_dict(
+            cfgs[tab_name] = utils.make_training_config_from_key_val_dict(
                 tab_cfg_key_val_dict
             )
 
@@ -381,7 +305,7 @@ class TrainingDialog(QtWidgets.QDialog):
             elif predict_frames_choice.startswith("entire video"):
                 frames_to_predict = self._frame_selection["video"]
 
-            # Convert [X, Y+1) ranges to [X, Y] ranges for inference cli
+            # Convert [X, Y+1) ranges to [X, Y] ranges for learning cli
             for video, frame_list in frames_to_predict.items():
                 # Check for [A, -B] list representing [A, B) range
                 if len(frame_list) == 2 and frame_list[1] < 0:
@@ -401,8 +325,8 @@ class TrainingDialog(QtWidgets.QDialog):
         # Close the dialog now that we have the data from it
         self.accept()
 
-        # Run training/inference pipeline using the TrainingJobs
-        new_counts = run_learning_pipeline(
+        # Run training/learning pipeline using the TrainingJobs
+        new_counts = runners.run_learning_pipeline(
             labels_filename=self.labels_filename,
             labels=self.labels,
             training_jobs=configs,
@@ -484,10 +408,14 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         self,
         skeleton: Optional["Skeleton"] = None,
         head: Optional[Text] = None,
+        cfg_getter: Optional["TrainingConfigsGetter"] = None,
         *args,
         **kwargs,
     ):
         super(TrainingEditorWidget, self).__init__()
+
+        self._cfg_getter = cfg_getter
+        self._cfg_list_widget = None
 
         yaml_name = "training_editor_form"
 
@@ -497,7 +425,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             self.form_widgets[key] = YamlFormWidget.from_name(
                 yaml_name, which_form=key, title=key.title()
             )
-            self.form_widgets[key].valueChanged.connect(self.valueChanged)
+            self.form_widgets[key].valueChanged.connect(self.emitValueChanged)
 
         if hasattr(skeleton, "node_names"):
             for field_name in NODE_LIST_FIELDS:
@@ -513,26 +441,32 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
             self.form_widgets["model"].set_field_enabled("_heads_name", False)
 
+        # Layout for header and columns
+        layout = QtWidgets.QVBoxLayout()
+
         # Two column layout for config parameters
         col1_layout = QtWidgets.QVBoxLayout()
         col2_layout = QtWidgets.QVBoxLayout()
 
-        # col1_layout.addWidget(self.form_widgets["data"])
-        # col1_layout.addWidget(self.form_widgets["model"])
-        #
-        # col2_layout.addWidget(self.form_widgets["optimization"])
-        # col2_layout.addWidget(self.form_widgets["outputs"])
-
-        # col1_layout.addWidget(self.form_widgets["data"])
         col1_layout.addWidget(self.form_widgets["optimization"])
-
         col2_layout.addWidget(self.form_widgets["model"])
 
         col_layout = QtWidgets.QHBoxLayout()
         col_layout.addWidget(self._layout_widget(col1_layout))
         col_layout.addWidget(self._layout_widget(col2_layout))
 
-        self.setLayout(col_layout)
+        if self._cfg_getter:
+            self._cfg_list_widget = configs.TrainingConfigFilesWidget(
+                cfg_getter=self._cfg_getter, head_name=head
+            )
+            self._cfg_list_widget.setConfig.connect(self._load_config)
+            # self._cfg_list_widget.setDataDict.connect(self.set_fields_from_key_val_dict)
+
+            layout.addWidget(self._cfg_list_widget)
+
+        layout.addWidget(self._layout_widget(col_layout))
+
+        self.setLayout(layout)
 
     @staticmethod
     def _layout_widget(layout):
@@ -540,10 +474,28 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         widget.setLayout(layout)
         return widget
 
+    def emitValueChanged(self):
+        self.valueChanged.emit()
+
+        # When there's a config getter, we want to inform it that the data
+        # has changed so that it can activate/update the "user" config
+        # if self._cfg_list_widget:
+        #     self._set_user_config()
+
+    def _load_config_or_key_val_dict(self, cfg_data):
+        if type(cfg_data) != dict:
+            self._load_config(cfg_data)
+        else:
+            self.set_fields_from_key_val_dict(cfg_data)
+
     def _load_config(self, cfg):
         cfg_dict = cattr.unstructure(cfg)
-        key_val_dict = ScopedKeyDict.from_hierarchical_dict(cfg_dict).key_val_dict
+        key_val_dict = utils.ScopedKeyDict.from_hierarchical_dict(cfg_dict).key_val_dict
         self.set_fields_from_key_val_dict(key_val_dict)
+
+    # def _set_user_config(self):
+    #     cfg_form_data_dict = self.get_all_form_data()
+    #     self._cfg_list_widget.setUserConfigData(cfg_form_data_dict)
 
     def set_fields_from_key_val_dict(self, cfg_key_val_dict):
         for form in self.form_widgets.values():
@@ -554,353 +506,6 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         for form in self.form_widgets.values():
             form_data.update(form.get_form_data())
         return form_data
-
-
-def run_learning_pipeline(
-    labels_filename: str,
-    labels: Labels,
-    training_jobs: Dict[Text, TrainingJobConfig],
-    inference_params: Dict[str, Any],
-    frames_to_predict: Dict[Video, List[int]] = None,
-) -> int:
-    """Run training (as needed) and inference.
-
-    Args:
-        labels_filename: Path to already saved current labels object.
-        labels: The current labels object; results will be added to this.
-        training_jobs: The TrainingJobs with params/hyperparams for training.
-        inference_params: Parameters to pass to inference.
-        frames_to_predict: Dict that gives list of frame indices for each video.
-
-    Returns:
-        Number of new frames added to labels.
-
-    """
-
-    save_viz = inference_params.get("_save_viz", False)
-
-    # Train the TrainingJobs
-    trained_jobs = run_gui_training(
-        labels_filename, training_jobs, gui=True, save_viz=save_viz
-    )
-
-    # Check that all the models were trained
-    if None in trained_jobs.values():
-        return -1
-
-    trained_job_paths = list(trained_jobs.values())
-
-    # Run the Predictor for suggested frames
-    new_labeled_frame_count = run_gui_inference(
-        labels=labels,
-        trained_job_paths=trained_job_paths,
-        inference_params=inference_params,
-        frames_to_predict=frames_to_predict,
-        labels_filename=labels_filename,
-    )
-
-    return new_labeled_frame_count
-
-
-def has_jobs_to_train(training_jobs: Dict["ModelOutputType", "TrainingJob"]):
-    """Returns whether any of the jobs need to be trained."""
-    return any(not getattr(job, "use_trained_model", False) for job in training_jobs)
-
-
-def run_gui_training(
-    labels_filename: str,
-    training_jobs: Dict[Text, TrainingJobConfig],
-    gui: bool = True,
-    save_viz: bool = False,
-) -> Dict[Text, Text]:
-    """
-    Run training for each training job.
-
-    Args:
-        labels: Labels object from which we'll get training data.
-        training_jobs: Dict of the jobs to train.
-        gui: Whether to show gui windows and process gui events.
-        save_viz: Whether to save visualizations from training.
-
-    Returns:
-        Dictionary, keys are head name, values are path to trained config.
-    """
-
-    trained_jobs = dict()
-
-    if gui:
-        from sleap.nn.monitor import LossViewer
-        from sleap.gui.imagedir import QtImageDirectoryWidget
-
-        # open training monitor window
-        win = LossViewer()
-        win.resize(600, 400)
-        win.show()
-
-    for model_type, job in training_jobs.items():
-        if getattr(job, "use_trained_model", False):
-            # set path to TrainingJob already trained from previous run
-            # json_name = f"{job.run_name}.json"
-            trained_jobs[model_type] = job.outputs.run_path
-            print(f"Using already trained model: {trained_jobs[model_type]}")
-
-        else:
-            # Update save dir and run name for job we're about to train
-            # so we have accessgi to them here (rather than letting
-            # train_subprocess update them).
-            # training.Trainer.set_run_name(job, labels_filename)
-            job.outputs.runs_folder = os.path.join(
-                os.path.dirname(labels_filename), "models"
-            )
-            training.setup_new_run_folder(job.outputs)
-
-            if gui:
-                print("Resetting monitor window.")
-                win.reset(what=str(model_type))
-                win.setWindowTitle(f"Training Model - {str(model_type)}")
-                if save_viz:
-                    viz_window = QtImageDirectoryWidget.make_training_vizualizer(
-                        job.outputs.run_path
-                    )
-                    viz_window.move(win.x() + win.width() + 20, win.y())
-                    win.on_epoch.connect(viz_window.poll)
-
-            print(f"Start training {str(model_type)}...")
-
-            def waiting():
-                if gui:
-                    QtWidgets.QApplication.instance().processEvents()
-
-            # Run training
-            trained_job_path, success = train_subprocess(
-                job,
-                labels_filename,
-                waiting_callback=waiting,
-                update_run_name=False,
-                save_viz=save_viz,
-            )
-
-            if success:
-                # get the path to the resulting TrainingJob file
-                trained_jobs[model_type] = trained_job_path
-                print(f"Finished training {str(model_type)}.")
-            else:
-                if gui:
-                    win.close()
-                    QtWidgets.QMessageBox(
-                        text=f"An error occurred while training {str(model_type)}. Your command line terminal may have more information about the error."
-                    ).exec_()
-                trained_jobs[model_type] = None
-
-    if gui:
-        # close training monitor window
-        win.close()
-
-    return trained_jobs
-
-
-def run_gui_inference(
-    labels: Labels,
-    trained_job_paths: List[str],
-    frames_to_predict: Dict[Video, List[int]],
-    inference_params: Dict[str, str],
-    labels_filename: str,
-    gui: bool = True,
-) -> int:
-    """Run inference on specified frames using models from training_jobs.
-
-    Args:
-        labels: The current labels object; results will be added to this.
-        trained_job_paths: List of paths to TrainingJobs with trained models.
-        frames_to_predict: Dict that gives list of frame indices for each video.
-        inference_params: Parameters to pass to inference.
-        gui: Whether to show gui windows and process gui events.
-
-    Returns:
-        Number of new frames added to labels.
-    """
-    from sleap.nn import inference
-
-    if gui:
-        # show message while running inference
-        progress = QtWidgets.QProgressDialog(
-            f"Running inference on {len(frames_to_predict)} videos...",
-            "Cancel",
-            0,
-            len(frames_to_predict),
-        )
-        progress.show()
-        QtWidgets.QApplication.instance().processEvents()
-
-    new_lfs = []
-    for i, (video, frames) in enumerate(frames_to_predict.items()):
-
-        if len(frames):
-
-            def waiting():
-                if gui:
-                    QtWidgets.QApplication.instance().processEvents()
-                    progress.setValue(i)
-                    if progress.wasCanceled():
-                        return -1
-
-            # Run inference for desired frames in this video
-            predictions_path, success = predict_subprocess(
-                video=video,
-                frames=frames,
-                trained_job_paths=trained_job_paths,
-                kwargs=inference_params,
-                waiting_callback=waiting,
-                labels_filename=labels_filename,
-            )
-
-            if success:
-                predictions_labels = Labels.load_file(predictions_path, match_to=labels)
-                new_lfs.extend(predictions_labels.labeled_frames)
-            else:
-                if gui:
-                    progress.close()
-                    QtWidgets.QMessageBox(
-                        text=f"An error occcured during inference. Your command line terminal may have more information about the error."
-                    ).exec_()
-                return -1
-
-    # Remove any frames without instances
-    new_lfs = list(filter(lambda lf: len(lf.instances), new_lfs))
-
-    # Merge predictions into current labels dataset
-    _, _, new_conflicts = Labels.complex_merge_between(
-        labels,
-        new_labels=Labels(new_lfs),
-        unify=False,  # since we used match_to when loading predictions file
-    )
-
-    # new predictions should replace old ones
-    Labels.finish_complex_merge(labels, new_conflicts)
-
-    # close message window
-    if gui:
-        progress.close()
-
-    # return total_new_lf_count
-    return len(new_lfs)
-
-
-def train_subprocess(
-    job_config: TrainingJobConfig,
-    labels_filename: str,
-    waiting_callback: Optional[Callable] = None,
-    update_run_name: bool = True,
-    save_viz: bool = False,
-):
-    """Runs training inside subprocess."""
-
-    # run_name = job_config.outputs.run_name
-    run_path = job_config.outputs.run_path
-
-    success = False
-
-    with tempfile.TemporaryDirectory() as temp_dir:
-
-        # Write a temporary file of the TrainingJob so that we can respect
-        # any changed made to the job attributes after it was loaded.
-        temp_filename = datetime.now().strftime("%y%m%d_%H%M%S") + "_training_job.json"
-        training_job_path = os.path.join(temp_dir, temp_filename)
-        job_config.save_json(training_job_path)
-
-        # Build CLI arguments for training
-        cli_args = [
-            "python",
-            "-m",
-            "sleap.nn.training",
-            training_job_path,
-            labels_filename,
-            "--zmq",
-            # "--run_name",
-            # run_name,
-        ]
-
-        if save_viz:
-            cli_args.append("--save_viz")
-
-        print(cli_args)
-
-        if not SKIP_TRAINING:
-            # Run training in a subprocess
-            with sub.Popen(cli_args) as proc:
-
-                # Wait till training is done, calling a callback if given.
-                while proc.poll() is None:
-                    if waiting_callback is not None:
-                        if waiting_callback() == -1:
-                            # -1 signals user cancellation
-                            return "", False
-                    time.sleep(0.1)
-
-                success = proc.returncode == 0
-
-    print("Run Path:", run_path)
-
-    return run_path, success
-
-
-def predict_subprocess(
-    video: "Video",
-    trained_job_paths: List[str],
-    kwargs: Dict[str, str],
-    frames: Optional[List[int]] = None,
-    waiting_callback: Optional[Callable] = None,
-    labels_filename: Optional[str] = None,
-):
-    cli_args = ["python", "-m", "sleap.nn.inference"]
-
-    if not trained_job_paths and "tracking.tracker" in kwargs and labels_filename:
-        # No models so we must want to re-track previous predictions
-        cli_args.append(labels_filename)
-    else:
-        cli_args.append(video.filename)
-
-    # TODO: better support for video params
-    if hasattr(video.backend, "dataset"):
-        cli_args.extend(("--video.dataset", video.backend.dataset))
-
-    if hasattr(video.backend, "input_format"):
-        cli_args.extend(("--video.input_format", video.backend.input_format))
-
-    # Make path where we'll save predictions
-    output_path = ".".join(
-        (video.filename, datetime.now().strftime("%y%m%d_%H%M%S"), "predictions.h5",)
-    )
-
-    for job_path in trained_job_paths:
-        cli_args.extend(("-m", job_path))
-
-    for key, val in kwargs.items():
-        if not key.startswith("_"):
-            cli_args.extend((f"--{key}", str(val)))
-
-    cli_args.extend(("--frames", ",".join(map(str, frames))))
-
-    cli_args.extend(("-o", output_path))
-
-    print("Command line call:")
-    print(" \\\n".join(cli_args))
-    print()
-
-    with sub.Popen(cli_args) as proc:
-        while proc.poll() is None:
-            if waiting_callback is not None:
-
-                if waiting_callback() == -1:
-                    # -1 signals user cancellation
-                    return "", False
-
-            time.sleep(0.1)
-
-        print(f"Process return code: {proc.returncode}")
-        success = proc.returncode == 0
-
-    return output_path, success
 
 
 if __name__ == "__main__":
