@@ -23,13 +23,13 @@ def run_learning_pipeline(
     inference_params: Dict[str, Any],
     frames_to_predict: Dict[Video, List[int]] = None,
 ) -> int:
-    """Run training (as needed) and learning.
+    """Run training (as needed) and inference.
 
     Args:
         labels_filename: Path to already saved current labels object.
         labels: The current labels object; results will be added to this.
         training_jobs: The TrainingJobs with params/hyperparams for training.
-        inference_params: Parameters to pass to learning.
+        inference_params: Parameters to pass to inference.
         frames_to_predict: Dict that gives list of frame indices for each video.
 
     Returns:
@@ -162,13 +162,13 @@ def run_gui_inference(
     labels_filename: str,
     gui: bool = True,
 ) -> int:
-    """Run learning on specified frames using models from training_jobs.
+    """Run inference on specified frames using models from training_jobs.
 
     Args:
         labels: The current labels object; results will be added to this.
         trained_job_paths: List of paths to TrainingJobs with trained models.
         frames_to_predict: Dict that gives list of frame indices for each video.
-        inference_params: Parameters to pass to learning.
+        inference_params: Parameters to pass to inference.
         gui: Whether to show gui windows and process gui events.
 
     Returns:
@@ -177,9 +177,9 @@ def run_gui_inference(
     from sleap.nn import inference
 
     if gui:
-        # show message while running learning
+        # show message while running inference
         progress = QtWidgets.QProgressDialog(
-            f"Running learning on {len(frames_to_predict)} videos...",
+            f"Running inference on {len(frames_to_predict)} videos...",
             "Cancel",
             0,
             len(frames_to_predict),
@@ -199,7 +199,7 @@ def run_gui_inference(
                     if progress.wasCanceled():
                         return -1
 
-            # Run learning for desired frames in this video
+            # Run inference for desired frames in this video
             predictions_path, success = predict_subprocess(
                 video=video,
                 frames=frames,
@@ -216,7 +216,7 @@ def run_gui_inference(
                 if gui:
                     progress.close()
                     QtWidgets.QMessageBox(
-                        text=f"An error occcured during learning. Your command line terminal may have more information about the error."
+                        text=f"An error occcured during inference. Your command line terminal may have more information about the error."
                     ).exec_()
                 return -1
 
@@ -307,7 +307,7 @@ def predict_subprocess(
     waiting_callback: Optional[Callable] = None,
     labels_filename: Optional[str] = None,
 ):
-    cli_args = ["python", "-m", "sleap.nn.learning"]
+    cli_args = ["python", "-m", "sleap.nn.inference"]
 
     if not trained_job_paths and "tracking.tracker" in kwargs and labels_filename:
         # No models so we must want to re-track previous predictions
