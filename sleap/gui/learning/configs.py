@@ -48,7 +48,7 @@ class ConfigFileInfo:
 
 
 class TrainingConfigFilesWidget(FieldComboWidget):
-    setConfig = QtCore.Signal(TrainingJobConfig)
+    onConfigSelection = QtCore.Signal(ConfigFileInfo)
     # setDataDict = QtCore.Signal(dict)
 
     SELECT_FILE_OPTION = "Select training config file..."
@@ -99,9 +99,13 @@ class TrainingConfigFilesWidget(FieldComboWidget):
     def lastOptionIdx(self):
         return self.count()
 
-    def getConfigByMenuIdx(self, menu_idx):
+    def getConfigInfoByMenuIdx(self, menu_idx):
         cfg_idx = menu_idx - 1
-        return self._cfg_list[cfg_idx].config if cfg_idx < len(self._cfg_list) else None
+        return self._cfg_list[cfg_idx] if cfg_idx < len(self._cfg_list) else None
+
+    def getSelectedConfigInfo(self):
+        current_idx = self.currentIndex()
+        return self.getConfigInfoByMenuIdx(current_idx)
 
     def onSelectionIdxChange(self, menu_idx):
         if self.value() == self.SELECT_FILE_OPTION:
@@ -118,9 +122,9 @@ class TrainingConfigFilesWidget(FieldComboWidget):
                 self.setCurrentIndex(0)
 
         elif menu_idx > 0:
-            cfg = self.getConfigByMenuIdx(menu_idx)
-            if cfg:
-                self.setConfig.emit(cfg)
+            cfg_info = self.getConfigInfoByMenuIdx(menu_idx)
+            if cfg_info:
+                self.onConfigSelection.emit(cfg_info)
         elif menu_idx == 0:
             pass
             # if self._user_config_data_dict:

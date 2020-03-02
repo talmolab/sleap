@@ -282,7 +282,6 @@ class TrainingDialog(QtWidgets.QDialog):
                 pipeline_data=pipeline_form_data,
             )
 
-            print(tab_cfg_key_val_dict)
             cfgs[tab_name] = utils.make_training_config_from_key_val_dict(
                 tab_cfg_key_val_dict
             )
@@ -416,6 +415,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
         self._cfg_getter = cfg_getter
         self._cfg_list_widget = None
+        self.head = head
 
         yaml_name = "training_editor_form"
 
@@ -434,12 +434,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
                     field_name, skeleton.node_names,
                 )
 
-        if head:
-            self.set_fields_from_key_val_dict(
-                {"_heads_name": head,}
-            )
-
-            self.form_widgets["model"].set_field_enabled("_heads_name", False)
+        self._set_head()
 
         # Layout for header and columns
         layout = QtWidgets.QVBoxLayout()
@@ -459,10 +454,21 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             self._cfg_list_widget = configs.TrainingConfigFilesWidget(
                 cfg_getter=self._cfg_getter, head_name=head
             )
-            self._cfg_list_widget.setConfig.connect(self._load_config)
+            self._cfg_list_widget.onConfigSelection.connect(
+                self.acceptSelectedConfigInfo
+            )
             # self._cfg_list_widget.setDataDict.connect(self.set_fields_from_key_val_dict)
 
             layout.addWidget(self._cfg_list_widget)
+
+            # Add option for using trained model from selected config
+            self._use_trained_model = QtWidgets.QCheckBox("Use Trained Model")
+            self._use_trained_model.setEnabled(False)
+            self._use_trained_model.setVisible(False)
+
+            self._use_trained_model.stateChanged.connect(self._update_use_trained)
+
+            layout.addWidget(self._use_trained_model)
 
         layout.addWidget(self._layout_widget(col_layout))
 
@@ -482,13 +488,21 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         # if self._cfg_list_widget:
         #     self._set_user_config()
 
+    def acceptSelectedConfigInfo(self, cfg_info: configs.ConfigFileInfo):
+        self._load_config(cfg_info)
+
+        has_trained_model = cfg_info.has_trained_model
+        self._use_trained_model.setVisible(has_trained_model)
+        self._use_trained_model.setEnabled(has_trained_model)
+
     def _load_config_or_key_val_dict(self, cfg_data):
         if type(cfg_data) != dict:
             self._load_config(cfg_data)
         else:
             self.set_fields_from_key_val_dict(cfg_data)
 
-    def _load_config(self, cfg):
+    def _load_config(self, cfg_info: configs.ConfigFileInfo):
+        cfg = cfg_info.config
         cfg_dict = cattr.unstructure(cfg)
         key_val_dict = utils.ScopedKeyDict.from_hierarchical_dict(cfg_dict).key_val_dict
         self.set_fields_from_key_val_dict(key_val_dict)
@@ -497,9 +511,38 @@ class TrainingEditorWidget(QtWidgets.QWidget):
     #     cfg_form_data_dict = self.get_all_form_data()
     #     self._cfg_list_widget.setUserConfigData(cfg_form_data_dict)
 
+    def _update_use_trained(self, check_state):
+        use_trained = check_state == QtCore.Qt.CheckState.Checked
+        for form in self.form_widgets.values():
+            form.set_enabled(not use_trained)
+
+        # If user wants to use trained model, then reset form to match config
+        if use_trained:
+            cfg_info = self._cfg_list_widget.getSelectedConfigInfo()
+            self._load_config(cfg_info)
+
+        self._set_head()
+
+    def _set_head(self):
+        if self.head:
+            self.set_fields_from_key_val_dict(
+                {"_heads_name": self.head,}
+            )
+
+            self.form_widgets["model"].set_field_enabled("_heads_name", False)
+
     def set_fields_from_key_val_dict(self, cfg_key_val_dict):
         for form in self.form_widgets.values():
             form.set_form_data(cfg_key_val_dict)
+
+        self._set_backbone_from_key_val_dict(cfg_key_val_dict)
+
+    def _set_backbone_from_key_val_dict(self, cfg_key_val_dict):
+        for key, val in cfg_key_val_dict.items():
+            if key.startswith("model.backbone.") and val is not None:
+                backbone_name = key.split(".")[2]
+                self.set_fields_from_key_val_dict(dict(_backbone_name=backbone_name))
+                break
 
     def get_all_form_data(self):
         form_data = dict()
