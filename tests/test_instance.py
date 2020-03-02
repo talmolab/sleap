@@ -188,3 +188,13 @@ def test_instance_labeled_frame_ref(skeleton, centered_pair_vid):
     assert frame.instances[0].frame == frame
     assert frame[0].frame == frame
     assert frame[0].frame_idx == 0
+
+
+def test_instance_from_pointsarray(skeleton):
+    pointsarray = np.array([[1, 2], [3, 4]])
+    inst = Instance.from_pointsarray(pointsarray, skeleton=skeleton)
+
+    assert inst[skeleton.nodes[0]].x == 1
+    assert inst[skeleton.nodes[0]].y == 2
+    assert inst[skeleton.nodes[1]].x == 3
+    assert inst[skeleton.nodes[1]].y == 4

@@ -834,6 +834,31 @@ class Instance:
         else:
             return self.frame.frame_idx
 
+    @classmethod
+    def from_pointsarray(
+        cls, points: np.ndarray, skeleton: Skeleton, track: Optional[Track] = None,
+    ) -> "Instance":
+        """Create an instance from pointsarray.
+
+        Args:
+            points: A numpy array of shape (n_nodes, 2) and dtype float32 that contains
+                the points in (x, y) coordinates of each node. Missing nodes should be
+                represented as NaNs.
+            skeleton: A sleap.Skeleton instance with n_nodes nodes to associate with the
+                predicted instance.
+
+        Returns:
+            A new Instance.
+        """
+        predicted_points = dict()
+        for point, node_name in zip(points, skeleton.node_names):
+            if np.isnan(point).any():
+                continue
+
+            predicted_points[node_name] = PredictedPoint(x=point[0], y=point[1])
+
+        return cls(points=predicted_points, skeleton=skeleton, track=track)
+
 
 @attr.s(cmp=False, slots=True)
 class PredictedInstance(Instance):
