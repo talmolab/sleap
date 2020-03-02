@@ -115,6 +115,9 @@ class YamlFormWidget(QtWidgets.QGroupBox):
     def set_field_enabled(self, field_name: str, is_enabled):
         self.form_layout.set_field_enabled(field_name, is_enabled)
 
+    def set_enabled(self, enabled: bool):
+        self.form_layout.setEnabled(enabled)
+
     def trigger_main_action(self):
         """Emit mainAction signal with form data."""
         self.mainAction.emit(self.get_form_data())
@@ -144,6 +147,13 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
     @property
     def stacked(self) -> list:
         return [w for w in self.fields.values() if type(w) == StackBuilderWidget]
+
+    def setEnabled(self, enabled: bool):
+        for field in self.fields.values():
+            if hasattr(field, "set_fields_enabled"):
+                field.set_fields_enabled(enabled)
+            if hasattr(field, "setEnabled"):
+                field.setEnabled(enabled)
 
     def get_form_data(self) -> dict:
         """Gets all user-editable data from the widgets in the form layout.
@@ -537,6 +547,10 @@ class StackBuilderWidget(QtWidgets.QWidget):
 
     def setEnabled(self, val):
         self.combo_box.setEnabled(val)
+
+    def set_fields_enabled(self, val):
+        for subform in self.page_layouts.values():
+            subform.setEnabled(val)
 
     def get_data(self):
         """Returns value from currently shown subform."""
