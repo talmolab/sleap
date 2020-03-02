@@ -1,17 +1,14 @@
 import attr
-import cattr
 import os
 
-from sleap import Labels, Video
 from sleap import util as sleap_utils
 from sleap.gui.filedialog import FileDialog
 from sleap.nn.config import TrainingJobConfig
-from sleap.gui.formbuilder import YamlFormWidget, FieldComboWidget
-from sleap.gui.learning import runners, utils
+from sleap.gui.formbuilder import FieldComboWidget
 
 from typing import Any, Callable, Dict, List, Optional, Union, Text
 
-from PySide2 import QtWidgets, QtCore
+from PySide2 import QtCore
 
 
 @attr.s(auto_attribs=True, slots=True)
@@ -27,8 +24,8 @@ class ConfigFileInfo:
 
             # Check if the model file exists.
             # TODO: inference only checks for the best model, so that's also
-            # what we'll do here, but both should check for other models
-            # depending on the training config settings.
+            #  what we'll do here, but both should check for other models
+            #  depending on the training config settings.
 
             model_dir = self.config.outputs.run_path
             model_shortname = "best_model.h5"
