@@ -21,17 +21,28 @@ class ConfigFileInfo:
     @property
     def has_trained_model(self):
         if self.config.outputs.run_name:
-
-            # Check if the model file exists.
-            # TODO: inference only checks for the best model, so that's also
-            #  what we'll do here, but both should check for other models
-            #  depending on the training config settings.
-
-            model_dir = self.config.outputs.run_path
-            model_shortname = "best_model.h5"
-            model_path = os.path.join(model_dir, model_shortname)
-            if os.path.exists(model_path):
+            # Check the run path saved in the file
+            if self._check_path_for_model(self.config.outputs.run_path):
                 return True
+
+            # Check the directory where the file is currently
+            if self._check_path_for_model(os.path.dirname(self.path)):
+                return True
+
+        return False
+
+    def _check_path_for_model(self, dir):
+        # Check if the model file exists.
+
+        # TODO: inference only checks for the best model, so that's also
+        #  what we'll do here, but both should check for other models
+        #  depending on the training config settings.
+
+        model_shortname = "best_model.h5"
+        model_path = os.path.join(dir, model_shortname)
+
+        if os.path.exists(model_path):
+            return True
 
         return False
 
