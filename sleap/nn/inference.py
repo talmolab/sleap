@@ -564,7 +564,10 @@ def make_predictor_from_cli(args):
         # Get the head from the model (i.e., what the model will predict)
         key = cfg.model.heads.which_oneof_attrib_name()
 
-        # trained_model_configs[key] = cfg
+        # If path is to config file json, then get the path to parent dir
+        if model_path.endswith(".json"):
+            model_path = os.path.dirname(model_path)
+
         trained_model_paths[key] = model_path
 
     if "multi_instance" in trained_model_paths:
