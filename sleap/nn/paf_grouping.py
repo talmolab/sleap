@@ -366,9 +366,16 @@ class PAFScorer:
         # Compute scores from PAF line integrals.
         line_scores, fraction_correct = self.score_edge(paf, src_peaks, dst_peaks)
 
+        # Replace NaNs with inf since linear_sum_assignment doesn't accept NaNs
+        line_costs = tf.where(
+            condition=tf.math.is_nan(line_scores),
+            x=tf.constant([np.inf]),
+            y=-line_scores,
+        )
+
         # Match edge candidates.
         src_inds, dst_inds = tf.py_function(
-            linear_sum_assignment, inp=[-line_scores], Tout=[tf.int32, tf.int32]
+            linear_sum_assignment, inp=[line_costs], Tout=[tf.int32, tf.int32]
         )
 
         # Pull out matched scores.
@@ -578,7 +585,7 @@ class PartAffinityFieldInstanceGrouper:
         predicted_instances_key: Text = "predicted_instances",
         predicted_peak_scores_key: Text = "predicted_peak_scores",
         predicted_instance_scores_key: Text = "predicted_instance_scores",
-        keep_pafs: bool = False
+        keep_pafs: bool = False,
     ) -> "PartAffinityFieldInstanceGrouper":
         return cls(
             paf_scorer=PAFScorer.from_config(
@@ -595,7 +602,7 @@ class PartAffinityFieldInstanceGrouper:
             predicted_instances_key=predicted_instances_key,
             predicted_peak_scores_key=predicted_peak_scores_key,
             predicted_instance_scores_key=predicted_instance_scores_key,
-            keep_pafs=keep_pafs
+            keep_pafs=keep_pafs,
         )
 
     @property
@@ -616,7 +623,6 @@ class PartAffinityFieldInstanceGrouper:
         ]
 
     def transform_dataset(self, input_ds: tf.data.Dataset) -> tf.data.Dataset:
-
         def group_instances(example):
             # Pull out example data.
             pafs = example[self.pafs_key]
