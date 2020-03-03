@@ -14,9 +14,10 @@ from PySide2 import QtCore
 @attr.s(auto_attribs=True, slots=True)
 class ConfigFileInfo:
     config: TrainingJobConfig
-    path: Text
-    filename: Text
-    head_name: Text
+    path: Optional[Text] = None
+    filename: Optional[Text] = None
+    head_name: Optional[Text] = None
+    dont_retrain: bool = False
 
     @property
     def has_trained_model(self):
@@ -45,6 +46,13 @@ class ConfigFileInfo:
             return True
 
         return False
+
+    @classmethod
+    def from_config_file(cls, path):
+        cfg = TrainingJobConfig.load_json(path)
+        head_name = cfg.model.heads.which_oneof_attrib_name()
+        filename = os.path.basename(path)
+        return cls(config=cfg, path=path, filename=filename, head_name=head_name)
 
 
 class TrainingConfigFilesWidget(FieldComboWidget):
@@ -103,7 +111,7 @@ class TrainingConfigFilesWidget(FieldComboWidget):
         cfg_idx = menu_idx - 1
         return self._cfg_list[cfg_idx] if cfg_idx < len(self._cfg_list) else None
 
-    def getSelectedConfigInfo(self):
+    def getSelectedConfigInfo(self) -> Optional[ConfigFileInfo]:
         current_idx = self.currentIndex()
         return self.getConfigInfoByMenuIdx(current_idx)
 

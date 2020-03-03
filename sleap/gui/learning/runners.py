@@ -8,6 +8,7 @@ from datetime import datetime
 from sleap import Labels, Video
 from sleap.nn import training
 from sleap.nn.config import TrainingJobConfig
+from sleap.gui.learning.configs import ConfigFileInfo
 
 from typing import Any, Callable, Dict, List, Optional, Text
 
@@ -19,7 +20,7 @@ SKIP_TRAINING = False
 def run_learning_pipeline(
     labels_filename: str,
     labels: Labels,
-    training_jobs: Dict[Text, TrainingJobConfig],
+    config_info_list: List[ConfigFileInfo],
     inference_params: Dict[str, Any],
     frames_to_predict: Dict[Video, List[int]] = None,
 ) -> int:
@@ -28,7 +29,8 @@ def run_learning_pipeline(
     Args:
         labels_filename: Path to already saved current labels object.
         labels: The current labels object; results will be added to this.
-        training_jobs: The TrainingJobs with params/hyperparams for training.
+        config_info_list: List of ConfigFileInfo with configs for training
+            and inference.
         inference_params: Parameters to pass to inference.
         frames_to_predict: Dict that gives list of frame indices for each video.
 
@@ -40,15 +42,15 @@ def run_learning_pipeline(
     save_viz = inference_params.get("_save_viz", False)
 
     # Train the TrainingJobs
-    trained_jobs = run_gui_training(
-        labels_filename, training_jobs, gui=True, save_viz=save_viz
+    trained_job_paths = run_gui_training(
+        labels_filename, config_info_list, gui=True, save_viz=save_viz
     )
 
     # Check that all the models were trained
-    if None in trained_jobs.values():
+    if None in trained_job_paths.values():
         return -1
 
-    trained_job_paths = list(trained_jobs.values())
+    trained_job_paths = list(trained_job_paths.values())
 
     # Run the Predictor for suggested frames
     new_labeled_frame_count = run_gui_inference(
@@ -64,7 +66,7 @@ def run_learning_pipeline(
 
 def run_gui_training(
     labels_filename: str,
-    training_jobs: Dict[Text, TrainingJobConfig],
+    config_info_list: List[ConfigFileInfo],
     gui: bool = True,
     save_viz: bool = False,
 ) -> Dict[Text, Text]:
@@ -73,7 +75,7 @@ def run_gui_training(
 
     Args:
         labels: Labels object from which we'll get training data.
-        training_jobs: Dict of the jobs to train.
+        config_info_list: List of ConfigFileInfo with configs for training.
         gui: Whether to show gui windows and process gui events.
         save_viz: Whether to save visualizations from training.
 
@@ -81,7 +83,7 @@ def run_gui_training(
         Dictionary, keys are head name, values are path to trained config.
     """
 
-    trained_jobs = dict()
+    trained_job_paths = dict()
 
     if gui:
         from sleap.nn.monitor import LossViewer
@@ -92,16 +94,26 @@ def run_gui_training(
         win.resize(600, 400)
         win.show()
 
-    for model_type, job in training_jobs.items():
-        if getattr(job, "use_trained_model", False):
-            # set path to TrainingJob already trained from previous run
-            # json_name = f"{job.run_name}.json"
-            trained_jobs[model_type] = job.outputs.run_path
-            print(f"Using already trained model: {trained_jobs[model_type]}")
+    for config_info in config_info_list:
+        if config_info.dont_retrain:
+
+            if not config_info.has_trained_model:
+                raise ValueError(
+                    f"Config is set to not retrain but no trained model found: {config_info.path}"
+                )
+
+            print(
+                f"Using already trained model for {config_info.head_name}: {config_info.path}"
+            )
+
+            trained_job_paths[config_info.head_name] = config_info.path
 
         else:
+            job = config_info.config
+            model_type = config_info.head_name
+
             # Update save dir and run name for job we're about to train
-            # so we have accessgi to them here (rather than letting
+            # so we have access to them here (rather than letting
             # train_subprocess update them).
             # training.Trainer.set_run_name(job, labels_filename)
             job.outputs.runs_folder = os.path.join(
@@ -137,7 +149,7 @@ def run_gui_training(
 
             if success:
                 # get the path to the resulting TrainingJob file
-                trained_jobs[model_type] = trained_job_path
+                trained_job_paths[model_type] = trained_job_path
                 print(f"Finished training {str(model_type)}.")
             else:
                 if gui:
@@ -145,13 +157,13 @@ def run_gui_training(
                     QtWidgets.QMessageBox(
                         text=f"An error occurred while training {str(model_type)}. Your command line terminal may have more information about the error."
                     ).exec_()
-                trained_jobs[model_type] = None
+                trained_job_paths[model_type] = None
 
     if gui:
         # close training monitor window
         win.close()
 
-    return trained_jobs
+    return trained_job_paths
 
 
 def run_gui_inference(

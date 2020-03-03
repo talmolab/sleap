@@ -271,22 +271,30 @@ class TrainingDialog(QtWidgets.QDialog):
             head_data[key] = val
 
     def get_every_head_config_data(self, pipeline_form_data):
-        cfgs = dict()
+        cfg_info_list = []
 
         for tab_name in self.shown_tab_names:
-            tab_cfg_key_val_dict = self.tabs[tab_name].get_all_form_data()
+            trained_cfg_info = self.tabs[tab_name].trained_config_info_to_use
+            if trained_cfg_info:
+                trained_cfg_info.dont_retrain = trained_cfg_info
+                cfg_info_list.append(trained_cfg_info)
 
-            self.merge_pipeline_and_head_config_data(
-                head_name=tab_name,
-                head_data=tab_cfg_key_val_dict,
-                pipeline_data=pipeline_form_data,
-            )
+            else:
 
-            cfgs[tab_name] = utils.make_training_config_from_key_val_dict(
-                tab_cfg_key_val_dict
-            )
+                tab_cfg_key_val_dict = self.tabs[tab_name].get_all_form_data()
 
-        return cfgs
+                self.merge_pipeline_and_head_config_data(
+                    head_name=tab_name,
+                    head_data=tab_cfg_key_val_dict,
+                    pipeline_data=pipeline_form_data,
+                )
+
+                cfg = utils.make_training_config_from_key_val_dict(tab_cfg_key_val_dict)
+                cfg_info = configs.ConfigFileInfo(config=cfg, head_name=tab_name)
+
+                cfg_info_list.append(cfg_info)
+
+        return cfg_info_list
 
     def get_selected_frames_to_predict(self, pipeline_form_data):
         frames_to_predict = dict()
@@ -319,7 +327,7 @@ class TrainingDialog(QtWidgets.QDialog):
         pipeline_form_data = self.pipeline_form_widget.get_form_data()
         frames_to_predict = self.get_selected_frames_to_predict(pipeline_form_data)
 
-        configs = self.get_every_head_config_data(pipeline_form_data)
+        config_info_list = self.get_every_head_config_data(pipeline_form_data)
 
         # Close the dialog now that we have the data from it
         self.accept()
@@ -328,7 +336,7 @@ class TrainingDialog(QtWidgets.QDialog):
         new_counts = runners.run_learning_pipeline(
             labels_filename=self.labels_filename,
             labels=self.labels,
-            training_jobs=configs,
+            config_info_list=config_info_list,
             inference_params=pipeline_form_data,
             frames_to_predict=frames_to_predict,
         )
@@ -415,6 +423,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
         self._cfg_getter = cfg_getter
         self._cfg_list_widget = None
+        self._use_trained_model = None
         self.head = head
 
         yaml_name = "training_editor_form"
@@ -449,6 +458,9 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         col_layout = QtWidgets.QHBoxLayout()
         col_layout.addWidget(self._layout_widget(col1_layout))
         col_layout.addWidget(self._layout_widget(col2_layout))
+
+        # If we have an object which gets a list of config files,
+        # then we'll show a menu to allow selection from the list.
 
         if self._cfg_getter:
             self._cfg_list_widget = configs.TrainingConfigFilesWidget(
@@ -544,7 +556,13 @@ class TrainingEditorWidget(QtWidgets.QWidget):
                 self.set_fields_from_key_val_dict(dict(_backbone_name=backbone_name))
                 break
 
-    def get_all_form_data(self):
+    @property
+    def trained_config_info_to_use(self) -> configs.ConfigFileInfo:
+        if self._use_trained_model and self._use_trained_model.isChecked():
+            return self._cfg_list_widget.getSelectedConfigInfo()
+        return None
+
+    def get_all_form_data(self) -> dict:
         form_data = dict()
         for form in self.form_widgets.values():
             form_data.update(form.get_form_data())
