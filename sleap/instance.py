@@ -855,7 +855,7 @@ class Instance:
             if np.isnan(point).any():
                 continue
 
-            predicted_points[node_name] = PredictedPoint(x=point[0], y=point[1])
+            predicted_points[node_name] = Point(x=point[0], y=point[1])
 
         return cls(points=predicted_points, skeleton=skeleton, track=track)
 
@@ -914,6 +914,7 @@ class PredictedInstance(Instance):
         point_confidences: np.ndarray,
         instance_score: float,
         skeleton: Skeleton,
+        track: Optional[Track] = None,
     ) -> "PredictedInstance":
         """Create a predicted instance from data arrays.
 
@@ -942,7 +943,12 @@ class PredictedInstance(Instance):
                 x=point[0], y=point[1], score=confidence
             )
 
-        return cls(points=predicted_points, skeleton=skeleton, score=instance_score)
+        return cls(
+            points=predicted_points,
+            skeleton=skeleton,
+            score=instance_score,
+            track=track,
+        )
 
 
 def make_instance_cattr() -> cattr.Converter:
