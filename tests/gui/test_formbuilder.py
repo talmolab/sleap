@@ -110,3 +110,15 @@ def test_text_or_list_widget(qtbot):
 
     widget.setMode("text")
     assert widget.value() == "b"
+
+
+def test_string_list_widget(qtbot):
+    widget = formbuilder.StringListWidget()
+
+    widget.setValue("foo bar")
+    x = widget.getValue()
+    print(x)
+    assert x == ["foo", "bar"]
+
+    widget.setValue(["zip", "cab"])
+    assert widget.text() == "zip cab"

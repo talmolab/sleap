@@ -184,7 +184,7 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
         for name, val in data.items():
             # print(f"Attempting to set {name} to {val}")
             if name in widgets:
-                # print(f"set {name} to {val}")
+                # print(f"set {name} to {val} ({type(val)})")
                 self.set_widget_value(widgets[name], val)
             else:
                 # print(f"cannot set {name} for {widgets}")
@@ -395,6 +395,11 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
                 val = item.get("default", "")
                 val = "" if val is None else val
                 field.setText(str(val))
+
+            elif item["type"] == "string_list":
+                field = StringListWidget()
+                val = item.get("default", "")
+                field.setValue(val)
 
             # stacked: show menu and form panel corresponding to menu selection
             elif item["type"] == "stacked":
@@ -702,6 +707,21 @@ class FieldComboWidget(QtWidgets.QComboBox):
         if type(val) == int and val <= len(self.options_list) and self.result_as_idx:
             val = self.options_list[val]
         super(FieldComboWidget, self).setCurrentText(str(val))
+
+
+class StringListWidget(QtWidgets.QLineEdit):
+    def __init__(self, delim=" ", *args, **kwargs):
+        super(StringListWidget, self).__init__(*args, **kwargs)
+        self.delim = delim
+
+    def setValue(self, val):
+        # Check if we have a list (not *sequence* since this would include str)
+        if isinstance(val, list):
+            val = self.delim.join(val)
+        self.setText(str(val))
+
+    def getValue(self):
+        return self.text().split(self.delim)
 
 
 class TextOrListWidget(QtWidgets.QWidget):
