@@ -1,9 +1,12 @@
-from typing import Any, Dict, Text
+from typing import Any, Dict, Optional, Text
 
 import attr
 import cattr
+import numpy as np
 
-from sleap.nn.config import TrainingJobConfig
+from sleap import Skeleton
+from sleap.nn.config import TrainingJobConfig, ModelConfig
+from sleap.nn.model import Model
 
 
 @attr.s(auto_attribs=True)
@@ -76,11 +79,6 @@ def apply_cfg_transforms_to_key_val_dict(key_val_dict):
         key_val_dict["data.preprocessing.ensure_rgb"] = ensure_rgb
         key_val_dict["data.preprocessing.ensure_grayscale"] = ensure_grayscale
 
-
-def make_training_config_from_key_val_dict(key_val_dict):
-    apply_cfg_transforms_to_key_val_dict(key_val_dict)
-    cfg_dict = ScopedKeyDict(key_val_dict).to_hierarchical_dict()
-
-    cfg = cattr.structure(cfg_dict, TrainingJobConfig)
-
-    return cfg
+    if "model.backbone.resnet.upsampling.skip_connections" in key_val_dict:
+        if key_val_dict["model.backbone.resnet.upsampling.skip_connections"] == "":
+            key_val_dict["model.backbone.resnet.upsampling.skip_connections"] = None
