@@ -147,7 +147,7 @@ pipeline:
     run name is specified.
   label: Run Name Prefix
   name: outputs.run_name_prefix
-  type: str
+  type: string
 - default: models
   help: 'Path to the folder that run data should be stored in. All the data for a
     single run are stored in the path: "{runs_folder}/{run_name_prefix}{run_name}{run_name_suffix}"
@@ -158,14 +158,14 @@ pipeline:
     working directory.'
   label: Runs Folder
   name: outputs.runs_folder
-  type: str
+  type: string
 - default: ''
   help: A list of strings to use as "tags" that can be used to organize multiple runs.
     These are not used for anything during training or inference, so they can be used
     to store arbitrary user-specified metadata.
   label: Tags
   name: outputs.tags
-  type: List
+  type: string_list
 - default: true
   help: 'If True, the model will be saved at the end of an epoch if the validation
     loss has improved. If enabled, the model will be serialized to: "{run_folder}/best_model.h5"'
@@ -193,21 +193,16 @@ pipeline:
   name: outputs.tensorboard.write_logs
   type: bool
 
+- name: _save_viz
+  label: Visualize Predictions During Training
+  type: bool
+  default: False
+
 - name: _predict_frames
   label: Predict On
   type: list
   options: current frame,random frames
   default: current frame
-
-- name: _save_predictions
-  label: Save Predictions in Separate File
-  type: bool
-  default: False
-
-- name: _save_viz
-  label: Visualize Predictions During Training
-  type: bool
-  default: False
 
 - name: _view_datagen
   label: View Training Image Inputs...
