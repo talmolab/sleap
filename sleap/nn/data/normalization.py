@@ -65,13 +65,8 @@ def ensure_grayscale(image: tf.Tensor) -> tf.Tensor:
     """
     if tf.shape(image)[-1] == 3:
         return tf.image.rgb_to_grayscale(image)
-    if tf.shape(image)[-1] == 1:
-        return image
-    else:
-        raise ValueError(
-            f"Image must have 1 or 3 channels to be converted to grayscale, "
-            f"but has shape: {tf.shape(image)}"
-        )
+
+    return image
 
 
 def ensure_rgb(image: tf.Tensor) -> tf.Tensor:
