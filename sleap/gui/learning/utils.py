@@ -82,3 +82,73 @@ def apply_cfg_transforms_to_key_val_dict(key_val_dict):
     if "model.backbone.resnet.upsampling.skip_connections" in key_val_dict:
         if key_val_dict["model.backbone.resnet.upsampling.skip_connections"] == "":
             key_val_dict["model.backbone.resnet.upsampling.skip_connections"] = None
+
+
+def make_training_config_from_key_val_dict(key_val_dict):
+    apply_cfg_transforms_to_key_val_dict(key_val_dict)
+    cfg_dict = ScopedKeyDict(key_val_dict).to_hierarchical_dict()
+
+    cfg = cattr.structure(cfg_dict, TrainingJobConfig)
+
+    return cfg
+
+
+def make_model_config_from_key_val_dict(key_val_dict):
+    apply_cfg_transforms_to_key_val_dict(key_val_dict)
+    cfg_dict = ScopedKeyDict(key_val_dict).to_hierarchical_dict()
+
+    if "model" in cfg_dict:
+        cfg_dict = cfg_dict["model"]
+
+    return cattr.structure(cfg_dict, ModelConfig)
+
+
+def compute_rf(down_blocks: int, convs_per_block: int = 2, kernel_size: int = 3) -> int:
+    """
+    Ref: https://distill.pub/2019/computing-receptive-fields/ (Eq. 2)
+    """
+    # Define the strides and kernel sizes for a single down block.
+    # convs have stride 1, pooling has stride 2:
+    block_strides = [1] * convs_per_block + [2]
+
+    # convs have `kernel_size` x `kernel_size` kernels, pooling has 2 x 2 kernels:
+    block_kernels = [kernel_size] * convs_per_block + [2]
+
+    # Repeat block parameters by the total number of down blocks.
+    strides = np.array(block_strides * down_blocks)
+    kernels = np.array(block_kernels * down_blocks)
+
+    # L = Total number of layers
+    L = len(strides)
+
+    # Compute the product term of the RF equation.
+    rf = 1
+    for l in range(L):
+        rf += (kernels[l] - 1) * np.prod(strides[:l])
+
+    return int(rf)
+
+
+def receptive_field_size_from_model_cfg(model_cfg: ModelConfig) -> Optional[int]:
+    try:
+        model = Model.from_config(model_cfg, Skeleton())
+    except ZeroDivisionError:
+        return None
+
+    if hasattr(model.backbone, "down_convs_per_block"):
+        convs_per_block = model.backbone.down_convs_per_block
+    elif hasattr(model.backbone, "convs_per_block"):
+        convs_per_block = model.backbone.convs_per_block
+    else:
+        return None
+
+    if hasattr(model.backbone, "kernel_size"):
+        kernel_size = model.backbone.kernel_size
+    else:
+        return None
+
+    return compute_rf(
+        down_blocks=model.backbone.down_blocks,
+        convs_per_block=convs_per_block,
+        kernel_size=kernel_size,
+    )
