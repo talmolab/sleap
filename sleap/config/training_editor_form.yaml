@@ -14,6 +14,7 @@ data:
   label: Crop Size
   name: data.instance_cropping.crop_size
   type: optional_int
+  range: 0,512
 model:
 - default: unet
   hourglass:
