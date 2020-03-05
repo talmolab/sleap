@@ -41,6 +41,7 @@ from PySide2.QtCore import Qt, QRectF, QPointF, QMarginsF, QLineF
 import atexit
 import math
 import time
+import numpy as np
 
 from typing import Callable, Dict, List, Optional, Tuple, Union
 
@@ -737,7 +738,7 @@ class GraphicsView(QGraphicsView):
 
         return pixmap_graphics_item
 
-    def setImage(self, image: Union[QImage, QPixmap]):
+    def setImage(self, image: Union[QImage, QPixmap, np.ndarray]):
         """
         Set the scene's current image pixmap to the input QImage or QPixmap.
 
@@ -750,6 +751,10 @@ class GraphicsView(QGraphicsView):
         Returns:
             None.
         """
+        if type(image) is np.ndarray:
+            # Convert numpy array of frame image to QImage
+            image = qimage2ndarray.array2qimage(image)
+
         if type(image) is QPixmap:
             pixmap = image
         elif type(image) is QImage:
