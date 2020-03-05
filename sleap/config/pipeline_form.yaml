@@ -46,18 +46,6 @@ pipeline:
     "<u>centered-instance confidence map</u>" model for predicted node locations
     for each individual animal predicted by the centroid model.'
 
-  - name: data.instance_cropping.crop_size
-    help: Integer size of bounding box height and width to crop out of the full image.
-      This should be greater than the largest size of the instances in pixels. The crop
-      is applied after any input scaling, so be sure to adjust this to changes in the
-      input image scale. If set to "auto", this will be automatically detected from
-      the data during training or from the model input layer during inference. This
-      must be divisible by the model's max stride (typically 32).
-    label: Crop Size
-    default:
-    none_label: Auto
-    type: optional_int
-
   - default: 5.0
     help: Spread of the Gaussian distribution of the confidence maps as a scalar float.
       Smaller values are more precise but may be difficult to learn as they have a
@@ -132,11 +120,6 @@ pipeline:
   name: _ensure_channels
   options: ',RGB,grayscale'
   type: list
-- default: 1.0
-  help: ''
-  label: Input Scaling
-  name: data.preprocessing.input_scaling
-  type: double
 
 - type: text
   text: '<b>Output Options</b>'

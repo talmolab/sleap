@@ -1,10 +1,4 @@
 data:
-- default: ''
-  help: If set, converts the image to RGB/grayscale if not already.
-  label: Convert To
-  name: _ensure_color
-  options: ',RGB,grayscale'
-  type: list
 - default: 1.0
   help: ''
   label: Input Scaling
