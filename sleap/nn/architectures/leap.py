@@ -59,6 +59,10 @@ class LeapCNN(encoder_decoder.EncoderDecoder):
     up_convs_per_block: int = 2
 
     @property
+    def kernel_size(self):
+        return 3
+
+    @property
     def encoder_stack(self) -> List[encoder_decoder.SimpleConvBlock]:
         """Return the encoder block configuration."""
         blocks = []
@@ -67,7 +71,7 @@ class LeapCNN(encoder_decoder.EncoderDecoder):
                 encoder_decoder.SimpleConvBlock(
                     num_convs=self.down_convs_per_block,
                     filters=self.filters * (self.filters_rate ** i),
-                    kernel_size=3,
+                    kernel_size=self.kernel_size,
                     use_bias=True,
                     batch_norm=False,
                     activation="relu",
@@ -88,14 +92,14 @@ class LeapCNN(encoder_decoder.EncoderDecoder):
                     transposed_conv=(not self.up_interpolate),
                     transposed_conv_filters=block_filters,
                     transposed_conv_use_bias=True,
-                    transposed_conv_kernel_size=3,
+                    transposed_conv_kernel_size=self.kernel_size,
                     transposed_conv_batch_norm=False,
                     transposed_conv_activation="relu",
                     interp_method="bilinear",
                     skip_connection=False,
                     refine_convs=self.up_convs_per_block,
                     refine_convs_filters=block_filters,
-                    refine_convs_kernel_size=3,
+                    refine_convs_kernel_size=self.kernel_size,
                     refine_convs_batch_norm=False,
                     refine_convs_activation="relu",
                 )
