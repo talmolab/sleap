@@ -37,7 +37,7 @@ class TrainingDialog(QtWidgets.QDialog):
         if labels is None:
             labels = Labels.load_file(labels_filename)
 
-        if skeleton is None:
+        if skeleton is None and labels.skeletons:
             skeleton = labels.skeletons[0]
 
         self.labels_filename = labels_filename
