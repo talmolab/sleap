@@ -1,4 +1,4 @@
-pipeline:
+training:
 
 - name: _pipeline
   label: Training/Inference Pipeline Type
@@ -191,4 +191,41 @@ pipeline:
   label: View Training Image Inputs...
   type: button
 
+inference:
 
+- name: _pipeline
+  label: Training/Inference Pipeline Type
+  type: stacked
+  default: "multi-animal bottom-up "
+  options: "multi-animal bottom-up,multi-animal top-down,single animal"
+
+  multi-animal bottom-up:
+  - type: text
+    text: '<b>Multi-Animal Bottom-Up Pipeline</b>:<br />
+      This pipeline uses single model with two output heads:
+      a "<u>confidence map</u>" head to predicts the
+      nodes for an entire image and a "<u>part affinity field</u>" head to group
+      the nodes into distinct animal instances.'
+
+  multi-animal top-down:
+  - type: text
+    text: '<b>Multi-Animal Top-Down Pipeline</b>:<br />
+    This pipeline uses two models: a "<u>centroid</u>" model to
+    locate and crop around each animal in the frame, and a
+    "<u>centered-instance confidence map</u>" model for predicted node locations
+    for each individual animal predicted by the centroid model.'
+
+  single animal:
+  - type: text
+    text: '<b>Single Animal Pipeline</b>:<br />
+      This pipeline uses a single "<u>confidence map</u>"
+      model to predicts the nodes for an entire image and then groups all of
+      these nodes into a single animal instance.<br /><br />
+      For predicting on videos with more than one animal per frame, use a
+      multi-animal pipeline (even if your training data has one instance per frame).'
+
+- name: _predict_frames
+  label: Predict On
+  type: list
+  options: current frame,random frames
+  default: current frame

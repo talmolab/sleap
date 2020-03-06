@@ -509,19 +509,13 @@ class MainWindow(QMainWindow):
             predictionMenu,
             "training",
             "Run Training...",
-            lambda: self.showLearningDialog("learning"),
+            lambda: self.showLearningDialog("training"),
         )
         add_menu_item(
             predictionMenu,
             "inference",
             "Run Inference...",
             lambda: self.showLearningDialog("inference"),
-        )
-        add_menu_item(
-            predictionMenu,
-            "learning expert",
-            "Expert Controls...",
-            lambda: self.showLearningDialog("expert"),
         )
 
         predictionMenu.addSeparator()
@@ -1222,14 +1216,13 @@ class MainWindow(QMainWindow):
 
         Args:
             mode: A string representing mode for dialog, which could be:
-            * "active"
+            * "training"
             * "inference"
-            * "expert"
 
         Returns:
             None.
         """
-        from sleap.gui.learning.training import TrainingDialog
+        from sleap.gui.learning.training import LearningDialog
 
         if "inference" in self.overlays:
             QMessageBox(
@@ -1246,8 +1239,8 @@ class MainWindow(QMainWindow):
             return
 
         if self._child_windows.get(mode, None) is None:
-            self._child_windows[mode] = TrainingDialog(
-                self.state["filename"], self.labels,
+            self._child_windows[mode] = LearningDialog(
+                mode, self.state["filename"], self.labels,
             )
             self._child_windows[mode].learningFinished.connect(self.learningFinished)
 
