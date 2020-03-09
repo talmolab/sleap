@@ -224,6 +224,54 @@ inference:
       For predicting on videos with more than one animal per frame, use a
       multi-animal pipeline (even if your training data has one instance per frame).'
 
+- name: tracking.tracker
+  label: Tracker (cross-frame identity) Method
+  type: stacked
+  default: none
+  options: none,flow,simple
+
+  none:
+
+  flow:
+    - name: tracking.similarity
+      label: Similarity Method
+      type: list
+      default: instance
+      options: instance,centroid,iou
+    - name: tracking.matching
+      label: Matching Method
+      type: list
+      default: greedy
+      options: greedy,hungarian
+    - name: tracking.window
+      label: Elapsed Frame Window
+      type: int
+      default: 5
+    - name: tracking.clean_instance_count
+      label: Target Number of Tracks (0 for all)
+      type: int
+      default: 0
+
+  simple:
+    - name: tracking.similarity
+      label: Similarity Method
+      type: list
+      default: iou
+      options: instance,centroid,iou
+    - name: tracking.matching
+      label: Matching Method
+      type: list
+      default: hungarian
+      options: greedy,hungarian
+    - name: tracking.window
+      label: Elapsed Frame Window
+      type: int
+      default: 5
+    - name: tracking.clean_instance_count
+      label: Target Number of Tracks (0 for all)
+      type: int
+      default: 0
+
 - name: _predict_frames
   label: Predict On
   type: list
