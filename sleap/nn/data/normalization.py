@@ -1,6 +1,7 @@
 """Transformers for normalizing data formats."""
 
 import tensorflow as tf
+import numpy as np
 from sleap.nn.data.utils import expand_to_rank
 import attr
 from typing import List, Text, Optional
@@ -64,10 +65,16 @@ def ensure_int(image: tf.Tensor) -> tf.Tensor:
 
         If the input was float with range [0, 1], it will be scaled to [0, 255].
     """
-    if image.dtype.is_floating:
+    # Tensors have is_floating attribute, ndarrays don't.
+    is_float = getattr(
+        image.dtype, "is_floating", image.dtype in (np.float32, np.float64)
+    )
+
+    if is_float:
         if tf.reduce_max(image) <= 1.0:
             return tf.image.convert_image_dtype(image, tf.uint8)
         return tf.cast(image, tf.uint8)
+
     return image
 
 
