@@ -267,7 +267,6 @@ class LearningDialog(QtWidgets.QDialog):
     def set_pipeline_from_most_recent(self):
         recent_pipeline_name = self.get_most_recent_pipeline_trained()
         if recent_pipeline_name:
-            print(recent_pipeline_name)
             self.pipeline_form_widget.current_pipeline = recent_pipeline_name
 
     def add_tab(self, tab_name):
@@ -443,7 +442,6 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
 
     def emitPipeline(self):
         val = self.current_pipeline
-        print(f"emit: {val}")
         self.updatePipeline.emit(val)
 
     @property
