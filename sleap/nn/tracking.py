@@ -12,6 +12,7 @@ from sleap.nn import utils
 from sleap.instance import Instance, PredictedInstance, Track
 from sleap.io.dataset import LabeledFrame
 from sleap.skeleton import Skeleton
+from sleap.nn.data.normalization import ensure_int
 
 InstanceType = TypeVar("InstanceType", Instance, PredictedInstance)
 
@@ -243,6 +244,10 @@ class FlowCandidateMaker:
         Notes:
             This function relies on the Lucas-Kanade method for optical flow estimation.
         """
+
+        # Convert to uint8 for cv2.calcOpticalFlowPyrLK
+        ref_img = ensure_int(ref_img)
+        new_img = ensure_int(new_img)
 
         # Convert RGB to grayscale.
         if ref_img.ndim > 2 and ref_img.shape[-1] == 3:
