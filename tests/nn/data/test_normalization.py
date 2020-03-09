@@ -19,6 +19,21 @@ def test_ensure_float():
     assert normalization.ensure_float(tf.zeros([2, 2], tf.float32)).dtype == tf.float32
 
 
+def test_ensure_int():
+    np.testing.assert_array_equal(
+        normalization.ensure_int(tf.constant([0.0, 0.5, 1.0])), np.array([0, 127, 255])
+    )
+
+    np.testing.assert_array_equal(
+        normalization.ensure_int(tf.constant([0.0, 127.0, 255.0])),
+        np.array([0, 127, 255]),
+    )
+
+    np.testing.assert_array_equal(
+        normalization.ensure_int(tf.constant([0, 127, 255])), np.array([0, 127, 255])
+    )
+
+
 def test_ensure_grayscale():
     np.testing.assert_array_equal(
         normalization.ensure_grayscale(tf.ones([2, 2, 3], tf.uint8) * 255),
@@ -33,9 +48,6 @@ def test_ensure_grayscale():
         tf.ones([2, 2, 1], tf.float32),
         atol=1e-4,
     )
-
-    # with pytest.raises(ValueError):
-    #     normalization.ensure_grayscale(tf.ones([2, 2, 5]))
 
 
 def test_ensure_rgb():
