@@ -206,6 +206,9 @@ class TopdownPredictor:
 
                 predicted_frames.append(labeled_frame)
 
+        if self.tracker:
+            self.tracker.final_pass(predicted_frames)
+
         return predicted_frames
 
     def predict_generator(self, data_provider: Provider):
@@ -365,6 +368,9 @@ class BottomupPredictor:
                 )
 
                 predicted_frames.append(labeled_frame)
+
+        if self.tracker:
+            self.tracker.final_pass(predicted_frames)
 
         return predicted_frames
 
