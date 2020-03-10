@@ -1,12 +1,14 @@
 """Inference pipelines and utilities."""
 
+import attr
+import logging
 import os
+import time
 from collections import defaultdict
+from typing import Text, Optional, List, Dict
 
 import tensorflow as tf
 
-import attr
-from typing import Text, Optional, List, Dict
 
 import sleap
 from sleap import util
@@ -31,6 +33,8 @@ from sleap.nn.data.pipelines import (
     PointsRescaler,
 )
 
+logger = logging.getLogger(__name__)
+
 
 def group_examples(examples):
     grouped_examples = defaultdict(list)
@@ -39,6 +43,37 @@ def group_examples(examples):
         frame_ind = example["frame_ind"].numpy()
         grouped_examples[(video_ind, frame_ind)].append(example)
     return grouped_examples
+
+
+def safely_generate(ds: tf.data.Dataset, progress: bool = True):
+    """Yields examples from dataset, catching and logging exceptions."""
+
+    # Unsafe generating:
+    # for example in ds:
+    #     yield example
+
+    ds_iter = iter(ds)
+
+    i = 0
+    t0 = time.time()
+    while True:
+        try:
+            yield next(ds_iter)
+        except StopIteration:
+            break
+        except Exception as e:
+            logger.info(f"ERROR in sample index {i}")
+            logger.info(e)
+            logger.info("")
+        finally:
+            i += 1
+            # Show the current progress (frames, time, fps)
+            if progress:
+                if i and i % 100 == 0:
+                    elapsed_time = time.time() - t0
+                    logger.info(f"Finished {i} frames in {elapsed_time:.2f} seconds")
+                    if elapsed_time:
+                        logger.info(f"FPS={i/elapsed_time}")
 
 
 @attr.s(auto_attribs=True)
@@ -217,8 +252,8 @@ class TopdownPredictor:
 
         self.pipeline.providers = [data_provider]
 
-        for example in self.pipeline.make_dataset():
-            yield example
+        # Yield each example from dataset, catching and logging exceptions
+        return safely_generate(self.pipeline.make_dataset())
 
     def predict(self, data_provider: Provider, make_instances: bool = True):
         generator = self.predict_generator(data_provider)
@@ -380,8 +415,8 @@ class BottomupPredictor:
 
         self.pipeline.providers = [data_provider]
 
-        for example in self.pipeline.make_dataset():
-            yield example
+        # Yield each example from dataset, catching and logging exceptions
+        return safely_generate(self.pipeline.make_dataset())
 
     def predict(self, data_provider: Provider, make_instances: bool = True):
         generator = self.predict_generator(data_provider)
@@ -498,8 +533,8 @@ class SingleInstancePredictor:
 
         self.pipeline.providers = [data_provider]
 
-        for example in self.pipeline.make_dataset():
-            yield example
+        # Yield each example from dataset, catching and logging exceptions
+        return safely_generate(self.pipeline.make_dataset())
 
     def predict(self, data_provider: Provider, make_instances: bool = True):
         generator = self.predict_generator(data_provider)
