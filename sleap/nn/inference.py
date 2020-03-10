@@ -69,7 +69,7 @@ def safely_generate(ds: tf.data.Dataset, progress: bool = True):
             i += 1
             # Show the current progress (frames, time, fps)
             if progress:
-                if i and i % 100 == 0:
+                if i and i % 1000 == 0:
                     elapsed_time = time.time() - t0
                     logger.info(f"Finished {i} frames in {elapsed_time:.2f} seconds")
                     if elapsed_time:
@@ -705,9 +705,11 @@ def main():
     predictor = make_predictor_from_cli(args)
 
     # Run inference!
+    t0 = time.time()
     predicted_frames = predictor.predict(video_reader)
 
     save_predictions_from_cli(args, predicted_frames)
+    print(f"Total Time: {time.time() - t0}")
 
 
 if __name__ == "__main__":
