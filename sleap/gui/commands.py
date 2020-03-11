@@ -199,6 +199,10 @@ class CommandContext(object):
         """Imports COCO datasets."""
         self.execute(ImportCoco)
 
+    def importDLC(self):
+        """Imports DeepLabCut datasets."""
+        self.execute(ImportDeepLabCut)
+
     def importLEAP(self):
         """Imports LEAP matlab datasets."""
         self.execute(ImportLEAP)
@@ -577,6 +581,37 @@ class ImportCoco(AppCommand):
 
         params["filename"] = filename
         params["img_dir"] = os.path.dirname(filename)
+
+        return True
+
+
+class ImportDeepLabCut(AppCommand):
+    @staticmethod
+    def do_action(context: "CommandContext", params: dict):
+
+        labels = Labels.load_deeplabcut_csv(
+            filename=params["filename"]
+        )
+
+        new_window = context.app.__class__()
+        new_window.showMaximized()
+        new_window.loadLabelsObject(labels=labels)
+
+    @staticmethod
+    def ask(context: "CommandContext", params: dict) -> bool:
+        filters = ["CSV (*.csv)"]
+
+        filename, selected_filter = FileDialog.open(
+            context.app,
+            dir=None,
+            caption="Import DeepLabCut dataset...",
+            filter=";;".join(filters),
+        )
+
+        if len(filename) == 0:
+            return False
+
+        params["filename"] = filename
 
         return True
 
