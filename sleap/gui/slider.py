@@ -196,9 +196,9 @@ class VideoSlider(QtWidgets.QGraphicsView):
         # self.outlineBox.setPen(QPen(QColor("black", alpha=0)))
 
         # Add drag handle rect
-        handle_width = 6
+        self._handle_width = 6
         handle_rect = QtCore.QRect(
-            0, self._handleTop(), handle_width, self._handleHeight()
+            0, self._handle_top, self._handle_width, self._handle_height
         )
         self.setMinimumHeight(self._min_height)
         self.setMaximumHeight(self._min_height)
@@ -264,7 +264,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
         track_row = 0
 
         # Add marks with track
-        track_occupancy = labels.get_track_occupany(video)
+        track_occupancy = labels.get_track_occupancy(video)
         for track in labels.tracks:
             if track in track_occupancy and not track_occupancy[track].is_empty:
                 if track_row > 0 and self.isNewColTrack(track_row):
@@ -420,7 +420,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
         self._val_main = val
         x = self._toPos(val)
         self.handle.setPos(x, 0)
-        self.ensureVisible(self.handle, 3, 0)
+        self.ensureVisible(x, 0, self._handle_width, 0, 3, 0)
 
     def setMinimum(self, min: float) -> float:
         """Sets minimum value for slider."""
@@ -532,7 +532,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
     def updateSelectionBoxesOnResize(self):
         for box_object in (self.select_box, self.zoom_box):
             rect = box_object.rect()
-            rect.setHeight(self._handleHeight())
+            rect.setHeight(self._handle_height)
             box_object.setRect(rect)
 
         if self.select_box.isVisible():
@@ -1032,8 +1032,8 @@ class VideoSlider(QtWidgets.QGraphicsView):
         outline_rect.setWidth(drawn_width)
         self.setBoxRect(outline_rect)
 
-        handle_rect.setTop(self._handleTop())
-        handle_rect.setHeight(self._handleHeight())
+        handle_rect.setTop(self._handle_top)
+        handle_rect.setHeight(self._handle_height)
         self.handle.setRect(handle_rect)
 
         self.updateSelectionBoxesOnResize()
@@ -1044,11 +1044,13 @@ class VideoSlider(QtWidgets.QGraphicsView):
 
         super(VideoSlider, self).resizeEvent(event)
 
-    def _handleTop(self) -> float:
+    @property
+    def _handle_top(self) -> float:
         """Returns y position of top of handle (i.e., header height)."""
         return 1 + self._header_height
 
-    def _handleHeight(self, outline_rect=None) -> float:
+    @property
+    def _handle_height(self, outline_rect=None) -> float:
         """
         Returns visual height of handle.
 

@@ -199,6 +199,10 @@ class CommandContext(object):
         """Imports COCO datasets."""
         self.execute(ImportCoco)
 
+    def importDLC(self):
+        """Imports DeepLabCut datasets."""
+        self.execute(ImportDeepLabCut)
+
     def importLEAP(self):
         """Imports LEAP matlab datasets."""
         self.execute(ImportLEAP)
@@ -407,14 +411,6 @@ class CommandContext(object):
         """
         self.execute(TransposeInstances)
 
-    def markNegativeAnchor(self):
-        """Allows user to add negative training sample anchor."""
-        self.execute(MarkNegativeAnchor)
-
-    def clearFrameNegativeAnchors(self):
-        """Removes negative training sample anchors on current frame."""
-        self.execute(ClearFrameNegativeAnchors)
-
     def importPredictions(self):
         """Starts gui for importing another dataset into currently one."""
         self.execute(MergeProject)
@@ -585,6 +581,37 @@ class ImportCoco(AppCommand):
 
         params["filename"] = filename
         params["img_dir"] = os.path.dirname(filename)
+
+        return True
+
+
+class ImportDeepLabCut(AppCommand):
+    @staticmethod
+    def do_action(context: "CommandContext", params: dict):
+
+        labels = Labels.load_deeplabcut_csv(
+            filename=params["filename"]
+        )
+
+        new_window = context.app.__class__()
+        new_window.showMaximized()
+        new_window.loadLabelsObject(labels=labels)
+
+    @staticmethod
+    def ask(context: "CommandContext", params: dict) -> bool:
+        filters = ["CSV (*.csv)"]
+
+        filename, selected_filter = FileDialog.open(
+            context.app,
+            dir=None,
+            caption="Import DeepLabCut dataset...",
+            filter=";;".join(filters),
+        )
+
+        if len(filename) == 0:
+            return False
+
+        params["filename"] = filename
 
         return True
 
@@ -828,7 +855,7 @@ class GoNextTrackFrame(NavCommand):
     def do_action(cls, context: CommandContext, params: dict):
         video = context.state["video"]
         cur_idx = context.state["frame_idx"]
-        track_ranges = context.labels.get_track_occupany(video)
+        track_ranges = context.labels.get_track_occupancy(video)
 
         later_tracks = [
             (track_range.start, track)
@@ -1181,7 +1208,7 @@ class InstanceDeleteCommand(EditCommand):
             context.labels.remove_instance(lf, inst, in_transaction=True)
 
         # Update caches since we skipped doing this after each deletion
-        context.labels._build_lookup_caches()
+        context.labels.update_cache()
 
         # Update visuals
         context.changestack_push("delete instances")
@@ -1522,35 +1549,6 @@ class SetTrackName(EditCommand):
         track = params["track"]
         name = params["name"]
         track.name = name
-
-
-class ClearFrameNegativeAnchors(EditCommand):
-    topics = [UpdateTopic.frame]
-
-    @staticmethod
-    def do_action(context: CommandContext, params: dict):
-        context.labels.remove_negative_anchors(
-            context.state["video"], context.state["frame_idx"]
-        )
-
-
-class MarkNegativeAnchor(EditCommand):
-    topics = [UpdateTopic.frame]
-
-    @classmethod
-    def ask_and_do(cls, context: CommandContext, params: dict):
-        def click_callback(x, y):
-            context.app.updateStatusMessage()
-            context.labels.add_negative_anchor(
-                context.state["video"], context.state["frame_idx"], (x, y)
-            )
-            cls.do_with_signal(context, params)
-
-        # Prompt the user to select area
-        context.app.updateStatusMessage(
-            f"Please click where you want a negative sample..."
-        )
-        context.app.player.onPointSelection(click_callback)
 
 
 class GenerateSuggestions(EditCommand):

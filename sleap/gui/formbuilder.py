@@ -514,6 +514,7 @@ class FieldComboWidget(QtWidgets.QComboBox):
         self.setMinimumContentsLength(3)
         self.result_as_idx = result_as_idx
         self.add_blank_option = add_blank_option
+        self.options_list = []
 
     def set_options(self, options_list: List[str], select_item: Optional[str] = None):
         """
@@ -550,7 +551,7 @@ class FieldComboWidget(QtWidgets.QComboBox):
         return val
 
     def setValue(self, val):
-        if type(val) == int and val <= len(self.options_list) and self.result_as_idx:
+        if type(val) == int and val < len(self.options_list) and self.result_as_idx:
             val = self.options_list[val]
         super(FieldComboWidget, self).setCurrentText(str(val))
 
