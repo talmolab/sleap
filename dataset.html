@@ -97,21 +97,6 @@ Dictionary key is <code class="xref py py-class docutils literal notranslate"><s
 </dd></dl>
 
 <dl class="method">
-<dt id="sleap.io.dataset.Labels.add_negative_anchor">
-<code class="sig-name descname">add_negative_anchor</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em>, <em class="sig-param">frame_idx: int</em>, <em class="sig-param">where: tuple</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.add_negative_anchor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.add_negative_anchor" title="Permalink to this definition">¶</a></dt>
-<dd><p>Adds a location for a negative training sample.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>video</strong> – the <cite>Video</cite> for this negative sample</p></li>
-<li><p><strong>frame_idx</strong> – frame index</p></li>
-<li><p><strong>where</strong> – (x, y)</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
 <dt id="sleap.io.dataset.Labels.add_track">
 <code class="sig-name descname">add_track</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em>, <em class="sig-param">track: sleap.instance.Track</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.add_track"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.add_track" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds track to labels, updating occupancy.</p>
@@ -394,8 +379,8 @@ frame, with NaN-padded xy coordinates for each visible body part.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="sleap.io.dataset.Labels.get_track_occupany">
-<code class="sig-name descname">get_track_occupany</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em><span class="sig-paren">)</span> &#x2192; List<a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.get_track_occupany"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.get_track_occupany" title="Permalink to this definition">¶</a></dt>
+<dt id="sleap.io.dataset.Labels.get_track_occupancy">
+<code class="sig-name descname">get_track_occupancy</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em><span class="sig-paren">)</span> &#x2192; List<a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.get_track_occupancy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.get_track_occupancy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns track occupancy list for given video</p>
 </dd></dl>
 
@@ -454,31 +439,13 @@ or suggestions for all videos (if no video specified).</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="sleap.io.dataset.Labels.make_gui_video_callback">
-<em class="property">classmethod </em><code class="sig-name descname">make_gui_video_callback</code><span class="sig-paren">(</span><em class="sig-param">search_paths: Optional[List] = None</em><span class="sig-paren">)</span> &#x2192; Callable<a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.make_gui_video_callback"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.make_gui_video_callback" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a callback with GUI for finding missing videos.</p>
+<dt id="sleap.io.dataset.Labels.make_video_callback">
+<em class="property">classmethod </em><code class="sig-name descname">make_video_callback</code><span class="sig-paren">(</span><em class="sig-param">search_paths: Optional[List] = None</em>, <em class="sig-param">use_gui: bool = False</em><span class="sig-paren">)</span> &#x2192; Callable<a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.make_video_callback"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.make_video_callback" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a callback for finding missing videos.</p>
 <p>The callback can be used while loading a saved project and
 allows the user to find videos which have been moved (or have
 paths from a different system).</p>
 <p>The callback function returns True to signal “abort”.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>search_paths</strong> – If specified, this is a list of paths where
-we’ll automatically try to find the missing videos.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The callback function.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.io.dataset.Labels.make_video_callback">
-<em class="property">classmethod </em><code class="sig-name descname">make_video_callback</code><span class="sig-paren">(</span><em class="sig-param">search_paths: Optional[List] = None</em><span class="sig-paren">)</span> &#x2192; Callable<a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.make_video_callback"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.make_video_callback" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a non-GUI callback for finding missing videos.</p>
-<p>The callback can be used while loading a saved project and
-allows the user to find videos which have been moved (or have
-paths from a different system).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>search_paths</strong> – If specified, this is a list of paths where
@@ -529,23 +496,6 @@ we’ll automatically try to find the missing videos.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="sleap.io.dataset.Labels.remove_negative_anchors">
-<code class="sig-name descname">remove_negative_anchors</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em>, <em class="sig-param">frame_idx: int</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.remove_negative_anchors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.remove_negative_anchors" title="Permalink to this definition">¶</a></dt>
-<dd><p>Removes negative training samples for given video and frame.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>video</strong> – the <cite>Video</cite> for which we’re removing negative samples</p></li>
-<li><p><strong>frame_idx</strong> – frame index</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
 <dt id="sleap.io.dataset.Labels.remove_video">
 <code class="sig-name descname">remove_video</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.remove_video"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.remove_video" title="Permalink to this definition">¶</a></dt>
 <dd><p>Removes a video from the labels and ALL associated labeled frames.</p>
@@ -583,7 +533,8 @@ format). Doesn’t need to have “.” before file extension.</p></li>
 <dl class="method">
 <dt id="sleap.io.dataset.Labels.save_frame_data_hdf5">
 <code class="sig-name descname">save_frame_data_hdf5</code><span class="sig-paren">(</span><em class="sig-param">output_path: str</em>, <em class="sig-param">format: str = 'png'</em>, <em class="sig-param">all_labels: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.save_frame_data_hdf5"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.save_frame_data_hdf5" title="Permalink to this definition">¶</a></dt>
-<dd><p>Write labeled frames from all videos to hdf5 file.</p>
+<dd><p>Write images for labeled frames from all videos to hdf5 file.</p>
+<p>Note that this will make an HDF5 video, not an HDF5 labels dataset.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -602,7 +553,7 @@ we’ll use for training (i.e., those with Instances).</p></li>
 <dl class="method">
 <dt id="sleap.io.dataset.Labels.save_frame_data_imgstore">
 <code class="sig-name descname">save_frame_data_imgstore</code><span class="sig-paren">(</span><em class="sig-param">output_dir: str = './'</em>, <em class="sig-param">format: str = 'png'</em>, <em class="sig-param">all_labels: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#Labels.save_frame_data_imgstore"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.save_frame_data_imgstore" title="Permalink to this definition">¶</a></dt>
-<dd><p>Write all labeled frames from all videos to imgstore datasets.</p>
+<dd><p>Write images for labeled frames from all videos to imgstore datasets.</p>
 <p>This only writes frames that have been labeled. Videos without
 any labeled frames will be included as empty imgstores.</p>
 <dl class="field-list simple">
@@ -721,6 +672,96 @@ If you want to swap tracks on a single frame, use
 
 </dd></dl>
 
+<dl class="class">
+<dt id="sleap.io.dataset.LabelsDataCache">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.io.dataset.</code><code class="sig-name descname">LabelsDataCache</code><span class="sig-paren">(</span><em class="sig-param">labels: Labels</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#LabelsDataCache"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.LabelsDataCache" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for maintaining cache of data in labels dataset.</p>
+<dl class="method">
+<dt id="sleap.io.dataset.LabelsDataCache.add_instance">
+<code class="sig-name descname">add_instance</code><span class="sig-paren">(</span><em class="sig-param">frame: sleap.instance.LabeledFrame</em>, <em class="sig-param">instance: sleap.instance.Instance</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#LabelsDataCache.add_instance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.LabelsDataCache.add_instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates cache as needed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.dataset.LabelsDataCache.add_track">
+<code class="sig-name descname">add_track</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em>, <em class="sig-param">track: sleap.instance.Track</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#LabelsDataCache.add_track"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.LabelsDataCache.add_track" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates cache as needed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.dataset.LabelsDataCache.find_fancy_frame_idxs">
+<code class="sig-name descname">find_fancy_frame_idxs</code><span class="sig-paren">(</span><em class="sig-param">video</em>, <em class="sig-param">from_frame_idx</em>, <em class="sig-param">reverse</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#LabelsDataCache.find_fancy_frame_idxs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.LabelsDataCache.find_fancy_frame_idxs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of frame idxs, with optional start position/order.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.dataset.LabelsDataCache.find_frames">
+<code class="sig-name descname">find_frames</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em>, <em class="sig-param">frame_idx: Union[int</em>, <em class="sig-param">range</em>, <em class="sig-param">None] = None</em><span class="sig-paren">)</span> &#x2192; Optional[List[sleap.instance.LabeledFrame]]<a class="reference internal" href="_modules/sleap/io/dataset.html#LabelsDataCache.find_frames"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.LabelsDataCache.find_frames" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns list of LabeledFrames matching video/frame_idx, or None.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.dataset.LabelsDataCache.get_filtered_frame_idxs">
+<code class="sig-name descname">get_filtered_frame_idxs</code><span class="sig-paren">(</span><em class="sig-param">video: Optional[sleap.io.video.Video] = None</em>, <em class="sig-param">filter: str = ''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#LabelsDataCache.get_filtered_frame_idxs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.LabelsDataCache.get_filtered_frame_idxs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns list of (video_idx, frame_idx) tuples matching video/filter.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.dataset.LabelsDataCache.get_frame_count">
+<code class="sig-name descname">get_frame_count</code><span class="sig-paren">(</span><em class="sig-param">video: Optional[sleap.io.video.Video] = None</em>, <em class="sig-param">filter: str = ''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#LabelsDataCache.get_frame_count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.LabelsDataCache.get_frame_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns (possibly cached) count of frames matching video/filter.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.dataset.LabelsDataCache.get_track_occupancy">
+<code class="sig-name descname">get_track_occupancy</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em>, <em class="sig-param">track: sleap.instance.Track</em><span class="sig-paren">)</span> &#x2192; sleap.rangelist.RangeList<a class="reference internal" href="_modules/sleap/io/dataset.html#LabelsDataCache.get_track_occupancy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.LabelsDataCache.get_track_occupancy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Accessor for track occupancy cache that adds video/track as needed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.dataset.LabelsDataCache.get_video_track_occupancy">
+<code class="sig-name descname">get_video_track_occupancy</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em><span class="sig-paren">)</span> &#x2192; Dict[sleap.instance.Track, sleap.rangelist.RangeList]<a class="reference internal" href="_modules/sleap/io/dataset.html#LabelsDataCache.get_video_track_occupancy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.LabelsDataCache.get_video_track_occupancy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns track occupancy information for specified video.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.dataset.LabelsDataCache.remove_frame">
+<code class="sig-name descname">remove_frame</code><span class="sig-paren">(</span><em class="sig-param">frame: sleap.instance.LabeledFrame</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#LabelsDataCache.remove_frame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.LabelsDataCache.remove_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates cache as needed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.dataset.LabelsDataCache.remove_instance">
+<code class="sig-name descname">remove_instance</code><span class="sig-paren">(</span><em class="sig-param">frame: sleap.instance.LabeledFrame</em>, <em class="sig-param">instance: sleap.instance.Instance</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#LabelsDataCache.remove_instance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.LabelsDataCache.remove_instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates cache as needed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.dataset.LabelsDataCache.remove_video">
+<code class="sig-name descname">remove_video</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#LabelsDataCache.remove_video"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.LabelsDataCache.remove_video" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates cache as needed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.dataset.LabelsDataCache.track_swap">
+<code class="sig-name descname">track_swap</code><span class="sig-paren">(</span><em class="sig-param">video: sleap.io.video.Video, new_track: sleap.instance.Track, old_track: Optional[sleap.instance.Track], frame_range: tuple</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#LabelsDataCache.track_swap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.LabelsDataCache.track_swap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates cache as needed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.dataset.LabelsDataCache.update">
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">new_frame: Optional[sleap.instance.LabeledFrame] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#LabelsDataCache.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.LabelsDataCache.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds (or rebuilds) various caches.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.io.dataset.LabelsDataCache.update_counts_for_frame">
+<code class="sig-name descname">update_counts_for_frame</code><span class="sig-paren">(</span><em class="sig-param">frame: sleap.instance.LabeledFrame</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/io/dataset.html#LabelsDataCache.update_counts_for_frame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.LabelsDataCache.update_counts_for_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updated the cached count. Should be called after frame is modified.</p>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 
 
@@ -798,7 +839,7 @@ If you want to swap tracks on a single frame, use
       &copy;2019, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

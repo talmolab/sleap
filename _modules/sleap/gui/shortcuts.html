@@ -148,8 +148,7 @@
         <span class="s2">&quot;next video&quot;</span><span class="p">,</span>
         <span class="s2">&quot;prev video&quot;</span><span class="p">,</span>
         <span class="s2">&quot;goto frame&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;mark frame&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;goto marked&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;select to frame&quot;</span><span class="p">,</span>
         <span class="s2">&quot;add instance&quot;</span><span class="p">,</span>
         <span class="s2">&quot;delete instance&quot;</span><span class="p">,</span>
         <span class="s2">&quot;delete track&quot;</span><span class="p">,</span>
@@ -172,12 +171,29 @@
         <span class="s2">&quot;delete frame predictions&quot;</span><span class="p">,</span>
         <span class="s2">&quot;delete clip predictions&quot;</span><span class="p">,</span>
         <span class="s2">&quot;delete area predictions&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;frame next&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;frame prev&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;frame next medium step&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;frame prev medium step&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;frame next large step&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;frame prev large step&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">shortcuts</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">get_config_yaml</span><span class="p">(</span><span class="s2">&quot;shortcuts.yaml&quot;</span><span class="p">)</span>
+        <span class="n">defaults</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">get_config_yaml</span><span class="p">(</span><span class="s2">&quot;shortcuts.yaml&quot;</span><span class="p">,</span> <span class="n">get_defaults</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-        <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">shortcuts</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shortcuts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_shortcut_dict</span><span class="p">(</span><span class="n">shortcuts</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_defaults</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_shortcut_dict</span><span class="p">(</span><span class="n">defaults</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_process_shortcut_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shortcuts</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">shortcuts</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+
+            <span class="c1"># Ignore shortcuts which aren&#39;t in currently supported list</span>
+            <span class="k">if</span> <span class="n">action</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="c1"># Use &quot;&quot; if there&#39;s no shortcut set</span>
             <span class="n">key_string</span> <span class="o">=</span> <span class="n">shortcuts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
             <span class="n">key_string</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span> <span class="k">if</span> <span class="n">key_string</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">key_string</span>
 
@@ -189,12 +205,19 @@
                 <span class="n">shortcuts</span><span class="p">[</span><span class="n">action</span><span class="p">]</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">key_string</span><span class="p">)</span>
             <span class="k">except</span><span class="p">:</span>
                 <span class="n">shortcuts</span><span class="p">[</span><span class="n">action</span><span class="p">]</span> <span class="o">=</span> <span class="n">QKeySequence</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">key_string</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_shortcuts</span> <span class="o">=</span> <span class="n">shortcuts</span>
+        <span class="k">return</span> <span class="n">shortcuts</span>
 
 <div class="viewcode-block" id="Shortcuts.save"><a class="viewcode-back" href="../../../gui.html#sleap.gui.shortcuts.Shortcuts.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Saves all shortcuts to shortcut file.&quot;&quot;&quot;</span>
-        <span class="n">util</span><span class="o">.</span><span class="n">save_config_yaml</span><span class="p">(</span><span class="s2">&quot;shortcuts.yaml&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shortcuts</span><span class="p">)</span></div>
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shortcuts</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># Only save shortcuts with names in supported list</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span><span class="o">.</span><span class="n">toString</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">QKeySequence</span><span class="p">)</span> <span class="k">else</span> <span class="n">val</span>
+
+        <span class="n">util</span><span class="o">.</span><span class="n">save_config_yaml</span><span class="p">(</span><span class="s2">&quot;shortcuts.yaml&quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">slice</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -215,18 +238,21 @@
             <span class="c1"># value</span>
             <span class="n">idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
             <span class="k">return</span> <span class="bp">self</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># value</span>
-            <span class="k">if</span> <span class="n">idx</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shortcuts</span><span class="p">:</span>
-                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shortcuts</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
-        <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="c1"># if idx not in self._names:</span>
+        <span class="c1">#     print(f&quot;No shortcut matching &#39;{idx}&#39;&quot;)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shortcuts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_defaults</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">val</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Sets shortcut by index.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="o">==</span> <span class="nb">int</span><span class="p">:</span>
-            <span class="n">idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
-            <span class="bp">self</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
         <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">idx</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No shortcut matching &#39;</span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+
             <span class="bp">self</span><span class="o">.</span><span class="n">_shortcuts</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
 
     <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -303,7 +329,7 @@
       &copy;2019, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

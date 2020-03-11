@@ -251,7 +251,7 @@
             <span class="n">train</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">training_job</span><span class="o">.</span><span class="n">train_set_filename</span>
         <span class="k">if</span> <span class="n">train</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">train</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading labels: </span><span class="si">{train}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading labels: </span><span class="si">{</span><span class="n">train</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">train</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">train</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">train</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">train</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">TrainingData</span><span class="o">.</span><span class="n">from_labels</span><span class="p">(</span><span class="n">train</span><span class="p">)</span>
@@ -259,7 +259,7 @@
             <span class="n">train</span> <span class="o">=</span> <span class="n">data_train</span>
         <span class="k">if</span> <span class="n">train</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">train</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading data: </span><span class="si">{train}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading data: </span><span class="si">{</span><span class="n">train</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">train</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">TrainingData</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">train</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">train</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Training data was not specified.&quot;</span><span class="p">)</span>
@@ -269,7 +269,7 @@
             <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">training_job</span><span class="o">.</span><span class="n">val_set_filename</span>
         <span class="k">if</span> <span class="n">val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading labels: </span><span class="si">{val}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading labels: </span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">val</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">val</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">TrainingData</span><span class="o">.</span><span class="n">from_labels</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
@@ -277,7 +277,7 @@
             <span class="n">val</span> <span class="o">=</span> <span class="n">data_val</span>
         <span class="k">if</span> <span class="n">val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading data: </span><span class="si">{val}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading data: </span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">val</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">TrainingData</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">training_job</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">val_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">train</span><span class="p">,</span> <span class="n">val</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">split_training_data</span><span class="p">(</span>
@@ -291,7 +291,7 @@
             <span class="n">test</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">training_job</span><span class="o">.</span><span class="n">test_set_filename</span>
         <span class="k">if</span> <span class="n">test</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">test</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading labels: </span><span class="si">{test}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading labels: </span><span class="si">{</span><span class="n">test</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">test</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">test</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">test</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">test</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">TrainingData</span><span class="o">.</span><span class="n">from_labels</span><span class="p">(</span><span class="n">test</span><span class="p">)</span>
@@ -299,7 +299,7 @@
             <span class="n">test</span> <span class="o">=</span> <span class="n">data_test</span>
         <span class="k">if</span> <span class="n">test</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">test</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading data: </span><span class="si">{test}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading data: </span><span class="si">{</span><span class="n">test</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">test</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">TrainingData</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">test</span><span class="p">)</span>
 
         <span class="c1"># Setup initial zipped datasets.</span>
@@ -482,7 +482,7 @@
 
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Invalid model output type specified (</span><span class="si">{self.training_job.model.output_type}</span><span class="s2">).&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid model output type specified (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">training_job</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">output_type</span><span class="si">}</span><span class="s2">).&quot;</span>
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">training_job</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">steps_per_epoch</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
@@ -819,11 +819,11 @@
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Model: </span><span class="si">{keras_model.name}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Input: </span><span class="si">{keras_model.input_shape}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Output: </span><span class="si">{keras_model.output_shape}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Layers: {len(keras_model.layers)}&quot;</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Params: {keras_model.count_params():3,}&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Model: </span><span class="si">{</span><span class="n">keras_model</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Input: </span><span class="si">{</span><span class="n">keras_model</span><span class="o">.</span><span class="n">input_shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Output: </span><span class="si">{</span><span class="n">keras_model</span><span class="o">.</span><span class="n">output_shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Layers: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">keras_model</span><span class="o">.</span><span class="n">layers</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Params: </span><span class="si">{</span><span class="n">keras_model</span><span class="o">.</span><span class="n">count_params</span><span class="p">()</span><span class="si">:</span><span class="s2">3,</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="nb">print</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="o">=</span> <span class="n">keras_model</span>
@@ -858,14 +858,14 @@
         <span class="p">):</span>
             <span class="c1"># Generate new run name if save_dir specified but not the run name.</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">training_job</span><span class="o">.</span><span class="n">run_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">training_job</span><span class="o">.</span><span class="n">new_run_name</span><span class="p">(</span>
-                <span class="n">suffix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;n={len(self.data_train.images)}&quot;</span>
+                <span class="n">suffix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;n=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_train</span><span class="o">.</span><span class="n">images</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">training_job</span><span class="o">.</span><span class="n">run_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">training_job</span><span class="o">.</span><span class="n">run_path</span><span class="p">):</span>
                 <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">training_job</span><span class="o">.</span><span class="n">run_path</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Run path: </span><span class="si">{self.training_job.run_path}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Run path: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">training_job</span><span class="o">.</span><span class="n">run_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Run path: Not provided, nothing will be saved to disk.&quot;</span><span class="p">)</span>
@@ -879,7 +879,7 @@
 
         <span class="n">t0</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Training started: {str(t0)}&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Training started: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">t0</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_history</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">ds_train</span><span class="p">,</span>
@@ -893,8 +893,8 @@
         <span class="n">t1</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
         <span class="n">elapsed</span> <span class="o">=</span> <span class="n">t1</span> <span class="o">-</span> <span class="n">t0</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Training finished: {str(t1)}&quot;</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total runtime: {str(elapsed)}&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Training finished: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">t1</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total runtime: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">elapsed</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="c1"># TODO: Evaluate final test set performance if available</span>
 
@@ -1129,7 +1129,7 @@
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">profile_dir</span><span class="p">,</span> <span class="n">job_filename</span><span class="p">)):</span>
             <span class="n">job_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">profile_dir</span><span class="p">,</span> <span class="n">job_filename</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not find training profile: </span><span class="si">{job_filename}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not find training profile: </span><span class="si">{</span><span class="n">job_filename</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="n">labels_train_path</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">labels_path</span>
 
@@ -1169,8 +1169,8 @@
     <span class="nb">print</span><span class="p">(</span><span class="n">training_job</span><span class="o">.</span><span class="n">run_path</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">()</span>
 
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Training labels file: </span><span class="si">{labels_train_path}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Training profile: </span><span class="si">{job_filename}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Training labels file: </span><span class="si">{</span><span class="n">labels_train_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Training profile: </span><span class="si">{</span><span class="n">job_filename</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">()</span>
 
     <span class="c1"># Log configuration to console.</span>
@@ -1260,7 +1260,7 @@
       &copy;2019, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

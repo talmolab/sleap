@@ -360,6 +360,11 @@ If no instance selected, returns None.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="sleap.gui.video.GraphicsView.mouseMoveEvent">
+<code class="sig-name descname">mouseMoveEvent</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">event:PySide2.QtGui.QMouseEvent</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#GraphicsView.mouseMoveEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.GraphicsView.mouseMoveEvent" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="sleap.gui.video.GraphicsView.mousePressEvent">
 <code class="sig-name descname">mousePressEvent</code><span class="sig-paren">(</span><em class="sig-param">event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/video.html#GraphicsView.mousePressEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.video.GraphicsView.mousePressEvent" title="Permalink to this definition">¶</a></dt>
 <dd><p>Start mouse pan or zoom mode.</p>
@@ -2678,31 +2683,6 @@ within trail_length).</p></li>
 </div>
 <div class="section" id="sleap-gui-overlays-anchors">
 <h3>sleap.gui.overlays.anchors<a class="headerlink" href="#sleap-gui-overlays-anchors" title="Permalink to this headline">¶</a></h3>
-<span class="target" id="module-sleap.gui.overlays.anchors"></span><p>Module with overlay for showing negative training sample anchors.</p>
-<dl class="class">
-<dt id="sleap.gui.overlays.anchors.NegativeAnchorOverlay">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.overlays.anchors.</code><code class="sig-name descname">NegativeAnchorOverlay</code><span class="sig-paren">(</span><em class="sig-param">labels: sleap.io.dataset.Labels = None</em>, <em class="sig-param">player: sleap.gui.video.QtVideoPlayer = None</em>, <em class="sig-param">line_len: int = 3</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/overlays/anchors.html#NegativeAnchorOverlay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.overlays.anchors.NegativeAnchorOverlay" title="Permalink to this definition">¶</a></dt>
-<dd><p>Class to overlay of negative training sample anchors to video frame.</p>
-<dl class="attribute">
-<dt id="sleap.gui.overlays.anchors.NegativeAnchorOverlay.labels">
-<code class="sig-name descname">labels</code><a class="headerlink" href="#sleap.gui.overlays.anchors.NegativeAnchorOverlay.labels" title="Permalink to this definition">¶</a></dt>
-<dd><p>The <code class="xref py py-class docutils literal notranslate"><span class="pre">Labels</span></code> dataset from which to get overlay data.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="sleap.gui.overlays.anchors.NegativeAnchorOverlay.player">
-<code class="sig-name descname">player</code><a class="headerlink" href="#sleap.gui.overlays.anchors.NegativeAnchorOverlay.player" title="Permalink to this definition">¶</a></dt>
-<dd><p>The video player in which to show overlay.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sleap.gui.overlays.anchors.NegativeAnchorOverlay.add_to_scene">
-<code class="sig-name descname">add_to_scene</code><span class="sig-paren">(</span><em class="sig-param">video</em>, <em class="sig-param">frame_idx</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/overlays/anchors.html#NegativeAnchorOverlay.add_to_scene"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.overlays.anchors.NegativeAnchorOverlay.add_to_scene" title="Permalink to this definition">¶</a></dt>
-<dd><p>Adds anchor markers as overlay on frame image.</p>
-</dd></dl>
-
-</dd></dl>
-
 </div>
 <div class="section" id="sleap-gui-overlays-base">
 <h3>sleap.gui.overlays.base<a class="headerlink" href="#sleap-gui-overlays-base" title="Permalink to this headline">¶</a></h3>
@@ -2979,6 +2959,23 @@ Shape of array should be (channels, height, width).</p></li>
 </dd></dl>
 
 <dl class="class">
+<dt id="sleap.gui.dataviews.GenericTableView">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.dataviews.</code><code class="sig-name descname">GenericTableView</code><span class="sig-paren">(</span><em class="sig-param">model: PySide2.QtCore.QAbstractTableModel</em>, <em class="sig-param">state: sleap.gui.state.GuiState = None</em>, <em class="sig-param">row_name: Optional[str] = None</em>, <em class="sig-param">name_prefix: Optional[str] = None</em>, <em class="sig-param">is_sortable: bool = False</em>, <em class="sig-param">is_activatable: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#GenericTableView"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.GenericTableView" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="sleap.gui.dataviews.GenericTableView.activateSelected">
+<code class="sig-name descname">activateSelected</code><span class="sig-paren">(</span><em class="sig-param">*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#GenericTableView.activateSelected"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.GenericTableView.activateSelected" title="Permalink to this definition">¶</a></dt>
+<dd><p>Activates item selected in table.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.gui.dataviews.GenericTableView.selectionChanged">
+<code class="sig-name descname">selectionChanged</code><span class="sig-paren">(</span><em class="sig-param">new</em>, <em class="sig-param">old</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#GenericTableView.selectionChanged"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.GenericTableView.selectionChanged" title="Permalink to this definition">¶</a></dt>
+<dd><p>Custom event handler.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="sleap.gui.dataviews.LabeledFrameTableModel">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.gui.dataviews.</code><code class="sig-name descname">LabeledFrameTableModel</code><span class="sig-paren">(</span><em class="sig-param">items: Optional[list] = None</em>, <em class="sig-param">properties: Optional[List[str]] = None</em>, <em class="sig-param">context: Optional[sleap.gui.commands.CommandContext] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/gui/dataviews.html#LabeledFrameTableModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.LabeledFrameTableModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Table model for listing instances in labeled frame.</p>
@@ -3206,7 +3203,7 @@ selected edge source node.</p></li>
       &copy;2019, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

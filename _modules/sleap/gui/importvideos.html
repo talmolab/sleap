@@ -314,7 +314,7 @@
 
             <span class="bp">self</span><span class="o">.</span><span class="n">preview_widget</span><span class="o">.</span><span class="n">load_video</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unable to load video with these parameters. Error: </span><span class="si">{e}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unable to load video with these parameters. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="c1"># if we got an error showing video with those settings, clear the video preview</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">video</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">preview_widget</span><span class="o">.</span><span class="n">clear_video</span><span class="p">()</span>
@@ -636,7 +636,7 @@
       &copy;2019, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

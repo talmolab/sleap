@@ -111,7 +111,7 @@
         <span class="k">return</span> <span class="n">val</span>
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{self.x}</span><span class="s2">, </span><span class="si">{self.y}</span><span class="s2">)&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="si">}</span><span class="s2">)&quot;</span>
 
 <div class="viewcode-block" id="Point.isnan"><a class="viewcode-back" href="../../instance.html#sleap.instance.Point.isnan">[docs]</a>    <span class="k">def</span> <span class="nf">isnan</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -423,7 +423,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">from_predicted</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">from_predicted</span><span class="p">)</span> <span class="o">!=</span> <span class="n">PredictedInstance</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Instance.from_predicted type must be PredictedInstance (not {type(from_predicted)})&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Instance.from_predicted type must be PredictedInstance (not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">from_predicted</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span>
             <span class="p">)</span>
 
     <span class="nd">@_points</span><span class="o">.</span><span class="n">validator</span>
@@ -452,7 +452,7 @@
                 <span class="k">for</span> <span class="n">node_name</span> <span class="ow">in</span> <span class="n">points</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                     <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">has_node</span><span class="p">(</span><span class="n">node_name</span><span class="p">):</span>
                         <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
-                            <span class="sa">f</span><span class="s2">&quot;There is no node named </span><span class="si">{node_name}</span><span class="s2"> in </span><span class="si">{self.skeleton}</span><span class="s2">&quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;There is no node named </span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2"> in </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="si">}</span><span class="s2">&quot;</span>
                         <span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">PointArray</span><span class="p">):</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">nodes</span><span class="p">):</span>
@@ -598,7 +598,7 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">[</span><span class="n">node</span><span class="p">]</span>
         <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;The underlying skeleton (</span><span class="si">{self.skeleton}</span><span class="s2">) has no node &#39;</span><span class="si">{node}</span><span class="s2">&#39;&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;The underlying skeleton (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="si">}</span><span class="s2">) has no node &#39;</span><span class="si">{</span><span class="n">node</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
             <span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Node</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
@@ -667,7 +667,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">[</span><span class="n">node_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
             <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;The underlying skeleton (</span><span class="si">{self.skeleton}</span><span class="s2">) has no node &#39;</span><span class="si">{node}</span><span class="s2">&#39;&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;The underlying skeleton (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="si">}</span><span class="s2">) has no node &#39;</span><span class="si">{</span><span class="n">node</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
                 <span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Node</span><span class="p">]):</span>
@@ -689,7 +689,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">[</span><span class="n">node_idx</span><span class="p">]</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">nan</span>
         <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;The underlying skeleton (</span><span class="si">{self.skeleton}</span><span class="s2">) has no node &#39;</span><span class="si">{node}</span><span class="s2">&#39;&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;The underlying skeleton (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="si">}</span><span class="s2">) has no node &#39;</span><span class="si">{</span><span class="n">node</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
             <span class="p">)</span>
 
 <div class="viewcode-block" id="Instance.matches"><a class="viewcode-back" href="../../instance.html#sleap.instance.Instance.matches">[docs]</a>    <span class="k">def</span> <span class="nf">matches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;Instance&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
@@ -1269,7 +1269,7 @@
         <span class="c1"># remove labeled frames with no instances</span>
         <span class="n">labeled_frames</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">lf</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">lf</span><span class="o">.</span><span class="n">instances</span><span class="p">),</span> <span class="n">labeled_frames</span><span class="p">))</span>
         <span class="k">if</span> <span class="n">redundant_count</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;skipped </span><span class="si">{redundant_count}</span><span class="s2"> redundant instances&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;skipped </span><span class="si">{</span><span class="n">redundant_count</span><span class="si">}</span><span class="s2"> redundant instances&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">labeled_frames</span></div>
 
 <div class="viewcode-block" id="LabeledFrame.complex_merge_between"><a class="viewcode-back" href="../../instance.html#sleap.instance.LabeledFrame.complex_merge_between">[docs]</a>    <span class="nd">@classmethod</span>
@@ -1491,7 +1491,7 @@
       &copy;2019, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

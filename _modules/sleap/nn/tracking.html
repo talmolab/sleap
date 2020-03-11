@@ -541,7 +541,7 @@
                 <span class="k">continue</span>
 
             <span class="c1"># Spawn new track.</span>
-            <span class="n">new_track</span> <span class="o">=</span> <span class="n">Track</span><span class="p">(</span><span class="n">spawned_on</span><span class="o">=</span><span class="n">t</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;track_{len(self.spawned_tracks)}&quot;</span><span class="p">)</span>
+            <span class="n">new_track</span> <span class="o">=</span> <span class="n">Track</span><span class="p">(</span><span class="n">spawned_on</span><span class="o">=</span><span class="n">t</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;track_</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spawned_tracks</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">spawned_tracks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_track</span><span class="p">)</span>
 
             <span class="c1"># Assign instance to the new track and save.</span>
@@ -565,7 +565,7 @@
         <span class="n">tracker_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">candidate_maker</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
         <span class="n">similarity_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">similarity_function</span><span class="o">.</span><span class="vm">__name__</span>
         <span class="n">match_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">matching_function</span><span class="o">.</span><span class="vm">__name__</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{tracker_name}</span><span class="s2">.</span><span class="si">{similarity_name}</span><span class="s2">.</span><span class="si">{match_name}</span><span class="s2">&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tracker_name</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">similarity_name</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">match_name</span><span class="si">}</span><span class="s2">&quot;</span>
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">make_tracker_by_name</span><span class="p">(</span>
@@ -584,15 +584,15 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Tracker&quot;</span><span class="p">:</span>
 
         <span class="k">if</span> <span class="n">tracker</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tracker_policies</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{tracker}</span><span class="s2"> is not a valid tracker.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tracker</span><span class="si">}</span><span class="s2"> is not a valid tracker.&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">similarity</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">similarity_policies</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{similarity}</span><span class="s2"> is not a valid tracker similarity function.&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">similarity</span><span class="si">}</span><span class="s2"> is not a valid tracker similarity function.&quot;</span>
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">match</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">match_policies</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{match}</span><span class="s2"> is not a valid tracker matching function.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">match</span><span class="si">}</span><span class="s2"> is not a valid tracker matching function.&quot;</span><span class="p">)</span>
 
         <span class="n">candidate_maker</span> <span class="o">=</span> <span class="n">tracker_policies</span><span class="p">[</span><span class="n">tracker</span><span class="p">](</span><span class="n">min_points</span><span class="o">=</span><span class="n">min_match_points</span><span class="p">)</span>
         <span class="n">similarity_function</span> <span class="o">=</span> <span class="n">similarity_policies</span><span class="p">[</span><span class="n">similarity</span><span class="p">]</span>
@@ -686,7 +686,7 @@
             <span class="n">help_string</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;help&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;options&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
                 <span class="n">help_string</span> <span class="o">+=</span> <span class="s2">&quot; Options: &quot;</span> <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">arg</span><span class="p">[</span><span class="s2">&quot;options&quot;</span><span class="p">])</span>
-            <span class="n">help_string</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; (default: </span><span class="si">{arg[&#39;default&#39;]}</span><span class="s2">)&quot;</span>
+            <span class="n">help_string</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; (default: </span><span class="si">{</span><span class="n">arg</span><span class="p">[</span><span class="s1">&#39;default&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">)&quot;</span>
 
             <span class="k">if</span> <span class="n">arg_scope</span><span class="p">:</span>
                 <span class="n">arg_name</span> <span class="o">=</span> <span class="n">arg_scope</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">arg</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
@@ -694,7 +694,7 @@
                 <span class="n">arg_name</span> <span class="o">=</span> <span class="n">arg</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
 
             <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;--</span><span class="si">{arg_name}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">arg</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span> <span class="n">help</span><span class="o">=</span><span class="n">help_string</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;--</span><span class="si">{</span><span class="n">arg_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">arg</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span> <span class="n">help</span><span class="o">=</span><span class="n">help_string</span><span class="p">,</span>
             <span class="p">)</span></div>
 
 
@@ -871,10 +871,10 @@
         <span class="n">output_path</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">output</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">out_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">data_path</span><span class="p">)</span>
-        <span class="n">out_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">data_path</span><span class="p">)</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;.{tracker.get_name()}.h5&quot;</span>
+        <span class="n">out_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">data_path</span><span class="p">)</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;.</span><span class="si">{</span><span class="n">tracker</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span><span class="si">}</span><span class="s2">.h5&quot;</span>
         <span class="n">output_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">out_name</span><span class="p">)</span>
 
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Saving: </span><span class="si">{output_path}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Saving: </span><span class="si">{</span><span class="n">output_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="n">Labels</span><span class="o">.</span><span class="n">save_file</span><span class="p">(</span><span class="n">new_labels</span><span class="p">,</span> <span class="n">output_path</span><span class="p">)</span>
 
 
@@ -944,7 +944,7 @@
       &copy;2019, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

@@ -109,15 +109,15 @@
             <span class="n">dtype_list</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">h5</span><span class="o">.</span><span class="n">special_dtype</span><span class="p">(</span><span class="n">vlen</span><span class="o">=</span><span class="nb">str</span><span class="p">)))</span>
         <span class="k">elif</span> <span class="n">field</span><span class="o">.</span><span class="n">type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;numpy dtype for </span><span class="si">{cls}</span><span class="s2"> cannot be constructed because no &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;numpy dtype for </span><span class="si">{</span><span class="bp">cls</span><span class="si">}</span><span class="s2"> cannot be constructed because no &quot;</span>
                 <span class="o">+</span> <span class="s2">&quot;type information found. Make sure each field is type annotated.&quot;</span>
             <span class="p">)</span>
         <span class="k">elif</span> <span class="n">field</span><span class="o">.</span><span class="n">type</span> <span class="ow">in</span> <span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]:</span>
             <span class="n">dtype_list</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">field</span><span class="o">.</span><span class="n">type</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;numpy dtype for </span><span class="si">{cls}</span><span class="s2"> cannot be constructed because no &quot;</span>
-                <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{field.type}</span><span class="s2"> is not supported.&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;numpy dtype for </span><span class="si">{</span><span class="bp">cls</span><span class="si">}</span><span class="s2"> cannot be constructed because no &quot;</span>
+                <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">field</span><span class="o">.</span><span class="n">type</span><span class="si">}</span><span class="s2"> is not supported.&quot;</span>
             <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype_list</span><span class="p">)</span></div>
@@ -164,7 +164,7 @@
 <span class="sd">        None</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">dic</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Saving </span><span class="si">{key}</span><span class="s2">:&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Saving </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">:&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">h5file</span><span class="p">[</span><span class="n">path</span> <span class="o">+</span> <span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
@@ -280,7 +280,9 @@
     <span class="k">return</span> <span class="n">result</span></div>
 
 
-<div class="viewcode-block" id="get_config_file"><a class="viewcode-back" href="../../misc.html#sleap.util.get_config_file">[docs]</a><span class="k">def</span> <span class="nf">get_config_file</span><span class="p">(</span><span class="n">shortname</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<div class="viewcode-block" id="get_config_file"><a class="viewcode-back" href="../../misc.html#sleap.util.get_config_file">[docs]</a><span class="k">def</span> <span class="nf">get_config_file</span><span class="p">(</span>
+    <span class="n">shortname</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ignore_file_not_found</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">get_defaults</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns the full path to the specified config file.</span>
 
@@ -292,6 +294,9 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        shortname: The short filename, e.g., shortcuts.yaml</span>
+<span class="sd">        ignore_file_not_found: If True, then return path for config file</span>
+<span class="sd">            regardless of whether it exists.</span>
+<span class="sd">        get_defaults: If True, then just return the path to default config file.</span>
 
 <span class="sd">    Raises:</span>
 <span class="sd">        FileNotFoundError: If the specified config file cannot be found.</span>
@@ -299,13 +304,10 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        The full path to the specified config file.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">desired_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;~/.sleap/</span><span class="si">{shortname}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">desired_path</span><span class="p">):</span>
-        <span class="n">package_path</span> <span class="o">=</span> <span class="n">get_package_file</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;sleap/config/</span><span class="si">{shortname}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">package_path</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Cannot locate </span><span class="si">{shortname}</span><span class="s2"> config file at </span><span class="si">{desired_path}</span><span class="s2"> or </span><span class="si">{package_path}</span><span class="s2">.&quot;</span>
-            <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">get_defaults</span><span class="p">:</span>
+        <span class="n">desired_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;~/.sleap/</span><span class="si">{</span><span class="n">shortname</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
         <span class="c1"># Make sure there&#39;s a ~/.sleap/ directory to store user version of the</span>
         <span class="c1"># config file.</span>
         <span class="k">try</span><span class="p">:</span>
@@ -313,20 +315,37 @@
         <span class="k">except</span> <span class="ne">FileExistsError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">pass</span>
 
+        <span class="c1"># If we don&#39;t care whether the file exists, just return the path</span>
+        <span class="k">if</span> <span class="n">ignore_file_not_found</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">desired_path</span>
+
+    <span class="c1"># If we do care whether the file exists, check the package version of the</span>
+    <span class="c1"># config file if we can&#39;t find the user version.</span>
+
+    <span class="k">if</span> <span class="n">get_defaults</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">desired_path</span><span class="p">):</span>
+        <span class="n">package_path</span> <span class="o">=</span> <span class="n">get_package_file</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;sleap/config/</span><span class="si">{</span><span class="n">shortname</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">package_path</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Cannot locate </span><span class="si">{</span><span class="n">shortname</span><span class="si">}</span><span class="s2"> config file at </span><span class="si">{</span><span class="n">desired_path</span><span class="si">}</span><span class="s2"> or </span><span class="si">{</span><span class="n">package_path</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">get_defaults</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">package_path</span>
+
         <span class="c1"># Copy package version of config file into user config directory.</span>
         <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">package_path</span><span class="p">,</span> <span class="n">desired_path</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">desired_path</span></div>
 
 
-<span class="k">def</span> <span class="nf">get_config_yaml</span><span class="p">(</span><span class="n">shortname</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-    <span class="n">config_path</span> <span class="o">=</span> <span class="n">get_config_file</span><span class="p">(</span><span class="n">shortname</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">get_config_yaml</span><span class="p">(</span><span class="n">shortname</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">get_defaults</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="n">config_path</span> <span class="o">=</span> <span class="n">get_config_file</span><span class="p">(</span><span class="n">shortname</span><span class="p">,</span> <span class="n">get_defaults</span><span class="o">=</span><span class="n">get_defaults</span><span class="p">)</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">SafeLoader</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">save_config_yaml</span><span class="p">(</span><span class="n">shortname</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-    <span class="n">yaml_path</span> <span class="o">=</span> <span class="n">get_config_file</span><span class="p">(</span><span class="n">shortname</span><span class="p">)</span>
+    <span class="n">yaml_path</span> <span class="o">=</span> <span class="n">get_config_file</span><span class="p">(</span><span class="n">shortname</span><span class="p">,</span> <span class="n">ignore_file_not_found</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">yaml_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
         <span class="n">yaml</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
 
@@ -448,7 +467,7 @@
       &copy;2019, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

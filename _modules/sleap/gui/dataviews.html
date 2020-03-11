@@ -228,7 +228,7 @@
         <span class="k">return</span> <span class="n">flags</span></div></div>
 
 
-<span class="k">class</span> <span class="nc">GenericTableView</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QTableView</span><span class="p">):</span>
+<div class="viewcode-block" id="GenericTableView"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.GenericTableView">[docs]</a><span class="k">class</span> <span class="nc">GenericTableView</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QTableView</span><span class="p">):</span>
     <span class="n">row_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">name_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;selected_&quot;</span>
     <span class="n">is_activatable</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
@@ -261,18 +261,18 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">row_name</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name_prefix</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">row_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">selectRowItem</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">selectionChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new</span><span class="p">,</span> <span class="n">old</span><span class="p">):</span>
+<div class="viewcode-block" id="GenericTableView.selectionChanged"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.GenericTableView.selectionChanged">[docs]</a>    <span class="k">def</span> <span class="nf">selectionChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new</span><span class="p">,</span> <span class="n">old</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Custom event handler.&quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">GenericTableView</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">selectionChanged</span><span class="p">(</span><span class="n">new</span><span class="p">,</span> <span class="n">old</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">row_name</span><span class="p">:</span>
             <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getSelectedRowItem</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name_prefix</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">row_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name_prefix</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">row_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span></div>
 
-    <span class="k">def</span> <span class="nf">activateSelected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+<div class="viewcode-block" id="GenericTableView.activateSelected"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.GenericTableView.activateSelected">[docs]</a>    <span class="k">def</span> <span class="nf">activateSelected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Activates item selected in table.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_activatable</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">row_name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getSelectedRowItem</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">row_name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getSelectedRowItem</span><span class="p">()</span></div>
 
     <span class="k">def</span> <span class="nf">selectRowItem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">item</span><span class="p">:</span>
@@ -289,7 +289,7 @@
         <span class="n">idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">currentIndex</span><span class="p">()</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">idx</span><span class="o">.</span><span class="n">isValid</span><span class="p">():</span>
             <span class="k">return</span> <span class="kc">None</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">()</span><span class="o">.</span><span class="n">original_items</span><span class="p">[</span><span class="n">idx</span><span class="o">.</span><span class="n">row</span><span class="p">()]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">()</span><span class="o">.</span><span class="n">original_items</span><span class="p">[</span><span class="n">idx</span><span class="o">.</span><span class="n">row</span><span class="p">()]</span></div>
 
 
 <div class="viewcode-block" id="VideosTableModel"><a class="viewcode-back" href="../../../gui.html#sleap.gui.dataviews.VideosTableModel">[docs]</a><span class="k">class</span> <span class="nc">VideosTableModel</span><span class="p">(</span><span class="n">GenericTableModel</span><span class="p">):</span>
@@ -372,7 +372,7 @@
     <span class="k">def</span> <span class="nf">item_to_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
         <span class="n">instance</span> <span class="o">=</span> <span class="n">item</span>
 
-        <span class="n">points</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;{len(instance.nodes)}/{len(instance.skeleton.nodes)}&quot;</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="n">track_name</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">track</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">instance</span><span class="o">.</span><span class="n">track</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
         <span class="n">score</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">):</span>
@@ -409,7 +409,7 @@
 
         <span class="n">item_dict</span><span class="p">[</span><span class="s2">&quot;SuggestionFrame&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span>
 
-        <span class="n">video_string</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;{labels.videos.index(item.video)+1}: {os.path.basename(item.video.filename)}&quot;</span>
+        <span class="n">video_string</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">labels</span><span class="o">.</span><span class="n">videos</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">video</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
 
         <span class="n">item_dict</span><span class="p">[</span><span class="s2">&quot;group&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">group</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">group</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
         <span class="n">item_dict</span><span class="p">[</span><span class="s2">&quot;group_int&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">group</span> <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">group</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span>
@@ -619,7 +619,7 @@
       &copy;2019, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

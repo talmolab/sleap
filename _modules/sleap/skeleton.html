@@ -274,7 +274,7 @@
             <span class="s2">&quot;Cannot change Skeleton name, it is immutable since &quot;</span>
             <span class="o">+</span> <span class="s2">&quot;it is used for hashing. Create a copy of the skeleton &quot;</span>
             <span class="o">+</span> <span class="s2">&quot;with new name using &quot;</span>
-            <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;new_skeleton = Skeleton.rename(skeleton, &#39;</span><span class="si">{name}</span><span class="s2">&#39;))&quot;</span>
+            <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;new_skeleton = Skeleton.rename(skeleton, &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;))&quot;</span>
         <span class="p">)</span>
 
 <div class="viewcode-block" id="Skeleton.rename_skeleton"><a class="viewcode-back" href="../../skeleton.html#sleap.skeleton.Skeleton.rename_skeleton">[docs]</a>    <span class="nd">@classmethod</span>
@@ -658,12 +658,12 @@
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_symmetry</span><span class="p">(</span><span class="n">node1</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{node1}</span><span class="s2"> is already symmetric with {self.get_symmetry(node1)}.&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node1</span><span class="si">}</span><span class="s2"> is already symmetric with </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_symmetry</span><span class="p">(</span><span class="n">node1</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_symmetry</span><span class="p">(</span><span class="n">node2</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{node2}</span><span class="s2"> is already symmetric with {self.get_symmetry(node2)}.&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node2</span><span class="si">}</span><span class="s2"> is already symmetric with </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_symmetry</span><span class="p">(</span><span class="n">node2</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
             <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">node1_node</span><span class="p">,</span> <span class="n">node2_node</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">EdgeType</span><span class="o">.</span><span class="n">SYMMETRY</span><span class="p">)</span>
@@ -690,7 +690,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">get_symmetry</span><span class="p">(</span><span class="n">node1</span><span class="p">)</span> <span class="o">!=</span> <span class="n">node2_node</span>
             <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_symmetry</span><span class="p">(</span><span class="n">node2</span><span class="p">)</span> <span class="o">!=</span> <span class="n">node1_node</span>
         <span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Nodes </span><span class="si">{node1}</span><span class="s2">, </span><span class="si">{node2}</span><span class="s2"> are not symmetric.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Nodes </span><span class="si">{</span><span class="n">node1</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">node2</span><span class="si">}</span><span class="s2"> are not symmetric.&quot;</span><span class="p">)</span>
 
         <span class="n">edges</span> <span class="o">=</span> <span class="p">[</span>
             <span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
@@ -727,7 +727,7 @@
         <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">symmetry</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">symmetry</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{node}</span><span class="s2"> has more than one symmetry.&quot;</span><span class="p">)</span></div>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node</span><span class="si">}</span><span class="s2"> has more than one symmetry.&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Skeleton.get_symmetry_name"><a class="viewcode-back" href="../../skeleton.html#sleap.skeleton.Skeleton.get_symmetry_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_symmetry_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">NodeRef</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -758,7 +758,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">node_name</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Skeleton does not have node named &#39;</span><span class="si">{node_name}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Skeleton does not have node named &#39;</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">data</span><span class="p">()[</span><span class="n">node</span><span class="p">]</span>
 
@@ -1270,7 +1270,7 @@
       &copy;2019, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

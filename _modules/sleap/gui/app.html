@@ -70,14 +70,13 @@
 <span class="kn">from</span> <span class="nn">sleap.gui.filedialog</span> <span class="kn">import</span> <span class="n">FileDialog</span>
 <span class="kn">from</span> <span class="nn">sleap.gui.formbuilder</span> <span class="kn">import</span> <span class="n">YamlFormWidget</span>
 <span class="kn">from</span> <span class="nn">sleap.gui.shortcuts</span> <span class="kn">import</span> <span class="n">Shortcuts</span><span class="p">,</span> <span class="n">ShortcutDialog</span>
-<span class="kn">from</span> <span class="nn">sleap.gui.suggestions</span> <span class="kn">import</span> <span class="n">VideoFrameSuggestions</span>
 <span class="kn">from</span> <span class="nn">sleap.gui.state</span> <span class="kn">import</span> <span class="n">GuiState</span>
 
 <span class="kn">from</span> <span class="nn">sleap.gui.overlays.tracks</span> <span class="kn">import</span> <span class="n">TrackTrailOverlay</span><span class="p">,</span> <span class="n">TrackListOverlay</span>
 <span class="kn">from</span> <span class="nn">sleap.gui.color</span> <span class="kn">import</span> <span class="n">ColorManager</span>
 <span class="kn">from</span> <span class="nn">sleap.gui.overlays.instance</span> <span class="kn">import</span> <span class="n">InstanceOverlay</span>
-<span class="kn">from</span> <span class="nn">sleap.gui.overlays.anchors</span> <span class="kn">import</span> <span class="n">NegativeAnchorOverlay</span>
-<span class="kn">from</span> <span class="nn">sleap.util</span> <span class="kn">import</span> <span class="n">get_config_file</span>
+
+<span class="kn">from</span> <span class="nn">sleap.prefs</span> <span class="kn">import</span> <span class="n">prefs</span>
 
 
 <div class="viewcode-block" id="MainWindow"><a class="viewcode-back" href="../../../gui.html#sleap.gui.app.MainWindow">[docs]</a><span class="k">class</span> <span class="nc">MainWindow</span><span class="p">(</span><span class="n">QMainWindow</span><span class="p">):</span>
@@ -126,7 +125,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;show edges&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;edge style&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Line&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;fit&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;color predicted&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;color predicted&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">prefs</span><span class="p">[</span><span class="s2">&quot;color predicted&quot;</span><span class="p">]</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_gui</span><span class="p">()</span>
 
@@ -271,7 +270,7 @@
 
             <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="n">options</span><span class="p">:</span>
                 <span class="n">submenu_item</span> <span class="o">=</span> <span class="n">submenu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{option}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="o">=</span><span class="n">option</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">option</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="o">=</span><span class="n">option</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
                 <span class="p">)</span>
                 <span class="n">submenu_item</span><span class="o">.</span><span class="n">setCheckable</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
 
@@ -289,6 +288,12 @@
             <span class="s2">&quot;import_coco&quot;</span><span class="p">,</span>
             <span class="s2">&quot;COCO dataset...&quot;</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">importCoco</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">add_menu_item</span><span class="p">(</span>
+            <span class="n">import_types_menu</span><span class="p">,</span>
+            <span class="s2">&quot;import_dlc&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;DeepLabCut dataset...&quot;</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">importDLC</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">add_menu_item</span><span class="p">(</span>
             <span class="n">import_types_menu</span><span class="p">,</span>
@@ -406,7 +411,7 @@
             <span class="n">key</span><span class="o">=</span><span class="s2">&quot;distinctly_color&quot;</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;palette&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;standard&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;palette&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">prefs</span><span class="p">[</span><span class="s2">&quot;palette&quot;</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;distinctly_color&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;instances&quot;</span>
 
         <span class="n">viewMenu</span><span class="o">.</span><span class="n">addSeparator</span><span class="p">()</span>
@@ -555,20 +560,6 @@
             <span class="s2">&quot;learning expert&quot;</span><span class="p">,</span>
             <span class="s2">&quot;Expert Controls...&quot;</span><span class="p">,</span>
             <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">showLearningDialog</span><span class="p">(</span><span class="s2">&quot;expert&quot;</span><span class="p">),</span>
-        <span class="p">)</span>
-
-        <span class="n">predictionMenu</span><span class="o">.</span><span class="n">addSeparator</span><span class="p">()</span>
-        <span class="n">add_menu_item</span><span class="p">(</span>
-            <span class="n">predictionMenu</span><span class="p">,</span>
-            <span class="s2">&quot;negative sample&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;Mark Negative Training Sample...&quot;</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">markNegativeAnchor</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">add_menu_item</span><span class="p">(</span>
-            <span class="n">predictionMenu</span><span class="p">,</span>
-            <span class="s2">&quot;clear negative samples&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;Clear Current Frame Negative Samples&quot;</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">clearFrameNegativeAnchors</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">predictionMenu</span><span class="o">.</span><span class="n">addSeparator</span><span class="p">()</span>
@@ -845,7 +836,6 @@
 <div class="viewcode-block" id="MainWindow.load_overlays"><a class="viewcode-back" href="../../../gui.html#sleap.gui.app.MainWindow.load_overlays">[docs]</a>    <span class="k">def</span> <span class="nf">load_overlays</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Load all standard video overlays.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">overlays</span><span class="p">[</span><span class="s2">&quot;track_labels&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">TrackListOverlay</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">overlays</span><span class="p">[</span><span class="s2">&quot;negative&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">NegativeAnchorOverlay</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">overlays</span><span class="p">[</span><span class="s2">&quot;trails&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">TrackTrailOverlay</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">overlays</span><span class="p">[</span><span class="s2">&quot;instance&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">InstanceOverlay</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span>
@@ -875,7 +865,7 @@
             <span class="p">)</span>
 
         <span class="c1"># Set defaults</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;trail_length&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;trail_length&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">prefs</span><span class="p">[</span><span class="s2">&quot;trail length&quot;</span><span class="p">]</span>
 
         <span class="c1"># Emit signals for default that may have been set earlier</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="s2">&quot;palette&quot;</span><span class="p">)</span>
@@ -1010,7 +1000,7 @@
                 <span class="p">]</span>
                 <span class="n">labeled_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">suggestion_list</span><span class="p">)</span> <span class="o">-</span> <span class="n">suggestion_label_counts</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
                 <span class="n">suggestion_status_text</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{labeled_count}</span><span class="s2">/{len(suggestion_list)} labeled&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">labeled_count</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">suggestion_list</span><span class="p">)</span><span class="si">}</span><span class="s2"> labeled&quot;</span>
                 <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">suggested_count_label</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">suggestion_status_text</span><span class="p">)</span>
 
@@ -1056,15 +1046,15 @@
         <span class="n">spacer</span> <span class="o">=</span> <span class="s2">&quot;        &quot;</span>
 
         <span class="k">if</span> <span class="n">message</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Frame: {frame_idx+1:,}/{len(current_video):,}&quot;</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Frame: </span><span class="si">{</span><span class="n">frame_idx</span><span class="o">+</span><span class="mi">1</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">current_video</span><span class="p">)</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">seekbar</span><span class="o">.</span><span class="n">hasSelection</span><span class="p">():</span>
                 <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;frame_range&quot;</span><span class="p">]</span>
-                <span class="n">message</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; (selection: {start+1:,}-</span><span class="si">{end:,}</span><span class="s2">)&quot;</span>
+                <span class="n">message</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; (selection: </span><span class="si">{</span><span class="n">start</span><span class="o">+</span><span class="mi">1</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">end</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">)&quot;</span>
 
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">videos</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="n">message</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; of video {self.labels.videos.index(current_video)+1}&quot;</span>
+                <span class="n">message</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; of video </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">videos</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">current_video</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span>
 
-            <span class="n">message</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{spacer}</span><span class="s2">Labeled Frames: &quot;</span>
+            <span class="n">message</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">spacer</span><span class="si">}</span><span class="s2">Labeled Frames: &quot;</span>
             <span class="k">if</span> <span class="n">current_video</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">message</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">get_labeled_frame_count</span><span class="p">(</span><span class="n">current_video</span><span class="p">,</span> <span class="s2">&quot;user&quot;</span><span class="p">)</span>
@@ -1076,17 +1066,18 @@
                 <span class="n">project_user_frame_count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">get_labeled_frame_count</span><span class="p">(</span>
                     <span class="nb">filter</span><span class="o">=</span><span class="s2">&quot;user&quot;</span>
                 <span class="p">)</span>
-                <span class="n">message</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{project_user_frame_count}</span><span class="s2"> in project&quot;</span>
+                <span class="n">message</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">project_user_frame_count</span><span class="si">}</span><span class="s2"> in project&quot;</span>
 
             <span class="k">if</span> <span class="n">current_video</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">pred_frame_count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">get_labeled_frame_count</span><span class="p">(</span>
                     <span class="n">current_video</span><span class="p">,</span> <span class="s2">&quot;predicted&quot;</span>
                 <span class="p">)</span>
                 <span class="k">if</span> <span class="n">pred_frame_count</span><span class="p">:</span>
-                    <span class="n">message</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{spacer}</span><span class="s2">Predicted Frames: </span><span class="si">{pred_frame_count:,}</span><span class="s2">&quot;</span>
+                    <span class="n">message</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">spacer</span><span class="si">}</span><span class="s2">Predicted Frames: </span><span class="si">{</span><span class="n">pred_frame_count</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">&quot;</span>
                     <span class="n">message</span> <span class="o">+=</span> <span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot; ({pred_frame_count/current_video.num_frames*100:.2f}%)&quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot; (</span><span class="si">{</span><span class="n">pred_frame_count</span><span class="o">/</span><span class="n">current_video</span><span class="o">.</span><span class="n">num_frames</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">%)&quot;</span>
                     <span class="p">)</span>
+                    <span class="n">message</span> <span class="o">+=</span> <span class="s2">&quot; in video&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">statusBar</span><span class="p">()</span><span class="o">.</span><span class="n">showMessage</span><span class="p">(</span><span class="n">message</span><span class="p">)</span></div>
 
@@ -1120,7 +1111,7 @@
                 <span class="n">has_loaded</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
-                <span class="n">QMessageBox</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Unable to load </span><span class="si">{filename}</span><span class="s2">.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
+                <span class="n">QMessageBox</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Unable to load </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">has_loaded</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">loadLabelsObject</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span></div>
@@ -1163,7 +1154,7 @@
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">tracks</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">track</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">9</span><span class="p">:</span>
                 <span class="n">key_command</span> <span class="o">=</span> <span class="n">Qt</span><span class="o">.</span><span class="n">CTRL</span> <span class="o">+</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key_0</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">tracks</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">track</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">track_menu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{track.name}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">track</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                 <span class="k">lambda</span> <span class="n">x</span><span class="o">=</span><span class="n">track</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">setInstanceTrack</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
                 <span class="n">key_command</span><span class="p">,</span>
             <span class="p">)</span>
@@ -1201,7 +1192,7 @@
                 <span class="n">series</span> <span class="o">=</span> <span class="n">header_functions</span><span class="p">[</span><span class="n">graph_name</span><span class="p">](</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">seekbar</span><span class="o">.</span><span class="n">setHeaderSeries</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not find function for </span><span class="si">{header_functions}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not find function for </span><span class="si">{</span><span class="n">header_functions</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_frames_for_prediction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Builds options for frames on which to run inference.</span>
@@ -1460,7 +1451,7 @@
       &copy;2019, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

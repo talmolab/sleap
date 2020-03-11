@@ -104,7 +104,7 @@ unless they really have no other place.</p>
 
 <dl class="function">
 <dt id="sleap.util.get_config_file">
-<code class="sig-prename descclassname">sleap.util.</code><code class="sig-name descname">get_config_file</code><span class="sig-paren">(</span><em class="sig-param">shortname: str</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/sleap/util.html#get_config_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.util.get_config_file" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">sleap.util.</code><code class="sig-name descname">get_config_file</code><span class="sig-paren">(</span><em class="sig-param">shortname: str</em>, <em class="sig-param">ignore_file_not_found: bool = False</em>, <em class="sig-param">get_defaults: bool = False</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/sleap/util.html#get_config_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.util.get_config_file" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the full path to the specified config file.</p>
 <p>The config file will be at ~/.sleap/&lt;shortname&gt;</p>
 <p>If that file doesn’t yet exist, we’ll look for a &lt;shortname&gt; file inside
@@ -112,7 +112,12 @@ the package config directory (sleap/config) and copy the file into the
 user’s config directory (creating the directory if needed).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>shortname</strong> – The short filename, e.g., shortcuts.yaml</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>shortname</strong> – The short filename, e.g., shortcuts.yaml</p></li>
+<li><p><strong>ignore_file_not_found</strong> – If True, then return path for config file
+regardless of whether it exists.</p></li>
+<li><p><strong>get_defaults</strong> – If True, then just return the path to default config file.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><p><strong>FileNotFoundError</strong> – If the specified config file cannot be found.</p>
@@ -209,7 +214,7 @@ Assume it is open.</p></li>
 
 <dl class="function">
 <dt id="sleap.util.uniquify">
-<code class="sig-prename descclassname">sleap.util.</code><code class="sig-name descname">uniquify</code><span class="sig-paren">(</span><em class="sig-param">seq: Iterable[collections.abc.Hashable]</em><span class="sig-paren">)</span> &#x2192; List<a class="reference internal" href="_modules/sleap/util.html#uniquify"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.util.uniquify" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">sleap.util.</code><code class="sig-name descname">uniquify</code><span class="sig-paren">(</span><em class="sig-param">seq: Iterable[Hashable]</em><span class="sig-paren">)</span> &#x2192; List<a class="reference internal" href="_modules/sleap/util.html#uniquify"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.util.uniquify" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns unique elements from list, preserving order.</p>
 <p>Note: This will not work on Python 3.5 or lower since dicts don’t
 preserve order.</p>
@@ -796,7 +801,7 @@ column-major format.</p></li>
       &copy;2019, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

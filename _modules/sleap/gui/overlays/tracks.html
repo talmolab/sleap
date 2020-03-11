@@ -236,11 +236,11 @@
             <span class="k">if</span> <span class="n">html</span><span class="p">:</span>
                 <span class="n">html</span> <span class="o">+=</span> <span class="s2">&quot;&lt;br /&gt;&quot;</span>
             <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">color_manager</span><span class="o">.</span><span class="n">get_track_color</span><span class="p">(</span><span class="n">track</span><span class="p">)</span>
-            <span class="n">html_color</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;#</span><span class="si">{color[0]:02X}{color[1]:02X}{color[2]:02X}</span><span class="s2">&quot;</span>
-            <span class="n">track_text</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&lt;b&gt;</span><span class="si">{track.name}</span><span class="s2">&lt;/b&gt;&quot;</span>
+            <span class="n">html_color</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;#</span><span class="si">{</span><span class="n">color</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">02X</span><span class="si">}{</span><span class="n">color</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">02X</span><span class="si">}{</span><span class="n">color</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">:</span><span class="s2">02X</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">track_text</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&lt;b&gt;</span><span class="si">{</span><span class="n">track</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&lt;/b&gt;&quot;</span>
             <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="o">!=</span> <span class="n">track</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
-                <span class="n">track_text</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; (</span><span class="si">{idx}</span><span class="s2">)&quot;</span>
-            <span class="n">html</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;&lt;span style=&#39;color:</span><span class="si">{html_color}</span><span class="s2">&#39;&gt;</span><span class="si">{track_text}</span><span class="s2">&lt;/span&gt;&quot;</span>
+                <span class="n">track_text</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; (</span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">)&quot;</span>
+            <span class="n">html</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;&lt;span style=&#39;color:</span><span class="si">{</span><span class="n">html_color</span><span class="si">}</span><span class="s2">&#39;&gt;</span><span class="si">{</span><span class="n">track_text</span><span class="si">}</span><span class="s2">&lt;/span&gt;&quot;</span>
 
         <span class="n">text_box</span> <span class="o">=</span> <span class="n">QtTextWithBackground</span><span class="p">()</span>
         <span class="n">text_box</span><span class="o">.</span><span class="n">setDefaultTextColor</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QColor</span><span class="p">(</span><span class="s2">&quot;white&quot;</span><span class="p">))</span>
@@ -334,7 +334,7 @@
       &copy;2019, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

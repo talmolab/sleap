@@ -86,12 +86,14 @@
     <span class="n">QGraphicsPolygonItem</span><span class="p">,</span>
 <span class="p">)</span>
 
+<span class="kn">from</span> <span class="nn">sleap.prefs</span> <span class="kn">import</span> <span class="n">prefs</span>
 <span class="kn">from</span> <span class="nn">sleap.skeleton</span> <span class="kn">import</span> <span class="n">Node</span>
 <span class="kn">from</span> <span class="nn">sleap.instance</span> <span class="kn">import</span> <span class="n">Instance</span><span class="p">,</span> <span class="n">Point</span>
 <span class="kn">from</span> <span class="nn">sleap.io.video</span> <span class="kn">import</span> <span class="n">Video</span>
 <span class="kn">from</span> <span class="nn">sleap.gui.slider</span> <span class="kn">import</span> <span class="n">VideoSlider</span>
 <span class="kn">from</span> <span class="nn">sleap.gui.state</span> <span class="kn">import</span> <span class="n">GuiState</span>
 <span class="kn">from</span> <span class="nn">sleap.gui.color</span> <span class="kn">import</span> <span class="n">ColorManager</span>
+<span class="kn">from</span> <span class="nn">sleap.gui.shortcuts</span> <span class="kn">import</span> <span class="n">Shortcuts</span>
 
 <span class="kn">import</span> <span class="nn">qimage2ndarray</span>
 
@@ -236,6 +238,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">color_manager</span> <span class="o">=</span> <span class="n">color_manager</span> <span class="ow">or</span> <span class="n">ColorManager</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="n">state</span> <span class="ow">or</span> <span class="n">GuiState</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shortcuts</span> <span class="o">=</span> <span class="n">Shortcuts</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">context</span> <span class="o">=</span> <span class="n">context</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">view</span> <span class="o">=</span> <span class="n">GraphicsView</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">video</span> <span class="o">=</span> <span class="kc">None</span>
@@ -628,23 +631,42 @@
 
         <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key</span><span class="o">.</span><span class="n">Key_Shift</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_shift_key_down</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key</span><span class="o">.</span><span class="n">Key_Left</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">shortcuts</span><span class="p">[</span><span class="s2">&quot;frame prev&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">increment</span><span class="p">(</span><span class="s2">&quot;frame_idx&quot;</span><span class="p">,</span> <span class="n">step</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">mod</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">frames</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key</span><span class="o">.</span><span class="n">Key_Right</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="p">:</span>
+
+        <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">shortcuts</span><span class="p">[</span><span class="s2">&quot;frame next&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">increment</span><span class="p">(</span><span class="s2">&quot;frame_idx&quot;</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">mod</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">frames</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key</span><span class="o">.</span><span class="n">Key_Up</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">increment</span><span class="p">(</span><span class="s2">&quot;frame_idx&quot;</span><span class="p">,</span> <span class="n">step</span><span class="o">=-</span><span class="mi">50</span><span class="p">,</span> <span class="n">mod</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">frames</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key</span><span class="o">.</span><span class="n">Key_Down</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">increment</span><span class="p">(</span><span class="s2">&quot;frame_idx&quot;</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">mod</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">frames</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key</span><span class="o">.</span><span class="n">Key_Space</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">increment</span><span class="p">(</span><span class="s2">&quot;frame_idx&quot;</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">mod</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">frames</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">shortcuts</span><span class="p">[</span><span class="s2">&quot;frame prev medium step&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">increment</span><span class="p">(</span>
+                <span class="s2">&quot;frame_idx&quot;</span><span class="p">,</span> <span class="n">step</span><span class="o">=-</span><span class="n">prefs</span><span class="p">[</span><span class="s2">&quot;medium step size&quot;</span><span class="p">],</span> <span class="n">mod</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">frames</span>
+            <span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">shortcuts</span><span class="p">[</span><span class="s2">&quot;frame next medium step&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">increment</span><span class="p">(</span>
+                <span class="s2">&quot;frame_idx&quot;</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="n">prefs</span><span class="p">[</span><span class="s2">&quot;medium step size&quot;</span><span class="p">],</span> <span class="n">mod</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">frames</span>
+            <span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">shortcuts</span><span class="p">[</span><span class="s2">&quot;frame prev large step&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">increment</span><span class="p">(</span>
+                <span class="s2">&quot;frame_idx&quot;</span><span class="p">,</span> <span class="n">step</span><span class="o">=-</span><span class="n">prefs</span><span class="p">[</span><span class="s2">&quot;large step size&quot;</span><span class="p">],</span> <span class="n">mod</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">frames</span>
+            <span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">shortcuts</span><span class="p">[</span><span class="s2">&quot;frame next large step&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">increment</span><span class="p">(</span>
+                <span class="s2">&quot;frame_idx&quot;</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="n">prefs</span><span class="p">[</span><span class="s2">&quot;large step size&quot;</span><span class="p">],</span> <span class="n">mod</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">frames</span>
+            <span class="p">)</span>
+
         <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key</span><span class="o">.</span><span class="n">Key_Home</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;frame_idx&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
         <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key</span><span class="o">.</span><span class="n">Key_End</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;frame_idx&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">frames</span> <span class="o">-</span> <span class="mi">1</span>
+
         <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key</span><span class="o">.</span><span class="n">Key_Escape</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">click_mode</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;instance&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
         <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key</span><span class="o">.</span><span class="n">Key_K</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;frame_idx&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">seekbar</span><span class="o">.</span><span class="n">getEndContiguousMark</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;frame_idx&quot;</span><span class="p">]</span>
@@ -990,11 +1012,11 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">setDragMode</span><span class="p">(</span><span class="n">QGraphicsView</span><span class="o">.</span><span class="n">NoDrag</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">rightMouseButtonReleased</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">scenePos</span><span class="o">.</span><span class="n">x</span><span class="p">(),</span> <span class="n">scenePos</span><span class="o">.</span><span class="n">y</span><span class="p">())</span></div>
 
-    <span class="k">def</span> <span class="nf">mouseMoveEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+<div class="viewcode-block" id="GraphicsView.mouseMoveEvent"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.GraphicsView.mouseMoveEvent">[docs]</a>    <span class="k">def</span> <span class="nf">mouseMoveEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
         <span class="c1"># re-enable contextual menu if necessary</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">is_menu_enabled</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="n">QGraphicsView</span><span class="o">.</span><span class="n">mouseMoveEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span>
+        <span class="n">QGraphicsView</span><span class="o">.</span><span class="n">mouseMoveEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="GraphicsView.zoomToRect"><a class="viewcode-back" href="../../../gui.html#sleap.gui.video.GraphicsView.zoomToRect">[docs]</a>    <span class="k">def</span> <span class="nf">zoomToRect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">zoom_rect</span><span class="p">:</span> <span class="n">QRectF</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1695,10 +1717,10 @@
             <span class="n">track_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">track</span><span class="o">.</span><span class="n">name</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">track_name</span> <span class="o">=</span> <span class="s2">&quot;[none]&quot;</span>
-        <span class="n">instance_label_text</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;&lt;b&gt;Track&lt;/b&gt;: </span><span class="si">{track_name}</span><span class="s2">&quot;</span>
+        <span class="n">instance_label_text</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;&lt;b&gt;Track&lt;/b&gt;: </span><span class="si">{</span><span class="n">track_name</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">):</span>
             <span class="n">instance_label_text</span> <span class="o">+=</span> <span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;&lt;br /&gt;&lt;b&gt;Prediction Score&lt;/b&gt;: {round(self.instance.score, 2)}&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;&lt;br /&gt;&lt;b&gt;Prediction Score&lt;/b&gt;: </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">score</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">track_label</span><span class="o">.</span><span class="n">setHtml</span><span class="p">(</span><span class="n">instance_label_text</span><span class="p">)</span>
 
@@ -2069,7 +2091,7 @@
       &copy;2019, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>
