@@ -84,7 +84,7 @@ class LabelsDeepLabCutAdaptor(Adaptor):
         # This may not be ideal for large projects, since we're reading in
         # each image and then writing it out in a new directory.
 
-        img_files = data.ix[:, 0]  # get list of all images
+        img_files = data.iloc[:, 0]  # get list of all images
 
         # the image filenames in the csv may not match where the user has them
         # so we'll change the directory to match where the user has the csv
