@@ -537,6 +537,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             self.form_widgets[key].valueChanged.connect(self.emitValueChanged)
 
         self.form_widgets["model"].valueChanged.connect(self.onModelFormChange)
+        self.form_widgets["data"].valueChanged.connect(self.onModelFormChange)
 
         if hasattr(skeleton, "node_names"):
             for field_name in NODE_LIST_FIELDS:
@@ -617,13 +618,15 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         #     self._set_user_config()
 
     def onModelFormChange(self):
+        data_form_data = self.form_widgets["data"].get_form_data()
         model_cfg = utils.make_model_config_from_key_val_dict(
             key_val_dict=self.form_widgets["model"].get_form_data()
         )
         rf_size = utils.receptive_field_size_from_model_cfg(model_cfg)
+        rf_image_scale = data_form_data.get("data.preprocessing.input_scaling", 1.0)
 
         if self._receptive_field_widget:
-            self._receptive_field_widget.setFieldSize(rf_size)
+            self._receptive_field_widget.setFieldSize(rf_size, scale=rf_image_scale)
 
     def acceptSelectedConfigInfo(self, cfg_info: configs.ConfigFileInfo):
         self._load_config(cfg_info)
@@ -739,9 +742,9 @@ class ReceptiveFieldWidget(QtWidgets.QWidget):
 
         self.setLayout(self.layout)
 
-    def setFieldSize(self, size):
+    def setFieldSize(self, size, scale):
         self._info_widget.setText(self._info_text + f"{size} pixels")
-        self._field_image_widget.setFieldSize(size)
+        self._field_image_widget.setFieldSize(size, scale)
 
     def setImage(self, *args, **kwargs):
         self._field_image_widget.setImage(*args, **kwargs)
@@ -752,6 +755,7 @@ class ReceptiveFieldImageWidget(GraphicsView):
         self._widget_size = 200
         self._pen_width = 4
         self._box_size = None
+        self._scale = None
 
         box_pen = QtGui.QPen(QtGui.QColor("blue"), self._pen_width)
         box_pen.setCosmetic(True)
@@ -774,15 +778,18 @@ class ReceptiveFieldImageWidget(GraphicsView):
         # Now draw the viewport
         return super(ReceptiveFieldImageWidget, self).viewportEvent(event)
 
-    def setFieldSize(self, size: Optional[int] = None):
+    def setFieldSize(self, size: Optional[int] = None, scale: int = 1.0):
         if size is not None:
             self._box_size = size
+            self._scale = scale
 
         if self._box_size:
             self.box.show()
         else:
             self.box.hide()
             return
+
+        scaled_box_size = self._box_size // self._scale
 
         # TODO
         # Calculate offset so that box stays centered in the view
@@ -792,7 +799,7 @@ class ReceptiveFieldImageWidget(GraphicsView):
         scene_offset = self.mapToScene(offset, offset)
 
         self.box.setRect(
-            scene_offset.x(), scene_offset.y(), self._box_size, self._box_size
+            scene_offset.x(), scene_offset.y(), scaled_box_size, scaled_box_size
         )
 
 
