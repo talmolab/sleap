@@ -1243,6 +1243,8 @@ class MainWindow(QMainWindow):
                 mode, self.state["filename"], self.labels,
             )
             self._child_windows[mode].learningFinished.connect(self.learningFinished)
+        else:
+            self._child_windows[mode].update_file_lists()
 
         self._child_windows[mode].frame_selection = self._frames_for_prediction()
         self._child_windows[mode].open()

@@ -104,10 +104,13 @@ class LearningDialog(QtWidgets.QDialog):
         buttons.accepted.connect(self.run)
         buttons.rejected.connect(self.reject)
 
-    def open(self):
-        """Shows dialog (we hide rather than close to maintain settings)."""
-        super(LearningDialog, self).open()
+        # Connect button for previewing the training data
+        if "_view_datagen" in self.pipeline_form_widget.buttons:
+            self.pipeline_form_widget.buttons["_view_datagen"].clicked.connect(
+                self.view_datagen
+            )
 
+    def update_file_lists(self):
         self._cfg_getter.update()
         for tab in self.tabs.values():
             tab.update_file_list()
@@ -383,6 +386,12 @@ class LearningDialog(QtWidgets.QDialog):
 
         self.run_button.setEnabled(can_run)
 
+    def view_datagen(self):
+        # pipeline_form_data = self.pipeline_form_widget.get_form_data()
+        # config_info_list = self.get_every_head_config_data(pipeline_form_data)
+        # runners.run_datagen_preview(self.labels, config_info_list)
+        pass
+
     def run(self):
         """Run with current dialog settings."""
 
@@ -441,6 +450,10 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
     @property
     def fields(self):
         return self.form_widget.fields
+
+    @property
+    def buttons(self):
+        return self.form_widget.buttons
 
     def get_form_data(self):
         return self.form_widget.get_form_data()
@@ -588,7 +601,6 @@ class TrainingEditorWidget(QtWidgets.QWidget):
                 layout.addWidget(self._use_trained_model)
 
         layout.addWidget(self._layout_widget(col_layout))
-
         self.setLayout(layout)
 
     @staticmethod
