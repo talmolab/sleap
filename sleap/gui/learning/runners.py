@@ -41,9 +41,9 @@ def run_datagen_preview(labels: Labels, config_info_list: List[ConfigFileInfo]):
         nonlocal last_win
 
         if key == "confmap":
-            win = demo_confmaps(results[key], vid)
+            win = demo_confmaps(results[key], video)
         elif key == "paf":
-            win = demo_pafs(results[key], vid)
+            win = demo_pafs(results[key], video)
         else:
             raise ValueError(f"Cannot show preview window for {key}")
 
