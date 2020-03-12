@@ -915,7 +915,7 @@ class Video:
         return cls(backend=backend)
 
     @classmethod
-    def from_numpy(cls, filename: str, *args, **kwargs) -> "Video":
+    def from_numpy(cls, filename: Union[str, np.ndarray], *args, **kwargs) -> "Video":
         """
         Create an instance of a video object from a numpy array.
 
