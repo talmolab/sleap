@@ -90,7 +90,6 @@ class TrainingConfigFilesWidget(FieldComboWidget):
             head_filter=self._head_name, only_trained=self._require_trained
         )
         self._cfg_list = cfg_list
-        print("filewidget update", len(cfg_list))
 
         select_key = None
 
