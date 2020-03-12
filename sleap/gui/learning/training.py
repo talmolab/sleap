@@ -527,7 +527,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
         if self._video:
             self._receptive_field_widget = ReceptiveFieldWidget(self.head)
-            self._receptive_field_widget.setImage(self._video.get_frame(0))
+            self._receptive_field_widget.setImage(self._video.test_frame)
 
         self._set_head()
 
