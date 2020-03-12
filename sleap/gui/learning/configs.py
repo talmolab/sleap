@@ -195,17 +195,16 @@ class TrainingConfigsGetter:
 
     def __attrs_post_init__(self):
         self._configs = self.find_configs()
-        print(self.dir_paths, len(self._configs))
 
     def update(self):
         if len(self._configs) == 0:
             self._configs = self.find_configs()
         else:
-            new_cfgs = self.find_configs()
             current_cfg_paths = {cfg.path for cfg in self._configs}
-            self._configs = [
-                cfg for cfg in new_cfgs if cfg.path not in current_cfg_paths
+            new_cfgs = [
+                cfg for cfg in self.find_configs() if cfg.path not in current_cfg_paths
             ]
+            self._configs = new_cfgs + self._configs
 
     def find_configs(self):
         configs = []
