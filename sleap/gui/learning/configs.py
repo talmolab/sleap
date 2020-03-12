@@ -191,9 +191,20 @@ class TrainingConfigFilesWidget(FieldComboWidget):
 class TrainingConfigsGetter:
     dir_paths: List[Text]
     head_filter: Optional[Text] = None
+    _configs: List[ConfigFileInfo] = attr.ib(default=attr.Factory(list))
 
     def __attrs_post_init__(self):
-        self._configs = self.find_configs()
+        self.update()
+
+    def update(self):
+        if len(self._configs) == 0:
+            self._configs = self.find_configs()
+        else:
+            new_cfgs = self.find_configs()
+            current_cfg_paths = {cfg.path for cfg in self._configs}
+            self._configs = [
+                cfg for cfg in new_cfgs if cfg.path not in current_cfg_paths
+            ]
 
     def find_configs(self):
         configs = []

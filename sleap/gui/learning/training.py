@@ -104,6 +104,14 @@ class LearningDialog(QtWidgets.QDialog):
         buttons.accepted.connect(self.run)
         buttons.rejected.connect(self.reject)
 
+    def open(self):
+        """Shows dialog (we hide rather than close to maintain settings)."""
+        super(LearningDialog, self).open()
+
+        self._cfg_getter.update()
+        for tab in self.tabs.values():
+            tab.update_file_list()
+
     @property
     def frame_selection(self) -> Dict[str, Dict[Video, List[int]]]:
         """
@@ -613,6 +621,9 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         if self._use_trained_model:
             self._use_trained_model.setVisible(has_trained_model)
             self._use_trained_model.setEnabled(has_trained_model)
+
+    def update_file_list(self):
+        self._cfg_list_widget.update()
 
     def _load_config_or_key_val_dict(self, cfg_data):
         if type(cfg_data) != dict:
