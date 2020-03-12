@@ -1,3 +1,4 @@
+import copy
 from collections import defaultdict
 
 import numpy as np
@@ -19,6 +20,7 @@ from sleap.nn.config import (
     MultiInstanceConfig,
 )
 from sleap.nn.data import pipelines
+from sleap.nn.data.instance_cropping import find_instance_crop_size
 from sleap.nn.data.providers import LabelsReader
 from sleap.gui.learning.configs import ConfigFileInfo
 
@@ -33,18 +35,41 @@ def run_datagen_preview(labels: Labels, config_info_list: List[ConfigFileInfo]):
 
     labels_reader = LabelsReader(labels)
 
+    last_win = None
+
+    def show_win(results: dict, key: Text, video: Video):
+        nonlocal last_win
+
+        if key == "confmap":
+            win = demo_confmaps(results[key], vid)
+        elif key == "paf":
+            win = demo_pafs(results[key], vid)
+        else:
+            raise ValueError(f"Cannot show preview window for {key}")
+
+        win.activateWindow()
+        win.resize(300, 300)
+        if last_win:
+            win.move(last_win.rect().right() + 20, 200)
+        else:
+            win.move(300, 300)
+
+        last_win = win
+
     for cfg_info in config_info_list:
         results = make_datagen_results(labels_reader, cfg_info.config)
 
         if "image" in results:
             vid = Video.from_numpy(results["image"])
             if "confmap" in results:
-                demo_confmaps(results["confmap"], vid).activateWindow()
+                show_win(results, "confmap", vid)
+
             if "paf" in results:
-                demo_pafs(results["paf"], vid).activateWindow()
+                show_win(results, "paf", vid)
 
 
 def make_datagen_results(reader: LabelsReader, cfg: TrainingJobConfig):
+    cfg = copy.deepcopy(cfg)
     pipeline = pipelines.Pipeline(reader)
 
     output_keys = dict()
@@ -64,6 +89,13 @@ def make_datagen_results(reader: LabelsReader, cfg: TrainingJobConfig):
         output_keys["confmap"] = "centroid_confidence_maps"
 
     elif isinstance(head_config, CenteredInstanceConfmapsHeadConfig):
+        if cfg.data.instance_cropping.crop_size is None:
+            cfg.data.instance_cropping.crop_size = find_instance_crop_size(
+                labels=reader.labels,
+                padding=cfg.data.instance_cropping.crop_size_detection_padding,
+                maximum_stride=cfg.model.backbone.which_oneof().max_stride,
+            )
+
         pipeline += pipelines.InstanceCentroidFinder.from_config(
             cfg.data.instance_cropping, skeletons=reader.labels.skeletons
         )
