@@ -1,3 +1,6 @@
+from collections import defaultdict
+
+import numpy as np
 import os
 import subprocess as sub
 import tempfile
@@ -6,8 +9,17 @@ import time
 from datetime import datetime
 
 from sleap import Labels, Video
+from sleap.gui.overlays.confmaps import demo_confmaps
+from sleap.gui.overlays.pafs import demo_pafs
 from sleap.nn import training
-from sleap.nn.config import TrainingJobConfig
+from sleap.nn.config import (
+    TrainingJobConfig,
+    CentroidsHeadConfig,
+    CenteredInstanceConfmapsHeadConfig,
+    MultiInstanceConfig,
+)
+from sleap.nn.data import pipelines
+from sleap.nn.data.providers import LabelsReader
 from sleap.gui.learning.configs import ConfigFileInfo
 
 from typing import Any, Callable, Dict, List, Optional, Text
@@ -15,6 +27,86 @@ from typing import Any, Callable, Dict, List, Optional, Text
 from PySide2 import QtWidgets
 
 SKIP_TRAINING = False
+
+
+def run_datagen_preview(labels: Labels, config_info_list: List[ConfigFileInfo]):
+
+    labels_reader = LabelsReader(labels)
+
+    for cfg_info in config_info_list:
+        results = make_datagen_results(labels_reader, cfg_info.config)
+
+        if "image" in results:
+            vid = Video.from_numpy(results["image"])
+            if "confmap" in results:
+                demo_confmaps(results["confmap"], vid).activateWindow()
+            if "paf" in results:
+                demo_pafs(results["paf"], vid).activateWindow()
+
+
+def make_datagen_results(reader: LabelsReader, cfg: TrainingJobConfig):
+    pipeline = pipelines.Pipeline(reader)
+
+    output_keys = dict()
+
+    head_config = cfg.model.heads.which_oneof()
+    if isinstance(head_config, CentroidsHeadConfig):
+        pipeline += pipelines.InstanceCentroidFinder.from_config(
+            cfg.data.instance_cropping, skeletons=reader.labels.skeletons
+        )
+        pipeline += pipelines.MultiConfidenceMapGenerator(
+            sigma=cfg.model.heads.centroid.sigma,
+            output_stride=cfg.model.heads.centroid.output_stride,
+            centroids=True,
+        )
+
+        output_keys["image"] = "image"
+        output_keys["confmap"] = "centroid_confidence_maps"
+
+    elif isinstance(head_config, CenteredInstanceConfmapsHeadConfig):
+        pipeline += pipelines.InstanceCentroidFinder.from_config(
+            cfg.data.instance_cropping, skeletons=reader.labels.skeletons
+        )
+        pipeline += pipelines.InstanceCropper.from_config(cfg.data.instance_cropping)
+        pipeline += pipelines.InstanceConfidenceMapGenerator(
+            sigma=cfg.model.heads.centered_instance.sigma,
+            output_stride=cfg.model.heads.centered_instance.output_stride,
+        )
+
+        output_keys["image"] = "instance_image"
+        output_keys["confmap"] = "instance_confidence_maps"
+
+    elif isinstance(head_config, MultiInstanceConfig):
+        output_keys["image"] = "image"
+        output_keys["confmap"] = "confidence_maps"
+        output_keys["paf"] = "confidence_maps"
+
+        pipeline += pipelines.MultiConfidenceMapGenerator(
+            sigma=cfg.model.heads.multi_instance.confmaps.sigma,
+            output_stride=cfg.model.heads.multi_instance.confmaps.output_stride,
+        )
+        pipeline += pipelines.PartAffinityFieldsGenerator(
+            sigma=cfg.model.heads.multi_instance.pafs.sigma,
+            output_stride=cfg.model.heads.multi_instance.pafs.output_stride,
+            skeletons=reader.labels.skeletons,
+        )
+
+    ds = pipeline.make_dataset()
+
+    output_lists = defaultdict(list)
+    i = 0
+    for example in ds:
+        for key, from_key in output_keys.items():
+            output_lists[key].append(example[from_key])
+        i += 1
+        if i == 10:
+            break
+
+    outputs = dict()
+    for key in output_lists.keys():
+        outputs[key] = np.stack(output_lists[key])
+
+    return outputs
 
 
 def run_learning_pipeline(

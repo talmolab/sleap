@@ -387,10 +387,9 @@ class LearningDialog(QtWidgets.QDialog):
         self.run_button.setEnabled(can_run)
 
     def view_datagen(self):
-        # pipeline_form_data = self.pipeline_form_widget.get_form_data()
-        # config_info_list = self.get_every_head_config_data(pipeline_form_data)
-        # runners.run_datagen_preview(self.labels, config_info_list)
-        pass
+        pipeline_form_data = self.pipeline_form_widget.get_form_data()
+        config_info_list = self.get_every_head_config_data(pipeline_form_data)
+        runners.run_datagen_preview(self.labels, config_info_list)
 
     def run(self):
         """Run with current dialog settings."""

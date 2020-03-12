@@ -90,6 +90,7 @@ class TrainingConfigFilesWidget(FieldComboWidget):
             head_filter=self._head_name, only_trained=self._require_trained
         )
         self._cfg_list = cfg_list
+        print("filewidget update", len(cfg_list))
 
         select_key = None
 
@@ -194,7 +195,8 @@ class TrainingConfigsGetter:
     _configs: List[ConfigFileInfo] = attr.ib(default=attr.Factory(list))
 
     def __attrs_post_init__(self):
-        self.update()
+        self._configs = self.find_configs()
+        print(self.dir_paths, len(self._configs))
 
     def update(self):
         if len(self._configs) == 0:
