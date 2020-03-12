@@ -28,6 +28,8 @@ from typing import Any, Callable, Dict, List, Optional, Text
 
 from PySide2 import QtWidgets
 
+from sleap.nn.data.resizing import Resizer
+
 SKIP_TRAINING = False
 
 
@@ -70,9 +72,15 @@ def run_datagen_preview(labels: Labels, config_info_list: List[ConfigFileInfo]):
 
 def make_datagen_results(reader: LabelsReader, cfg: TrainingJobConfig):
     cfg = copy.deepcopy(cfg)
-    pipeline = pipelines.Pipeline(reader)
-
     output_keys = dict()
+
+    if cfg.data.preprocessing.pad_to_stride is None:
+        cfg.data.preprocessing.pad_to_stride = (
+            cfg.model.backbone.which_oneof().max_stride
+        )
+
+    pipeline = pipelines.Pipeline(reader)
+    pipeline += Resizer.from_config(cfg.data.preprocessing)
 
     head_config = cfg.model.heads.which_oneof()
     if isinstance(head_config, CentroidsHeadConfig):
