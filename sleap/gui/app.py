@@ -518,19 +518,19 @@ class MainWindow(QMainWindow):
             lambda: self.showLearningDialog("inference"),
         )
 
-        predictionMenu.addSeparator()
-        add_menu_item(
-            predictionMenu,
-            "negative sample",
-            "Mark Negative Training Sample...",
-            self.commands.markNegativeAnchor,
-        )
-        add_menu_item(
-            predictionMenu,
-            "clear negative samples",
-            "Clear Current Frame Negative Samples",
-            self.commands.clearFrameNegativeAnchors,
-        )
+        # predictionMenu.addSeparator()
+        # add_menu_item(
+        #     predictionMenu,
+        #     "negative sample",
+        #     "Mark Negative Training Sample...",
+        #     self.commands.markNegativeAnchor,
+        # )
+        # add_menu_item(
+        #     predictionMenu,
+        #     "clear negative samples",
+        #     "Clear Current Frame Negative Samples",
+        #     self.commands.clearFrameNegativeAnchors,
+        # )
 
         predictionMenu.addSeparator()
         add_menu_item(
