@@ -3,7 +3,7 @@ from sleap.gui.widgets.video import GraphicsView
 
 from typing import Optional, Text
 
-from PySide2 import QtWidgets, QtGui
+from PySide2 import QtWidgets, QtGui, QtCore
 
 
 class ReceptiveFieldWidget(QtWidgets.QWidget):
@@ -58,7 +58,8 @@ class ReceptiveFieldImageWidget(GraphicsView):
 
     def viewportEvent(self, event):
         # Update the position and visible size of field
-        self.setFieldSize()
+        if isinstance(event, QtGui.QPaintEvent):
+            self.setFieldSize()
 
         # Now draw the viewport
         return super(ReceptiveFieldImageWidget, self).viewportEvent(event)
@@ -74,17 +75,20 @@ class ReceptiveFieldImageWidget(GraphicsView):
             self.box.hide()
             return
 
+        # Adjust box relative to scaling on image that will happen in training
         scaled_box_size = self._box_size // self._scale
 
-        # TODO
         # Calculate offset so that box stays centered in the view
-        # visible_box_size = (self._box_size + (self._pen_width * 2)) / self.zoomFactor
-
-        offset = (self._widget_size) // 2
-        scene_offset = self.mapToScene(offset, offset)
+        vis_box_rect = self.mapFromScene(
+            0, 0, scaled_box_size, scaled_box_size
+        ).boundingRect()
+        offset = self._widget_size / 2
+        scene_center = self.mapToScene(
+            offset - (vis_box_rect.width() / 2), offset - (vis_box_rect.height() / 2)
+        )
 
         self.box.setRect(
-            scene_offset.x(), scene_offset.y(), scaled_box_size, scaled_box_size
+            scene_center.x(), scene_center.y(), scaled_box_size, scaled_box_size
         )
 
 
