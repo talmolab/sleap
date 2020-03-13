@@ -42,7 +42,7 @@ class LabelsReader:
         """
         user_labels = sleap.Labels(
             [
-                sleap.LabeledFrame(lf.video, lf.frame_idx, lf.user_instances)
+                sleap.LabeledFrame(lf.video, lf.frame_idx, lf.training_instances)
                 for lf in labels.user_labeled_frames
             ]
         )

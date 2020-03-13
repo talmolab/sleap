@@ -1182,6 +1182,15 @@ class LabeledFrame:
         ]
 
     @property
+    def training_instances(self) -> List[Instance]:
+        """Returns list of user instances with points for training."""
+        return [
+            inst
+            for inst in self._instances
+            if not isinstance(inst, PredictedInstance) and inst.n_visible_points
+        ]
+
+    @property
     def predicted_instances(self) -> List[PredictedInstance]:
         """Returns list of predicted instances associated with frame."""
         return [inst for inst in self._instances if isinstance(inst, PredictedInstance)]
