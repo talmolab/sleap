@@ -22,7 +22,7 @@ from sleap.nn.data.resizing import Resizer
 
 def show_datagen_preview(labels: Labels, config_info_list: List[ConfigFileInfo]):
 
-    labels_reader = LabelsReader(labels)
+    labels_reader = LabelsReader.from_user_instances(labels)
 
     win_x = 300
 
