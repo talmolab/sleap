@@ -2,7 +2,7 @@ import cattr
 
 from sleap import Labels, Video
 from sleap.gui.dialogs.formbuilder import YamlFormWidget
-from sleap.gui.learning import runners, utils, configs
+from sleap.gui.learning import runners, utils, configs, datagen
 from sleap.gui.widgets.video import GraphicsView
 
 
@@ -389,7 +389,8 @@ class LearningDialog(QtWidgets.QDialog):
     def view_datagen(self):
         pipeline_form_data = self.pipeline_form_widget.get_form_data()
         config_info_list = self.get_every_head_config_data(pipeline_form_data)
-        runners.run_datagen_preview(self.labels, config_info_list)
+        datagen.show_datagen_preview(self.labels, config_info_list)
+        self.hide()
 
     def run(self):
         """Run with current dialog settings."""
