@@ -20,6 +20,9 @@ from sleap.nn.data.providers import LabelsReader
 from sleap.nn.data.resizing import Resizer
 
 
+MAX_FRAMES_TO_PREVIEW = 20
+
+
 def show_datagen_preview(labels: Labels, config_info_list: List[ConfigFileInfo]):
 
     labels_reader = LabelsReader.from_user_instances(labels)
@@ -123,7 +126,7 @@ def make_datagen_results(reader: LabelsReader, cfg: TrainingJobConfig):
         for key, from_key in output_keys.items():
             output_lists[key].append(example[from_key])
         i += 1
-        if i == 10:
+        if i == MAX_FRAMES_TO_PREVIEW:
             break
 
     outputs = dict()
