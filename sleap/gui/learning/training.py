@@ -535,8 +535,8 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             )
             self.form_widgets[key].valueChanged.connect(self.emitValueChanged)
 
-        self.form_widgets["model"].valueChanged.connect(self.onModelFormChange)
-        self.form_widgets["data"].valueChanged.connect(self.onModelFormChange)
+        self.form_widgets["model"].valueChanged.connect(self.update_receptive_field)
+        self.form_widgets["data"].valueChanged.connect(self.update_receptive_field)
 
         if hasattr(skeleton, "node_names"):
             for field_name in NODE_LIST_FIELDS:
@@ -618,7 +618,17 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         # if self._cfg_list_widget:
         #     self._set_user_config()
 
-    def onModelFormChange(self):
+    def acceptSelectedConfigInfo(self, cfg_info: configs.ConfigFileInfo):
+        self._load_config(cfg_info)
+
+        has_trained_model = cfg_info.has_trained_model
+        if self._use_trained_model:
+            self._use_trained_model.setVisible(has_trained_model)
+            self._use_trained_model.setEnabled(has_trained_model)
+
+        self.update_receptive_field()
+
+    def update_receptive_field(self):
         data_form_data = self.form_widgets["data"].get_form_data()
         model_cfg = utils.make_model_config_from_key_val_dict(
             key_val_dict=self.form_widgets["model"].get_form_data()
@@ -628,14 +638,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
         if self._receptive_field_widget:
             self._receptive_field_widget.setFieldSize(rf_size, scale=rf_image_scale)
-
-    def acceptSelectedConfigInfo(self, cfg_info: configs.ConfigFileInfo):
-        self._load_config(cfg_info)
-
-        has_trained_model = cfg_info.has_trained_model
-        if self._use_trained_model:
-            self._use_trained_model.setVisible(has_trained_model)
-            self._use_trained_model.setEnabled(has_trained_model)
+            self._receptive_field_widget.repaint()
 
     def update_file_list(self):
         self._cfg_list_widget.update()
