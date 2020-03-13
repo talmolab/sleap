@@ -6,7 +6,14 @@ import pytest
 import numpy as np
 
 from sleap.skeleton import Skeleton
-from sleap.instance import Instance, Point, LabeledFrame
+from sleap.instance import (
+    Instance,
+    PredictedInstance,
+    Point,
+    PredictedPoint,
+    LabeledFrame,
+)
+from sleap import Labels
 
 
 def test_instance_node_get_set_item(skeleton):
@@ -198,3 +205,59 @@ def test_instance_from_pointsarray(skeleton):
     assert inst[skeleton.nodes[0]].y == 2
     assert inst[skeleton.nodes[1]].x == 3
     assert inst[skeleton.nodes[1]].y == 4
+
+
+def test_frame_merge_predicted_and_user(skeleton, centered_pair_vid):
+    user_inst = Instance(skeleton=skeleton, points={skeleton.nodes[0]: Point(1, 2)},)
+    user_frame = LabeledFrame(
+        video=centered_pair_vid, frame_idx=0, instances=[user_inst],
+    )
+
+    pred_inst = PredictedInstance(
+        skeleton=skeleton,
+        points={skeleton.nodes[0]: PredictedPoint(1, 2, score=1.0)},
+        score=1.0,
+    )
+    pred_frame = LabeledFrame(
+        video=centered_pair_vid, frame_idx=0, instances=[pred_inst],
+    )
+
+    LabeledFrame.complex_frame_merge(user_frame, pred_frame)
+
+    # We should be able to cleanly merge the user and the predicted instance,
+    # and we want to retain both even though they perfectly match.
+    assert user_inst in user_frame.instances
+    assert pred_inst in user_frame.instances
+    assert len(user_frame.instances) == 2
+
+
+def test_frame_merge_between_predicted_and_user(skeleton, centered_pair_vid):
+    user_inst = Instance(skeleton=skeleton, points={skeleton.nodes[0]: Point(1, 2)},)
+    user_labels = Labels(
+        [LabeledFrame(video=centered_pair_vid, frame_idx=0, instances=[user_inst],)]
+    )
+
+    pred_inst = PredictedInstance(
+        skeleton=skeleton,
+        points={skeleton.nodes[0]: PredictedPoint(1, 2, score=1.0)},
+        score=1.0,
+    )
+    pred_labels = Labels(
+        [LabeledFrame(video=centered_pair_vid, frame_idx=0, instances=[pred_inst],)]
+    )
+
+    # Merge predictions into current labels dataset
+    _, _, new_conflicts = Labels.complex_merge_between(
+        user_labels,
+        new_labels=pred_labels,
+        unify=False,  # since we used match_to when loading predictions file
+    )
+
+    # new predictions should replace old ones
+    Labels.finish_complex_merge(user_labels, new_conflicts)
+
+    # We should be able to cleanly merge the user and the predicted instance,
+    # and we want to retain both even though they perfectly match.
+    assert user_inst in user_labels[0].instances
+    assert pred_inst in user_labels[0].instances
+    assert len(user_labels[0].instances) == 2
