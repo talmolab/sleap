@@ -1,4 +1,4 @@
-from sleap.gui.importvideos import ImportParamDialog
+from sleap.gui.dialogs.importvideos import ImportParamDialog
 
 import PySide2.QtCore as QtCore
 

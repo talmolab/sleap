@@ -1,5 +1,5 @@
 from sleap import Video
-from sleap.gui.video import QtVideoPlayer
+from sleap.gui.widgets.video import QtVideoPlayer
 
 from PySide2 import QtWidgets
 

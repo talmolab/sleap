@@ -26,15 +26,13 @@ from sleap.instance import (
     LabeledFrame,
     Track,
     make_instance_cattr,
-    PointArray,
-    PredictedPointArray,
     PredictedInstance,
 )
 
 from sleap.io import pathutils
 from sleap.io.video import Video
 from sleap.gui.suggestions import SuggestionFrame
-from sleap.gui.missingfiles import MissingFilesDialog
+from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.rangelist import RangeList
 from sleap.util import uniquify, json_dumps
 
@@ -565,7 +563,7 @@ class Labels(MutableSequence):
                 template_points = align.get_template_points_array(first_n_instances)
                 self._template_instance_points = template_points
             else:
-                # No labeled frames so use force-directed graph layou
+                # No labeled frames so use force-directed graph layout
                 import networkx as nx
 
                 node_positions = nx.spring_layout(G=skeleton.graph, scale=50)
@@ -574,7 +572,7 @@ class Labels(MutableSequence):
                     [
                         node_positions[node]
                         if node in node_positions
-                        else np.random.random_integers(0, 50, 2)
+                        else np.random.randint(0, 50, size=2)
                         for node in skeleton.nodes
                     ]
                 )

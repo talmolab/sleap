@@ -7,7 +7,7 @@ import re
 import os
 import random
 
-from typing import Callable, Dict, Iterator, List, Optional
+from typing import Callable, List, Optional
 
 from PySide2 import QtCore, QtGui
 from PySide2.QtCore import Qt, QEvent
@@ -23,7 +23,7 @@ from sleap.instance import Instance
 from sleap.io.dataset import Labels
 from sleap.info.summary import StatisticSeries
 from sleap.gui.commands import CommandContext, UpdateTopic
-from sleap.gui.video import QtVideoPlayer
+from sleap.gui.widgets.video import QtVideoPlayer
 from sleap.gui.dataviews import (
     GenericTableView,
     VideosTableModel,
@@ -34,17 +34,16 @@ from sleap.gui.dataviews import (
     SkeletonNodeModel,
 )
 
-from sleap.gui.filedialog import FileDialog
-from sleap.gui.formbuilder import YamlFormWidget
-from sleap.gui.shortcuts import Shortcuts, ShortcutDialog
-from sleap.gui.suggestions import VideoFrameSuggestions
+from sleap.gui.dialogs.filedialog import FileDialog
+from sleap.gui.dialogs.formbuilder import YamlFormWidget
+from sleap.gui.shortcuts import Shortcuts
+from sleap.gui.dialogs.shortcuts import ShortcutDialog
 from sleap.gui.state import GuiState
 
 from sleap.gui.overlays.tracks import TrackTrailOverlay, TrackListOverlay
 from sleap.gui.color import ColorManager
 from sleap.gui.overlays.instance import InstanceOverlay
 from sleap.gui.overlays.anchors import NegativeAnchorOverlay
-from sleap.util import get_config_file
 
 
 class MainWindow(QMainWindow):

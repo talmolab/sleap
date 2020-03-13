@@ -1,12 +1,12 @@
 import cattr
 
 from sleap import Labels, Video
-from sleap.gui.formbuilder import YamlFormWidget
+from sleap.gui.dialogs.formbuilder import YamlFormWidget
 from sleap.gui.learning import runners, utils, configs
-from sleap.gui.video import GraphicsView
+from sleap.gui.widgets.video import GraphicsView
 
 
-from typing import Any, Callable, Dict, List, Optional, Text
+from typing import Dict, List, Optional, Text
 
 from PySide2 import QtWidgets, QtCore, QtGui
 

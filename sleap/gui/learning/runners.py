@@ -219,7 +219,7 @@ def run_gui_training(
 
     if gui:
         from sleap.nn.monitor import LossViewer
-        from sleap.gui.imagedir import QtImageDirectoryWidget
+        from sleap.gui.widgets.imagedir import QtImageDirectoryWidget
 
         # open training monitor window
         win = LossViewer()
@@ -318,7 +318,6 @@ def run_gui_inference(
     Returns:
         Number of new frames added to labels.
     """
-    from sleap.nn import inference
 
     if gui:
         # show message while running inference

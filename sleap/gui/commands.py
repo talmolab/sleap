@@ -21,11 +21,11 @@ from sleap.skeleton import Skeleton
 from sleap.instance import Instance, PredictedInstance, Point, Track, LabeledFrame
 from sleap.io.video import Video
 from sleap.io.dataset import Labels
-from sleap.gui.importvideos import ImportVideos
-from sleap.gui.filedialog import FileDialog
-from sleap.gui.missingfiles import MissingFilesDialog
-from sleap.gui.merge import MergeDialog
-from sleap.gui.message import MessageDialog
+from sleap.gui.dialogs.importvideos import ImportVideos
+from sleap.gui.dialogs.filedialog import FileDialog
+from sleap.gui.dialogs.missingfiles import MissingFilesDialog
+from sleap.gui.dialogs.merge import MergeDialog
+from sleap.gui.dialogs.message import MessageDialog
 from sleap.gui.suggestions import VideoFrameSuggestions
 from sleap.gui.state import GuiState
 

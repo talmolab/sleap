@@ -1,6 +1,6 @@
 import yaml
 
-from sleap.gui import formbuilder
+from sleap.gui.dialogs import formbuilder
 
 
 def test_formbuilder(qtbot):

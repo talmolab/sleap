@@ -9,7 +9,7 @@ from typing import Callable, List
 from PySide2 import QtWidgets, QtCore, QtGui
 
 from sleap.io import pathutils
-from sleap.gui.filedialog import FileDialog
+from sleap.gui.dialogs.filedialog import FileDialog
 
 
 class MissingFilesDialog(QtWidgets.QDialog):

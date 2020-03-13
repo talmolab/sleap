@@ -1,4 +1,4 @@
-from sleap.gui.multicheck import MultiCheckWidget
+from sleap.gui.widgets.multicheck import MultiCheckWidget
 
 import PySide2.QtCore as QtCore
 

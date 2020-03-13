@@ -5,7 +5,7 @@ import attr
 
 from PySide2 import QtGui
 
-from sleap.gui.video import QtVideoPlayer
+from sleap.gui.widgets.video import QtVideoPlayer
 from sleap.io.dataset import Labels
 
 

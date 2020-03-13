@@ -2,11 +2,11 @@ import attr
 import os
 
 from sleap import util as sleap_utils
-from sleap.gui.filedialog import FileDialog
+from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.nn.config import TrainingJobConfig
-from sleap.gui.formbuilder import FieldComboWidget
+from sleap.gui.dialogs.formbuilder import FieldComboWidget
 
-from typing import Any, Callable, Dict, List, Optional, Union, Text
+from typing import Any, Dict, List, Optional, Text
 
 from PySide2 import QtCore, QtWidgets
 
