@@ -179,7 +179,7 @@ class TopdownPredictor:
         ]
 
         if self.tracker and self.tracker.uses_image:
-            keep_keys.append("image")
+            keep_keys.append("full_image")
 
         pipeline += KeyFilter(keep_keys=keep_keys)
 
@@ -223,7 +223,7 @@ class TopdownPredictor:
                         skeleton=skeleton,
                     )
                 )
-                img = example["image"] if "image" in example else None
+                img = example["full_image"] if "full_image" in example else None
 
             if len(predicted_instances) > 0:
                 if self.tracker:
