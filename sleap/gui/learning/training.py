@@ -264,7 +264,7 @@ class LearningDialog(QtWidgets.QDialog):
 
     def get_most_recent_pipeline_trained(self) -> Text:
         recent_cfg_info = self._cfg_getter.get_first()
-        if recent_cfg_info:
+        if recent_cfg_info and recent_cfg_info.head_name:
             if recent_cfg_info.head_name in ("centroid", "centered_instance"):
                 return "top-down"
             if recent_cfg_info.head_name in ("multi_instance"):
