@@ -57,9 +57,9 @@ class ConfigFileInfo:
 
 class TrainingConfigFilesWidget(FieldComboWidget):
     onConfigSelection = QtCore.Signal(ConfigFileInfo)
-    # setDataDict = QtCore.Signal(dict)
 
     SELECT_FILE_OPTION = "Select training config file..."
+    SHOW_INITIAL_BLANK = 0
 
     def __init__(
         self,
@@ -76,14 +76,7 @@ class TrainingConfigFilesWidget(FieldComboWidget):
         self._require_trained = require_trained
         self._user_config_data_dict = None
 
-        self.update()
-
         self.currentIndexChanged.connect(self.onSelectionIdxChange)
-
-        # If we're only listing trained models, then default to the most recent
-        if self._require_trained:
-            if self._cfg_list:
-                self.setCurrentIndex(1)
 
     def update(self, select: Optional[ConfigFileInfo] = None):
         cfg_list = self._cfg_getter.get_filtered_configs(
@@ -94,7 +87,8 @@ class TrainingConfigFilesWidget(FieldComboWidget):
         select_key = None
 
         option_list = []
-        option_list.append("")
+        if self.SHOW_INITIAL_BLANK or len(cfg_list) == 0:
+            option_list.append("")
 
         # add options for config files
         for cfg_info in cfg_list:
@@ -117,11 +111,25 @@ class TrainingConfigFilesWidget(FieldComboWidget):
 
         self.set_options(option_list, select_item=select_key)
 
+    def selectByIdx(self, option_idx: int):
+        self.setCurrentIndex(option_idx)
+        self.onSelectionIdxChange(option_idx)
+
     def lastOptionIdx(self):
         return self.count()
 
+    @property
+    def _menu_cfg_idx_offset(self):
+        if not hasattr(self, "options_list"):
+            return 0
+        if not self.options_list:
+            return 0
+        if self.options_list[0] == "":
+            return 1
+        return 0
+
     def getConfigInfoByMenuIdx(self, menu_idx):
-        cfg_idx = menu_idx - 1
+        cfg_idx = menu_idx - self._menu_cfg_idx_offset
         return self._cfg_list[cfg_idx] if 0 <= cfg_idx < len(self._cfg_list) else None
 
     def getSelectedConfigInfo(self) -> Optional[ConfigFileInfo]:
@@ -133,14 +141,10 @@ class TrainingConfigFilesWidget(FieldComboWidget):
             cfg_info = self.doFileSelection()
             self.addFileSelectionToMenu(cfg_info)
 
-        elif menu_idx > 0:
+        elif menu_idx >= self._menu_cfg_idx_offset:
             cfg_info = self.getConfigInfoByMenuIdx(menu_idx)
             if cfg_info:
                 self.onConfigSelection.emit(cfg_info)
-        elif menu_idx == 0:
-            pass
-            # if self._user_config_data_dict:
-            #     self.setDataDict.emit(self._user_config_data_dict)
 
     def setUserConfigData(self, cfg_data_dict: Dict[Text, Any]):
         """Sets the user config option from settings made by user."""
