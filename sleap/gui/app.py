@@ -485,6 +485,14 @@ class MainWindow(QMainWindow):
 
         add_menu_item(
             labelMenu,
+            "custom delete",
+            "Custom Instance Delete...",
+            self.commands.deleteDialog,
+        )
+        labelMenu.addSeparator()
+
+        add_menu_item(
+            labelMenu,
             "select next",
             "Select Next Instance",
             lambda: self.state.increment_in_list(

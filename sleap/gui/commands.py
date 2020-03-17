@@ -17,6 +17,7 @@ from PySide2 import QtCore, QtWidgets
 
 from PySide2.QtWidgets import QMessageBox
 
+from sleap.gui.dialogs.delete import DeleteDialog
 from sleap.skeleton import Skeleton
 from sleap.instance import Instance, PredictedInstance, Point, Track, LabeledFrame
 from sleap.io.video import Video
@@ -120,6 +121,11 @@ class AppCommand(ABC):
             context.changestack_push(cls.__name__)
 
 
+@attr.s(auto_attribs=True)
+class FakeApp(object):
+    labels: Labels
+
+
 @attr.s(auto_attribs=True, eq=False)
 class CommandContext(object):
     """
@@ -137,6 +143,12 @@ class CommandContext(object):
 
     update_callback: Optional[Callable] = None
     _change_stack: List = attr.ib(default=attr.Factory(list))
+
+    @classmethod
+    def from_labels(cls, labels: Labels):
+        state = GuiState()
+        app = FakeApp(labels)
+        return cls(state=state, app=app)
 
     @property
     def labels(self):
@@ -385,6 +397,10 @@ class CommandContext(object):
     def deleteSelectedInstanceTrack(self):
         """Deletes all instances from track of currently selected instance."""
         self.execute(DeleteSelectedInstanceTrack)
+
+    def deleteDialog(self):
+        """Deletes using options selected in a dialog."""
+        self.execute(DeleteDialogCommand)
 
     def addTrack(self):
         """Creates new track and moves selected instance into this track."""
@@ -1242,20 +1258,6 @@ class DeleteClipPredictions(InstanceDeleteCommand):
             for inst in lf
             if type(inst) == PredictedInstance
         ]
-
-        # If user selected an instance, then only delete for that track.
-        selected_inst = context.state["instance"]
-        if selected_inst is not None:
-            track = selected_inst.track
-            if track is None:
-                # If user selected an instance without a track, delete only
-                # that instance and only on the current frame.
-                predicted_instances = [(context.state["labeled_frame"], selected_inst)]
-            else:
-                # Filter by track
-                predicted_instances = list(
-                    filter(lambda x: x[1].track == track, predicted_instances)
-                )
         return predicted_instances
 
 
@@ -1441,6 +1443,17 @@ class DeleteSelectedInstanceTrack(EditCommand):
                 track_instances = filter(lambda inst: inst.track == track, lf.instances)
                 for inst in track_instances:
                     context.labels.remove_instance(lf, inst)
+
+
+class DeleteDialogCommand(EditCommand):
+    topics = [
+        UpdateTopic.project_instances,
+    ]
+
+    @staticmethod
+    def ask_and_do(context: CommandContext, params: dict):
+        if DeleteDialog(context).exec_():
+            context.signal_update([UpdateTopic.project_instances])
 
 
 class AddTrack(EditCommand):
