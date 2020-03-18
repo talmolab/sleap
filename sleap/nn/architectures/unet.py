@@ -76,6 +76,10 @@ class UNet(encoder_decoder.EncoderDecoder):
             recover details from higher scales. If using transposed convolutions, the
             number of filters are determined by `filters` and `filters_rate` to
             progressively decrease the number of filters at each step.
+        block_contraction: If True, reduces the number of filters at the end of middle
+            and decoder blocks. This has the effect of introducing an additional
+            bottleneck before each upsampling step. The original implementation does not
+            do this, but the CARE implementation does.
 
     Note:
         This bears some differences with other implementations, particularly with
@@ -95,6 +99,7 @@ class UNet(encoder_decoder.EncoderDecoder):
     middle_block: bool = True
     up_blocks: int = 4
     up_interpolate: bool = False
+    block_contraction: bool = False
 
     @property
     def stem_stack(self) -> Optional[List[encoder_decoder.SimpleConvBlock]]:
@@ -119,6 +124,9 @@ class UNet(encoder_decoder.EncoderDecoder):
                 )
             )
 
+        # Always finish with a pooling block to account for pooling before convs.
+        blocks.append(PoolingBlock(pool=True, pooling_stride=2))
+
         return blocks
 
     @property
@@ -131,7 +139,7 @@ class UNet(encoder_decoder.EncoderDecoder):
             )
             blocks.append(
                 encoder_decoder.SimpleConvBlock(
-                    pool=(block > 0) or (self.stem_blocks > 0),
+                    pool=(block > 0),
                     pool_before_convs=True,
                     pooling_stride=2,
                     num_convs=self.convs_per_block,
@@ -169,11 +177,18 @@ class UNet(encoder_decoder.EncoderDecoder):
                     )
                 )
 
-            # Contract the channels with an exponent lower than the last encoder block.
-            block_filters = int(
-                self.filters
-                * (self.filters_rate ** (self.down_blocks + self.stem_blocks - 1))
-            )
+            if self.block_contraction:
+                # Contract the channels with an exponent lower than the last encoder block.
+                block_filters = int(
+                    self.filters
+                    * (self.filters_rate ** (self.down_blocks + self.stem_blocks - 1))
+                )
+            else:
+                # Keep the block output filters the same.
+                block_filters = int(
+                    self.filters
+                    * (self.filters_rate ** (self.down_blocks + self.stem_blocks))
+                )
             blocks.append(
                 encoder_decoder.SimpleConvBlock(
                     pool=False,
@@ -196,21 +211,17 @@ class UNet(encoder_decoder.EncoderDecoder):
         """Define the decoder stack."""
         blocks = []
         for block in range(self.up_blocks):
-            # block_filters = int(
-            #     self.filters
-            #     * (
-            #         self.filters_rate
-            #         ** (self.stem_blocks + self.down_blocks - block - 1)
-            #     )
-            # )
             block_filters_in = int(
                 self.filters
                 * (self.filters_rate ** (self.down_blocks + self.stem_blocks - 1 - block))
             )
-            block_filters_out = int(
-                self.filters
-                * (self.filters_rate ** (self.down_blocks + self.stem_blocks - 2 - block))
-            )
+            if self.block_contraction:
+                block_filters_out = int(
+                    self.filters
+                    * (self.filters_rate ** (self.down_blocks + self.stem_blocks - 2 - block))
+                )
+            else:
+                block_filters_out = block_filters_in
             blocks.append(
                 encoder_decoder.SimpleUpsamplingBlock(
                     upsampling_stride=2,
