@@ -678,12 +678,25 @@ class SingleImageVideo:
         self.test_frame = None
 
     def _load_idx(self, idx):
-        img = cv2.imread(self.filenames[idx])
+        img = cv2.imread(self._get_filename(idx))
 
         if img.shape[2] == 3:
             # OpenCV channels are in BGR order, so we should convert to RGB
             img = img[:, :, ::-1]
         return img
+
+    def _get_filename(self, idx: int) -> str:
+        f = self.filenames[idx]
+        if os.path.exists(f):
+            return f
+
+        # Try the directory from the "video" file (this works if all the images
+        # are in the same directory with distinctive filenames).
+        f = os.path.join(os.path.dirname(self.filename), os.path.basename(f))
+        if os.path.exists(f):
+            return f
+
+        raise FileNotFoundError(f"Unable to locate file {idx}: {self.filenames[idx]}")
 
     def _load_test_frame(self):
         if self.test_frame is None:
