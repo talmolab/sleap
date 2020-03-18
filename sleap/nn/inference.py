@@ -514,7 +514,7 @@ class SingleInstancePredictor:
     pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
 
     @classmethod
-    def from_trained_models(cls, confmap_model_path: Text) -> "TopdownPredictor":
+    def from_trained_models(cls, confmap_model_path: Text) -> "SingleInstancePredictor":
         """Create predictor from saved models."""
 
         # Load confmap model.
