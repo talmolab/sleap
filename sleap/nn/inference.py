@@ -23,6 +23,7 @@ from sleap.nn.data.pipelines import (
     Normalizer,
     Resizer,
     Prefetcher,
+    LambdaFilter,
     KerasModelPredictor,
     LocalPeakFinder,
     PredictedInstanceCropper,
@@ -393,6 +394,8 @@ class BottomupPredictor:
             peak_channel_inds_key="predicted_peak_channel_inds",
             keep_confmaps=False,
         )
+
+        pipeline += LambdaFilter(filter_fn=lambda ex: len(ex["predicted_peaks"]) > 0)
 
         pipeline += PartAffinityFieldInstanceGrouper.from_config(
             self.bottomup_config.model.heads.multi_instance,

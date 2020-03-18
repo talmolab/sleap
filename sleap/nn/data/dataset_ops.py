@@ -7,7 +7,7 @@ import numpy as np
 import tensorflow as tf
 from sleap.nn.data.utils import expand_to_rank
 import attr
-from typing import List, Text, Optional, Any
+from typing import List, Text, Optional, Any, Callable, Dict
 
 
 @attr.s(auto_attribs=True)
@@ -329,4 +329,46 @@ class Preloader:
         ds_output = ds_output.map(
             lambda *example: {key: val for key, val in zip(keys, example)}
         )
+        return ds_output
+
+
+@attr.s(auto_attribs=True)
+class LambdaFilter:
+    """Transformer for filtering examples out of a dataset.
+
+    This class is useful for eliminating examples that fail to meet some criteria, e.g.,
+    when no peaks are found.
+
+    Attributes:
+        filter_fn: Callable that takes an example dictionary as input and returns True
+            if the the element should be kept.
+    """
+
+    filter_fn: Callable[[Dict[Text, tf.Tensor]], bool]
+
+    @property
+    def input_keys(self) -> List[Text]:
+        """Return the keys that incoming elements are expected to have."""
+        return []
+
+    @property
+    def output_keys(self) -> List[Text]:
+        """Return the keys that outgoing elements will have."""
+        return []
+
+    def transform_dataset(self, ds_input: tf.data.Dataset) -> tf.data.Dataset:
+        """Create a dataset with filtering applied.
+
+        Args:
+            ds_input: Any dataset that produces dictionaries keyed by strings and values
+                with any rank tensors.
+
+        Returns:
+            A `tf.data.Dataset` with elements containing the same keys, but with
+            potentially fewer elements.
+        """
+
+        # Filter and return.
+        ds_output = ds_input.filter(self.filter_fn)
+
         return ds_output
