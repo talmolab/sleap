@@ -243,6 +243,67 @@ class GlobalPeakFinder:
         return output_ds
 
 
+@attr.s(auto_attribs=True)
+class MockGlobalPeakFinder:
+    """Transformer that mimics `GlobalPeakFinder` but passes ground truth data."""
+
+    all_peaks_in_key: Text = "instances"
+    peaks_out_key: Text = "predicted_center_instance_points"
+    peak_vals_key: Text = "predicted_center_instance_confidences"
+    keep_confmaps: bool = True
+    confmaps_in_key: Text = "instance_confidence_maps"
+    confmaps_out_key: Text = "predicted_instance_confidence_maps"
+
+    @property
+    def input_keys(self) -> List[Text]:
+        input_keys = [self.all_peaks_in_key, "centroid", "bbox", "scale"]
+        if self.keep_confmaps:
+            input_keys.append(self.confmaps_in_key)
+        return input_keys
+
+    @property
+    def output_keys(self) -> List[Text]:
+        output_keys = [self.peaks_out_key, self.peak_vals_key]
+        if self.keep_confmaps:
+            output_keys.append(self.confmaps_out_key)
+        return output_keys
+
+    def transform_dataset(self, input_ds: tf.data.Dataset) -> tf.data.Dataset:
+        def find_peaks(example):
+            # Match example centroid to the instance with the closest node.
+            centroid = example["centroid"] / example["scale"]
+            all_peaks = example[self.all_peaks_in_key]  # (n_instances, n_nodes, 2)
+            dists = tf.reduce_min(
+                tf.norm(
+                    all_peaks - tf.reshape(centroid, [1, 1, 2]), axis=-1
+                ),
+                axis=1,
+            )  # (n_instances,)
+            instance_ind = tf.argmin(dists)
+            center_instance = tf.gather(all_peaks, instance_ind)
+
+            # Adjust to coordinates relative to bounding box.
+            center_instance -= tf.reshape(tf.gather(example["bbox"], [1, 0]), [1, 2])
+
+            # Fill in mock data.
+            example[self.peaks_out_key] = center_instance
+            example[self.peak_vals_key] = tf.ones(
+                [tf.shape(center_instance)[0]], dtype=tf.float32
+            )
+            example.pop(self.all_peaks_in_key)
+
+            if self.keep_confmaps:
+                example[self.confmaps_out_key] = example[self.confmaps_in_key]
+                example.pop(self.confmaps_in_key)
+
+            return example
+
+        output_ds = input_ds.map(
+            find_peaks, num_parallel_calls=tf.data.experimental.AUTOTUNE
+        )
+        return output_ds
+
+
 def find_local_peaks(
     img: tf.Tensor, threshold: float = 0.2
 ) -> Tuple[tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor]:

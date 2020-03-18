@@ -37,6 +37,7 @@ from sleap.nn.data.general import KeyFilter, KeyRenamer
 from sleap.nn.data.inference import (
     KerasModelPredictor,
     GlobalPeakFinder,
+    MockGlobalPeakFinder,
     LocalPeakFinder,
     PredictedCenterInstanceNormalizer,
 )
@@ -71,6 +72,7 @@ TRANSFORMERS = (
     KeyMapper,
     KerasModelPredictor,
     GlobalPeakFinder,
+    MockGlobalPeakFinder,
     LocalPeakFinder,
     PredictedInstanceCropper,
     PredictedCenterInstanceNormalizer,
