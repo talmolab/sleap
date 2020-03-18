@@ -181,6 +181,10 @@ class TopdownPredictor:
                 keep_confmaps=False,
             )
 
+            pipeline += LambdaFilter(
+                filter_fn=lambda ex: len(ex["predicted_centroids"]) > 0
+            )
+
             if self.confmap_config is not None:
                 crop_size = self.confmap_config.data.instance_cropping.crop_size
             else:
@@ -194,7 +198,7 @@ class TopdownPredictor:
                 centroids_key="predicted_centroids",
                 centroid_confidences_key="predicted_centroid_confidences",
                 full_image_key="full_image",
-                keep_instances_gt=self.confmap_model is None
+                keep_instances_gt=self.confmap_model is None,
             )
 
         else:
@@ -675,20 +679,16 @@ def make_cli_parser():
     device_group.add_argument(
         "--cpu",
         action="store_true",
-        help="Run inference only on CPU. If not specified, will use available GPU."
+        help="Run inference only on CPU. If not specified, will use available GPU.",
     )
     device_group.add_argument(
         "--first-gpu",
         action="store_true",
-        help="Run inference on the first GPU, if available."
+        help="Run inference on the first GPU, if available.",
     )
     device_group.add_argument(
-        "--gpu",
-        type=int,
-        default=0,
-        help="Run inference on the i-th GPU specified."
+        "--gpu", type=int, default=0, help="Run inference on the i-th GPU specified."
     )
-
 
     # Add args for tracking
     Tracker.add_cli_parser_args(parser, arg_scope="tracking")
