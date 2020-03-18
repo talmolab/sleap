@@ -7,6 +7,9 @@ import seaborn as sns
 from typing import Union, Tuple, Optional, Text
 
 
+matplotlib.use("Qt5Agg")
+
+
 def imgfig(
     size: Union[float, Tuple] = 6, dpi: int = 72, scale: float = 1.0
 ) -> matplotlib.figure.Figure:
