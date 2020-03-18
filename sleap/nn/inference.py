@@ -687,6 +687,11 @@ def make_cli_parser():
         help="Run inference on the first GPU, if available.",
     )
     device_group.add_argument(
+        "--last-gpu",
+        action="store_true",
+        help="Run inference on the last GPU, if available.",
+    )
+    device_group.add_argument(
         "--gpu", type=int, default=0, help="Run inference on the i-th GPU specified."
     )
 
