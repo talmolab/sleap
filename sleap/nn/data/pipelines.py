@@ -31,12 +31,14 @@ from sleap.nn.data.dataset_ops import (
     Repeater,
     Prefetcher,
     Preloader,
+    LambdaFilter
 )
 from sleap.nn.data.training import KeyMapper
 from sleap.nn.data.general import KeyFilter, KeyRenamer
 from sleap.nn.data.inference import (
     KerasModelPredictor,
     GlobalPeakFinder,
+    MockGlobalPeakFinder,
     LocalPeakFinder,
     PredictedCenterInstanceNormalizer,
 )
@@ -68,9 +70,11 @@ TRANSFORMERS = (
     Repeater,
     Prefetcher,
     Preloader,
+    LambdaFilter,
     KeyMapper,
     KerasModelPredictor,
     GlobalPeakFinder,
+    MockGlobalPeakFinder,
     LocalPeakFinder,
     PredictedInstanceCropper,
     PredictedCenterInstanceNormalizer,

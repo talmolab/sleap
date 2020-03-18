@@ -46,8 +46,10 @@ def plot_img(
         dpi=dpi,
         scale=scale,
     )
+    img = img.squeeze(axis=-1) if img.shape[-1] == 1 else img
+    img = (img - img.min()) / np.ptp(img)
     fig.gca().imshow(
-        img.squeeze(axis=-1) if img.shape[-1] == 1 else img,
+        img,
         cmap="gray" if img.shape[-1] == 1 else None,
         origin="lower",
         extent=[-0.5, img.shape[1] - 0.5, -0.5, img.shape[0] - 0.5],

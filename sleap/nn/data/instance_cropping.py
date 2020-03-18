@@ -203,11 +203,14 @@ class InstanceCropper:
             that use both full and cropped images, at the cost of increased memory
             requirements usage. Setting this to False can substantially improve
             performance of large pipelines if the full images are no longer required.
+        mock_centroid_confidence: If True, add confidence keys for compatibility with 
+            predicted instance cropping.
     """
 
     crop_width: int
     crop_height: int
     keep_full_image: bool = False
+    mock_centroid_confidence: bool = False
 
     @classmethod
     def from_config(
@@ -258,6 +261,8 @@ class InstanceCropper:
         ]
         if self.keep_full_image:
             output_keys.append("image")
+        if self.mock_centroid_confidence:
+            output_keys.append("centroid_confidence")
         return output_keys
 
     def transform_dataset(self, input_ds: tf.data.Dataset) -> tf.data.Dataset:
@@ -307,6 +312,10 @@ class InstanceCropper:
 
             If `keep_full_image` is True, examples will also have an "image" key
             containing the same image as the input.
+
+            if `mock_centroid_confidence` is True, examples will also have a
+            "centroid_confidence" key with all ones. This is useful for evaluating
+            models that use crops independently from centroid inference.
 
             Additional keys will be replicated in each example under the same name.
         """
@@ -365,6 +374,10 @@ class InstanceCropper:
                     tf.shape(frame_data["image"])[1], n_instances
                 ),
             }
+            if self.mock_centroid_confidence:
+                instances_data["centroid_confidence"] = tf.ones(
+                    [n_instances,], dtype=tf.float32
+                )  # (n_instances,)
             for key in keys_to_expand:
                 instances_data[key] = tf.repeat(
                     tf.expand_dims(frame_data[key], axis=0), n_instances, axis=0
@@ -391,11 +404,12 @@ class PredictedInstanceCropper:
     centroid_confidences_key: Text = "predicted_centroid_confidences"
     full_image_key: Text = "full_image"
     keep_full_image: bool = False
+    keep_instances_gt: bool = False
 
     @property
     def input_keys(self) -> List[Text]:
         """Return the keys that incoming elements are expected to have."""
-        return [
+        input_keys = [
             self.full_image_key,
             self.centroids_key,
             self.centroid_confidences_key,
@@ -403,6 +417,9 @@ class PredictedInstanceCropper:
             "video_ind",
             "frame_ind",
         ]
+        if self.keep_instances_gt:
+            input_keys.append("instances")
+        return input_keys
 
     @property
     def output_keys(self) -> List[Text]:
@@ -421,11 +438,17 @@ class PredictedInstanceCropper:
         ]
         if self.keep_full_image:
             output_keys.append(self.full_image_key)
+        if self.keep_instances_gt:
+            output_keys.append("instances")
         return output_keys
 
     def transform_dataset(self, input_ds: tf.data.Dataset) -> tf.data.Dataset:
         """Create a dataset that contains instance cropped data."""
-        keys_to_expand = [self.full_image_key, "scale", "video_ind", "frame_ind"]
+        keys_to_expand = ["scale", "video_ind", "frame_ind"]
+        if self.keep_full_image:
+            keys_to_expand.append(self.full_image_key)
+        if self.keep_instances_gt:
+            keys_to_expand.append("instances")
 
         def crop_instances(frame_data):
             """Local processing function for dataset mapping."""

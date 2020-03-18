@@ -23,10 +23,14 @@ from sleap.nn.data.pipelines import (
     Normalizer,
     Resizer,
     Prefetcher,
+    LambdaFilter,
     KerasModelPredictor,
     LocalPeakFinder,
     PredictedInstanceCropper,
+    InstanceCentroidFinder,
+    InstanceCropper,
     GlobalPeakFinder,
+    MockGlobalPeakFinder,
     KeyFilter,
     PredictedCenterInstanceNormalizer,
     PartAffinityFieldInstanceGrouper,
@@ -78,33 +82,61 @@ def safely_generate(ds: tf.data.Dataset, progress: bool = True):
 
 @attr.s(auto_attribs=True)
 class TopdownPredictor:
-    centroid_config: TrainingJobConfig
-    centroid_model: Model
-    confmap_config: TrainingJobConfig
-    confmap_model: Model
+    centroid_config: Optional[TrainingJobConfig] = attr.ib(default=None)
+    centroid_model: Optional[Model] = attr.ib(default=None)
+    confmap_config: Optional[TrainingJobConfig] = attr.ib(default=None)
+    confmap_model: Optional[Model] = attr.ib(default=None)
     pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
     tracker: Optional[Tracker] = attr.ib(default=None, init=False)
 
     @classmethod
     def from_trained_models(
-        cls, centroid_model_path: Text, confmap_model_path: Text
+        cls,
+        centroid_model_path: Optional[Text] = None,
+        confmap_model_path: Optional[Text] = None,
     ) -> "TopdownPredictor":
-        """Create predictor from saved models."""
-        # Load centroid model.
-        centroid_config = TrainingJobConfig.load_json(centroid_model_path)
-        centroid_keras_model_path = os.path.join(centroid_model_path, "best_model.h5")
-        centroid_model = Model.from_config(centroid_config.model)
-        centroid_model.keras_model = tf.keras.models.load_model(
-            centroid_keras_model_path, compile=False
-        )
+        """Create predictor from saved models.
 
-        # Load confmap model.
-        confmap_config = TrainingJobConfig.load_json(confmap_model_path)
-        confmap_keras_model_path = os.path.join(confmap_model_path, "best_model.h5")
-        confmap_model = Model.from_config(confmap_config.model)
-        confmap_model.keras_model = tf.keras.models.load_model(
-            confmap_keras_model_path, compile=False
-        )
+        Args:
+            centroid_model_path: Path to centroid model folder.
+            confmap_model_path: Path to topdown confidence map model folder.
+        
+        Returns:
+            An instance of TopdownPredictor with the loaded models.
+
+            One of the two models can be left as None to perform inference with ground
+            truth data. This will only work with LabelsReader as the provider.
+        """
+        if centroid_model_path is None and confmap_model_path is None:
+            raise ValueError(
+                "Either the centroid or topdown confidence map model must be provided."
+            )
+
+        if centroid_model_path is not None:
+            # Load centroid model.
+            centroid_config = TrainingJobConfig.load_json(centroid_model_path)
+            centroid_keras_model_path = os.path.join(
+                centroid_model_path, "best_model.h5"
+            )
+            centroid_model = Model.from_config(centroid_config.model)
+            centroid_model.keras_model = tf.keras.models.load_model(
+                centroid_keras_model_path, compile=False
+            )
+        else:
+            centroid_config = None
+            centroid_model = None
+
+        if confmap_model_path is not None:
+            # Load confmap model.
+            confmap_config = TrainingJobConfig.load_json(confmap_model_path)
+            confmap_keras_model_path = os.path.join(confmap_model_path, "best_model.h5")
+            confmap_model = Model.from_config(confmap_config.model)
+            confmap_model.keras_model = tf.keras.models.load_model(
+                confmap_keras_model_path, compile=False
+            )
+        else:
+            confmap_config = None
+            confmap_model = None
 
         return cls(
             centroid_config=centroid_config,
@@ -119,51 +151,93 @@ class TopdownPredictor:
         if data_provider is not None:
             pipeline.providers = [data_provider]
 
-        pipeline += Normalizer.from_config(self.centroid_config.data.preprocessing)
+        if self.centroid_config is not None:
+            preprocessing_config = self.centroid_config.data.preprocessing
+        else:
+            preprocessing_config = self.confmap_config.data.preprocessing
+        pipeline += Normalizer.from_config(preprocessing_config)
         pipeline += Resizer.from_config(
-            self.centroid_config.data.preprocessing,
-            keep_full_image=True,
-            points_key=None,
+            preprocessing_config, keep_full_image=True, points_key=None,
         )
 
         pipeline += Prefetcher()
 
-        pipeline += KerasModelPredictor(
-            keras_model=self.centroid_model.keras_model,
-            model_input_keys="image",
-            model_output_keys="predicted_centroid_confidence_maps",
-        )
+        if self.centroid_model is not None:
+            # Predict centroids using model.
+            pipeline += KerasModelPredictor(
+                keras_model=self.centroid_model.keras_model,
+                model_input_keys="image",
+                model_output_keys="predicted_centroid_confidence_maps",
+            )
 
-        pipeline += LocalPeakFinder(
-            confmaps_stride=self.centroid_model.heads[0].output_stride,
-            peak_threshold=0.2,
-            confmaps_key="predicted_centroid_confidence_maps",
-            peaks_key="predicted_centroids",
-            peak_vals_key="predicted_centroid_confidences",
-            peak_sample_inds_key="predicted_centroid_sample_inds",
-            peak_channel_inds_key="predicted_centroid_channel_inds",
-            keep_confmaps=False,
-        )
+            pipeline += LocalPeakFinder(
+                confmaps_stride=self.centroid_model.heads[0].output_stride,
+                peak_threshold=0.2,
+                confmaps_key="predicted_centroid_confidence_maps",
+                peaks_key="predicted_centroids",
+                peak_vals_key="predicted_centroid_confidences",
+                peak_sample_inds_key="predicted_centroid_sample_inds",
+                peak_channel_inds_key="predicted_centroid_channel_inds",
+                keep_confmaps=False,
+            )
 
-        pipeline += PredictedInstanceCropper(
-            crop_width=self.confmap_config.data.instance_cropping.crop_size,
-            crop_height=self.confmap_config.data.instance_cropping.crop_size,
-            centroids_key="predicted_centroids",
-            centroid_confidences_key="predicted_centroid_confidences",
-            full_image_key="full_image",
-        )
+            pipeline += LambdaFilter(
+                filter_fn=lambda ex: len(ex["predicted_centroids"]) > 0
+            )
 
-        pipeline += KerasModelPredictor(
-            keras_model=self.confmap_model.keras_model,
-            model_input_keys="instance_image",
-            model_output_keys="predicted_instance_confidence_maps",
-        )
-        pipeline += GlobalPeakFinder(
-            confmaps_key="predicted_instance_confidence_maps",
-            peaks_key="predicted_center_instance_points",
-            confmaps_stride=self.confmap_model.heads[0].output_stride,
-            peak_threshold=0.2,
-        )
+            if self.confmap_config is not None:
+                crop_size = self.confmap_config.data.instance_cropping.crop_size
+            else:
+                crop_size = sleap.nn.data.instance_cropping.find_instance_crop_size(
+                    data_provider.labels
+                )
+
+            pipeline += PredictedInstanceCropper(
+                crop_width=crop_size,
+                crop_height=crop_size,
+                centroids_key="predicted_centroids",
+                centroid_confidences_key="predicted_centroid_confidences",
+                full_image_key="full_image",
+                keep_instances_gt=self.confmap_model is None,
+            )
+
+        else:
+            # Generate ground truth centroids and crops.
+            anchor_part = self.confmap_config.data.instance_cropping.center_on_part
+            pipeline += InstanceCentroidFinder(
+                center_on_anchor_part=True,
+                anchor_part_names=anchor_part,
+                skeletons=data_provider.labels.skeletons,
+            )
+            pipeline += InstanceCropper(
+                crop_width=self.confmap_config.data.instance_cropping.crop_size,
+                crop_height=self.confmap_config.data.instance_cropping.crop_size,
+                keep_full_image=False,
+                mock_centroid_confidence=True,
+            )
+
+        if self.confmap_model is not None:
+            # Predict confidence maps using model.
+            pipeline += KerasModelPredictor(
+                keras_model=self.confmap_model.keras_model,
+                model_input_keys="instance_image",
+                model_output_keys="predicted_instance_confidence_maps",
+            )
+            pipeline += GlobalPeakFinder(
+                confmaps_key="predicted_instance_confidence_maps",
+                peaks_key="predicted_center_instance_points",
+                confmaps_stride=self.confmap_model.heads[0].output_stride,
+                peak_threshold=0.2,
+            )
+
+        else:
+            # Generate ground truth instance points.
+            pipeline += MockGlobalPeakFinder(
+                all_peaks_in_key="instances",
+                peaks_out_key="predicted_center_instance_points",
+                peak_vals_key="predicted_center_instance_confidences",
+                keep_confmaps=False,
+            )
 
         keep_keys = [
             "bbox",
@@ -202,7 +276,10 @@ class TopdownPredictor:
         self, examples: List[Dict[Text, tf.Tensor]], videos: List[sleap.Video]
     ) -> List[sleap.LabeledFrame]:
         # Pull out skeleton from the config.
-        skeleton = self.confmap_config.data.labels.skeletons[0]
+        if self.confmap_config is not None:
+            skeleton = self.confmap_config.data.labels.skeletons[0]
+        else:
+            skeleton = self.centroid_config.data.labels.skeletons[0]
 
         # Group the examples by video and frame.
         grouped_examples = group_examples(examples)
@@ -248,7 +325,11 @@ class TopdownPredictor:
 
     def predict_generator(self, data_provider: Provider):
         if self.pipeline is None:
-            self.make_pipeline()
+            if self.centroid_config is not None and self.confmap_config is not None:
+                self.make_pipeline()
+            else:
+                # Pass in data provider when mocking one of the models.
+                self.make_pipeline(data_provider=data_provider)
 
         self.pipeline.providers = [data_provider]
 
@@ -317,6 +398,8 @@ class BottomupPredictor:
             peak_channel_inds_key="predicted_peak_channel_inds",
             keep_confmaps=False,
         )
+
+        pipeline += LambdaFilter(filter_fn=lambda ex: len(ex["predicted_peaks"]) > 0)
 
         pipeline += PartAffinityFieldInstanceGrouper.from_config(
             self.bottomup_config.model.heads.multi_instance,
@@ -435,7 +518,7 @@ class SingleInstancePredictor:
     pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
 
     @classmethod
-    def from_trained_models(cls, confmap_model_path: Text) -> "TopdownPredictor":
+    def from_trained_models(cls, confmap_model_path: Text) -> "SingleInstancePredictor":
         """Create predictor from saved models."""
 
         # Load confmap model.
@@ -512,6 +595,7 @@ class SingleInstancePredictor:
                         points=example["predicted_instance"],
                         point_confidences=example["predicted_instance_confidences"],
                         skeleton=skeleton,
+                        instance_score=sum(example["predicted_instance_confidences"]),
                     )
                 )
 
@@ -589,6 +673,21 @@ def make_cli_parser():
         type=str,
         default="",
         help="The input_format for HDF5 videos.",
+    )
+
+    device_group = parser.add_mutually_exclusive_group(required=False)
+    device_group.add_argument(
+        "--cpu",
+        action="store_true",
+        help="Run inference only on CPU. If not specified, will use available GPU.",
+    )
+    device_group.add_argument(
+        "--first-gpu",
+        action="store_true",
+        help="Run inference on the first GPU, if available.",
+    )
+    device_group.add_argument(
+        "--gpu", type=int, default=0, help="Run inference on the i-th GPU specified."
     )
 
     # Add args for tracking
@@ -698,6 +797,20 @@ def main():
     parser = make_cli_parser()
     args, _ = parser.parse_known_args()
     print(args)
+
+    if args.cpu or not sleap.nn.system.is_gpu_system():
+        sleap.nn.system.use_cpu_only()
+    else:
+        if args.first_gpu:
+            sleap.nn.system.use_first_gpu()
+        elif args.last_gpu:
+            sleap.nn.system.use_last_gpu()
+        else:
+            sleap.nn.system.use_gpu(args.gpu)
+    sleap.nn.system.disable_preallocation()
+
+    print("System:")
+    sleap.nn.system.summary()
 
     video_reader = make_video_reader_from_cli(args)
     print("Frames:", len(video_reader))
