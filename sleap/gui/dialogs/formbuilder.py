@@ -17,7 +17,7 @@ from typing import Any, Dict, List, Optional
 
 from PySide2 import QtWidgets, QtCore
 
-from sleap.gui.filedialog import FileDialog
+from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.util import get_package_file
 
 
@@ -349,6 +349,12 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
                 field = OptionalSpinWidget(
                     type=spin_type, none_string=none_string, none_label=none_label
                 )
+                if "range" in item.keys():
+                    min, max = list(map(int, item["range"].split(",")))
+                    field.setRange(min, max)
+                elif item["default"] is not None and item["default"] > 100:
+                    min, max = 0, item["default"] * 10
+                    field.setRange(min, max)
                 field.setValue(item["default"])
                 field.valueChanged.connect(lambda: self.valueChanged.emit())
 
@@ -642,6 +648,9 @@ class OptionalSpinWidget(QtWidgets.QWidget):
         if not is_none:
             self.spin_widget.setValue(val)
         self.updateState(valueChanged=False)
+
+    def setRange(self, min, max):
+        self.spin_widget.setRange(min, max)
 
 
 class FieldComboWidget(QtWidgets.QComboBox):

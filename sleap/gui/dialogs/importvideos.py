@@ -22,7 +22,7 @@ method while passing the user-selected params as the named parameters:
 
 from PySide2.QtCore import Qt, QRectF, Signal
 from PySide2.QtWidgets import QApplication, QLayout, QVBoxLayout, QHBoxLayout, QFrame
-from PySide2.QtWidgets import QFileDialog, QDialog, QWidget, QLabel, QScrollArea
+from PySide2.QtWidgets import QDialog, QWidget, QLabel, QScrollArea
 from PySide2.QtWidgets import (
     QPushButton,
     QButtonGroup,
@@ -31,9 +31,9 @@ from PySide2.QtWidgets import (
     QComboBox,
 )
 
-from sleap.gui.video import GraphicsView
+from sleap.gui.widgets.video import GraphicsView
 from sleap.io.video import Video
-from sleap.gui.filedialog import FileDialog
+from sleap.gui.dialogs.filedialog import FileDialog
 
 import h5py
 import qimage2ndarray

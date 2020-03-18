@@ -2,7 +2,7 @@ import os
 
 from PySide2 import QtWidgets
 
-from sleap.gui.filedialog import FileDialog
+from sleap.gui.dialogs.filedialog import FileDialog
 
 
 def test_non_native_dialog():

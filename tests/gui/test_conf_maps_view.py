@@ -1,9 +1,5 @@
-from sleap.gui.video import QtVideoPlayer
+from sleap.gui.widgets.video import QtVideoPlayer
 from sleap.gui.overlays.confmaps import ConfMapsPlot
-
-from sleap.io.video import Video
-
-import PySide2.QtCore as QtCore
 
 
 def test_gui_conf_maps(qtbot, hdf5_confmaps):

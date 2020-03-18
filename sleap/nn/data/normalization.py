@@ -1,6 +1,7 @@
 """Transformers for normalizing data formats."""
 
 import tensorflow as tf
+import numpy as np
 from sleap.nn.data.utils import expand_to_rank
 import attr
 from typing import List, Text, Optional
@@ -46,6 +47,35 @@ def ensure_float(image: tf.Tensor) -> tf.Tensor:
     See also: tf.image.convert_image_dtype
     """
     return tf.image.convert_image_dtype(image, tf.float32)
+
+
+def ensure_int(image: tf.Tensor) -> tf.Tensor:
+    """
+    Convert the image to a tf.uint8.
+
+    If the image is a floating dtype, then converts and scales data from [0, 1]
+    to [0, 255] as needed. Otherwise, returns image as is.
+
+    Args:
+        image: Tensor of any dtype.
+
+    Returns:
+        A tensor of the same shape as `image` but with dtype tf.uint8.
+        If the image was not a floating dtype, then it will not be changed.
+
+        If the input was float with range [0, 1], it will be scaled to [0, 255].
+    """
+    # Tensors have is_floating attribute, ndarrays don't.
+    is_float = getattr(
+        image.dtype, "is_floating", image.dtype in (np.float32, np.float64)
+    )
+
+    if is_float:
+        if tf.reduce_max(image) <= 1.0:
+            return tf.image.convert_image_dtype(image, tf.uint8)
+        return tf.cast(image, tf.uint8)
+
+    return image
 
 
 def ensure_grayscale(image: tf.Tensor) -> tf.Tensor:

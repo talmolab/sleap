@@ -43,7 +43,7 @@ import math
 import time
 import numpy as np
 
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Callable, List, Optional, Union
 
 from PySide2.QtWidgets import QGraphicsItem, QGraphicsObject
 
@@ -57,7 +57,7 @@ from PySide2.QtWidgets import (
 from sleap.skeleton import Node
 from sleap.instance import Instance, Point
 from sleap.io.video import Video
-from sleap.gui.slider import VideoSlider
+from sleap.gui.widgets.slider import VideoSlider
 from sleap.gui.state import GuiState
 from sleap.gui.color import ColorManager
 

@@ -1,6 +1,7 @@
 """Training functionality and high level APIs."""
 
 import os
+import re
 from datetime import datetime
 from time import time
 import logging
@@ -410,7 +411,11 @@ def setup_visualization(
             )
         )
 
-    if config.tensorboard.write_logs and config.tensorboard.visualizations and config.save_outputs:
+    if (
+        config.tensorboard.write_logs
+        and config.tensorboard.visualizations
+        and config.save_outputs
+    ):
         callbacks.append(
             TensorBoardMatplotlibWriter(
                 log_dir=os.path.join(run_path, name), plot_fn=viz_fn, tag=name
@@ -418,6 +423,15 @@ def setup_visualization(
         )
 
     return callbacks
+
+
+def sanitize_scope_name(name: Text) -> Text:
+    """Sanitizes string which will be used as TensorFlow scope name."""
+    # Add "." to beginning if first character isn't acceptable
+    name = re.sub("^([^A-Za-z0-9.])", ".\\1", name)
+    # Replace invalid characters with "_"
+    name = re.sub("([^A-Za-z0-9._])", "_", name)
+    return name
 
 
 PipelineBuilder = TypeVar(
@@ -651,7 +665,9 @@ class Trainer(ABC):
         # TODO: Implement general part loss reporting.
         part_names = None
         if isinstance(self.pipeline_builder, TopdownConfmapsPipeline):
-            part_names = self.model.heads[0].part_names
+            part_names = [
+                sanitize_scope_name(name) for name in self.model.heads[0].part_names
+            ]
         metrics = setup_metrics(self.config.optimization, part_names=part_names)
 
         self.optimization_callbacks = setup_optimization_callbacks(

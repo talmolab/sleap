@@ -4,7 +4,7 @@ Module with overlay for showing instances.
 import attr
 
 from sleap.gui.state import GuiState
-from sleap.gui.video import QtVideoPlayer
+from sleap.gui.widgets.video import QtVideoPlayer
 from sleap.io.dataset import Labels
 
 

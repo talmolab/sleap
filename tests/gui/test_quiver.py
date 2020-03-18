@@ -1,9 +1,5 @@
-from sleap.gui.video import QtVideoPlayer
+from sleap.gui.widgets.video import QtVideoPlayer
 from sleap.gui.overlays.pafs import MultiQuiverPlot
-
-from sleap.io.video import Video
-
-import PySide2.QtCore as QtCore
 
 
 def test_gui_quiver(qtbot, hdf5_affinity):

@@ -390,6 +390,7 @@ class PredictedInstanceCropper:
     centroids_key: Text = "predicted_centroids"
     centroid_confidences_key: Text = "predicted_centroid_confidences"
     full_image_key: Text = "full_image"
+    keep_full_image: bool = False
 
     @property
     def input_keys(self) -> List[Text]:
@@ -418,6 +419,8 @@ class PredictedInstanceCropper:
             "video_ind",
             "frame_ind",
         ]
+        if self.keep_full_image:
+            output_keys.append(self.full_image_key)
         return output_keys
 
     def transform_dataset(self, input_ds: tf.data.Dataset) -> tf.data.Dataset:

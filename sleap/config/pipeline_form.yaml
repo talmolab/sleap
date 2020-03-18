@@ -1,4 +1,4 @@
-pipeline:
+training:
 
 - name: _pipeline
   label: Training/Inference Pipeline Type
@@ -45,18 +45,6 @@ pipeline:
     locate and crop around each animal in the frame, and a
     "<u>centered-instance confidence map</u>" model for predicted node locations
     for each individual animal predicted by the centroid model.'
-
-  - name: data.instance_cropping.crop_size
-    help: Integer size of bounding box height and width to crop out of the full image.
-      This should be greater than the largest size of the instances in pixels. The crop
-      is applied after any input scaling, so be sure to adjust this to changes in the
-      input image scale. If set to "auto", this will be automatically detected from
-      the data during training or from the model input layer during inference. This
-      must be divisible by the model's max stride (typically 32).
-    label: Crop Size
-    default:
-    none_label: Auto
-    type: optional_int
 
   - default: 5.0
     help: Spread of the Gaussian distribution of the confidence maps as a scalar float.
@@ -132,11 +120,6 @@ pipeline:
   name: _ensure_channels
   options: ',RGB,grayscale'
   type: list
-- default: 1.0
-  help: ''
-  label: Input Scaling
-  name: data.preprocessing.input_scaling
-  type: double
 
 - type: text
   text: '<b>Output Options</b>'
@@ -208,4 +191,89 @@ pipeline:
   label: View Training Image Inputs...
   type: button
 
+inference:
 
+- name: _pipeline
+  label: Training/Inference Pipeline Type
+  type: stacked
+  default: "multi-animal bottom-up "
+  options: "multi-animal bottom-up,multi-animal top-down,single animal"
+
+  multi-animal bottom-up:
+  - type: text
+    text: '<b>Multi-Animal Bottom-Up Pipeline</b>:<br />
+      This pipeline uses single model with two output heads:
+      a "<u>confidence map</u>" head to predicts the
+      nodes for an entire image and a "<u>part affinity field</u>" head to group
+      the nodes into distinct animal instances.'
+
+  multi-animal top-down:
+  - type: text
+    text: '<b>Multi-Animal Top-Down Pipeline</b>:<br />
+    This pipeline uses two models: a "<u>centroid</u>" model to
+    locate and crop around each animal in the frame, and a
+    "<u>centered-instance confidence map</u>" model for predicted node locations
+    for each individual animal predicted by the centroid model.'
+
+  single animal:
+  - type: text
+    text: '<b>Single Animal Pipeline</b>:<br />
+      This pipeline uses a single "<u>confidence map</u>"
+      model to predicts the nodes for an entire image and then groups all of
+      these nodes into a single animal instance.<br /><br />
+      For predicting on videos with more than one animal per frame, use a
+      multi-animal pipeline (even if your training data has one instance per frame).'
+
+- name: tracking.tracker
+  label: Tracker (cross-frame identity) Method
+  type: stacked
+  default: none
+  options: none,flow,simple
+
+  none:
+
+  flow:
+    - name: tracking.similarity
+      label: Similarity Method
+      type: list
+      default: instance
+      options: instance,centroid,iou
+    - name: tracking.matching
+      label: Matching Method
+      type: list
+      default: greedy
+      options: greedy,hungarian
+    - name: tracking.window
+      label: Elapsed Frame Window
+      type: int
+      default: 5
+    - name: tracking.clean_instance_count
+      label: Target Number of Tracks (0 for all)
+      type: int
+      default: 0
+
+  simple:
+    - name: tracking.similarity
+      label: Similarity Method
+      type: list
+      default: iou
+      options: instance,centroid,iou
+    - name: tracking.matching
+      label: Matching Method
+      type: list
+      default: hungarian
+      options: greedy,hungarian
+    - name: tracking.window
+      label: Elapsed Frame Window
+      type: int
+      default: 5
+    - name: tracking.clean_instance_count
+      label: Target Number of Tracks (0 for all)
+      type: int
+      default: 0
+
+- name: _predict_frames
+  label: Predict On
+  type: list
+  options: current frame,random frames
+  default: current frame

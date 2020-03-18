@@ -47,7 +47,7 @@ def plot_img(
         scale=scale,
     )
     fig.gca().imshow(
-        img.squeeze(axis=-1),
+        img.squeeze(axis=-1) if img.shape[-1] == 1 else img,
         cmap="gray" if img.shape[-1] == 1 else None,
         origin="lower",
         extent=[-0.5, img.shape[1] - 0.5, -0.5, img.shape[0] - 0.5],

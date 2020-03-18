@@ -1,12 +1,14 @@
 """Inference pipelines and utilities."""
 
+import attr
+import logging
 import os
+import time
 from collections import defaultdict
+from typing import Text, Optional, List, Dict
 
 import tensorflow as tf
 
-import attr
-from typing import Text, Optional, List, Dict
 
 import sleap
 from sleap import util
@@ -31,6 +33,8 @@ from sleap.nn.data.pipelines import (
     PointsRescaler,
 )
 
+logger = logging.getLogger(__name__)
+
 
 def group_examples(examples):
     grouped_examples = defaultdict(list)
@@ -41,6 +45,37 @@ def group_examples(examples):
     return grouped_examples
 
 
+def safely_generate(ds: tf.data.Dataset, progress: bool = True):
+    """Yields examples from dataset, catching and logging exceptions."""
+
+    # Unsafe generating:
+    # for example in ds:
+    #     yield example
+
+    ds_iter = iter(ds)
+
+    i = 0
+    t0 = time.time()
+    while True:
+        try:
+            yield next(ds_iter)
+        except StopIteration:
+            break
+        except Exception as e:
+            logger.info(f"ERROR in sample index {i}")
+            logger.info(e)
+            logger.info("")
+        finally:
+            i += 1
+            # Show the current progress (frames, time, fps)
+            if progress:
+                if i and i % 1000 == 0:
+                    elapsed_time = time.time() - t0
+                    logger.info(f"Finished {i} frames in {elapsed_time:.2f} seconds")
+                    if elapsed_time:
+                        logger.info(f"FPS={i/elapsed_time}")
+
+
 @attr.s(auto_attribs=True)
 class TopdownPredictor:
     centroid_config: TrainingJobConfig
@@ -48,6 +83,7 @@ class TopdownPredictor:
     confmap_config: TrainingJobConfig
     confmap_model: Model
     pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
+    tracker: Optional[Tracker] = attr.ib(default=None, init=False)
 
     @classmethod
     def from_trained_models(
@@ -129,20 +165,23 @@ class TopdownPredictor:
             peak_threshold=0.2,
         )
 
-        pipeline += KeyFilter(
-            keep_keys=[
-                "bbox",
-                "center_instance_ind",
-                "centroid",
-                "centroid_confidence",
-                "scale",
-                "video_ind",
-                "frame_ind",
-                "center_instance_ind",
-                "predicted_center_instance_points",
-                "predicted_center_instance_confidences",
-            ]
-        )
+        keep_keys = [
+            "bbox",
+            "center_instance_ind",
+            "centroid",
+            "centroid_confidence",
+            "scale",
+            "video_ind",
+            "frame_ind",
+            "center_instance_ind",
+            "predicted_center_instance_points",
+            "predicted_center_instance_confidences",
+        ]
+
+        if self.tracker and self.tracker.uses_image:
+            keep_keys.append("full_image")
+
+        pipeline += KeyFilter(keep_keys=keep_keys)
 
         pipeline += PredictedCenterInstanceNormalizer(
             centroid_key="centroid",
@@ -174,6 +213,7 @@ class TopdownPredictor:
 
             # Create predicted instances from examples in the current frame.
             predicted_instances = []
+            img = None
             for example in frame_examples:
                 predicted_instances.append(
                     sleap.PredictedInstance.from_arrays(
@@ -183,16 +223,26 @@ class TopdownPredictor:
                         skeleton=skeleton,
                     )
                 )
+                img = example["full_image"] if "full_image" in example else None
 
             if len(predicted_instances) > 0:
-                # Create labeled frame from predicted instances.
-                predicted_frames.append(
-                    sleap.LabeledFrame(
-                        video=videos[video_ind],
-                        frame_idx=frame_ind,
-                        instances=predicted_instances,
+                if self.tracker:
+                    # Set tracks for predicted instances in this frame.
+                    predicted_instances = self.tracker.track(
+                        untracked_instances=predicted_instances, img=img, t=frame_ind,
                     )
+
+                # Create labeled frame from predicted instances.
+                labeled_frame = sleap.LabeledFrame(
+                    video=videos[video_ind],
+                    frame_idx=frame_ind,
+                    instances=predicted_instances,
                 )
+
+                predicted_frames.append(labeled_frame)
+
+        if self.tracker:
+            self.tracker.final_pass(predicted_frames)
 
         return predicted_frames
 
@@ -202,8 +252,8 @@ class TopdownPredictor:
 
         self.pipeline.providers = [data_provider]
 
-        for example in self.pipeline.make_dataset():
-            yield example
+        # Yield each example from dataset, catching and logging exceptions
+        return safely_generate(self.pipeline.make_dataset())
 
     def predict(self, data_provider: Provider, make_instances: bool = True):
         generator = self.predict_generator(data_provider)
@@ -220,6 +270,7 @@ class BottomupPredictor:
     bottomup_config: TrainingJobConfig
     bottomup_model: Model
     pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
+    tracker: Optional[Tracker] = attr.ib(default=None, init=False)
 
     @classmethod
     def from_trained_models(cls, bottomup_model_path: Text) -> "BottomupPredictor":
@@ -283,16 +334,19 @@ class BottomupPredictor:
             keep_pafs=False,
         )
 
-        pipeline += KeyFilter(
-            keep_keys=[
-                "scale",
-                "video_ind",
-                "frame_ind",
-                "predicted_instances",
-                "predicted_peak_scores",
-                "predicted_instance_scores",
-            ]
-        )
+        keep_keys = [
+            "scale",
+            "video_ind",
+            "frame_ind",
+            "predicted_instances",
+            "predicted_peak_scores",
+            "predicted_instance_scores",
+        ]
+
+        if self.tracker and self.tracker.uses_image:
+            keep_keys.append("image")
+
+        pipeline += KeyFilter(keep_keys=keep_keys)
 
         pipeline += PointsRescaler(
             points_key="predicted_instances", scale_key="scale", invert=True
@@ -317,6 +371,7 @@ class BottomupPredictor:
 
             # Create predicted instances from examples in the current frame.
             predicted_instances = []
+            img = None
             for example in frame_examples:
                 for points, confidences, instance_score in zip(
                     example["predicted_instances"],
@@ -331,16 +386,26 @@ class BottomupPredictor:
                             skeleton=skeleton,
                         )
                     )
+                    img = example["image"] if "image" in example else None
 
             if len(predicted_instances) > 0:
-                # Create labeled frame from predicted instances.
-                predicted_frames.append(
-                    sleap.LabeledFrame(
-                        video=videos[video_ind],
-                        frame_idx=frame_ind,
-                        instances=predicted_instances,
+                if self.tracker:
+                    # Set tracks for predicted instances in this frame.
+                    predicted_instances = self.tracker.track(
+                        untracked_instances=predicted_instances, img=img, t=frame_ind,
                     )
+
+                # Create labeled frame from predicted instances.
+                labeled_frame = sleap.LabeledFrame(
+                    video=videos[video_ind],
+                    frame_idx=frame_ind,
+                    instances=predicted_instances,
                 )
+
+                predicted_frames.append(labeled_frame)
+
+        if self.tracker:
+            self.tracker.final_pass(predicted_frames)
 
         return predicted_frames
 
@@ -350,8 +415,8 @@ class BottomupPredictor:
 
         self.pipeline.providers = [data_provider]
 
-        for example in self.pipeline.make_dataset():
-            yield example
+        # Yield each example from dataset, catching and logging exceptions
+        return safely_generate(self.pipeline.make_dataset())
 
     def predict(self, data_provider: Provider, make_instances: bool = True):
         generator = self.predict_generator(data_provider)
@@ -468,8 +533,8 @@ class SingleInstancePredictor:
 
         self.pipeline.providers = [data_provider]
 
-        for example in self.pipeline.make_dataset():
-            yield example
+        # Yield each example from dataset, catching and logging exceptions
+        return safely_generate(self.pipeline.make_dataset())
 
     def predict(self, data_provider: Provider, make_instances: bool = True):
         generator = self.predict_generator(data_provider)
@@ -591,6 +656,9 @@ def make_predictor_from_cli(args):
             f"Unable to run inference with {list(trained_model_paths.keys())} heads."
         )
 
+    tracker = make_tracker_from_cli(args)
+    predictor.tracker = tracker
+
     return predictor
 
 
@@ -637,9 +705,11 @@ def main():
     predictor = make_predictor_from_cli(args)
 
     # Run inference!
+    t0 = time.time()
     predicted_frames = predictor.predict(video_reader)
 
     save_predictions_from_cli(args, predicted_frames)
+    print(f"Total Time: {time.time() - t0}")
 
 
 if __name__ == "__main__":

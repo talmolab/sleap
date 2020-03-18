@@ -2,17 +2,15 @@ import os
 import subprocess as sub
 import tempfile
 import time
-
 from datetime import datetime
-
-from sleap import Labels, Video
-from sleap.nn import training
-from sleap.nn.config import TrainingJobConfig
-from sleap.gui.learning.configs import ConfigFileInfo
-
 from typing import Any, Callable, Dict, List, Optional, Text
 
 from PySide2 import QtWidgets
+
+from sleap import Labels, Video
+from sleap.gui.learning.configs import ConfigFileInfo
+from sleap.nn import training
+from sleap.nn.config import TrainingJobConfig
 
 SKIP_TRAINING = False
 
@@ -87,7 +85,7 @@ def run_gui_training(
 
     if gui:
         from sleap.nn.monitor import LossViewer
-        from sleap.gui.imagedir import QtImageDirectoryWidget
+        from sleap.gui.widgets.imagedir import QtImageDirectoryWidget
 
         # open training monitor window
         win = LossViewer()
@@ -186,7 +184,6 @@ def run_gui_inference(
     Returns:
         Number of new frames added to labels.
     """
-    from sleap.nn import inference
 
     if gui:
         # show message while running inference

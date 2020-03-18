@@ -36,7 +36,7 @@ class KeyRenamer:
             if self.drop_old:
                 for old_key in self.old_key_names:
                     example.pop(old_key)
-            return filtered_example
+            return example
 
         # Map the main processing function to each example.
         output_ds = input_ds.map(

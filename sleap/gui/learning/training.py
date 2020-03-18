@@ -1,14 +1,12 @@
 import cattr
 
 from sleap import Labels, Video
-from sleap.gui.formbuilder import YamlFormWidget
-from sleap.gui.learning import runners, utils, configs
-from sleap.gui.video import GraphicsView
+from sleap.gui.dialogs.formbuilder import YamlFormWidget
+from sleap.gui.learning import runners, utils, configs, datagen, receptivefield
 
+from typing import Dict, List, Optional, Text
 
-from typing import Any, Callable, Dict, List, Optional, Text
-
-from PySide2 import QtWidgets, QtCore, QtGui
+from PySide2 import QtWidgets, QtCore
 
 
 SKIP_TRAINING = False
@@ -20,26 +18,28 @@ NODE_LIST_FIELDS = [
 ]
 
 
-class TrainingDialog(QtWidgets.QDialog):
+class LearningDialog(QtWidgets.QDialog):
 
     learningFinished = QtCore.Signal(int)
 
     def __init__(
         self,
+        mode: Text,
         labels_filename: Text,
         labels: Optional[Labels] = None,
         skeleton: Optional["Skeleton"] = None,
         *args,
         **kwargs,
     ):
-        super(TrainingDialog, self).__init__()
+        super(LearningDialog, self).__init__()
 
         if labels is None:
             labels = Labels.load_file(labels_filename)
 
-        if skeleton is None:
+        if skeleton is None and labels.skeletons:
             skeleton = labels.skeletons[0]
 
+        self.mode = mode
         self.labels_filename = labels_filename
         self.labels = labels
         self.skeleton = skeleton
@@ -50,6 +50,10 @@ class TrainingDialog(QtWidgets.QDialog):
 
         self.tabs = dict()
         self.shown_tab_names = []
+
+        self._cfg_getter = configs.TrainingConfigsGetter.make_from_labels_filename(
+            labels_filename=self.labels_filename
+        )
 
         # Layout for buttons
         buttons = QtWidgets.QDialogButtonBox()
@@ -64,11 +68,18 @@ class TrainingDialog(QtWidgets.QDialog):
         buttons_layout_widget = QtWidgets.QWidget()
         buttons_layout_widget.setLayout(buttons_layout)
 
-        self.pipeline_form_widget = TrainingPipelineWidget(skeleton=skeleton)
+        self.pipeline_form_widget = TrainingPipelineWidget(mode=mode, skeleton=skeleton)
+        if mode == "training":
+            tab_label = "Training Pipeline"
+        elif mode == "inference":
+            # self.pipeline_form_widget = InferencePipelineWidget()
+            tab_label = "Inference Pipeline"
+        else:
+            raise ValueError(f"Invalid LearningDialog mode: {mode}")
 
         self.tab_widget = QtWidgets.QTabWidget()
 
-        self.tab_widget.addTab(self.pipeline_form_widget, "Training Pipeline")
+        self.tab_widget.addTab(self.pipeline_form_widget, tab_label)
         self.make_tabs()
 
         # Layout for entire dialog
@@ -77,6 +88,9 @@ class TrainingDialog(QtWidgets.QDialog):
         layout.addWidget(buttons_layout_widget)
 
         self.setLayout(layout)
+
+        # Default to most recently trained pipeline (if there is one)
+        self.set_pipeline_from_most_recent()
 
         # Connect functions to update pipeline tabs when pipeline changes
         self.pipeline_form_widget.updatePipeline.connect(self.set_pipeline)
@@ -87,6 +101,17 @@ class TrainingDialog(QtWidgets.QDialog):
         # Connect actions for buttons
         buttons.accepted.connect(self.run)
         buttons.rejected.connect(self.reject)
+
+        # Connect button for previewing the training data
+        if "_view_datagen" in self.pipeline_form_widget.buttons:
+            self.pipeline_form_widget.buttons["_view_datagen"].clicked.connect(
+                self.view_datagen
+            )
+
+    def update_file_lists(self):
+        self._cfg_getter.update()
+        for tab in self.tabs.values():
+            tab.update_file_list()
 
     @property
     def frame_selection(self) -> Dict[str, Dict[Video, List[int]]]:
@@ -135,8 +160,8 @@ class TrainingDialog(QtWidgets.QDialog):
 
             # Build list of options
 
-            # if self.mode != "learning":
-            prediction_options.append("nothing")
+            if self.mode != "inference":
+                prediction_options.append("nothing")
             prediction_options.append("current frame")
 
             option = f"random frames ({total_random} total frames)"
@@ -174,10 +199,6 @@ class TrainingDialog(QtWidgets.QDialog):
     def make_tabs(self):
         heads = ("single_instance", "centroid", "centered_instance", "multi_instance")
 
-        self._cfg_getter = configs.TrainingConfigsGetter.make_from_labels_filename(
-            labels_filename=self.labels_filename
-        )
-
         video = self.labels.videos[0] if self.labels else None
 
         for head_name in heads:
@@ -186,6 +207,7 @@ class TrainingDialog(QtWidgets.QDialog):
                 skeleton=self.skeleton,
                 head=head_name,
                 cfg_getter=self._cfg_getter,
+                require_trained=(self.mode == "inference"),
             )
 
     def adjust_data_to_update_other_tabs(self, source_data, updated_data=None):
@@ -236,7 +258,25 @@ class TrainingDialog(QtWidgets.QDialog):
             # Update pipeline tab
             self.pipeline_form_widget.set_form_data(source_data)
 
+        self._validate_pipeline()
+
         self.connect_signals()
+
+    def get_most_recent_pipeline_trained(self) -> Text:
+        recent_cfg_info = self._cfg_getter.get_first()
+        if recent_cfg_info:
+            if recent_cfg_info.head_name in ("centroid", "centered_instance"):
+                return "top-down"
+            if recent_cfg_info.head_name in ("multi_instance"):
+                return "bottom-up"
+            if recent_cfg_info.head_name in ("single_instance"):
+                return "single"
+        return ""
+
+    def set_pipeline_from_most_recent(self):
+        recent_pipeline_name = self.get_most_recent_pipeline_trained()
+        if recent_pipeline_name:
+            self.pipeline_form_widget.current_pipeline = recent_pipeline_name
 
     def add_tab(self, tab_name):
         tab_labels = {
@@ -264,6 +304,8 @@ class TrainingDialog(QtWidgets.QDialog):
             elif pipeline == "single":
                 self.add_tab("single_instance")
         self.current_pipeline = pipeline
+
+        self._validate_pipeline()
 
     def change_tab(self, tab_idx: int):
         print(tab_idx)
@@ -329,6 +371,25 @@ class TrainingDialog(QtWidgets.QDialog):
 
         return frames_to_predict
 
+    def _validate_pipeline(self):
+        can_run = True
+
+        if self.mode == "inference":
+            # Make sure we have trained models for each required head
+            for tab_name in self.shown_tab_names:
+                tab = self.tabs[tab_name]
+                if not tab.has_trained_config_selected:
+                    can_run = False
+                    break
+
+        self.run_button.setEnabled(can_run)
+
+    def view_datagen(self):
+        pipeline_form_data = self.pipeline_form_widget.get_form_data()
+        config_info_list = self.get_every_head_config_data(pipeline_form_data)
+        datagen.show_datagen_preview(self.labels, config_info_list)
+        self.hide()
+
     def run(self):
         """Run with current dialog settings."""
 
@@ -361,11 +422,13 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
     updatePipeline = QtCore.Signal(str)
     valueChanged = QtCore.Signal()
 
-    def __init__(self, skeleton: Optional["Skeleton"] = None, *args, **kwargs):
+    def __init__(
+        self, mode: Text, skeleton: Optional["Skeleton"] = None, *args, **kwargs
+    ):
         super(TrainingPipelineWidget, self).__init__(*args, **kwargs)
 
         self.form_widget = YamlFormWidget.from_name(
-            "pipeline_form", which_form="pipeline", title="Inference Pipeline"
+            "pipeline_form", which_form=mode, title="Training Pipeline"
         )
 
         if hasattr(skeleton, "node_names"):
@@ -386,6 +449,10 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
     def fields(self):
         return self.form_widget.fields
 
+    @property
+    def buttons(self):
+        return self.form_widget.buttons
+
     def get_form_data(self):
         return self.form_widget.get_form_data()
 
@@ -393,7 +460,8 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
         self.form_widget.set_form_data(data)
 
     def emitPipeline(self):
-        self.updatePipeline.emit(self.current_pipeline)
+        val = self.current_pipeline
+        self.updatePipeline.emit(val)
 
     @property
     def current_pipeline(self):
@@ -406,15 +474,33 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
             return "single"
         return ""
 
+    @current_pipeline.setter
+    def current_pipeline(self, val):
+        if val not in ("top-down", "bottom-up", "single"):
+            raise ValueError(f"Cannot set pipeline to {val}")
+
+        # Match short name to full pipeline name shown in menu
+        for full_option_name in self.pipeline_field.option_list:
+            if val in full_option_name:
+                val = full_option_name
+                break
+
+        self.pipeline_field.setValue(val)
+        self.emitPipeline()
+
 
 class TrainingEditorWidget(QtWidgets.QWidget):
     """
     Dialog for viewing and modifying training profiles.
 
     Args:
-        profile_filename: Path to saved training profile to view.
-        saved_files: When user saved profile, it's path is added to this
-            list (which will be updated in code that created TrainingEditor).
+        video: Video to use for receptive field preview
+        skeleton: Skeleton to use for node option list
+        head: If given, then only show configs with specified head name
+        cfg_getter: Object to use for getting list of config files.
+            If given, then menu of config files will be shown.
+        require_trained: If True, then only show configs that are trained,
+            and don't allow user to uncheck "use trained" setting.
     """
 
     valueChanged = QtCore.Signal()
@@ -425,6 +511,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         skeleton: Optional["Skeleton"] = None,
         head: Optional[Text] = None,
         cfg_getter: Optional["TrainingConfigsGetter"] = None,
+        require_trained: bool = False,
         *args,
         **kwargs,
     ):
@@ -435,6 +522,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         self._cfg_list_widget = None
         self._receptive_field_widget = None
         self._use_trained_model = None
+        self._require_trained = require_trained
         self.head = head
 
         yaml_name = "training_editor_form"
@@ -447,7 +535,8 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             )
             self.form_widgets[key].valueChanged.connect(self.emitValueChanged)
 
-        self.form_widgets["model"].valueChanged.connect(self.onModelFormChange)
+        self.form_widgets["model"].valueChanged.connect(self.update_receptive_field)
+        self.form_widgets["data"].valueChanged.connect(self.update_receptive_field)
 
         if hasattr(skeleton, "node_names"):
             for field_name in NODE_LIST_FIELDS:
@@ -457,8 +546,10 @@ class TrainingEditorWidget(QtWidgets.QWidget):
                 )
 
         if self._video:
-            self._receptive_field_widget = ReceptiveFieldWidget(self.head)
-            self._receptive_field_widget.setImage(self._video.get_frame(0))
+            self._receptive_field_widget = receptivefield.ReceptiveFieldWidget(
+                self.head
+            )
+            self._receptive_field_widget.setImage(self._video.test_frame)
 
         self._set_head()
 
@@ -468,23 +559,28 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         # Two column layout for config parameters
         col1_layout = QtWidgets.QVBoxLayout()
         col2_layout = QtWidgets.QVBoxLayout()
+        col3_layout = QtWidgets.QVBoxLayout()
 
-        col1_layout.addWidget(self.form_widgets["optimization"])
-        col2_layout.addWidget(self.form_widgets["model"])
+        col1_layout.addWidget(self.form_widgets["data"])
+        col2_layout.addWidget(self.form_widgets["optimization"])
+        col3_layout.addWidget(self.form_widgets["model"])
 
         col_layout = QtWidgets.QHBoxLayout()
         col_layout.addWidget(self._layout_widget(col1_layout))
         col_layout.addWidget(self._layout_widget(col2_layout))
+        col_layout.addWidget(self._layout_widget(col3_layout))
 
         if self._receptive_field_widget:
-            col_layout.addWidget(self._receptive_field_widget)
+            col1_layout.addWidget(self._receptive_field_widget)
 
         # If we have an object which gets a list of config files,
         # then we'll show a menu to allow selection from the list.
 
         if self._cfg_getter:
             self._cfg_list_widget = configs.TrainingConfigFilesWidget(
-                cfg_getter=self._cfg_getter, head_name=head
+                cfg_getter=self._cfg_getter,
+                head_name=head,
+                require_trained=require_trained,
             )
             self._cfg_list_widget.onConfigSelection.connect(
                 self.acceptSelectedConfigInfo
@@ -494,16 +590,18 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             layout.addWidget(self._cfg_list_widget)
 
             # Add option for using trained model from selected config
-            self._use_trained_model = QtWidgets.QCheckBox("Use Trained Model")
-            self._use_trained_model.setEnabled(False)
-            self._use_trained_model.setVisible(False)
+            if self._require_trained:
+                self._update_use_trained()
+            else:
+                self._use_trained_model = QtWidgets.QCheckBox("Use Trained Model")
+                self._use_trained_model.setEnabled(False)
+                self._use_trained_model.setVisible(False)
 
-            self._use_trained_model.stateChanged.connect(self._update_use_trained)
+                self._use_trained_model.stateChanged.connect(self._update_use_trained)
 
-            layout.addWidget(self._use_trained_model)
+                layout.addWidget(self._use_trained_model)
 
         layout.addWidget(self._layout_widget(col_layout))
-
         self.setLayout(layout)
 
     @staticmethod
@@ -520,21 +618,30 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         # if self._cfg_list_widget:
         #     self._set_user_config()
 
-    def onModelFormChange(self):
-        model_cfg = utils.make_model_config_from_key_val_dict(
-            key_val_dict=self.form_widgets["model"].get_form_data()
-        )
-        rf_size = utils.receptive_field_size_from_model_cfg(model_cfg)
-
-        if self._receptive_field_widget:
-            self._receptive_field_widget.setFieldSize(rf_size)
-
     def acceptSelectedConfigInfo(self, cfg_info: configs.ConfigFileInfo):
         self._load_config(cfg_info)
 
         has_trained_model = cfg_info.has_trained_model
-        self._use_trained_model.setVisible(has_trained_model)
-        self._use_trained_model.setEnabled(has_trained_model)
+        if self._use_trained_model:
+            self._use_trained_model.setVisible(has_trained_model)
+            self._use_trained_model.setEnabled(has_trained_model)
+
+        self.update_receptive_field()
+
+    def update_receptive_field(self):
+        data_form_data = self.form_widgets["data"].get_form_data()
+        model_cfg = utils.make_model_config_from_key_val_dict(
+            key_val_dict=self.form_widgets["model"].get_form_data()
+        )
+        rf_size = utils.receptive_field_size_from_model_cfg(model_cfg)
+        rf_image_scale = data_form_data.get("data.preprocessing.input_scaling", 1.0)
+
+        if self._receptive_field_widget:
+            self._receptive_field_widget.setFieldSize(rf_size, scale=rf_image_scale)
+            self._receptive_field_widget.repaint()
+
+    def update_file_list(self):
+        self._cfg_list_widget.update()
 
     def _load_config_or_key_val_dict(self, cfg_data):
         if type(cfg_data) != dict:
@@ -543,6 +650,9 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             self.set_fields_from_key_val_dict(cfg_data)
 
     def _load_config(self, cfg_info: configs.ConfigFileInfo):
+        if cfg_info is None:
+            return
+
         cfg = cfg_info.config
         cfg_dict = cattr.unstructure(cfg)
         key_val_dict = utils.ScopedKeyDict.from_hierarchical_dict(cfg_dict).key_val_dict
@@ -552,8 +662,12 @@ class TrainingEditorWidget(QtWidgets.QWidget):
     #     cfg_form_data_dict = self.get_all_form_data()
     #     self._cfg_list_widget.setUserConfigData(cfg_form_data_dict)
 
-    def _update_use_trained(self, check_state):
-        use_trained = check_state == QtCore.Qt.CheckState.Checked
+    def _update_use_trained(self, check_state=0):
+        if self._require_trained:
+            use_trained = True
+        else:
+            use_trained = check_state == QtCore.Qt.CheckState.Checked
+
         for form in self.form_widgets.values():
             form.set_enabled(not use_trained)
 
@@ -586,10 +700,23 @@ class TrainingEditorWidget(QtWidgets.QWidget):
                 break
 
     @property
-    def trained_config_info_to_use(self) -> configs.ConfigFileInfo:
-        if self._use_trained_model and self._use_trained_model.isChecked():
+    def trained_config_info_to_use(self) -> Optional[configs.ConfigFileInfo]:
+        use_trained = False
+        if self._require_trained:
+            use_trained = True
+        elif self._use_trained_model and self._use_trained_model.isChecked():
+            use_trained = True
+
+        if use_trained:
             return self._cfg_list_widget.getSelectedConfigInfo()
         return None
+
+    @property
+    def has_trained_config_selected(self) -> bool:
+        cfg_info = self._cfg_list_widget.getSelectedConfigInfo()
+        if cfg_info and cfg_info.has_trained_model:
+            return True
+        return False
 
     def get_all_form_data(self) -> dict:
         form_data = dict()
@@ -598,90 +725,12 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         return form_data
 
 
-class ReceptiveFieldWidget(QtWidgets.QWidget):
-    def __init__(self, head_name: Text, *args, **kwargs):
-        super(ReceptiveFieldWidget, self).__init__(*args, **kwargs)
-
-        self.layout = QtWidgets.QVBoxLayout()
-
-        self._field_image_widget = ReceptiveFieldImageWidget()
-
-        self._info_text = (
-            f"Receptive Field for {head_name}:<br />"
-            if head_name
-            else "Receptive Field:<br />"
-        )
-        self._info_widget = QtWidgets.QLabel("")
-
-        self.layout.addWidget(self._field_image_widget)
-        self.layout.addWidget(self._info_widget)
-        self.layout.addStretch()
-
-        self.setLayout(self.layout)
-
-    def setFieldSize(self, size):
-        self._info_widget.setText(self._info_text + f"{size} pixels")
-        self._field_image_widget.setFieldSize(size)
-
-    def setImage(self, *args, **kwargs):
-        self._field_image_widget.setImage(*args, **kwargs)
-
-
-class ReceptiveFieldImageWidget(GraphicsView):
-    def __init__(self, *args, **kwargs):
-        self._widget_size = 200
-        self._pen_width = 4
-        self._box_size = None
-
-        box_pen = QtGui.QPen(QtGui.QColor("blue"), self._pen_width)
-        box_pen.setCosmetic(True)
-
-        self.box = QtWidgets.QGraphicsRectItem()
-        self.box.setPen(box_pen)
-
-        super(ReceptiveFieldImageWidget, self).__init__(*args, **kwargs)
-
-        self.setFixedSize(self._widget_size, self._widget_size)
-        self.scene.addItem(self.box)
-
-        # TODO: zoom around bounding box for labeled instance
-        # self.zoomToRect(QtCore.QRectF(0, 0, 1, 1))
-
-    def viewportEvent(self, event):
-        # Update the position and visible size of field
-        self.setFieldSize()
-
-        # Now draw the viewport
-        return super(ReceptiveFieldImageWidget, self).viewportEvent(event)
-
-    def setFieldSize(self, size: Optional[int] = None):
-        if size is not None:
-            self._box_size = size
-
-        if self._box_size:
-            self.box.show()
-        else:
-            self.box.hide()
-            return
-
-        # TODO
-        # Calculate offset so that box stays centered in the view
-        # visible_box_size = (self._box_size + (self._pen_width * 2)) / self.zoomFactor
-
-        offset = (self._widget_size) // 2
-        scene_offset = self.mapToScene(offset, offset)
-
-        self.box.setRect(
-            scene_offset.x(), scene_offset.y(), self._box_size, self._box_size
-        )
-
-
 def demo_training_dialog():
     app = QtWidgets.QApplication([])
 
     filename = "tests/data/json_format_v1/centered_pair.json"
     labels = Labels.load_file(filename)
-    win = TrainingDialog(labels_filename=filename, labels=labels)
+    win = LearningDialog("training", labels_filename=filename, labels=labels)
 
     win.frame_selection = {"clip": {labels.videos[0]: (1, 2, 3, 4)}}
     # win.training_editor_widget.set_fields_from_key_val_dict({
@@ -695,20 +744,5 @@ def demo_training_dialog():
     app.exec_()
 
 
-def demo_receptive_field():
-    app = QtWidgets.QApplication([])
-
-    video = Video.from_filename(
-        "/Volumes/fileset-mmurthy/junyu/data/pair/wt/190719_085355_wt_18159203_rig3.1/000000.mp4"
-    )
-
-    win = ReceptiveFieldImageWidget()
-    win.setImage(video.get_frame(0))
-    win.setFieldSize(50)
-
-    win.show()
-    app.exec_()
-
-
 if __name__ == "__main__":
-    demo_receptive_field()
+    demo_training_dialog()

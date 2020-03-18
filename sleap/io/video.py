@@ -101,7 +101,7 @@ class HDF5Video:
             self.__height_idx = 1
 
     @property
-    def __test_frame(self):
+    def test_frame(self):
         # Load if not already loaded
         if self._test_frame_ is None:
             # Lets grab a test frame to help us figure things out about the video
@@ -172,7 +172,7 @@ class HDF5Video:
     @property
     def dtype(self):
         """See :class:`Video`."""
-        return self.__test_frame.dtype
+        return self.test_frame.dtype
 
     @property
     def last_frame_idx(self) -> int:
@@ -276,14 +276,14 @@ class MediaVideo:
             # the first frame of data.
             if self._detect_grayscale is True:
                 self.grayscale = bool(
-                    np.alltrue(self.__test_frame[..., 0] == self.__test_frame[..., -1])
+                    np.alltrue(self.test_frame[..., 0] == self.test_frame[..., -1])
                 )
 
         # Return cached reader
         return self._reader_
 
     @property
-    def __test_frame(self):
+    def test_frame(self):
         # Load if not already loaded
         if self._test_frame_ is None:
             # Lets grab a test frame to help us figure things out about the video
@@ -332,22 +332,22 @@ class MediaVideo:
         if self.grayscale:
             return 1
         else:
-            return self.__test_frame.shape[2]
+            return self.test_frame.shape[2]
 
     @property
     def width(self):
         """See :class:`Video`."""
-        return self.__test_frame.shape[1]
+        return self.test_frame.shape[1]
 
     @property
     def height(self):
         """See :class:`Video`."""
-        return self.__test_frame.shape[0]
+        return self.test_frame.shape[0]
 
     @property
     def dtype(self):
         """See :class:`Video`."""
-        return self.__test_frame.dtype
+        return self.test_frame.dtype
 
     def reset(self):
         """Reloads the video."""
@@ -669,7 +669,7 @@ class SingleImageVideo:
             self.filenames = [self.filename]
 
         self.__data = dict()
-        self.__test_frame = None
+        self.test_frame = None
 
     def _load_idx(self, idx):
         img = cv2.imread(self.filenames[idx])
@@ -680,15 +680,15 @@ class SingleImageVideo:
         return img
 
     def _load_test_frame(self):
-        if self.__test_frame is None:
-            self.__test_frame = self._load_idx(0)
+        if self.test_frame is None:
+            self.test_frame = self._load_idx(0)
 
             if self.height_ is None:
-                self.height_ = self.__test_frame.shape[0]
+                self.height_ = self.test_frame.shape[0]
             if self.width_ is None:
-                self.width_ = self.__test_frame.shape[1]
+                self.width_ = self.test_frame.shape[1]
             if self.channels_ is None:
-                self.channels_ = self.__test_frame.shape[2]
+                self.channels_ = self.test_frame.shape[2]
 
     def get_idx_from_filename(self, filename: str) -> int:
         try:
@@ -915,7 +915,7 @@ class Video:
         return cls(backend=backend)
 
     @classmethod
-    def from_numpy(cls, filename: str, *args, **kwargs) -> "Video":
+    def from_numpy(cls, filename: Union[str, np.ndarray], *args, **kwargs) -> "Video":
         """
         Create an instance of a video object from a numpy array.
 
