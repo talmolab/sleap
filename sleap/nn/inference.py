@@ -671,6 +671,25 @@ def make_cli_parser():
         help="The input_format for HDF5 videos.",
     )
 
+    device_group = parser.add_mutually_exclusive_group(required=False)
+    device_group.add_argument(
+        "--cpu",
+        action="store_true",
+        help="Run inference only on CPU. If not specified, will use available GPU."
+    )
+    device_group.add_argument(
+        "--first-gpu",
+        action="store_true",
+        help="Run inference on the first GPU, if available."
+    )
+    device_group.add_argument(
+        "--gpu",
+        type=int,
+        default=0,
+        help="Run inference on the i-th GPU specified."
+    )
+
+
     # Add args for tracking
     Tracker.add_cli_parser_args(parser, arg_scope="tracking")
 
@@ -778,6 +797,20 @@ def main():
     parser = make_cli_parser()
     args, _ = parser.parse_known_args()
     print(args)
+
+    if args.cpu or not sleap.nn.system.is_gpu_system():
+        sleap.nn.system.use_cpu_only()
+    else:
+        if args.first_gpu:
+            sleap.nn.system.use_first_gpu()
+        elif args.last_gpu:
+            sleap.nn.system.use_last_gpu()
+        else:
+            sleap.nn.system.use_gpu(args.gpu)
+    sleap.nn.system.disable_preallocation()
+
+    print("System:")
+    sleap.nn.system.summary()
 
     video_reader = make_video_reader_from_cli(args)
     print("Frames:", len(video_reader))
