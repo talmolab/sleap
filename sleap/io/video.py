@@ -10,6 +10,7 @@ import numpy as np
 import attr
 import cattr
 import logging
+import multiprocessing
 
 from typing import Iterable, List, Optional, Tuple, Union
 
@@ -255,6 +256,9 @@ class MediaVideo:
     _reader_ = None
     _test_frame_ = None
 
+    def __attrs_post_init__(self):
+        self._lock = multiprocessing.RLock()
+
     @grayscale.default
     def __grayscale_default__(self):
         self._detect_grayscale = True
@@ -355,10 +359,12 @@ class MediaVideo:
 
     def get_frame(self, idx: int, grayscale: bool = None) -> np.ndarray:
         """See :class:`Video`."""
-        if self.__reader.get(cv2.CAP_PROP_POS_FRAMES) != idx:
-            self.__reader.set(cv2.CAP_PROP_POS_FRAMES, idx)
 
-        ret, frame = self.__reader.read()
+        with self._lock:
+            if self.__reader.get(cv2.CAP_PROP_POS_FRAMES) != idx:
+                self.__reader.set(cv2.CAP_PROP_POS_FRAMES, idx)
+
+            ret, frame = self.__reader.read()
 
         if grayscale is None:
             grayscale = self.grayscale
