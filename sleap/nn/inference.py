@@ -512,6 +512,7 @@ class SingleInstancePredictor:
                         points=example["predicted_instance"],
                         point_confidences=example["predicted_instance_confidences"],
                         skeleton=skeleton,
+                        instance_score=sum(example["predicted_instance_confidences"])
                     )
                 )
 
