@@ -7,4 +7,5 @@ sphinx_rtd_theme
 coveralls
 black
 pre-commit
+jupyterlab
 twine

@@ -1,7 +1,4 @@
-import os
-import pytest
-
-from sleap.gui.missingfiles import MissingFilesDialog
+from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 
 
 def test_missing_gui(qtbot):

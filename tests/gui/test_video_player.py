@@ -1,4 +1,4 @@
-from sleap.gui.video import QtVideoPlayer
+from sleap.gui.widgets.video import QtVideoPlayer
 
 import PySide2.QtCore as QtCore
 

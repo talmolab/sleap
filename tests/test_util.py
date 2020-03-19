@@ -47,6 +47,7 @@ def test_attr_to_dtype():
 
 def test_frame_list():
     assert frame_list("3-5") == [3, 4, 5]
+    assert frame_list("3,-5") == [3, 4, 5]
     assert frame_list("7,10") == [7, 10]
 
 

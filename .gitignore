@@ -105,3 +105,9 @@ venv.bak/
 
 # Pycharm Files
 .idea/
+
+# Sublime files
+*.sublime-*
+
+# VSCode files
+.vscode/

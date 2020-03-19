@@ -5,7 +5,8 @@ dependencies:
 - attrs
 - jsonpickle=1.2
 - networkx
-- tensorflow-gpu=2.0
+- cudatoolkit=10.1.*
+- cudnn
 - scikit-learn
 - h5py
 - pandas
@@ -17,6 +18,7 @@ dependencies:
 - python-rapidjson
 - pip
 - pip:
+    - tensorflow==2.1
     - opencv-python-headless==3.4.1.15
     - PySide2>=5.12.0
     - imgaug==0.3.0
@@ -24,3 +26,6 @@ dependencies:
     - qimage2ndarray==1.8
     - imgstore
     - jsmin
+    - seaborn
+    - "--editable=./"
+    - "--requirement=./dev_requirements.txt"
