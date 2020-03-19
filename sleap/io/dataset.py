@@ -781,7 +781,7 @@ class Labels(MutableSequence):
 
     # Methods for suggestions
 
-    def get_video_suggestions(self, video: Video) -> list:
+    def get_video_suggestions(self, video: Video) -> List[int]:
         """
         Returns the list of suggested frames for the specified video
         or suggestions for all videos (if no video specified).
