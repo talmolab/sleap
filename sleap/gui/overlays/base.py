@@ -4,11 +4,11 @@ from PySide2 import QtWidgets
 
 import attr
 import numpy as np
-from typing import Any, Sequence, Union
+from typing import Sequence, Union
 
 import sleap
 from sleap.io.video import Video
-from sleap.gui.video import QtVideoPlayer
+from sleap.gui.widgets.video import QtVideoPlayer
 
 
 @attr.s(auto_attribs=True)

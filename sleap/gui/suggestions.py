@@ -3,11 +3,10 @@ Module for generating lists of suggested frames (for labeling or reviewing).
 """
 
 import attr
-import itertools
 import numpy as np
 import random
 
-from typing import Callable, List, Optional, Union
+from typing import List, Optional, Union
 
 from sleap.io.video import Video
 from sleap.info.feature_suggestions import (
@@ -237,7 +236,7 @@ class VideoFrameSuggestions(object):
 
 
 def demo_gui():
-    from sleap.gui.formbuilder import YamlFormWidget
+    from sleap.gui.dialogs.formbuilder import YamlFormWidget
     from sleap import Labels
     from PySide2.QtWidgets import QApplication
 

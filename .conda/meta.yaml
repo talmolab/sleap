@@ -4,7 +4,7 @@ package:
   # Repeating name because of the following issue:
   # https://github.com/conda/conda-build/issues/2475
   name: sleap
-  version: {{ data.get('version') }}
+  version: {{ GIT_DESCRIBE_TAG[1:] }}
 
 about:
   home: {{ data.get('url') }}

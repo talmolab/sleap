@@ -97,7 +97,7 @@ class LabelsDeepLabCutAdaptor(Adaptor):
         img_dir = os.path.dirname(filename)
         img_files = list(map(lambda f: fix_img_path(img_dir, f), img_files))
 
-        # Create "video" wrapper for the individual image files
+        # create the imgstore (or open if it already exists)
         video = Video.from_image_filenames(img_files)
 
         labels = []

@@ -10,6 +10,7 @@ import numpy as np
 import attr
 import cattr
 import logging
+import multiprocessing
 
 from typing import Iterable, List, Optional, Tuple, Union
 
@@ -111,7 +112,7 @@ class HDF5Video:
             self.__height_idx = 1
 
     @property
-    def __test_frame(self):
+    def test_frame(self):
         # Load if not already loaded
         if self._test_frame_ is None:
             # Lets grab a test frame to help us figure things out about the video
@@ -189,7 +190,7 @@ class HDF5Video:
     @property
     def dtype(self):
         """See :class:`Video`."""
-        return self.__test_frame.dtype
+        return self.test_frame.dtype
 
     @property
     def last_frame_idx(self) -> int:
@@ -284,6 +285,12 @@ class MediaVideo:
     _reader_ = None
     _test_frame_ = None
 
+    @property
+    def __lock(self):
+        if not hasattr(self, "_lock"):
+            self._lock = multiprocessing.RLock()
+        return self._lock
+
     @grayscale.default
     def __grayscale_default__(self):
         self._detect_grayscale = True
@@ -305,14 +312,14 @@ class MediaVideo:
             # the first frame of data.
             if self._detect_grayscale is True:
                 self.grayscale = bool(
-                    np.alltrue(self.__test_frame[..., 0] == self.__test_frame[..., -1])
+                    np.alltrue(self.test_frame[..., 0] == self.test_frame[..., -1])
                 )
 
         # Return cached reader
         return self._reader_
 
     @property
-    def __test_frame(self):
+    def test_frame(self):
         # Load if not already loaded
         if self._test_frame_ is None:
             # Lets grab a test frame to help us figure things out about the video
@@ -361,22 +368,22 @@ class MediaVideo:
         if self.grayscale:
             return 1
         else:
-            return self.__test_frame.shape[2]
+            return self.test_frame.shape[2]
 
     @property
     def width(self):
         """See :class:`Video`."""
-        return self.__test_frame.shape[1]
+        return self.test_frame.shape[1]
 
     @property
     def height(self):
         """See :class:`Video`."""
-        return self.__test_frame.shape[0]
+        return self.test_frame.shape[0]
 
     @property
     def dtype(self):
         """See :class:`Video`."""
-        return self.__test_frame.dtype
+        return self.test_frame.dtype
 
     def reset(self):
         """Reloads the video."""
@@ -384,10 +391,12 @@ class MediaVideo:
 
     def get_frame(self, idx: int, grayscale: bool = None) -> np.ndarray:
         """See :class:`Video`."""
-        if self.__reader.get(cv2.CAP_PROP_POS_FRAMES) != idx:
-            self.__reader.set(cv2.CAP_PROP_POS_FRAMES, idx)
 
-        ret, frame = self.__reader.read()
+        with self.__lock:
+            if self.__reader.get(cv2.CAP_PROP_POS_FRAMES) != idx:
+                self.__reader.set(cv2.CAP_PROP_POS_FRAMES, idx)
+
+            ret, frame = self.__reader.read()
 
         if grayscale is None:
             grayscale = self.grayscale
@@ -698,26 +707,39 @@ class SingleImageVideo:
             self.filenames = [self.filename]
 
         self.__data = dict()
-        self.__test_frame = None
+        self.test_frame = None
 
     def _load_idx(self, idx):
-        img = cv2.imread(self.filenames[idx])
+        img = cv2.imread(self._get_filename(idx))
 
         if img.shape[2] == 3:
             # OpenCV channels are in BGR order, so we should convert to RGB
             img = img[:, :, ::-1]
         return img
 
+    def _get_filename(self, idx: int) -> str:
+        f = self.filenames[idx]
+        if os.path.exists(f):
+            return f
+
+        # Try the directory from the "video" file (this works if all the images
+        # are in the same directory with distinctive filenames).
+        f = os.path.join(os.path.dirname(self.filename), os.path.basename(f))
+        if os.path.exists(f):
+            return f
+
+        raise FileNotFoundError(f"Unable to locate file {idx}: {self.filenames[idx]}")
+
     def _load_test_frame(self):
-        if self.__test_frame is None:
-            self.__test_frame = self._load_idx(0)
+        if self.test_frame is None:
+            self.test_frame = self._load_idx(0)
 
             if self.height_ is None:
-                self.height_ = self.__test_frame.shape[0]
+                self.height_ = self.test_frame.shape[0]
             if self.width_ is None:
-                self.width_ = self.__test_frame.shape[1]
+                self.width_ = self.test_frame.shape[1]
             if self.channels_ is None:
-                self.channels_ = self.__test_frame.shape[2]
+                self.channels_ = self.test_frame.shape[2]
 
     def get_idx_from_filename(self, filename: str) -> int:
         try:
@@ -944,7 +966,7 @@ class Video:
         return cls(backend=backend)
 
     @classmethod
-    def from_numpy(cls, filename: str, *args, **kwargs) -> "Video":
+    def from_numpy(cls, filename: Union[str, np.ndarray], *args, **kwargs) -> "Video":
         """
         Create an instance of a video object from a numpy array.
 

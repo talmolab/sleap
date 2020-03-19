@@ -1,3 +1,5 @@
+"""Tracking tools for linking grouped instances over time."""
+
 from collections import deque, defaultdict
 import attr
 import numpy as np
@@ -10,6 +12,7 @@ from sleap.nn import utils
 from sleap.instance import Instance, PredictedInstance, Track
 from sleap.io.dataset import LabeledFrame
 from sleap.skeleton import Skeleton
+from sleap.nn.data.normalization import ensure_int
 
 InstanceType = TypeVar("InstanceType", Instance, PredictedInstance)
 
@@ -223,23 +226,28 @@ class FlowCandidateMaker:
             ref_instances: Reference instances in the previous frame.
             ref_img: Previous frame image as a numpy array.
             new_img: New frame image as a numpy array.
-            min_shifted_points: Minimum number of points that must be detected in the new
-                frame in order to generate a new shifted instance.
-            scale: Factor to scale the images by when computing optical flow. Decrease this
-                to increase performance at the cost of finer accuracy. Sometimes decreasing
-                the image scale can improve performance with fast movements.
-            window_size: Optical flow window size to consider at each pyramid scale level.
-            max_levels: Number of pyramid scale levels to consider. This is different from
-                the scale parameter, which determines the initial image scaling.
+            min_shifted_points: Minimum number of points that must be detected in the
+                new frame in order to generate a new shifted instance.
+            scale: Factor to scale the images by when computing optical flow. Decrease
+                this to increase performance at the cost of finer accuracy. Sometimes
+                decreasing the image scale can improve performance with fast movements.
+            window_size: Optical flow window size to consider at each pyramid scale
+                level.
+            max_levels: Number of pyramid scale levels to consider. This is different
+                from the scale parameter, which determines the initial image scaling.
 
         Returns:
-            A list of ShiftedInstances with the optical flow displacements applied to the
-            reference instance points. Points that are not found will be represented as
-            NaNs in the points array for each shifted instance.
+            A list of ShiftedInstances with the optical flow displacements applied to
+            the reference instance points. Points that are not found will be represented
+            as NaNs in the points array for each shifted instance.
 
         Notes:
             This function relies on the Lucas-Kanade method for optical flow estimation.
         """
+
+        # Convert to uint8 for cv2.calcOpticalFlowPyrLK
+        ref_img = ensure_int(ref_img)
+        new_img = ensure_int(new_img)
 
         # Convert RGB to grayscale.
         if ref_img.ndim > 2 and ref_img.shape[-1] == 3:
@@ -637,7 +645,8 @@ class Tracker:
         option["type"] = int
         option[
             "help"
-        ] = "For optical-flow: Optical flow window size to consider at each pyramid scale level"
+        ] = "For optical-flow: Optical flow window size to consider at each pyramid "
+        "scale level"
         options.append(option)
 
         option = dict(name="of_max_levels", default=3)

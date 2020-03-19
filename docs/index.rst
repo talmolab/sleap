@@ -23,11 +23,7 @@ Contributors
 
 * **Talmo Pereira**, Princeton Neuroscience Institute, Princeton University
 * **Nat Tabris**, Princeton Neuroscience Institute, Princeton University
-* **David Turner**, Research Computing and Princeton Neuroscience Institute, Princeton University
-* **Joshua Shaevitz**, Physics and Lewis-Sigler Institute, Princeton University
-* **Mala Murthy**, Princeton Neuroscience Institute, Princeton University
-
-SLEAP was developed in the Murthy and Shaevitz labs at Princeton University. Funding: NIH BRAIN Initative R01 NS104899 and Princeton Innovation Accelerator Fund.
+* **David Turner**, Research Computing, Princeton University
 
 Contact
 -------

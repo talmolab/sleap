@@ -4,8 +4,7 @@ import numpy as np
 import itertools
 import math
 
-from sleap.io.video import Video, HDF5Video
-from sleap.gui.multicheck import MultiCheckWidget
+from sleap.io.video import HDF5Video
 
 from sleap.gui.overlays.base import DataOverlay, h5_colors
 
@@ -242,7 +241,7 @@ def show_pafs_from_h5(filename, input_format="channels_last", standalone=False):
 
 
 def demo_pafs(pafs, video, decimation=4, standalone=False):
-    from sleap.gui.video import QtVideoPlayer
+    from sleap.gui.widgets.video import QtVideoPlayer
 
     if standalone:
         app = QtWidgets.QApplication([])
