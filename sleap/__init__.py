@@ -10,3 +10,5 @@ from sleap.io.video import Video
 from sleap.instance import LabeledFrame, Instance, PredictedInstance
 from sleap.skeleton import Skeleton
 import sleap.nn
+
+from sleap.version import __version__

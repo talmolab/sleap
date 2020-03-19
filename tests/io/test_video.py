@@ -220,7 +220,6 @@ def test_hdf5_inline_video(small_robot_mp4_vid, tmpdir, format):
     hdf5_vid = small_robot_mp4_vid.to_hdf5(
         path, "testvid", format=format, frame_numbers=frame_indices
     )
-
     assert hdf5_vid.num_frames == len(frame_indices)
 
     # Make sure we can read arbitrary frames by imgstore frame number
@@ -230,6 +229,9 @@ def test_hdf5_inline_video(small_robot_mp4_vid, tmpdir, format):
     assert hdf5_vid.channels == 3
     assert hdf5_vid.height == 320
     assert hdf5_vid.width == 560
+
+    # Try loading a frame from the source video that's not in the inline video
+    assert hdf5_vid.get_frame(3).shape == (320, 560, 3)
 
     # Check the image data is exactly the same when lossless is used.
     if format in ("", "png"):
@@ -250,11 +252,14 @@ def test_hdf5_indexing(small_robot_mp4_vid, tmpdir):
         path, dataset="testvid2", frame_numbers=frame_indices, index_by_original=False
     )
 
-    # Index by frame index in imgstore
+    # Index by frame index in newly saved video
     frames = hdf5_vid.get_frames([0, 1, 2])
     assert frames.shape == (3, 320, 560, 3)
 
     assert hdf5_vid.last_frame_idx == len(frame_indices) - 1
+
+    # Disable loading frames from the original source video
+    hdf5_vid.backend.enable_source_video = False
 
     with pytest.raises(ValueError):
         hdf5_vid.get_frames(frame_indices)
@@ -267,7 +272,10 @@ def test_hdf5_indexing(small_robot_mp4_vid, tmpdir):
         path, dataset="testvid3", frame_numbers=frame_indices
     )
 
-    # Index by frame index in imgstore
+    # Disable loading frames from the original source video
+    hdf5_vid2.backend.enable_source_video = False
+
+    # Index by frame index in original video
     frames = hdf5_vid2.get_frames(frame_indices)
     assert frames.shape == (3, 320, 560, 3)
 

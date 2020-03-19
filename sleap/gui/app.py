@@ -39,11 +39,11 @@ from sleap.gui.dialogs.formbuilder import YamlFormWidget
 from sleap.gui.shortcuts import Shortcuts
 from sleap.gui.dialogs.shortcuts import ShortcutDialog
 from sleap.gui.state import GuiState
-
 from sleap.gui.overlays.tracks import TrackTrailOverlay, TrackListOverlay
 from sleap.gui.color import ColorManager
 from sleap.gui.overlays.instance import InstanceOverlay
-from sleap.gui.overlays.anchors import NegativeAnchorOverlay
+
+from sleap.prefs import prefs
 
 
 class MainWindow(QMainWindow):
@@ -92,7 +92,7 @@ class MainWindow(QMainWindow):
         self.state["show edges"] = True
         self.state["edge style"] = "Line"
         self.state["fit"] = False
-        self.state["color predicted"] = False
+        self.state["color predicted"] = prefs["color predicted"]
 
         self._initialize_gui()
 
@@ -258,6 +258,12 @@ class MainWindow(QMainWindow):
         )
         add_menu_item(
             import_types_menu,
+            "import_dlc",
+            "DeepLabCut dataset...",
+            self.commands.importDLC,
+        )
+        add_menu_item(
+            import_types_menu,
             "import_dpk",
             "DeepPoseKit dataset...",
             self.commands.importDPK,
@@ -372,7 +378,7 @@ class MainWindow(QMainWindow):
             key="distinctly_color",
         )
 
-        self.state["palette"] = "standard"
+        self.state["palette"] = prefs["palette"]
         self.state["distinctly_color"] = "instances"
 
         viewMenu.addSeparator()
@@ -524,20 +530,6 @@ class MainWindow(QMainWindow):
             "Run Inference...",
             lambda: self.showLearningDialog("inference"),
         )
-
-        # predictionMenu.addSeparator()
-        # add_menu_item(
-        #     predictionMenu,
-        #     "negative sample",
-        #     "Mark Negative Training Sample...",
-        #     self.commands.markNegativeAnchor,
-        # )
-        # add_menu_item(
-        #     predictionMenu,
-        #     "clear negative samples",
-        #     "Clear Current Frame Negative Samples",
-        #     self.commands.clearFrameNegativeAnchors,
-        # )
 
         predictionMenu.addSeparator()
         add_menu_item(
@@ -813,7 +805,6 @@ class MainWindow(QMainWindow):
     def load_overlays(self):
         """Load all standard video overlays."""
         self.overlays["track_labels"] = TrackListOverlay(self.labels, self.player)
-        self.overlays["negative"] = NegativeAnchorOverlay(self.labels, self.player)
         self.overlays["trails"] = TrackTrailOverlay(self.labels, self.player)
         self.overlays["instance"] = InstanceOverlay(
             self.labels, self.player, self.state
@@ -843,7 +834,7 @@ class MainWindow(QMainWindow):
             )
 
         # Set defaults
-        self.state["trail_length"] = 0
+        self.state["trail_length"] = prefs["trail length"]
 
         # Emit signals for default that may have been set earlier
         self.state.emit("palette")
@@ -1055,6 +1046,7 @@ class MainWindow(QMainWindow):
                     message += (
                         f" ({pred_frame_count/current_video.num_frames*100:.2f}%)"
                     )
+                    message += " in video"
 
         self.statusBar().showMessage(message)
 

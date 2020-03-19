@@ -2,7 +2,7 @@
 Wrappers for Qt File Dialogs.
 """
 
-import os
+import os, sys
 
 from PySide2 import QtWidgets
 
@@ -55,7 +55,10 @@ class FileDialog(object):
 
     @staticmethod
     def _non_native_if_set(kwargs):
-        if os.environ.get("USE_NON_NATIVE_FILE", False):
+        is_linux = sys.platform.startswith("linux")
+        env_var_set = os.environ.get("USE_NON_NATIVE_FILE", False)
+
+        if is_linux or env_var_set:
             kwargs["options"] = kwargs.get("options", 0)
             kwargs["options"] |= QtWidgets.QFileDialog.DontUseNativeDialog
 
