@@ -1,1047 +1,1117 @@
-"""SLEAP model training."""
+"""Training functionality and high level APIs."""
 
 import os
-import attr
-import argparse
-import json
-from typing import Callable, Dict, List, Optional, Text, Tuple, Union
-from time import time
+import re
 from datetime import datetime
+from time import time
+import logging
 
-import numpy as np
 import tensorflow as tf
+import numpy as np
 
-import matplotlib
+import attr
+from typing import Optional, Callable, List, Union, Text, TypeVar
+from abc import ABC, abstractmethod
 
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-from sleap.nn import peak_finding
+import cattr
+import json
+import copy
 
-from sleap import Labels, Skeleton
+import sleap
 from sleap.util import get_package_file
-from sleap.nn import callbacks
-from sleap.nn import data
-from sleap.nn import job
-from sleap.nn import model
+
+# Config
+from sleap.nn.config import (
+    TrainingJobConfig,
+    CentroidsHeadConfig,
+    CenteredInstanceConfmapsHeadConfig,
+    MultiInstanceConfig,
+)
+
+# Model
+from sleap.nn.model import Model
+
+# Data
+from sleap.nn.config import LabelsConfig
+from sleap.nn.data.pipelines import LabelsReader
+from sleap.nn.data.pipelines import (
+    Pipeline,
+    CentroidConfmapsPipeline,
+    TopdownConfmapsPipeline,
+    BottomUpPipeline,
+    KeyMapper,
+)
+from sleap.nn.data.training import split_labels
+
+# Optimization
+from sleap.nn.config import OptimizationConfig
+from sleap.nn.losses import OHKMLoss, PartLoss
+from tensorflow.keras.callbacks import ReduceLROnPlateau, EarlyStopping
+
+# Outputs
+from sleap.nn.config import (
+    OutputsConfig,
+    ZMQConfig,
+    TensorBoardConfig,
+    CheckpointingConfig,
+)
+from sleap.nn.callbacks import (
+    TrainingControllerZMQ,
+    ProgressReporterZMQ,
+    ModelCheckpointOnEvent,
+)
+from tensorflow.keras.callbacks import TensorBoard, ModelCheckpoint, CSVLogger
+
+# Visualization
+import matplotlib
+import matplotlib.pyplot as plt
+from sleap.nn.callbacks import TensorBoardMatplotlibWriter, MatplotlibSaver
+from sleap.nn.viz import plot_img, plot_confmaps, plot_peaks, plot_pafs
 
 
-class OHKMLoss(tf.keras.losses.Loss):
-    """Online hard keypoint mining loss.
+logger = logging.getLogger(__name__)
 
-    This loss serves to dynamically reweight the MSE of the top-K worst channels in each
-    batch. This is useful when fine tuning a model to improve performance on a hard
-    part to optimize for (e.g., small, hard to see, often not visible).
 
-    Note: This works with any type of channel, so it can work for PAFs as well.
+@attr.s(auto_attribs=True)
+class DataReaders:
+    """Container class for SLEAP labels that serve as training data sources.
 
     Attributes:
-        K: Number of worst performing channels to compute loss for.
-        weight: Scalar factor to multiply with the MSE for the top-K worst channels.
-        name: Name of the loss tensor.
+        training_labels_reader: LabelsReader pipeline provider for a training data from
+            a sleap.Labels instance.
+        validation_labels_reader: LabelsReader pipeline provider for a validation data
+            from a sleap.Labels instance.
+        test_labels_reader: LabelsReader pipeline provider for a test set data from a
+            sleap.Labels instance. This is not necessary for training.
     """
 
-    def __init__(self, K=2, weight=5, name="ohkm", **kwargs):
-        super(OHKMLoss, self).__init__(name=name, **kwargs)
-        self.K = K
-        self.weight = weight
+    training_labels_reader: LabelsReader
+    validation_labels_reader: LabelsReader
+    test_labels_reader: Optional[LabelsReader] = None
 
-    def __call__(self, y_gt, y_pr, sample_weight=None):
+    @classmethod
+    def from_config(
+        cls,
+        labels_config: LabelsConfig,
+        training: Union[Text, sleap.Labels],
+        validation: Union[Text, sleap.Labels, float],
+        test: Optional[Union[Text, sleap.Labels]] = None,
+        update_config: bool = False,
+    ) -> "DataReaders":
+        """Create data readers from a (possibly incomplete) configuration."""
+        # Use config values if not provided in the arguments.
+        if training is None:
+            training = labels_config.training_labels
+        if validation is None:
+            if labels_config.validation_labels is not None:
+                validation = labels_config.validation_labels
+            else:
+                validation = labels_config.validation_fraction
+        if test is None:
+            test = labels_config.test_labels
 
-        # Squared difference
-        loss = tf.math.squared_difference(y_gt, y_pr)  # rank 4
+        # Update the config fields with arguments (if not a full sleap.Labels instance).
+        if update_config:
+            if isinstance(training, Text):
+                labels_config.training_labels = training
+            if isinstance(validation, Text):
+                labels_config.validation_labels = validation
+            elif isinstance(validation, float):
+                validation_labels = labels_config.validation_fraction
+            if isinstance(test, Text):
+                labels_config.test_labels = test
 
-        # Store initial shape for normalization
-        batch_shape = tf.shape(loss)
+        # Build class.
+        # TODO: use labels_config.search_path_hints for loading
+        return cls.from_labels(training=training, validation=validation, test=test)
 
-        # Reduce over everything but channels axis
-        loss = tf.reduce_sum(loss, axis=[0, 1, 2])
+    @classmethod
+    def from_labels(
+        cls,
+        training: Union[Text, sleap.Labels],
+        validation: Union[Text, sleap.Labels, float],
+        test: Optional[Union[Text, sleap.Labels]] = None,
+    ) -> "DataReaders":
+        """Create data readers from sleap.Labels datasets as data providers."""
 
-        # Keep only top loss terms
-        k_vals, k_inds = tf.math.top_k(loss, k=self.K, sorted=False)
+        if isinstance(training, str):
+            training = sleap.Labels.load_file(training)
 
-        # Apply weights
-        k_loss = k_vals * self.weight
+        if isinstance(validation, str):
+            validation = sleap.Labels.load_file(validation)
+        elif isinstance(validation, float):
+            training, validation = split_labels(training, [-1, validation])
 
-        # Reduce over all channels
-        n_elements = tf.cast(
-            batch_shape[0] * batch_shape[1] * batch_shape[2] * self.K, tf.float32
+        if isinstance(test, str):
+            test = sleap.Labels.load_file(test)
+
+        test_reader = None
+        if test is not None:
+            test_reader = LabelsReader.from_user_instances(test)
+
+        return cls(
+            training_labels_reader=LabelsReader.from_user_instances(training),
+            validation_labels_reader=LabelsReader.from_user_instances(validation),
+            test_labels_reader=test_reader,
         )
-        k_loss = tf.reduce_sum(k_loss) / n_elements
 
-        return k_loss
+    @property
+    def training_labels(self) -> sleap.Labels:
+        """Return the sleap.Labels underlying the training data reader."""
+        return self.training_labels_reader.labels
+
+    @property
+    def validation_labels(self) -> sleap.Labels:
+        """Return the sleap.Labels underlying the validation data reader."""
+        return self.validation_labels_reader.labels
+
+    @property
+    def test_labels(self) -> sleap.Labels:
+        """Return the sleap.Labels underlying the test data reader."""
+        if self.test_labels_reader is None:
+            raise ValueError("No test labels provided to data reader.")
+        return self.test_labels_reader.labels
 
 
-class NodeLoss(tf.keras.metrics.Metric):
-    """Compute node-specific loss.
-
-    Useful for monitoring the MSE for specific body parts (channels).
-
-    Attributes:
-        node_ind: Index of channel to compute MSE for.
-        name: Name of the loss tensor.
-    """
-
-    def __init__(self, node_ind, name="node_loss", **kwargs):
-        super(NodeLoss, self).__init__(name=name, **kwargs)
-        self.node_ind = node_ind
-        self.node_mse = self.add_weight(
-            name=name + ".mse", initializer="zeros", dtype=tf.float32
+def setup_optimizer(config: OptimizationConfig) -> tf.keras.optimizers.Optimizer:
+    """Set up model optimizer from config."""
+    if config.optimizer == "adam":
+        optimizer = tf.keras.optimizers.Adam(
+            learning_rate=config.initial_learning_rate, amsgrad=True
         )
-        self.n_samples = self.add_weight(
-            name=name + ".n_samples", initializer="zeros", dtype=tf.int32
-        )
-        self.height = self.add_weight(
-            name=name + ".height", initializer="zeros", dtype=tf.int32
-        )
-        self.width = self.add_weight(
-            name=name + ".width", initializer="zeros", dtype=tf.int32
-        )
+    else:
+        # TODO: explicit lookup
+        optimizer = config.optimizer
+    return optimizer
 
-    def update_state(self, y_gt, y_pr, sample_weight=None):
-        shape = tf.shape(y_gt)
-        n_samples = shape[0]
-        node_mse = tf.reduce_sum(
-            tf.math.squared_difference(
-                tf.gather(y_gt, self.node_ind, axis=3),
-                tf.gather(y_pr, self.node_ind, axis=3),
+
+def setup_losses(config: OptimizationConfig) -> Callable[[tf.Tensor], tf.Tensor]:
+    """Set up model loss function from config."""
+    losses = [tf.keras.losses.MeanSquaredError()]
+
+    if config.hard_keypoint_mining.online_mining:
+        losses.append(OHKMLoss.from_config(config.hard_keypoint_mining))
+        logging.info(f"  OHKM enabled: {config.hard_keypoint_mining}")
+
+    def loss_fn(y_gt, y_pr):
+        loss = 0
+        for loss_fn in losses:
+            loss += loss_fn(y_gt, y_pr)
+        return loss
+
+    return loss_fn
+
+
+def setup_metrics(
+    config: OptimizationConfig, part_names: Optional[List[Text]] = None
+) -> List[Union[tf.keras.losses.Loss, tf.keras.metrics.Metric]]:
+    """Set up training metrics from config."""
+    metrics = []
+
+    if config.hard_keypoint_mining.online_mining:
+        metrics.append(OHKMLoss.from_config(config.hard_keypoint_mining))
+
+    if part_names is not None:
+        for channel_ind, part_name in enumerate(part_names):
+            metrics.append(PartLoss(channel_ind=channel_ind, name=part_name))
+
+    return metrics
+
+
+def setup_optimization_callbacks(
+    config: OptimizationConfig,
+) -> List[tf.keras.callbacks.Callback]:
+    """Set up optimization callbacks from config."""
+    callbacks = []
+    if config.learning_rate_schedule.reduce_on_plateau:
+        callbacks.append(
+            ReduceLROnPlateau(
+                monitor="val_loss",
+                mode="min",
+                factor=config.learning_rate_schedule.reduction_factor,
+                patience=config.learning_rate_schedule.plateau_patience,
+                min_delta=config.learning_rate_schedule.plateau_min_delta,
+                cooldown=config.learning_rate_schedule.plateau_cooldown,
+                min_lr=config.learning_rate_schedule.min_learning_rate,
+                verbose=1,
             )
-        )  # rank 4
+        )
+    logging.info(f"  Learning rate schedule: {config.learning_rate_schedule}")
 
-        self.height.assign(shape[1])
-        self.width.assign(shape[2])
-        self.n_samples.assign_add(n_samples)
-        self.node_mse.assign_add(node_mse)
+    if config.early_stopping.stop_training_on_plateau:
+        callbacks.append(
+            EarlyStopping(
+                monitor="val_loss",
+                mode="min",
+                patience=config.early_stopping.plateau_patience,
+                min_delta=config.early_stopping.plateau_min_delta,
+                verbose=1,
+            )
+        )
+    logging.info(f"  Early stopping: {config.early_stopping}")
 
-    def result(self):
-        return self.node_mse / tf.cast(
-            self.n_samples * self.height * self.width, tf.float32
+    return callbacks
+
+
+def get_timestamp() -> Text:
+    """Return the date and time as a string."""
+    return datetime.now().strftime("%y%m%d_%H%M%S")
+
+
+def setup_new_run_folder(
+    config: OutputsConfig, base_run_name: Optional[Text] = None
+) -> Text:
+    """Create a new run folder from config."""
+    run_path = None
+    if config.save_outputs:
+        # Auto-generate run name.
+        if config.run_name is None:
+            config.run_name = get_timestamp()
+            if isinstance(base_run_name, str):
+                config.run_name = config.run_name + "." + base_run_name
+
+        # Find new run name suffix if needed.
+        if config.run_name_suffix is None:
+            config.run_name_suffix = ""
+            run_path = os.path.join(
+                config.runs_folder, f"{config.run_name_prefix}{config.run_name}"
+            )
+            i = 0
+            while os.path.exists(run_path):
+                i += 1
+                config.run_name_suffix = f"_{i}"
+                run_path = os.path.join(
+                    config.runs_folder,
+                    f"{config.run_name_prefix}{config.run_name}{config.run_name_suffix}",
+                )
+
+        # Build run path.
+        run_path = config.run_path
+
+    return run_path
+
+
+def setup_zmq_callbacks(zmq_config: ZMQConfig) -> List[tf.keras.callbacks.Callback]:
+    """Set up ZeroMQ callbacks from config."""
+    callbacks = []
+
+    if zmq_config.subscribe_to_controller:
+        callbacks.append(
+            TrainingControllerZMQ(
+                address=zmq_config.controller_address,
+                poll_timeout=zmq_config.controller_polling_timeout,
+            )
+        )
+        logger.info(f"  ZMQ controller subcribed to: {zmq_config.controller_address}")
+    if zmq_config.publish_updates:
+        callbacks.append(ProgressReporterZMQ(address=zmq_config.publish_address))
+        logger.info(f"  ZMQ progress reporter publish on: {zmq_config.publish_address}")
+
+    return callbacks
+
+
+def setup_checkpointing(
+    config: CheckpointingConfig, run_path: Text
+) -> List[tf.keras.callbacks.Callback]:
+    """Set up model checkpointing callbacks from config."""
+    callbacks = []
+    if config.initial_model:
+        callbacks.append(
+            ModelCheckpointOnEvent(
+                filepath=os.path.join(run_path, "initial_model.h5"), event="train_begin"
+            )
+        )
+
+    if config.best_model:
+        callbacks.append(
+            ModelCheckpoint(
+                filepath=os.path.join(run_path, "best_model.h5"),
+                monitor="val_loss",
+                save_best_only=True,
+                save_weights_only=False,
+                save_freq="epoch",
+                verbose=0,
+            )
+        )
+
+    if config.every_epoch:
+        callbacks.append(
+            ModelCheckpointOnEvent(
+                filepath=os.path.join(run_path, "model.epoch%04d.h5"), event="epoch_end"
+            )
+        )
+
+    if config.latest_model:
+        callbacks.append(
+            ModelCheckpointOnEvent(
+                filepath=os.path.join(run_path, "latest_model.h5"), event="epoch_end"
+            )
+        )
+
+    if config.final_model:
+        callbacks.append(
+            ModelCheckpointOnEvent(
+                filepath=os.path.join(run_path, "final_model.h5"), event="train_end"
+            )
+        )
+
+    return callbacks
+
+
+def setup_tensorboard(
+    config: TensorBoardConfig, run_path: Text
+) -> List[tf.keras.callbacks.Callback]:
+    """Set up TensorBoard callbacks from config."""
+    callbacks = []
+    if config.write_logs:
+        callbacks.append(
+            TensorBoard(
+                log_dir=run_path,
+                histogram_freq=0,
+                write_graph=config.architecture_graph,
+                update_freq=config.loss_frequency,
+                profile_batch=2 if config.profile_graph else 0,
+                embeddings_freq=0,
+                embeddings_metadata=None,
+            )
+        )
+
+    return callbacks
+
+
+def setup_output_callbacks(
+    config: OutputsConfig, run_path: Optional[Text] = None
+) -> List[tf.keras.callbacks.Callback]:
+    """Set up training outputs callbacks from config."""
+    callbacks = []
+    if config.save_outputs and run_path is not None:
+        callbacks.extend(setup_checkpointing(config.checkpointing, run_path))
+        callbacks.extend(setup_tensorboard(config.tensorboard, run_path))
+
+        if config.log_to_csv:
+            callbacks.append(
+                CSVLogger(filename=os.path.join(run_path, "training_log.csv"))
+            )
+    callbacks.extend(setup_zmq_callbacks(config.zmq))
+    return callbacks
+
+
+def setup_visualization(
+    config: OutputsConfig,
+    run_path: Text,
+    viz_fn: Callable[[], matplotlib.figure.Figure],
+    name: Text,
+) -> List[tf.keras.callbacks.Callback]:
+    """Set up visualization callbacks from config."""
+    callbacks = []
+    if config.save_visualizations and config.save_outputs:
+        callbacks.append(
+            MatplotlibSaver(
+                save_folder=os.path.join(run_path, "viz"), plot_fn=viz_fn, prefix=name
+            )
+        )
+
+    if (
+        config.tensorboard.write_logs
+        and config.tensorboard.visualizations
+        and config.save_outputs
+    ):
+        callbacks.append(
+            TensorBoardMatplotlibWriter(
+                log_dir=os.path.join(run_path, name), plot_fn=viz_fn, tag=name
+            )
+        )
+
+    return callbacks
+
+
+def sanitize_scope_name(name: Text) -> Text:
+    """Sanitizes string which will be used as TensorFlow scope name."""
+    # Add "." to beginning if first character isn't acceptable
+    name = re.sub("^([^A-Za-z0-9.])", ".\\1", name)
+    # Replace invalid characters with "_"
+    name = re.sub("([^A-Za-z0-9._])", "_", name)
+    return name
+
+
+PipelineBuilder = TypeVar(
+    "PipelineBuilder",
+    CentroidConfmapsPipeline,
+    TopdownConfmapsPipeline,
+    BottomUpPipeline,
+)
+
+
+@attr.s(auto_attribs=True)
+class Trainer(ABC):
+    """Base trainer class that provides general model training functionality.
+
+    This class is intended to be instantiated using the `from_config()` class method,
+    which will return the appropriate subclass based on the input configuration.
+
+    This class should not be used directly. It is intended to be subclassed by a model
+    output type-specific trainer that provides more specific functionality.
+
+    Attributes:
+        data_readers: A `DataReaders` instance that contains training data providers.
+        model: A `Model` instance describing the SLEAP model to train.
+        config: A `TrainingJobConfig` that describes the training parameters.
+        initial_config: This attribute will contain a copy of the input configuration
+            before any attributes are updated in `config`.
+        pipeline_builder: A model output type-specific data pipeline builder to create
+            pipelines that generate data used for training. This must be specified in
+            subclasses.
+        training_pipeline: The data pipeline that generates examples from the training
+            set for optimization.
+        validation_pipeline: The data pipeline that generates examples from the
+            validation set for optimization.
+        training_viz_pipeline: The data pipeline that generates examples from the
+            training set for visualization.
+        validation_viz_pipeline: The data pipeline that generates examples from the
+            validation set for visualization.
+        optimization_callbacks: Keras callbacks related to optimization.
+        output_callbacks: Keras callbacks related to outputs.
+        visualization_callbacks: Keras callbacks related to visualization.
+        run_path: The path to the run folder that will contain training results, if any.
+    """
+
+    data_readers: DataReaders
+    model: Model
+    config: TrainingJobConfig
+    initial_config: Optional[TrainingJobConfig] = None
+
+    pipeline_builder: PipelineBuilder = attr.ib(init=False)
+    training_pipeline: Pipeline = attr.ib(init=False)
+    validation_pipeline: Pipeline = attr.ib(init=False)
+    training_viz_pipeline: Pipeline = attr.ib(init=False)
+    validation_viz_pipeline: Pipeline = attr.ib(init=False)
+
+    optimization_callbacks: List[tf.keras.callbacks.Callback] = attr.ib(
+        factory=list, init=False
+    )
+    output_callbacks: List[tf.keras.callbacks.Callback] = attr.ib(
+        factory=list, init=False
+    )
+    visualization_callbacks: List[tf.keras.callbacks.Callback] = attr.ib(
+        factory=list, init=False
+    )
+
+    run_path: Optional[Text] = attr.ib(default=None, init=False)
+
+    @classmethod
+    def from_config(
+        cls,
+        config: TrainingJobConfig,
+        training_labels: Optional[Union[Text, sleap.Labels]] = None,
+        validation_labels: Optional[Union[Text, sleap.Labels, float]] = None,
+        test_labels: Optional[Union[Text, sleap.Labels]] = None,
+    ) -> "Trainer":
+        """Initialize the trainer from a training job configuration.
+        
+        Args:
+            config: A `TrainingJobConfig` instance.
+            training_labels: Training labels to use instead of the ones in the config,
+                if any. If a path is specified, it will overwrite the one in the config.
+            validation_labels: Validation labels to use instead of the ones in the
+                 config, if any. If a path is specified, it will overwrite the one in
+                 the config.
+            test_labels: Teset labels to use instead of the ones in the config, if any.
+                If a path is specified, it will overwrite the one in the config.
+        """
+        # Copy input config before we make any changes.
+        initial_config = copy.deepcopy(config)
+
+        # Create data readers and store loaded skeleton.
+        data_readers = DataReaders.from_config(
+            config.data.labels,
+            training=training_labels,
+            validation=validation_labels,
+            test=test_labels,
+            update_config=True,
+        )
+        config.data.labels.skeletons = data_readers.training_labels.skeletons
+
+        # Create model.
+        model = Model.from_config(
+            config.model, skeleton=config.data.labels.skeletons[0], update_config=True
+        )
+
+        # Determine output type to create type-specific model trainer.
+        head_config = config.model.heads.which_oneof()
+        if isinstance(head_config, CentroidsHeadConfig):
+            return CentroidConfmapsModelTrainer(
+                config=config,
+                initial_config=initial_config,
+                data_readers=data_readers,
+                model=model,
+            )
+        elif isinstance(head_config, CenteredInstanceConfmapsHeadConfig):
+            return TopdownConfmapsModelTrainer(
+                config=config,
+                initial_config=initial_config,
+                data_readers=data_readers,
+                model=model,
+            )
+        elif isinstance(head_config, MultiInstanceConfig):
+            return BottomUpModelTrainer(
+                config=config,
+                initial_config=initial_config,
+                data_readers=data_readers,
+                model=model,
+            )
+        else:
+            # TODO: Trainer for SingleInstanceConfmapsHeadConfig
+            raise ValueError(
+                "Model head not specified or configured. Check the config.model.heads"
+                " setting."
+            )
+
+    @abstractmethod
+    def _update_config():
+        """Implement in subclasses."""
+        pass
+
+    @abstractmethod
+    def _setup_pipeline_builder():
+        """Implement in subclasses."""
+        pass
+
+    @property
+    @abstractmethod
+    def input_keys(self):
+        """Implement in subclasses."""
+        pass
+
+    @property
+    @abstractmethod
+    def output_keys(self):
+        """Implement in subclasses."""
+        pass
+
+    @abstractmethod
+    def _setup_visualization(self):
+        """Implement in subclasses."""
+        pass
+
+    def _setup_model(self):
+        """Set up the keras model."""
+        # Infer the input shape by evaluating the data pipeline.
+        logger.info("Building test pipeline...")
+        t0 = time()
+        base_pipeline = self.pipeline_builder.make_base_pipeline(
+            self.data_readers.training_labels_reader
+        )
+        base_example = next(iter(base_pipeline.make_dataset()))
+        input_shape = base_example[self.input_keys[0]].shape
+        # TODO: extend input shape determination for multi-input
+        logger.info(f"Loaded test example. [{time() - t0:.3f}s]")
+        logger.info(f"  Input shape: {input_shape}")
+
+        # Create the tf.keras.Model instance.
+        self.model.make_model(input_shape)
+        logger.info("Created Keras model.")
+        logger.info(f"  Backbone: {self.model.backbone}")
+        logger.info(f"  Max stride: {self.model.maximum_stride}")
+        logger.info(f"  Parameters: {self.model.keras_model.count_params():3,d}")
+        # logger.info("  Heads: " + ", ".join([type(head).__name__ for head in self.model.heads]))
+        logger.info("  Heads: ")
+        for i, head in enumerate(self.model.heads):
+            logger.info(f"  heads[{i}] = {head}")
+
+    @property
+    def keras_model(self) -> tf.keras.Model:
+        """Alias for `self.model.keras_model`."""
+        return self.model.keras_model
+
+    def _setup_pipelines(self):
+        """Set up training data pipelines for consumption by the keras model."""
+        # Create the training and validation pipelines with appropriate tensor names.
+        key_mapper = KeyMapper(
+            [
+                {
+                    input_key: input_name
+                    for input_key, input_name in zip(
+                        self.input_keys, self.keras_model.input_names
+                    )
+                },
+                {
+                    output_key: output_name
+                    for output_key, output_name in zip(
+                        self.output_keys, self.keras_model.output_names
+                    )
+                },
+            ]
+        )
+        self.training_pipeline = (
+            self.pipeline_builder.make_training_pipeline(
+                self.data_readers.training_labels_reader
+            )
+            + key_mapper
+        )
+        logger.info(f"Training set: n = {len(self.data_readers.training_labels)}")
+        self.validation_pipeline = (
+            self.pipeline_builder.make_training_pipeline(
+                self.data_readers.validation_labels_reader
+            )
+            + key_mapper
+        )
+        logger.info(f"Validation set: n = {len(self.data_readers.validation_labels)}")
+
+    def _setup_optimization(self):
+        """Set up optimizer, loss functions and compile the model."""
+        optimizer = setup_optimizer(self.config.optimization)
+        loss_fn = setup_losses(self.config.optimization)
+
+        # TODO: Implement general part loss reporting.
+        part_names = None
+        if isinstance(self.pipeline_builder, TopdownConfmapsPipeline):
+            part_names = [
+                sanitize_scope_name(name) for name in self.model.heads[0].part_names
+            ]
+        metrics = setup_metrics(self.config.optimization, part_names=part_names)
+
+        self.optimization_callbacks = setup_optimization_callbacks(
+            self.config.optimization
+        )
+
+        self.keras_model.compile(
+            optimizer=optimizer,
+            loss=loss_fn,
+            metrics=metrics,
+            loss_weights={
+                output_name: head.loss_weight
+                for output_name, head in zip(
+                    self.keras_model.output_names, self.model.heads
+                )
+            },
+        )
+
+    def _setup_outputs(self):
+        """Set up output-related functionality."""
+        if self.config.outputs.save_outputs:
+            # Build path to run folder.
+            self.run_path = setup_new_run_folder(
+                self.config.outputs, base_run_name=type(self.model.backbone).__name__
+            )
+
+        # Setup output callbacks.
+        self.output_callbacks = setup_output_callbacks(
+            self.config.outputs, run_path=self.run_path
+        )
+
+        if self.run_path is not None and self.config.outputs.save_outputs:
+            # Create run directory.
+            os.makedirs(self.run_path, exist_ok=True)
+            logger.info(f"Created run path: {self.run_path}")
+
+            # Save configs.
+            if self.initial_config is not None:
+                self.initial_config.save_json(
+                    os.path.join(self.run_path, "initial_config.json")
+                )
+
+            self.config.save_json(os.path.join(self.run_path, "training_config.json"))
+
+    @property
+    def callbacks(self) -> List[tf.keras.callbacks.Callback]:
+        """Return all callbacks currently configured."""
+        callbacks = (
+            self.optimization_callbacks
+            + self.visualization_callbacks
+            + self.output_callbacks
+        )
+
+        # Some callbacks should be called after all previous ones since they depend on
+        # the state of some shared objects (e.g., tf.keras.Model).
+        final_callbacks = []
+        for callback in callbacks[::-1]:
+            if isinstance(callback, tf.keras.callbacks.EarlyStopping):
+                final_callbacks.append(callback)
+                callbacks.remove(callback)
+
+        return callbacks + final_callbacks
+
+    def setup(self):
+        """Set up data pipeline and model for training."""
+        logger.info(f"Setting up for training...")
+        t0 = time()
+        self._update_config()
+        logger.info(f"Setting up pipeline builders...")
+        self._setup_pipeline_builder()
+        logger.info(f"Setting up model...")
+        self._setup_model()
+        logger.info(f"Setting up data pipelines...")
+        self._setup_pipelines()
+        logger.info(f"Setting up optimization...")
+        self._setup_optimization()
+        logger.info(f"Setting up outputs...")
+        self._setup_outputs()
+        logger.info(f"Setting up visualization...")
+        self._setup_visualization()
+        logger.info(f"Finished trainer set up. [{time() - t0:.1f}s]")
+
+    def train(self):
+        """Execute the optimization loop to train the model."""
+        if self.keras_model is None:
+            self.setup()
+
+        logger.info(f"Creating tf.data.Datasets for training data generation...")
+        t0 = time()
+        training_ds = self.training_pipeline.make_dataset()
+        validation_ds = self.validation_pipeline.make_dataset()
+        logger.info(f"Finished creating training datasets. [{time() - t0:.1f}s]")
+
+        logger.info(f"Starting training loop...")
+        t0 = time()
+        history = self.keras_model.fit(
+            training_ds,
+            epochs=self.config.optimization.epochs,
+            validation_data=validation_ds,
+            steps_per_epoch=self.config.optimization.batches_per_epoch,
+            validation_steps=self.config.optimization.val_batches_per_epoch,
+            callbacks=self.callbacks,
+            verbose=2,
+        )
+        logger.info(f"Finished training loop. [{(time() - t0) / 60:.1f} min]")
+
+
+@attr.s(auto_attribs=True)
+class CentroidConfmapsModelTrainer(Trainer):
+    """Trainer for models that output centroid confidence maps."""
+
+    pipeline_builder: CentroidConfmapsPipeline = attr.ib(init=False)
+
+    def _update_config(self):
+        """Update the configuration with inferred values."""
+        if self.config.data.preprocessing.pad_to_stride is None:
+            self.config.data.preprocessing.pad_to_stride = self.model.maximum_stride
+
+        if self.config.optimization.batches_per_epoch is None:
+            n_training_examples = len(self.data_readers.training_labels)
+            n_training_batches = (
+                n_training_examples // self.config.optimization.batch_size
+            )
+            self.config.optimization.batches_per_epoch = max(
+                self.config.optimization.min_batches_per_epoch, n_training_batches
+            )
+
+        if self.config.optimization.val_batches_per_epoch is None:
+            n_validation_examples = len(self.data_readers.validation_labels)
+            n_validation_batches = (
+                n_validation_examples // self.config.optimization.batch_size
+            )
+            self.config.optimization.val_batches_per_epoch = max(
+                self.config.optimization.min_val_batches_per_epoch, n_validation_batches
+            )
+
+    def _setup_pipeline_builder(self):
+        """Initialize pipeline builder."""
+        self.pipeline_builder = CentroidConfmapsPipeline(
+            data_config=self.config.data,
+            optimization_config=self.config.optimization,
+            centroid_confmap_head=self.model.heads[0],
+        )
+
+    @property
+    def input_keys(self) -> List[Text]:
+        """Return example keys to be mapped to model inputs."""
+        return ["image"]
+
+    @property
+    def output_keys(self) -> List[Text]:
+        """Return example keys to be mapped to model outputs."""
+        return ["centroid_confidence_maps"]
+
+    def _setup_visualization(self):
+        """Set up visualization pipelines and callbacks."""
+        # Create visualization/inference pipelines.
+        self.training_viz_pipeline = self.pipeline_builder.make_viz_pipeline(
+            self.data_readers.training_labels_reader, self.keras_model
+        )
+        self.validation_viz_pipeline = self.pipeline_builder.make_viz_pipeline(
+            self.data_readers.validation_labels_reader, self.keras_model
+        )
+
+        # Create static iterators.
+        training_viz_ds_iter = iter(self.training_viz_pipeline.make_dataset())
+        validation_viz_ds_iter = iter(self.validation_viz_pipeline.make_dataset())
+
+        def visualize_example(example):
+            img = example["image"].numpy()
+            cms = example["predicted_centroid_confidence_maps"].numpy()
+            pts_gt = example["centroids"].numpy()
+            pts_pr = example["predicted_centroids"].numpy()
+
+            scale = 1.0
+            if img.shape[0] < 512:
+                scale = 2.0
+            if img.shape[0] < 256:
+                scale = 4.0
+            fig = plot_img(img, dpi=72 * scale, scale=scale)
+            plot_confmaps(cms, output_scale=cms.shape[0] / img.shape[0])
+            plot_peaks(pts_gt, pts_pr, paired=False)
+            return fig
+
+        self.visualization_callbacks.extend(
+            setup_visualization(
+                self.config.outputs,
+                run_path=self.run_path,
+                viz_fn=lambda: visualize_example(next(training_viz_ds_iter)),
+                name=f"train",
+            )
+        )
+        self.visualization_callbacks.extend(
+            setup_visualization(
+                self.config.outputs,
+                run_path=self.run_path,
+                viz_fn=lambda: visualize_example(next(validation_viz_ds_iter)),
+                name=f"validation",
+            )
         )
 
 
 @attr.s(auto_attribs=True)
-class Trainer:
-    training_job: job.TrainingJob
+class TopdownConfmapsModelTrainer(Trainer):
+    """Trainer for models that output instance centered confidence maps."""
 
-    tensorboard: bool = False
-    tensorboard_freq: Union[Text, int] = "epoch"
-    tensorboard_dir: Union[Text, None] = None
-    tensorboard_profiling: bool = False
-    zmq: bool = False
-    control_zmq_port: int = 9000
-    progress_report_zmq_port: int = 9001
-    verbosity: int = 2
-    save_viz: bool = False
+    pipeline_builder: TopdownConfmapsPipeline = attr.ib(init=False)
 
-    _img_shape: Tuple[int, int, int] = None
-    _n_output_channels: int = None
-    _train: data.TrainingData = None
-    _val: data.TrainingData = None
-    _test: data.TrainingData = None
-    _ds_train: tf.data.Dataset = None
-    _ds_val: tf.data.Dataset = None
-    _ds_test: tf.data.Dataset = None
-    _simple_skeleton: data.SimpleSkeleton = None
-    _model: tf.keras.Model = None
-    _optimizer: tf.keras.optimizers.Optimizer = None
-    _loss_fn: tf.keras.losses.Loss = None
-    _training_callbacks: List[tf.keras.callbacks.Callback] = None
-    _history: dict = None
+    def _update_config(self):
+        """Update the configuration with inferred values."""
+        if self.config.data.preprocessing.pad_to_stride is None:
+            self.config.data.preprocessing.pad_to_stride = 1
 
-    @property
-    def img_shape(self):
-        return self._img_shape
-
-    @property
-    def n_output_channels(self):
-        return self._n_output_channels
-
-    @property
-    def data_train(self):
-        return self._train
-
-    @property
-    def data_val(self):
-        return self._val
-
-    @property
-    def data_test(self):
-        return self._test
-
-    @property
-    def ds_train(self):
-        return self._ds_train
-
-    @property
-    def ds_val(self):
-        return self._ds_val
-
-    @property
-    def ds_test(self):
-        return self._ds_test
-
-    @property
-    def simple_skeleton(self):
-        return self._simple_skeleton
-
-    @property
-    def model(self):
-        return self._model
-
-    @property
-    def optimizer(self):
-        return self._optimizer
-
-    @property
-    def loss_fn(self):
-        return self._loss_fn
-
-    @property
-    def training_callbacks(self):
-        return self._training_callbacks
-
-    @property
-    def history(self):
-        return self._history
-
-    def setup_data(
-        self,
-        labels_train: Union[Labels, Text] = None,
-        labels_val: Union[Labels, Text] = None,
-        labels_test: Union[Labels, Text] = None,
-        data_train: Union[data.TrainingData, Text] = None,
-        data_val: Union[data.TrainingData, Text] = None,
-        data_test: Union[data.TrainingData, Text] = None,
-    ):
-
-        train = labels_train
-        if train is None:
-            train = self.training_job.train_set_filename
-        if train is not None and isinstance(train, str):
-            if self.verbosity > 0:
-                print(f"Loading labels: {train}")
-            train = Labels.load_file(train)
-        if train is not None:
-            train = data.TrainingData.from_labels(train)
-        if train is None:
-            train = data_train
-        if train is not None and isinstance(train, str):
-            if self.verbosity > 0:
-                print(f"Loading data: {train}")
-            train = data.TrainingData.load_file(train)
-        if train is None:
-            raise ValueError("Training data was not specified.")
-
-        val = labels_val
-        if val is None:
-            val = self.training_job.val_set_filename
-        if val is not None and isinstance(val, str):
-            if self.verbosity > 0:
-                print(f"Loading labels: {val}")
-            val = Labels.load_file(val)
-        if val is not None:
-            val = data.TrainingData.from_labels(val)
-        if val is None:
-            val = data_val
-        if val is not None and isinstance(val, str):
-            if self.verbosity > 0:
-                print(f"Loading data: {val}")
-            val = data.TrainingData.load_file(val)
-        if val is None and self.training_job.trainer.val_size is not None:
-            train, val = data.split_training_data(
-                train, first_split_fraction=self.training_job.trainer.val_size
-            )
-        if val is None:
-            raise ValueError("Validation set or fraction must be specified.")
-
-        test = labels_test
-        if test is None:
-            test = self.training_job.test_set_filename
-        if test is not None and isinstance(test, str):
-            if self.verbosity > 0:
-                print(f"Loading labels: {test}")
-            test = Labels.load_file(test)
-        if test is not None:
-            test = data.TrainingData.from_labels(test)
-        if test is None:
-            test = data_test
-        if test is not None and isinstance(test, str):
-            if self.verbosity > 0:
-                print(f"Loading data: {test}")
-            test = data.TrainingData.load_file(test)
-
-        # Setup initial zipped datasets.
-        ds_train = train.to_ds()
-        ds_val = val.to_ds()
-        ds_test = None
-        if test is not None:
-            ds_test = test.to_ds()
-
-        # Adjust for input scaling and add padding to the model's minimum multiple.
-        ds_train = data.adjust_dataset_input_scale(
-            ds_train,
-            input_scale=self.training_job.input_scale,
-            min_multiple=self.training_job.model.input_min_multiple,
-            normalize_image=False,
-        )
-        ds_val = data.adjust_dataset_input_scale(
-            ds_val,
-            input_scale=self.training_job.input_scale,
-            min_multiple=self.training_job.model.input_min_multiple,
-            normalize_image=False,
-        )
-
-        if ds_test is not None:
-            ds_test = data.adjust_dataset_input_scale(
-                ds_test,
-                input_scale=self.training_job.input_scale,
-                min_multiple=self.training_job.model.input_min_multiple,
-                normalize_image=False,
+        if self.config.data.instance_cropping.crop_size is None:
+            self.config.data.instance_cropping.crop_size = sleap.nn.data.instance_cropping.find_instance_crop_size(
+                self.data_readers.training_labels,
+                padding=self.config.data.instance_cropping.crop_size_detection_padding,
+                maximum_stride=self.model.maximum_stride,
             )
 
-        # Cache the data with the current transformations.
-        # ds_train = ds_train.cache()
-        # ds_val = ds_val.cache()
-        # if ds_test is not None:
-        #     ds_test = ds_test.cache()
-
-        # Apply augmentations.
-        aug_params = dict(
-            rotate=self.training_job.trainer.augment_rotate,
-            rotation_min_angle=-self.training_job.trainer.augment_rotation,
-            rotation_max_angle=self.training_job.trainer.augment_rotation,
-            scale=self.training_job.trainer.augment_scale,
-            scale_min=self.training_job.trainer.augment_scale_min,
-            scale_max=self.training_job.trainer.augment_scale_max,
-            uniform_noise=self.training_job.trainer.augment_uniform_noise,
-            min_noise_val=self.training_job.trainer.augment_uniform_noise_min_val,
-            max_noise_val=self.training_job.trainer.augment_uniform_noise_max_val,
-            gaussian_noise=self.training_job.trainer.augment_gaussian_noise,
-            gaussian_noise_mean=self.training_job.trainer.augment_gaussian_noise_mean,
-            gaussian_noise_stddev=self.training_job.trainer.augment_gaussian_noise_stddev,
-            contrast=self.training_job.trainer.augment_contrast,
-            contrast_min_gamma=self.training_job.trainer.augment_contrast_min_gamma,
-            contrast_max_gamma=self.training_job.trainer.augment_contrast_max_gamma,
-            brightness=self.training_job.trainer.augment_brightness,
-            brightness_val=self.training_job.trainer.augment_brightness_val,
-        )
-        ds_train = data.augment_dataset(ds_train, **aug_params)
-        ds_val = data.augment_dataset(ds_val, **aug_params)
-
-        if self.training_job.trainer.instance_crop:
-            # Crop around instances.
-
-            if (
-                self.training_job.trainer.bounding_box_size is None
-                or self.training_job.trainer.bounding_box_size <= 0
-            ):
-                # Estimate bounding box size from the data if not specified.
-                # TODO: Do this earlier with more points if available.
-                box_size = data.estimate_instance_crop_size(
-                    train.points,
-                    min_multiple=self.training_job.model.input_min_multiple,
-                    padding=self.training_job.trainer.instance_crop_padding,
-                )
-                self.training_job.trainer.bounding_box_size = box_size
-
-            crop_params = dict(
-                box_height=self.training_job.trainer.bounding_box_size,
-                box_width=self.training_job.trainer.bounding_box_size,
-                use_ctr_node=self.training_job.trainer.instance_crop_use_ctr_node,
-                ctr_node_ind=self.training_job.trainer.instance_crop_ctr_node_ind,
-                normalize_image=True,
+        if self.config.optimization.batches_per_epoch is None:
+            n_training_examples = len(
+                self.data_readers.training_labels_reader.labels.user_instances
             )
-            ds_train = data.instance_crop_dataset(ds_train, **crop_params)
-            ds_val = data.instance_crop_dataset(ds_val, **crop_params)
-            if ds_test is not None:
-                ds_test = data.instance_crop_dataset(ds_test, **crop_params)
+            n_training_batches = (
+                n_training_examples // self.config.optimization.batch_size
+            )
+            self.config.optimization.batches_per_epoch = max(
+                self.config.optimization.min_batches_per_epoch, n_training_batches
+            )
 
-        else:
-            # We're not instance cropping, so at this point the images are still not
-            # normalized. Let's account for that before moving on.
-            ds_train = data.normalize_dataset(ds_train)
-            ds_val = data.normalize_dataset(ds_val)
-            if ds_test is not None:
-                ds_test = data.normalize_dataset(ds_test)
+        if self.config.optimization.val_batches_per_epoch is None:
+            n_validation_examples = len(
+                self.data_readers.validation_labels_reader.labels.user_instances
+            )
+            n_validation_batches = (
+                n_validation_examples // self.config.optimization.batch_size
+            )
+            self.config.optimization.val_batches_per_epoch = max(
+                self.config.optimization.min_val_batches_per_epoch, n_validation_batches
+            )
 
-        # Setup remaining pipeline by output type.
-        # rel_output_scale = (
-        # self.training_job.model.output_scale / self.training_job.input_scale
+    def _setup_pipeline_builder(self):
+        # Initialize pipeline builder.
+        self.pipeline_builder = TopdownConfmapsPipeline(
+            data_config=self.config.data,
+            optimization_config=self.config.optimization,
+            instance_confmap_head=self.model.heads[0],
+        )
+
+    @property
+    def input_keys(self) -> List[Text]:
+        """Return example keys to be mapped to model inputs."""
+        return ["instance_image"]
+
+    @property
+    def output_keys(self) -> List[Text]:
+        """Return example keys to be mapped to model outputs."""
+        return ["instance_confidence_maps"]
+
+    def _setup_visualization(self):
+        """Set up visualization pipelines and callbacks."""
+        # Create visualization/inference pipelines.
+        self.training_viz_pipeline = self.pipeline_builder.make_viz_pipeline(
+            self.data_readers.training_labels_reader, self.keras_model
+        )
+        self.validation_viz_pipeline = self.pipeline_builder.make_viz_pipeline(
+            self.data_readers.validation_labels_reader, self.keras_model
+        )
+
+        # Create static iterators.
+        training_viz_ds_iter = iter(self.training_viz_pipeline.make_dataset())
+        validation_viz_ds_iter = iter(self.validation_viz_pipeline.make_dataset())
+
+        def visualize_example(example):
+            img = example["instance_image"].numpy()
+            cms = example["predicted_instance_confidence_maps"].numpy()
+            pts_gt = example["center_instance"].numpy()
+            pts_pr = example["predicted_center_instance_points"].numpy()
+
+            scale = 1.0
+            if img.shape[0] < 512:
+                scale = 2.0
+            if img.shape[0] < 256:
+                scale = 4.0
+            fig = plot_img(img, dpi=72 * scale, scale=scale)
+            plot_confmaps(cms, output_scale=cms.shape[0] / img.shape[0])
+            plot_peaks(pts_gt, pts_pr, paired=True)
+            return fig
+
+        self.visualization_callbacks.extend(
+            setup_visualization(
+                self.config.outputs,
+                run_path=self.run_path,
+                viz_fn=lambda: visualize_example(next(training_viz_ds_iter)),
+                name=f"train",
+            )
+        )
+        self.visualization_callbacks.extend(
+            setup_visualization(
+                self.config.outputs,
+                run_path=self.run_path,
+                viz_fn=lambda: visualize_example(next(validation_viz_ds_iter)),
+                name=f"validation",
+            )
+        )
+
+
+@attr.s(auto_attribs=True)
+class BottomUpModelTrainer(Trainer):
+    """Trainer for models that output multi-instance confidence maps and PAFs."""
+
+    pipeline_builder: BottomUpPipeline = attr.ib(init=False)
+
+    def _update_config(self):
+        """Update the configuration with inferred values."""
+        if self.config.data.preprocessing.pad_to_stride is None:
+            self.config.data.preprocessing.pad_to_stride = self.model.maximum_stride
+
+        if self.config.optimization.batches_per_epoch is None:
+            n_training_examples = len(self.data_readers.training_labels)
+            n_training_batches = (
+                n_training_examples // self.config.optimization.batch_size
+            )
+            self.config.optimization.batches_per_epoch = max(
+                self.config.optimization.min_batches_per_epoch, n_training_batches
+            )
+
+        if self.config.optimization.val_batches_per_epoch is None:
+            n_validation_examples = len(self.data_readers.validation_labels)
+            n_validation_batches = (
+                n_validation_examples // self.config.optimization.batch_size
+            )
+            self.config.optimization.val_batches_per_epoch = max(
+                self.config.optimization.min_val_batches_per_epoch, n_validation_batches
+            )
+
+    def _setup_pipeline_builder(self):
+        # Initialize pipeline builder.
+        self.pipeline_builder = BottomUpPipeline(
+            data_config=self.config.data,
+            optimization_config=self.config.optimization,
+            confmaps_head=self.model.heads[0],
+            pafs_head=self.model.heads[1],
+        )
+
+    @property
+    def input_keys(self) -> List[Text]:
+        """Return example keys to be mapped to model inputs."""
+        return ["image"]
+
+    @property
+    def output_keys(self) -> List[Text]:
+        """Return example keys to be mapped to model outputs."""
+        return ["confidence_maps", "part_affinity_fields"]
+
+    def _setup_visualization(self):
+        """Set up visualization pipelines and callbacks."""
+        # Create visualization/inference pipelines.
+        self.training_viz_pipeline = self.pipeline_builder.make_viz_pipeline(
+            self.data_readers.training_labels_reader, self.keras_model
+        )
+        self.validation_viz_pipeline = self.pipeline_builder.make_viz_pipeline(
+            self.data_readers.validation_labels_reader, self.keras_model
+        )
+
+        # Create static iterators.
+        training_viz_ds_iter = iter(self.training_viz_pipeline.make_dataset())
+        validation_viz_ds_iter = iter(self.validation_viz_pipeline.make_dataset())
+
+        def visualize_confmaps_example(example):
+            img = example["image"].numpy()
+            cms = example["predicted_confidence_maps"].numpy()
+            pts_gt = example["instances"].numpy()
+            pts_pr = example["predicted_peaks"].numpy()
+
+            scale = 1.0
+            if img.shape[0] < 512:
+                scale = 2.0
+            if img.shape[0] < 256:
+                scale = 4.0
+            fig = plot_img(img, dpi=72 * scale, scale=scale)
+            plot_confmaps(cms, output_scale=cms.shape[0] / img.shape[0])
+            plot_peaks(pts_gt, pts_pr, paired=False)
+            return fig
+
+        def visualize_pafs_example(example):
+            img = example["image"].numpy()
+            pafs = example["predicted_part_affinity_fields"].numpy()
+
+            scale = 1.0
+            if img.shape[0] < 512:
+                scale = 2.0
+            if img.shape[0] < 256:
+                scale = 4.0
+            fig = plot_img(img, dpi=72 * scale, scale=scale)
+            plot_pafs(
+                pafs,
+                output_scale=pafs.shape[0] / img.shape[0],
+                stride=1,
+                scale=8.0,
+                width=1.0,
+            )
+            return fig
+
+        self.visualization_callbacks.extend(
+            setup_visualization(
+                self.config.outputs,
+                run_path=self.run_path,
+                viz_fn=lambda: visualize_confmaps_example(next(training_viz_ds_iter)),
+                name=f"train",
+            )
+        )
+        self.visualization_callbacks.extend(
+            setup_visualization(
+                self.config.outputs,
+                run_path=self.run_path,
+                viz_fn=lambda: visualize_confmaps_example(next(validation_viz_ds_iter)),
+                name=f"validation",
+            )
+        )
+
+        # Memory leak:
+        # self.visualization_callbacks.extend(
+        #     setup_visualization(
+        #         self.config.outputs,
+        #         run_path=self.run_path,
+        #         viz_fn=lambda: visualize_pafs_example(next(training_viz_ds_iter)),
+        #         name=f"train_pafs",
+        #     )
         # )
-        # TODO: Update this to the commented calculation above when model config
-        # includes metadata about absolute input scale.
-        rel_output_scale = self.training_job.model.output_scale
-        output_type = self.training_job.model.output_type
-        if output_type == model.ModelOutputType.CONFIDENCE_MAP:
-            ds_train = data.make_confmap_dataset(
-                ds_train,
-                output_scale=rel_output_scale,
-                sigma=self.training_job.trainer.sigma,
-            )
-            ds_val = data.make_confmap_dataset(
-                ds_val,
-                output_scale=rel_output_scale,
-                sigma=self.training_job.trainer.sigma,
-            )
-            if ds_test is not None:
-                ds_test = data.make_confmap_dataset(
-                    ds_test,
-                    output_scale=rel_output_scale,
-                    sigma=self.training_job.trainer.sigma,
-                )
-            n_output_channels = train.skeleton.n_nodes
-
-        elif output_type == model.ModelOutputType.TOPDOWN_CONFIDENCE_MAP:
-            if not self.training_job.trainer.instance_crop:
-                raise ValueError(
-                    "Cannot train a topddown model without instance cropping enabled."
-                )
-
-            # TODO: Parametrize multiple heads in the training configuration.
-            cm_params = dict(
-                sigma=self.training_job.trainer.sigma,
-                output_scale=rel_output_scale,
-                with_instance_cms=False,
-                with_all_peaks=False,
-                with_ctr_peaks=True,
-            )
-            ds_train = data.make_instance_confmap_dataset(ds_train, **cm_params)
-            ds_val = data.make_instance_confmap_dataset(ds_val, **cm_params)
-            if ds_test is not None:
-                ds_test = data.make_instance_confmap_dataset(ds_test, **cm_params)
-            n_output_channels = train.skeleton.n_nodes
-
-        elif output_type == model.ModelOutputType.PART_AFFINITY_FIELD:
-            ds_train = data.make_paf_dataset(
-                ds_train,
-                train.skeleton.edges,
-                output_scale=rel_output_scale,
-                distance_threshold=self.training_job.trainer.sigma,
-            )
-            ds_val = data.make_paf_dataset(
-                ds_val,
-                train.skeleton.edges,
-                output_scale=rel_output_scale,
-                distance_threshold=self.training_job.trainer.sigma,
-            )
-            if ds_test is not None:
-                ds_test = data.make_paf_dataset(
-                    ds_test,
-                    train.skeleton.edges,
-                    output_scale=rel_output_scale,
-                    distance_threshold=self.training_job.trainer.sigma,
-                )
-            n_output_channels = train.skeleton.n_edges * 2
-
-        elif output_type == model.ModelOutputType.CENTROIDS:
-            cm_params = dict(
-                sigma=self.training_job.trainer.sigma,
-                output_scale=rel_output_scale,
-                use_ctr_node=self.training_job.trainer.instance_crop_use_ctr_node,
-                ctr_node_ind=self.training_job.trainer.instance_crop_ctr_node_ind,
-            )
-
-            ds_train = data.make_centroid_confmap_dataset(ds_train, **cm_params)
-            ds_val = data.make_centroid_confmap_dataset(ds_val, **cm_params)
-            if ds_test is not None:
-                ds_test = data.make_centroid_confmap_dataset(ds_test, **cm_params)
-
-            n_output_channels = 1
-
-        else:
-            raise ValueError(
-                f"Invalid model output type specified ({self.training_job.model.output_type})."
-            )
-
-        if self.training_job.trainer.steps_per_epoch <= 0:
-            self.training_job.trainer.steps_per_epoch = int(
-                len(train.images) // self.training_job.trainer.batch_size
-            )
-        if self.training_job.trainer.val_steps_per_epoch <= 0:
-            self.training_job.trainer.val_steps_per_epoch = int(
-                np.ceil(len(val.images) / self.training_job.trainer.batch_size)
-            )
-
-        # Set up shuffling, batching, repeating and prefetching.
-        shuffle_buffer_size = self.training_job.trainer.shuffle_buffer_size
-        if shuffle_buffer_size is None or shuffle_buffer_size <= 0:
-            shuffle_buffer_size = len(train.images)
-        ds_train = (
-            ds_train.shuffle(shuffle_buffer_size)
-            .repeat(-1)
-            .batch(self.training_job.trainer.batch_size, drop_remainder=True)
-            .prefetch(buffer_size=self.training_job.trainer.steps_per_epoch)
-            # .prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
-        )
-        ds_val = (
-            ds_val.repeat(-1)
-            .batch(self.training_job.trainer.batch_size)
-            .prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
-        )
-        if ds_test is not None:
-            ds_test = ds_val.batch(self.training_job.trainer.batch_size).prefetch(
-                buffer_size=self.training_job.trainer.val_steps_per_epoch
-                # buffer_size=tf.data.experimental.AUTOTUNE
-            )
-
-        # Get image shape after all the dataset transformations are applied.
-        img_shape = list(ds_val.take(1))[0][0][0].shape
-
-        # Update internal attributes.
-        self._img_shape = img_shape
-        self._n_output_channels = n_output_channels
-        self._train = train
-        self._val = val
-        self._test = test
-        self._ds_train = ds_train
-        self._ds_val = ds_val
-        self._ds_test = ds_test
-        self._simple_skeleton = train.skeleton
-
-        if (
-            self.training_job.model.skeletons is None
-            or len(self.training_job.model.skeletons) == 0
-        ):
-            # Save skeleton to training job/model config if none were already stored.
-            skeleton = Skeleton.from_names_and_edge_inds(
-                node_names=self.simple_skeleton.node_names,
-                edge_inds=self.simple_skeleton.edge_inds,
-            )
-            self.training_job.model.skeletons = [skeleton]
-
-        if self.verbosity > 0:
-            print("Data:")
-            print("  Input scale:", self.training_job.input_scale)
-            print("  Relative output scale:", self.training_job.model.output_scale)
-            print(
-                "  Output scale:",
-                self.training_job.input_scale * self.training_job.model.output_scale,
-            )
-            print("  Training data:", self.data_train.images.shape)
-            print("  Validation data:", self.data_val.images.shape)
-            if self.data_test is not None:
-                print("  Test data:", self.data_test.images.shape)
-            else:
-                print("  Test data: N/A")
-            print("  Image shape:", self.img_shape)
-            print("  Output channels:", self.n_output_channels)
-            print("  Skeleton:", self.simple_skeleton)
-            print()
-
-        return ds_train, ds_val, ds_test
-
-    def setup_callbacks(self) -> List[tf.keras.callbacks.Callback]:
-
-        callback_list = []
-
-        if self.training_job.trainer.reduce_lr_on_plateau:
-            callback_list.append(
-                callbacks.ReduceLROnPlateau(
-                    min_delta=self.training_job.trainer.reduce_lr_min_delta,
-                    factor=self.training_job.trainer.reduce_lr_factor,
-                    patience=self.training_job.trainer.reduce_lr_patience,
-                    cooldown=self.training_job.trainer.reduce_lr_cooldown,
-                    min_lr=self.training_job.trainer.reduce_lr_min_lr,
-                    monitor=self.training_job.trainer.monitor_metric_name,
-                    mode="auto",
-                    verbose=self.verbosity,
-                )
-            )
-
-        if self.training_job.trainer.early_stopping:
-            callback_list.append(
-                callbacks.EarlyStopping(
-                    monitor=self.training_job.trainer.monitor_metric_name,
-                    min_delta=self.training_job.trainer.early_stopping_min_delta,
-                    patience=self.training_job.trainer.early_stopping_patience,
-                    verbose=self.verbosity,
-                    mode="min",
-                )
-            )
-
-        if self.training_job.run_path is not None:
-
-            if self.save_viz:
-                if self.training_job.model.output_type in [
-                    model.ModelOutputType.CONFIDENCE_MAP,
-                    model.ModelOutputType.TOPDOWN_CONFIDENCE_MAP,
-                    model.ModelOutputType.CENTROIDS,
-                ]:
-                    callback_list.append(
-                        callbacks.MatplotlibSaver(
-                            save_folder=os.path.join(self.training_job.run_path, "viz"),
-                            plot_fn=lambda: self.visualize_predictions(
-                                training_set=True
-                            ),
-                            prefix="train",
-                        )
-                    )
-                    callback_list.append(
-                        callbacks.MatplotlibSaver(
-                            save_folder=os.path.join(self.training_job.run_path, "viz"),
-                            plot_fn=lambda: self.visualize_predictions(
-                                training_set=False
-                            ),
-                            prefix="val",
-                        )
-                    )
-
-            if self.training_job.trainer.csv_logging:
-                callback_list.append(
-                    callbacks.CSVLogger(
-                        filename=os.path.join(
-                            self.training_job.run_path,
-                            self.training_job.trainer.csv_log_filename,
-                        )
-                    )
-                )
-
-            if self.tensorboard:
-                if self.tensorboard_dir is None:
-                    self.tensorboard_dir = self.training_job.run_path
-                callback_list.append(
-                    callbacks.TensorBoard(
-                        log_dir=self.tensorboard_dir,
-                        update_freq=self.tensorboard_freq,
-                        profile_batch=2 if self.tensorboard_profiling else 0,
-                    )
-                )
-
-                if self.training_job.model.output_type in [
-                    model.ModelOutputType.CONFIDENCE_MAP,
-                    model.ModelOutputType.TOPDOWN_CONFIDENCE_MAP,
-                    model.ModelOutputType.CENTROIDS,
-                ]:
-                    callback_list.append(
-                        callbacks.TensorBoardMatplotlibWriter(
-                            log_dir=os.path.join(self.tensorboard_dir, "train"),
-                            plot_fn=lambda: self.visualize_predictions(
-                                training_set=True
-                            ),
-                            tag="viz_train",
-                        )
-                    )
-                    callback_list.append(
-                        callbacks.TensorBoardMatplotlibWriter(
-                            log_dir=os.path.join(self.tensorboard_dir, "validation"),
-                            plot_fn=lambda: self.visualize_predictions(
-                                training_set=False
-                            ),
-                            tag="viz_val",
-                        )
-                    )
-
-            if self.training_job.trainer.save_every_epoch:
-                if self.training_job.newest_model_filename is None:
-                    self.training_job.newest_model_filename = "newest_model.h5"
-
-                callback_list.append(
-                    callbacks.ModelCheckpoint(
-                        filepath=os.path.join(
-                            self.training_job.run_path,
-                            self.training_job.newest_model_filename,
-                        ),
-                        monitor=self.training_job.trainer.monitor_metric_name,
-                        save_best_only=False,
-                        save_weights_only=False,
-                        save_freq="epoch",
-                        verbose=self.verbosity,
-                    )
-                )
-
-            if self.training_job.trainer.save_best_val:
-                if self.training_job.best_model_filename is None:
-                    self.training_job.best_model_filename = "best_model.h5"
-
-                callback_list.append(
-                    callbacks.ModelCheckpoint(
-                        filepath=os.path.join(
-                            self.training_job.run_path,
-                            self.training_job.best_model_filename,
-                        ),
-                        monitor=self.training_job.trainer.monitor_metric_name,
-                        save_best_only=True,
-                        save_weights_only=False,
-                        save_freq="epoch",
-                        verbose=self.verbosity,
-                    )
-                )
-
-            if self.training_job.trainer.save_final_model:
-                if self.training_job.final_model_filename is None:
-                    self.training_job.final_model_filename = "final_model.h5"
-
-                callback_list.append(
-                    callbacks.ModelCheckpointOnEvent(
-                        filepath=os.path.join(
-                            self.training_job.run_path,
-                            self.training_job.final_model_filename,
-                        ),
-                        event="train_end",
-                    )
-                )
-
-            self.training_job.save(
-                os.path.join(self.training_job.run_path, "training_job.json")
-            )
-
-        if self.zmq:
-            # Callbacks: ZMQ control
-            if self.control_zmq_port is not None:
-                callback_list.append(
-                    callbacks.TrainingControllerZMQ(
-                        address="tcp://127.0.0.1",
-                        port=self.control_zmq_port,
-                        topic="",
-                        poll_timeout=10,
-                    )
-                )
-
-            # Callbacks: ZMQ progress reporter
-            if self.progress_report_zmq_port is not None:
-                callback_list.append(
-                    callbacks.ProgressReporterZMQ(
-                        port=self.progress_report_zmq_port,
-                        what=str(self.training_job.model.output_type),
-                    )
-                )
-
-        self._training_callbacks = callback_list
-        return callback_list
-
-    def setup_optimization(self):
-
-        if self.training_job.trainer.optimizer.lower() == "adam":
-            optimizer = tf.keras.optimizers.Adam(
-                learning_rate=self.training_job.trainer.learning_rate,
-                amsgrad=self.training_job.trainer.amsgrad,
-            )
-
-        elif self.training_job.trainer.optimizer.lower() == "rmsprop":
-            optimizer = tf.keras.optimizers.Adam(
-                learning_rate=self.training_job.trainer.learning_rate
-            )
-
-        else:
-            raise ValueError(
-                "Unrecognized optimizer specified: %s",
-                self.training_job.trainer.optimizer,
-            )
-
-        # Construct loss and metrics.
-        metrics = []
-        mse_loss = tf.keras.losses.MeanSquaredError()
-
-        if (
-            self.training_job.trainer.ohkm
-            and self.training_job.model.output_type != model.ModelOutputType.CENTROIDS
-        ):
-            # Add OHKM loss if not training centroids (they have a single channel).
-            ohkm_loss = OHKMLoss(
-                K=min(self.training_job.trainer.ohkm_K, self.n_output_channels - 1),
-                weight=self.training_job.trainer.ohkm_weight,
-            )
-
-            def loss_fn(y_gt, y_pr):
-                return mse_loss(y_gt, y_pr) + ohkm_loss(y_gt, y_pr)
-
-            metrics.append(ohkm_loss)
-
-        else:
-            loss_fn = mse_loss
-
-        if (
-            self.training_job.trainer.node_metrics
-            and self.training_job.model.output_type
-            in [
-                model.ModelOutputType.CONFIDENCE_MAP,
-                model.ModelOutputType.TOPDOWN_CONFIDENCE_MAP,
-            ]
-        ):
-            # Add node-wise metrics when training confidence map models.
-            for node_ind, node_name in enumerate(self.simple_skeleton.node_names):
-                metrics.append(NodeLoss(node_ind=node_ind, name=node_name))
-
-        self._optimizer = optimizer
-        self._loss_fn = loss_fn
-        self._metrics = metrics
-
-        return optimizer, loss_fn
-
-    def setup_model(self, img_shape=None, n_output_channels=None):
-
-        if img_shape is None:
-            img_shape = self.img_shape
-
-        if n_output_channels is None:
-            n_output_channels = self.n_output_channels
-
-        input_layer = tf.keras.layers.Input(img_shape, name="input")
-
-        outputs = self.training_job.model.output(input_layer, n_output_channels)
-        if isinstance(outputs, tf.keras.Model):
-            outputs = outputs.outputs
-
-        keras_model = tf.keras.Model(
-            input_layer, outputs, name=self.training_job.model.backbone_name
-        )
-
-        if self.verbosity > 0:
-            print(f"Model: {keras_model.name}")
-            print(f"  Input: {keras_model.input_shape}")
-            print(f"  Output: {keras_model.output_shape}")
-            print(f"  Layers: {len(keras_model.layers)}")
-            print(f"  Params: {keras_model.count_params():3,}")
-            print()
-
-        self._model = keras_model
-
-        return keras_model
-
-    def train(
-        self,
-        labels_train: Union[Labels, Text] = None,
-        labels_val: Union[Labels, Text] = None,
-        labels_test: Union[Labels, Text] = None,
-        data_train: Union[data.TrainingData, Text] = None,
-        data_val: Union[data.TrainingData, Text] = None,
-        data_test: Union[data.TrainingData, Text] = None,
-        extra_callbacks: List[tf.keras.callbacks.Callback] = None,
-    ) -> tf.keras.Model:
-
-        self.setup_data(
-            labels_train=labels_train,
-            labels_val=labels_val,
-            labels_test=labels_test,
-            data_train=data_train,
-            data_val=data_val,
-            data_test=data_test,
-        )
-        self.setup_model()
-        self.setup_optimization()
-
-        if (
-            self.training_job.save_dir is not None
-            and self.training_job.run_name is None
-        ):
-            # Generate new run name if save_dir specified but not the run name.
-            self.training_job.run_name = self.training_job.new_run_name(
-                suffix=f"n={len(self.data_train.images)}"
-            )
-
-        if self.training_job.run_path is not None:
-            if not os.path.exists(self.training_job.run_path):
-                os.makedirs(self.training_job.run_path, exist_ok=True)
-            if self.verbosity > 0:
-                print(f"Run path: {self.training_job.run_path}")
-        else:
-            if self.verbosity > 0:
-                print(f"Run path: Not provided, nothing will be saved to disk.")
-
-        self.setup_callbacks()
-        if extra_callbacks is not None:
-            self.training_callbacks.extend(extra_callbacks)
-        self.model.compile(
-            optimizer=self.optimizer, loss=self.loss_fn, metrics=self._metrics
-        )
-
-        t0 = datetime.now()
-        if self.verbosity > 0:
-            print(f"Training started: {str(t0)}")
-
-        self._history = self.model.fit(
-            self.ds_train,
-            epochs=self.training_job.trainer.num_epochs,
-            callbacks=self.training_callbacks,
-            validation_data=self.ds_val,
-            steps_per_epoch=self.training_job.trainer.steps_per_epoch,
-            validation_steps=self.training_job.trainer.val_steps_per_epoch,
-            verbose=self.verbosity,
-        )
-        t1 = datetime.now()
-        elapsed = t1 - t0
-        if self.verbosity > 0:
-            print(f"Training finished: {str(t1)}")
-            print(f"Total runtime: {str(elapsed)}")
-
-        # TODO: Evaluate final test set performance if available
-
-        return self.model
-
-    @classmethod
-    def set_run_name(
-        cls, training_job: job.TrainingJob, labels_filename: str,
-    ):
-        training_job.save_dir = os.path.join(os.path.dirname(labels_filename), "models")
-        training_job.run_name = training_job.new_run_name(check_existing=True)
-
-        # Make the run directory if it doesn't exist, since when we load the
-        # saved job the save_dir will be reset if the dir doesn't exist
-        os.makedirs(training_job.run_path)
-
-    @classmethod
-    def train_subprocess(
-        cls,
-        training_job: job.TrainingJob,
-        labels_filename: str,
-        waiting_callback: Optional[Callable] = None,
-        update_run_name: bool = True,
-        save_viz: bool = False,
-    ):
-        """Runs training inside subprocess."""
-        import subprocess as sub
-        import time
-        import tempfile
-
-        if update_run_name:
-            cls.set_run_name(training_job, labels_filename)
-
-        run_name = training_job.run_name
-        run_path = training_job.run_path
-
-        with tempfile.TemporaryDirectory() as temp_dir:
-
-            # Write a temporary file of the TrainingJob so that we can respect
-            # any changed made to the job attributes after it was loaded.
-            temp_filename = (
-                datetime.now().strftime("%y%m%d_%H%M%S") + "_training_job.json"
-            )
-            training_job_path = os.path.join(temp_dir, temp_filename)
-            job.TrainingJob.save_json(training_job, training_job_path)
-
-            # Build CLI arguments for training
-            cli_args = [
-                "python",
-                "-m",
-                "sleap.nn.training",
-                training_job_path,
-                labels_filename,
-                "--zmq",
-                "--run_name",
-                run_name,
-            ]
-
-            if save_viz:
-                cli_args.append("--save_viz")
-
-            print(cli_args)
-
-            # Run training in a subprocess
-            # with sub.Popen(cli_args, stdout=sub.PIPE) as proc:
-            with sub.Popen(cli_args) as proc:
-
-                # Wait till training is done, calling a callback if given.
-                while proc.poll() is None:
-                    if waiting_callback is not None:
-                        if waiting_callback() == -1:
-                            # -1 signals user cancellation
-                            return "", False
-                    time.sleep(0.1)
-
-                success = proc.returncode == 0
-
-        return run_path, success
-
-    def visualize_predictions(
-        self, training_set: bool = False, figsize=(6, 6)
-    ) -> matplotlib.figure.Figure:
-        """Plot confidence map visualizations.
-
-        This method is primarily intended to be used as a callback for TensorBoard or
-        other forms of visualization during training.
-
-        Args:
-            training_set: If True, will sample from the training set for data to visualize.
-                If False, the validation set will be sampled.
-            figsize: Size of the output figure (width, height) in inches. See `plt.figure`
-                for more info on sizing.
-
-        Returns:
-            A `matplotlib.figure.Figure` instance. This object provides `show` and
-            `savefig` methods which can be used to display or render the visualized
-            plots.
-
-            This will NOT display any figure until one of the above methods are called.
-        """
-        topdown = (
-            self.training_job.model.output_type
-            == model.ModelOutputType.TOPDOWN_CONFIDENCE_MAP
-        )
-
-        # Draw a batch from the specified dataset.
-        if training_set:
-            X, Y_gt = next(iter(self.ds_train))
-        else:
-            X, Y_gt = next(iter(self.ds_val))
-
-        # Select a single sample from the batch.
-        ind = np.random.randint(0, len(X))
-        X = X[ind : (ind + 1)]
-
-        if isinstance(Y_gt, (list, tuple)):
-            Y_gt = Y_gt[0]
-        Y_gt = Y_gt[ind : (ind + 1)]
-
-        stop_training = self.model.stop_training
-
-        # Predict on single sample.
-        Y_pr = self.model.predict(X)
-        cm_scale = Y_pr.shape[1] / X.shape[1]
-
-        self.model.stop_training = stop_training
-
-        # Find peaks.
-        if topdown:
-            peaks_gt, peak_vals_gt = peak_finding.find_global_peaks(Y_gt)
-            peaks_pr, peak_vals_pr = peak_finding.find_global_peaks(Y_pr)
-            peaks_gt = peaks_gt.numpy() / cm_scale
-            peaks_pr = peaks_pr.numpy() / cm_scale
-            peaks_gt[peak_vals_gt < 0.3, :] = np.nan
-            peaks_pr[peak_vals_pr < 0.3, :] = np.nan
-
-        else:
-            peaks_gt = peak_finding.find_local_peaks(Y_gt)[0].numpy() / cm_scale
-            peaks_pr = peak_finding.find_local_peaks(Y_pr)[0].numpy() / cm_scale
-
-        # Drop singleton sample dimension.
-        img = X[0]
-        cm = Y_pr[0]
-
-        # Plot.
-        fig = plt.figure(figsize=figsize)
-        ax = fig.add_axes([0, 0, 1, 1], frameon=False)
-        ax.get_xaxis().set_visible(False)
-        ax.get_yaxis().set_visible(False)
-        plt.autoscale(tight=True)
-        ax.imshow(
-            np.squeeze(img),
-            cmap="gray",
-            origin="lower",
-            extent=[-0.5, img.shape[1] - 0.5, -0.5, img.shape[0] - 0.5],
-        )
-        ax.imshow(
-            np.squeeze(Y_pr.max(axis=-1)),
-            alpha=0.5,
-            origin="lower",
-            extent=[-0.5, img.shape[1] - 0.5, -0.5, img.shape[0] - 0.5],
-        )
-
-        if topdown:
-            # Draw error line for topdown since no matching is required as
-            # (there is only one peak per node type).
-            for p_gt, p_pr in zip(peaks_gt, peaks_pr):
-                ax.plot([p_gt[2], p_pr[2]], [p_gt[1], p_pr[1]], "r-", alpha=0.5, lw=2)
-
-        ax.plot(peaks_gt[:, 2], peaks_gt[:, 1], ".", alpha=0.6, ms=10)
-        ax.plot(peaks_pr[:, 2], peaks_pr[:, 1], ".", alpha=0.6, ms=10)
-        ax.set_xticks([])
-        ax.set_yticks([])
-        ax.grid(False)
-
-        return fig
+        # self.visualization_callbacks.extend(
+        #     setup_visualization(
+        #         self.config.outputs,
+        #         run_path=self.run_path,
+        #         viz_fn=lambda: visualize_pafs_example(next(validation_viz_ds_iter)),
+        #         name=f"validation_pafs",
+        #     )
+        # )
 
 
 def main():
-    """CLI for training."""
+    """Create CLI for training and run."""
+    import argparse
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -1076,19 +1146,12 @@ def main():
         default="",
         help="Run name to use when saving file, overrides other run name settings.",
     )
-    parser.add_argument(
-        "--prefix",
-        action="append",
-        help="Prefix to prepend to run name. Can be specified multiple times.",
-    )
-    parser.add_argument(
-        "--suffix",
-        action="append",
-        help="Suffix to append to run name. Can be specified multiple times.",
-    )
+    parser.add_argument("--prefix", default="", help="Prefix to prepend to run name.")
+    parser.add_argument("--suffix", default="", help="Suffix to append to run name.")
 
     args, _ = parser.parse_known_args()
 
+    # Find job configuration file.
     job_filename = args.training_job_path
     if not os.path.exists(job_filename):
         profile_dir = get_package_file("sleap/training_profiles")
@@ -1098,67 +1161,51 @@ def main():
         else:
             raise FileNotFoundError(f"Could not find training profile: {job_filename}")
 
-    labels_train_path = args.labels_path
+    # Load job configuration.
+    job_config = TrainingJobConfig.load_json(job_filename)
 
-    training_job = job.TrainingJob.load_json(job_filename)
-
-    # Set data paths in job.
-    training_job.labels_filename = labels_train_path
-    if args.val_labels is not None:
-        training_job.val_set_filename = args.val_labels
-    if args.test_labels is not None:
-        training_job.test_set_filename = args.test_labels
-
-    if training_job.save_dir is None:
-        # Default save dir to models subdir of training labels.
-        training_job.save_dir = os.path.join(
-            os.path.dirname(labels_train_path), "models"
-        )
-
-    if args.run_name:
-        training_job.run_name = args.run_name
-    else:
-        prefixes = args.prefix or []
-        if training_job.run_name is not None:
-            # Add run name specified in file to prefixes.
-            prefixes.append(training_job.run_name)
-
-        # Create new run name.
-        training_job.run_name = training_job.new_run_name(
-            prefix=prefixes, suffix=args.suffix, check_existing=True
-        )
-
-    # Print path to training job run.
+    # Override config settings for CLI-based training.
+    job_config.outputs.save_outputs = True
+    job_config.outputs.tensorboard.write_logs = args.tensorboard
+    job_config.outputs.zmq.publish_updates = args.zmq
+    job_config.outputs.zmq.subscribe_to_controller = args.zmq
+    if args.run_name != "":
+        job_config.outputs.run_name = args.run_name
+    if args.prefix != "":
+        job_config.outputs.run_name_prefix = args.prefix
+    if args.suffix != "":
+        job_config.outputs.run_name_suffix = args.suffix
+    job_config.outputs.save_visualizations = args.save_viz
 
     # NOTE: This must be first line printed to stdout, otherwise we won't be
     # able to access it when running training in subprocess via Popen.
+    # logger.info(training_job.run_path)
+    # logger.info()
+    ## Now this is what is printed: logger.info(f"Created run path: {self.run_path}")
+    # TODO: Set the run_name, prefix and suffix explicitly so this doesn't need to be
+    #   parsed from stdout.
 
-    print(training_job.run_path)
-    print()
-
-    print(f"Training labels file: {labels_train_path}")
-    print(f"Training profile: {job_filename}")
-    print()
+    logger.info(f"Training labels file: {args.labels_path}")
+    logger.info(f"Training profile: {job_filename}")
+    logger.info("")
 
     # Log configuration to console.
-    print("Arguments:")
-    print(json.dumps(vars(args), indent=4))
-    print()
-    print("Training job:")
-    print(json.dumps(job.TrainingJob._to_dicts(training_job), indent=4))
-    print()
+    logger.info("Arguments:")
+    logger.info(json.dumps(vars(args), indent=4))
+    logger.info("")
+    logger.info("Training job:")
+    logger.info(job_config.to_json())
+    logger.info("")
 
-    print("Initializing training...")
+    logger.info("Initializing trainer...")
     # Create a trainer and run!
-    trainer = Trainer(
-        training_job,
-        tensorboard=args.tensorboard,
-        save_viz=args.save_viz,
-        zmq=args.zmq,
-        verbosity=2,
+    trainer = Trainer.from_config(
+        job_config,
+        training_labels=args.labels_path,
+        validation_labels=args.val_labels,
+        test_labels=args.test_labels,
     )
-
-    trained_model = trainer.train()
+    trainer.train()
 
 
 if __name__ == "__main__":

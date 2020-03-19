@@ -192,7 +192,7 @@ class TrackListOverlay:
 
     def add_to_scene(self, video: Video, frame_idx: int):
         """Adds track list as overlay on video."""
-        from sleap.gui.video import QtTextWithBackground
+        from sleap.gui.widgets.video import QtTextWithBackground
 
         html = ""
         num_to_show = min(9, len(self.labels.tracks))

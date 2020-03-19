@@ -1,0 +1,279 @@
+training:
+
+- name: _pipeline
+  label: Training/Inference Pipeline Type
+  type: stacked
+  default: "multi-animal bottom-up "
+  options: "multi-animal bottom-up,multi-animal top-down,single animal"
+
+  multi-animal bottom-up:
+  - type: text
+    text: '<b>Multi-Animal Bottom-Up Pipeline</b>:<br />
+      This pipeline uses single model with two output heads:
+      a "<u>confidence map</u>" head to predicts the
+      nodes for an entire image and a "<u>part affinity field</u>" head to group
+      the nodes into distinct animal instances.'
+
+  - name: model.heads.multi_instance.confmaps.sigma
+    label: Sigma for Nodes
+    type: double
+    default: 5.0
+    help: Spread of the Gaussian distribution of the confidence maps as a scalar float.
+      Smaller values are more precise but may be difficult to learn as they have a
+      lower density within the image space. Larger values are easier to learn but
+      are less precise with respect to the peak coordinate. This spread is in units
+      of pixels of the model input image, i.e., the image resolution after any input
+      scaling is applied.
+
+  - name: model.heads.multi_instance.pafs.sigma
+    label: Sigma for Edges
+    type: double
+    default: 15.0
+    help: Spread of the Gaussian distribution that weigh the part affinity fields
+      as a function of their distance from the edge they represent. Smaller values
+      are more precise but may be difficult to learn as they have a lower density
+      within the image space. Larger values are easier to learn but are less precise
+      with respect to the edge distance, so can be less useful in disambiguating between
+      edges that are nearby and parallel in direction. This spread is in units of
+      pixels of the model input image, i.e., the image resolution after any input
+      scaling is applied.
+
+  multi-animal top-down:
+  - type: text
+    text: '<b>Multi-Animal Top-Down Pipeline</b>:<br />
+    This pipeline uses two models: a "<u>centroid</u>" model to
+    locate and crop around each animal in the frame, and a
+    "<u>centered-instance confidence map</u>" model for predicted node locations
+    for each individual animal predicted by the centroid model.'
+
+  - default: 5.0
+    help: Spread of the Gaussian distribution of the confidence maps as a scalar float.
+      Smaller values are more precise but may be difficult to learn as they have a
+      lower density within the image space. Larger values are easier to learn but
+      are less precise with respect to the peak coordinate. This spread is in units
+      of pixels of the model input image, i.e., the image resolution after any input
+      scaling is applied.
+    label: Sigma for Centroids
+    name: model.heads.centroid.sigma
+    type: double
+
+  - default: null
+    help: Text name of a body part (node) to use as the anchor point. If None, the
+      midpoint of the bounding box of all visible instance points will be used as
+      the anchor. The bounding box midpoint will also be used if the anchor part is
+      specified but not visible in the instance. Setting a reliable anchor point can
+      significantly improve topdown model accuracy as they benefit from a consistent
+      geometry of the body parts relative to the center of the image.
+    label: Anchor Part
+    name: model.heads.centered_instance.anchor_part
+    type: optional_list
+
+  - default: 5.0
+    help: Spread of the Gaussian distribution of the confidence maps as a scalar float.
+      Smaller values are more precise but may be difficult to learn as they have a
+      lower density within the image space. Larger values are easier to learn but
+      are less precise with respect to the peak coordinate. This spread is in units
+      of pixels of the model input image, i.e., the image resolution after any input
+      scaling is applied.
+    label: Sigma for Nodes
+    name: model.heads.centered_instance.sigma
+    type: double
+
+  single animal:
+  - type: text
+    text: '<b>Single Animal Pipeline</b>:<br />
+      This pipeline uses a single "<u>confidence map</u>"
+      model to predicts the nodes for an entire image and then groups all of
+      these nodes into a single animal instance.<br /><br />
+      For predicting on videos with more than one animal per frame, use a
+      multi-animal pipeline (even if your training data has one instance per frame).'
+
+  - name: model.heads.single_instance.sigma
+    label: Sigma for Nodes
+    type: double
+    default: 5.0
+    help: Spread of the Gaussian distribution of the confidence maps as a scalar float.
+      Smaller values are more precise but may be difficult to learn as they have a
+      lower density within the image space. Larger values are easier to learn but
+      are less precise with respect to the peak coordinate. This spread is in units
+      of pixels of the model input image, i.e., the image resolution after any input
+      scaling is applied.
+
+#general:
+#- default: 8
+#  help: Number of examples per minibatch, i.e., a single step of training. Higher
+#    numbers can increase generalization performance by averaging model gradient updates
+#    over a larger number of examples at the cost of considerably more GPU memory,
+#    especially for larger sized images. Lower numbers may lead to overfitting, but
+#    may be beneficial to the optimization process when few but varied examples are
+#    available.
+#  label: Batch Size
+#  name: optimization.batch_size
+#  type: int
+
+- type: text
+  text: '<b>Input Data Options</b>'
+
+- default: ''
+  help: If set, converts the image to RGB/grayscale if not already.
+  label: Convert Image To
+  name: _ensure_channels
+  options: ',RGB,grayscale'
+  type: list
+
+- type: text
+  text: '<b>Output Options</b>'
+
+- default: ''
+  help: String to prepend to the run name. This is useful to prevent multiple runs
+    started at the same exact time to be mapped to the same folder, or when a fixed
+    run name is specified.
+  label: Run Name Prefix
+  name: outputs.run_name_prefix
+  type: string
+- default: models
+  help: 'Path to the folder that run data should be stored in. All the data for a
+    single run are stored in the path: "{runs_folder}/{run_name_prefix}{run_name}{run_name_suffix}"
+    These are specified separately to allow the `run_name` to be auto-generated. This
+    can be specified as an absolute or relative path. Relative paths specify a path
+    with respect to the current working directory. Non-existing folders will be created
+    if they do not already exist. Defaults to the "models" subdirectory of the current
+    working directory.'
+  label: Runs Folder
+  name: outputs.runs_folder
+  type: string
+- default: ''
+  help: A list of strings to use as "tags" that can be used to organize multiple runs.
+    These are not used for anything during training or inference, so they can be used
+    to store arbitrary user-specified metadata.
+  label: Tags
+  name: outputs.tags
+  type: string_list
+- default: true
+  help: 'If True, the model will be saved at the end of an epoch if the validation
+    loss has improved. If enabled, the model will be serialized to: "{run_folder}/best_model.h5"'
+  label: Best Model
+  name: outputs.checkpointing.best_model
+  type: bool
+- default: false
+  help: 'If True, the model will be saved at the end of every epoch, regardless of
+    whether there was an improvement detected, but will overwrite the previous latest
+    model. If enabled, the model will be serialized to: "{run_folder}/latest_model.h5"'
+  label: Latest Model
+  name: outputs.checkpointing.latest_model
+  type: bool
+- default: false
+  help: 'If True, the model will be saved at the end of training, whether it was stopped
+    early or finished all epochs. If enabled, the model will be serialized to: "{run_folder}/final_model.h5"'
+  label: Final Model
+  name: outputs.checkpointing.final_model
+  type: bool
+- default: false
+  help: If True, logging data will be written to disk within the run folder. TensorBoard
+    can monitor either the specific run folder, or the parent runs folder that may
+    contain multiple models/runs. Both will be displayed correctly in the dashboard.
+  label: Write Tensorboard Logs
+  name: outputs.tensorboard.write_logs
+  type: bool
+
+- name: _save_viz
+  label: Visualize Predictions During Training
+  type: bool
+  default: False
+
+- name: _predict_frames
+  label: Predict On
+  type: list
+  options: current frame,random frames
+  default: current frame
+
+- name: _view_datagen
+  label: View Training Image Inputs...
+  type: button
+
+inference:
+
+- name: _pipeline
+  label: Training/Inference Pipeline Type
+  type: stacked
+  default: "multi-animal bottom-up "
+  options: "multi-animal bottom-up,multi-animal top-down,single animal"
+
+  multi-animal bottom-up:
+  - type: text
+    text: '<b>Multi-Animal Bottom-Up Pipeline</b>:<br />
+      This pipeline uses single model with two output heads:
+      a "<u>confidence map</u>" head to predicts the
+      nodes for an entire image and a "<u>part affinity field</u>" head to group
+      the nodes into distinct animal instances.'
+
+  multi-animal top-down:
+  - type: text
+    text: '<b>Multi-Animal Top-Down Pipeline</b>:<br />
+    This pipeline uses two models: a "<u>centroid</u>" model to
+    locate and crop around each animal in the frame, and a
+    "<u>centered-instance confidence map</u>" model for predicted node locations
+    for each individual animal predicted by the centroid model.'
+
+  single animal:
+  - type: text
+    text: '<b>Single Animal Pipeline</b>:<br />
+      This pipeline uses a single "<u>confidence map</u>"
+      model to predicts the nodes for an entire image and then groups all of
+      these nodes into a single animal instance.<br /><br />
+      For predicting on videos with more than one animal per frame, use a
+      multi-animal pipeline (even if your training data has one instance per frame).'
+
+- name: tracking.tracker
+  label: Tracker (cross-frame identity) Method
+  type: stacked
+  default: none
+  options: none,flow,simple
+
+  none:
+
+  flow:
+    - name: tracking.similarity
+      label: Similarity Method
+      type: list
+      default: instance
+      options: instance,centroid,iou
+    - name: tracking.matching
+      label: Matching Method
+      type: list
+      default: greedy
+      options: greedy,hungarian
+    - name: tracking.window
+      label: Elapsed Frame Window
+      type: int
+      default: 5
+    - name: tracking.clean_instance_count
+      label: Target Number of Tracks (0 for all)
+      type: int
+      default: 0
+
+  simple:
+    - name: tracking.similarity
+      label: Similarity Method
+      type: list
+      default: iou
+      options: instance,centroid,iou
+    - name: tracking.matching
+      label: Matching Method
+      type: list
+      default: hungarian
+      options: greedy,hungarian
+    - name: tracking.window
+      label: Elapsed Frame Window
+      type: int
+      default: 5
+    - name: tracking.clean_instance_count
+      label: Target Number of Tracks (0 for all)
+      type: int
+      default: 0
+
+- name: _predict_frames
+  label: Predict On
+  type: list
+  options: current frame,random frames
+  default: current frame

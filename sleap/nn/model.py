@@ -1,354 +1,242 @@
-import os
-import attr
-import cattr
+"""This module defines the main SLEAP model class for defining a trainable model.
+
+This is a higher level wrapper around `tf.keras.Model` that holds all the configuration
+parameters required to construct the actual model. This allows for easy querying of the
+model configuration without actually instantiating the model itself.
+"""
 import tensorflow as tf
-import numpy as np
-from enum import Enum
-from typing import List, Text, Callable, Tuple, Dict, Union
-import logging
 
-from sleap import Skeleton
-from sleap.nn.architectures import *
-from sleap.nn.architectures import common
-from sleap.nn import utils
+import attr
+from typing import List, TypeVar, Optional, Text, Tuple
 
-logger = logging.getLogger(__name__)
+import sleap
+from sleap.nn.architectures import (
+    LeapCNN,
+    UNet,
+    Hourglass,
+    ResNetv1,
+    ResNet50,
+    ResNet101,
+    ResNet152,
+    IntermediateFeature,
+)
+from sleap.nn.heads import (
+    CentroidConfmapsHead,
+    SingleInstanceConfmapsHead,
+    CenteredInstanceConfmapsHead,
+    MultiInstanceConfmapsHead,
+    PartAffinityFieldsHead,
+)
+from sleap.nn.config import (
+    LEAPConfig,
+    UNetConfig,
+    HourglassConfig,
+    ResNetConfig,
+    SingleInstanceConfmapsHeadConfig,
+    CentroidsHeadConfig,
+    CenteredInstanceConfmapsHeadConfig,
+    MultiInstanceConfig,
+    BackboneConfig,
+    HeadsConfig,
+    ModelConfig,
+)
+from sleap.nn.data.utils import ensure_list
 
 
-class ModelOutputType(Enum):
-    """
-    Supported output type for SLEAP models. Currently supported
-    output modes are:
+ARCHITECTURES = [LeapCNN, UNet, Hourglass, ResNetv1, ResNet50, ResNet101, ResNet152]
+ARCHITECTURE_NAMES = [cls.__name__ for cls in ARCHITECTURES]
+Architecture = TypeVar("Architecture", *ARCHITECTURES)
 
-    CONFIDENCE_MAPS: Scalar fields representing the probability of finding a
-    skeleton node within an image. Models with this type will output a tensor
-    that contains N channels, where N is the number of unique nodes across all
-    skeletons for the model.
+BACKBONE_CONFIG_TO_CLS = {
+    LEAPConfig: LeapCNN,
+    UNetConfig: UNet,
+    HourglassConfig: Hourglass,
+    ResNetConfig: ResNetv1,
+}
 
-    PART_AFFINITY_FIELDS: A nonparametric representation made up from a set of
-    "2D vector fields that encode the location and orientation of limbs over
-    the image domain". Models with this type will output a tensor that contains
-    2*E channels where E is the number of unique edges across all skeletons for
-    the model.
-    See "Realtime Multi-Person 2D Pose Estimation using Part Affinity Fields"
-    by Cao et al.
-
-    CENTROIDS: Confidence maps trained to detect instance centroids.
-
-    TOPDOWN_CONFIDENCE_MAP: Confidence maps trained to detect skeleton nodes
-    for the instance at the center of the image.
-
-    """
-
-    CONFIDENCE_MAP = 0
-    PART_AFFINITY_FIELD = 1
-    CENTROIDS = 2
-    TOPDOWN_CONFIDENCE_MAP = 3
-
-    def __str__(self):
-        if self == ModelOutputType.CONFIDENCE_MAP:
-            return "confmaps"
-        elif self == ModelOutputType.PART_AFFINITY_FIELD:
-            return "pafs"
-        elif self == ModelOutputType.CENTROIDS:
-            return "centroids"
-        elif self == ModelOutputType.TOPDOWN_CONFIDENCE_MAP:
-            return "topdown_confidence_maps"
-        else:
-            # This shouldn't ever happen I don't think.
-            raise NotImplementedError(
-                f"__str__ not implemented for ModelOutputType={self}"
-            )
+HEADS = [
+    CentroidConfmapsHead,
+    SingleInstanceConfmapsHead,
+    CenteredInstanceConfmapsHead,
+    MultiInstanceConfmapsHead,
+    PartAffinityFieldsHead,
+]
+Head = TypeVar("Head", *HEADS)
 
 
 @attr.s(auto_attribs=True)
 class Model:
-    """
-    The Model class is a wrapper class that specifies an interface to pose
-    estimation models supported by sLEAP. It is fairly straighforward class
-    that allows specification of the underlying architecture and the
-    instantiation of a predictor object for inference.
+    """SLEAP model that describes an architecture and output types.
 
-        Args:
-            output_type: The output type of this model.
-            skeletons:
-            backbone: A class with an output method that returns a
-            tf.Tensor of the output of the backbone block. This tensor
-            will be set as the outputs of the tf.keras.Model that is constructed.
-            See sleap.nn.architectures for example backbone block classes.
-            backbone_name: The name of the backbone architecture, this defaults
-            to self.backbone.__name__ when set to None. In general, the user should
-            not set this value.
-
+    Attributes:
+        backbone: An `Architecture` class that provides methods for building a
+            tf.keras.Model given an input.
+        heads: List of `Head`s that define the outputs of the network.
+        keras_model: The current `tf.keras.Model` instance if one has been created.
     """
 
-    output_type: ModelOutputType
-    backbone: BackboneType
-    backbone_name: str = None
-    skeletons: Union[None, List[Skeleton]] = None
-    average_multi_output: bool = True
-
-    def __attrs_post_init__(self):
-
-        if not isinstance(self.backbone, tuple(available_archs)):
-            raise ValueError(
-                f"backbone ({self.backbone}) is not "
-                f"in available architectures ({available_archs})"
-            )
-
-        if not hasattr(self.backbone, "output"):
-            raise ValueError(
-                f"backbone ({self.backbone}) has now output method! "
-                f"Not a valid backbone architecture!"
-            )
-
-        if self.backbone_name is None:
-            self.backbone_name = self.backbone.__class__.__name__
-
-    def output(self, input_tensor, num_output_channels=None):
-        """
-        Invoke the backbone function with current backbone_args and backbone_kwargs
-        to produce the model backbone block. This is a convenience property for
-        self.backbone.output(input_tensor, num_ouput_channels)
-
-        Args:
-            input_tensor: An input layer to feed into the backbone.
-            num_output_channels: The number of output channels for the network.
-
-        Returns:
-            The return value of backbone output method, should be a tf.Tensor that is
-            the output of the backbone block.
-        """
-
-        # TODO: Add support for multiple skeletons
-        # If we need to, figure out how many output channels we will have
-        if num_output_channels is None:
-            if self.skeletons is not None:
-                if (
-                    self.output_type == ModelOutputType.CONFIDENCE_MAP
-                    or self.output_type == ModelOutputType.TOPDOWN_CONFIDENCE_MAP
-                ):
-                    num_outputs_channels = len(self.skeletons[0].nodes)
-                elif self.output_type == ModelOutputType.PART_AFFINITY_FIELD:
-                    num_outputs_channels = len(self.skeleton[0].edges) * 2
-            else:
-                raise ValueError(
-                    "Model.skeletons has not been set. "
-                    "Cannot infer num output channels."
-                )
-
-        backbone_output = self.backbone.output(input_tensor, num_output_channels)
-
-        if isinstance(backbone_output, tf.keras.Model):
-            backbone_output = backbone_output.outputs
-
-        if isinstance(backbone_output, list):
-            if len(backbone_output) == 1:
-                backbone_output = backbone_output[0]
-
-            elif self.average_multi_output:
-                backbone_output = common.upsampled_average_block(backbone_output)
-
-            else:
-                raise NotImplementedError("Multi-head output not yet implemented.")
-
-        return backbone_output
-
-    @property
-    def name(self):
-        """
-        Get the name of the backbone function. This is a convenience method for:
-        self.backbone.__name__
-
-        Returns:
-            A string representation of the backbone's name.
-        """
-        return self.backbone_name
-
-    @property
-    def down_blocks(self):
-        """Returns the number of pooling or striding blocks in the backbone.
-
-        This is useful when computing valid dimensions of the input data.
-
-        If the backbone does not provide enough information to infer this,
-        this is set to 0.
-        """
-
-        if hasattr(self.backbone, "down_blocks"):
-            return self.backbone.down_blocks
-
-        else:
-            return 0
-
-    @property
-    def input_min_multiple(self):
-        """Returns the minimum multiple that the input data must be of."""
-
-        return 2 ** self.down_blocks
-
-    @property
-    def output_scale(self):
-        """Calculates output scale relative to input."""
-
-        if hasattr(self.backbone, "output_scale"):
-            output_scale = self.backbone.output_scale
-            if isinstance(output_scale, list):
-                if self.average_multi_output:
-                    output_scale = max(output_scale)
-                else:
-                    raise NotImplementedError("Multi-head output not yet implemented.")
-
-            return output_scale
-
-        elif hasattr(self.backbone, "down_blocks") and hasattr(
-            self.backbone, "up_blocks"
-        ):
-            asym = self.backbone.down_blocks - self.backbone.up_blocks
-            return 1 / (2 ** asym)
-
-        elif hasattr(self.backbone, "initial_stride"):
-            return 1 / self.backbone.initial_stride
-
-        else:
-            return 1
-
-    @staticmethod
-    def _structure_model(model_dict, cls):
-        """Structuring hook for instantiating Model via cattrs.
-
-        This function should be used directly with cattrs as a
-        structuring hook. It serves the purpose of instantiating
-        the appropriate backbone class from the string name.
-
-        This is required when backbone classes do not have a
-        unique attribute name from which to infer the appropriate
-        class to use.
-
-        Args:
-            model_dict: Dictionaries containing deserialized Model.
-            cls: Class to return (not used).
-
-        Returns:
-            An instantiated Model class with the correct backbone.
-
-        Example:
-            >> cattr.register_structure_hook(Model, Model.structure_model)
-        """
-
-        arch_idx = available_arch_names.index(model_dict["backbone_name"])
-        backbone_cls = available_archs[arch_idx]
-
-        return Model(
-            backbone=backbone_cls(**model_dict["backbone"]),
-            output_type=ModelOutputType(model_dict["output_type"]),
-            skeletons=model_dict["skeletons"],
-        )
-
-
-@attr.s(auto_attribs=True)
-class InferenceModel:
-    """This class provides convenience metadata and methods for running inference from
-    a trained model."""
-
-    skeleton: Skeleton
-    input_scale: float = 1.0
-    output_scale: float = 1.0
-    input_tensor_ind: int = 0
-    output_tensor_ind: int = -1
-    down_blocks: int = 5
-    model_path: Text = None
-    keras_model: tf.keras.Model = None
+    backbone: Architecture
+    heads: List[Head] = attr.ib(converter=ensure_list)
+    keras_model: Optional[tf.keras.Model] = None
 
     @classmethod
-    def from_training_job(
+    def from_config(
         cls,
-        training_job: Union["sleap.nn.job.TrainingJob", Text],
-        skeleton: Skeleton = None,
-    ):
-        """Create an InferenceModel from a TrainingJob or path to json file."""
+        config: ModelConfig,
+        skeleton: Optional[sleap.Skeleton] = None,
+        update_config: bool = False,
+    ) -> "Model":
+        """Create a SLEAP model from configurations.
 
-        if isinstance(training_job, str):
-            from sleap.nn.job import TrainingJob
+        Arguments:
+            config: The configurations as a `ModelConfig` instance.
+            skeleton: A `sleap.Skeleton` to use if not provided in the config.
 
-            training_job = TrainingJob.load_json(training_job)
+        Returns:
+            An instance of `Model` built with the specified configurations.
+        """
+        # Figure out which backbone class to use.
+        backbone_config = config.backbone.which_oneof()
+        backbone_cls = BACKBONE_CONFIG_TO_CLS[type(backbone_config)]
 
-        if skeleton is None:
-            if (
-                training_job.model.skeletons is not None
-                and len(training_job.model.skeletons) > 0
-            ):
-                skeleton = training_job.model.skeletons[0]
+        # Figure out which head class to use.
+        head_config = config.heads.which_oneof()
+        if isinstance(head_config, SingleInstanceConfmapsHeadConfig):
+            part_names = head_config.part_names
+            if part_names is None:
+                if skeleton is None:
+                    raise ValueError(
+                        "Skeleton must be provided when the head configuration is "
+                        "incomplete."
+                    )
+                part_names = skeleton.node_names
+                if update_config:
+                    head_config.part_names = part_names
+            heads = SingleInstanceConfmapsHead.from_config(
+                head_config, part_names=part_names
+            )
+
+        elif isinstance(head_config, CentroidsHeadConfig):
+            heads = CentroidConfmapsHead.from_config(head_config)
+
+        elif isinstance(head_config, CenteredInstanceConfmapsHeadConfig):
+            part_names = head_config.part_names
+            if part_names is None:
+                if skeleton is None:
+                    raise ValueError(
+                        "Skeleton must be provided when the head configuration is "
+                        "incomplete."
+                    )
+                part_names = skeleton.node_names
+                if update_config:
+                    head_config.part_names = part_names
+            heads = CenteredInstanceConfmapsHead.from_config(
+                head_config, part_names=part_names
+            )
+
+        elif isinstance(head_config, MultiInstanceConfig):
+            part_names = head_config.confmaps.part_names
+            if part_names is None:
+                if skeleton is None:
+                    raise ValueError(
+                        "Skeleton must be provided when the head configuration is "
+                        "incomplete."
+                    )
+                part_names = skeleton.node_names
+                if update_config:
+                    head_config.confmaps.part_names = part_names
+
+            edges = head_config.pafs.edges
+            if edges is None:
+                if skeleton is None:
+                    raise ValueError(
+                        "Skeleton must be provided when the head configuration is "
+                        "incomplete."
+                    )
+                edges = skeleton.edge_names
+                if update_config:
+                    head_config.pafs.edges = edges
+
+            heads = [
+                MultiInstanceConfmapsHead.from_config(
+                    head_config.confmaps, part_names=part_names
+                ),
+                PartAffinityFieldsHead.from_config(head_config.pafs, edges=edges),
+            ]
+
+        return cls(backbone=backbone_cls.from_config(backbone_config), heads=heads)
+
+    @property
+    def maximum_stride(self) -> int:
+        """Return the maximum stride of the model backbone."""
+        return self.backbone.maximum_stride
+
+    def make_model(self, input_shape: Tuple[int, int, int]) -> tf.keras.Model:
+        """Create a trainable model from the configuration.
+
+        Args:
+            input_shape: Tuple of (height, width, channels) specifying the shape of the
+                inputs before preprocessing.
+            
+        Returns:
+            An instantiated `tf.keras.Model`.
+        """
+        # Create input layer.
+        x_in = tf.keras.layers.Input(input_shape, name="input")
+
+        # Create backbone.
+        x_main, x_mid = self.backbone.make_backbone(x_in=x_in)
+
+        # Make sure main and intermediate feature outputs are lists.
+        if isinstance(x_main, tf.Tensor):
+            x_main = [x_main]
+        if isinstance(x_mid[0], IntermediateFeature):
+            x_mid = [x_mid]
+
+        # Build output layers for each head.
+        x_outs = []
+        for output in self.heads:
+            x_head = []
+            if output.output_stride == self.backbone.output_stride:
+                # The main output has the same stride as the head, so build output layer
+                # from that tensor.
+                for i, x in enumerate(x_main):
+                    x_head.append(
+                        tf.keras.layers.Conv2D(
+                            filters=output.channels,
+                            kernel_size=1,
+                            strides=1,
+                            padding="same",
+                            name=f"{type(output).__name__}_{i}",
+                        )(x)
+                    )
+
             else:
-                raise ValueError("No skeleton in training model or provided.")
+                # Look for an intermediate activation that has the correct stride.
+                for feats in zip(*x_mid):
+                    # TODO: Test for this assumption?
+                    assert all([feat.stride == feats[0].stride for feat in feats])
+                    if feats[0].stride == output.output_stride:
+                        for i, feat in enumerate(feats):
+                            x_head.append(
+                                tf.keras.layers.Conv2D(
+                                    filters=output.channels,
+                                    kernel_size=1,
+                                    strides=1,
+                                    padding="same",
+                                    name=f"{type(output).__name__}_{i}",
+                                )(feat.tensor)
+                            )
+                        break
 
-        return cls(
-            skeleton=skeleton,
-            input_scale=training_job.trainer.scale,
-            output_scale=training_job.trainer.scale * training_job.model.output_scale,
-            input_tensor_ind=0,
-            output_tensor_ind=-1,
-            down_blocks=training_job.model.down_blocks,
-            model_path=training_job.model_path,
-        )
+            if len(x_head) == 0:
+                raise ValueError(
+                    f"Could not find a feature activation for output at stride "
+                    f"{output.stride}."
+                )
+            x_outs.append(x_head)
+        # TODO: Warn/error if x_main was not connected to any heads?
 
-    def __attrs_post_init__(self):
-
-        # Load model if needed.
-        if self.keras_model is None:
-            self.load_model()
-
-        self._setup_input_output_tensors()
-
-    def load_model(self, model_path: Text = None):
-        """Loads a saved model with specified settings."""
-
-        # Use attribute-stored model path if a new one was not specified.
-        if model_path is None:
-            model_path = self.model_path
-
-        if model_path is None:
-            raise ValueError("Model path was not specified.")
-
-        # Load from disk.
-        self.keras_model = tf.keras.models.load_model(
-            model_path, custom_objects={"tf": tf}, compile=False
-        )
-
-        # Store the path to the current model.
-        self.model_path = model_path
-
-    def _setup_input_output_tensors(self):
-        """Create model with the specified input/output tensors."""
-
-        self.keras_model = tf.keras.Model(
-            self.keras_model.inputs[self.input_tensor_ind],
-            self.keras_model.outputs[self.output_tensor_ind],
-        )
-
-    @property
-    def input_tensor(self) -> tf.Tensor:
-        """Returns the input tensor to the model."""
-        return self.keras_model.input
-
-    @property
-    def output_tensor(self) -> tf.Tensor:
-        """Returns the output tensor from the model."""
-        return self.keras_model.output
-
-    @property
-    def output_relative_scale(self) -> float:
-        """Returns the scale of the model outputs relative to the inputs."""
-        return self.output_scale / self.input_scale
-
-    @property
-    def trained_input_shape(self) -> Tuple[int]:
-        """Returns the shape of the input tensor."""
-        return tuple(self.input_tensor.shape)
-
-    def predict(self, X: np.ndarray, batch_size: int = 8) -> np.ndarray:
-        """Runs inference on input data."""
-
-        return utils.batched_call_slices(
-            self.keras_model, X, batch_size=batch_size, return_numpy=True
-        )
+        # Create model.
+        self.keras_model = tf.keras.Model(inputs=x_in, outputs=x_outs)
+        return self.keras_model

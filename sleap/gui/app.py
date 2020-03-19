@@ -7,7 +7,7 @@ import re
 import os
 import random
 
-from typing import Callable, Dict, Iterator, List, Optional
+from typing import Callable, List, Optional
 
 from PySide2 import QtCore, QtGui
 from PySide2.QtCore import Qt, QEvent
@@ -23,7 +23,7 @@ from sleap.instance import Instance
 from sleap.io.dataset import Labels
 from sleap.info.summary import StatisticSeries
 from sleap.gui.commands import CommandContext, UpdateTopic
-from sleap.gui.video import QtVideoPlayer
+from sleap.gui.widgets.video import QtVideoPlayer
 from sleap.gui.dataviews import (
     GenericTableView,
     VideosTableModel,
@@ -34,11 +34,11 @@ from sleap.gui.dataviews import (
     SkeletonNodeModel,
 )
 
-from sleap.gui.filedialog import FileDialog
-from sleap.gui.formbuilder import YamlFormWidget
-from sleap.gui.shortcuts import Shortcuts, ShortcutDialog
+from sleap.gui.dialogs.filedialog import FileDialog
+from sleap.gui.dialogs.formbuilder import YamlFormWidget
+from sleap.gui.shortcuts import Shortcuts
+from sleap.gui.dialogs.shortcuts import ShortcutDialog
 from sleap.gui.state import GuiState
-
 from sleap.gui.overlays.tracks import TrackTrailOverlay, TrackListOverlay
 from sleap.gui.color import ColorManager
 from sleap.gui.overlays.instance import InstanceOverlay
@@ -491,6 +491,14 @@ class MainWindow(QMainWindow):
 
         add_menu_item(
             labelMenu,
+            "custom delete",
+            "Custom Instance Delete...",
+            self.commands.deleteDialog,
+        )
+        labelMenu.addSeparator()
+
+        add_menu_item(
+            labelMenu,
             "select next",
             "Select Next Instance",
             lambda: self.state.increment_in_list(
@@ -514,19 +522,13 @@ class MainWindow(QMainWindow):
             predictionMenu,
             "training",
             "Run Training...",
-            lambda: self.showLearningDialog("learning"),
+            lambda: self.showLearningDialog("training"),
         )
         add_menu_item(
             predictionMenu,
             "inference",
             "Run Inference...",
             lambda: self.showLearningDialog("inference"),
-        )
-        add_menu_item(
-            predictionMenu,
-            "learning expert",
-            "Expert Controls...",
-            lambda: self.showLearningDialog("expert"),
         )
 
         predictionMenu.addSeparator()
@@ -1213,14 +1215,13 @@ class MainWindow(QMainWindow):
 
         Args:
             mode: A string representing mode for dialog, which could be:
-            * "active"
+            * "training"
             * "inference"
-            * "expert"
 
         Returns:
             None.
         """
-        from sleap.gui.inference import InferenceDialog
+        from sleap.gui.learning.training import LearningDialog
 
         if "inference" in self.overlays:
             QMessageBox(
@@ -1237,10 +1238,12 @@ class MainWindow(QMainWindow):
             return
 
         if self._child_windows.get(mode, None) is None:
-            self._child_windows[mode] = InferenceDialog(
-                self.state["filename"], self.labels, mode
+            self._child_windows[mode] = LearningDialog(
+                mode, self.state["filename"], self.labels,
             )
             self._child_windows[mode].learningFinished.connect(self.learningFinished)
+
+        self._child_windows[mode].update_file_lists()
 
         self._child_windows[mode].frame_selection = self._frames_for_prediction()
         self._child_windows[mode].open()

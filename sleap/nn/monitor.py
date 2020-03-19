@@ -1,3 +1,5 @@
+"""GUI for monitoring training progress interactively."""
+
 from collections import deque
 import numpy as np
 from time import time, sleep
@@ -5,9 +7,9 @@ import zmq
 import jsonpickle
 import logging
 
-logger = logging.getLogger(__name__)
-
 from PySide2 import QtCore, QtWidgets, QtGui, QtCharts
+
+logger = logging.getLogger(__name__)
 
 
 class LossViewer(QtWidgets.QMainWindow):
