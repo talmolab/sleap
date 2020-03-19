@@ -27,33 +27,45 @@ machine, you should only try it if you have a GPU installed.
 By default, training uses the training settings which we’ve found to work
 well on a wide range of videos. We train a “centroid” model on 1/4 scale
 images and then use this to crop where we think there are instances
-during inference. Another pair of models are trained on unscaled,
-cropped images. The “confidence map” model is used to infer node
-locations, and the “part affinity field” model is used to infer the
-edges that connect nodes.
+during inference. Another "instance centered" model is trained on full-sized,
+cropped image to predict the nodes for an instance at the center of each cropped
+image.
+
+At the top of the training dialog, you'll see tabs for each of the models.
+This is where you can configure the model architecture and hyperparameters.
+
+|model|
 
 There are a few hyperparameters that you can control for active
 learning:
 
--  **Crop size** ensures that the box for our crop is at least a
-   given size instead of using the tightest crop that will bound any
-   labeled instance.
-
--  **Sigma** controls the size of the confidence map gaussians and part
-   affinity fields used for training.
+-  **Crop size** lets you set a specific crop size, or you can use "None" to let
+   SLEAP determine a crop size for you based on the size of your labeled
+   instances.
 
 -  **Batch Size** determines how many samples are used to train the
    neural network at one time. If you get an error that your GPU ran out
    of memory while training, you should try a smaller batch size.
 
 You can visually preview the effects of these settings on the training
-data by clicking the “**View Training Image Inputs…**” button. You’ll then
-see windows with the confidence maps and part affinity fields that will
-be used to train the models.
+data by clicking the “**View Training Image Inputs…**” button on the
+**Training Pipeline** tab.
 
+You should also note the **Receptive Field** preview:
 
+|receptive-field|
 
-After setting the parameters click “**Run Training and Inference**”. During the
+This lets you see the receptive field size of the model give the current
+settings; you can zoom and drag the image just like you can when labeling frames.
+
+The `receptive field <https://distill.pub/2019/computing-receptive-fields/>`_
+is the amount of visual "context" around each pixel in the
+image that will be used for the prediction at that pixel.
+For a U-Net backbone (the default) it's a function of the
+"max stride", and in a way also a function of the image input scaling (since
+scaling will give you a larger field relative to the original image).
+
+After setting the parameters click “**Run**”. During the
 training process, you’ll see a window where you can monitor the loss.
 Blue points are training loss for each batch, lines are training and
 validation loss for the epochs (these won’t appear until the second
@@ -61,9 +73,8 @@ epoch has finished.) There’s a button to stop training the model when
 you think is appropriate, or the training will automatically stop if the
 model doesn’t improve for a certain number of epochs (15 by default)
 
-First we train a model for confidence maps, part affinity fields, and
-centroids, and then we run inference. The GUI doesn’t yet give you a way
-to monitor the progress during inference, although it will alert you if an error occurs during inference.
+The GUI doesn’t yet give you a way to monitor the progress during inference,
+although it will alert you if an error occurs during inference.
 
 When inference finishes, you’ll be told how many instances were
 predicted. Suggested frames with predicted instances will be marked in
@@ -73,12 +84,14 @@ Reviewing and fixing predictions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 After you’ve successfully trained models and predicted some instances,
-you’ll get a message that inference has finished. Every suggested
-frame with predicted instances will have a distinctive mark in the
-seekbar. Suggested frames which you labeled are marked in blue while
-those with predicted instances are marked in red. Predicted instances
-will *not* be used for future model training unless you correct the
-predictions in the GUI.
+you’ll get a message that inference has finished.
+Predictions will be marked with a thin black line on the seekbar, while frames
+that you manually labeled will be marked with a thicker black line. (For
+"suggested" frames, manually labeled frames will have a dark blue line and
+predicted frames will have a lighter blue.)
+
+Predicted instances will *not* be used for future model training unless you
+correct the predictions in the GUI.
 
 |imagefix|
 
@@ -99,7 +112,18 @@ When you’re satisfied with the predictions you’re getting, you can use your 
 “**Run Inference…**” from the “Predict” menu. This will use the most
 recently trained set of models.
 
-|image8|
+The inference dialog is almost identical to the training dialog with a few key differences.
+
+The inference dialog allows you to choose a method to use for tracking
+instance identities:
+
+|tracker|
+
+By default the inference dialog will use the most recently train model (or set
+of models), but if you want to choose another trained model, you can do this
+by using the dropdown menu on the tab for the relevant model type.
+
+|model-selection|
 
 .. _track_proofreading:
 
@@ -157,6 +181,9 @@ For more tools and tips, see the :ref:`proofreading` how-to.
 .. |image4| image:: docs/_static/labeling.gif
 .. |image5| image:: docs/_static/toggle-visibility.gif
 .. |image6| image:: docs/_static/training-dialog.jpg
+.. |model| image:: docs/_static/training-model-dialog.jpg
+.. |receptive-field| image:: docs/_static/receptive-field.jpg
 .. |imagefix| image:: docs/_static/fixing-predictions.gif
-.. |image8| image:: docs/_static/inference-dialog.jpg
+.. |tracker| image:: docs/_static/tracker.jpg
+.. |model-selection| image:: docs/_static/model-selection.jpg
 .. |image9| image:: docs/_static/fixing-track.gif

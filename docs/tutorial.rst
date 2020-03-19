@@ -140,7 +140,11 @@ menu. For this tutorial, let's use the default settings for training and predict
 
 |image6|
 
-The default settings will train three models: one for confidence maps, one for part affinity fields, and one for centroids. The models will be trained in that order. You should see a window which shows you a graph of training and validation loss for each model as it trains.
+The default settings will train two models: one for locating each instance in the frame confidence maps, and one for locating the parts for each of those instances. The models will be trained in that order.
+
+For this "topdown" prediction approach, it's a good idea to choose an **anchor** part which has a relatively stable position near the center of your animal. You may also want to turn on the option to "**Visualize Predictions During Training**" (although this will make training run a bit more slowly).
+
+Once you hit the **Run** button, you should see a window which shows you a graph of training and validation loss for each model as it trains.
 
 Just for this tutorial, let's stop each training session after about 10 epochs. This should take a minute or two for each model (assuming you have a usable GPU!), and should be good enough to get some initial predictions.
 
