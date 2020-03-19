@@ -256,8 +256,11 @@ class MediaVideo:
     _reader_ = None
     _test_frame_ = None
 
-    def __attrs_post_init__(self):
-        self._lock = multiprocessing.RLock()
+    @property
+    def __lock(self):
+        if not hasattr(self, "_lock"):
+            self._lock = multiprocessing.RLock()
+        return self._lock
 
     @grayscale.default
     def __grayscale_default__(self):
@@ -360,7 +363,7 @@ class MediaVideo:
     def get_frame(self, idx: int, grayscale: bool = None) -> np.ndarray:
         """See :class:`Video`."""
 
-        with self._lock:
+        with self.__lock:
             if self.__reader.get(cv2.CAP_PROP_POS_FRAMES) != idx:
                 self.__reader.set(cv2.CAP_PROP_POS_FRAMES, idx)
 
