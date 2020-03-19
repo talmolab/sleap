@@ -40,19 +40,33 @@ def plot_img(
 ) -> matplotlib.figure.Figure:
     """Plot an image in a tight figure."""
     if img.shape[0] == 1:
+        # Squeeze out batch singleton dimension.
         img = img.squeeze(axis=0)
+
+    # Check if image is grayscale (single channel).
+    grayscale = img.shape[-1] == 1
+    if grayscale:
+        # Squeeze out singleton channel.
+        img = img.squeeze(axis=-1)
+
+    # Normalize the range of pixel values.
+    img_min = img.min()
+    img_max = img.max()
+    if img_min < 0. or img_max > 1.0:
+        img = (img - img_min) / (img_max - img_min)
+
     fig = imgfig(
         size=(float(img.shape[1]) / dpi, float(img.shape[0]) / dpi),
         dpi=dpi,
         scale=scale,
     )
-    img = img.squeeze(axis=-1) if img.shape[-1] == 1 else img
-    img = (img - img.min()) / np.ptp(img)
-    fig.gca().imshow(
+
+    ax = fig.gca()
+    ax.imshow(
         img,
-        cmap="gray" if img.shape[-1] == 1 else None,
-        origin="lower",
-        extent=[-0.5, img.shape[1] - 0.5, -0.5, img.shape[0] - 0.5],
+        cmap="gray" if grayscale else None,
+        origin="upper",
+        extent=[-0.5, img.shape[1] - 0.5, img.shape[0] - 0.5, -0.5],
     )
     return fig
 
@@ -63,12 +77,12 @@ def plot_confmaps(confmaps: np.ndarray, output_scale: float = 1.0):
     return ax.imshow(
         np.squeeze(confmaps.max(axis=-1)),
         alpha=0.5,
-        origin="lower",
+        origin="upper",
         extent=[
             -0.5,
             confmaps.shape[1] / output_scale - 0.5,
-            -0.5,
             confmaps.shape[0] / output_scale - 0.5,
+            -0.5,
         ],
     )
 
