@@ -20,13 +20,14 @@ class SliderMark:
 
     Attributes:
         type: Type of the mark, options are:
-            * "simple" (single value)
-            * "filled" (single value)
-            * "open" (single value)
-            * "predicted" (single value)
-            * "track" (range of values)
-            * "tick" (single value)
-            * "tick_column" (single value)
+            * "simple"     (single value)
+            * "simple_thin" (    ditto   )
+            * "filled"
+            * "open"
+            * "predicted"
+            * "tick"
+            * "tick_column"
+            * "track"      (range of values)
         val: Beginning of mark range
         end_val: End of mark range (for "track" marks)
         row: The row that the mark goes in; used for tracks.
@@ -46,9 +47,10 @@ class SliderMark:
         """Returns color of mark."""
         colors = dict(
             simple="black",
+            simple_thin="black",
             filled="blue",
             open="blue",
-            predicted="yellow",
+            predicted=(1, 170, 247),  # light blue
             tick="lightGray",
             tick_column="gray",
         )
@@ -100,7 +102,7 @@ class SliderMark:
     def visual_width(self):
         if self.type in ("open", "filled", "tick"):
             return 2
-        if self.type in ("tick_column"):
+        if self.type in ("tick_column", "simple", "predicted"):
             return 1
         return 0
 
@@ -283,23 +285,38 @@ class VideoSlider(QtWidgets.QGraphicsView):
                     )
                 track_row += 1
 
-        # Add marks without track
+        # Frames with instance without track
+        untracked_frames = set()
         if None in track_occupancy:
             for occupancy_range in track_occupancy[None].list:
-                for val in range(*occupancy_range):
-                    slider_marks.append(SliderMark("simple", val=val))
+                untracked_frames.update({val for val in range(*occupancy_range)})
 
-        # list of frame_idx for simple markers for labeled frames
-        labeled_marks = [lf.frame_idx for lf in lfs]
-        user_labeled = [lf.frame_idx for lf in lfs if len(lf.user_instances)]
+        labeled_marks = {lf.frame_idx for lf in lfs}
+        user_labeled = {lf.frame_idx for lf in lfs if len(lf.user_instances)}
+        suggested_frames = set(labels.get_video_suggestions(video))
 
-        for frame_idx in labels.get_video_suggestions(video):
-            if frame_idx in user_labeled:
-                mark_type = "filled"
-            elif frame_idx in labeled_marks:
-                mark_type = "predicted"
+        all_simple_frames = set()
+        all_simple_frames.update(untracked_frames)
+        all_simple_frames.update(suggested_frames)
+        all_simple_frames.update(user_labeled)
+
+        for frame_idx in all_simple_frames:
+            if frame_idx in suggested_frames:
+                if frame_idx in user_labeled:
+                    # suggested frame with user labeled instances
+                    mark_type = "filled"
+                elif frame_idx in labeled_marks:
+                    # suggested frame with only predicted instances
+                    mark_type = "predicted"
+                else:
+                    # suggested frame without any instances
+                    mark_type = "open"
+            elif frame_idx in user_labeled:
+                # frame with user labeled instances
+                mark_type = "simple"
             else:
-                mark_type = "open"
+                # no user instances, predicted instance without track identity
+                mark_type = "simple_thin"
             slider_marks.append(SliderMark(mark_type, val=frame_idx))
 
         self.setTracks(track_row)  # total number of tracks to show
