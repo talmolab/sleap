@@ -6,8 +6,13 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from typing import Union, Tuple, Optional, Text
 
-
-matplotlib.use("Qt5Agg")
+try:
+    matplotlib.use("Qt5Agg")
+except ImportError:
+    print(
+        "Unable to use Qt backend for matplotlib. "
+        "This probably means Qt is running headless."
+    )
 
 
 def imgfig(
